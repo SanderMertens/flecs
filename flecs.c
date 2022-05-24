@@ -19381,6 +19381,7 @@ ecs_rule_var_t* most_specific_var(
         return NULL;
     }
 
+<<<<<<< HEAD
     ecs_rule_var_t *tvar, *evar = to_entity(rule, var);
     if (!evar) {
         return var;
@@ -19391,6 +19392,10 @@ ecs_rule_var_t* most_specific_var(
     } else {
         tvar = find_variable(rule, EcsRuleVarKindTable, var->name);
     }
+=======
+    return id;
+}
+>>>>>>> 8ad57806 (#124 simplify working with Any wildcards)
 
     /* If variable is used as predicate or object, it should have been 
      * registered as an entity. */
@@ -48600,6 +48605,7 @@ bool flecs_set_type_info_for_id_record(
     return changed;
 }
 
+<<<<<<< HEAD
 ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_world_t *world,
     ecs_id_t id)
@@ -48612,6 +48618,52 @@ ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_hashmap_t *map = idr->name_index;
     if (!map) {
         map = idr->name_index = flecs_name_index_new();
+=======
+<<<<<<< HEAD
+void ecs_os_dbg(
+    const char *file, 
+    int32_t line, 
+    const char *msg)
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(1, file, line, msg);
+=======
+static
+ecs_id_t flecs_id_record_id(
+    ecs_id_t id)
+{
+    id = ecs_strip_generation(id);
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
+        if (r == EcsAny) {
+            r = EcsWildcard;
+        }
+        if (o == EcsAny) {
+            o = EcsWildcard;
+        }
+        id = ecs_pair(r, o);
+    }
+    return id;
+}
+
+ecs_id_record_t* flecs_ensure_id_record(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_poly_assert(world, ecs_world_t);
+
+    ecs_id_record_t **idr_ptr = ecs_map_ensure(&world->id_index, 
+        ecs_id_record_t*, ecs_strip_generation(id));
+    ecs_id_record_t *idr = idr_ptr[0];
+    if (!idr) {
+        idr = new_id_record(world, id);
+        idr_ptr = ecs_map_get(&world->id_index, 
+            ecs_id_record_t*, flecs_id_record_id(id));
+        ecs_assert(idr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        idr_ptr[0] = idr;
+>>>>>>> 8ad57806 (#124 simplify working with Any wildcards)
+>>>>>>> 947da9c1 (#124 simplify working with Any wildcards)
     }
 
     return map;
@@ -48621,10 +48673,122 @@ ecs_hashmap_t* flecs_get_id_name_index(
     const ecs_world_t *world,
     ecs_id_t id)
 {
+<<<<<<< HEAD
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
+=======
+<<<<<<< HEAD
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(0, file, line, msg);
+    }
+=======
+    ecs_poly_assert(world, ecs_world_t);
+    return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
+        flecs_id_record_id(id));
+>>>>>>> 8ad57806 (#124 simplify working with Any wildcards)
+}
+
+void ecs_os_warn(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+<<<<<<< HEAD
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-2, file, line, msg);
+=======
+    ecs_poly_assert(world, ecs_world_t);
+
+    /* Free id record resources */
+    if (free_id_record(world, id, idr)) {
+        /* Remove record from world index */
+        ecs_map_remove(&world->id_index, flecs_id_record_id(id));
+>>>>>>> 8ad57806 (#124 simplify working with Any wildcards)
+    }
+}
+
+void ecs_os_err(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-3, file, line, msg);
+    }
+}
+
+void ecs_os_fatal(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-4, file, line, msg);
+    }
+}
+
+static
+void ecs_os_gettime(ecs_time_t *time) {
+    ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
+    
+    uint64_t now = ecs_os_now();
+    uint64_t sec = now / 1000000000;
+
+    assert(sec < UINT32_MAX);
+    assert((now - sec * 1000000000) < UINT32_MAX);
+
+    time->sec = (uint32_t)sec;
+    time->nanosec = (uint32_t)(now - sec * 1000000000);
+}
+
+static
+void* ecs_os_api_malloc(ecs_size_t size) {
+    ecs_os_api_malloc_count ++;
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    return malloc((size_t)size);
+}
+
+static
+void* ecs_os_api_calloc(ecs_size_t size) {
+    ecs_os_api_calloc_count ++;
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    return calloc(1, (size_t)size);
+}
+
+static
+void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ptr) {
+        ecs_os_api_realloc_count ++;
+    } else {
+        /* If not actually reallocing, treat as malloc */
+        ecs_os_api_malloc_count ++; 
+    }
+    
+    return realloc(ptr, (size_t)size);
+}
+
+static
+void ecs_os_api_free(void *ptr) {
+    if (ptr) {
+        ecs_os_api_free_count ++;
+    }
+    free(ptr);
+}
+
+static
+char* ecs_os_api_strdup(const char *str) {
+    if (str) {
+        int len = ecs_os_strlen(str);
+        char *result = ecs_os_malloc(len + 1);
+        ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_os_strcpy(result, str);
+        return result;
+    } else {
+>>>>>>> 947da9c1 (#124 simplify working with Any wildcards)
         return NULL;
     }
 
