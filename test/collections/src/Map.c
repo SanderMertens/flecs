@@ -16,6 +16,7 @@ void fill_map(
 
     for (i = 0; i < count; i ++) {
         ecs_map_set(map, elems[i].hash, &elems[i].value);
+        test_assert(ecs_map_get(map, char*, elems[i].hash) != NULL);
     }
 }
 
@@ -183,12 +184,34 @@ void Map_get_unknown() {
 void Map_iter() {
     ecs_map_t *map = ecs_map_new(char*, 16);
     fill_map(map);
+    
+    int32_t str_world_count = 0;
+    int32_t str_bar_count = 0;
+    int32_t str_hello_count = 0;
+    int32_t str_foo_count = 0;
 
     ecs_map_iter_t it = ecs_map_iter(map);
-    test_str(ecs_map_next_ptr(&it, char*, NULL), "world");
-    test_str(ecs_map_next_ptr(&it, char*, NULL), "bar");
-    test_str(ecs_map_next_ptr(&it, char*, NULL), "hello");
-    test_str(ecs_map_next_ptr(&it, char*, NULL), "foo");
+    int32_t index;
+    for(index = 0; index < 4; ++index) {
+        void *value = ecs_map_next_ptr(&it, char*, NULL);
+        test_assert(value != NULL);
+        if(strcmp(value, "world") == 0) {
+            ++str_world_count;
+        }
+        else if(strcmp(value, "bar") == 0) {
+            ++str_bar_count;
+        }
+        else if(strcmp(value, "hello") == 0) {
+            ++str_hello_count;
+        }
+        else if(strcmp(value, "foo") == 0) {
+            ++str_foo_count;
+        }
+    }
+    test_int(str_world_count, 1);
+    test_int(str_bar_count, 1);
+    test_int(str_hello_count, 1);
+    test_int(str_foo_count, 1);
     test_assert(ecs_map_next_ptr(&it, char*, NULL) == NULL);
 
     ecs_map_free(map);
@@ -285,7 +308,7 @@ void Map_grow() {
         ecs_map_set(map, i, &v);
     }
 
-    test_int(malloc_count, 20);
+    test_int(malloc_count, 10);
 
     ecs_map_free(map);
 }
