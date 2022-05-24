@@ -289,16 +289,8 @@ void flecs_table_init_data(
             ecs_assert(switch_type != NULL, 
                 ECS_INVALID_PARAMETER, "not a switch");
             ecs_table_t *sw_table = switch_type->normalized;
-            ecs_type_t sw_type = sw_table->type;
 
-            ecs_id_t *sw_array = sw_type.array;
-            int32_t sw_array_count = sw_type.count;
-
-            flecs_switch_init(
-                &storage->sw_columns[i].data,
-                sw_array[0], 
-                sw_array[sw_array_count - 1], 
-                0);
+            flecs_switch_init( &storage->sw_columns[i].data, 0);
 
             storage->sw_columns[i].type = sw_table;
         }
