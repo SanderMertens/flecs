@@ -461,6 +461,7 @@ void* _ecs_map_next(
     ecs_size_t elem_size,
     ecs_map_key_t *key_out)
 {
+    (void)elem_size;
     const ecs_map_t *map = iter->map;
     if (!ecs_map_is_initialized(map)) {
         return NULL;
