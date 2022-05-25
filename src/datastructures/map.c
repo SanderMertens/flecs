@@ -497,6 +497,7 @@ void* _ecs_map_next(
     }
     
     if (key_out) {
+        ecs_assert(iter->entry != NULL, ECS_INTERNAL_ERROR, NULL);
         *key_out = iter->entry->key;
     }
 
