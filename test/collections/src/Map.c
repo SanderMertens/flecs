@@ -81,14 +81,14 @@ void Map_set_rehash() {
     ecs_map_t *map = ecs_map_new(char*, 8);
     fill_map(map);
 
-    test_int(ecs_map_bucket_count(map), 8);
+    test_int(ecs_map_bucket_count(map), 16);
 
     int i;
     for (i = 5; i < 16; i ++) {
         ecs_map_set(map, i, &(char*){"zzz"});
     }
 
-    test_int(ecs_map_bucket_count(map), 16);
+    test_int(ecs_map_bucket_count(map), 32);
     test_str(ecs_map_get_ptr(map, char*, 1), "hello");
     test_str(ecs_map_get_ptr(map, char*, 2), "world");
     test_str(ecs_map_get_ptr(map, char*, 3), "foo");
