@@ -8,11 +8,17 @@
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
-static ecs_block_allocator_chunk_header_t *ecs_balloc_block(ecs_block_allocator_t *allocator){
-    ecs_block_allocator_chunk_header_t *first_chunk = ecs_os_malloc(allocator->block_size);
-    ecs_block_allocator_block_t *block = ecs_os_malloc(ECS_SIZEOF(ecs_block_allocator_block_t));
+static 
+ecs_block_allocator_chunk_header_t *ecs_balloc_block(
+    ecs_block_allocator_t *allocator)
+{
+    ecs_block_allocator_chunk_header_t *first_chunk = 
+        ecs_os_malloc(allocator->block_size);
+    ecs_block_allocator_block_t *block = 
+        ecs_os_malloc_t(ecs_block_allocator_block_t);
+
     block->memory = first_chunk;
-    if(!allocator->block_tail) {
+    if (!allocator->block_tail) {
         ecs_assert(!allocator->block_head, ECS_INTERNAL_ERROR, 0);
         block->next = NULL;
         allocator->block_head = block;
@@ -22,26 +28,36 @@ static ecs_block_allocator_chunk_header_t *ecs_balloc_block(ecs_block_allocator_
         allocator->block_tail->next = block;
         allocator->block_tail = block;
     }
+
     ecs_block_allocator_chunk_header_t *chunk = first_chunk;
-    int32_t index, end;
-    for(index = 0, end = allocator->chunks_per_block - 1; index < end; ++index) {
+    int32_t i, end;
+    for (i = 0, end = allocator->chunks_per_block - 1; i < end; ++i) {
         chunk->next = ECS_OFFSET(chunk, allocator->chunk_size);
         chunk = chunk->next;
     }
+
     chunk->next = NULL;
     return first_chunk;
 }
 
-static void *ecs_balloc(ecs_block_allocator_t *allocator) {
-    if(!allocator->head) {
+static 
+void *ecs_balloc(
+    ecs_block_allocator_t *allocator) 
+{
+    if (!allocator->head) {
         allocator->head = ecs_balloc_block(allocator);
     }
+
     void *result = allocator->head;
     allocator->head = allocator->head->next;
     return result;
 }
 
-static void ecs_bfree(ecs_block_allocator_t *allocator, void *memory) {
+static 
+void ecs_bfree(
+    ecs_block_allocator_t *allocator, 
+    void *memory) 
+{
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = allocator->head;
     allocator->head = chunk;
@@ -89,7 +105,7 @@ int32_t get_bucket_index(
 
 /* Get bucket for key */
 static
-ecs_bucket_header_t** get_bucket(
+ecs_bucket_t* get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
@@ -113,14 +129,13 @@ void ensure_buckets(
     }
 
     if (new_count && new_count > bucket_count) {
-        int32_t bucket_size = ECS_SIZEOF(ecs_bucket_header_t*);
-        map->buckets = ecs_os_realloc(map->buckets, new_count * bucket_size);
-        map->buckets_end = ECS_OFFSET(map->buckets, ECS_SIZEOF(ecs_bucket_header_t *) * new_count);
+        map->buckets = ecs_os_realloc_n(map->buckets, ecs_bucket_t, new_count);
+        map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
+
         map->bucket_count = new_count;
         map->bucket_shift = get_bucket_shift(new_count);
-        ecs_os_memset(
-            ECS_OFFSET(map->buckets, bucket_count * bucket_size),
-            0, (new_count - bucket_count) * bucket_size);
+        ecs_os_memset_n(ECS_ELEM_T(map->buckets, ecs_bucket_t, bucket_count),
+            0, ecs_bucket_t, (new_count - bucket_count));
     }
 }
 
@@ -128,10 +143,10 @@ void ensure_buckets(
 static
 void clear_bucket(
     ecs_block_allocator_t *allocator,
-    ecs_bucket_header_t *bucket)
+    ecs_bucket_entry_t *bucket)
 {
     while(bucket) {
-      ecs_bucket_header_t *next = bucket->next;
+      ecs_bucket_entry_t *next = bucket->next;
       ecs_bfree(allocator, bucket);
       bucket = next;
     }
@@ -144,7 +159,7 @@ void clear_buckets(
 {
     int32_t i, count = map->bucket_count;
     for (i = 0; i < count; i ++) {
-        clear_bucket(&map->allocator, map->buckets[i]);
+        clear_bucket(&map->allocator, map->buckets[i].first);
     }
     ecs_os_free(map->buckets);
     map->buckets = NULL;
@@ -155,15 +170,15 @@ void clear_buckets(
 static
 void* add_to_bucket(
     ecs_block_allocator_t *allocator,
-    ecs_bucket_header_t **bucket,
+    ecs_bucket_t *bucket,
     ecs_size_t elem_size,
     ecs_map_key_t key,
     const void *payload)
 {
-    ecs_bucket_header_t *new_entry = ecs_balloc(allocator);
+    ecs_bucket_entry_t *new_entry = ecs_balloc(allocator);
     new_entry->key = key;
-    new_entry->next = *bucket;
-    *bucket = new_entry;
+    new_entry->next = bucket->first;
+    bucket->first = new_entry;
     void *new_payload = ECS_OFFSET(&new_entry->key, ECS_SIZEOF(ecs_map_key_t));
     if (elem_size && payload) {
         ecs_os_memcpy(new_payload, payload, elem_size);
@@ -175,13 +190,13 @@ void* add_to_bucket(
 static
 bool remove_from_bucket(
     ecs_block_allocator_t *allocator,
-    ecs_bucket_header_t **bucket,
+    ecs_bucket_t *bucket,
     ecs_map_key_t key)
 {
-    ecs_bucket_header_t *entry;
-    for(entry = *bucket; entry; entry = entry->next) {
-        if(entry->key == key) {
-            ecs_bucket_header_t **next_holder = bucket;
+    ecs_bucket_entry_t *entry;
+    for (entry = bucket->first; entry; entry = entry->next) {
+        if (entry->key == key) {
+            ecs_bucket_entry_t **next_holder = &bucket->first;
             while(*next_holder != entry) {
                 next_holder = &(*next_holder)->next;
             }
@@ -197,12 +212,12 @@ bool remove_from_bucket(
 /* Get payload pointer for key from bucket */
 static
 void* get_from_bucket(
-    ecs_bucket_header_t **bucket,
+    ecs_bucket_t *bucket,
     ecs_map_key_t key)
 {
-    ecs_bucket_header_t *entry;
-    for(entry = *bucket; entry; entry = entry->next) {
-        if(entry->key == key) {
+    ecs_bucket_entry_t *entry;
+    for (entry = bucket->first; entry; entry = entry->next) {
+        if (entry->key == key) {
             return ECS_OFFSET(&entry->key, ECS_SIZEOF(ecs_map_key_t));
         }
     }
@@ -220,25 +235,25 @@ void rehash(
     ecs_assert(bucket_count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     
     int32_t old_count = map->bucket_count;
-    ecs_bucket_header_t** old_buckets;
-    old_buckets = map->buckets;
+    ecs_bucket_t *old_buckets = map->buckets;
     
     int32_t new_count = flecs_next_pow_of_2(bucket_count);
     map->bucket_count = new_count;
     map->bucket_shift = get_bucket_shift(new_count);
-    map->buckets = ecs_os_calloc_n(ecs_bucket_header_t*, new_count);
-    map->buckets_end = ECS_OFFSET(map->buckets, ECS_SIZEOF(ecs_bucket_header_t *) * new_count);
+    map->buckets = ecs_os_calloc_n(ecs_bucket_t, new_count);
+    map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
     
-    // remap old bucket entries to new buckets
+    /* Remap old bucket entries to new buckets */
     int32_t index;
     for (index = 0; index < old_count; ++index) {
-        ecs_bucket_header_t* entry;
-        for(entry = old_buckets[index]; entry;) {
-            ecs_bucket_header_t* next = entry->next;
-            int32_t bucket_index = get_bucket_index(map->bucket_shift, entry->key);
-            ecs_bucket_header_t** bucket = &map->buckets[bucket_index];
-            entry->next = *bucket;
-            *bucket = entry;
+        ecs_bucket_entry_t* entry;
+        for (entry = old_buckets[index].first; entry;) {
+            ecs_bucket_entry_t* next = entry->next;
+            int32_t bucket_index = get_bucket_index(
+                map->bucket_shift, entry->key);
+            ecs_bucket_t *bucket = &map->buckets[bucket_index];
+            entry->next = bucket->first;
+            bucket->first = entry;
             entry = next;
         }
     }
@@ -256,14 +271,19 @@ void _ecs_map_init(
     result->count = 0;
     result->elem_size = (int16_t)elem_size;
     
-    int32_t entry_size = elem_size + ECS_SIZEOF(ecs_bucket_header_t);
-    int32_t balloc_min_chunk_size = ECS_MAX(entry_size, ECS_SIZEOF(ecs_block_allocator_chunk_header_t));
+    int32_t entry_size = elem_size + ECS_SIZEOF(ecs_bucket_entry_t);
+    int32_t balloc_min_chunk_size = ECS_MAX(entry_size, 
+        ECS_SIZEOF(ecs_block_allocator_chunk_header_t));
     uint32_t alignment = 16;
     uint32_t alignment_mask = alignment - 1u;
-    // align balloc_min_chunk_size up to alignment.
-    result->allocator.chunk_size = (int32_t)(((uint32_t)balloc_min_chunk_size + alignment_mask) & ~alignment_mask);
-    result->allocator.chunks_per_block = ECS_MAX(4096 / result->allocator.chunk_size, 1);
-    result->allocator.block_size = result->allocator.chunks_per_block * result->allocator.chunk_size;
+
+    /* Align balloc_min_chunk_size up to alignment. */
+    result->allocator.chunk_size = (int32_t)(((uint32_t)balloc_min_chunk_size + 
+        alignment_mask) & ~alignment_mask);
+    result->allocator.chunks_per_block = 
+        ECS_MAX(4096 / result->allocator.chunk_size, 1);
+    result->allocator.block_size = result->allocator.chunks_per_block * 
+        result->allocator.chunk_size;
     result->allocator.head = NULL;
     result->allocator.block_head = NULL;
     result->allocator.block_tail = NULL;
@@ -294,7 +314,7 @@ void ecs_map_fini(
 {
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_block_allocator_block_t *block;
-    for(block = map->allocator.block_head; block; ){
+    for (block = map->allocator.block_head; block; ){
         ecs_block_allocator_block_t *next = block->next;
         ecs_os_free(block->memory);
         ecs_os_free(block);
@@ -330,7 +350,7 @@ void* _ecs_map_get(
 
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_header_t **bucket = get_bucket(map, key);
+    ecs_bucket_t *bucket = get_bucket(map, key);
 
     return get_from_bucket(bucket, key);
 }
@@ -356,7 +376,7 @@ bool ecs_map_has(
         return false;
     }
 
-    ecs_bucket_header_t **bucket = get_bucket(map, key);
+    ecs_bucket_t *bucket = get_bucket(map, key);
 
     return get_from_bucket(bucket, key) != NULL;
 }
@@ -387,11 +407,12 @@ void* _ecs_map_set(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_header_t **bucket = get_bucket(map, key);
+    ecs_bucket_t *bucket = get_bucket(map, key);
 
     void *elem = get_from_bucket(bucket, key);
     if (!elem) {
-        void *added_data = add_to_bucket(&map->allocator, bucket, elem_size, key, payload);
+        void *added_data = add_to_bucket(
+            &map->allocator, bucket, elem_size, key, payload);
         int32_t map_count = ++map->count;
         int32_t target_bucket_count = get_bucket_count(map_count);
         int32_t map_bucket_count = map->bucket_count;
@@ -417,7 +438,7 @@ int32_t ecs_map_remove(
 {
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_bucket_header_t **bucket = get_bucket(map, key);
+    ecs_bucket_t *bucket = get_bucket(map, key);
     if (remove_from_bucket(&map->allocator, bucket, key)) {
         return --map->count;
     }
@@ -466,7 +487,7 @@ void* _ecs_map_next(
     if (!ecs_map_is_initialized(map)) {
         return NULL;
     }
-    if(iter->bucket == map->buckets_end) {
+    if (iter->bucket == map->buckets_end) {
         return NULL;
     }
     
@@ -474,26 +495,29 @@ void* _ecs_map_next(
         ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!iter->bucket || iter->entry, ECS_INVALID_PARAMETER, NULL);
     
-    if(!iter->bucket) {
-        for(iter->bucket = map->buckets; iter->bucket != map->buckets_end; ++iter->bucket) {
-            if(*iter->bucket) {
-                iter->entry = *iter->bucket;
+    if (!iter->bucket) {
+        for (iter->bucket = map->buckets; 
+            iter->bucket != map->buckets_end; 
+            ++iter->bucket) 
+        {
+            if (iter->bucket->first) {
+                iter->entry = iter->bucket->first;
                 break;
             }
         }
-        if(iter->bucket == map->buckets_end) {
+        if (iter->bucket == map->buckets_end) {
             return NULL;
         }
-    } else if(iter->entry->next) {
+    } else if (iter->entry->next) {
         iter->entry = iter->entry->next;
     } else {
         do {
             ++iter->bucket;
-            if(iter->bucket == map->buckets_end) {
+            if (iter->bucket == map->buckets_end) {
                 return NULL;
             }
-        } while(!*iter->bucket);
-        iter->entry = *iter->bucket;
+        } while(!iter->bucket->first);
+        iter->entry = iter->bucket->first;
     }
     
     if (key_out) {
@@ -575,12 +599,12 @@ void ecs_map_memory(
     // TODO: something something block allocator
     if (allocd) {
         *allocd += ECS_SIZEOF(ecs_map_t);
-        *allocd += ECS_SIZEOF(ecs_bucket_header_t*) * map->bucket_count;
+        *allocd += ECS_SIZEOF(ecs_bucket_entry_t*) * map->bucket_count;
         int32_t index;
-        int32_t entry_size = map->elem_size + ECS_SIZEOF(ecs_bucket_header_t);
-        for(index = 0; index < map->bucket_count; ++index) {
-            ecs_bucket_header_t *entry;
-            for(entry = map->buckets[index]; entry; entry = entry->next) {
+        int32_t entry_size = map->elem_size + ECS_SIZEOF(ecs_bucket_entry_t);
+        for (index = 0; index < map->bucket_count; ++index) {
+            ecs_bucket_entry_t *entry;
+            for (entry = map->buckets[index].first; entry; entry = entry->next){
                 *allocd += entry_size;
             }
         }
