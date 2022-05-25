@@ -42,6 +42,24 @@ typedef struct ecs_bucket_header_t {
     // payload right after key.
 } ecs_bucket_header_t;
 
+typedef struct ecs_block_allocator_block_t {
+    void *memory;
+    struct ecs_block_allocator_block_t *next;
+} ecs_block_allocator_block_t;
+
+typedef struct ecs_block_allocator_chunk_header_t {
+    struct ecs_block_allocator_chunk_header_t *next;
+} ecs_block_allocator_chunk_header_t;
+
+typedef struct ecs_block_allocator_t {
+    ecs_block_allocator_chunk_header_t *head;
+    ecs_block_allocator_block_t *block_head;
+    ecs_block_allocator_block_t *block_tail;
+    int32_t chunk_size;
+    int32_t chunks_per_block;
+    int32_t block_size;
+} ecs_block_allocator_t;
+
 typedef struct ecs_map_t {
     ecs_bucket_header_t **buckets;
     ecs_bucket_header_t **buckets_end;
@@ -49,6 +67,7 @@ typedef struct ecs_map_t {
     uint8_t bucket_shift;
     int32_t bucket_count;
     int32_t count;
+    ecs_block_allocator_t allocator;
 } ecs_map_t;
 
 typedef struct ecs_map_iter_t {
