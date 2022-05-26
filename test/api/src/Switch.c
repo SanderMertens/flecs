@@ -1661,7 +1661,7 @@ void Switch_delete_case_trigger_after_delete_switch() {
 
     Probe ctx = {0};
 
-    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term = { .id = ecs_pair(Movement, Walking), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = Trigger,

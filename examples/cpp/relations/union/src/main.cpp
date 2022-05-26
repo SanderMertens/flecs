@@ -12,6 +12,9 @@
 // There is a tradeoff, and that is that because a single archetype can contain
 // entities with multiple targets, queries need to do a bit of extra work to
 // only return the requested target. 
+//
+// This code uses enumeration relationships. See the enum_relations example for
+// more details.
 
 enum Movement {
     Walking,

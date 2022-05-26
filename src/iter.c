@@ -259,7 +259,7 @@ has_data:
 has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_switch_t *sw = &table->data.sw_columns[u_index].data;
+        ecs_switch_t *sw = &table->data.sw_columns[u_index];
         vec = flecs_switch_values(sw);
         size = ECS_SIZEOF(ecs_entity_t);
         align = ECS_ALIGNOF(ecs_entity_t);

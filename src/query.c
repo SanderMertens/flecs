@@ -2083,26 +2083,25 @@ int find_smallest_column(
         flecs_switch_term_t *sparse_column = &sparse_column_array[i];
 
         /* Pointer to the switch column struct of the table */
-        ecs_sw_column_t *sc = sparse_column->sw_column;
+        ecs_switch_t *sw = sparse_column->sw_column;
 
         /* If the sparse column pointer hadn't been retrieved yet, do it now */
-        if (!sc) {
+        if (!sw) {
             /* Get the table column index from the signature column index */
             int32_t table_column_index = table_data->columns[
                 sparse_column->signature_column_index];
 
             /* Translate the table column index to switch column index */
-            table_column_index -= table->sw_column_offset;
+            table_column_index -= table->sw_offset;
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
             ecs_data_t *data = &table->data;
-            sc = sparse_column->sw_column = 
+            sw = sparse_column->sw_column = 
                 &data->sw_columns[table_column_index - 1];
         }
 
         /* Find the smallest column */
-        ecs_switch_t *sw = &sc->data;
         int32_t case_count = flecs_switch_case_count(sw, sparse_column->sw_case);
         if (case_count < min) {
             min = case_count;
@@ -2141,7 +2140,7 @@ int sparse_column_next(
     flecs_switch_term_t *columns = ecs_vector_first(
         sparse_columns, flecs_switch_term_t);
     flecs_switch_term_t *column = &columns[sparse_smallest];
-    ecs_switch_t *sw, *sw_smallest = &column->sw_column->data;
+    ecs_switch_t *sw, *sw_smallest = column->sw_column;
     ecs_entity_t case_smallest = column->sw_case;
 
     /* Find next entity to iterate in sparse column */
@@ -2179,7 +2178,7 @@ int sparse_column_next(
             }
 
             column = &columns[i];
-            sw = &column->sw_column->data;
+            sw = column->sw_column;
 
             if (flecs_switch_get(sw, first) != column->sw_case) {
                 first = flecs_switch_next(sw_smallest, first);
@@ -2261,23 +2260,22 @@ int bitset_column_next(
     int32_t i, count = ecs_vector_count(bitset_columns);
     flecs_bitset_term_t *columns = ecs_vector_first(
         bitset_columns, flecs_bitset_term_t);
-    int32_t bs_offset = table->bs_column_offset;
+    int32_t bs_offset = table->bs_offset;
 
     int32_t first = iter->bitset_first;
     int32_t last = 0;
 
     for (i = 0; i < count; i ++) {
         flecs_bitset_term_t *column = &columns[i];
-        ecs_bs_column_t *bs_column = columns[i].bs_column;
+        ecs_bitset_t *bs = columns[i].bs_column;
 
-        if (!bs_column) {
+        if (!bs) {
             int32_t index = column->column_index;
             ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
-            bs_column = &table->data.bs_columns[index - bs_offset];
-            columns[i].bs_column = bs_column;
+            bs = &table->data.bs_columns[index - bs_offset];
+            columns[i].bs_column = bs;
         }
         
-        ecs_bitset_t *bs = &bs_column->data;
         int32_t bs_elem_count = bs->count;
         int32_t bs_block = first >> 6;
         int32_t bs_block_count = ((bs_elem_count - 1) >> 6) + 1;

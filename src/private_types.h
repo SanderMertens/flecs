@@ -100,24 +100,13 @@ struct ecs_column_t {
     ecs_vector_t *data;          /* Data */
 };
 
-/** A switch column. */
-typedef struct ecs_sw_column_t {
-    ecs_switch_t data;           /* Data */
-    ecs_table_t *type;           /* Table with switch type */
-} ecs_sw_column_t;
-
-/** A bitset column. */
-typedef struct ecs_bs_column_t {
-    ecs_bitset_t data;           /* Data */
-} ecs_bs_column_t;
-
 /** Stage-specific component data */
 struct ecs_data_t {
     ecs_vector_t *entities;      /* Entity identifiers */
     ecs_vector_t *record_ptrs;   /* Ptrs to records in main entity index */
     ecs_column_t *columns;       /* Component columns */
-    ecs_sw_column_t *sw_columns; /* Switch columns */
-    ecs_bs_column_t *bs_columns; /* Bitset columns */
+    ecs_switch_t *sw_columns;    /* Switch columns */
+    ecs_bitset_t *bs_columns;    /* Bitset columns */
 };
 
 /** Cache of added/removed components for non-trivial edges between tables */
@@ -183,11 +172,11 @@ struct ecs_table_t {
     ecs_type_info_t **type_info;     /* Cached type info */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
-    
-    int16_t sw_column_count;
-    int16_t sw_column_offset;
-    int16_t bs_column_count;
-    int16_t bs_column_offset;
+
+    int16_t sw_count;
+    int16_t sw_offset;
+    int16_t bs_count;
+    int16_t bs_offset;
 
     int32_t refcount;                /* Increased when used as storage table */
     int16_t lock;                    /* Prevents modifications */
@@ -218,14 +207,14 @@ typedef struct ecs_table_cache_t {
 
 /* Sparse query column */
 typedef struct flecs_switch_term_t {
-    ecs_sw_column_t *sw_column;
+    ecs_switch_t *sw_column;
     ecs_entity_t sw_case; 
     int32_t signature_column_index;
 } flecs_switch_term_t;
 
 /* Bitset query column */
 typedef struct flecs_bitset_term_t {
-    ecs_bs_column_t *bs_column;
+    ecs_bitset_t *bs_column;
     int32_t column_index;
 } flecs_bitset_term_t;
 

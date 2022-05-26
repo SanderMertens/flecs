@@ -668,8 +668,8 @@ void flecs_set_union(
             const ecs_table_record_t *tr = flecs_id_record_table(
                 idr, table);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            int32_t column = tr->column - table->sw_column_offset;
-            ecs_switch_t *sw = &table->data.sw_columns[column].data;
+            int32_t column = tr->column - table->sw_offset;
+            ecs_switch_t *sw = &table->data.sw_columns[column];
             ecs_entity_t union_case = 0;
             if (!reset) {
                 union_case = ECS_PAIR_SECOND(id);
@@ -3063,11 +3063,11 @@ void ecs_enable_component_w_id(
         return;
     }
 
-    index -= table->bs_column_offset;
+    index -= table->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Data cannot be NULl, since entity is stored in the table */
-    ecs_bitset_t *bs = &table->data.bs_columns[index].data;
+    ecs_bitset_t *bs = &table->data.bs_columns[index];
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, ECS_RECORD_TO_ROW(r->row), enable);
@@ -3101,9 +3101,9 @@ bool ecs_is_component_enabled_w_id(
         return ecs_has_id(world, entity, id);
     }
 
-    index -= table->bs_column_offset;
+    index -= table->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &table->data.bs_columns[index].data;  
+    ecs_bitset_t *bs = &table->data.bs_columns[index];
 
     return flecs_bitset_get(bs, ECS_RECORD_TO_ROW(r->row));
 error:
@@ -3141,7 +3141,7 @@ bool ecs_has_id(
     {
         if (ECS_PAIR_FIRST(table->type.array[column]) == EcsUnion) {
             ecs_switch_t *sw = &table->data.sw_columns[
-                column - table->sw_column_offset].data;
+                column - table->sw_offset];
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             uint64_t value = flecs_switch_get(sw, row);
             return value == ECS_PAIR_SECOND(id);
@@ -3178,7 +3178,8 @@ ecs_entity_t ecs_get_object(
             wc = ecs_pair(EcsUnion, rel);
             tr = flecs_get_table_record(world, table, wc);
             if (tr) {
-                ecs_switch_t *sw = &table->data.sw_columns[tr->column - table->sw_column_offset].data;
+                ecs_switch_t *sw = &table->data.sw_columns[
+                    tr->column - table->sw_offset];
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
                 return flecs_switch_get(sw, row);
                 
