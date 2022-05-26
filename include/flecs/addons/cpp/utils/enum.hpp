@@ -59,7 +59,7 @@ constexpr size_t enum_type_len() {
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
 #if defined(__clang__)
-#if defined(__clang_major__) && __clang_major__ < 13
+#if defined(__clang_major__) && __clang_major__ < 13 && !defined(__APPLE__)
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
