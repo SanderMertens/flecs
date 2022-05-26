@@ -12929,6 +12929,7 @@ struct string_view : string {
 }
 
 #include <string.h>
+#include <stdio.h>
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -12988,6 +12989,7 @@ constexpr size_t enum_type_len() {
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
 #if defined(__clang__)
+#if defined(__clang_major__) && __clang_major__ < 13
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -12996,6 +12998,13 @@ constexpr bool enum_constant_is_valid() {
         (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
             enum_type_len<E>() + 6 /* ', C = ' */] <= '9'));
 }
+#else
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+        enum_type_len<E>() + 6 /* ', E C = ' */] != '(');
+}
+#endif
 #elif defined(__GNUC__)
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
