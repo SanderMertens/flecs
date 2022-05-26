@@ -1767,7 +1767,8 @@
                 "use_after_delete_empty_w_component",
                 "use_after_clear_empty_w_component",
                 "use_after_clear_empty_w_component_w_lifecycle",
-                "use_after_clear_unused"
+                "use_after_clear_unused",
+                "get_mut_in_at_fini"
             ]
         }, {
             "id": "WorldInfo",

@@ -1689,6 +1689,7 @@ void World_use_after_delete_empty_w_component(void);
 void World_use_after_clear_empty_w_component(void);
 void World_use_after_clear_empty_w_component_w_lifecycle(void);
 void World_use_after_clear_unused(void);
+void World_get_mut_in_at_fini(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -8428,6 +8429,10 @@ bake_test_case World_testcases[] = {
     {
         "use_after_clear_unused",
         World_use_after_clear_unused
+    },
+    {
+        "get_mut_in_at_fini",
+        World_get_mut_in_at_fini
     }
 };
 
@@ -9607,7 +9612,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        46,
+        47,
         World_testcases
     },
     {

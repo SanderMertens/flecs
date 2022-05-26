@@ -1145,6 +1145,10 @@ int ecs_fini(
 
     world->is_fini = true;
 
+    /* Run fini actions (simple callbacks ran when world is deleted) before
+     * destroying the storage */
+    fini_actions(world);
+
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
     ecs_defer_begin(world);
@@ -1152,10 +1156,6 @@ int ecs_fini(
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
     fini_unset_tables(world);
-    
-    /* Run fini actions (simple callbacks ran when world is deleted) before
-     * destroying the storage */
-    fini_actions(world);
 
     /* This will destroy all entities and components. After this point no more
      * user code is executed. */

@@ -1382,3 +1382,33 @@ void World_use_after_clear_unused() {
 
     ecs_fini(world);
 }
+
+static ECS_COMPONENT_DECLARE(Test);
+
+typedef struct Test {
+    uint32_t value;
+} Test;
+
+static int at_fini_test_invoked = 0;
+
+static 
+void at_fini_test(
+    ecs_world_t* world,
+    void* context) 
+{
+    test_assert(ecs_singleton_get_mut(world, Test) != NULL);
+    at_fini_test_invoked = 1;
+}
+
+void World_get_mut_in_at_fini() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Test);
+    ecs_singleton_set(world, Test, { 42 });
+
+    ecs_atfini(world, at_fini_test, NULL);
+
+    ecs_fini(world);
+
+    test_int(at_fini_test_invoked, 1);
+}
