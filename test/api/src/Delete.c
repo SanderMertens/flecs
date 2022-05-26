@@ -571,7 +571,7 @@ static ECS_MOVE(Position, dst, src, {
     move_src_x = src->x;
     move_src_y = src->y;         
     *dst = *src;
-    move_invoked ++;   
+    move_invoked ++;
 })
 
 void Delete_move_w_dtor_move() {
@@ -590,8 +590,11 @@ void Delete_move_w_dtor_move() {
     ecs_entity_t e_2 = ecs_new_id(world);
     test_assert(e_2 != 0);
 
+
     ecs_set(world, e_1, Position, {10, 20});
     ecs_set(world, e_2, Position, {30, 40}); // append after e_1
+
+    test_int(move_invoked, 0);
 
     ecs_delete(world, e_1); // move e_2 to e_1
 

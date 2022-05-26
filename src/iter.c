@@ -129,9 +129,8 @@ bool flecs_iter_populate_term_data(
 {
     bool is_shared = false;
     ecs_table_t *table;
-    ecs_vector_t *vec;
+    void *data;
     ecs_size_t size = 0;
-    ecs_size_t align;
     int32_t row, u_index;
 
     if (!column) {
@@ -214,8 +213,7 @@ bool flecs_iter_populate_term_data(
             ecs_type_info_t *ti = table->type_info[column];
             ecs_column_t *s = &table->data.columns[column];
             size = ti->size;
-            align = ti->alignment;
-            vec = s->data;
+            data = ecs_storage_first(s);
             /* Fallthrough to has_data */
         }
     } else {
@@ -241,8 +239,7 @@ bool flecs_iter_populate_term_data(
         ecs_type_info_t *ti = table->type_info[storage_column];
         ecs_column_t *s = &table->data.columns[storage_column];
         size = ti->size;
-        align = ti->alignment;
-        vec = s->data;
+        data = ecs_storage_first(s);
 
         if (!table || !ecs_table_count(table)) {
             goto no_data;
@@ -252,7 +249,7 @@ bool flecs_iter_populate_term_data(
     }
 
 has_data:
-    if (ptr_out) ptr_out[0] = ecs_vector_get_t(vec, size, align, row);
+    if (ptr_out) ptr_out[0] = ECS_ELEM(data, size, row);
     if (size_out) size_out[0] = size;
     return is_shared;
 
@@ -260,9 +257,8 @@ has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
         ecs_switch_t *sw = &table->data.sw_columns[u_index];
-        vec = flecs_switch_values(sw);
+        data = ecs_vector_first(flecs_switch_values(sw), ecs_entity_t);
         size = ECS_SIZEOF(ecs_entity_t);
-        align = ECS_ALIGNOF(ecs_entity_t);
         goto has_data;
     }
 
@@ -294,8 +290,8 @@ void flecs_iter_populate_data(
             count = it->count = ecs_table_count(table);
         }
         if (count) {
-            it->entities = ecs_vector_get(
-                table->data.entities, ecs_entity_t, offset);
+            it->entities = ecs_storage_get_t(
+                &table->data.entities, ecs_entity_t, offset);
         } else {
             it->entities = NULL;
         }
@@ -526,11 +522,10 @@ void* ecs_iter_column_w_size(
     ecs_type_info_t *ti = table->type_info[storage_index];
     ecs_check(!size || (ecs_size_t)size == ti->size, 
         ECS_INVALID_PARAMETER, NULL);
+    (void)ti;
 
     ecs_column_t *column = &table->data.columns[storage_index];
-    int32_t alignment = ti->alignment;
-    return ecs_vector_get_t(column->data, flecs_uto(int32_t, size), alignment,
-         it->offset);
+    return ecs_storage_get(column, flecs_uto(int32_t, size), it->offset);
 error:
     return NULL;
 }
@@ -692,7 +687,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_vector_get(table->data.entities, ecs_entity_t, 
+                e = ecs_storage_get_t(&table->data.entities, ecs_entity_t,
                     var->range.offset)[0];
             }
         }
@@ -854,8 +849,8 @@ void ecs_iter_set_var_as_range(
 
     if (range->count == 1) {
         ecs_table_t *table = range->table;
-        var->entity = ecs_vector_get(
-            table->data.entities, ecs_entity_t, range->offset)[0];
+        var->entity = ecs_storage_get_t(
+            &table->data.entities, ecs_entity_t, range->offset)[0];
     } else {
         var->entity = 0;
     }

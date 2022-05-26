@@ -34,39 +34,31 @@ ecs_data_t* duplicate_data(
     result->columns = ecs_os_memdup_n(
         main_data->columns, ecs_column_t, column_count);
 
-    /* Copy entities */
-    result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
-
-    /* Copy record ptrs */
-    result->record_ptrs = ecs_vector_copy(
-        main_data->record_ptrs, ecs_record_t*);
-
-    ecs_size_t to_alloc = ecs_vector_size(result->entities);
+    /* Copy entities and records */
+    result->entities = ecs_storage_copy_t(&main_data->entities, ecs_entity_t);
+    result->records = ecs_storage_copy_t(&main_data->records, ecs_record_t*);
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &result->columns[i];
         ecs_type_info_t *ti = table->type_info[i];
         int32_t size = ti->size;
-        int32_t alignment = ti->alignment;
         ecs_copy_t copy = ti->lifecycle.copy;
         if (copy) {
-            int32_t count = ecs_vector_count(column->data);
-            ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, to_alloc);
-            ecs_vector_set_count_t(&dst_vec, size, alignment, count);
-            void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
-            
+            ecs_column_t dst = ecs_storage_copy(column, size);
+            int32_t count = ecs_storage_count(column);
+            void *dst_ptr = ecs_storage_first(&dst);
+            void *src_ptr = ecs_storage_first(column);
+
             ecs_xtor_t ctor = ti->lifecycle.ctor;
             if (ctor) {
                 ctor(dst_ptr, count, ti);
             }
 
-            void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
             copy(dst_ptr, src_ptr, count, ti);
-
-            column->data = dst_vec;
+            *column = dst;
         } else {
-            column->data = ecs_vector_copy_t(column->data, size, alignment);
+            *column = ecs_storage_copy(column, size);
         }
     }
 
@@ -294,9 +286,9 @@ void restore_filtered(
 
         /* Delete entity from storage first, so that when we restore it to the
          * current table we can be sure that there won't be any duplicates */
-        int32_t i, entity_count = ecs_vector_count(data->entities);
-        ecs_entity_t *entities = ecs_vector_first(
-            snapshot_table->data->entities, ecs_entity_t);
+        int32_t i, entity_count = ecs_storage_count(&data->entities);
+        ecs_entity_t *entities = ecs_storage_first(
+            &snapshot_table->data->entities);
         for (i = 0; i < entity_count; i ++) {
             ecs_entity_t e = entities[i];
             ecs_record_t *r = ecs_eis_get(world, e);
@@ -382,7 +374,7 @@ bool ecs_snapshot_next(
         it->table = table;
         it->count = ecs_table_count(table);
         if (data) {
-            it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+            it->entities = ecs_storage_first(&data->entities);
         } else {
             it->entities = NULL;
         }
