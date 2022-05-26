@@ -497,6 +497,7 @@ int add_constant_to_enum(
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     ecs_enum_constant_t *c;
     ecs_map_key_t key;
+
     while ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
         if (c->constant == e) {
             ecs_os_free((char*)c->name);

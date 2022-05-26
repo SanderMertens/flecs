@@ -12423,10 +12423,11 @@ void* _ecs_map_next(
     if (iter->bucket == map->buckets_end) {
         return NULL;
     }
-    
+
     ecs_assert(!elem_size || elem_size == map->elem_size, 
         ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!iter->bucket || iter->entry, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_bucket_entry_t *entry = NULL;
     
     if (!iter->bucket) {
         for (iter->bucket = map->buckets; 
@@ -12434,31 +12435,31 @@ void* _ecs_map_next(
             ++iter->bucket) 
         {
             if (iter->bucket->first) {
-                iter->entry = iter->bucket->first;
+                entry = iter->bucket->first;
                 break;
             }
         }
         if (iter->bucket == map->buckets_end) {
             return NULL;
         }
-    } else if (iter->entry->next) {
-        iter->entry = iter->entry->next;
-    } else {
+    } else if ((entry = iter->entry) == NULL) {
         do {
             ++iter->bucket;
             if (iter->bucket == map->buckets_end) {
                 return NULL;
             }
         } while(!iter->bucket->first);
-        iter->entry = iter->bucket->first;
+        entry = iter->bucket->first;
     }
     
     if (key_out) {
-        ecs_assert(iter->entry != NULL, ECS_INTERNAL_ERROR, NULL);
-        *key_out = iter->entry->key;
+        ecs_assert(entry != NULL, ECS_INTERNAL_ERROR, NULL);
+        *key_out = entry->key;
     }
 
-    return ECS_OFFSET(&iter->entry->key, ECS_SIZEOF(ecs_map_key_t));
+    iter->entry = entry->next;
+
+    return ECS_OFFSET(&entry->key, ECS_SIZEOF(ecs_map_key_t));
 }
 
 void* _ecs_map_next_ptr(
@@ -29906,6 +29907,7 @@ int add_constant_to_enum(
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     ecs_enum_constant_t *c;
     ecs_map_key_t key;
+
     while ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
         if (c->constant == e) {
             ecs_os_free((char*)c->name);
