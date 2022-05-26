@@ -7072,6 +7072,28 @@ FLECS_API
 bool ecs_defer_end(
     ecs_world_t *world);
 
+/** Suspend deferring but do not flush queue.
+ * This operation can be used to do an undeferred operation while not flushing
+ * the operations in the queue.
+ * 
+ * An application should invoke ecs_defer_resume before ecs_defer_end is called.
+ * The operation may only be called when deferring is enabled.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_defer_suspend(
+    ecs_world_t *world);
+
+/** Resume deferring.
+ * See ecs_defer_suspend.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_defer_resume(
+    ecs_world_t *world);
+
 /** Enable/disable automerging for world or stage.
  * When automerging is enabled, staged data will automatically be merged with
  * the world when staging ends. This happens at the end of progress(), at a
@@ -15562,6 +15584,22 @@ struct world {
         ecs_defer_begin(m_world);
         func();
         ecs_defer_end(m_world);
+    }
+
+    /** Suspend deferring operations.
+     * 
+     * @see ecs_defer_suspend
+     */
+    void defer_suspend() const {
+        ecs_defer_suspend(m_world);
+    }
+
+    /** Resume deferring operations.
+     * 
+     * @see ecs_defer_suspend
+     */
+    void defer_resume() const {
+        ecs_defer_resume(m_world);
     }
 
     /** Check if entity id exists in the world.

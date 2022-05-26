@@ -136,6 +136,7 @@
                 "defer_new_w_with",
                 "defer_new_w_name_scope_with",
                 "defer_w_with_implicit_component",
+                "defer_suspend_resume",
                 "entity_id_str",
                 "pair_id_str",
                 "role_id_str",

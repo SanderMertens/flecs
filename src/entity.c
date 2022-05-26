@@ -3666,6 +3666,37 @@ error:
     return false;
 }
 
+FLECS_API
+void ecs_defer_suspend(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(stage->defer_suspend == false, ECS_INVALID_OPERATION, NULL);
+    stage->defer_suspend = true;
+error:
+    return;
+}
+
+/** Resume deferring.
+ * See ecs_defer_suspend.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_defer_resume(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(stage->defer_suspend == true, ECS_INVALID_OPERATION, NULL);
+    stage->defer_suspend = false;
+error:
+    return;
+}
+
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
@@ -3904,6 +3935,10 @@ bool flecs_defer_flush(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (stage->defer_suspend) {
+        return false;
+    }
 
     if (!--stage->defer) {
         /* Set to NULL. Processing deferred commands can cause additional

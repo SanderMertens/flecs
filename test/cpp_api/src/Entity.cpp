@@ -2280,6 +2280,32 @@ void Entity_defer_w_with_implicit_component() {
     test_assert(e.has<Tag>());
 }
 
+void Entity_defer_suspend_resume() {
+    flecs::world ecs;
+
+    struct TagA { };
+    struct TagB { };
+
+    flecs::entity e = ecs.entity();
+
+    ecs.defer([&]{
+        e.add<TagA>();
+        test_assert(!e.has<TagA>());
+
+        ecs.defer_suspend();
+        e.add<TagB>();
+        test_assert(!e.has<TagA>());
+        test_assert(e.has<TagB>());
+        ecs.defer_resume();
+
+        test_assert(!e.has<TagA>());
+        test_assert(e.has<TagB>());
+    });
+
+    test_assert(e.has<TagA>());
+    test_assert(e.has<TagB>());
+}
+
 void Entity_with_after_builder_method() {
     flecs::world ecs;
 

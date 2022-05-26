@@ -775,6 +775,22 @@ struct world {
         ecs_defer_end(m_world);
     }
 
+    /** Suspend deferring operations.
+     * 
+     * @see ecs_defer_suspend
+     */
+    void defer_suspend() const {
+        ecs_defer_suspend(m_world);
+    }
+
+    /** Resume deferring operations.
+     * 
+     * @see ecs_defer_suspend
+     */
+    void defer_resume() const {
+        ecs_defer_resume(m_world);
+    }
+
     /** Check if entity id exists in the world.
      * Ignores entity relation.
      * 

@@ -2000,3 +2000,32 @@ void DeferredActions_merge_nested_cleanup_ops_before_delete() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_suspend_resume() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagA);
+    test_assert(!ecs_has(world, e, TagA));
+
+    ecs_defer_suspend(world);
+    ecs_add(world, e, TagB);
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
+    ecs_defer_resume(world);
+
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}

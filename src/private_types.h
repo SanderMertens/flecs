@@ -408,6 +408,7 @@ struct ecs_stage_t {
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    bool defer_suspend;
 
     ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
     ecs_world_t *world;          /* Reference to world */

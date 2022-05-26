@@ -15,6 +15,7 @@ bool defer_add_remove(
     ecs_entity_t entity,
     ecs_id_t id)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         if (!id) {
             return true;
@@ -109,6 +110,7 @@ bool flecs_defer_none(
     ecs_stage_t *stage)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     return (++ stage->defer) == 1;
 }
 
@@ -119,6 +121,7 @@ bool flecs_defer_modified(
     ecs_id_t id)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
@@ -140,6 +143,7 @@ bool flecs_defer_clone(
     bool clone_value)
 {   
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
@@ -160,6 +164,7 @@ bool flecs_defer_delete(
     ecs_entity_t entity)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
@@ -178,6 +183,7 @@ bool flecs_defer_clear(
     ecs_entity_t entity)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
@@ -197,6 +203,7 @@ bool flecs_defer_on_delete_action(
     ecs_entity_t action)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpOnDeleteAction;
@@ -218,6 +225,7 @@ bool flecs_defer_enable(
     bool enable)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = enable ? EcsOpEnable : EcsOpDisable;
@@ -237,6 +245,7 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
         world->bulk_new_count ++;
@@ -302,6 +311,7 @@ bool flecs_defer_set(
     void **value_out,
     bool *is_added)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         world->set_count ++;
         if (!size) {

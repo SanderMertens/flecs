@@ -688,6 +688,7 @@ struct ecs_stage_t {
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    bool defer_suspend;
 
     ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
     ecs_world_t *world;          /* Reference to world */
@@ -8708,6 +8709,37 @@ error:
     return false;
 }
 
+FLECS_API
+void ecs_defer_suspend(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(stage->defer_suspend == false, ECS_INVALID_OPERATION, NULL);
+    stage->defer_suspend = true;
+error:
+    return;
+}
+
+/** Resume deferring.
+ * See ecs_defer_suspend.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_defer_resume(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(stage->defer_suspend == true, ECS_INVALID_OPERATION, NULL);
+    stage->defer_suspend = false;
+error:
+    return;
+}
+
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
@@ -8947,6 +8979,10 @@ bool flecs_defer_flush(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    if (stage->defer_suspend) {
+        return false;
+    }
+
     if (!--stage->defer) {
         /* Set to NULL. Processing deferred commands can cause additional
          * commands to get enqueued (as result of reactive systems). Make sure
@@ -9104,6 +9140,7 @@ bool defer_add_remove(
     ecs_entity_t entity,
     ecs_id_t id)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         if (!id) {
             return true;
@@ -9198,6 +9235,7 @@ bool flecs_defer_none(
     ecs_stage_t *stage)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     return (++ stage->defer) == 1;
 }
 
@@ -9208,6 +9246,7 @@ bool flecs_defer_modified(
     ecs_id_t id)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
@@ -9229,6 +9268,7 @@ bool flecs_defer_clone(
     bool clone_value)
 {   
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
@@ -9249,6 +9289,7 @@ bool flecs_defer_delete(
     ecs_entity_t entity)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
@@ -9267,6 +9308,7 @@ bool flecs_defer_clear(
     ecs_entity_t entity)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
@@ -9286,6 +9328,7 @@ bool flecs_defer_on_delete_action(
     ecs_entity_t action)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpOnDeleteAction;
@@ -9307,6 +9350,7 @@ bool flecs_defer_enable(
     bool enable)
 {
     (void)world;
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = enable ? EcsOpEnable : EcsOpDisable;
@@ -9326,6 +9370,7 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
         world->bulk_new_count ++;
@@ -9391,6 +9436,7 @@ bool flecs_defer_set(
     void **value_out,
     bool *is_added)
 {
+    if (stage->defer_suspend) return false;
     if (stage->defer) {
         world->set_count ++;
         if (!size) {
