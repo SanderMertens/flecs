@@ -962,7 +962,7 @@ void sort_table(
     ecs_order_by_action_t compare)
 {
     ecs_data_t *data = &table->data;
-    if (!data->entities) {
+    if (!ecs_storage_count(&data->entities)) {
         /* Nothing to sort */
         return;
     }
@@ -972,7 +972,7 @@ void sort_table(
         return;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+    ecs_entity_t *entities = ecs_storage_first(&data->entities);
 
     void *ptr = NULL;
     int32_t size = 0;
@@ -980,7 +980,7 @@ void sort_table(
         ecs_type_info_t *ti = table->type_info[column_index];
         ecs_column_t *column = &data->columns[column_index];
         size = ti->size;
-        ptr = ecs_vector_first_t(column->data, size, ti->alignment);
+        ptr = ecs_storage_first(column);
     }
 
     qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
@@ -1043,11 +1043,8 @@ void build_sorted_table_range(
         ecs_query_table_match_t *match = cur->match;
         ecs_table_t *table = match->table;
         ecs_data_t *data = &table->data;
-        ecs_vector_t *entities;
 
         ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
-
-        entities = data->entities;
 
         int32_t index = -1;
         if (id) {
@@ -1058,8 +1055,7 @@ void build_sorted_table_range(
             ecs_type_info_t *ti = table->type_info[index];
             ecs_column_t *column = &data->columns[index];
             int32_t size = ti->size;
-            int32_t align = ti->alignment;
-            helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
+            helper[to_sort].ptr = ecs_storage_first(column);
             helper[to_sort].elem_size = size;
             helper[to_sort].shared = false;
         } else if (id) {
@@ -1085,7 +1081,7 @@ void build_sorted_table_range(
         }
 
         helper[to_sort].match = match;
-        helper[to_sort].entities = ecs_vector_first(entities, ecs_entity_t);
+        helper[to_sort].entities = ecs_storage_first(&data->entities);
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      

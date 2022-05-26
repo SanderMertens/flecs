@@ -10,6 +10,7 @@
 #include "table_cache.h"
 #include "id_record.h"
 #include "observable.h"
+#include "storage.h"
 #include "iter.h"
 #include "table.h"
 #include "poly.h"

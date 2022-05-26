@@ -97,13 +97,15 @@ typedef struct ecs_table_event_t {
 
 /** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;          /* Data */
+    void *array;
+    int32_t count;
+    int32_t size;
 };
 
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vector_t *entities;      /* Entity identifiers */
-    ecs_vector_t *record_ptrs;   /* Ptrs to records in main entity index */
+    ecs_column_t entities;       /* Entity identifiers */
+    ecs_column_t records;    /* Ptrs to records in main entity index */
     ecs_column_t *columns;       /* Component columns */
     ecs_switch_t *sw_columns;    /* Switch columns */
     ecs_bitset_t *bs_columns;    /* Bitset columns */

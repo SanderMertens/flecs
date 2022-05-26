@@ -509,7 +509,7 @@ void _bootstrap_component(
     int32_t index = flecs_table_append(world, table, entity, record, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
-    EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
+    EcsComponent *component = ecs_storage_first(&columns[0]);
     component[index].size = size;
     component[index].alignment = alignment;
 
@@ -517,14 +517,14 @@ void _bootstrap_component(
     ecs_size_t symbol_length = ecs_os_strlen(symbol);
     ecs_size_t name_length = symbol_length - 3;
 
-    EcsIdentifier *name_col = ecs_vector_first(columns[1].data, EcsIdentifier);
+    EcsIdentifier *name_col = ecs_storage_first(&columns[1]);
     name_col[index].value = ecs_os_strdup(name);
     name_col[index].length = name_length;
     name_col[index].hash = flecs_hash(name, name_length);
     name_col[index].index_hash = 0;
     name_col[index].index = NULL;
 
-    EcsIdentifier *symbol_col = ecs_vector_first(columns[2].data, EcsIdentifier);
+    EcsIdentifier *symbol_col = ecs_storage_first(&columns[2]);
     symbol_col[index].value = ecs_os_strdup(symbol);
     symbol_col[index].length = symbol_length;
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
@@ -590,12 +590,12 @@ ecs_table_t* bootstrap_component_table(
     ecs_data_t *data = &result->data;
 
     /* Preallocate enough memory for initial components */
-    data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
-    data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
+    ecs_storage_init_t(&data->entities, ecs_entity_t, EcsFirstUserComponentId);
+    ecs_storage_init_t(&data->records, ecs_record_t, EcsFirstUserComponentId);
 
-    data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
-    data->columns[1].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-    data->columns[2].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(&data->columns[0], EcsComponent, EcsFirstUserComponentId);
+    ecs_storage_init_t(&data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(&data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
     
     return result;
 }
