@@ -131,6 +131,7 @@ Examples and tutorials contributed by the community :heart:
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
 ## Projects using Flecs
+If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
 
 ### Territory Control
 https://store.steampowered.com/app/690290/Territory_Control_2/
@@ -147,7 +148,6 @@ https://github.com/ConfettiFX/The-Forge
 ### Gravitas
 https://thepunkcollective.itch.io/gravitas
 ![image](https://user-images.githubusercontent.com/9919222/170774659-4eef4277-98cc-4653-8410-d7b30383d1ab.png)
-
 
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
