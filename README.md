@@ -131,7 +131,6 @@ Examples and tutorials contributed by the community :heart:
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
 ## Projects using Flecs
-Here's a few of the projects using Flecs!
 
 ### Territory Control
 https://store.steampowered.com/app/690290/Territory_Control_2/
