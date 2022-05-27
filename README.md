@@ -130,6 +130,26 @@ Examples and tutorials contributed by the community :heart:
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
+## Projects using Flecs
+Here's a few of the projects using Flecs!
+
+### Territory Control
+https://store.steampowered.com/app/690290/Territory_Control_2/
+![image](https://user-images.githubusercontent.com/9919222/170771279-4c3517e0-467d-4a8d-af34-8dd546cbf938.png)
+
+### Sol Survivor
+https://nicok.itch.io/sol-survivor-demo
+![image](https://user-images.githubusercontent.com/9919222/170772047-6dc398f7-cb78-4ffd-9335-a83d034b3849.png)
+
+### The Forge
+https://github.com/ConfettiFX/The-Forge
+![image](https://user-images.githubusercontent.com/9919222/170774256-8d362f82-1213-4eb4-8f5f-3c4521684d11.png)
+
+### Gravitas
+https://thepunkcollective.itch.io/gravitas
+![image](https://user-images.githubusercontent.com/9919222/170774659-4eef4277-98cc-4653-8410-d7b30383d1ab.png)
+
+
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
 
