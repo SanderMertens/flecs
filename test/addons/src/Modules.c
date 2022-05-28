@@ -118,18 +118,15 @@ void Modules_import_module_from_system() {
     ecs_fini(world);
 }
 
-ecs_entity_t import_module(ecs_world_t *world) {
-    ECS_IMPORT(world, SimpleModule);
-    return ecs_id(SimpleModule);
-}
-
 void Modules_import_again() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule);
+    ecs_entity_t m1 = ECS_IMPORT(world, SimpleModule);
+    ecs_entity_t m2 = ECS_IMPORT(world, SimpleModule);
 
-    test_assert(ecs_id(SimpleModule) != 0);
-    test_assert(ecs_id(SimpleModule) == import_module(world));
+    test_assert(m1 != 0);
+    test_assert(m2 != 0);
+    test_assert(m1 == m2);
     
     ecs_fini(world);
 }

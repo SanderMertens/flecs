@@ -29,6 +29,7 @@ flecs_src = files(
     'src/addons/meta/cursor.c',
     'src/addons/meta_c.c',
     'src/addons/module.c',
+    'src/addons/monitor.c',
     'src/addons/os_api_impl/os_api_impl.c',
     'src/addons/parser.c',
     'src/addons/pipeline/pipeline.c',

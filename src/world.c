@@ -526,6 +526,9 @@ void log_addons(void) {
     #ifdef FLECS_STATS
         ecs_trace("FLECS_STATS");
     #endif
+    #ifdef FLECS_MONITOR
+        ecs_trace("FLECS_MONITOR");
+    #endif
     #ifdef FLECS_SYSTEM
         ecs_trace("FLECS_SYSTEM");
     #endif

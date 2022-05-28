@@ -842,6 +842,7 @@
                 "filter_1_variable_as_pred_w_pair",
                 "filter_w_pair_id",
                 "filter_w_pred_obj",
+                "filter_w_pair_id_and_subj",
                 "filter_move",
                 "filter_copy",
                 "filter_w_resources_copy",
@@ -1186,7 +1187,8 @@
                 "rematch_optional_ref_tag_w_ref_component",
                 "match_query_expr_from_scope",
                 "query_long_or_w_ref",
-                "0_query"
+                "0_query",
+                "query_w_pair_id_and_subj"
             ]
         }, {
             "id": "Iter",

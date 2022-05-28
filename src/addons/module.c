@@ -28,7 +28,7 @@ char* ecs_module_path_from_c(
 
 ecs_entity_t ecs_import(
     ecs_world_t *world,
-    ecs_module_action_t init_action,
+    ecs_module_action_t module,
     const char *module_name)
 {
     ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
@@ -45,7 +45,7 @@ ecs_entity_t ecs_import(
         ecs_log_push();
 
         /* Load module */
-        init_action(world);
+        module(world);
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup_fullpath(world, module_name);
@@ -61,6 +61,17 @@ ecs_entity_t ecs_import(
     return e;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_import_c(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *c_name)
+{
+    char *name = ecs_module_path_from_c(c_name);
+    ecs_entity_t e = ecs_import(world, module, name);
+    ecs_os_free(name);
+    return e;
 }
 
 ecs_entity_t ecs_import_from_library(

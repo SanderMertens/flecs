@@ -15667,6 +15667,179 @@ void FlecsPipelineImport(
 #endif
 
 
+#ifdef FLECS_MONITOR
+
+ECS_COMPONENT_DECLARE(FlecsMonitor);
+ECS_COMPONENT_DECLARE(EcsWorldStats);
+ECS_DECLARE(EcsPeriod1s);
+ECS_DECLARE(EcsPeriod1m);
+ECS_DECLARE(EcsPeriod1h);
+ECS_DECLARE(EcsPeriod1d);
+ECS_DECLARE(EcsPeriod1w);
+
+static
+void MonitorWorldStats(ecs_iter_t *it) {
+    EcsWorldStats *stats = ecs_term(it, EcsWorldStats, 1);
+
+    FLECS_FLOAT elapsed = stats->elapsed;
+    stats->elapsed += it->delta_time;
+
+    ecs_world_stats_get(it->real_world, &stats->stats);
+
+    int32_t t_last = (int32_t)(elapsed * 60);
+    int32_t t_next = (int32_t)(stats->elapsed * 60);
+    int32_t i, dif = t_last - t_next;
+    if (!dif) {
+        /* Still in same interval, combine with last measurement */
+        ecs_world_stats_reduce_last(&stats->stats);
+    } else if (dif > 1) {
+        /* More than 16ms has passed, backfill */
+        for (i = 1; i < dif; i ++) {
+            ecs_world_stats_copy_last(&stats->stats);
+        }
+    }
+}
+
+static
+void ReduceWorldStats(ecs_iter_t *it) {
+    EcsWorldStats *dst = ecs_term(it, EcsWorldStats, 1);
+    EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
+
+    ecs_world_stats_reduce(&dst->stats, &src->stats);
+}
+
+static
+void ReduceWorldStats1Day(ecs_iter_t *it) {
+    EcsWorldStats *dst = ecs_term(it, EcsWorldStats, 1);
+    EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
+
+    /* Reduce from minutes to the current day */
+    ecs_world_stats_reduce(&dst->stats, &src->stats);
+
+    dst->elapsed ++;
+    if (dst->elapsed < 1440) {
+        /* 1440 minutes in a day */
+        ecs_world_stats_reduce_last(&dst->stats);
+    } else {
+        dst->elapsed = 0;
+    }
+}
+
+static
+void ReduceWorldStats1Week(ecs_iter_t *it) {
+    EcsWorldStats *dst = ecs_term(it, EcsWorldStats, 1);
+    EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
+
+    /* Reduce from minutes to the current day */
+    ecs_world_stats_reduce(&dst->stats, &src->stats);
+
+    dst->elapsed ++;
+    if (dst->elapsed < 168) {
+        /* 1440 minutes in a day */
+        ecs_world_stats_reduce_last(&dst->stats);
+    } else {
+        dst->elapsed = 0;
+    }
+}
+
+void FlecsMonitorImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE_DEFINE(world, FlecsMonitor);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    ECS_COMPONENT_DEFINE(world, EcsWorldStats);
+    ECS_TAG_DEFINE(world, EcsPeriod1s);
+    ECS_TAG_DEFINE(world, EcsPeriod1m);
+    ECS_TAG_DEFINE(world, EcsPeriod1h);
+    ECS_TAG_DEFINE(world, EcsPeriod1d);
+    ECS_TAG_DEFINE(world, EcsPeriod1w);
+    
+    // Called each frame, collects 60 measurements per second
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "MonitorWorld1s", .add = {EcsPreFrame} },
+        .query.filter.terms = {{
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1s),
+            .subj.entity = EcsWorld 
+        }},
+        .callback = MonitorWorldStats
+    });
+
+    // Called each second, reduces into 60 measurements per minute
+    ecs_entity_t mw1m = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "MonitorWorld1m", .add = {EcsPreFrame} },
+        .query.filter.terms = {{
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1m),
+            .subj.entity = EcsWorld 
+        }, {
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1s),
+            .subj.entity = EcsWorld 
+        }},
+        .callback = ReduceWorldStats,
+        .interval = 1
+    });
+
+    // Called each minute, reduces into 60 measurements per hour
+    ecs_entity_t mw1h = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "MonitorWorld1h", .add = {EcsPreFrame} },
+        .query.filter.terms = {{
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1h),
+            .subj.entity = EcsWorld 
+        }, {
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1m),
+            .subj.entity = EcsWorld 
+        }},
+        .callback = ReduceWorldStats,
+        .rate = 60,
+        .tick_source = mw1m
+    });
+
+    // Called each minute, reduces into 60 measurements per day
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "MonitorWorld1d", .add = {EcsPreFrame} },
+        .query.filter.terms = {{
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1d),
+            .subj.entity = EcsWorld 
+        }, {
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1m),
+            .subj.entity = EcsWorld 
+        }},
+        .callback = ReduceWorldStats1Day,
+        .rate = 60,
+        .tick_source = mw1m
+    });
+
+    // Called each hour, reduces into 60 measurements per week
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "MonitorWorld1w", .add = {EcsPreFrame} },
+        .query.filter.terms = {{
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1w),
+            .subj.entity = EcsWorld 
+        }, {
+            .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1h),
+            .subj.entity = EcsWorld 
+        }},
+        .callback = ReduceWorldStats1Week,
+        .rate = 60,
+        .tick_source = mw1h
+    });
+
+    ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1s, {0});
+    ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1m, {0});
+    ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1h, {0});
+    ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1d, {0});
+    ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1w, {0});
+
+    if (ecs_os_has_time()) {
+        ecs_measure_frame_time(world, true);
+        ecs_measure_system_time(world, true);
+    }
+}
+
+#endif
+
+
 #ifdef FLECS_TIMER
 
 static
@@ -22509,7 +22682,7 @@ char* ecs_module_path_from_c(
 
 ecs_entity_t ecs_import(
     ecs_world_t *world,
-    ecs_module_action_t init_action,
+    ecs_module_action_t module,
     const char *module_name)
 {
     ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
@@ -22526,7 +22699,7 @@ ecs_entity_t ecs_import(
         ecs_log_push();
 
         /* Load module */
-        init_action(world);
+        module(world);
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup_fullpath(world, module_name);
@@ -22542,6 +22715,17 @@ ecs_entity_t ecs_import(
     return e;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_import_c(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *c_name)
+{
+    char *name = ecs_module_path_from_c(c_name);
+    ecs_entity_t e = ecs_import(world, module, name);
+    ecs_os_free(name);
+    return e;
 }
 
 ecs_entity_t ecs_import_from_library(
@@ -26401,6 +26585,18 @@ error:
 
 #include <stdio.h>
 
+#define ECS_GAUGE_RECORD(m, t, value)\
+    flecs_gauge_record(m, t, (float)value)
+
+#define ECS_COUNTER_RECORD(m, t, value)\
+    flecs_counter_record(m, t, (float)value)
+
+#define ECS_METRIC_FIRST(stats)\
+    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
+
+#define ECS_METRIC_LAST(stats)\
+    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
+
 static
 int32_t t_next(
     int32_t t)
@@ -26416,38 +26612,31 @@ int32_t t_prev(
 }
 
 static
-void _record_gauge(
-    ecs_gauge_t *m,
+void flecs_gauge_record(
+    ecs_metric_t *m,
     int32_t t,
     float value)
 {
-    m->avg[t] = value;
-    m->min[t] = value;
-    m->max[t] = value;
+    m->gauge.avg[t] = value;
+    m->gauge.min[t] = value;
+    m->gauge.max[t] = value;
 }
 
 static
-float _record_counter(
-    ecs_counter_t *m,
+float flecs_counter_record(
+    ecs_metric_t *m,
     int32_t t,
     float value)
 {
     int32_t tp = t_prev(t);
-    float prev = m->value[tp];
-    m->value[t] = value;
-    _record_gauge((ecs_gauge_t*)m, t, value - prev);
+    float prev = m->counter.value[tp];
+    m->counter.value[t] = value;
+    flecs_gauge_record(m, t, value - prev);
     return value - prev;
 }
 
-/* Macro's to silence conversion warnings without adding casts everywhere */
-#define record_gauge(m, t, value)\
-    _record_gauge(m, t, (float)value)
-
-#define record_counter(m, t, value)\
-    _record_counter(m, t, (float)value)
-
 static
-void print_value(
+void flecs_metric_print(
     const char *name,
     float value)
 {
@@ -26456,54 +26645,85 @@ void print_value(
 }
 
 static
-void print_gauge(
+void flecs_gauge_print(
     const char *name,
     int32_t t,
-    const ecs_gauge_t *m)
+    const ecs_metric_t *m)
 {
-    print_value(name, m->avg[t]);
+    flecs_metric_print(name, m->gauge.avg[t]);
 }
 
 static
-void print_counter(
+void flecs_counter_print(
     const char *name,
     int32_t t,
-    const ecs_counter_t *m)
+    const ecs_metric_t *m)
 {
-    print_value(name, m->rate.avg[t]);
+    flecs_metric_print(name, m->counter.rate.avg[t]);
 }
 
-void ecs_gauge_reduce(
-    ecs_gauge_t *dst,
+void ecs_metric_reduce(
+    ecs_metric_t *dst,
+    const ecs_metric_t *src,
     int32_t t_dst,
-    ecs_gauge_t *src,
     int32_t t_src)
 {
     ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(src != NULL, ECS_INVALID_PARAMETER, NULL);
 
     bool min_set = false;
-    dst->min[t_dst] = 0;
-    dst->avg[t_dst] = 0;
-    dst->max[t_dst] = 0;
+    dst->gauge.min[t_dst] = 0;
+    dst->gauge.avg[t_dst] = 0;
+    dst->gauge.max[t_dst] = 0;
 
     int32_t i;
     for (i = 0; i < ECS_STAT_WINDOW; i ++) {
         int32_t t = (t_src + i) % ECS_STAT_WINDOW;
-        dst->avg[t_dst] += src->avg[t] / (float)ECS_STAT_WINDOW;
-        if (!min_set || (src->min[t] < dst->min[t_dst])) {
-            dst->min[t_dst] = src->min[t];
+        dst->gauge.avg[t_dst] += src->gauge.avg[t] / (float)ECS_STAT_WINDOW;
+
+        if (!min_set || (src->gauge.min[t] < dst->gauge.min[t_dst])) {
+            dst->gauge.min[t_dst] = src->gauge.min[t];
             min_set = true;
         }
-        if ((src->max[t] > dst->max[t_dst])) {
-            dst->max[t_dst] = src->max[t];
+        if ((src->gauge.max[t] > dst->gauge.max[t_dst])) {
+            dst->gauge.max[t_dst] = src->gauge.max[t];
         }
     }
+    
+    dst->counter.value[t_dst] = src->counter.value[t_src];
+
 error:
     return;
 }
 
-void ecs_get_world_stats(
+void ecs_metric_reduce_last(
+    ecs_metric_t *m,
+    int32_t t)
+{
+    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_metric_reduce(m, m, t, t_next(t));
+error:
+    return;
+}
+
+void ecs_metric_copy(
+    ecs_metric_t *m,
+    int32_t dst,
+    int32_t src)
+{
+    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(dst != src, ECS_INVALID_PARAMETER, NULL);
+
+    m->gauge.avg[dst] = m->gauge.avg[src];
+    m->gauge.min[dst] = m->gauge.min[src];
+    m->gauge.max[dst] = m->gauge.max[src];
+    m->counter.value[dst] = m->counter.value[src];
+
+error:
+    return;
+}
+
+void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
@@ -26514,106 +26734,111 @@ void ecs_get_world_stats(
 
     int32_t t = s->t = t_next(s->t);
 
-    float delta_world_time = record_counter(&s->world_time_total_raw, t, world->info.world_time_total_raw);
-    record_counter(&s->world_time_total, t, world->info.world_time_total);
-    record_counter(&s->frame_time_total, t, world->info.frame_time_total);
-    record_counter(&s->system_time_total, t, world->info.system_time_total);
-    record_counter(&s->merge_time_total, t, world->info.merge_time_total);
+    float delta_world_time = ECS_COUNTER_RECORD(&s->world_time_total_raw, t, world->info.world_time_total_raw);
+    ECS_COUNTER_RECORD(&s->world_time_total, t, world->info.world_time_total);
+    ECS_COUNTER_RECORD(&s->frame_time_total, t, world->info.frame_time_total);
+    ECS_COUNTER_RECORD(&s->system_time_total, t, world->info.system_time_total);
+    ECS_COUNTER_RECORD(&s->merge_time_total, t, world->info.merge_time_total);
 
-    float delta_frame_count = record_counter(&s->frame_count_total, t, world->info.frame_count_total);
-    record_counter(&s->merge_count_total, t, world->info.merge_count_total);
-    record_counter(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
-    record_counter(&s->systems_ran_frame, t, world->info.systems_ran_frame);
+    float delta_frame_count = ECS_COUNTER_RECORD(&s->frame_count_total, t, world->info.frame_count_total);
+    ECS_COUNTER_RECORD(&s->merge_count_total, t, world->info.merge_count_total);
+    ECS_COUNTER_RECORD(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
+    ECS_COUNTER_RECORD(&s->systems_ran_frame, t, world->info.systems_ran_frame);
 
     if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
-        record_gauge(
+        ECS_GAUGE_RECORD(
             &s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
     } else {
-        record_gauge(&s->fps, t, 0);
+        ECS_GAUGE_RECORD(&s->fps, t, 0);
     }
 
-    record_gauge(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
-    record_gauge(&s->entity_not_alive_count, t, 
+    ECS_GAUGE_RECORD(&s->delta_time, t, delta_world_time);
+
+    ECS_GAUGE_RECORD(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
+    ECS_GAUGE_RECORD(&s->entity_not_alive_count, t, 
         flecs_sparse_not_alive_count(ecs_eis(world)));
 
-    record_gauge(&s->id_count, t, world->info.id_count);
-    record_gauge(&s->tag_id_count, t, world->info.tag_id_count);
-    record_gauge(&s->component_id_count, t, world->info.component_id_count);
-    record_gauge(&s->pair_id_count, t, world->info.pair_id_count);
-    record_gauge(&s->wildcard_id_count, t, world->info.wildcard_id_count);
-    record_gauge(&s->component_count, t, ecs_sparse_count(world->type_info));
+    ECS_GAUGE_RECORD(&s->id_count, t, world->info.id_count);
+    ECS_GAUGE_RECORD(&s->tag_id_count, t, world->info.tag_id_count);
+    ECS_GAUGE_RECORD(&s->component_id_count, t, world->info.component_id_count);
+    ECS_GAUGE_RECORD(&s->pair_id_count, t, world->info.pair_id_count);
+    ECS_GAUGE_RECORD(&s->wildcard_id_count, t, world->info.wildcard_id_count);
+    ECS_GAUGE_RECORD(&s->component_count, t, ecs_sparse_count(world->type_info));
 
-    record_gauge(&s->query_count, t, flecs_sparse_count(world->queries));
-    record_gauge(&s->trigger_count, t, ecs_count(world, EcsTrigger));
-    record_gauge(&s->observer_count, t, ecs_count(world, EcsObserver));
-    record_gauge(&s->system_count, t, ecs_count(world, EcsSystem));
+    ECS_GAUGE_RECORD(&s->query_count, t, flecs_sparse_count(world->queries));
+    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count(world, EcsTrigger));
+    ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count(world, EcsObserver));
+    ECS_GAUGE_RECORD(&s->system_count, t, ecs_count(world, EcsSystem));
 
-    record_counter(&s->id_create_count, t, world->info.id_create_total);
-    record_counter(&s->id_delete_count, t, world->info.id_delete_total);
-    record_counter(&s->table_create_count, t, world->info.table_create_total);
-    record_counter(&s->table_delete_count, t, world->info.table_delete_total);
+    ECS_COUNTER_RECORD(&s->id_create_count, t, world->info.id_create_total);
+    ECS_COUNTER_RECORD(&s->id_delete_count, t, world->info.id_delete_total);
+    ECS_COUNTER_RECORD(&s->table_create_count, t, world->info.table_create_total);
+    ECS_COUNTER_RECORD(&s->table_delete_count, t, world->info.table_delete_total);
 
-    record_counter(&s->new_count, t, world->new_count);
-    record_counter(&s->bulk_new_count, t, world->bulk_new_count);
-    record_counter(&s->delete_count, t, world->delete_count);
-    record_counter(&s->clear_count, t, world->clear_count);
-    record_counter(&s->add_count, t, world->add_count);
-    record_counter(&s->remove_count, t, world->remove_count);
-    record_counter(&s->set_count, t, world->set_count);
-    record_counter(&s->discard_count, t, world->discard_count);
+    ECS_COUNTER_RECORD(&s->new_count, t, world->new_count);
+    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->bulk_new_count);
+    ECS_COUNTER_RECORD(&s->delete_count, t, world->delete_count);
+    ECS_COUNTER_RECORD(&s->clear_count, t, world->clear_count);
+    ECS_COUNTER_RECORD(&s->add_count, t, world->add_count);
+    ECS_COUNTER_RECORD(&s->remove_count, t, world->remove_count);
+    ECS_COUNTER_RECORD(&s->set_count, t, world->set_count);
+    ECS_COUNTER_RECORD(&s->discard_count, t, world->discard_count);
 
-    /* Compute table statistics */
-    int32_t empty_table_count = 0;
-    int32_t singleton_table_count = 0;
-
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(&world->store.tables, 
-            ecs_table_t, i);
-        int32_t entity_count = ecs_table_count(table);
-
-        if (!entity_count) {
-            empty_table_count ++;
-        }
-
-        /* Singleton tables are tables that have just one entity that also has
-         * itself in the table type. */
-        if (entity_count == 1) {
-            ecs_entity_t *entities = ecs_storage_first_t(
-                &table->data.entities, ecs_entity_t);
-            if (ecs_search(world, table, entities[0], 0)) {
-                singleton_table_count ++;
-            }
-        }
-    }
-
-    /* Correct for root table */
-    count --;
-    empty_table_count --;
-
-    if (count != world->info.table_count) {
-        ecs_warn("world::table_count (%d) is not equal to computed number (%d)",
-            world->info.table_count, count);
-    }
-    if (empty_table_count != world->info.empty_table_count) {
-        ecs_warn("world::empty_table_count (%d) is not equal to computed"
-            " number (%d)",
-                world->info.empty_table_count, empty_table_count);
-    }
-
-    record_gauge(&s->table_count, t, count);
-    record_gauge(&s->empty_table_count, t, empty_table_count);
-    record_gauge(&s->singleton_table_count, t, singleton_table_count);
-    record_gauge(&s->tag_table_count, t, world->info.tag_table_count);
-    record_gauge(&s->trivial_table_count, t, world->info.trivial_table_count);
-    record_gauge(&s->table_storage_count, t, world->info.table_storage_count);
-    record_gauge(&s->table_record_count, t, world->info.table_record_count);
+    ECS_GAUGE_RECORD(&s->table_count, t, world->info.table_count);
+    ECS_GAUGE_RECORD(&s->empty_table_count, t, world->info.empty_table_count);
+    ECS_GAUGE_RECORD(&s->tag_table_count, t, world->info.tag_table_count);
+    ECS_GAUGE_RECORD(&s->trivial_table_count, t, world->info.trivial_table_count);
+    ECS_GAUGE_RECORD(&s->table_storage_count, t, world->info.table_storage_count);
+    ECS_GAUGE_RECORD(&s->table_record_count, t, world->info.table_record_count);
 
 error:
     return;
 }
 
-void ecs_get_query_stats(
+void ecs_world_stats_reduce(
+    ecs_world_stats_t *dst,
+    const ecs_world_stats_t *src)
+{
+    int32_t t_dst = dst->t = t_next(dst->t);
+    int32_t t_src = src->t;
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
+    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
+    
+    for (; cur != last; cur ++, src_cur ++) {
+        ecs_metric_reduce(cur, src_cur, t_dst, t_src);
+    }
+}
+
+void ecs_world_stats_reduce_last(
+    ecs_world_stats_t *stats)
+{
+    int32_t t = stats->t;
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
+    
+    for (; cur != last; cur ++) {
+        ecs_metric_reduce_last(cur, t);
+    }
+
+    stats->t = t_prev(t);
+}
+
+void ecs_world_stats_copy_last(
+    ecs_world_stats_t *stats)
+{
+    int32_t t_last = stats->t, t = t_next(t_last);
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
+    
+    for (; cur != last; cur ++) {
+        ecs_metric_copy(cur, t_last, t);
+    }
+
+    stats->t = t;
+}
+
+void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *s)
@@ -26626,16 +26851,16 @@ void ecs_get_query_stats(
     int32_t t = s->t = t_next(s->t);
 
     ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
-    record_gauge(&s->matched_entity_count, t, ecs_iter_count(&it));
-    record_gauge(&s->matched_table_count, t, ecs_query_table_count(query));
-    record_gauge(&s->matched_empty_table_count, t, 
+    ECS_GAUGE_RECORD(&s->matched_entity_count, t, ecs_iter_count(&it));
+    ECS_GAUGE_RECORD(&s->matched_table_count, t, ecs_query_table_count(query));
+    ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 
         ecs_query_empty_table_count(query));
 error:
     return;
 }
 
 #ifdef FLECS_SYSTEM
-bool ecs_get_system_stats(
+bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *s)
@@ -26651,13 +26876,13 @@ bool ecs_get_system_stats(
         return false;
     }
 
-    ecs_get_query_stats(world, ptr->query, &s->query_stats);
+    ecs_query_stats_get(world, ptr->query, &s->query_stats);
     int32_t t = s->query_stats.t;
 
-    record_counter(&s->time_spent, t, ptr->time_spent);
-    record_counter(&s->invoke_count, t, ptr->invoke_count);
-    record_gauge(&s->active, t, !ecs_has_id(world, system, EcsInactive));
-    record_gauge(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
+    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
+    ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
+    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsInactive));
+    ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     return true;
 error:
@@ -26686,7 +26911,7 @@ error:
     return NULL;
 }
 
-bool ecs_get_pipeline_stats(
+bool ecs_pipeline_stats_get(
     ecs_world_t *stage,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
@@ -26773,7 +26998,7 @@ bool ecs_get_pipeline_stats(
         for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *sys_stats = get_system_stats(
                 s->system_stats, it.entities[i]);
-            ecs_get_system_stats(world, it.entities[i], sys_stats);
+            ecs_system_stats_get(world, it.entities[i], sys_stats);
         }
     }
 
@@ -26791,7 +27016,7 @@ void ecs_pipeline_stats_fini(
 
 #endif
 
-void ecs_dump_world_stats(
+void ecs_world_stats_log(
     const ecs_world_t *world,
     const ecs_world_stats_t *s)
 {
@@ -26802,56 +27027,55 @@ void ecs_dump_world_stats(
 
     world = ecs_get_world(world);    
     
-    print_counter("Frame", t, &s->frame_count_total);
+    flecs_counter_print("Frame", t, &s->frame_count_total);
     ecs_trace("-------------------------------------");
-    print_counter("pipeline rebuilds", t, &s->pipeline_build_count_total);
-    print_counter("systems invocations", t, &s->systems_ran_frame);
+    flecs_counter_print("pipeline rebuilds", t, &s->pipeline_build_count_total);
+    flecs_counter_print("systems invocations", t, &s->systems_ran_frame);
     ecs_trace("");
-    print_value("target FPS", world->info.target_fps);
-    print_value("time scale", world->info.time_scale);
+    flecs_metric_print("target FPS", world->info.target_fps);
+    flecs_metric_print("time scale", world->info.time_scale);
     ecs_trace("");
-    print_gauge("actual FPS", t, &s->fps);
-    print_counter("frame time", t, &s->frame_time_total);
-    print_counter("system time", t, &s->system_time_total);
-    print_counter("merge time", t, &s->merge_time_total);
-    print_counter("simulation time elapsed", t, &s->world_time_total);
+    flecs_gauge_print("actual FPS", t, &s->fps);
+    flecs_counter_print("frame time", t, &s->frame_time_total);
+    flecs_counter_print("system time", t, &s->system_time_total);
+    flecs_counter_print("merge time", t, &s->merge_time_total);
+    flecs_counter_print("simulation time elapsed", t, &s->world_time_total);
     ecs_trace("");
-    print_gauge("id count", t, &s->id_count);
-    print_gauge("tag id count", t, &s->tag_id_count);
-    print_gauge("component id count", t, &s->component_id_count);
-    print_gauge("pair id count", t, &s->pair_id_count);
-    print_gauge("wildcard id count", t, &s->wildcard_id_count);
-    print_gauge("component count", t, &s->component_count);
+    flecs_gauge_print("id count", t, &s->id_count);
+    flecs_gauge_print("tag id count", t, &s->tag_id_count);
+    flecs_gauge_print("component id count", t, &s->component_id_count);
+    flecs_gauge_print("pair id count", t, &s->pair_id_count);
+    flecs_gauge_print("wildcard id count", t, &s->wildcard_id_count);
+    flecs_gauge_print("component count", t, &s->component_count);
     ecs_trace("");
-    print_gauge("alive entity count", t, &s->entity_count);
-    print_gauge("not alive entity count", t, &s->entity_not_alive_count);
+    flecs_gauge_print("alive entity count", t, &s->entity_count);
+    flecs_gauge_print("not alive entity count", t, &s->entity_not_alive_count);
     ecs_trace("");
-    print_gauge("query count", t, &s->query_count);
-    print_gauge("trigger count", t, &s->trigger_count);
-    print_gauge("observer count", t, &s->observer_count);
-    print_gauge("system count", t, &s->system_count);
+    flecs_gauge_print("query count", t, &s->query_count);
+    flecs_gauge_print("trigger count", t, &s->trigger_count);
+    flecs_gauge_print("observer count", t, &s->observer_count);
+    flecs_gauge_print("system count", t, &s->system_count);
     ecs_trace("");
-    print_gauge("table count", t, &s->table_count);
-    print_gauge("empty table count", t, &s->empty_table_count);
-    print_gauge("tag table count", t, &s->tag_table_count);
-    print_gauge("trivial table count", t, &s->trivial_table_count);
-    print_gauge("table storage count", t, &s->table_storage_count);
-    print_gauge("table cache record count", t, &s->table_record_count);
-    print_gauge("singleton table count", t, &s->singleton_table_count);
+    flecs_gauge_print("table count", t, &s->table_count);
+    flecs_gauge_print("empty table count", t, &s->empty_table_count);
+    flecs_gauge_print("tag table count", t, &s->tag_table_count);
+    flecs_gauge_print("trivial table count", t, &s->trivial_table_count);
+    flecs_gauge_print("table storage count", t, &s->table_storage_count);
+    flecs_gauge_print("table cache record count", t, &s->table_record_count);
     ecs_trace("");
-    print_counter("table create count", t, &s->table_create_count);
-    print_counter("table delete count", t, &s->table_delete_count);
-    print_counter("id create count", t, &s->id_create_count);
-    print_counter("id delete count", t, &s->id_delete_count);
+    flecs_counter_print("table create count", t, &s->table_create_count);
+    flecs_counter_print("table delete count", t, &s->table_delete_count);
+    flecs_counter_print("id create count", t, &s->id_create_count);
+    flecs_counter_print("id delete count", t, &s->id_delete_count);
     ecs_trace("");
-    print_counter("deferred new operations", t, &s->new_count);
-    print_counter("deferred bulk_new operations", t, &s->bulk_new_count);
-    print_counter("deferred delete operations", t, &s->delete_count);
-    print_counter("deferred clear operations", t, &s->clear_count);
-    print_counter("deferred add operations", t, &s->add_count);
-    print_counter("deferred remove operations", t, &s->remove_count);
-    print_counter("deferred set operations", t, &s->set_count);
-    print_counter("discarded operations", t, &s->discard_count);
+    flecs_counter_print("deferred new operations", t, &s->new_count);
+    flecs_counter_print("deferred bulk_new operations", t, &s->bulk_new_count);
+    flecs_counter_print("deferred delete operations", t, &s->delete_count);
+    flecs_counter_print("deferred clear operations", t, &s->clear_count);
+    flecs_counter_print("deferred add operations", t, &s->add_count);
+    flecs_counter_print("deferred remove operations", t, &s->remove_count);
+    flecs_counter_print("deferred set operations", t, &s->set_count);
+    flecs_counter_print("discarded operations", t, &s->discard_count);
     ecs_trace("");
     
 error:
@@ -30870,7 +31094,7 @@ static ECS_DTOR(EcsRest, ptr, {
 static char *rest_last_err;
 
 static 
-void rest_capture_log(
+void flecs_rest_capture_log(
     int32_t level, 
     const char *file, 
     int32_t line, 
@@ -30884,14 +31108,14 @@ void rest_capture_log(
 }
 
 static
-char* rest_get_captured_log(void) {
+char* flecs_rest_get_captured_log(void) {
     char *result = rest_last_err;
     rest_last_err = NULL;
     return result;
 }
 
 static
-void reply_verror(
+void flecs_reply_verror(
     ecs_http_reply_t *reply,
     const char *fmt,
     va_list args)
@@ -30902,19 +31126,19 @@ void reply_verror(
 }
 
 static
-void reply_error(
+void flecs_reply_error(
     ecs_http_reply_t *reply,
     const char *fmt,
     ...)
 {
     va_list args;
     va_start(args, fmt);
-    reply_verror(reply, fmt, args);
+    flecs_reply_verror(reply, fmt, args);
     va_end(args);
 }
 
 static
-void rest_bool_param(
+void flecs_rest_bool_param(
     const ecs_http_request_t *req,
     const char *name,
     bool *value_out)
@@ -30930,7 +31154,7 @@ void rest_bool_param(
 }
 
 static
-void rest_int_param(
+void flecs_rest_int_param(
     const ecs_http_request_t *req,
     const char *name,
     int32_t *value_out)
@@ -30942,41 +31166,274 @@ void rest_int_param(
 }
 
 static
-void rest_parse_json_ser_entity_params(
+void flecs_rest_string_param(
+    const ecs_http_request_t *req,
+    const char *name,
+    char **value_out)
+{
+    const char *value = ecs_http_get_param(req, name);
+    if (value) {
+        *value_out = (char*)value;
+    }
+}
+
+static
+void flecs_rest_parse_json_ser_entity_params(
     ecs_entity_to_json_desc_t *desc,
     const ecs_http_request_t *req)
 {
-    rest_bool_param(req, "path", &desc->serialize_path);
-    rest_bool_param(req, "label", &desc->serialize_label);
-    rest_bool_param(req, "brief", &desc->serialize_brief);
-    rest_bool_param(req, "link", &desc->serialize_link);
-    rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
-    rest_bool_param(req, "base", &desc->serialize_base);
-    rest_bool_param(req, "values", &desc->serialize_values);
-    rest_bool_param(req, "private", &desc->serialize_private);
-    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+    flecs_rest_bool_param(req, "path", &desc->serialize_path);
+    flecs_rest_bool_param(req, "label", &desc->serialize_label);
+    flecs_rest_bool_param(req, "brief", &desc->serialize_brief);
+    flecs_rest_bool_param(req, "link", &desc->serialize_link);
+    flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
+    flecs_rest_bool_param(req, "base", &desc->serialize_base);
+    flecs_rest_bool_param(req, "values", &desc->serialize_values);
+    flecs_rest_bool_param(req, "private", &desc->serialize_private);
+    flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }
 
 static
-void rest_parse_json_ser_iter_params(
+void flecs_rest_parse_json_ser_iter_params(
     ecs_iter_to_json_desc_t *desc,
     const ecs_http_request_t *req)
 {
-    rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
-    rest_bool_param(req, "ids", &desc->serialize_ids);
-    rest_bool_param(req, "subjects", &desc->serialize_subjects);
-    rest_bool_param(req, "variables", &desc->serialize_variables);
-    rest_bool_param(req, "is_set", &desc->serialize_is_set);
-    rest_bool_param(req, "values", &desc->serialize_values);
-    rest_bool_param(req, "entities", &desc->serialize_entities);
-    rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
-    rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
-    rest_bool_param(req, "duration", &desc->measure_eval_duration);
-    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+    flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
+    flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
+    flecs_rest_bool_param(req, "subjects", &desc->serialize_subjects);
+    flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
+    flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
+    flecs_rest_bool_param(req, "values", &desc->serialize_values);
+    flecs_rest_bool_param(req, "entities", &desc->serialize_entities);
+    flecs_rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
+    flecs_rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
+    flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
+    flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }
 
 static
-bool rest_reply(
+bool flecs_rest_reply_entity(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    char *path = &req->path[7];
+    ecs_dbg_2("rest: request entity '%s'", path);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(
+        world, 0, path, "/", NULL, false);
+    if (!e) {
+        ecs_dbg_2("rest: entity '%s' not found", path);
+        flecs_reply_error(reply, "entity '%s' not found", path);
+        reply->code = 404;
+        return true;
+    }
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    flecs_rest_parse_json_ser_entity_params(&desc, req);
+
+    ecs_entity_to_json_buf(world, e, &reply->body, &desc);
+    return true;
+}
+
+static
+bool flecs_rest_reply_query(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    const char *q = ecs_http_get_param(req, "q");
+    if (!q) {
+        ecs_strbuf_appendstr(&reply->body, "Missing parameter 'q'");
+        reply->code = 400; /* bad request */
+        return true;
+    }
+
+    ecs_dbg_2("rest: request query '%s'", q);
+    bool prev_color = ecs_log_enable_colors(false);
+    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = q
+    });
+    if (!r) {
+        char *err = flecs_rest_get_captured_log();
+        char *escaped_err = ecs_astresc('"', err);
+        flecs_reply_error(reply, escaped_err);
+        reply->code = 400; /* bad request */
+        ecs_os_free(escaped_err);
+        ecs_os_free(err);
+    } else {
+        ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+        flecs_rest_parse_json_ser_iter_params(&desc, req);
+
+        int32_t offset = 0;
+        int32_t limit = 100;
+
+        flecs_rest_int_param(req, "offset", &offset);
+        flecs_rest_int_param(req, "limit", &limit);
+
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
+        ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
+        ecs_rule_fini(r);
+    }
+
+    ecs_os_api.log_ = prev_log_;
+    ecs_log_enable_colors(prev_color);
+
+    return true;
+}
+
+static
+void flecs_rest_array_append(
+    ecs_strbuf_t *reply,
+    const char *field,
+    const FLECS_FLOAT *values,
+    int32_t t)
+{
+    ecs_strbuf_list_append(reply, "\"%s\"", field);
+    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_push(reply, "[", ",");
+
+    int32_t i;
+    for (i = t + 1; i <= (t + ECS_STAT_WINDOW); i ++) {
+        int32_t index = i % ECS_STAT_WINDOW;
+        ecs_strbuf_list_next(reply);
+        ecs_strbuf_appendflt(reply, (double)values[index], '"');
+    }
+
+    ecs_strbuf_list_pop(reply, "]");
+}
+
+static
+void flecs_rest_gauge_append(
+    ecs_strbuf_t *reply,
+    const ecs_metric_t *m,
+    const char *field,
+    int32_t t)
+{
+    ecs_strbuf_list_append(reply, "\"%s\"", field);
+    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_push(reply, "{", ",");
+
+    flecs_rest_array_append(reply, "avg", m->gauge.avg, t);
+    flecs_rest_array_append(reply, "min", m->gauge.min, t);
+    flecs_rest_array_append(reply, "max", m->gauge.max, t);
+
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+void flecs_rest_counter_append(
+    ecs_strbuf_t *reply,
+    const ecs_metric_t *m,
+    const char *field,
+    int32_t t)
+{
+    flecs_rest_gauge_append(reply, m, field, t);
+}
+
+#define ECS_GAUGE_APPEND(reply, s, field)\
+    flecs_rest_gauge_append(reply, &s->stats.field, #field, s->stats.t)
+
+#define ECS_COUNTER_APPEND(reply, s, field)\
+    flecs_rest_counter_append(reply, &s->stats.field, #field, s->stats.t)
+
+static
+void flecs_world_stats_to_json(
+    ecs_strbuf_t *reply,
+    const EcsWorldStats *stats)
+{
+    ecs_strbuf_list_push(reply, "{", ",");
+    ECS_GAUGE_APPEND(reply, stats, entity_count);
+    ECS_GAUGE_APPEND(reply, stats, entity_not_alive_count);
+    ECS_GAUGE_APPEND(reply, stats, id_count);
+    ECS_GAUGE_APPEND(reply, stats, tag_id_count);
+    ECS_GAUGE_APPEND(reply, stats, component_id_count);
+    ECS_GAUGE_APPEND(reply, stats, pair_id_count);
+    ECS_GAUGE_APPEND(reply, stats, wildcard_id_count);
+    ECS_GAUGE_APPEND(reply, stats, component_count);
+    ECS_COUNTER_APPEND(reply, stats, id_create_count);
+    ECS_COUNTER_APPEND(reply, stats, id_delete_count);
+    ECS_GAUGE_APPEND(reply, stats, table_count);
+    ECS_GAUGE_APPEND(reply, stats, empty_table_count);
+    ECS_GAUGE_APPEND(reply, stats, tag_table_count);
+    ECS_GAUGE_APPEND(reply, stats, trivial_table_count);
+    ECS_GAUGE_APPEND(reply, stats, table_record_count);
+    ECS_GAUGE_APPEND(reply, stats, table_storage_count);
+    ECS_COUNTER_APPEND(reply, stats, table_create_count);
+    ECS_COUNTER_APPEND(reply, stats, table_delete_count);
+    ECS_GAUGE_APPEND(reply, stats, query_count);
+    ECS_GAUGE_APPEND(reply, stats, trigger_count);
+    ECS_GAUGE_APPEND(reply, stats, observer_count);
+    ECS_GAUGE_APPEND(reply, stats, system_count);
+    ECS_COUNTER_APPEND(reply, stats, new_count);
+    ECS_COUNTER_APPEND(reply, stats, bulk_new_count);
+    ECS_COUNTER_APPEND(reply, stats, delete_count);
+    ECS_COUNTER_APPEND(reply, stats, clear_count);
+    ECS_COUNTER_APPEND(reply, stats, add_count);
+    ECS_COUNTER_APPEND(reply, stats, remove_count);
+    ECS_COUNTER_APPEND(reply, stats, set_count);
+    ECS_COUNTER_APPEND(reply, stats, discard_count);
+    ECS_COUNTER_APPEND(reply, stats, world_time_total_raw);
+    ECS_COUNTER_APPEND(reply, stats, world_time_total);
+    ECS_COUNTER_APPEND(reply, stats, frame_time_total);
+    ECS_COUNTER_APPEND(reply, stats, system_time_total);
+    ECS_COUNTER_APPEND(reply, stats, merge_time_total);
+    ECS_GAUGE_APPEND(reply, stats, fps);
+    ECS_GAUGE_APPEND(reply, stats, delta_time);
+    ECS_COUNTER_APPEND(reply, stats, frame_count_total);
+    ECS_COUNTER_APPEND(reply, stats, merge_count_total);
+    ECS_COUNTER_APPEND(reply, stats, pipeline_build_count_total);
+    ECS_COUNTER_APPEND(reply, stats, systems_ran_frame);
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+bool flecs_rest_reply_stats(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+#ifdef FLECS_MONITOR
+    char *period_str = NULL;
+    flecs_rest_string_param(req, "period", &period_str);
+    char *category = &req->path[6];
+
+    ecs_entity_t period = EcsPeriod1s;
+    if (period_str) {
+        char *period_name = ecs_asprintf("Period%s", period_str);
+        period = ecs_lookup_child(world, ecs_id(FlecsMonitor), period_name);
+        ecs_os_free(period_name);
+        if (!period) {
+            flecs_reply_error(reply, "bad request (invalid period string)");
+            reply->code = 400;
+            return false;
+        }
+    }
+
+    if (!ecs_os_strcmp(category, "world")) {
+        const EcsWorldStats *stats = ecs_get_pair(world, EcsWorld, 
+            EcsWorldStats, period);
+        flecs_world_stats_to_json(&reply->body, stats);
+        return true;
+
+    } else {
+        flecs_reply_error(reply, "bad request (unsupported category)");
+        reply->code = 400;
+        return false;
+    }
+
+    return true;
+#else
+    return false;
+#endif
+}
+
+static
+bool flecs_rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     void *ctx)
@@ -30986,7 +31443,7 @@ bool rest_reply(
 
     if (req->path == NULL) {
         ecs_dbg("rest: bad request (missing path)");
-        reply_error(reply, "bad request (missing path)");
+        flecs_reply_error(reply, "bad request (missing path)");
         reply->code = 400;
         return false;
     }
@@ -30996,71 +31453,18 @@ bool rest_reply(
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
-            char *path = &req->path[7];
-            ecs_dbg_2("rest: request entity '%s'", path);
-
-            ecs_entity_t e = ecs_lookup_path_w_sep(
-                world, 0, path, "/", NULL, false);
-            if (!e) {
-                ecs_dbg_2("rest: entity '%s' not found", path);
-                reply_error(reply, "entity '%s' not found", path);
-                reply->code = 404;
-                return true;
-            }
-
-            ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-            rest_parse_json_ser_entity_params(&desc, req);
-
-            ecs_entity_to_json_buf(world, e, &reply->body, &desc);
-            return true;
+            return flecs_rest_reply_entity(world, req, reply);
         
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
-            const char *q = ecs_http_get_param(req, "q");
-            if (!q) {
-                ecs_strbuf_appendstr(&reply->body, "Missing parameter 'q'");
-                reply->code = 400; /* bad request */
-                return true;
-            }
+            return flecs_rest_reply_query(world, req, reply);
 
-            ecs_dbg_2("rest: request query '%s'", q);
-            bool prev_color = ecs_log_enable_colors(false);
-            ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
-            ecs_os_api.log_ = rest_capture_log;
-
-            ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-                .expr = q
-            });
-            if (!r) {
-                char *err = rest_get_captured_log();
-                char *escaped_err = ecs_astresc('"', err);
-                reply_error(reply, escaped_err);
-                reply->code = 400; /* bad request */
-                ecs_os_free(escaped_err);
-                ecs_os_free(err);
-            } else {
-                ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-                rest_parse_json_ser_iter_params(&desc, req);
-
-                int32_t offset = 0;
-                int32_t limit = 100;
-
-                rest_int_param(req, "offset", &offset);
-                rest_int_param(req, "limit", &limit);
-
-                ecs_iter_t it = ecs_rule_iter(world, r);
-                ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
-                ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
-                ecs_rule_fini(r);
-            }
-
-            ecs_os_api.log_ = prev_log_;
-            ecs_log_enable_colors(prev_color);
-
-            return true;
+        /* Stats endpoint */
+        } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
+            return flecs_rest_reply_stats(world, req, reply);
         }
-    }
-    if (req->method == EcsHttpOptions) {
+
+    } else if (req->method == EcsHttpOptions) {
         return true;
     }
 
@@ -31068,7 +31472,7 @@ bool rest_reply(
 }
 
 static
-void on_set_rest(ecs_iter_t *it)
+void flecs_on_set_rest(ecs_iter_t *it)
 {
     EcsRest *rest = it->ptrs[0];
 
@@ -31082,7 +31486,7 @@ void on_set_rest(ecs_iter_t *it)
         ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
             .ipaddr = rest[i].ipaddr,
             .port = rest[i].port,
-            .callback = rest_reply,
+            .callback = flecs_rest_reply,
             .ctx = srv_ctx
         });
 
@@ -31138,7 +31542,7 @@ void FlecsRestImport(
         .move = ecs_move(EcsRest),
         .copy = ecs_copy(EcsRest),
         .dtor = ecs_dtor(EcsRest),
-        .on_set = on_set_rest
+        .on_set = flecs_on_set_rest
     });
 
     ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
@@ -35002,6 +35406,9 @@ void log_addons(void) {
     #endif
     #ifdef FLECS_STATS
         ecs_trace("FLECS_STATS");
+    #endif
+    #ifdef FLECS_MONITOR
+        ecs_trace("FLECS_MONITOR");
     #endif
     #ifdef FLECS_SYSTEM
         ecs_trace("FLECS_SYSTEM");
@@ -39613,7 +40020,7 @@ ecs_entity_t ecs_observer_init(
             .last_event_id = &observer->last_event_id
         };
 
-        bool optional_only = true;
+        bool optional_only = filter->flags & EcsFilterMatchThis;
         for (i = 0; i < filter->term_count; i ++) {
             if (filter->terms[i].oper != EcsOptional) {
                 if (filter->terms[i].subj.entity == EcsThis) {
@@ -48698,15 +49105,17 @@ bool flecs_set_type_info_for_id_record(
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti)
 {
-    if (ti) {
-        if (!idr->type_info) {
-            world->info.tag_id_count --;
-            world->info.component_id_count ++;
-        }
-    } else {
-        if (idr->type_info) {
-            world->info.tag_id_count ++;
-            world->info.component_id_count --;
+    if (!ecs_id_is_wildcard(idr->id)) {
+        if (ti) {
+            if (!idr->type_info) {
+                world->info.tag_id_count --;
+                world->info.component_id_count ++;
+            }
+        } else {
+            if (idr->type_info) {
+                world->info.tag_id_count ++;
+                world->info.component_id_count --;
+            }
         }
     }
 

@@ -13,6 +13,18 @@
 
 #include <stdio.h>
 
+#define ECS_GAUGE_RECORD(m, t, value)\
+    flecs_gauge_record(m, t, (float)value)
+
+#define ECS_COUNTER_RECORD(m, t, value)\
+    flecs_counter_record(m, t, (float)value)
+
+#define ECS_METRIC_FIRST(stats)\
+    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
+
+#define ECS_METRIC_LAST(stats)\
+    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
+
 static
 int32_t t_next(
     int32_t t)
@@ -28,38 +40,31 @@ int32_t t_prev(
 }
 
 static
-void _record_gauge(
-    ecs_gauge_t *m,
+void flecs_gauge_record(
+    ecs_metric_t *m,
     int32_t t,
     float value)
 {
-    m->avg[t] = value;
-    m->min[t] = value;
-    m->max[t] = value;
+    m->gauge.avg[t] = value;
+    m->gauge.min[t] = value;
+    m->gauge.max[t] = value;
 }
 
 static
-float _record_counter(
-    ecs_counter_t *m,
+float flecs_counter_record(
+    ecs_metric_t *m,
     int32_t t,
     float value)
 {
     int32_t tp = t_prev(t);
-    float prev = m->value[tp];
-    m->value[t] = value;
-    _record_gauge((ecs_gauge_t*)m, t, value - prev);
+    float prev = m->counter.value[tp];
+    m->counter.value[t] = value;
+    flecs_gauge_record(m, t, value - prev);
     return value - prev;
 }
 
-/* Macro's to silence conversion warnings without adding casts everywhere */
-#define record_gauge(m, t, value)\
-    _record_gauge(m, t, (float)value)
-
-#define record_counter(m, t, value)\
-    _record_counter(m, t, (float)value)
-
 static
-void print_value(
+void flecs_metric_print(
     const char *name,
     float value)
 {
@@ -68,54 +73,85 @@ void print_value(
 }
 
 static
-void print_gauge(
+void flecs_gauge_print(
     const char *name,
     int32_t t,
-    const ecs_gauge_t *m)
+    const ecs_metric_t *m)
 {
-    print_value(name, m->avg[t]);
+    flecs_metric_print(name, m->gauge.avg[t]);
 }
 
 static
-void print_counter(
+void flecs_counter_print(
     const char *name,
     int32_t t,
-    const ecs_counter_t *m)
+    const ecs_metric_t *m)
 {
-    print_value(name, m->rate.avg[t]);
+    flecs_metric_print(name, m->counter.rate.avg[t]);
 }
 
-void ecs_gauge_reduce(
-    ecs_gauge_t *dst,
+void ecs_metric_reduce(
+    ecs_metric_t *dst,
+    const ecs_metric_t *src,
     int32_t t_dst,
-    ecs_gauge_t *src,
     int32_t t_src)
 {
     ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(src != NULL, ECS_INVALID_PARAMETER, NULL);
 
     bool min_set = false;
-    dst->min[t_dst] = 0;
-    dst->avg[t_dst] = 0;
-    dst->max[t_dst] = 0;
+    dst->gauge.min[t_dst] = 0;
+    dst->gauge.avg[t_dst] = 0;
+    dst->gauge.max[t_dst] = 0;
 
     int32_t i;
     for (i = 0; i < ECS_STAT_WINDOW; i ++) {
         int32_t t = (t_src + i) % ECS_STAT_WINDOW;
-        dst->avg[t_dst] += src->avg[t] / (float)ECS_STAT_WINDOW;
-        if (!min_set || (src->min[t] < dst->min[t_dst])) {
-            dst->min[t_dst] = src->min[t];
+        dst->gauge.avg[t_dst] += src->gauge.avg[t] / (float)ECS_STAT_WINDOW;
+
+        if (!min_set || (src->gauge.min[t] < dst->gauge.min[t_dst])) {
+            dst->gauge.min[t_dst] = src->gauge.min[t];
             min_set = true;
         }
-        if ((src->max[t] > dst->max[t_dst])) {
-            dst->max[t_dst] = src->max[t];
+        if ((src->gauge.max[t] > dst->gauge.max[t_dst])) {
+            dst->gauge.max[t_dst] = src->gauge.max[t];
         }
     }
+    
+    dst->counter.value[t_dst] = src->counter.value[t_src];
+
 error:
     return;
 }
 
-void ecs_get_world_stats(
+void ecs_metric_reduce_last(
+    ecs_metric_t *m,
+    int32_t t)
+{
+    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_metric_reduce(m, m, t, t_next(t));
+error:
+    return;
+}
+
+void ecs_metric_copy(
+    ecs_metric_t *m,
+    int32_t dst,
+    int32_t src)
+{
+    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(dst != src, ECS_INVALID_PARAMETER, NULL);
+
+    m->gauge.avg[dst] = m->gauge.avg[src];
+    m->gauge.min[dst] = m->gauge.min[src];
+    m->gauge.max[dst] = m->gauge.max[src];
+    m->counter.value[dst] = m->counter.value[src];
+
+error:
+    return;
+}
+
+void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
@@ -126,106 +162,111 @@ void ecs_get_world_stats(
 
     int32_t t = s->t = t_next(s->t);
 
-    float delta_world_time = record_counter(&s->world_time_total_raw, t, world->info.world_time_total_raw);
-    record_counter(&s->world_time_total, t, world->info.world_time_total);
-    record_counter(&s->frame_time_total, t, world->info.frame_time_total);
-    record_counter(&s->system_time_total, t, world->info.system_time_total);
-    record_counter(&s->merge_time_total, t, world->info.merge_time_total);
+    float delta_world_time = ECS_COUNTER_RECORD(&s->world_time_total_raw, t, world->info.world_time_total_raw);
+    ECS_COUNTER_RECORD(&s->world_time_total, t, world->info.world_time_total);
+    ECS_COUNTER_RECORD(&s->frame_time_total, t, world->info.frame_time_total);
+    ECS_COUNTER_RECORD(&s->system_time_total, t, world->info.system_time_total);
+    ECS_COUNTER_RECORD(&s->merge_time_total, t, world->info.merge_time_total);
 
-    float delta_frame_count = record_counter(&s->frame_count_total, t, world->info.frame_count_total);
-    record_counter(&s->merge_count_total, t, world->info.merge_count_total);
-    record_counter(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
-    record_counter(&s->systems_ran_frame, t, world->info.systems_ran_frame);
+    float delta_frame_count = ECS_COUNTER_RECORD(&s->frame_count_total, t, world->info.frame_count_total);
+    ECS_COUNTER_RECORD(&s->merge_count_total, t, world->info.merge_count_total);
+    ECS_COUNTER_RECORD(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
+    ECS_COUNTER_RECORD(&s->systems_ran_frame, t, world->info.systems_ran_frame);
 
     if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
-        record_gauge(
+        ECS_GAUGE_RECORD(
             &s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
     } else {
-        record_gauge(&s->fps, t, 0);
+        ECS_GAUGE_RECORD(&s->fps, t, 0);
     }
 
-    record_gauge(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
-    record_gauge(&s->entity_not_alive_count, t, 
+    ECS_GAUGE_RECORD(&s->delta_time, t, delta_world_time);
+
+    ECS_GAUGE_RECORD(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
+    ECS_GAUGE_RECORD(&s->entity_not_alive_count, t, 
         flecs_sparse_not_alive_count(ecs_eis(world)));
 
-    record_gauge(&s->id_count, t, world->info.id_count);
-    record_gauge(&s->tag_id_count, t, world->info.tag_id_count);
-    record_gauge(&s->component_id_count, t, world->info.component_id_count);
-    record_gauge(&s->pair_id_count, t, world->info.pair_id_count);
-    record_gauge(&s->wildcard_id_count, t, world->info.wildcard_id_count);
-    record_gauge(&s->component_count, t, ecs_sparse_count(world->type_info));
+    ECS_GAUGE_RECORD(&s->id_count, t, world->info.id_count);
+    ECS_GAUGE_RECORD(&s->tag_id_count, t, world->info.tag_id_count);
+    ECS_GAUGE_RECORD(&s->component_id_count, t, world->info.component_id_count);
+    ECS_GAUGE_RECORD(&s->pair_id_count, t, world->info.pair_id_count);
+    ECS_GAUGE_RECORD(&s->wildcard_id_count, t, world->info.wildcard_id_count);
+    ECS_GAUGE_RECORD(&s->component_count, t, ecs_sparse_count(world->type_info));
 
-    record_gauge(&s->query_count, t, flecs_sparse_count(world->queries));
-    record_gauge(&s->trigger_count, t, ecs_count(world, EcsTrigger));
-    record_gauge(&s->observer_count, t, ecs_count(world, EcsObserver));
-    record_gauge(&s->system_count, t, ecs_count(world, EcsSystem));
+    ECS_GAUGE_RECORD(&s->query_count, t, flecs_sparse_count(world->queries));
+    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count(world, EcsTrigger));
+    ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count(world, EcsObserver));
+    ECS_GAUGE_RECORD(&s->system_count, t, ecs_count(world, EcsSystem));
 
-    record_counter(&s->id_create_count, t, world->info.id_create_total);
-    record_counter(&s->id_delete_count, t, world->info.id_delete_total);
-    record_counter(&s->table_create_count, t, world->info.table_create_total);
-    record_counter(&s->table_delete_count, t, world->info.table_delete_total);
+    ECS_COUNTER_RECORD(&s->id_create_count, t, world->info.id_create_total);
+    ECS_COUNTER_RECORD(&s->id_delete_count, t, world->info.id_delete_total);
+    ECS_COUNTER_RECORD(&s->table_create_count, t, world->info.table_create_total);
+    ECS_COUNTER_RECORD(&s->table_delete_count, t, world->info.table_delete_total);
 
-    record_counter(&s->new_count, t, world->new_count);
-    record_counter(&s->bulk_new_count, t, world->bulk_new_count);
-    record_counter(&s->delete_count, t, world->delete_count);
-    record_counter(&s->clear_count, t, world->clear_count);
-    record_counter(&s->add_count, t, world->add_count);
-    record_counter(&s->remove_count, t, world->remove_count);
-    record_counter(&s->set_count, t, world->set_count);
-    record_counter(&s->discard_count, t, world->discard_count);
+    ECS_COUNTER_RECORD(&s->new_count, t, world->new_count);
+    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->bulk_new_count);
+    ECS_COUNTER_RECORD(&s->delete_count, t, world->delete_count);
+    ECS_COUNTER_RECORD(&s->clear_count, t, world->clear_count);
+    ECS_COUNTER_RECORD(&s->add_count, t, world->add_count);
+    ECS_COUNTER_RECORD(&s->remove_count, t, world->remove_count);
+    ECS_COUNTER_RECORD(&s->set_count, t, world->set_count);
+    ECS_COUNTER_RECORD(&s->discard_count, t, world->discard_count);
 
-    /* Compute table statistics */
-    int32_t empty_table_count = 0;
-    int32_t singleton_table_count = 0;
-
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(&world->store.tables, 
-            ecs_table_t, i);
-        int32_t entity_count = ecs_table_count(table);
-
-        if (!entity_count) {
-            empty_table_count ++;
-        }
-
-        /* Singleton tables are tables that have just one entity that also has
-         * itself in the table type. */
-        if (entity_count == 1) {
-            ecs_entity_t *entities = ecs_storage_first_t(
-                &table->data.entities, ecs_entity_t);
-            if (ecs_search(world, table, entities[0], 0)) {
-                singleton_table_count ++;
-            }
-        }
-    }
-
-    /* Correct for root table */
-    count --;
-    empty_table_count --;
-
-    if (count != world->info.table_count) {
-        ecs_warn("world::table_count (%d) is not equal to computed number (%d)",
-            world->info.table_count, count);
-    }
-    if (empty_table_count != world->info.empty_table_count) {
-        ecs_warn("world::empty_table_count (%d) is not equal to computed"
-            " number (%d)",
-                world->info.empty_table_count, empty_table_count);
-    }
-
-    record_gauge(&s->table_count, t, count);
-    record_gauge(&s->empty_table_count, t, empty_table_count);
-    record_gauge(&s->singleton_table_count, t, singleton_table_count);
-    record_gauge(&s->tag_table_count, t, world->info.tag_table_count);
-    record_gauge(&s->trivial_table_count, t, world->info.trivial_table_count);
-    record_gauge(&s->table_storage_count, t, world->info.table_storage_count);
-    record_gauge(&s->table_record_count, t, world->info.table_record_count);
+    ECS_GAUGE_RECORD(&s->table_count, t, world->info.table_count);
+    ECS_GAUGE_RECORD(&s->empty_table_count, t, world->info.empty_table_count);
+    ECS_GAUGE_RECORD(&s->tag_table_count, t, world->info.tag_table_count);
+    ECS_GAUGE_RECORD(&s->trivial_table_count, t, world->info.trivial_table_count);
+    ECS_GAUGE_RECORD(&s->table_storage_count, t, world->info.table_storage_count);
+    ECS_GAUGE_RECORD(&s->table_record_count, t, world->info.table_record_count);
 
 error:
     return;
 }
 
-void ecs_get_query_stats(
+void ecs_world_stats_reduce(
+    ecs_world_stats_t *dst,
+    const ecs_world_stats_t *src)
+{
+    int32_t t_dst = dst->t = t_next(dst->t);
+    int32_t t_src = src->t;
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
+    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
+    
+    for (; cur != last; cur ++, src_cur ++) {
+        ecs_metric_reduce(cur, src_cur, t_dst, t_src);
+    }
+}
+
+void ecs_world_stats_reduce_last(
+    ecs_world_stats_t *stats)
+{
+    int32_t t = stats->t;
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
+    
+    for (; cur != last; cur ++) {
+        ecs_metric_reduce_last(cur, t);
+    }
+
+    stats->t = t_prev(t);
+}
+
+void ecs_world_stats_copy_last(
+    ecs_world_stats_t *stats)
+{
+    int32_t t_last = stats->t, t = t_next(t_last);
+
+    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
+    
+    for (; cur != last; cur ++) {
+        ecs_metric_copy(cur, t_last, t);
+    }
+
+    stats->t = t;
+}
+
+void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *s)
@@ -238,16 +279,16 @@ void ecs_get_query_stats(
     int32_t t = s->t = t_next(s->t);
 
     ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
-    record_gauge(&s->matched_entity_count, t, ecs_iter_count(&it));
-    record_gauge(&s->matched_table_count, t, ecs_query_table_count(query));
-    record_gauge(&s->matched_empty_table_count, t, 
+    ECS_GAUGE_RECORD(&s->matched_entity_count, t, ecs_iter_count(&it));
+    ECS_GAUGE_RECORD(&s->matched_table_count, t, ecs_query_table_count(query));
+    ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 
         ecs_query_empty_table_count(query));
 error:
     return;
 }
 
 #ifdef FLECS_SYSTEM
-bool ecs_get_system_stats(
+bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *s)
@@ -263,13 +304,13 @@ bool ecs_get_system_stats(
         return false;
     }
 
-    ecs_get_query_stats(world, ptr->query, &s->query_stats);
+    ecs_query_stats_get(world, ptr->query, &s->query_stats);
     int32_t t = s->query_stats.t;
 
-    record_counter(&s->time_spent, t, ptr->time_spent);
-    record_counter(&s->invoke_count, t, ptr->invoke_count);
-    record_gauge(&s->active, t, !ecs_has_id(world, system, EcsInactive));
-    record_gauge(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
+    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
+    ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
+    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsInactive));
+    ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     return true;
 error:
@@ -298,7 +339,7 @@ error:
     return NULL;
 }
 
-bool ecs_get_pipeline_stats(
+bool ecs_pipeline_stats_get(
     ecs_world_t *stage,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
@@ -385,7 +426,7 @@ bool ecs_get_pipeline_stats(
         for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *sys_stats = get_system_stats(
                 s->system_stats, it.entities[i]);
-            ecs_get_system_stats(world, it.entities[i], sys_stats);
+            ecs_system_stats_get(world, it.entities[i], sys_stats);
         }
     }
 
@@ -403,7 +444,7 @@ void ecs_pipeline_stats_fini(
 
 #endif
 
-void ecs_dump_world_stats(
+void ecs_world_stats_log(
     const ecs_world_t *world,
     const ecs_world_stats_t *s)
 {
@@ -414,56 +455,55 @@ void ecs_dump_world_stats(
 
     world = ecs_get_world(world);    
     
-    print_counter("Frame", t, &s->frame_count_total);
+    flecs_counter_print("Frame", t, &s->frame_count_total);
     ecs_trace("-------------------------------------");
-    print_counter("pipeline rebuilds", t, &s->pipeline_build_count_total);
-    print_counter("systems invocations", t, &s->systems_ran_frame);
+    flecs_counter_print("pipeline rebuilds", t, &s->pipeline_build_count_total);
+    flecs_counter_print("systems invocations", t, &s->systems_ran_frame);
     ecs_trace("");
-    print_value("target FPS", world->info.target_fps);
-    print_value("time scale", world->info.time_scale);
+    flecs_metric_print("target FPS", world->info.target_fps);
+    flecs_metric_print("time scale", world->info.time_scale);
     ecs_trace("");
-    print_gauge("actual FPS", t, &s->fps);
-    print_counter("frame time", t, &s->frame_time_total);
-    print_counter("system time", t, &s->system_time_total);
-    print_counter("merge time", t, &s->merge_time_total);
-    print_counter("simulation time elapsed", t, &s->world_time_total);
+    flecs_gauge_print("actual FPS", t, &s->fps);
+    flecs_counter_print("frame time", t, &s->frame_time_total);
+    flecs_counter_print("system time", t, &s->system_time_total);
+    flecs_counter_print("merge time", t, &s->merge_time_total);
+    flecs_counter_print("simulation time elapsed", t, &s->world_time_total);
     ecs_trace("");
-    print_gauge("id count", t, &s->id_count);
-    print_gauge("tag id count", t, &s->tag_id_count);
-    print_gauge("component id count", t, &s->component_id_count);
-    print_gauge("pair id count", t, &s->pair_id_count);
-    print_gauge("wildcard id count", t, &s->wildcard_id_count);
-    print_gauge("component count", t, &s->component_count);
+    flecs_gauge_print("id count", t, &s->id_count);
+    flecs_gauge_print("tag id count", t, &s->tag_id_count);
+    flecs_gauge_print("component id count", t, &s->component_id_count);
+    flecs_gauge_print("pair id count", t, &s->pair_id_count);
+    flecs_gauge_print("wildcard id count", t, &s->wildcard_id_count);
+    flecs_gauge_print("component count", t, &s->component_count);
     ecs_trace("");
-    print_gauge("alive entity count", t, &s->entity_count);
-    print_gauge("not alive entity count", t, &s->entity_not_alive_count);
+    flecs_gauge_print("alive entity count", t, &s->entity_count);
+    flecs_gauge_print("not alive entity count", t, &s->entity_not_alive_count);
     ecs_trace("");
-    print_gauge("query count", t, &s->query_count);
-    print_gauge("trigger count", t, &s->trigger_count);
-    print_gauge("observer count", t, &s->observer_count);
-    print_gauge("system count", t, &s->system_count);
+    flecs_gauge_print("query count", t, &s->query_count);
+    flecs_gauge_print("trigger count", t, &s->trigger_count);
+    flecs_gauge_print("observer count", t, &s->observer_count);
+    flecs_gauge_print("system count", t, &s->system_count);
     ecs_trace("");
-    print_gauge("table count", t, &s->table_count);
-    print_gauge("empty table count", t, &s->empty_table_count);
-    print_gauge("tag table count", t, &s->tag_table_count);
-    print_gauge("trivial table count", t, &s->trivial_table_count);
-    print_gauge("table storage count", t, &s->table_storage_count);
-    print_gauge("table cache record count", t, &s->table_record_count);
-    print_gauge("singleton table count", t, &s->singleton_table_count);
+    flecs_gauge_print("table count", t, &s->table_count);
+    flecs_gauge_print("empty table count", t, &s->empty_table_count);
+    flecs_gauge_print("tag table count", t, &s->tag_table_count);
+    flecs_gauge_print("trivial table count", t, &s->trivial_table_count);
+    flecs_gauge_print("table storage count", t, &s->table_storage_count);
+    flecs_gauge_print("table cache record count", t, &s->table_record_count);
     ecs_trace("");
-    print_counter("table create count", t, &s->table_create_count);
-    print_counter("table delete count", t, &s->table_delete_count);
-    print_counter("id create count", t, &s->id_create_count);
-    print_counter("id delete count", t, &s->id_delete_count);
+    flecs_counter_print("table create count", t, &s->table_create_count);
+    flecs_counter_print("table delete count", t, &s->table_delete_count);
+    flecs_counter_print("id create count", t, &s->id_create_count);
+    flecs_counter_print("id delete count", t, &s->id_delete_count);
     ecs_trace("");
-    print_counter("deferred new operations", t, &s->new_count);
-    print_counter("deferred bulk_new operations", t, &s->bulk_new_count);
-    print_counter("deferred delete operations", t, &s->delete_count);
-    print_counter("deferred clear operations", t, &s->clear_count);
-    print_counter("deferred add operations", t, &s->add_count);
-    print_counter("deferred remove operations", t, &s->remove_count);
-    print_counter("deferred set operations", t, &s->set_count);
-    print_counter("discarded operations", t, &s->discard_count);
+    flecs_counter_print("deferred new operations", t, &s->new_count);
+    flecs_counter_print("deferred bulk_new operations", t, &s->bulk_new_count);
+    flecs_counter_print("deferred delete operations", t, &s->delete_count);
+    flecs_counter_print("deferred clear operations", t, &s->clear_count);
+    flecs_counter_print("deferred add operations", t, &s->add_count);
+    flecs_counter_print("deferred remove operations", t, &s->remove_count);
+    flecs_counter_print("deferred set operations", t, &s->set_count);
+    flecs_counter_print("discarded operations", t, &s->discard_count);
     ecs_trace("");
     
 error:

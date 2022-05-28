@@ -6646,3 +6646,32 @@ void Query_0_query() {
 
     ecs_fini(world);
 }
+
+void Query_query_w_pair_id_and_subj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Subj);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{
+            .id = ecs_pair(Rel, Obj), .subj.entity = Subj
+        }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_add_pair(world, Subj, Rel, Obj);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 0);
+    test_uint(it.subjects[0], Subj);
+    test_uint(it.ids[0], ecs_pair(Rel, Obj));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

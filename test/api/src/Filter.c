@@ -734,6 +734,40 @@ void Filter_filter_w_pred_obj() {
     ecs_fini(world);
 }
 
+void Filter_filter_w_pair_id_and_subj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Subj);
+
+    ecs_id_t pair = ecs_pair(Rel, Obj);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{.id = pair, .subj.entity = Subj}}
+    }), 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, pair);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, Subj);
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsEntity);
+    test_int(f.terms[0].obj.entity, Obj);
+    test_int(f.terms[0].obj.set.mask, EcsSelf);
+    test_int(f.terms[0].obj.var, EcsVarIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_term_w_id() {
     ecs_world_t *world = ecs_mini();
 

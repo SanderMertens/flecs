@@ -190,6 +190,7 @@ Addon         | Description                                      | Define       
 [Rules](https://flecs.docsforge.com/master/api-rules/)       | Powerful prolog-like query language              | FLECS_RULES         |
 [Snapshot](https://flecs.docsforge.com/master/api-snapshot/) | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
 [Stats](https://flecs.docsforge.com/master/api-stats/)       | See what's happening in a world with statistics  | FLECS_STATS         |
+[Monitor](https://flecs.docsforge.com/master/api-monitor/)   | Periodically collect & store statistics          | FLECS_MONITOR       |
 [Log](https://flecs.docsforge.com/master/api-log/)           | Extended tracing and error logging               | FLECS_LOG           |
 [App](https://flecs.docsforge.com/master/api-app/)           | Flecs application framework                      | FLECS_APP           |
 [OS API Impl](https://flecs.docsforge.com/master/api-os-api-impl/)   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |

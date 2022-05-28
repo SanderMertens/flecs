@@ -1087,7 +1087,7 @@ void Pipeline_stage_write_before_read() {
     test_int(sys_c_invoked, 1);
 
     ecs_pipeline_stats_t stats = {0};
-    test_bool(ecs_get_pipeline_stats(world, 
+    test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
     test_int(ecs_vector_count(stats.systems), 5);
@@ -1163,7 +1163,7 @@ void Pipeline_mixed_multithreaded() {
     test_int(sys_f_invoked, 1);
 
     ecs_pipeline_stats_t stats = {0};
-    test_bool(ecs_get_pipeline_stats(world, 
+    test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
     test_int(ecs_vector_count(stats.systems), 10);
@@ -1273,7 +1273,7 @@ void Pipeline_mixed_staging() {
     test_int(sys_f_world_readonly, true);
 
     ecs_pipeline_stats_t stats = {0};
-    test_bool(ecs_get_pipeline_stats(world, 
+    test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
     test_int(ecs_vector_count(stats.systems), 10);
@@ -1541,7 +1541,7 @@ void Pipeline_no_staging_system_create_query() {
     test_assert(q_result != NULL);
 
     ecs_pipeline_stats_t stats = {0};
-    test_bool(ecs_get_pipeline_stats(world, 
+    test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
     test_int(ecs_vector_count(stats.systems), 2);

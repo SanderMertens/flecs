@@ -38,6 +38,9 @@
 #ifdef FLECS_NO_SNAPSHOT
 #undef FLECS_SNAPSHOT
 #endif
+#ifdef FLECS_NO_MONITOR
+#undef FLECS_MONITOR
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -188,6 +191,12 @@
 #error "FLECS_NO_STATS failed: STATS is required by other addons"
 #endif
 #include "../addons/stats.h"
+#endif
+#ifdef FLECS_MONITOR
+#ifdef FLECS_NO_MONITOR
+#error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
+#endif
+#include "../addons/monitor.h"
 #endif
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER

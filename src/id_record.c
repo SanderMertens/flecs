@@ -424,15 +424,17 @@ bool flecs_set_type_info_for_id_record(
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti)
 {
-    if (ti) {
-        if (!idr->type_info) {
-            world->info.tag_id_count --;
-            world->info.component_id_count ++;
-        }
-    } else {
-        if (idr->type_info) {
-            world->info.tag_id_count ++;
-            world->info.component_id_count --;
+    if (!ecs_id_is_wildcard(idr->id)) {
+        if (ti) {
+            if (!idr->type_info) {
+                world->info.tag_id_count --;
+                world->info.component_id_count ++;
+            }
+        } else {
+            if (idr->type_info) {
+                world->info.tag_id_count ++;
+                world->info.component_id_count --;
+            }
         }
     }
 

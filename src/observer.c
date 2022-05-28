@@ -277,7 +277,7 @@ ecs_entity_t ecs_observer_init(
             .last_event_id = &observer->last_event_id
         };
 
-        bool optional_only = true;
+        bool optional_only = filter->flags & EcsFilterMatchThis;
         for (i = 0; i < filter->term_count; i ++) {
             if (filter->terms[i].oper != EcsOptional) {
                 if (filter->terms[i].subj.entity == EcsThis) {

@@ -789,6 +789,7 @@ void Filter_filter_1_variable_as_pred_w_subj(void);
 void Filter_filter_1_variable_as_pred_w_pair(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
+void Filter_filter_w_pair_id_and_subj(void);
 void Filter_filter_move(void);
 void Filter_filter_copy(void);
 void Filter_filter_w_resources_copy(void);
@@ -1130,6 +1131,7 @@ void Query_rematch_optional_ref_tag_w_ref_component(void);
 void Query_match_query_expr_from_scope(void);
 void Query_query_long_or_w_ref(void);
 void Query_0_query(void);
+void Query_query_w_pair_id_and_subj(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -4909,6 +4911,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_pred_obj
     },
     {
+        "filter_w_pair_id_and_subj",
+        Filter_filter_w_pair_id_and_subj
+    },
+    {
         "filter_move",
         Filter_filter_move
     },
@@ -6261,6 +6267,10 @@ bake_test_case Query_testcases[] = {
     {
         "0_query",
         Query_0_query
+    },
+    {
+        "query_w_pair_id_and_subj",
+        Query_query_w_pair_id_and_subj
     }
 };
 
@@ -9526,7 +9536,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        189,
+        190,
         Filter_testcases
     },
     {
@@ -9540,7 +9550,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        165,
+        166,
         Query_testcases
     },
     {

@@ -41,6 +41,20 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name);
 
+/** Same as ecs_import, but with name to scope conversion.
+ * PascalCase names are automatically converted to scoped names.
+ *
+ * @param world The world.
+ * @param module The module import function.
+ * @param module_name_c The name of the module.
+ * @return The module entity.
+ */
+FLECS_API
+ecs_entity_t ecs_import_c(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *module_name_c);
+
 /* Import a module from a library.
  * Similar to ecs_import, except that this operation will attempt to load the 
  * module from a dynamic library.
@@ -74,8 +88,8 @@ ecs_entity_t ecs_module_init(
 
 /** Define module
  */
-#define ECS_MODULE(world, id)\
-    ecs_entity_t ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
+#define ECS_MODULE_DEFINE(world, id)\
+    ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
         .entity = {\
             .name = #id,\
             .add = {EcsModule}\
@@ -84,23 +98,16 @@ ecs_entity_t ecs_module_init(
     ecs_set_scope(world, ecs_id(id));\
     (void)ecs_id(id);
 
+#define ECS_MODULE(world, id)\
+    ecs_entity_t ECS_MODULE_DEFINE(world, id)
+
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
- * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
- * 
- * This macro will define entity and type handles for the component associated
- * with the module. The module component will be created as a singleton. 
- * 
- * The contents of a module component are module specific, although they
- * typically contain handles to the content of the module.
+ * ECS_IMPORT(world, FlecsSystemsPhysics);
  */
-#define ECS_IMPORT(world, id) \
-    char *FLECS__##id##_name = ecs_module_path_from_c(#id);\
-    ecs_id_t ecs_id(id) = ecs_import(world, id##Import, FLECS__##id##_name);\
-    ecs_os_free(FLECS__##id##_name);\
-    (void)ecs_id(id)
+#define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id);
 
 #ifdef __cplusplus
 }

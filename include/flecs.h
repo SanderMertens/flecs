@@ -94,7 +94,8 @@
 #define FLECS_PLECS         /* ECS data definition format */
 #define FLECS_RULES         /* Constraint solver for advanced queries */
 #define FLECS_SNAPSHOT      /* Snapshot & restore ECS data */
-#define FLECS_STATS         /* Keep track of runtime statistics */
+#define FLECS_STATS         /* Access runtime statistics */
+#define FLECS_MONITOR       /* Track runtime statistics periodically */
 #define FLECS_SYSTEM        /* System support */
 #define FLECS_PIPELINE      /* Pipeline support */
 #define FLECS_TIMER         /* Timer support */
