@@ -96,6 +96,7 @@
 #ifdef FLECS_MONITOR
 #define FLECS_STATS
 #define FLECS_SYSTEM
+#define FLECS_TIMER
 #endif
 
 #ifdef FLECS_APP

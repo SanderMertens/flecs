@@ -1694,7 +1694,7 @@ int traverse_add(
     }
 
     /* Add components from the 'add_expr' expression */
-    if (desc->add_expr) {
+    if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
 #ifdef FLECS_PARSER
         bool error = false;
         table = traverse_from_expr(
