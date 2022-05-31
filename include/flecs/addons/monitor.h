@@ -36,6 +36,7 @@ FLECS_API extern ECS_DECLARE(EcsPeriod1w);
 typedef struct {
     ecs_world_stats_t stats;
     FLECS_FLOAT elapsed;
+    int32_t reduce_count;
 } EcsWorldStats;
 
 /* Module import */

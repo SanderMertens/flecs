@@ -126,10 +126,36 @@ error:
 
 void ecs_metric_reduce_last(
     ecs_metric_t *m,
-    int32_t t)
+    int32_t prev,
+    int32_t count)
 {
     ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_metric_reduce(m, m, t, t_next(t));
+    int32_t t = t_next(prev);
+
+    if (m->gauge.min[t] < m->gauge.min[prev]) {
+        m->gauge.min[prev] = m->gauge.min[t];
+    }
+
+    if (m->gauge.max[t] > m->gauge.max[prev]) {
+        m->gauge.max[prev] = m->gauge.max[t];
+    }
+
+    FLECS_FLOAT fcount = count + 1;
+
+    FLECS_FLOAT cur = m->gauge.avg[prev];
+    FLECS_FLOAT next = m->gauge.avg[t];
+
+    cur *= ((fcount - 1) / fcount);
+    next *= (FLECS_FLOAT)1.0 / fcount;
+
+    m->gauge.avg[prev] = cur + next;
+    m->counter.value[prev] = m->gauge.avg[t];
+
+    m->gauge.min[t] = 0;
+    m->gauge.max[t] = 0;
+    m->gauge.avg[t] = 0;
+    m->counter.value[t] = 0;
+
 error:
     return;
 }
@@ -239,17 +265,16 @@ void ecs_world_stats_reduce(
 }
 
 void ecs_world_stats_reduce_last(
-    ecs_world_stats_t *stats)
+    ecs_world_stats_t *stats,
+    int32_t count)
 {
-    int32_t t = stats->t;
+    int32_t t = stats->t = t_prev(stats->t);
 
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
     
     for (; cur != last; cur ++) {
-        ecs_metric_reduce_last(cur, t);
+        ecs_metric_reduce_last(cur, t, count);
     }
-
-    stats->t = t_prev(t);
 }
 
 void ecs_world_stats_copy_last(

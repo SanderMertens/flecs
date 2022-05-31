@@ -15651,12 +15651,14 @@ void MonitorWorldStats(ecs_iter_t *it) {
     int32_t i, dif = t_last - t_next;
     if (!dif) {
         /* Still in same interval, combine with last measurement */
-        ecs_world_stats_reduce_last(&stats->stats);
+        stats->reduce_count ++;
+        ecs_world_stats_reduce_last(&stats->stats, stats->reduce_count);
     } else if (dif > 1) {
         /* More than 16ms has passed, backfill */
         for (i = 1; i < dif; i ++) {
             ecs_world_stats_copy_last(&stats->stats);
         }
+        stats->reduce_count = 0;
     }
 }
 
@@ -15676,12 +15678,14 @@ void ReduceWorldStats1Day(ecs_iter_t *it) {
     /* Reduce from minutes to the current day */
     ecs_world_stats_reduce(&dst->stats, &src->stats);
 
-    dst->elapsed ++;
-    if (dst->elapsed < 1440) {
-        /* 1440 minutes in a day */
-        ecs_world_stats_reduce_last(&dst->stats);
-    } else {
-        dst->elapsed = 0;
+    if (dst->reduce_count != 0) {
+        ecs_world_stats_reduce_last(&dst->stats, dst->reduce_count);
+    }
+
+    /* A day has 60 24 minute intervals */
+    dst->reduce_count ++;
+    if (dst->reduce_count >= 24) {
+        dst->reduce_count = 0;
     }
 }
 
@@ -15693,12 +15697,14 @@ void ReduceWorldStats1Week(ecs_iter_t *it) {
     /* Reduce from minutes to the current day */
     ecs_world_stats_reduce(&dst->stats, &src->stats);
 
-    dst->elapsed ++;
-    if (dst->elapsed < 168) {
-        /* 1440 minutes in a day */
-        ecs_world_stats_reduce_last(&dst->stats);
-    } else {
-        dst->elapsed = 0;
+    if (dst->reduce_count != 0) {
+        ecs_world_stats_reduce_last(&dst->stats, dst->reduce_count);
+    }
+
+    /* A week has 60 168 minute intervals */
+    dst->reduce_count ++;
+    if (dst->reduce_count >= 168) {
+        dst->reduce_count = 0;
     }
 }
 
@@ -15737,11 +15743,11 @@ void FlecsMonitorImport(
             .subj.entity = EcsWorld 
         }},
         .callback = ReduceWorldStats,
-        .interval = 1
+        .interval = 1.0
     });
 
     // Called each minute, reduces into 60 measurements per hour
-    ecs_entity_t mw1h = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t) {
         .entity = { .name = "MonitorWorld1h", .add = {EcsPreFrame} },
         .query.filter.terms = {{
             .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1h),
@@ -15782,7 +15788,7 @@ void FlecsMonitorImport(
         }},
         .callback = ReduceWorldStats1Week,
         .rate = 60,
-        .tick_source = mw1h
+        .tick_source = mw1m
     });
 
     ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1s, {0});
@@ -26658,10 +26664,36 @@ error:
 
 void ecs_metric_reduce_last(
     ecs_metric_t *m,
-    int32_t t)
+    int32_t prev,
+    int32_t count)
 {
     ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_metric_reduce(m, m, t, t_next(t));
+    int32_t t = t_next(prev);
+
+    if (m->gauge.min[t] < m->gauge.min[prev]) {
+        m->gauge.min[prev] = m->gauge.min[t];
+    }
+
+    if (m->gauge.max[t] > m->gauge.max[prev]) {
+        m->gauge.max[prev] = m->gauge.max[t];
+    }
+
+    FLECS_FLOAT fcount = count + 1;
+
+    FLECS_FLOAT cur = m->gauge.avg[prev];
+    FLECS_FLOAT next = m->gauge.avg[t];
+
+    cur *= ((fcount - 1) / fcount);
+    next *= (FLECS_FLOAT)1.0 / fcount;
+
+    m->gauge.avg[prev] = cur + next;
+    m->counter.value[prev] = m->gauge.avg[t];
+
+    m->gauge.min[t] = 0;
+    m->gauge.max[t] = 0;
+    m->gauge.avg[t] = 0;
+    m->counter.value[t] = 0;
+
 error:
     return;
 }
@@ -26771,17 +26803,16 @@ void ecs_world_stats_reduce(
 }
 
 void ecs_world_stats_reduce_last(
-    ecs_world_stats_t *stats)
+    ecs_world_stats_t *stats,
+    int32_t count)
 {
-    int32_t t = stats->t;
+    int32_t t = stats->t = t_prev(stats->t);
 
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
     
     for (; cur != last; cur ++) {
-        ecs_metric_reduce_last(cur, t);
+        ecs_metric_reduce_last(cur, t, count);
     }
-
-    stats->t = t_prev(t);
 }
 
 void ecs_world_stats_copy_last(

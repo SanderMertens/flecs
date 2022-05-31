@@ -163,10 +163,12 @@ void ecs_world_stats_reduce(
 /** Reduce last measurement into previous measurement.
  * 
  * @param stats The metrics.
+ * @param count The number of times the metric was reduced.
  */
 FLECS_API
 void ecs_world_stats_reduce_last(
-    ecs_world_stats_t *stats);
+    ecs_world_stats_t *stats,
+    int32_t count);
 
 /** Copy last measurement to next measurement.
  * 
@@ -252,7 +254,8 @@ void ecs_metric_reduce(
 FLECS_API
 void ecs_metric_reduce_last(
     ecs_metric_t *m,
-    int32_t t);
+    int32_t t,
+    int32_t count);
 
 FLECS_API
 void ecs_metric_copy(
