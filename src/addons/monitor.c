@@ -42,6 +42,12 @@ void ReduceWorldStats(ecs_iter_t *it) {
     EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
 
     ecs_world_stats_reduce(&dst->stats, &src->stats);
+
+    printf("dst_min = %f, t = %d\n",
+        dst->stats.entity_count.gauge.min[dst->stats.t], dst->stats.t);
+
+    ecs_assert(dst->stats.entity_count.gauge.min[dst->stats.t] != 0,
+        ECS_INTERNAL_ERROR, NULL);
 }
 
 static

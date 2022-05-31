@@ -554,6 +554,8 @@ void ecs_run_pipeline(
                 ecs_dbg_3("pipeline: run system %s", ecs_get_name(world, e));
             }
 
+            sys[i].last_frame = world->info.frame_count_total + 1;
+
             if (!stage_index || op->multi_threaded) {
                 ecs_stage_t *s = NULL;
                 if (!op->no_staging) {
@@ -563,8 +565,6 @@ void ecs_run_pipeline(
                 ecs_run_intern(world, s, e, &sys[i], stage_index, 
                     stage_count, delta_time, 0, 0, NULL);
             }
-
-            sys[i].last_frame = world->info.frame_count_total + 1;
 
             ran_since_merge ++;
             world->info.systems_ran_frame ++;

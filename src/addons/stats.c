@@ -104,10 +104,12 @@ void ecs_metric_reduce(
     dst->gauge.avg[t_dst] = 0;
     dst->gauge.max[t_dst] = 0;
 
+    FLECS_FLOAT fwindow = (FLECS_FLOAT)ECS_STAT_WINDOW;
+
     int32_t i;
     for (i = 0; i < ECS_STAT_WINDOW; i ++) {
         int32_t t = (t_src + i) % ECS_STAT_WINDOW;
-        dst->gauge.avg[t_dst] += src->gauge.avg[t] / (float)ECS_STAT_WINDOW;
+        dst->gauge.avg[t_dst] += src->gauge.avg[t] / fwindow;
 
         if (!min_set || (src->gauge.min[t] < dst->gauge.min[t_dst])) {
             dst->gauge.min[t_dst] = src->gauge.min[t];
