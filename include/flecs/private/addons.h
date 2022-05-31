@@ -93,6 +93,11 @@
 /* Always included, if disabled log functions are replaced with dummy macro's */
 #include "flecs/addons/log.h"
 
+#ifdef FLECS_MONITOR
+#define FLECS_STATS
+#define FLECS_SYSTEM
+#endif
+
 #ifdef FLECS_APP
 #ifdef FLECS_NO_APP
 #error "FLECS_NO_APP failed: APP is required by other addons"
@@ -122,6 +127,18 @@
 #error "FLECS_NO_SYSTEM failed: SYSTEM is required by other addons"
 #endif
 #include "../addons/system.h"
+#endif
+#ifdef FLECS_STATS
+#ifdef FLECS_NO_STATS
+#error "FLECS_NO_STATS failed: STATS is required by other addons"
+#endif
+#include "../addons/stats.h"
+#endif
+#ifdef FLECS_MONITOR
+#ifdef FLECS_NO_MONITOR
+#error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
+#endif
+#include "../addons/monitor.h"
 #endif
 #ifdef FLECS_COREDOC
 #ifdef FLECS_NO_COREDOC
@@ -185,18 +202,6 @@
 #error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
 #endif
 #include "../addons/snapshot.h"
-#endif
-#ifdef FLECS_STATS
-#ifdef FLECS_NO_STATS
-#error "FLECS_NO_STATS failed: STATS is required by other addons"
-#endif
-#include "../addons/stats.h"
-#endif
-#ifdef FLECS_MONITOR
-#ifdef FLECS_NO_MONITOR
-#error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
-#endif
-#include "../addons/monitor.h"
 #endif
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER

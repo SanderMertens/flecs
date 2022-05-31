@@ -233,6 +233,8 @@ bool flecs_rest_reply_query(
     return true;
 }
 
+#ifdef FLECS_MONITOR
+
 static
 void flecs_rest_array_append(
     ecs_strbuf_t *reply,
@@ -344,7 +346,6 @@ bool flecs_rest_reply_stats(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
-#ifdef FLECS_MONITOR
     char *period_str = NULL;
     flecs_rest_string_param(req, "period", &period_str);
     char *category = &req->path[6];
@@ -374,10 +375,20 @@ bool flecs_rest_reply_stats(
     }
 
     return true;
-#else
-    return false;
-#endif
 }
+#else
+static
+bool flecs_rest_reply_stats(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)world;
+    (void)req;
+    (void)reply;
+    return false;
+}
+#endif
 
 static
 bool flecs_rest_reply(

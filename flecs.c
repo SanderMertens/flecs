@@ -13757,46 +13757,6 @@ void* _flecs_hashmap_next(
 #include <stdio.h>
 #include <ctype.h>
 
-char* ecs_vasprintf(
-    const char *fmt,
-    va_list args)
-{
-    ecs_size_t size = 0;
-    char *result  = NULL;
-    va_list tmpa;
-
-    va_copy(tmpa, args);
-
-    size = vsnprintf(result, 0, fmt, tmpa);
-
-    va_end(tmpa);
-
-    if ((int32_t)size < 0) { 
-        return NULL; 
-    }
-
-    result = (char *) ecs_os_malloc(size + 1);
-
-    if (!result) { 
-        return NULL; 
-    }
-
-    ecs_os_vsprintf(result, fmt, args);
-
-    return result;
-}
-
-char* ecs_asprintf(
-    const char *fmt,
-    ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    char *result = ecs_vasprintf(fmt, args);
-    va_end(args);
-    return result;
-}
-
 static
 void ecs_colorize_buf(
     char *msg,
@@ -31286,6 +31246,8 @@ bool flecs_rest_reply_query(
     return true;
 }
 
+#ifdef FLECS_MONITOR
+
 static
 void flecs_rest_array_append(
     ecs_strbuf_t *reply,
@@ -31397,7 +31359,6 @@ bool flecs_rest_reply_stats(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
-#ifdef FLECS_MONITOR
     char *period_str = NULL;
     flecs_rest_string_param(req, "period", &period_str);
     char *category = &req->path[6];
@@ -31427,10 +31388,20 @@ bool flecs_rest_reply_stats(
     }
 
     return true;
-#else
-    return false;
-#endif
 }
+#else
+static
+bool flecs_rest_reply_stats(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)world;
+    (void)req;
+    (void)reply;
+    return false;
+}
+#endif
 
 static
 bool flecs_rest_reply(
@@ -47140,6 +47111,46 @@ uint64_t flecs_string_hash(
     const ecs_hashed_string_t *str = ptr;
     ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
     return str->hash;
+}
+
+char* ecs_vasprintf(
+    const char *fmt,
+    va_list args)
+{
+    ecs_size_t size = 0;
+    char *result  = NULL;
+    va_list tmpa;
+
+    va_copy(tmpa, args);
+
+    size = vsnprintf(result, 0, fmt, tmpa);
+
+    va_end(tmpa);
+
+    if ((int32_t)size < 0) { 
+        return NULL; 
+    }
+
+    result = (char *) ecs_os_malloc(size + 1);
+
+    if (!result) { 
+        return NULL; 
+    }
+
+    ecs_os_vsprintf(result, fmt, args);
+
+    return result;
+}
+
+char* ecs_asprintf(
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *result = ecs_vasprintf(fmt, args);
+    va_end(args);
+    return result;
 }
 
 /*
