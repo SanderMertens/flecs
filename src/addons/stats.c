@@ -140,13 +140,13 @@ void ecs_metric_reduce_last(
         m->gauge.max[prev] = m->gauge.max[t];
     }
 
-    FLECS_FLOAT fcount = count + 1;
+    FLECS_FLOAT fcount = (FLECS_FLOAT)(count + 1);
 
     FLECS_FLOAT cur = m->gauge.avg[prev];
     FLECS_FLOAT next = m->gauge.avg[t];
 
     cur *= ((fcount - 1) / fcount);
-    next *= (FLECS_FLOAT)1.0 / fcount;
+    next *= 1 / fcount;
 
     m->gauge.avg[prev] = cur + next;
     m->counter.value[prev] = m->gauge.avg[t];
