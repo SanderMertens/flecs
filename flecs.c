@@ -15668,12 +15668,6 @@ void ReduceWorldStats(ecs_iter_t *it) {
     EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
 
     ecs_world_stats_reduce(&dst->stats, &src->stats);
-
-    printf("dst_min = %f, t = %d\n",
-        dst->stats.entity_count.gauge.min[dst->stats.t], dst->stats.t);
-
-    ecs_assert(dst->stats.entity_count.gauge.min[dst->stats.t] != 0,
-        ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -26687,7 +26681,6 @@ void ecs_metric_reduce_last(
     }
 
     FLECS_FLOAT fcount = (FLECS_FLOAT)(count + 1);
-
     FLECS_FLOAT cur = m->gauge.avg[prev];
     FLECS_FLOAT next = m->gauge.avg[t];
 
@@ -26695,12 +26688,7 @@ void ecs_metric_reduce_last(
     next *= 1 / fcount;
 
     m->gauge.avg[prev] = cur + next;
-    m->counter.value[prev] = m->gauge.avg[t];
-
-    m->gauge.min[t] = 0;
-    m->gauge.max[t] = 0;
-    m->gauge.avg[t] = 0;
-    m->counter.value[t] = 0;
+    m->counter.value[prev] = m->counter.value[t];
 
 error:
     return;
@@ -26815,7 +26803,6 @@ void ecs_world_stats_reduce_last(
     int32_t count)
 {
     int32_t t = stats->t = t_prev(stats->t);
-
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
     
     for (; cur != last; cur ++) {
@@ -26827,7 +26814,6 @@ void ecs_world_stats_copy_last(
     ecs_world_stats_t *stats)
 {
     int32_t t_last = stats->t, t = t_next(t_last);
-
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
     
     for (; cur != last; cur ++) {
