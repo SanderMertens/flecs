@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     ECS_IMPORT(world, FlecsUnits);
+    ECS_IMPORT(world, FlecsMonitor); // Collect statistics periodically
 
     // Mass component
     ECS_COMPONENT(world, Mass);

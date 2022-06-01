@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
     flecs::world world(argc, argv);
 
     world.import<flecs::units>();
+    world.import<flecs::monitor>(); // Collect statistics periodically
 
     // Mass component
     world.component<Mass>()
