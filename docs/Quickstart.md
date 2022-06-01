@@ -422,9 +422,8 @@ std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 A type can also be iterated by an application:
 ```c
 const ecs_type_t *type = ecs_get_type(world, e);
-ecs_id_t *ids = ecs_vector_first(type);
-for (int i = 0; i < ecs_vector_count(type; i ++) {
-    if (ids[i] == ecs_id(Position)) {
+for (int i = 0; i < type->count; i ++) {
+    if (type->array[i] == ecs_id(Position)) {
         // Found Position component!
     }
 }
