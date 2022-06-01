@@ -26,6 +26,7 @@ void MonitorWorldStats(ecs_iter_t *it) {
     int32_t i, dif = t_last - t_next;
 
     ecs_world_stats_t last;
+    last.t = 0;
     if (!dif) {
         /* Copy last value so we can pass it to reduce_last */
         ecs_world_stats_copy_last(&last, &stats->stats);
@@ -62,6 +63,7 @@ void AggregateWorldStats(ecs_iter_t *it) {
     EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
 
     ecs_world_stats_t last;
+    last.t = 0;
     if (dst->reduce_count != 0) {
         /* Copy last value so we can pass it to reduce_last */
         ecs_world_stats_copy_last(&last, &dst->stats);
