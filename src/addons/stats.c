@@ -100,8 +100,8 @@ void ecs_metric_reduce(
     ecs_check(src != NULL, ECS_INVALID_PARAMETER, NULL);
 
     bool min_set = false;
-    dst->gauge.min[t_dst] = 0;
     dst->gauge.avg[t_dst] = 0;
+    dst->gauge.min[t_dst] = 0;
     dst->gauge.max[t_dst] = 0;
 
     FLECS_FLOAT fwindow = (FLECS_FLOAT)ECS_STAT_WINDOW;
@@ -262,17 +262,25 @@ void ecs_world_stats_reduce(
 
 void ecs_world_stats_reduce_last(
     ecs_world_stats_t *stats,
+    const ecs_world_stats_t *src,
     int32_t count)
 {
-    int32_t t = stats->t = t_prev(stats->t);
+    int32_t prev_t = stats->t, src_t = src->t;
+    int32_t t = stats->t = t_prev(prev_t);
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
+    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
     
-    for (; cur != last; cur ++) {
+    for (; cur != last; cur ++, src_cur ++) {
         ecs_metric_reduce_last(cur, t, count);
+
+        cur->gauge.avg[prev_t] = src_cur->gauge.avg[src_t];
+        cur->gauge.min[prev_t] = src_cur->gauge.min[src_t];
+        cur->gauge.max[prev_t] = src_cur->gauge.max[src_t];
+        cur->counter.value[prev_t] = src_cur->counter.value[src_t];
     }
 }
 
-void ecs_world_stats_copy_last(
+void ecs_world_stats_repeat_last(
     ecs_world_stats_t *stats)
 {
     int32_t t_last = stats->t, t = t_next(t_last);
@@ -283,6 +291,22 @@ void ecs_world_stats_copy_last(
     }
 
     stats->t = t;
+}
+
+void ecs_world_stats_copy_last(
+    ecs_world_stats_t *dst,
+    const ecs_world_stats_t *src)
+{
+    int32_t t_dst = dst->t, t_src = t_next(src->t);
+    ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
+    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
+    
+    for (; cur != last; cur ++, src_cur ++) {
+        cur->gauge.avg[t_dst] = src_cur->gauge.avg[t_src];
+        cur->gauge.min[t_dst] = src_cur->gauge.min[t_src];
+        cur->gauge.max[t_dst] = src_cur->gauge.max[t_src];
+        cur->counter.value[t_dst] = src_cur->counter.value[t_src];
+    }
 }
 
 void ecs_query_stats_get(

@@ -150,7 +150,8 @@ void ecs_world_stats_get(
     ecs_world_stats_t *stats);
 
 /** Reduce world statistics.
- * This operation reduces values from the last window into a single metric.
+ * This operation reduces values from the last window into a single metric, and
+ * moves the cursor of dst forward.
  * 
  * @param dst The metrics to reduce to.
  * @param src The metrics to reduce.
@@ -161,22 +162,38 @@ void ecs_world_stats_reduce(
     const ecs_world_stats_t *src);
 
 /** Reduce last measurement into previous measurement.
+ * This operation moves the cursor backward.
  * 
  * @param stats The metrics.
+ * @param last The value to restore to the cursor before moving backward.
  * @param count The number of times the metric was reduced.
  */
 FLECS_API
 void ecs_world_stats_reduce_last(
     ecs_world_stats_t *stats,
+    const ecs_world_stats_t *last,
     int32_t count);
 
 /** Copy last measurement to next measurement.
+ * This operation moves the cursor forward.
  * 
  * @param stats The metrics.
  */
 FLECS_API
-void ecs_world_stats_copy_last(
+void ecs_world_stats_repeat_last(
     ecs_world_stats_t *stats);
+
+/** Copy last measurement to destination.
+ * This operation copies the last measurement into the destination. It does not
+ * modify the cursor.
+ * 
+ * @param dst The metrics.
+ * @param src The metrics to copy.
+ */
+FLECS_API
+void ecs_world_stats_copy_last(
+    ecs_world_stats_t *dst,
+    const ecs_world_stats_t *src);
 
 /** Print world statistics.
  * Print statistics obtained by ecs_get_world_statistics and in the

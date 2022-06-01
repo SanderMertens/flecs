@@ -11,6 +11,9 @@ ECS_DECLARE(EcsPeriod1h);
 ECS_DECLARE(EcsPeriod1d);
 ECS_DECLARE(EcsPeriod1w);
 
+static int32_t flecs_day_interval_count = 24;
+static int32_t flecs_week_interval_count = 168;
+
 static
 void MonitorWorldStats(ecs_iter_t *it) {
     EcsWorldStats *stats = ecs_term(it, EcsWorldStats, 1);
@@ -18,19 +21,26 @@ void MonitorWorldStats(ecs_iter_t *it) {
     FLECS_FLOAT elapsed = stats->elapsed;
     stats->elapsed += it->delta_time;
 
-    ecs_world_stats_get(it->real_world, &stats->stats);
-
     int32_t t_last = (int32_t)(elapsed * 60);
     int32_t t_next = (int32_t)(stats->elapsed * 60);
     int32_t i, dif = t_last - t_next;
+
+    ecs_world_stats_t last;
+    if (!dif) {
+        /* Copy last value so we can pass it to reduce_last */
+        ecs_world_stats_copy_last(&last, &stats->stats);
+    }
+
+    ecs_world_stats_get(it->real_world, &stats->stats);
+
     if (!dif) {
         /* Still in same interval, combine with last measurement */
         stats->reduce_count ++;
-        ecs_world_stats_reduce_last(&stats->stats, stats->reduce_count);
+        ecs_world_stats_reduce_last(&stats->stats, &last, stats->reduce_count);
     } else if (dif > 1) {
         /* More than 16ms has passed, backfill */
         for (i = 1; i < dif; i ++) {
-            ecs_world_stats_copy_last(&stats->stats);
+            ecs_world_stats_repeat_last(&stats->stats);
         }
         stats->reduce_count = 0;
     }
@@ -45,39 +55,28 @@ void ReduceWorldStats(ecs_iter_t *it) {
 }
 
 static
-void ReduceWorldStats1Day(ecs_iter_t *it) {
+void AggregateWorldStats(ecs_iter_t *it) {
+    int32_t interval = *(int32_t*)it->ctx;
+
     EcsWorldStats *dst = ecs_term(it, EcsWorldStats, 1);
     EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
+
+    ecs_world_stats_t last;
+    if (dst->reduce_count != 0) {
+        /* Copy last value so we can pass it to reduce_last */
+        ecs_world_stats_copy_last(&last, &dst->stats);
+    }
 
     /* Reduce from minutes to the current day */
     ecs_world_stats_reduce(&dst->stats, &src->stats);
 
     if (dst->reduce_count != 0) {
-        ecs_world_stats_reduce_last(&dst->stats, dst->reduce_count);
+        ecs_world_stats_reduce_last(&dst->stats, &last, dst->reduce_count);
     }
 
     /* A day has 60 24 minute intervals */
     dst->reduce_count ++;
-    if (dst->reduce_count >= 24) {
-        dst->reduce_count = 0;
-    }
-}
-
-static
-void ReduceWorldStats1Week(ecs_iter_t *it) {
-    EcsWorldStats *dst = ecs_term(it, EcsWorldStats, 1);
-    EcsWorldStats *src = ecs_term(it, EcsWorldStats, 2);
-
-    /* Reduce from minutes to the current day */
-    ecs_world_stats_reduce(&dst->stats, &src->stats);
-
-    if (dst->reduce_count != 0) {
-        ecs_world_stats_reduce_last(&dst->stats, dst->reduce_count);
-    }
-
-    /* A week has 60 168 minute intervals */
-    dst->reduce_count ++;
-    if (dst->reduce_count >= 168) {
+    if (dst->reduce_count >= interval) {
         dst->reduce_count = 0;
     }
 }
@@ -145,9 +144,10 @@ void FlecsMonitorImport(
             .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1m),
             .subj.entity = EcsWorld 
         }},
-        .callback = ReduceWorldStats1Day,
+        .callback = AggregateWorldStats,
         .rate = 60,
-        .tick_source = mw1m
+        .tick_source = mw1m,
+        .ctx = &flecs_day_interval_count
     });
 
     // Called each hour, reduces into 60 measurements per week
@@ -160,9 +160,10 @@ void FlecsMonitorImport(
             .id = ecs_pair(ecs_id(EcsWorldStats), EcsPeriod1h),
             .subj.entity = EcsWorld 
         }},
-        .callback = ReduceWorldStats1Week,
+        .callback = AggregateWorldStats,
         .rate = 60,
-        .tick_source = mw1m
+        .tick_source = mw1m,
+        .ctx = &flecs_week_interval_count
     });
 
     ecs_set_pair(world, EcsWorld, EcsWorldStats, EcsPeriod1s, {0});
