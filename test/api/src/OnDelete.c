@@ -2146,3 +2146,21 @@ void OnDelete_remove_on_delete_action() {
 
     ecs_fini(world);
 }
+
+void OnDelete_delete_with_w_relation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add_pair(world, e2, Rel, e1);
+
+    ecs_delete_with(world, Tag);
+
+    test_assert( !ecs_is_alive(world, e1));
+    test_assert( !ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}

@@ -7382,16 +7382,25 @@ void delete_objects(
 }
 
 static
-void on_delete_object_action(
+void on_delete_id_action(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t action,
+    bool on_delete_object)
 {
     ecs_table_cache_iter_t it;
     ecs_id_record_t *idrr, *idr = flecs_get_id_record(world, id);
 
     if (idr) {
         bool deleted;
+
+        if (!action && !on_delete_object) {
+            action = ECS_ID_ON_DELETE(idr->flags);
+
+            if (action == EcsPanic) {
+                throw_invalid_delete(world, id);
+            }
+        }
 
         do {
             deleted = false;
@@ -7425,7 +7434,7 @@ void on_delete_object_action(
                     ecs_entity_t cur_action = action;
 
                     /* Find delete action for relation */
-                    if (!cur_action) {
+                    if (!cur_action && on_delete_object) {
                         trr = &table->records[tr->column];
                         idrr = (ecs_id_record_t*)trr->hdr.cache;
                         cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
@@ -7495,39 +7504,6 @@ void on_delete_object_action(
 }
 
 static
-void on_delete_id_action(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action)
-{
-    ecs_table_cache_iter_t it;
-    ecs_id_record_t *idr = flecs_table_iter(world, id, &it);
-    if (idr) {
-        if (!action) {
-            action = ECS_ID_ON_DELETE(idr->flags);
-        }
-
-        if (action == EcsPanic) {
-            throw_invalid_delete(world, id);
-        }
-
-        /* Delete non-empty tables */
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-
-            if (!action || action == EcsRemove) {
-                remove_from_table(world, table, id, tr->column, tr->count);
-            } else if (action == EcsDelete) {
-                delete_objects(world, table);
-            }
-        }
-
-        flecs_remove_id_record(world, id, idr);
-    }
-}
-
-static
 void on_delete_action(
     ecs_world_t *world,
     ecs_id_t id,
@@ -7542,21 +7518,14 @@ void on_delete_action(
     ecs_log_push_1();
 
     if (ecs_id_is_wildcard(id)) {
-        /* If id is wildcard, check if the relation or object is a wildcard.
-         * Relation wildcard ids are implemented differently as relations
-         * with the same object aren't guaranteed to occupy neighboring
-         * elements in the type, other wildcards with the same relation. */
-        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            on_delete_object_action(world, id, action);
-        } else {
-            on_delete_id_action(world, id, action);
-        }
+        /* If the relation part of the id is a wildcard, tell the logic
+         * to use the OnDeleteObject cleanup action. */
+        on_delete_id_action(world, id, action, 
+            ECS_PAIR_FIRST(id) == EcsWildcard);
     } else {
-        /* If the id is not a wildcard it's simple, as a table can only have
-         * at most one instance of the id */
-        on_delete_id_action(world, id, action);
+        on_delete_id_action(world, id, action, false);
     }
-    
+
     ecs_log_pop_1();
 }
 

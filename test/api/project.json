@@ -606,7 +606,8 @@
                 "on_delete_id_w_disabled",
                 "on_delete_id_to_no_switch",
                 "on_delete_id_to_no_disabled",
-                "remove_on_delete_action"
+                "remove_on_delete_action",
+                "delete_with_w_relation"
             ]
         }, {
             "id": "Set",
