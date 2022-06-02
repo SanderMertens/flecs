@@ -216,7 +216,7 @@ bool flecs_rest_reply_query(
         flecs_rest_parse_json_ser_iter_params(&desc, req);
 
         int32_t offset = 0;
-        int32_t limit = 100;
+        int32_t limit = 1000;
 
         flecs_rest_int_param(req, "offset", &offset);
         flecs_rest_int_param(req, "limit", &limit);
@@ -453,7 +453,6 @@ void flecs_rest_reply_table_append(
     ecs_strbuf_list_pop(reply, "}");
 }
 
-
 static
 bool flecs_rest_reply_tables(
     ecs_world_t *world,
@@ -485,7 +484,7 @@ void flecs_rest_reply_id_append(
     ecs_strbuf_list_appendstr(reply, "\"id\":\"");
     ecs_id_str_buf(world, idr->id, reply);
     ecs_strbuf_appendch(reply, '"');
-    
+
     if (idr->type_info) {
         if (idr->type_info->component != idr->id) {
             ecs_strbuf_list_appendstr(reply, "\"component\":\"");
