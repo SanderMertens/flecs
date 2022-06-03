@@ -171,7 +171,7 @@ static
 void flecs_stats_monitor_import(
     ecs_world_t *world,
     ecs_id_t kind,
-    ecs_size_t size)
+    size_t size)
 {
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
@@ -262,7 +262,7 @@ void flecs_world_monitor_import(
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
     flecs_stats_monitor_import(world, ecs_id(EcsWorldStats), 
-        ECS_SIZEOF(EcsWorldStats));
+        sizeof(EcsWorldStats));
 }
 
 static
@@ -279,7 +279,7 @@ void flecs_pipeline_monitor_import(
     });
 
     flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats),
-        ECS_SIZEOF(EcsPipelineStats));
+        sizeof(EcsPipelineStats));
 }
 
 void FlecsMonitorImport(

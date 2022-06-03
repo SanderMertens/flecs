@@ -3457,6 +3457,15 @@ FLECS_API
 bool ecs_query_orphaned(
     ecs_query_t *query);
 
+/** Convert query to string.
+ *
+ * @param query The query.
+ * @return The query string.
+ */
+FLECS_API
+char* ecs_query_str(
+    const ecs_query_t *query);
+
 /** @} */
 
 

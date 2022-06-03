@@ -2664,3 +2664,9 @@ bool ecs_query_orphaned(
     ecs_poly_assert(query, ecs_query_t);
     return query->flags & EcsQueryIsOrphaned;
 }
+
+char* ecs_query_str(
+    const ecs_query_t *query)
+{
+    return ecs_filter_str(query->world, &query->filter);
+}

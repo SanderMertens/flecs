@@ -284,17 +284,25 @@ void flecs_rest_counter_append(
     flecs_rest_gauge_append(reply, m, field, t);
 }
 
+#define ECS_GAUGE_APPEND_T(reply, s, field, t)\
+    flecs_rest_gauge_append(reply, &(s)->field, #field, t)
+
+#define ECS_COUNTER_APPEND_T(reply, s, field, t)\
+    flecs_rest_counter_append(reply, &(s)->field, #field, t)
+
 #define ECS_GAUGE_APPEND(reply, s, field)\
-    flecs_rest_gauge_append(reply, &s->stats.field, #field, s->stats.t)
+    ECS_GAUGE_APPEND_T(reply, s, field, (s)->t)
 
 #define ECS_COUNTER_APPEND(reply, s, field)\
-    flecs_rest_counter_append(reply, &s->stats.field, #field, s->stats.t)
+    ECS_COUNTER_APPEND_T(reply, s, field, (s)->t)
 
 static
 void flecs_world_stats_to_json(
     ecs_strbuf_t *reply,
-    const EcsWorldStats *stats)
+    const EcsWorldStats *monitor_stats)
 {
+    const ecs_world_stats_t *stats = &monitor_stats->stats;
+
     ecs_strbuf_list_push(reply, "{", ",");
     ECS_GAUGE_APPEND(reply, stats, entity_count);
     ECS_GAUGE_APPEND(reply, stats, entity_not_alive_count);
@@ -345,6 +353,59 @@ void flecs_world_stats_to_json(
 }
 
 static
+void flecs_system_stats_to_json(
+    ecs_world_t *world,
+    ecs_strbuf_t *reply,
+    ecs_entity_t system,
+    const ecs_system_stats_t *stats)
+{
+    ecs_strbuf_list_push(reply, "{", ",");
+
+    char *path = ecs_get_fullpath(world, system);
+    ecs_strbuf_list_append(reply, "\"name\":\"%s\"", path);
+    ecs_os_free(path);
+
+    ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count);
+    ECS_GAUGE_APPEND(reply, &stats->query, matched_empty_table_count);
+    ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count);
+
+    ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t);
+    ECS_COUNTER_APPEND_T(reply, stats, invoke_count, stats->query.t);
+    ECS_COUNTER_APPEND_T(reply, stats, active, stats->query.t);
+    ECS_COUNTER_APPEND_T(reply, stats, enabled, stats->query.t);
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+void flecs_pipeline_stats_to_json(
+    ecs_world_t *world,
+    ecs_strbuf_t *reply,
+    const EcsPipelineStats *stats)
+{
+    ecs_strbuf_list_push(reply, "[", ",");
+
+    int32_t i, count = ecs_vector_count(stats->stats.systems);
+    ecs_entity_t *ids = ecs_vector_first(stats->stats.systems, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+        
+        ecs_strbuf_list_next(reply);
+
+        if (id) {
+            ecs_system_stats_t *sys_stats = ecs_map_get(
+                    &stats->stats.system_stats, ecs_system_stats_t, id);
+            flecs_system_stats_to_json(world, reply, id, sys_stats);
+        } else {
+            /* Sync point */
+            ecs_strbuf_list_push(reply, "{", ",");
+            ecs_strbuf_list_pop(reply, "}");
+        }
+    }
+
+    ecs_strbuf_list_pop(reply, "]");
+}
+
+static
 bool flecs_rest_reply_stats(
     ecs_world_t *world,
     const ecs_http_request_t* req,
@@ -370,6 +431,12 @@ bool flecs_rest_reply_stats(
         const EcsWorldStats *stats = ecs_get_pair(world, EcsWorld, 
             EcsWorldStats, period);
         flecs_world_stats_to_json(&reply->body, stats);
+        return true;
+
+    } else if (!ecs_os_strcmp(category, "pipeline")) {
+        const EcsPipelineStats *stats = ecs_get_pair(world, EcsWorld, 
+            EcsPipelineStats, period);
+        flecs_pipeline_stats_to_json(world, &reply->body, stats);
         return true;
 
     } else {
