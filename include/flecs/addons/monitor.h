@@ -26,6 +26,7 @@ extern "C" {
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMonitor);
 
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
 FLECS_API extern ECS_DECLARE(EcsPeriod1s);
 FLECS_API extern ECS_DECLARE(EcsPeriod1m);
@@ -34,10 +35,19 @@ FLECS_API extern ECS_DECLARE(EcsPeriod1d);
 FLECS_API extern ECS_DECLARE(EcsPeriod1w);
 
 typedef struct {
-    ecs_world_stats_t stats;
     FLECS_FLOAT elapsed;
     int32_t reduce_count;
+} EcsStatsHeader;
+
+typedef struct {
+    EcsStatsHeader hdr; 
+    ecs_world_stats_t stats;
 } EcsWorldStats;
+
+typedef struct {
+    EcsStatsHeader hdr;
+    ecs_pipeline_stats_t stats;
+} EcsPipelineStats;
 
 /* Module import */
 FLECS_API

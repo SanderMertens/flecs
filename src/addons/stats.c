@@ -173,6 +173,69 @@ error:
     return;
 }
 
+static
+void flecs_stats_reduce(
+    ecs_metric_t *dst_cur,
+    ecs_metric_t *dst_last,
+    ecs_metric_t *src_cur,
+    int32_t t_dst,
+    int32_t t_src)
+{
+    for (; dst_cur <= dst_last; dst_cur ++, src_cur ++) {
+        ecs_metric_reduce(dst_cur, src_cur, t_dst, t_src);
+    }
+}
+
+static
+void flecs_stats_reduce_last(
+    ecs_metric_t *dst_cur,
+    ecs_metric_t *dst_last,
+    ecs_metric_t *src_cur,
+    int32_t t_dst,
+    int32_t t_src,
+    int32_t count)
+{
+    int32_t t_dst_next = t_next(t_dst);
+    for (; dst_cur <= dst_last; dst_cur ++, src_cur ++) {
+        /* Reduce into previous value */
+        ecs_metric_reduce_last(dst_cur, t_dst, count);
+
+        /* Restore old value */
+        dst_cur->gauge.avg[t_dst_next] = src_cur->gauge.avg[t_src];
+        dst_cur->gauge.min[t_dst_next] = src_cur->gauge.min[t_src];
+        dst_cur->gauge.max[t_dst_next] = src_cur->gauge.max[t_src];
+        dst_cur->counter.value[t_dst_next] = src_cur->counter.value[t_src];
+    }
+}
+
+static
+void flecs_stats_repeat_last(
+    ecs_metric_t *cur,
+    ecs_metric_t *last,
+    int32_t t)
+{
+    int32_t prev = t_prev(t);
+    for (; cur <= last; cur ++) {
+        ecs_metric_copy(cur, t, prev);
+    }
+}
+
+static
+void flecs_stats_copy_last(
+    ecs_metric_t *dst_cur,
+    ecs_metric_t *dst_last,
+    ecs_metric_t *src_cur,
+    int32_t t_dst,
+    int32_t t_src)
+{
+    for (; dst_cur <= dst_last; dst_cur ++, src_cur ++) {
+        dst_cur->gauge.avg[t_dst] = src_cur->gauge.avg[t_src];
+        dst_cur->gauge.min[t_dst] = src_cur->gauge.min[t_src];
+        dst_cur->gauge.max[t_dst] = src_cur->gauge.max[t_src];
+        dst_cur->counter.value[t_dst] = src_cur->counter.value[t_src];
+    }
+}
+
 void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
@@ -258,64 +321,32 @@ void ecs_world_stats_reduce(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src)
 {
-    int32_t t_dst = dst->t = t_next(dst->t);
-    int32_t t_src = src->t;
-
-    ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
-    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
-    
-    for (; cur <= last; cur ++, src_cur ++) {
-        ecs_metric_reduce(cur, src_cur, t_dst, t_src);
-    }
+    flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), (dst->t = t_next(dst->t)), src->t);
 }
 
 void ecs_world_stats_reduce_last(
-    ecs_world_stats_t *stats,
+    ecs_world_stats_t *dst,
     const ecs_world_stats_t *src,
     int32_t count)
 {
-    int32_t prev_t = stats->t, src_t = src->t;
-    int32_t t = stats->t = t_prev(prev_t);
-    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
-    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
-    
-    for (; cur <= last; cur ++, src_cur ++) {
-        ecs_metric_reduce_last(cur, t, count);
-
-        cur->gauge.avg[prev_t] = src_cur->gauge.avg[src_t];
-        cur->gauge.min[prev_t] = src_cur->gauge.min[src_t];
-        cur->gauge.max[prev_t] = src_cur->gauge.max[src_t];
-        cur->counter.value[prev_t] = src_cur->counter.value[src_t];
-    }
+    flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), (dst->t = t_prev(dst->t)), src->t, count);
 }
 
 void ecs_world_stats_repeat_last(
     ecs_world_stats_t *stats)
 {
-    int32_t t_last = stats->t, t = t_next(t_last);
-    ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
-    
-    for (; cur != last; cur ++) {
-        ecs_metric_copy(cur, t_last, t);
-    }
-
-    stats->t = t;
+    flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
+        (stats->t = t_next(stats->t)));
 }
 
 void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src)
 {
-    int32_t t_dst = dst->t, t_src = t_next(src->t);
-    ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
-    ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
-    
-    for (; cur <= last; cur ++, src_cur ++) {
-        cur->gauge.avg[t_dst] = src_cur->gauge.avg[t_src];
-        cur->gauge.min[t_dst] = src_cur->gauge.min[t_src];
-        cur->gauge.max[t_dst] = src_cur->gauge.max[t_src];
-        cur->counter.value[t_dst] = src_cur->counter.value[t_src];
-    }
+    flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
+        ECS_METRIC_FIRST(src), dst->t, t_next(src->t));
 }
 
 void ecs_query_stats_get(
@@ -339,7 +370,40 @@ error:
     return;
 }
 
+void ecs_query_stats_reduce(
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src)
+{
+    flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), (dst->t = t_next(dst->t)), src->t);
+}
+
+void ecs_query_stats_reduce_last(
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src,
+    int32_t count)
+{
+    flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), (dst->t = t_prev(dst->t)), src->t, count);
+}
+
+void ecs_query_stats_repeat_last(
+    ecs_query_stats_t *stats)
+{
+    flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
+        (stats->t = t_next(stats->t)));
+}
+
+void ecs_query_stats_copy_last(
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src)
+{
+    flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
+        ECS_METRIC_FIRST(src), dst->t, t_next(src->t));
+}
+
 #ifdef FLECS_SYSTEM
+
 bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
@@ -356,8 +420,8 @@ bool ecs_system_stats_get(
         return false;
     }
 
-    ecs_query_stats_get(world, ptr->query, &s->query_stats);
-    int32_t t = s->query_stats.t;
+    ecs_query_stats_get(world, ptr->query, &s->query);
+    int32_t t = s->query.t;
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
     ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
@@ -368,28 +432,46 @@ bool ecs_system_stats_get(
 error:
     return false;
 }
+
+void ecs_system_stats_reduce(
+    ecs_system_stats_t *dst,
+    const ecs_system_stats_t *src)
+{
+    ecs_query_stats_reduce(&dst->query, &src->query);
+    flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), dst->query.t, src->query.t);
+}
+
+void ecs_system_stats_reduce_last(
+    ecs_system_stats_t *dst,
+    const ecs_system_stats_t *src,
+    int32_t count)
+{
+    ecs_query_stats_reduce_last(&dst->query, &src->query, count);
+    flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
+        ECS_METRIC_FIRST(src), dst->query.t, src->query.t, count);
+}
+
+void ecs_system_stats_repeat_last(
+    ecs_system_stats_t *stats)
+{
+    ecs_query_stats_repeat_last(&stats->query);
+    flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
+        (stats->query.t));
+}
+
+void ecs_system_stats_copy_last(
+    ecs_system_stats_t *dst,
+    const ecs_system_stats_t *src)
+{
+    ecs_query_stats_copy_last(&dst->query, &src->query);
+    flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
+        ECS_METRIC_FIRST(src), dst->query.t, t_next(src->query.t));
+}
+
 #endif
 
-
 #ifdef FLECS_PIPELINE
-
-static 
-ecs_system_stats_t* get_system_stats(
-    ecs_map_t *systems,
-    ecs_entity_t system)
-{
-    ecs_check(systems != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_system_stats_t *s = ecs_map_get(systems, ecs_system_stats_t, system);
-    if (!s) {
-        s = ecs_map_ensure(systems, ecs_system_stats_t, system);
-    }
-
-    return s;
-error:
-    return NULL;
-}
 
 bool ecs_pipeline_stats_get(
     ecs_world_t *stage,
@@ -401,7 +483,6 @@ bool ecs_pipeline_stats_get(
     ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
-
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     if (!pq) {
         return false;
@@ -431,14 +512,11 @@ bool ecs_pipeline_stats_get(
         return false;
     }
 
-    if (s->system_stats && !sys_count) {
-        ecs_map_free(s->system_stats);
+    if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
+        ecs_map_fini(&s->system_stats);
     }
-    if (!s->system_stats && sys_count) {
-        s->system_stats = ecs_map_new(ecs_system_stats_t, sys_count);
-    }
-    if (!sys_count) {
-        s->system_stats = NULL;
+    if (!ecs_map_is_initialized(&s->system_stats) && sys_count) {
+        ecs_map_init(&s->system_stats, ecs_system_stats_t, sys_count);
     }
 
     /* Make sure vector is large enough to store all systems & sync points */
@@ -476,11 +554,14 @@ bool ecs_pipeline_stats_get(
     while (ecs_query_next(&it)) {
         int i;
         for (i = 0; i < it.count; i ++) {
-            ecs_system_stats_t *sys_stats = get_system_stats(
-                s->system_stats, it.entities[i]);
+            ecs_system_stats_t *sys_stats = ecs_map_ensure(
+                    &s->system_stats, ecs_system_stats_t, it.entities[i]);
+            sys_stats->query.t = s->t;
             ecs_system_stats_get(world, it.entities[i], sys_stats);
         }
     }
+
+    s->t = t_next(s->t);
 
     return true;
 error:
@@ -490,8 +571,81 @@ error:
 void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats)
 {
-    ecs_map_free(stats->system_stats);
+    ecs_map_fini(&stats->system_stats);
     ecs_vector_free(stats->systems);
+}
+
+void ecs_pipeline_stats_reduce(
+    ecs_pipeline_stats_t *dst,
+    const ecs_pipeline_stats_t *src)
+{
+    if (!ecs_map_is_initialized(&dst->system_stats)) {
+        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
+            ecs_map_count(&src->system_stats));
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
+    ecs_system_stats_t *sys_src, *sys_dst;
+    ecs_entity_t key;
+    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
+        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+        sys_dst->query.t = dst->t;
+        ecs_system_stats_reduce(sys_dst, sys_src);
+    }
+    dst->t = t_next(dst->t);
+}
+
+void ecs_pipeline_stats_reduce_last(
+    ecs_pipeline_stats_t *dst,
+    const ecs_pipeline_stats_t *src,
+    int32_t count)
+{
+    if (!ecs_map_is_initialized(&dst->system_stats)) {
+        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
+            ecs_map_count(&src->system_stats));
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
+    ecs_system_stats_t *sys_src, *sys_dst;
+    ecs_entity_t key;
+    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
+        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+        sys_dst->query.t = dst->t;
+        ecs_system_stats_reduce_last(sys_dst, sys_src, count);
+    }
+    dst->t = t_prev(dst->t);
+}
+
+void ecs_pipeline_stats_repeat_last(
+    ecs_pipeline_stats_t *stats)
+{
+    ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
+    ecs_system_stats_t *sys;
+    ecs_entity_t key;
+    while ((sys = ecs_map_next(&it, ecs_system_stats_t, &key))) {
+        sys->query.t = stats->t;
+        ecs_system_stats_repeat_last(sys);
+    }
+    stats->t = t_next(stats->t);
+}
+
+void ecs_pipeline_stats_copy_last(
+    ecs_pipeline_stats_t *dst,
+    const ecs_pipeline_stats_t *src)
+{
+    if (!ecs_map_is_initialized(&dst->system_stats)) {
+        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
+            ecs_map_count(&src->system_stats));
+    }
+
+    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
+    ecs_system_stats_t *sys_src, *sys_dst;
+    ecs_entity_t key;
+    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
+        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+        sys_dst->query.t = dst->t;
+        ecs_system_stats_copy_last(sys_dst, sys_src);
+    }
 }
 
 #endif
