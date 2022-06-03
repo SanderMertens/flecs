@@ -93,6 +93,12 @@ typedef struct ecs_world_stats_t {
     ecs_metric_t pipeline_build_count_total; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
     ecs_metric_t systems_ran_frame;          /* Number of systems ran in the last frame. */
 
+    /* OS API data */
+    ecs_metric_t alloc_count;                /* Allocs per frame */
+    ecs_metric_t realloc_count;              /* Reallocs per frame */
+    ecs_metric_t free_count;                 /* Frees per frame */
+    ecs_metric_t outstanding_alloc_count;    /* Difference between allocs & frees */
+
     int32_t last_;
 
     /** Current position in ringbuffer */

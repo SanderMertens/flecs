@@ -14,10 +14,10 @@
 #include <stdio.h>
 
 #define ECS_GAUGE_RECORD(m, t, value)\
-    flecs_gauge_record(m, t, (float)value)
+    flecs_gauge_record(m, t, (float)(value))
 
 #define ECS_COUNTER_RECORD(m, t, value)\
-    flecs_counter_record(m, t, (float)value)
+    flecs_counter_record(m, t, (float)(value))
 
 #define ECS_METRIC_FIRST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
@@ -241,6 +241,15 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->table_storage_count, t, world->info.table_storage_count);
     ECS_GAUGE_RECORD(&s->table_record_count, t, world->info.table_record_count);
 
+    ECS_COUNTER_RECORD(&s->alloc_count, t, ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count);
+    ECS_COUNTER_RECORD(&s->realloc_count, t, ecs_os_api_realloc_count);
+    ECS_COUNTER_RECORD(&s->free_count, t, ecs_os_api_free_count);
+
+    int64_t outstanding_allocs = ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count - ecs_os_api_free_count;
+    ECS_GAUGE_RECORD(&s->outstanding_alloc_count, t, outstanding_allocs);
+
 error:
     return;
 }
@@ -255,7 +264,7 @@ void ecs_world_stats_reduce(
     ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
     ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
     
-    for (; cur != last; cur ++, src_cur ++) {
+    for (; cur <= last; cur ++, src_cur ++) {
         ecs_metric_reduce(cur, src_cur, t_dst, t_src);
     }
 }
@@ -270,7 +279,7 @@ void ecs_world_stats_reduce_last(
     ecs_metric_t *cur = ECS_METRIC_FIRST(stats), *last = ECS_METRIC_LAST(stats);
     ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
     
-    for (; cur != last; cur ++, src_cur ++) {
+    for (; cur <= last; cur ++, src_cur ++) {
         ecs_metric_reduce_last(cur, t, count);
 
         cur->gauge.avg[prev_t] = src_cur->gauge.avg[src_t];
@@ -301,7 +310,7 @@ void ecs_world_stats_copy_last(
     ecs_metric_t *cur = ECS_METRIC_FIRST(dst), *last = ECS_METRIC_LAST(dst);
     ecs_metric_t *src_cur = ECS_METRIC_FIRST(src);
     
-    for (; cur != last; cur ++, src_cur ++) {
+    for (; cur <= last; cur ++, src_cur ++) {
         cur->gauge.avg[t_dst] = src_cur->gauge.avg[t_src];
         cur->gauge.min[t_dst] = src_cur->gauge.min[t_src];
         cur->gauge.max[t_dst] = src_cur->gauge.max[t_src];

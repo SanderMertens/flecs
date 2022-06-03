@@ -337,6 +337,10 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, merge_count_total);
     ECS_COUNTER_APPEND(reply, stats, pipeline_build_count_total);
     ECS_COUNTER_APPEND(reply, stats, systems_ran_frame);
+    ECS_COUNTER_APPEND(reply, stats, alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, realloc_count);
+    ECS_COUNTER_APPEND(reply, stats, free_count);
+    ECS_GAUGE_APPEND(reply, stats, outstanding_alloc_count);
     ecs_strbuf_list_pop(reply, "}");
 }
 
