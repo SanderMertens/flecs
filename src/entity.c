@@ -2938,7 +2938,7 @@ ecs_entity_t set_ptr_w_id(
             ecs_os_memcpy(dst, ptr, flecs_utosize(size));
         }
     } else {
-        memset(dst, 0, size);
+        ecs_os_memset(dst, 0, size);
     }
 
     flecs_table_mark_dirty(world, r->table, id);

@@ -2887,6 +2887,7 @@ void ecs_default_ctor(
 #else
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 #endif
+#define ECS_OFFSET_T(o, T) ECS_OFFSET(o, ECS_SIZEOF(T))
 
 #define ECS_ELEM(ptr, size, index) ECS_OFFSET(ptr, (size) * (index))
 #define ECS_ELEM_T(o, T, index) ECS_ELEM(o, ECS_SIZEOF(T), index)
@@ -9632,13 +9633,11 @@ typedef struct ecs_world_stats_t {
 
 /* Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
-    ecs_metric_t matched_table_count;       /* Number of matched non-empty tables. This is the number of tables 
-                                            * iterated over when evaluating a query. */    
-
-    ecs_metric_t matched_empty_table_count; /* Number of matched empty tables. Empty tables are not iterated over when
-                                            * evaluating a query. */
-    
-    ecs_metric_t matched_entity_count;      /* Number of matched entities across all tables */
+    int32_t first_;
+    ecs_metric_t matched_table_count;       /* Matched non-empty tables */    
+    ecs_metric_t matched_empty_table_count; /* Matched empty tables */
+    ecs_metric_t matched_entity_count;      /* Number of matched entities */
+    int32_t last_;
 
     /** Current position in ringbuffer */
     int32_t t; 
@@ -9646,11 +9645,14 @@ typedef struct ecs_query_stats_t {
 
 /** Statistics for a single system (use ecs_system_stats_get) */
 typedef struct ecs_system_stats_t {
-    ecs_query_stats_t query_stats;
+    int32_t first_;
     ecs_metric_t time_spent;       /* Time spent processing a system */
     ecs_metric_t invoke_count;     /* Number of times system is invoked */
     ecs_metric_t active;           /* Whether system is active (is matched with >0 entities) */
     ecs_metric_t enabled;          /* Whether system is enabled */
+    int32_t last_;
+
+    ecs_query_stats_t query;
 } ecs_system_stats_t;
 
 /** Statistics for all systems in a pipeline. */
@@ -9661,7 +9663,10 @@ typedef struct ecs_pipeline_stats_t {
 
     /** Map with system statistics. For each system in the systems vector, an
      * entry in the map exists of type ecs_system_stats_t. */
-    ecs_map_t *system_stats;
+    ecs_map_t system_stats;
+
+    /** Current position in ringbuffer */
+    int32_t t;
 
     int32_t system_count; /* Number of systems in pipeline */
     int32_t active_system_count; /* Number of active systems in pipeline */
@@ -9669,8 +9674,6 @@ typedef struct ecs_pipeline_stats_t {
 } ecs_pipeline_stats_t;
 
 /** Get world statistics.
- * Obtain statistics for the provided world. This operation loops several times
- * over the tables in the world, and can impact application performance.
  *
  * @param world The world.
  * @param stats Out parameter for statistics.
@@ -9680,59 +9683,26 @@ void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
-/** Reduce world statistics.
- * This operation reduces values from the last window into a single metric, and
- * moves the cursor of dst forward.
- * 
- * @param dst The metrics to reduce to.
- * @param src The metrics to reduce.
- */
 FLECS_API 
 void ecs_world_stats_reduce(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
-/** Reduce last measurement into previous measurement.
- * This operation moves the cursor backward.
- * 
- * @param stats The metrics.
- * @param last The value to restore to the cursor before moving backward.
- * @param count The number of times the metric was reduced.
- */
 FLECS_API
 void ecs_world_stats_reduce_last(
     ecs_world_stats_t *stats,
     const ecs_world_stats_t *last,
     int32_t count);
 
-/** Copy last measurement to next measurement.
- * This operation moves the cursor forward.
- * 
- * @param stats The metrics.
- */
 FLECS_API
 void ecs_world_stats_repeat_last(
     ecs_world_stats_t *stats);
 
-/** Copy last measurement to destination.
- * This operation copies the last measurement into the destination. It does not
- * modify the cursor.
- * 
- * @param dst The metrics.
- * @param src The metrics to copy.
- */
 FLECS_API
 void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
-/** Print world statistics.
- * Print statistics obtained by ecs_get_world_statistics and in the
- * ecs_world_info_t struct.
- * 
- * @param world The world.
- * @param stats The statistics to print.
- */
 FLECS_API 
 void ecs_world_stats_log(
     const ecs_world_t *world,
@@ -9750,6 +9720,26 @@ void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *stats);
+
+FLECS_API 
+void ecs_query_stats_reduce(
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src);
+
+FLECS_API
+void ecs_query_stats_reduce_last(
+    ecs_query_stats_t *stats,
+    const ecs_query_stats_t *last,
+    int32_t count);
+
+FLECS_API
+void ecs_query_stats_repeat_last(
+    ecs_query_stats_t *stats);
+
+FLECS_API
+void ecs_query_stats_copy_last(
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src);
 
 #ifdef FLECS_SYSTEM
 /** Get system statistics.
@@ -9790,8 +9780,55 @@ FLECS_API
 void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats);
 
+/** Reduce pipeline statistics.
+ * This operation reduces values from the last window into a single metric, and
+ * moves the cursor of dst forward.
+ * 
+ * @param dst The metrics to reduce to.
+ * @param src The metrics to reduce.
+ */
+FLECS_API 
+void ecs_pipeline_stats_reduce(
+    ecs_pipeline_stats_t *dst,
+    const ecs_pipeline_stats_t *src);
+
+/** Reduce last measurement into previous measurement.
+ * This operation moves the cursor backward.
+ * 
+ * @param stats The metrics.
+ * @param last The value to restore to the cursor before moving backward.
+ * @param count The number of times the metric was reduced.
+ */
+FLECS_API
+void ecs_pipeline_stats_reduce_last(
+    ecs_pipeline_stats_t *stats,
+    const ecs_pipeline_stats_t *last,
+    int32_t count);
+
+/** Copy last measurement to next measurement.
+ * This operation moves the cursor forward.
+ * 
+ * @param stats The metrics.
+ */
+FLECS_API
+void ecs_pipeline_stats_repeat_last(
+    ecs_pipeline_stats_t *stats);
+
+/** Copy last measurement to destination.
+ * This operation copies the last measurement into the destination. It does not
+ * modify the cursor.
+ * 
+ * @param dst The metrics.
+ * @param src The metrics to copy.
+ */
+FLECS_API
+void ecs_pipeline_stats_copy_last(
+    ecs_pipeline_stats_t *dst,
+    const ecs_pipeline_stats_t *src);
+
 #endif
 
+/** Reduce all measurements from a window into a single measurement. */
 FLECS_API 
 void ecs_metric_reduce(
     ecs_metric_t *dst,
@@ -9799,12 +9836,14 @@ void ecs_metric_reduce(
     int32_t t_dst,
     int32_t t_src);
 
+/** Reduce last measurement into previous measurement */
 FLECS_API
 void ecs_metric_reduce_last(
     ecs_metric_t *m,
     int32_t t,
     int32_t count);
 
+/** Copy measurement */
 FLECS_API
 void ecs_metric_copy(
     ecs_metric_t *m,
@@ -9852,6 +9891,7 @@ extern "C" {
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMonitor);
 
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
 FLECS_API extern ECS_DECLARE(EcsPeriod1s);
 FLECS_API extern ECS_DECLARE(EcsPeriod1m);
@@ -9860,10 +9900,19 @@ FLECS_API extern ECS_DECLARE(EcsPeriod1d);
 FLECS_API extern ECS_DECLARE(EcsPeriod1w);
 
 typedef struct {
-    ecs_world_stats_t stats;
     FLECS_FLOAT elapsed;
     int32_t reduce_count;
+} EcsStatsHeader;
+
+typedef struct {
+    EcsStatsHeader hdr; 
+    ecs_world_stats_t stats;
 } EcsWorldStats;
+
+typedef struct {
+    EcsStatsHeader hdr;
+    ecs_pipeline_stats_t stats;
+} EcsPipelineStats;
 
 /* Module import */
 FLECS_API

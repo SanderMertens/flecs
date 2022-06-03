@@ -76,6 +76,7 @@ void ecs_default_ctor(
 #else
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 #endif
+#define ECS_OFFSET_T(o, T) ECS_OFFSET(o, ECS_SIZEOF(T))
 
 #define ECS_ELEM(ptr, size, index) ECS_OFFSET(ptr, (size) * (index))
 #define ECS_ELEM_T(o, T, index) ECS_ELEM(o, ECS_SIZEOF(T), index)
