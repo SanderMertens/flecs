@@ -157,21 +157,25 @@ void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
+/** Reduce source measurement window into single destination measurement. */
 FLECS_API 
 void ecs_world_stats_reduce(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
+/** Reduce last measurement into previous measurement, restore old value. */
 FLECS_API
 void ecs_world_stats_reduce_last(
     ecs_world_stats_t *stats,
-    const ecs_world_stats_t *last,
+    const ecs_world_stats_t *old,
     int32_t count);
 
+/** Repeat last measurement. */
 FLECS_API
 void ecs_world_stats_repeat_last(
     ecs_world_stats_t *stats);
 
+/** Copy last measurement from source to destination. */
 FLECS_API
 void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
@@ -195,21 +199,25 @@ void ecs_query_stats_get(
     const ecs_query_t *query,
     ecs_query_stats_t *stats);
 
+/** Reduce source measurement window into single destination measurement. */
 FLECS_API 
 void ecs_query_stats_reduce(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src);
 
+/** Reduce last measurement into previous measurement, restore old value. */
 FLECS_API
 void ecs_query_stats_reduce_last(
     ecs_query_stats_t *stats,
-    const ecs_query_stats_t *last,
+    const ecs_query_stats_t *old,
     int32_t count);
 
+/** Repeat last measurement. */
 FLECS_API
 void ecs_query_stats_repeat_last(
     ecs_query_stats_t *stats);
 
+/** Copy last measurement from source to destination. */
 FLECS_API
 void ecs_query_stats_copy_last(
     ecs_query_stats_t *dst,
@@ -229,6 +237,30 @@ bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
+
+/** Reduce source measurement window into single destination measurement */
+FLECS_API 
+void ecs_system_stats_reduce(
+    ecs_system_stats_t *dst,
+    const ecs_system_stats_t *src);
+
+/** Reduce last measurement into previous measurement, restore old value. */
+FLECS_API
+void ecs_system_stats_reduce_last(
+    ecs_system_stats_t *stats,
+    const ecs_system_stats_t *old,
+    int32_t count);
+
+/** Repeat last measurement. */
+FLECS_API
+void ecs_system_stats_repeat_last(
+    ecs_system_stats_t *stats);
+
+/** Copy last measurement from source to destination. */
+FLECS_API
+void ecs_system_stats_copy_last(
+    ecs_system_stats_t *dst,
+    const ecs_system_stats_t *src);
 #endif
 
 #ifdef FLECS_PIPELINE
@@ -254,36 +286,20 @@ FLECS_API
 void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats);
 
-/** Reduce pipeline statistics.
- * This operation reduces values from the last window into a single metric, and
- * moves the cursor of dst forward.
- * 
- * @param dst The metrics to reduce to.
- * @param src The metrics to reduce.
- */
+/** Reduce source measurement window into single destination measurement */
 FLECS_API 
 void ecs_pipeline_stats_reduce(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src);
 
-/** Reduce last measurement into previous measurement.
- * This operation moves the cursor backward.
- * 
- * @param stats The metrics.
- * @param last The value to restore to the cursor before moving backward.
- * @param count The number of times the metric was reduced.
- */
+/** Reduce last measurement into previous measurement, restore old value. */
 FLECS_API
 void ecs_pipeline_stats_reduce_last(
     ecs_pipeline_stats_t *stats,
-    const ecs_pipeline_stats_t *last,
+    const ecs_pipeline_stats_t *old,
     int32_t count);
 
-/** Copy last measurement to next measurement.
- * This operation moves the cursor forward.
- * 
- * @param stats The metrics.
- */
+/** Repeat last measurement. */
 FLECS_API
 void ecs_pipeline_stats_repeat_last(
     ecs_pipeline_stats_t *stats);

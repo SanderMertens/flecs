@@ -360,7 +360,6 @@ void ecs_query_stats_get(
     (void)world;
 
     int32_t t = s->t = t_next(s->t);
-
     ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
     ECS_GAUGE_RECORD(&s->matched_entity_count, t, ecs_iter_count(&it));
     ECS_GAUGE_RECORD(&s->matched_table_count, t, ecs_query_table_count(query));
@@ -579,6 +578,12 @@ void ecs_pipeline_stats_reduce(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
+    int32_t system_count = ecs_vector_count(src->systems);
+    ecs_vector_set_count(&dst->systems, ecs_entity_t, system_count);
+    ecs_entity_t *dst_systems = ecs_vector_first(dst->systems, ecs_entity_t);
+    ecs_entity_t *src_systems = ecs_vector_first(src->systems, ecs_entity_t);
+    ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
+
     if (!ecs_map_is_initialized(&dst->system_stats)) {
         ecs_map_init(&dst->system_stats, ecs_system_stats_t,
             ecs_map_count(&src->system_stats));
