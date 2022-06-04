@@ -497,6 +497,7 @@
             "testcases": [
                 "delete_1",
                 "delete_1_again",
+                "delete_recycled_tag_again",
                 "delete_empty",
                 "delete_nonexist",
                 "delete_1st_of_3",

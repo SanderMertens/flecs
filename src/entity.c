@@ -2535,6 +2535,7 @@ void ecs_delete(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    bool is_alive = false;
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_delete(world, stage, entity)) {
@@ -2595,13 +2596,17 @@ void ecs_delete(
 
         /* Remove (and invalidate) entity after executing handlers */
         flecs_sparse_remove(ecs_eis(world), entity);
+
+        is_alive = true;
     }
 
-    ecs_assert(!ecs_id_in_use(world, entity), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_id_in_use(world, ecs_pair(EcsWildcard, entity)), 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_id_in_use(world, ecs_pair(entity, EcsWildcard)), 
-        ECS_INTERNAL_ERROR, NULL);
+    if (is_alive) {
+        ecs_assert(!ecs_id_in_use(world, entity), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(!ecs_id_in_use(world, ecs_pair(EcsWildcard, entity)), 
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(!ecs_id_in_use(world, ecs_pair(entity, EcsWildcard)), 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 
     flecs_defer_flush(world, stage);
 error:

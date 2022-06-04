@@ -39,6 +39,38 @@ void Delete_delete_1_again() {
     ecs_fini(world);
 }
 
+void Delete_delete_recycled_tag_again() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_entity_t t = ecs_new_id(world);
+    test_assert(t != 0);
+    test_assert((uint32_t)t == (uint32_t)e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, t));
+    test_assert(ecs_is_alive(world, t));
+
+    ecs_entity_t f = ecs_new_id(world);
+    ecs_add_id(world, f, t);
+
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_exists(world, t));
+    test_assert(ecs_is_alive(world, t));
+
+    test_assert(ecs_has_id(world, f, t));
+
+    ecs_fini(world);
+}
+
 void Delete_delete_empty() {
     ecs_world_t *world = ecs_init();
 

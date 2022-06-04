@@ -460,6 +460,7 @@ void Reference_get_nonexisting(void);
 void Delete_setup(void);
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
+void Delete_delete_recycled_tag_again(void);
 void Delete_delete_empty(void);
 void Delete_delete_nonexist(void);
 void Delete_delete_1st_of_3(void);
@@ -3643,6 +3644,10 @@ bake_test_case Delete_testcases[] = {
     {
         "delete_1_again",
         Delete_delete_1_again
+    },
+    {
+        "delete_recycled_tag_again",
+        Delete_delete_recycled_tag_again
     },
     {
         "delete_empty",
@@ -9490,7 +9495,7 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        30,
+        31,
         Delete_testcases
     },
     {
