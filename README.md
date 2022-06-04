@@ -121,7 +121,6 @@ int main(int argc, char *argv[]) {
 Examples and tutorials contributed by the community :heart:
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
-- [Bringing Flecs to UE4](https://bebylon.dev/blog/ecs-flecs-ue4/)
 - [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
 - [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
 - [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
