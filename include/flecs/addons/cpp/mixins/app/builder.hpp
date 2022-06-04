@@ -35,6 +35,11 @@ struct app_builder {
         return *this;
     }
 
+    app_builder& enable_monitor(bool value = true) {
+        m_desc.enable_monitor = value;
+        return *this;
+    }
+
     app_builder& init(ecs_app_init_action_t value) {
         m_desc.init = value;
         return *this;

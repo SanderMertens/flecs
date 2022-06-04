@@ -35341,7 +35341,7 @@ int ecs_app_run(
 
     /* Monitoring periodically collects statistics */
     if (desc->enable_monitor) {
-#ifdef FLECS_MONITORING
+#ifdef FLECS_MONITOR
         ECS_IMPORT(world, FlecsMonitor);
 #else
         ecs_warn("cannot enable monitoring, MONITOR addon not available");
