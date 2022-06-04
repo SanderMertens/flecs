@@ -25,9 +25,9 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance)
 - [Statistics addon](https://flecs.docsforge.com/master/api-stats/) for profiling ECS performance
-- [A web-based dashboard (click to try!)](https://flecs.dev/explorer) for exploring entities, running queries & learning Flecs:
+- [A web-based dashboard (click to try!)](https://flecs.dev/explorer) for inspecting entities, running ECS queries and monitoring games:
 
-<img width="1110" alt="Screen Shot 2022-04-13 at 11 43 43 AM" src="https://user-images.githubusercontent.com/9919222/163149399-e817368a-ac28-4315-98d9-a393faaee377.png">
+<img width="1759" alt="Screen Shot 2022-06-04 at 1 26 06 AM" src="https://user-images.githubusercontent.com/9919222/171991348-30f4b222-884f-4954-b620-d223c083a7b1.png">
 
 **Flecs v3 is the latest, most stable and feature rich version of Flecs, and recommended for new projects.**
 
