@@ -1257,6 +1257,25 @@ void World_delete_with_pair_type() {
     test_assert(!e_3.is_alive());
 }
 
+void World_delete_with_implicit() {
+    flecs::world ecs;
+
+    ecs.delete_with<Tag>();
+
+    test_assert(true);
+}
+
+void World_delete_with_pair_implicit() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    ecs.delete_with<Rel, Obj>();
+
+    test_assert(true);
+}
+
 void World_remove_all_id() {
     flecs::world ecs;
 
@@ -1346,6 +1365,25 @@ void World_remove_all_pair_type() {
     test_assert((!e_1.has<Rel, ObjB>()));
     test_assert((!e_2.has<Rel, ObjB>()));
     test_assert((e_3.has<Rel, ObjB>()));
+}
+
+void World_remove_all_implicit() {
+    flecs::world ecs;
+
+    ecs.remove_all<Tag>();
+
+    test_assert(true);
+}
+
+void World_remove_all_pair_implicit() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    ecs.remove_all<Rel, Obj>();
+
+    test_assert(true);
 }
 
 void World_get_scope() {

@@ -859,10 +859,14 @@ void World_delete_with_id(void);
 void World_delete_with_type(void);
 void World_delete_with_pair(void);
 void World_delete_with_pair_type(void);
+void World_delete_with_implicit(void);
+void World_delete_with_pair_implicit(void);
 void World_remove_all_id(void);
 void World_remove_all_type(void);
 void World_remove_all_pair(void);
 void World_remove_all_pair_type(void);
+void World_remove_all_implicit(void);
+void World_remove_all_pair_implicit(void);
 void World_get_scope(void);
 void World_get_scope_type(void);
 void World_register_namespace_after_component(void);
@@ -4220,6 +4224,14 @@ bake_test_case World_testcases[] = {
         World_delete_with_pair_type
     },
     {
+        "delete_with_implicit",
+        World_delete_with_implicit
+    },
+    {
+        "delete_with_pair_implicit",
+        World_delete_with_pair_implicit
+    },
+    {
         "remove_all_id",
         World_remove_all_id
     },
@@ -4234,6 +4246,14 @@ bake_test_case World_testcases[] = {
     {
         "remove_all_pair_type",
         World_remove_all_pair_type
+    },
+    {
+        "remove_all_implicit",
+        World_remove_all_implicit
+    },
+    {
+        "remove_all_pair_implicit",
+        World_remove_all_pair_implicit
     },
     {
         "get_scope",
@@ -4655,7 +4675,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        86,
+        90,
         World_testcases
     },
     {
