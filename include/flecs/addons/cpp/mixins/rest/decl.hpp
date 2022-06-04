@@ -1,9 +1,10 @@
 #pragma once
 
 namespace flecs {
-namespace rest {
 
 using Rest = EcsRest;
+
+namespace rest {
 
 namespace _ {
 

@@ -4,5 +4,5 @@
 int main(int, char *[]) {
     flecs::world world;
 
-    world.set<flecs::rest::Rest>({});
+    world.set<flecs::Rest>({});
 }

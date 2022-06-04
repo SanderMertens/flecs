@@ -5,7 +5,7 @@ namespace rest {
 namespace _ {
 
 inline void init(flecs::world& world) {
-    world.component<rest::Rest>("flecs::rest::Rest");
+    world.component<Rest>("flecs::rest::Rest");
 }
  
 } // namespace _

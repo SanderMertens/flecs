@@ -31,6 +31,7 @@ typedef struct ecs_app_desc_t {
     FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
     int32_t threads;          /* Number of threads. */
     bool enable_rest;         /* Allows HTTP clients to access ECS data */
+    bool enable_monitor;      /* Periodically collect statistics */
 
     ecs_app_init_action_t init; /* If set, function is ran before starting the
                                  * main loop. */
