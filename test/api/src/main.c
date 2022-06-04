@@ -1162,6 +1162,7 @@ void Iter_paged_iter_w_singleton_component_instanced(void);
 void Iter_iter_1_term_no_alloc(void);
 void Iter_iter_cache_size_terms_no_alloc(void);
 void Iter_iter_lt_cache_size_terms_alloc(void);
+void Iter_count(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6387,6 +6388,10 @@ bake_test_case Iter_testcases[] = {
     {
         "iter_lt_cache_size_terms_alloc",
         Iter_iter_lt_cache_size_terms_alloc
+    },
+    {
+        "count",
+        Iter_count
     }
 };
 
@@ -9562,7 +9567,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        27,
+        28,
         Iter_testcases
     },
     {

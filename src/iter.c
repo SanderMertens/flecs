@@ -641,7 +641,7 @@ error:
     return false;
 }
 
-bool ecs_iter_count(
+int32_t ecs_iter_count(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);

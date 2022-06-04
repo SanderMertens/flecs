@@ -1676,3 +1676,29 @@ void Iter_paged_iter_w_singleton_component_instanced() {
 
     ecs_fini(world);
 }
+
+void Iter_count() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    for (int i = 0; i < 500; i ++) {
+        ecs_entity_t e = ecs_new(world, TagA);
+        if (!(i % 2)) {
+            ecs_add(world, e, TagB);
+        }
+        if (!(i % 3)) {
+            ecs_add(world, e, TagC);
+        }
+    }
+
+    ecs_query_t *q = ecs_query_new(world, "TagA");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_int(500, ecs_iter_count(&it));
+
+    ecs_fini(world);
+}
