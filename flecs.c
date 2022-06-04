@@ -26996,9 +26996,8 @@ void ecs_query_stats_get(
     int32_t t = s->t = t_next(s->t);
 
     if (query->filter.flags & EcsFilterMatchThis) {
-        ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
-        it.flags |= EcsIterIsInstanced;
-        ECS_GAUGE_RECORD(&s->matched_entity_count, t, ecs_iter_count(&it));
+        ECS_GAUGE_RECORD(&s->matched_entity_count, t, 
+            ecs_query_entity_count(query));
         ECS_GAUGE_RECORD(&s->matched_table_count, t, 
             ecs_query_table_count(query));
         ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 
@@ -44121,6 +44120,29 @@ char* ecs_query_str(
     const ecs_query_t *query)
 {
     return ecs_filter_str(query->world, &query->filter);
+}
+
+int32_t ecs_query_table_count(
+    const ecs_query_t *query)
+{
+    return query->cache.tables.count;
+}
+
+int32_t ecs_query_empty_table_count(
+    const ecs_query_t *query)
+{
+    return query->cache.empty_tables.count;
+}
+
+int32_t ecs_query_entity_count(
+    const ecs_query_t *query)
+{
+    int32_t result = 0;
+    ecs_table_cache_hdr_t *cur, *last = query->cache.tables.last;
+    for (cur = query->cache.tables.first; cur != last; cur = cur->next) {
+        result += ecs_table_count(cur->table);
+    }
+    return result;
 }
 
 #include <stdio.h>

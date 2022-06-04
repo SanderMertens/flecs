@@ -327,11 +327,6 @@
     ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
 
 
-/* -- Queries -- */
-
-#define ecs_query_table_count(query) query->cache.tables.count
-#define ecs_query_empty_table_count(query) query->cache.empty_tables.count
-
 /* -- Iterators -- */
 
 #define ecs_term_id(it, index)\

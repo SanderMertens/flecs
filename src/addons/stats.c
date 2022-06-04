@@ -362,9 +362,8 @@ void ecs_query_stats_get(
     int32_t t = s->t = t_next(s->t);
 
     if (query->filter.flags & EcsFilterMatchThis) {
-        ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
-        it.flags |= EcsIterIsInstanced;
-        ECS_GAUGE_RECORD(&s->matched_entity_count, t, ecs_iter_count(&it));
+        ECS_GAUGE_RECORD(&s->matched_entity_count, t, 
+            ecs_query_entity_count(query));
         ECS_GAUGE_RECORD(&s->matched_table_count, t, 
             ecs_query_table_count(query));
         ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 

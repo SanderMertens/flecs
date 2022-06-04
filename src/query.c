@@ -2670,3 +2670,26 @@ char* ecs_query_str(
 {
     return ecs_filter_str(query->world, &query->filter);
 }
+
+int32_t ecs_query_table_count(
+    const ecs_query_t *query)
+{
+    return query->cache.tables.count;
+}
+
+int32_t ecs_query_empty_table_count(
+    const ecs_query_t *query)
+{
+    return query->cache.empty_tables.count;
+}
+
+int32_t ecs_query_entity_count(
+    const ecs_query_t *query)
+{
+    int32_t result = 0;
+    ecs_table_cache_hdr_t *cur, *last = query->cache.tables.last;
+    for (cur = query->cache.tables.first; cur != last; cur = cur->next) {
+        result += ecs_table_count(cur->table);
+    }
+    return result;
+}

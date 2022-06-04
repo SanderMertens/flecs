@@ -6324,6 +6324,35 @@ FLECS_API
 char* ecs_query_str(
     const ecs_query_t *query);
 
+/** Returns number of tables query matched with.
+ *
+ * @param query The query.
+ * @return The number of matched tables.
+ */
+FLECS_API
+int32_t ecs_query_table_count(
+    const ecs_query_t *query);
+
+/** Returns number of empty tables query matched with.
+ *
+ * @param query The query.
+ * @return The number of matched empty tables.
+ */
+FLECS_API
+int32_t ecs_query_empty_table_count(
+    const ecs_query_t *query);
+
+/** Returns number of entities query matched with.
+ * This operation iterates all non-empty tables in the query cache to find the
+ * total number of entities.
+ *
+ * @param query The query.
+ * @return The number of matched entities.
+ */
+FLECS_API
+int32_t ecs_query_entity_count(
+    const ecs_query_t *query);
+
 /** @} */
 
 
@@ -7895,11 +7924,6 @@ void* ecs_record_get_column(
 #define ecs_add_fullpath(world, entity, path)\
     ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
 
-
-/* -- Queries -- */
-
-#define ecs_query_table_count(query) query->cache.tables.count
-#define ecs_query_empty_table_count(query) query->cache.empty_tables.count
 
 /* -- Iterators -- */
 
