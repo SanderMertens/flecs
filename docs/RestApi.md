@@ -19,16 +19,44 @@ When an application uses the app addon [FLECS_APP](https://flecs.docsforge.com/m
 // Start application main loop, enable REST interface
 ecs_app_run(world, &(ecs_app_desc_t){
     .enable_rest = true
-})
+});
 ```
 ```cpp
 // Start application main loop, enable REST interface
-world.app().enable_rest().run();
+world.app()
+  .enable_rest()
+  .run();
 ```
 
 To test if the REST API is working, navigate to http://localhost:27750/entity/flecs/core/World. Upon success this request should return a reply that looks like:
 ```json
 {"path":"World", "ids":[["flecs.rest.Rest"], ["flecs.core.Identifier", "flecs.core.Name"], ["flecs.core.Identifier", "flecs.core.Symbol"], ["flecs.core.ChildOf", "flecs.core"], ["flecs.doc.Description", "flecs.core.Name"], ["flecs.doc.Description", "flecs.doc.Brief"]]}
+```
+
+When the monitor module is imported, the REST API provides a `stats` endpoint with statistics for different time intervals:
+
+```c
+// Import monitor addon
+ECS_IMPORT(world, FlecsMonitor);
+```
+```cpp
+world.import<flecs::monitor>();
+```
+
+When an application uses the app addon [FLECS_APP](https://flecs.docsforge.com/master/api-app/) the monitoring can be enabled like this:
+```c
+// Start application main loop, enable REST interface and monitoring
+ecs_app_run(world, &(ecs_app_desc_t){
+    .enable_rest = true,
+    .enable_monitor = true
+});
+```
+```cpp
+// Start application main loop, enable REST interface and monitoring
+world.app()
+  .enable_rest()
+  .enable_monitor()
+  .run();
 ```
 
 For the full C/C++ API reference [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
@@ -201,3 +229,20 @@ data, a 0 element is added to the array.
 /query?q=Position&values=true
 /query?q=Position%2CVelocity
 ```
+
+### stats
+```
+/stats/<category>/<period>
+```
+The stats endpoint returns statistics for a specified category or period. This endpoint requires the monitor module to be imported (see above). The supported categories are:
+
+- world
+- pipeline
+
+The supported periods are:
+
+- 1s
+- 1m
+- 1h
+- 1d
+- 1w
