@@ -645,6 +645,10 @@ int32_t ecs_iter_count(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
+
     int32_t count = 0;
     while (ecs_iter_next(it)) {
         count += it->count;
