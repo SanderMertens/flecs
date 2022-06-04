@@ -365,14 +365,12 @@ void flecs_system_stats_to_json(
     ecs_strbuf_list_append(reply, "\"name\":\"%s\"", path);
     ecs_os_free(path);
 
-    ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count);
-    ECS_GAUGE_APPEND(reply, &stats->query, matched_empty_table_count);
-    ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count);
+    if (!stats->task) {
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count);
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count);
+    }
 
     ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t);
-    ECS_COUNTER_APPEND_T(reply, stats, invoke_count, stats->query.t);
-    ECS_COUNTER_APPEND_T(reply, stats, active, stats->query.t);
-    ECS_COUNTER_APPEND_T(reply, stats, enabled, stats->query.t);
     ecs_strbuf_list_pop(reply, "}");
 }
 

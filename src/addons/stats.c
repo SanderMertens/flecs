@@ -436,6 +436,8 @@ bool ecs_system_stats_get(
     ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsInactive));
     ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
+    s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
+
     return true;
 error:
     return false;
@@ -446,6 +448,7 @@ void ecs_system_stats_reduce(
     const ecs_system_stats_t *src)
 {
     ecs_query_stats_reduce(&dst->query, &src->query);
+    dst->task = src->task;
     flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
         ECS_METRIC_FIRST(src), dst->query.t, src->query.t);
 }
@@ -456,6 +459,7 @@ void ecs_system_stats_reduce_last(
     int32_t count)
 {
     ecs_query_stats_reduce_last(&dst->query, &src->query, count);
+    dst->task = src->task;
     flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
         ECS_METRIC_FIRST(src), dst->query.t, src->query.t, count);
 }
@@ -473,6 +477,7 @@ void ecs_system_stats_copy_last(
     const ecs_system_stats_t *src)
 {
     ecs_query_stats_copy_last(&dst->query, &src->query);
+    dst->task = src->task;
     flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
         ECS_METRIC_FIRST(src), dst->query.t, t_next(src->query.t));
 }

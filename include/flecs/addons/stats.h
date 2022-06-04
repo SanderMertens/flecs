@@ -126,6 +126,8 @@ typedef struct ecs_system_stats_t {
     ecs_metric_t enabled;          /* Whether system is enabled */
     int32_t last_;
 
+    bool task;                     /* Is system a task */
+
     ecs_query_stats_t query;
 } ecs_system_stats_t;
 
