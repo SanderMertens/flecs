@@ -79,11 +79,6 @@ bool flecs_table_release(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Unregister table cache records */
-void flecs_table_records_unregister(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 /* Make sure table records are in correct table cache list */
 bool flecs_table_records_update_empty(
     ecs_table_t *table);

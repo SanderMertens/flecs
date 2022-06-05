@@ -453,6 +453,7 @@ void fini_store(ecs_world_t *world) {
     flecs_sparse_clear(&world->store.entity_index);
     flecs_hashmap_fini(&world->store.table_map);
     ecs_vector_free(world->store.records);
+    ecs_vector_free(world->store.to_delete_stack);
 
     ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
     while ((cur = next)) {
@@ -785,7 +786,7 @@ void flecs_notify_tables(
 
     /* If id is specified, only broadcast to tables with id */
     } else {
-        ecs_id_record_t *idr = flecs_get_id_record(world, id);
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
         if (!idr) {
             return;
         }
@@ -1465,35 +1466,35 @@ bool flecs_init_type_info_id(
     }
 
     /* Set type info for id record of component */
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, component);
-    changed |= flecs_set_type_info_for_id_record(world, idr, ti);
+    ecs_id_record_t *idr = flecs_id_record_ensure(world, component);
+    changed |= flecs_id_record_set_type_info(world, idr, ti);
     bool is_tag = idr->flags & EcsIdTag;
 
     /* All id records with component as relation inherit type info */
-    idr = flecs_ensure_id_record(world, ecs_pair(component, EcsWildcard));
+    idr = flecs_id_record_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
-            changed |= flecs_set_type_info_for_id_record(world, idr, NULL);
+            changed |= flecs_id_record_set_type_info(world, idr, NULL);
         } else if (ti) {
-            changed |= flecs_set_type_info_for_id_record(world, idr, ti);
+            changed |= flecs_id_record_set_type_info(world, idr, ti);
         } else if ((idr->type_info != NULL) && 
             (idr->type_info->component == component))
         {
-            changed |= flecs_set_type_info_for_id_record(world, idr, NULL);
+            changed |= flecs_id_record_set_type_info(world, idr, NULL);
         }
     } while ((idr = idr->first.next));
 
     /* All non-tag id records with component as object inherit type info,
      * if relation doesn't have type info */
-    idr = flecs_ensure_id_record(world, ecs_pair(EcsWildcard, component));
+    idr = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, component));
     do {
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {
-            changed |= flecs_set_type_info_for_id_record(world, idr, ti);
+            changed |= flecs_id_record_set_type_info(world, idr, ti);
         }
     } while ((idr = idr->first.next));
 
     /* Type info of (*, component) should always point to component */
-    ecs_assert(flecs_get_id_record(world, ecs_pair(EcsWildcard, component))->
+    ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
         type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
@@ -1778,12 +1779,12 @@ bool ecs_id_in_use(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return false;
     }
-    return (ecs_table_cache_count(&idr->cache) != 0) ||
-        (ecs_table_cache_empty_count(&idr->cache) != 0);
+    return (flecs_table_cache_count(&idr->cache) != 0) ||
+        (flecs_table_cache_empty_count(&idr->cache) != 0);
 }
 
 void ecs_run_aperiodic(

@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Clone_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new(world, 0);
     test_assert(e1 != 0);
@@ -17,7 +17,7 @@ void Clone_empty() {
 }
 
 void Clone_empty_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new(world, 0);
     test_assert(e1 != 0);
@@ -35,7 +35,7 @@ void Clone_empty_w_value() {
 void Clone_null() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
     ecs_clone(world, 0, 0, false);
@@ -43,14 +43,14 @@ void Clone_null() {
 
 void Clone_null_w_value() {
     install_test_abort();
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
     ecs_clone(world, 0, 0, true);
 }
 
 void Clone_1_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -70,7 +70,7 @@ void Clone_1_component() {
 }
 
 void Clone_2_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -97,7 +97,7 @@ void Clone_2_component() {
 }
 
 void Clone_3_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -129,7 +129,7 @@ void Clone_3_component() {
 }
 
 void Clone_1_component_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -160,7 +160,7 @@ void Clone_1_component_w_value() {
 }
 
 void Clone_2_component_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -206,7 +206,7 @@ void Clone_2_component_w_value() {
 }
 
 void Clone_3_component_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -265,7 +265,7 @@ void Clone_3_component_w_value() {
 }
 
 void Clone_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
 
@@ -283,7 +283,7 @@ void Clone_tag() {
 }
 
 void Clone_tag_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
 
@@ -301,7 +301,7 @@ void Clone_tag_w_value() {
 }
 
 void Clone_1_tag_1_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
@@ -323,7 +323,7 @@ void Clone_1_tag_1_component() {
 }
 
 void Clone_1_tag_1_component_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);

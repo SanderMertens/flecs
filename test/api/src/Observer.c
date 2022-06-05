@@ -97,7 +97,7 @@ void Dummy(ecs_iter_t *it) {
 }
 
 void Observer_2_terms_w_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -132,7 +132,7 @@ void Observer_2_terms_w_on_add() {
 }
 
 void Observer_2_terms_w_on_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -170,7 +170,7 @@ void Observer_2_terms_w_on_remove() {
 }
 
 void Observer_2_terms_w_on_set_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -205,7 +205,7 @@ void Observer_2_terms_w_on_set_value() {
 }
 
 void Observer_2_terms_w_on_remove_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -244,7 +244,7 @@ void Observer_2_terms_w_on_remove_value() {
 
 
 void Observer_2_terms_w_on_add_2nd() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -279,7 +279,7 @@ void Observer_2_terms_w_on_add_2nd() {
 }
 
 void Observer_2_terms_w_on_remove_2nd() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -317,7 +317,7 @@ void Observer_2_terms_w_on_remove_2nd() {
 }
 
 void Observer_2_pair_terms_w_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -357,7 +357,7 @@ void Observer_2_pair_terms_w_on_add() {
 }
 
 void Observer_2_pair_terms_w_on_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -400,7 +400,7 @@ void Observer_2_pair_terms_w_on_remove() {
 }
 
 void Observer_2_wildcard_pair_terms_w_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -437,7 +437,7 @@ void Observer_2_wildcard_pair_terms_w_on_add() {
 }
 
 void Observer_2_wildcard_pair_terms_w_on_add_2_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -487,7 +487,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_2_matching() {
 }
 
 void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -552,7 +552,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
 
 
 void Observer_2_wildcard_pair_terms_w_on_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -592,7 +592,7 @@ void Observer_2_wildcard_pair_terms_w_on_remove() {
 }
 
 void Observer_on_set_n_entities() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
 
@@ -652,7 +652,7 @@ void Observer_on_set_n_entities() {
 }
 
 void Observer_on_set_n_entities_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Obj);
     ECS_COMPONENT(world, Self);
@@ -702,7 +702,7 @@ void Observer_on_set_n_entities_2_comp() {
 }
 
 void Observer_wildcard_pair_w_pred_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
@@ -757,7 +757,7 @@ void Observer_wildcard_pair_w_pred_component() {
 }
 
 void Observer_wildcard_pair_w_obj_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -812,7 +812,7 @@ void Observer_wildcard_pair_w_obj_component() {
 }
 
 void Observer_2_terms_1_not_w_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -853,7 +853,7 @@ void Observer_2_terms_1_not_w_on_add() {
 }
 
 void Observer_2_terms_1_not_w_on_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -900,7 +900,7 @@ void Observer_2_terms_1_not_w_on_remove() {
 }
 
 void Observer_2_terms_w_on_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, TagB);
@@ -938,7 +938,7 @@ void Observer_2_terms_w_on_set() {
 }
 
 void Observer_2_terms_w_un_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, TagB);
@@ -979,7 +979,7 @@ void Observer_2_terms_w_un_set() {
 }
 
 void Observer_3_terms_2_or_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1029,7 +1029,7 @@ void Observer_3_terms_2_or_on_add() {
 }
 
 void Observer_3_terms_2_or_on_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1068,7 +1068,7 @@ void Observer_3_terms_2_or_on_remove() {
 }
 
 void Observer_2_terms_w_from_entity_on_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1105,7 +1105,7 @@ void Observer_2_terms_w_from_entity_on_add() {
 }
 
 void Observer_2_terms_on_remove_on_clear() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1134,7 +1134,7 @@ void Observer_2_terms_on_remove_on_clear() {
 }
 
 void Observer_2_terms_on_remove_on_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1163,7 +1163,7 @@ void Observer_2_terms_on_remove_on_delete() {
 }
 
 void Observer_observer_w_self() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1189,7 +1189,7 @@ void Observer_observer_w_self() {
 }
 
 void Observer_add_after_delete_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1218,7 +1218,7 @@ void Observer_add_after_delete_observer() {
 }
 
 void Observer_remove_after_delete_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1267,7 +1267,7 @@ void binding_ctx_free(void *ctx) {
 }
 
 void Observer_delete_observer_w_ctx() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1294,7 +1294,7 @@ void Observer_delete_observer_w_ctx() {
 }
 
 void Observer_filter_w_strings() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1335,7 +1335,7 @@ void TypeObserver(ecs_iter_t *it) {
 }
 
 void Observer_iter_type_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1365,7 +1365,7 @@ void ObserverReadonly(ecs_iter_t *it) {
 }
 
 void Observer_readonly_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1396,7 +1396,7 @@ void Observer_readonly_term() {
 }
 
 void Observer_trigger_on_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1442,7 +1442,7 @@ void Observer_trigger_on_prefab() {
 }
 
 void Observer_trigger_on_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1500,7 +1500,7 @@ void UnSetB(ecs_iter_t *it) {
 }
 
 void Observer_unset_1_of_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1539,14 +1539,11 @@ void Observer_unset_1_of_1() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_progress(world, 0);
-    test_int(ctx.invoked, 0);
-
     ecs_fini(world);
 }
 
 void Observer_unset_1_of_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1589,16 +1586,13 @@ void Observer_unset_1_of_2() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_progress(world, 0);
-    test_int(ctx.invoked, 0);
-
     ecs_fini(world);
 
     test_int(ctx.invoked, 0);
 }
 
 void Observer_unset_1_of_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1652,16 +1646,13 @@ void Observer_unset_1_of_3() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_progress(world, 0);
-    test_int(ctx.invoked, 0);
-
     ecs_fini(world);
 
     test_int(ctx.invoked, 0);
 }
 
 void Observer_unset_on_delete_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, UnSet, EcsUnSet, Position);
@@ -1695,7 +1686,7 @@ void Observer_unset_on_delete_1() {
 }
 
 void Observer_unset_on_delete_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1735,7 +1726,7 @@ void Observer_unset_on_delete_2() {
 }
 
 void Observer_unset_on_delete_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1781,7 +1772,7 @@ void Observer_unset_on_delete_3() {
 }
 
 void Observer_unset_on_fini_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1819,7 +1810,7 @@ void Observer_unset_on_fini_1() {
 }
 
 void Observer_unset_on_fini_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1864,7 +1855,7 @@ void Observer_unset_on_fini_2() {
 }
 
 void Observer_unset_on_fini_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1919,7 +1910,7 @@ void Observer_unset_on_fini_3() {
 }
 
 void Observer_overlapping_unset_systems() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2041,7 +2032,7 @@ void UnSet_WriteComp(ecs_iter_t *it) {
 }
 
 void Observer_write_in_unset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2081,7 +2072,7 @@ void Observer_write_in_unset() {
 }
 
 void Observer_filter_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -2112,7 +2103,7 @@ void Observer_filter_term() {
 }
 
 void Observer_2_terms_1_filter() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2151,7 +2142,7 @@ void Observer_2_terms_1_filter() {
 }
 
 void Observer_3_terms_2_filter() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2194,7 +2185,7 @@ void Observer_3_terms_2_filter() {
 }
 
 void Observer_and_from() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2229,7 +2220,7 @@ void Observer_and_from() {
 }
 
 void Observer_or_from() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2320,7 +2311,7 @@ void Observer_notify_propagated_twice() {
 }
 
 void Observer_on_add_yield_existing() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2364,7 +2355,7 @@ void Observer_on_add_yield_existing() {
 }
 
 void Observer_on_add_yield_existing_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2411,7 +2402,7 @@ void Observer_on_add_yield_existing_2_tables() {
 }
 
 void Observer_on_add_yield_existing_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);

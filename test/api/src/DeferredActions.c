@@ -1,7 +1,7 @@
 #include <api.h>
 
 void DeferredActions_defer_new() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -32,7 +32,7 @@ void DeferredActions_defer_new() {
 }
 
 void DeferredActions_defer_bulk_new() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -72,7 +72,7 @@ void DeferredActions_defer_bulk_new() {
 }
 
 void DeferredActions_defer_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -104,7 +104,7 @@ void DeferredActions_defer_add() {
 }
 
 void DeferredActions_defer_add_two() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -142,7 +142,7 @@ void DeferredActions_defer_add_two() {
 }
 
 void DeferredActions_defer_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -174,7 +174,7 @@ void DeferredActions_defer_remove() {
 }
 
 void DeferredActions_defer_remove_two() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -214,7 +214,7 @@ void DeferredActions_defer_remove_two() {
 }
 
 void DeferredActions_defer_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -268,7 +268,7 @@ void DeferredActions_defer_set() {
 }
 
 void DeferredActions_defer_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -300,7 +300,7 @@ void DeferredActions_defer_delete() {
 }
 
 void DeferredActions_defer_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -326,7 +326,7 @@ void DeferredActions_defer_twice() {
 }
 
 void DeferredActions_defer_twice_in_progress() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -416,7 +416,7 @@ void OnSetTestInvoked(ecs_iter_t *it) {
 }
 
 void DeferredActions_defer_get_mut_no_modify() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -446,7 +446,7 @@ void DeferredActions_defer_get_mut_no_modify() {
 }
 
 void DeferredActions_defer_get_mut_w_modify() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -479,7 +479,7 @@ void DeferredActions_defer_get_mut_w_modify() {
 }
 
 void DeferredActions_defer_modify() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
 
@@ -501,7 +501,7 @@ void DeferredActions_defer_modify() {
 }
 
 void DeferredActions_defer_set_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -520,7 +520,7 @@ void DeferredActions_defer_set_pair() {
 }
 
 void DeferredActions_defer_clear() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -552,7 +552,7 @@ void DeferredActions_defer_clear() {
 }
 
 void DeferredActions_defer_add_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -585,7 +585,7 @@ void DeferredActions_defer_add_after_delete() {
 }
 
 void DeferredActions_defer_set_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -618,7 +618,7 @@ void DeferredActions_defer_set_after_delete() {
 }
 
 void DeferredActions_defer_get_mut_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -653,7 +653,7 @@ void DeferredActions_defer_get_mut_after_delete() {
 }
 
 void DeferredActions_defer_get_mut_after_delete_2nd_to_last() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -692,7 +692,7 @@ void DeferredActions_defer_get_mut_after_delete_2nd_to_last() {
 }
 
 void DeferredActions_defer_add_child_to_deleted_parent() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -718,7 +718,7 @@ void DeferredActions_defer_add_child_to_deleted_parent() {
 }
 
 void DeferredActions_recreate_deleted_entity_while_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -757,7 +757,7 @@ void DeferredActions_recreate_deleted_entity_while_deferred() {
 }
 
 void DeferredActions_defer_add_to_recycled_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -791,7 +791,7 @@ void DeferredActions_defer_add_to_recycled_id() {
 }
 
 void DeferredActions_defer_add_to_recycled_id_w_role() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -825,7 +825,7 @@ void DeferredActions_defer_add_to_recycled_id_w_role() {
 }
 
 void DeferredActions_defer_add_to_recycled_relation() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -863,7 +863,7 @@ void DeferredActions_defer_add_to_recycled_relation() {
 }
 
 void DeferredActions_defer_add_to_recycled_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -898,7 +898,7 @@ void DeferredActions_defer_add_to_recycled_object() {
 }
 
 void DeferredActions_defer_add_to_recycled_object_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -932,7 +932,7 @@ void DeferredActions_defer_add_to_recycled_object_childof() {
 }
 
 void DeferredActions_defer_add_to_deleted_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -960,7 +960,7 @@ void DeferredActions_defer_add_to_deleted_id() {
 }
 
 void DeferredActions_defer_add_to_deleted_id_w_role() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -988,7 +988,7 @@ void DeferredActions_defer_add_to_deleted_id_w_role() {
 }
 
 void DeferredActions_defer_add_to_deleted_relation() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1020,7 +1020,7 @@ void DeferredActions_defer_add_to_deleted_relation() {
 }
 
 void DeferredActions_defer_add_to_deleted_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1049,7 +1049,7 @@ void DeferredActions_defer_add_to_deleted_object() {
 }
 
 void DeferredActions_defer_add_to_deleted_object_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1103,7 +1103,7 @@ void DeferredActions_defer_delete_added_id() {
 }
 
 void DeferredActions_defer_delete_added_id_w_role() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1131,7 +1131,7 @@ void DeferredActions_defer_delete_added_id_w_role() {
 }
 
 void DeferredActions_defer_delete_added_relation() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1163,7 +1163,7 @@ void DeferredActions_defer_delete_added_relation() {
 }
 
 void DeferredActions_defer_delete_added_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1192,7 +1192,7 @@ void DeferredActions_defer_delete_added_object() {
 }
 
 void DeferredActions_defer_delete_added_object_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1218,7 +1218,7 @@ void DeferredActions_defer_delete_added_object_childof() {
 }
 
 void DeferredActions_discard_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1255,7 +1255,7 @@ void DeferredActions_discard_add() {
 }
 
 void DeferredActions_discard_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1292,7 +1292,7 @@ void DeferredActions_discard_remove() {
 }
 
 void DeferredActions_discard_add_two() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1333,7 +1333,7 @@ void DeferredActions_discard_add_two() {
 }
 
 void DeferredActions_discard_remove_two() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1376,7 +1376,7 @@ void DeferredActions_discard_remove_two() {
 }
 
 void DeferredActions_discard_child() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1417,7 +1417,7 @@ void DeferredActions_discard_child() {
 }
 
 void DeferredActions_discard_child_w_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1458,7 +1458,7 @@ void DeferredActions_discard_child_w_add() {
 }
 
 void DeferredActions_defer_return_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_bool(ecs_defer_begin(world), true);
 
@@ -1472,7 +1472,7 @@ void DeferredActions_defer_return_value() {
 }
  
 void DeferredActions_defer_get_mut_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
@@ -1497,7 +1497,7 @@ void DeferredActions_defer_get_mut_pair() {
 }
 
 void DeferredActions_async_stage_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1515,7 +1515,7 @@ void DeferredActions_async_stage_add() {
 }
 
 void DeferredActions_async_stage_add_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1540,7 +1540,7 @@ void DeferredActions_async_stage_add_twice() {
 
 
 void DeferredActions_async_stage_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1558,7 +1558,7 @@ void DeferredActions_async_stage_remove() {
 }
 
 void DeferredActions_async_stage_clear() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1580,7 +1580,7 @@ void DeferredActions_async_stage_clear() {
 }
 
 void DeferredActions_async_stage_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1602,7 +1602,7 @@ void DeferredActions_async_stage_delete() {
 }
 
 void DeferredActions_async_stage_new() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1626,7 +1626,7 @@ void DeferredActions_async_stage_new() {
 void DeferredActions_async_stage_no_get() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1639,7 +1639,7 @@ void DeferredActions_async_stage_no_get() {
 }
 
 void DeferredActions_async_stage_readonly() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_world_t *async = ecs_async_stage_new(world);
     test_assert(!ecs_stage_is_readonly(async));
@@ -1649,7 +1649,7 @@ void DeferredActions_async_stage_readonly() {
 }
 
 void DeferredActions_async_stage_is_async() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_world_t *async = ecs_async_stage_new(world);
     test_assert(ecs_stage_is_async(async));
@@ -1694,7 +1694,7 @@ void DeferredActions_register_component_while_in_progress() {
 }
 
 void DeferredActions_register_component_while_staged() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1733,7 +1733,7 @@ void DeferredActions_register_component_while_staged() {
 }
 
 void DeferredActions_register_component_while_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1763,7 +1763,7 @@ void DeferredActions_register_component_while_deferred() {
 }
 
 void DeferredActions_defer_enable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
 
@@ -1778,7 +1778,7 @@ void DeferredActions_defer_enable() {
 }
 
 void DeferredActions_defer_disable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_w_id(world, EcsDisabled);
 
@@ -1793,7 +1793,7 @@ void DeferredActions_defer_disable() {
 }
 
 void DeferredActions_defer_delete_with() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1818,7 +1818,7 @@ void DeferredActions_defer_delete_with() {
 }
 
 void DeferredActions_defer_remove_all() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1848,7 +1848,7 @@ void DeferredActions_defer_remove_all() {
 }
 
 void DeferredActions_deferred_modified_after_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
     
     ECS_COMPONENT(world, Position);
 
@@ -1918,7 +1918,7 @@ static void remove_counter(ecs_iter_t *it) {
 }
 
 void DeferredActions_merge_cleanup_ops_before_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Counter);
     ECS_TAG(world, Tag);
@@ -1956,7 +1956,7 @@ void DeferredActions_merge_cleanup_ops_before_delete() {
 }
 
 void DeferredActions_merge_nested_cleanup_ops_before_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Counter);
     ECS_TAG(world, Tag);

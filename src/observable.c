@@ -39,7 +39,7 @@ void notify_subset(
     const ecs_type_t *ids)
 {
     ecs_id_t pair = ecs_pair(EcsWildcard, entity);
-    ecs_id_record_t *idr = flecs_get_id_record(world, pair);
+    ecs_id_record_t *idr = flecs_id_record_get(world, pair);
     if (!idr) {
         return;
     }

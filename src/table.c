@@ -409,7 +409,7 @@ void flecs_table_init(
         if (dst_id == src_id) {
             idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
         } else if (dst_id < src_id) {
-            idr = flecs_ensure_id_record(world, dst_id);
+            idr = flecs_id_record_ensure(world, dst_id);
         }
         if (idr) {
             tr = ecs_vector_add(&records, ecs_table_record_t);
@@ -426,7 +426,7 @@ void flecs_table_init(
     for (; (dst_i < dst_count); dst_i ++) {
         ecs_id_t dst_id = dst_ids[dst_i];
         tr = ecs_vector_add(&records, ecs_table_record_t);
-        idr = flecs_ensure_id_record(world, dst_id);
+        idr = flecs_id_record_ensure(world, dst_id);
         tr->hdr.cache = (ecs_table_cache_t*)idr;
         ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
         tr->column = dst_i;
@@ -442,7 +442,7 @@ void flecs_table_init(
                 id &= ECS_COMPONENT_MASK;
                 id = ecs_pair(id, EcsWildcard);
                 tr = ecs_vector_add(&records, ecs_table_record_t);
-                tr->hdr.cache = (ecs_table_cache_t*)flecs_ensure_id_record(
+                tr->hdr.cache = (ecs_table_cache_t*)flecs_id_record_ensure(
                     world, id);
                 tr->column = dst_i;
                 tr->count = 1;
@@ -502,8 +502,8 @@ void flecs_table_init(
 
             /* To avoid a quadratic search, use the O(1) lookup that the index
              * already provides. */
-            idr = flecs_ensure_id_record(world, tgt_id);
-            tr = (ecs_table_record_t*)flecs_id_record_table(idr, table);
+            idr = flecs_id_record_ensure(world, tgt_id);
+            tr = (ecs_table_record_t*)flecs_id_record_get_table(idr, table);
             if (!tr) {
                 tr = ecs_vector_add(&records, ecs_table_record_t);
                 tr->column = dst_i;
@@ -574,6 +574,9 @@ void flecs_table_init(
             ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
         }
 
+        /* Claim id record so it stays alive as long as the table exists */
+        flecs_id_record_claim(world, idr);
+
         /* Initialize event flags */
         table->flags |= idr->flags & EcsIdEventMask;
     }
@@ -582,6 +585,30 @@ void flecs_table_init(
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(table); 
+}
+
+static
+void flecs_table_records_unregister(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t i, count = table->record_count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &table->records[i];
+        ecs_table_cache_t *cache = tr->hdr.cache;
+        ecs_id_t id = ((ecs_id_record_t*)cache)->id;
+
+        ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(flecs_id_record_get(world, id) == (ecs_id_record_t*)cache,
+            ECS_INTERNAL_ERROR, NULL);
+        (void)id;
+
+        ecs_table_cache_remove(cache, table, &tr->hdr);
+        flecs_id_record_release(world, (ecs_id_record_t*)cache);
+    }
+    
+    ecs_os_free(table->records);
 }
 
 static
@@ -2328,7 +2355,7 @@ ecs_column_t* ecs_table_column_for_id(
         return NULL;
     }
 
-    ecs_table_record_t *tr = flecs_get_table_record(world, storage_table, id);
+    ecs_table_record_t *tr = flecs_table_record_get(world, storage_table, id);
     if (tr) {
         return &table->data.columns[tr->column];
     }

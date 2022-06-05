@@ -44,7 +44,7 @@ void Remove_from_current(ecs_iter_t *it) {
 }
 
 void TriggerOnRemove_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
@@ -71,7 +71,7 @@ void TriggerOnRemove_remove() {
 }
 
 void TriggerOnRemove_remove_no_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -93,7 +93,7 @@ void TriggerOnRemove_remove_no_match() {
 }
 
 void TriggerOnRemove_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
@@ -120,7 +120,7 @@ void TriggerOnRemove_delete() {
 }
 
 void TriggerOnRemove_delete_no_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -153,7 +153,7 @@ void RemovePosition(ecs_iter_t *it) {
 }
 
 void TriggerOnRemove_remove_watched() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -175,7 +175,7 @@ void TriggerOnRemove_remove_watched() {
 
 
 void TriggerOnRemove_delete_watched() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -203,7 +203,7 @@ void Dummy(ecs_iter_t *it) {
 }
 
 void TriggerOnRemove_on_remove_in_on_update() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -251,7 +251,7 @@ void RemoveDummyComp(ecs_iter_t *it) {
 }
 
 void TriggerOnRemove_valid_entity_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, DummyComp);
     ECS_TRIGGER(world, RemoveDummyComp, EcsOnRemove, DummyComp);
@@ -269,7 +269,7 @@ void TriggerOnRemove_valid_entity_after_delete() {
 }
 
 void TriggerOnRemove_remove_after_delete_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -304,7 +304,7 @@ void TriggerOnRemove_remove_after_delete_trigger() {
 }
 
 void TriggerOnRemove_remove_after_delete_wildcard_id_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -359,7 +359,7 @@ void OnRemoveHasTag(ecs_iter_t *it) {
 }
 
 void TriggerOnRemove_has_removed_tag_trigger_1_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -387,7 +387,7 @@ void TriggerOnRemove_has_removed_tag_trigger_1_tag() {
 }
 
 void TriggerOnRemove_has_removed_tag_trigger_2_tags() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);

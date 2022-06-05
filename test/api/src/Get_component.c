@@ -5,7 +5,7 @@ void Get_component_setup() {
 }
 
 void Get_component_get_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -16,7 +16,7 @@ void Get_component_get_empty() {
 }
 
 void Get_component_get_1_from_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -29,7 +29,7 @@ void Get_component_get_1_from_1() {
 }
 
 void Get_component_get_1_from_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -43,7 +43,7 @@ void Get_component_get_1_from_2() {
 }
 
 void Get_component_get_2_from_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -57,7 +57,7 @@ void Get_component_get_2_from_2() {
 }
 
 void Get_component_get_2_from_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -198,7 +198,7 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
 void Get_component_get_childof_component() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

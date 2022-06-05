@@ -30,7 +30,7 @@ static ecs_entity_t return_entity() {
 }
 
 void GlobalComponentIds_declare() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -42,7 +42,7 @@ void GlobalComponentIds_declare() {
 }
 
 void GlobalComponentIds_declare_w_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -54,7 +54,7 @@ void GlobalComponentIds_declare_w_entity() {
 }
 
 void GlobalComponentIds_declare_2_world() {    
-    ecs_world_t *world_1 = ecs_init();
+    ecs_world_t *world_1 = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world_1, Position);
     ECS_COMPONENT_DEFINE(world_1, Velocity);
@@ -62,7 +62,7 @@ void GlobalComponentIds_declare_2_world() {
     ecs_entity_t e_pos = ecs_id(Position);
     ecs_entity_t e_vel = ecs_id(Velocity);
 
-    ecs_world_t *world_2 = ecs_init();
+    ecs_world_t *world_2 = ecs_mini();
 
     /* Declare in reverse order, ensure that ids are still the same */
     ECS_COMPONENT_DEFINE(world_2, Velocity);
@@ -76,7 +76,7 @@ void GlobalComponentIds_declare_2_world() {
 }
 
 void GlobalComponentIds_declare_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG_DEFINE(world, MyTag);
 
@@ -88,7 +88,7 @@ void GlobalComponentIds_declare_tag() {
 }
 
 void GlobalComponentIds_declare_tag_w_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG_DEFINE(world, MyTag);
 
@@ -100,7 +100,7 @@ void GlobalComponentIds_declare_tag_w_entity() {
 }
 
 void GlobalComponentIds_declare_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_ENTITY_DEFINE(world, MyEntity, Position);

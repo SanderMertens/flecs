@@ -98,7 +98,7 @@ void inc_trigger_count(
 
         ecs_flags32_t flags = id_flag_for_event(event);
         if (flags) {
-            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            ecs_id_record_t *idr = flecs_id_record_get(world, id);
             if (idr) {
                 idr->flags |= flags;
             }
@@ -112,7 +112,7 @@ void inc_trigger_count(
 
         ecs_flags32_t flags = id_flag_for_event(event);
         if (flags) {
-            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            ecs_id_record_t *idr = flecs_id_record_get(world, id);
             if (idr) {
                 idr->flags &= ~flags;
             }
@@ -523,7 +523,7 @@ void notify_set_base_triggers(
             continue;
         }
 
-        if (!term->subj.set.min_depth && flecs_get_table_record(
+        if (!term->subj.set.min_depth && flecs_table_record_get(
             world, it->table, id) != NULL) 
         {
             continue;

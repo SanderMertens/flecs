@@ -53,7 +53,7 @@ void* get_component(
         return NULL;
     }
 
-    ecs_table_record_t *tr = flecs_get_table_record(
+    ecs_table_record_t *tr = flecs_table_record_get(
         world, table->storage_table, id);
     if (!tr) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
@@ -89,7 +89,7 @@ void* get_base_component(
 
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
-    const ecs_table_record_t *tr_isa = flecs_id_record_table(
+    const ecs_table_record_t *tr_isa = flecs_id_record_get_table(
         world->idr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -116,7 +116,7 @@ void* get_base_component(
 
         ecs_table_t *storage_table = table->storage_table;
         if (storage_table) {
-            tr = flecs_id_record_table(table_index, storage_table);
+            tr = flecs_id_record_get_table(table_index, storage_table);
         } else {
             ecs_check(!ecs_owns_id(world, base, id), 
                 ECS_NOT_A_COMPONENT, NULL);
@@ -605,7 +605,7 @@ void components_override(
             continue;
         }
 
-        ecs_table_record_t *tr = flecs_get_table_record(
+        ecs_table_record_t *tr = flecs_table_record_get(
             world, storage_table, id);
         if (!tr) {
             continue;
@@ -644,13 +644,13 @@ void flecs_set_union(
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = array[i];
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_id_record_t *idr = flecs_get_id_record(world, 
+            ecs_id_record_t *idr = flecs_id_record_get(world, 
                 ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
             if (!idr) {
                 continue;
             }
 
-            const ecs_table_record_t *tr = flecs_id_record_table(
+            const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             int32_t column = tr->column - table->sw_offset;
@@ -978,7 +978,7 @@ const ecs_entity_t* new_w_data(
 
             /* Find component in storage type */
             ecs_entity_t id = component_ids->array[c_i];
-            const ecs_table_record_t *tr = flecs_get_table_record(
+            const ecs_table_record_t *tr = flecs_table_record_get(
                 world, storage_table, id);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
@@ -1232,7 +1232,7 @@ void flecs_notify_on_set(
         int i;
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
-            const ecs_table_record_t *tr = flecs_get_table_record(world, 
+            const ecs_table_record_t *tr = flecs_table_record_get(world, 
                 storage_table, id);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
@@ -2219,14 +2219,7 @@ error:
 }
 
 static
-void on_delete_any_w_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t action,
-    uint32_t flags);
-
-static
-void throw_invalid_delete(
+void flecs_throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -2237,71 +2230,236 @@ error:
 }
 
 static
-void remove_from_table(
+void flecs_to_delete_push(
     ecs_world_t *world,
-    ecs_table_t *src_table,
-    ecs_id_t id,
-    int32_t column,
-    int32_t column_count)
+    ecs_id_record_t* idr)
 {
-    ecs_table_diff_t temp_diff;
-    ecs_diff_buffer_t diff = ECS_DIFF_INIT;
-    ecs_table_t *dst_table = src_table; 
-    ecs_id_t *ids = src_table->type.array;
+    ecs_id_record_t **elem = ecs_vector_add(&world->store.to_delete_stack, 
+        ecs_id_record_t*);
+    elem[0] = idr;
+    flecs_id_record_claim(world, idr);
+}
 
-    /* If id is pair but the column pointed to is not a pair, the record is
-     * pointing to an instance of the id that has a (non-PAIR) role. */
-    bool is_pair = ECS_HAS_ROLE(id, PAIR);     
-    bool is_role = is_pair && !ECS_HAS_ROLE(ids[column], PAIR);
-    ecs_assert(!is_role || ((ids[column] & ECS_ROLE_MASK) != 0), 
-        ECS_INTERNAL_ERROR, NULL);
-    bool is_wildcard = ecs_id_is_wildcard(id);
+static
+void flecs_id_mark_for_delete(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    ecs_entity_t action);
 
-    int32_t i, count = src_table->type.count, removed_count = 0;
-    ecs_entity_t entity = ECS_PAIR_FIRST(id);
-
-    for (i = column; i < count; i ++) {
-        ecs_id_t e = ids[i];
-
-        if (is_role) {
-            if ((e & ECS_COMPONENT_MASK) != entity) {
-                continue;
-            }
-        } else if (is_wildcard && !ecs_id_match(e, id)) {
+static
+void flecs_targets_mark_for_delete(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_id_record_t *idr;
+    ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
+    ecs_record_t **records = ecs_storage_first(&table->data.records);
+    int32_t i, count = ecs_storage_count(&table->data.entities);
+    for (i = 0; i < count; i ++) {
+        ecs_record_t *r = records[i];
+        if (!r) {
             continue;
         }
 
-        dst_table = flecs_table_traverse_remove(
-            world, dst_table, &e, &temp_diff);
-        diff_append(&diff, &temp_diff);
-        
-        removed_count ++;
-        if (removed_count == column_count) {
-            break;
+        /* If entity is not used as id or as relationship target, there won't
+         * be any tables with a reference to it. */
+        ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
+        if (!(flags & (EcsEntityObservedId|EcsEntityObservedObject))) {
+            continue;
         }
+
+        ecs_entity_t e = entities[i];
+        if (flags & EcsEntityObservedId) {
+            if ((idr = flecs_id_record_get(world, e))) {
+                flecs_id_mark_for_delete(world, idr, 0);
+            }
+            if ((idr = flecs_id_record_get(world, ecs_pair(e, EcsWildcard)))) {
+                flecs_id_mark_for_delete(world, idr, 0);
+            }
+        }
+        if (flags & EcsEntityObservedObject) {
+            if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
+                flecs_id_mark_for_delete(world, idr, 0);
+            }
+        }
+    }
+}
+
+static
+bool flecs_id_is_delete_target(
+    ecs_id_t id,
+    ecs_entity_t action)
+{
+    if (!action && ecs_id_is_pair(id) && ECS_PAIR_FIRST(id) == EcsWildcard) {
+        /* If no explicit delete action is provided, and the id we're deleting
+         * has the form (*, Target), use OnDeleteObject action */
+        return true;
+    }
+    return false;
+}
+
+static
+ecs_entity_t flecs_get_delete_action(
+    ecs_table_t *table,
+    ecs_table_record_t *tr,
+    ecs_entity_t action,
+    bool delete_target)
+{
+    ecs_entity_t result = action;
+    if (!result && delete_target) {
+        /* If action is not specified and we're deleting a relation target,
+         * derive the action from the current record */
+        ecs_table_record_t *trr = &table->records[tr->column];
+        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
+        result = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
+    }
+    return result;
+}
+
+static
+void flecs_id_mark_for_delete(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    ecs_entity_t action)
+{
+    if (idr->flags & EcsIdMarkedForDelete) {
+        return;
+    }
+
+    idr->flags |= EcsIdMarkedForDelete;
+    flecs_to_delete_push(world, idr);
+
+    ecs_id_t id = idr->id;
+
+    if (ecs_should_log_3()) {
+        char *idstr = ecs_id_str(world, id);
+        ecs_dbg_3("#[green]id#[reset] %s marked for deletion", idstr);
+        ecs_os_free(idstr);
+    }
+
+    ecs_log_push_2();
+
+    bool delete_target = flecs_id_is_delete_target(id, action);
+
+    /* Mark all tables with the id for delete */
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_iter(&idr->cache, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            if (table->flags & EcsTableMarkedForDelete) {
+                continue;
+            }
+
+            ecs_entity_t cur_action = flecs_get_delete_action(table, tr, action,
+                delete_target);
+
+            /* If this is a Delete action, recursively mark ids & tables */
+            if (cur_action == EcsDelete) {
+                table->flags |= EcsTableMarkedForDelete;
+                ecs_log_push_2();
+                flecs_targets_mark_for_delete(world, table);
+                ecs_log_pop_2();
+            } else if (cur_action == EcsPanic) {
+                flecs_throw_invalid_delete(world, id);
+            }
+        }
+    }
+
+    /* Same for empty tables */
+    if (flecs_table_cache_empty_iter(&idr->cache, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            tr->hdr.table->flags |= EcsTableMarkedForDelete;
+        }
+    }
+
+    ecs_log_pop_2();
+}
+
+static
+bool flecs_on_delete_mark(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t action)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        /* If there's no id record, there's nothing to delete */
+        return false;
+    }
+
+    if (!action) {
+        /* If no explicit action is provided, derive it */
+        if (!ecs_id_is_pair(id) || ECS_PAIR_SECOND(id) == EcsWildcard) {
+            /* Delete actions are determined by the component, or in the case
+             * of a pair by the relationship. */
+            action = ECS_ID_ON_DELETE(idr->flags);
+        }
+    }
+
+    if (action == EcsPanic) {
+        /* This id is protected from deletion */
+        flecs_throw_invalid_delete(world, id);
+        return false;
+    }
+
+    flecs_id_mark_for_delete(world, idr, action);
+
+    return true;
+}
+
+static
+void flecs_remove_from_table(
+    ecs_world_t *world, 
+    ecs_table_t *table) 
+{
+    ecs_table_diff_t temp_diff;
+    ecs_diff_buffer_t diff = ECS_DIFF_INIT;
+    ecs_table_t *dst_table = table; 
+
+    /* To find the dst table, remove all ids that are marked for deletion */
+    int32_t i, t, count = ecs_vector_count(world->store.to_delete_stack);
+    ecs_id_record_t **idrs = ecs_vector_first(world->store.to_delete_stack,
+        ecs_id_record_t*);
+    const ecs_table_record_t *tr;
+    for (i = 0; i < count; i ++) {
+        const ecs_id_record_t *idr = idrs[i];
+
+        if (!(tr = flecs_id_record_get_table(idr, dst_table))) {
+            continue;
+        }
+
+        t = tr->column;
+
+        do {
+            ecs_id_t id = dst_table->type.array[t];
+            dst_table = flecs_table_traverse_remove(
+                world, dst_table, &id, &temp_diff);
+            diff_append(&diff, &temp_diff);
+        } while (dst_table->type.count && (t = ecs_search_offset(
+            world, dst_table, t, idr->id, NULL)) != -1);
     }
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!dst_table->type.count) {
-        ecs_dbg_3("clear entities from table %u", (uint32_t)src_table->id);
         /* If this removes all components, clear table */
-        flecs_table_clear_entities(world, src_table);
+        ecs_dbg_3("clear entities from table %u", (uint32_t)table->id);
+        flecs_table_clear_entities(world, table);
     } else {
-        ecs_dbg_3("move entities from table %u to %u", 
-            (uint32_t)src_table->id,
-            (uint32_t)dst_table->id);
         /* Otherwise, merge table into dst_table */
-        if (dst_table != src_table) {
-            ecs_data_t *src_data = &src_table->data;
-            int32_t src_count = ecs_table_count(src_table);
+        ecs_dbg_3("move entities from table %u to %u", 
+            (uint32_t)table->id, (uint32_t)dst_table->id);
+
+        if (dst_table != table) {
             if (diff.removed.type.count) {
                 ecs_table_diff_t td = diff_to_table_diff(&diff);
-                flecs_notify_on_remove(world, src_table, NULL, 
-                    0, src_count, &td);
+                flecs_notify_on_remove(world, table, NULL, 
+                    0, ecs_table_count(table), &td);
             }
-            flecs_table_merge(world, dst_table, src_table, 
-                &dst_table->data, src_data);
+            flecs_table_merge(world, dst_table, table, 
+                &dst_table->data, &table->data);
         }
     }
 
@@ -2309,166 +2467,87 @@ void remove_from_table(
 }
 
 static
-void delete_objects(
-    ecs_world_t *world,
+void flecs_delete_from_table(
+    ecs_world_t *world, 
     ecs_table_t *table)
 {
-    ecs_data_t *data = &table->data;
-    if (data) {
-        ecs_entity_t *entities = ecs_storage_first(&data->entities);
-        ecs_record_t **records = ecs_storage_first(&data->records);
-
-        int32_t i, count = ecs_storage_count(&data->entities);
-        for (i = 0; i < count; i ++) {
-            ecs_record_t *r = records[i];
-            
-            /* If entity is flagged, it could have delete actions. */
-            uint32_t flags;
-            if (r && (flags = (r->row & ECS_ROW_FLAGS_MASK))) {
-                /* Strip mask to prevent infinite recursion */
-                r->row = r->row & ECS_ROW_MASK;
-
-                /* Run delete actions for object */
-                on_delete_any_w_entity(world, entities[i], 0, flags);
-            }
-        }
-
-        /* Clear components from table (invokes destructors, OnRemove) */
-        flecs_table_delete_entities(world, table);
-    } 
+    ecs_dbg_3("delete entities from table %u", (uint32_t)table->id);
+    flecs_table_delete_entities(world, table);   
 }
 
 static
-void on_delete_id_action(
+bool flecs_on_delete_clear_tables(
     ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action,
-    bool on_delete_object)
+    ecs_entity_t action)
 {
-    ecs_table_cache_iter_t it;
-    ecs_id_record_t *idrr, *idr = flecs_get_id_record(world, id);
+    int32_t i, count = ecs_vector_count(world->store.to_delete_stack);
+    ecs_id_record_t **idrs = ecs_vector_first(world->store.to_delete_stack,
+        ecs_id_record_t*);
 
-    if (idr) {
-        bool deleted;
+    /* Iterate in reverse order so that DAGs get deleted bottom to top */
+    for (i = count - 1; i >= 0; i --) {
+        ecs_id_record_t *idr = idrs[i];
 
-        if (!action && !on_delete_object) {
-            action = ECS_ID_ON_DELETE(idr->flags);
+        /* The provided action only applies to top-level deleted id. For all
+         * other ids, follow the cleanup policies.
+         * This enables things like delete_with<Position>(), even if Position
+         * has a Remove delete policy. */
+        ecs_entity_t cur_action = 0;
+        if (i == 0) {
+            cur_action = action;
+        }
 
-            if (action == EcsPanic) {
-                throw_invalid_delete(world, id);
+        /* Empty all tables for id */
+        ecs_table_cache_iter_t it;
+        if (flecs_table_cache_iter(&idr->cache, &it)) {
+            ecs_table_record_t *tr;
+            while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                ecs_table_t *table = tr->hdr.table;
+                ecs_log_push_2();
+                if ((cur_action == EcsRemove) || 
+                    !(table->flags & EcsTableMarkedForDelete))
+                {
+                    flecs_remove_from_table(world, table);
+                } else {
+                    flecs_delete_from_table(world, table);
+                }
+                ecs_log_pop_2();
             }
         }
 
-        do {
-            deleted = false;
-
-            /* Make sure records are in the right list (empty/non-empty) */
-            ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
-
-            if (!flecs_table_cache_iter(&idr->cache, &it)) {
-                continue;
-            }
-
-            /* First move entities to tables without the id (action = Remove) or
-             * delete entities with id (action = Delete) */
-            const ecs_table_record_t *trr, *tr;
-            if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-                do {
-                    ecs_table_t *table = tr->hdr.table;
-
-                    if (!ecs_table_count(table)) {
-                        continue;
-                    }
-
-                    if (table->flags & EcsTableMarkedForDelete) {
-                        /* Table is already getting cleaned up */
-                        continue;
-                    }
-
-                    table->flags |= EcsTableMarkedForDelete;
-
-                    ecs_dbg_3("cleanup table %u", (uint32_t)table->id);
-                    ecs_log_push_3();
-
-                    /* Prevent table from getting deleted in next step, which 
-                     * could happen if store contains cyclic relationships */
-                    flecs_table_claim(world, table);
-
-                    /* Initialize with original value in case action = 0 */
-                    ecs_entity_t cur_action = action;
-
-                    /* Find delete action for relation */
-                    if (!cur_action && on_delete_object) {
-                        trr = &table->records[tr->column];
-                        idrr = (ecs_id_record_t*)trr->hdr.cache;
-                        cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
-                    }
-
-                    if (!cur_action || cur_action == EcsRemove) {
-                        remove_from_table(
-                            world, table, id, tr->column, tr->count);
-                    } else if (cur_action == EcsDelete) {
-                        delete_objects(world, table);
-
-                        /* Delete actions can cause cyclic cleanup, which 
-                         * requires special attention */
-                        deleted = true;
-                    } else if (cur_action == EcsPanic) {
-                        throw_invalid_delete(world, id);
-                    }
-
-                    /* Merge operations before proceeding */
-                    ecs_defer_end(world);
-                    ecs_defer_begin(world);
-
-                    ecs_log_pop_3();
-
-                    /* It is possible that the current record has been moved to
-                     * the empty list, as result of a cyclic cleanup action. In
-                     * that case, break out of the loop and re-obtain an 
-                     * iterator to the non-empty list, as the current record 
-                     * will be pointing to the next empty table. */
-                    if (tr->hdr.empty) {
-                        flecs_table_release(world, table);
-                        break;
-                    }
-
-                    /* Manually set next in case the next element has been
-                     * deleted by the previous cleanup operations */
-                    it.next = tr->hdr.next;
-
-                    /* It is possible that a cyclic relationship has emptied a
-                     * table that was already in this list. There is one edge
-                     * case where releasing the current table could invalidate
-                     * the next (empty) record, which is if the (emptied) record
-                     * belongs to the table's storage table.
-                     * To make sure the next record is valid, first move to a
-                     * non-empty record before releasing the table. */
-                    while (it.next && !ecs_table_count(it.next->table)) {
-                        it.next = it.next->next;
-                    }
-                    
-                    /* Release table. This may remove the table record from the
-                     * current list */
-                    flecs_table_release(world, table);
-
-                } while ((tr = flecs_table_cache_next(
-                    &it, ecs_table_record_t)));
-            }
-
-        /* Keep repeating while cleanup actions were performed. This ensures 
-         * that even when tables are moved between empty/non-empty lists as
-         * cleanup actions are performed, eventually all tables with the id
-         * are correctly cleaned up. */
-        } while (deleted);
-
-        /* Delete all remaining (empty) tables with id */
-        flecs_remove_id_record(world, id, idr);
+        /* Run commands so children get notified before parent is deleted */
+        ecs_defer_end(world);
+        ecs_defer_begin(world);
     }
+
+    return true;
 }
 
 static
-void on_delete_action(
+bool flecs_on_delete_clear_ids(
+    ecs_world_t *world)
+{
+    int32_t i, count = ecs_vector_count(world->store.to_delete_stack);
+    ecs_id_record_t **idrs = ecs_vector_first(world->store.to_delete_stack,
+        ecs_id_record_t*);
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_record_t *idr = idrs[i];
+        flecs_id_record_release_tables(world, idr);
+
+        /* Release the claim taken by flecs_to_delete_push. This may delete the
+         * id record as all other claims may have been released. */
+        if (flecs_id_record_release(world, idr)) {
+            /* If the id record is still alive, release the initial claim */
+            flecs_id_record_release(world, idr);
+        }
+    }
+
+    return true;
+}
+
+static
+void flecs_on_delete(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t action)
@@ -2479,22 +2558,30 @@ void on_delete_action(
         ecs_os_free(id_str);
     }
 
-    ecs_log_push_1();
+    ecs_vector_clear(world->store.to_delete_stack);
 
-    if (ecs_id_is_wildcard(id)) {
-        /* If the relation part of the id is a wildcard, tell the logic
-         * to use the OnDeleteObject cleanup action. */
-        on_delete_id_action(world, id, action, 
-            ECS_PAIR_FIRST(id) == EcsWildcard);
-    } else {
-        on_delete_id_action(world, id, action, false);
-    }
+    ecs_log_push_1();
+    
+    /* Make sure we're evaluating a consistent list of non-empty tables */
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+
+    /* Collect all ids that need to be deleted */
+    flecs_on_delete_mark(world, id, action);
+
+    /* Empty tables with all the to be deleted ids */
+    flecs_on_delete_clear_tables(world, action);
+
+    /* All marked tables are now empty, ensure they're in the right list */
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+
+    /* Release ids. After this no remaining references to the ids will exist */
+    flecs_on_delete_clear_ids(world);
 
     ecs_log_pop_1();
 }
 
 static
-void on_delete_any_w_entity(
+void flecs_on_delete_entity(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t action,
@@ -2502,11 +2589,11 @@ void on_delete_any_w_entity(
 {
     /* Make sure any references to the entity are cleaned up */
     if (flags & EcsEntityObservedId) {
-        on_delete_action(world, e, action);
-        on_delete_action(world, ecs_pair(e, EcsWildcard), action);
+        flecs_on_delete(world, e, action);
+        flecs_on_delete(world, ecs_pair(e, EcsWildcard), action);
     }
     if (flags & EcsEntityObservedObject) {
-        on_delete_action(world, ecs_pair(EcsWildcard, e), action);
+        flecs_on_delete(world, ecs_pair(EcsWildcard, e), action);
     }
 }
 
@@ -2519,7 +2606,7 @@ void ecs_delete_with(
         return;
     }
 
-    on_delete_action(world, id, EcsDelete);
+    flecs_on_delete(world, id, EcsDelete);
     flecs_defer_flush(world, stage);
 }
 
@@ -2532,7 +2619,7 @@ void ecs_remove_all(
         return;
     }
 
-    on_delete_action(world, id, EcsRemove);
+    flecs_on_delete(world, id, EcsRemove);
     flecs_defer_flush(world, stage);
 }
 
@@ -2565,7 +2652,7 @@ void ecs_delete(
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
-            on_delete_any_w_entity(world, entity, 0, row_flags);
+            flecs_on_delete_entity(world, entity, 0, row_flags);
 
             /* Merge operations before deleting entity */
             ecs_defer_end(world);
@@ -2714,7 +2801,7 @@ const void* ecs_get_id(
         return NULL;
     }
 
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return NULL;
     }
@@ -2722,7 +2809,7 @@ const void* ecs_get_id(
     const ecs_table_record_t *tr = NULL;
     ecs_table_t *storage_table = table->storage_table;
     if (storage_table) {
-        tr = flecs_id_record_table(idr, storage_table);
+        tr = flecs_id_record_get_table(idr, storage_table);
     } else {
         /* If the entity does not have a storage table (has no data) but it does
          * have the id, the id must be a tag, and getting a tag is illegal. */
@@ -2791,7 +2878,7 @@ ecs_ref_t ecs_ref_init_id(
 
     ecs_table_t *table = record->table;
     if (table) {
-        result.tr = flecs_get_table_record(world, table->storage_table, id);
+        result.tr = flecs_table_record_get(world, table->storage_table, id);
     }
 
     return result;
@@ -2822,7 +2909,7 @@ void* ecs_ref_get_id(
 
     ecs_table_record_t *tr = ref->tr;
     if (!tr || tr->hdr.table != table) {
-        tr = ref->tr = flecs_get_table_record(world, table->storage_table, id);
+        tr = ref->tr = flecs_table_record_get(world, table->storage_table, id);
         if (!tr) {
             return NULL;
         }
@@ -3131,11 +3218,11 @@ ecs_entity_t ecs_get_object(
     }
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
-    ecs_table_record_t *tr = flecs_get_table_record(world, table, wc);
+    ecs_table_record_t *tr = flecs_table_record_get(world, table, wc);
     if (!tr) {
         if (table->flags & EcsTableHasUnion) {
             wc = ecs_pair(EcsUnion, rel);
-            tr = flecs_get_table_record(world, table, wc);
+            tr = flecs_table_record_get(world, table, wc);
             if (tr) {
                 ecs_switch_t *sw = &table->data.sw_columns[
                     tr->column - table->sw_offset];
@@ -3510,15 +3597,15 @@ const ecs_type_info_t* ecs_get_type_info(
 
     world = ecs_get_world(world);
 
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr && ECS_HAS_ROLE(id, PAIR)) {
-        idr = flecs_get_id_record(world, 
+        idr = flecs_id_record_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         if (!idr || !idr->type_info) {
             idr = NULL;
         }
         if (!idr) {
-            idr = flecs_get_id_record(world, 
+            idr = flecs_id_record_get(world, 
                 ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
             if (!idr || !idr->type_info) {
                 idr = NULL;
@@ -3874,7 +3961,7 @@ bool remove_invalid(
             ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
-                ecs_id_record_t *idr = flecs_get_id_record(world, 
+                ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
                 if (idr) {
                     ecs_entity_t action = ECS_ID_ON_DELETE_OBJECT(idr->flags);
@@ -3885,7 +3972,7 @@ bool remove_invalid(
                     } else if (action == EcsPanic) {
                         /* If policy is throw this object should not have
                          * been deleted */
-                        throw_invalid_delete(world, id);
+                        flecs_throw_invalid_delete(world, id);
                     } else {
                         *id_out = 0;
                         return true;
@@ -3993,7 +4080,7 @@ bool flecs_defer_flush(
                     ecs_clear(world, e);
                     break;
                 case EcsOpOnDeleteAction:
-                    on_delete_action(world, op->id, e);
+                    flecs_on_delete(world, op->id, e);
                     break;
                 case EcsOpEnable:
                     ecs_enable_component_w_id(world, e, op->id, true);

@@ -413,37 +413,6 @@ void init_node(
     init_edges(&node->remove);
 }
 
-typedef struct {
-    int32_t first;
-    int32_t count;
-} id_first_count_t;
-
-void flecs_table_records_unregister(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    int32_t i, count = table->record_count;
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &table->records[i];
-        ecs_table_cache_t *cache = tr->hdr.cache;
-        ecs_id_t id = ((ecs_id_record_t*)cache)->id;
-
-        ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(flecs_get_id_record(world, id) == (ecs_id_record_t*)cache,
-            ECS_INTERNAL_ERROR, NULL);
-
-        ecs_table_cache_remove(cache, table, &tr->hdr);
-
-        if (ecs_table_cache_is_empty(cache)) {
-            ecs_id_record_t *idr = (ecs_id_record_t*)cache;
-            flecs_remove_id_record(world, id, idr);
-        }
-    }
-    
-    ecs_os_free(table->records);
-}
-
 bool flecs_table_records_update_empty(
     ecs_table_t *table)
 {
@@ -837,7 +806,7 @@ void flecs_add_overrides_for_base(
     }
 
     if (flags & EcsTableHasIsA) {
-        const ecs_table_record_t *tr = flecs_id_record_table(
+        const ecs_table_record_t *tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = tr->column, end = i + tr->count;
@@ -864,7 +833,7 @@ void flecs_add_with_property(
         return;
     }
     
-    const ecs_table_record_t *tr = flecs_id_record_table(
+    const ecs_table_record_t *tr = flecs_id_record_get_table(
         idr_with_wildcard, table);
     if (tr) {
         int32_t i = tr->column, end = i + tr->count;
@@ -900,7 +869,7 @@ ecs_table_t* flecs_find_table_with(
     if (ECS_HAS_ROLE(with, PAIR)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
-        idr = flecs_ensure_id_record(world, ecs_pair(r, EcsWildcard));
+        idr = flecs_id_record_ensure(world, ecs_pair(r, EcsWildcard));
         if (idr->flags & EcsIdUnion) {
             ecs_type_t dst_type;
             ecs_id_t union_id = ecs_pair(EcsUnion, r);
@@ -911,7 +880,7 @@ ecs_table_t* flecs_find_table_with(
             return find_or_create(world, &dst_type, true, node);;
         } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
-            const ecs_table_record_t *tr = flecs_id_record_table(idr, node);
+            const ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
                     * a new id sequence with the existing id replaced */
@@ -921,7 +890,7 @@ ecs_table_t* flecs_find_table_with(
             }
         }
     } else {
-        idr = flecs_ensure_id_record(world, with);
+        idr = flecs_id_record_ensure(world, with);
         r = with;
     }
 
@@ -938,7 +907,7 @@ ecs_table_t* flecs_find_table_with(
     }
 
     if (idr->flags & EcsIdWith) {
-        ecs_id_record_t *idr_with_wildcard = flecs_get_id_record(world,
+        ecs_id_record_t *idr_with_wildcard = flecs_id_record_get(world,
             ecs_pair(EcsWith, EcsWildcard));
         /* If id has With property, add targets to type */
         flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
@@ -957,7 +926,7 @@ ecs_table_t* flecs_find_table_without(
         ecs_entity_t r = 0;
         ecs_id_record_t *idr = NULL;
         r = ECS_PAIR_FIRST(without);
-        idr = flecs_get_id_record(world, ecs_pair(r, EcsWildcard));
+        idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
         if (idr && idr->flags & EcsIdUnion) {
             without = ecs_pair(EcsUnion, r);
         }

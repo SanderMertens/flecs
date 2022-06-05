@@ -3,7 +3,7 @@
 void Remove_zero() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -13,7 +13,7 @@ void Remove_zero() {
 }
 
 void Remove_1_of_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -27,7 +27,7 @@ void Remove_1_of_1() {
 }
 
 void Remove_1_of_1_again() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -44,7 +44,7 @@ void Remove_1_of_1_again() {
 }
 
 void Remove_1_of_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -61,7 +61,7 @@ void Remove_1_of_2() {
 }
 
 void Remove_2_of_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -81,7 +81,7 @@ void Remove_2_of_2() {
 }
 
 void Remove_2_of_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -104,7 +104,7 @@ void Remove_2_of_3() {
 }
 
 void Remove_2_again() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -126,7 +126,7 @@ void Remove_2_again() {
 }
 
 void Remove_2_overlap() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -145,7 +145,7 @@ void Remove_2_overlap() {
 }
 
 void Remove_1_from_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -159,7 +159,7 @@ void Remove_1_from_empty() {
 }
 
 void Remove_not_added() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

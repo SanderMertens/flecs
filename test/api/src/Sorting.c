@@ -24,7 +24,7 @@ int compare_entity(
 }
 
 void Sorting_sort_by_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -57,7 +57,7 @@ void Sorting_sort_by_component() {
 }
 
 void Sorting_sort_by_component_same_value_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -91,7 +91,7 @@ void Sorting_sort_by_component_same_value_1() {
 }
 
 void Sorting_sort_by_component_same_value_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -126,7 +126,7 @@ void Sorting_sort_by_component_same_value_2() {
 }
 
 void Sorting_sort_by_component_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -172,7 +172,7 @@ void Sorting_sort_by_component_2_tables() {
 }
 
 void Sorting_sort_by_component_3_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -227,7 +227,7 @@ void Sorting_sort_by_component_3_tables() {
 
 
 void Sorting_sort_by_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -272,7 +272,7 @@ void Sorting_sort_by_entity() {
 }
 
 void Sorting_sort_after_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -350,7 +350,7 @@ void Sorting_sort_after_add() {
 }
 
 void Sorting_sort_after_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -450,7 +450,7 @@ void Sorting_sort_after_remove() {
 }
 
 void Sorting_sort_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -534,7 +534,7 @@ void Sorting_sort_after_delete() {
 }
 
 void Sorting_sort_after_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -716,7 +716,7 @@ void Sorting_sort_after_system() {
 }
 
 void Sorting_sort_after_query() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Position);
@@ -820,7 +820,7 @@ void Sorting_sort_after_query() {
 }
 
 void Sorting_sort_by_component_move_pivot() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -851,7 +851,7 @@ void Sorting_sort_by_component_move_pivot() {
 }
 
 void Sorting_sort_1000_entities() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -885,7 +885,7 @@ void Sorting_sort_1000_entities() {
 }
 
 void Sorting_sort_1000_entities_w_duplicates() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -920,7 +920,7 @@ void Sorting_sort_1000_entities_w_duplicates() {
 }
 
 void Sorting_sort_1000_entities_again() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -975,7 +975,7 @@ void Sorting_sort_1000_entities_again() {
 }
 
 void Sorting_sort_1000_entities_2_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1013,7 +1013,7 @@ void Sorting_sort_1000_entities_2_types() {
 }
 
 void Sorting_sort_1000_entities_2_types_again() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1071,7 +1071,7 @@ void Sorting_sort_1000_entities_2_types_again() {
 }
 
 void Sorting_sort_1000_entities_add_type_after_sort() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1136,7 +1136,7 @@ void Sorting_sort_1000_entities_add_type_after_sort() {
 }
 
 void Sorting_sort_1500_entities_3_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1177,7 +1177,7 @@ void Sorting_sort_1500_entities_3_types() {
 }
 
 void Sorting_sort_2000_entities_4_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1223,7 +1223,7 @@ void Sorting_sort_2000_entities_4_types() {
 }
 
 void Sorting_sort_shared_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1285,7 +1285,7 @@ void Sorting_sort_shared_component() {
 }
 
 void Sorting_sort_2_entities_2_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1321,7 +1321,7 @@ void Sorting_sort_2_entities_2_types() {
 }
 
 void Sorting_sort_3_entities_3_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1361,7 +1361,7 @@ void Sorting_sort_3_entities_3_types() {
 }
 
 void Sorting_sort_3_entities_3_types_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Foo);
@@ -1399,7 +1399,7 @@ void Sorting_sort_3_entities_3_types_2() {
 }
 
 void Sorting_sort_4_entities_4_types() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1443,7 +1443,7 @@ void Sorting_sort_4_entities_4_types() {
 }
 
 void Sorting_sort_w_tags_only() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1469,7 +1469,7 @@ void Sorting_sort_w_tags_only() {
 }
 
 void Sorting_sort_childof_marked() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1500,7 +1500,7 @@ void Sorting_sort_childof_marked() {
 }
 
 void Sorting_sort_isa_marked() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1534,7 +1534,7 @@ void Sorting_sort_isa_marked() {
 }
 
 void Sorting_sort_relation_marked() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -1582,7 +1582,7 @@ int dummy_compare(
 }
 
 void Sorting_dont_resort_after_set_unsorted_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1625,7 +1625,7 @@ void Sorting_dont_resort_after_set_unsorted_component() {
 }
 
 void Sorting_dont_resort_after_set_unsorted_component_w_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
 
@@ -1677,7 +1677,7 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag() {
 }
 
 void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
 

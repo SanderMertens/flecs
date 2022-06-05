@@ -315,7 +315,7 @@ bool flecs_defer_set(
     if (stage->defer) {
         world->set_count ++;
         if (!size) {
-            ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+            ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
             ecs_check(idr != NULL && idr->type_info != NULL, 
                 ECS_INVALID_PARAMETER, NULL);
             size = idr->type_info->size;

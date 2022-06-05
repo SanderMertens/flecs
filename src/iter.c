@@ -102,7 +102,7 @@ ecs_size_t iter_get_size_for_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return 0;
     }
@@ -199,7 +199,7 @@ bool flecs_iter_populate_term_data(
             ecs_table_t *s_table = table->storage_table;
             ecs_table_record_t *tr;
 
-            if (!s_table || !(tr = flecs_get_table_record(world, s_table, id))){
+            if (!s_table || !(tr = flecs_table_record_get(world, s_table, id))){
                 u_index = flecs_table_column_to_union_index(table, -column - 1);
                 if (u_index != -1) {
                     goto has_union;

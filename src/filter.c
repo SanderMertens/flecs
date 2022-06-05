@@ -633,7 +633,7 @@ ecs_id_t flecs_from_public_id(
 {
     if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_id_record_t *idr = flecs_ensure_id_record(world, 
+        ecs_id_record_t *idr = flecs_id_record_ensure(world, 
             ecs_pair(first, EcsWildcard));
         if (idr->flags & EcsIdUnion) {
             return ecs_pair(EcsUnion, first);
@@ -1725,7 +1725,7 @@ void term_iter_init_wildcard(
     bool empty_tables)
 {
     iter->term = (ecs_term_t){ .index = -1 };
-    iter->self_index = flecs_get_id_record(world, EcsAny);
+    iter->self_index = flecs_id_record_get(world, EcsAny);
     ecs_id_record_t *idr = iter->cur = iter->self_index;
     term_iter_init_w_idr(iter, idr, empty_tables);
 }
@@ -1742,11 +1742,11 @@ void term_iter_init(
     iter->term = *term;
 
     if (subj->set.mask == EcsDefaultSet || subj->set.mask & EcsSelf) {
-        iter->self_index = flecs_get_query_id_record(world, term->id);
+        iter->self_index = flecs_query_id_record_get(world, term->id);
     }
 
     if (subj->set.mask & EcsSuperSet) {
-        iter->set_index = flecs_get_id_record(world, 
+        iter->set_index = flecs_id_record_get(world, 
             ecs_pair(subj->set.relation, EcsWildcard));
     }
 
@@ -1944,7 +1944,7 @@ bool flecs_term_iter_next(
 
         if (iter->cur == iter->set_index) {
             if (iter->self_index) {
-                if (flecs_id_record_table(iter->self_index, table) != NULL) {
+                if (flecs_id_record_get_table(iter->self_index, table) != NULL) {
                     /* If the table has the id itself and this term matched Self
                      * we already matched it */
                     continue;
@@ -2130,14 +2130,14 @@ int32_t ecs_filter_pivot_term(
             continue;
         }
 
-        ecs_id_record_t *idr = flecs_get_query_id_record(world, id);
+        ecs_id_record_t *idr = flecs_query_id_record_get(world, id);
         if (!idr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */
             return -2; /* -2 indicates filter doesn't match anything */
         }
 
-        int32_t table_count = ecs_table_cache_count(&idr->cache);
+        int32_t table_count = flecs_table_cache_count(&idr->cache);
         if (min_count == -1 || table_count < min_count) {
             min_count = table_count;
             pivot_term = i;

@@ -52,7 +52,7 @@ void insert_id_elem(
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
     if (!widr) {
-        widr = flecs_ensure_id_record(world, wildcard);
+        widr = flecs_id_record_ensure(world, wildcard);
     }
     ecs_assert(widr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -73,15 +73,10 @@ void insert_id_elem(
 
 static
 void remove_id_elem(
-    ecs_world_t *world,
     ecs_id_record_t *idr,
     ecs_id_t wildcard)
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
-    ecs_id_record_t *widr = flecs_get_id_record(world, wildcard);
-    if (!widr) {
-        return;
-    }
 
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
@@ -99,6 +94,25 @@ void remove_id_elem(
 }
 
 static
+ecs_id_t flecs_id_record_id(
+    ecs_id_t id)
+{
+    id = ecs_strip_generation(id);
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
+        if (r == EcsAny) {
+            r = EcsWildcard;
+        }
+        if (o == EcsAny) {
+            o = EcsWildcard;
+        }
+        id = ecs_pair(r, o);
+    }
+    return id;
+}
+
+static
 ecs_id_record_t* new_id_record(
     ecs_world_t *world,
     ecs_id_t id)
@@ -107,6 +121,7 @@ ecs_id_record_t* new_id_record(
     ecs_table_cache_init(&idr->cache);
 
     idr->id = id;
+    idr->refcount = 1;
 
     bool is_wildcard = ecs_id_is_wildcard(id);
 
@@ -133,7 +148,7 @@ ecs_id_record_t* new_id_record(
 
         if (!is_wildcard) {
             /* Inherit flags from (relation, *) record */
-            ecs_id_record_t *idr_r = flecs_ensure_id_record(
+            ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
             idr->parent = idr_r;
             idr->flags = idr_r->flags;
@@ -225,119 +240,99 @@ error:
     return NULL;
 }
 
-/* Cleanup id index */
 static
-bool free_id_record(
-    ecs_world_t *world,
-    ecs_id_t id,
+void flecs_id_record_assert_empty(
     ecs_id_record_t *idr)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_poly_assert(world, ecs_world_t);
-    (void)id;
-
-    /* Force the empty table administration to be consistent if the non-empty
-     * list of the id record has elements */
-    if (ecs_table_cache_count(&idr->cache)) {
-        ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
-    }
-
-    /* If there are still tables in the non-empty list they're really not empty.
-     * We can't free the record yet. */
-    if (ecs_table_cache_count(&idr->cache)) {
-        return false;
-    }
-
-    /* If id record contains no more empty tables, free it */
-    if (ecs_table_cache_empty_count(&idr->cache) == 0) {
-        if (ecs_should_log_1()) {
-            char *id_str = ecs_id_str(world, id);
-            ecs_dbg_1("#[green]id#[normal] %s #[red]deleted", id_str);
-            ecs_os_free(id_str);
-        }
-
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            if (!ecs_id_is_wildcard(id)) {
-                ecs_entity_t rel = ecs_pair_first(world, id);
-                ecs_entity_t obj = ECS_PAIR_SECOND(id);
-                remove_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
-                remove_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
-            }
-        }
-
-        /* Update counters */
-        world->info.id_delete_total ++;
-
-        if (!ecs_id_is_wildcard(id)) {
-            world->info.id_count --;
-
-            if (ECS_HAS_ROLE(id, PAIR)) {
-                world->info.pair_id_count --;
-            }
-
-            if (idr->type_info) {
-                world->info.component_id_count --;
-            } else {
-                world->info.tag_id_count --;
-            }
-        } else {
-            world->info.wildcard_id_count --;
-        }
-
-        ecs_table_cache_fini(&idr->cache);
-        flecs_name_index_free(idr->name_index);
-        ecs_os_free(idr);
-        return true;
-    }
-
-    /* Delete empty tables */
-    ecs_table_cache_iter_t cache_it;
-    flecs_table_cache_empty_iter(&idr->cache, &cache_it);
-
-    const ecs_table_record_t *tr;
-    int32_t unreleased_count = 0;
-    while ((tr = flecs_table_cache_next(&cache_it, ecs_table_record_t))) {
-        if (!flecs_table_release(world, tr->hdr.table)) {
-            /* Releasing the table did not free it, which means that something
-             * is keeping the table alive. Cleanup of the id record will happen
-             * when the last reference(s) to the table are released */
-            unreleased_count ++;
-        }
-    }
-    if (unreleased_count) {
-        return false;
-    }
-
-    /* If all tables were deleted for this id record, the last deleted table
-     * should have removed the record from the world. */
-    ecs_assert(flecs_get_id_record(world, id) == NULL, 
+    (void)idr;
+    ecs_assert(flecs_table_cache_count(&idr->cache) == 0, 
         ECS_INTERNAL_ERROR, NULL);
-
-    return true;
+    ecs_assert(flecs_table_cache_empty_count(&idr->cache) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
 }
 
 static
-ecs_id_t flecs_id_record_id(
-    ecs_id_t id)
+void flecs_id_record_free(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
 {
-    id = ecs_strip_generation(id);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t id = idr->id;
+
+    flecs_id_record_assert_empty(idr);
+
     if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t r = ECS_PAIR_FIRST(id);
-        ecs_entity_t o = ECS_PAIR_SECOND(id);
-        if (r == EcsAny) {
-            r = EcsWildcard;
+        ecs_entity_t rel = ecs_pair_first(world, id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
+        if (!ecs_id_is_wildcard(id)) {
+            /* If id is not a wildcard, remove it from the wildcard lists */
+            remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
+            remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+        } else {
+            ecs_log_push_2();
+
+            /* If id is a wildcard, it means that all id records that match the
+             * wildcard are also empty, so release them */
+            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+                /* Iterate (*, Target) list */
+                ecs_id_record_t *cur, *next = idr->second.next;
+                while ((cur = next)) {
+                    flecs_id_record_assert_empty(cur);
+                    next = cur->second.next;
+                    flecs_id_record_release(world, cur);
+                }
+            } else {
+                /* Iterate (Relation, *) list */
+                ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_id_record_t *cur, *next = idr->first.next;
+                while ((cur = next)) {
+                    flecs_id_record_assert_empty(cur);
+                    next = cur->first.next;
+                    flecs_id_record_release(world, cur);
+                }
+            }
+
+            ecs_log_pop_2();
         }
-        if (o == EcsAny) {
-            o = EcsWildcard;
-        }
-        id = ecs_pair(r, o);
     }
-    return id;
+
+    /* Update counters */
+    world->info.id_delete_total ++;
+
+    if (!ecs_id_is_wildcard(id)) {
+        world->info.id_count --;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            world->info.pair_id_count --;
+        }
+
+        if (idr->type_info) {
+            world->info.component_id_count --;
+        } else {
+            world->info.tag_id_count --;
+        }
+    } else {
+        world->info.wildcard_id_count --;
+    }
+
+    /* Unregister the id record from the world */
+    ecs_map_remove(&world->id_index, flecs_id_record_id(id));
+
+    /* Free resources */
+    ecs_table_cache_fini(&idr->cache);
+    flecs_name_index_free(idr->name_index);
+    ecs_os_free(idr);
+
+    if (ecs_should_log_1()) {
+        char *id_str = ecs_id_str(world, id);
+        ecs_dbg_1("#[green]id#[normal] %s #[red]deleted", id_str);
+        ecs_os_free(id_str);
+    }
 }
 
-ecs_id_record_t* flecs_ensure_id_record(
+ecs_id_record_t* flecs_id_record_ensure(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -357,7 +352,7 @@ ecs_id_record_t* flecs_ensure_id_record(
     return idr;
 }
 
-ecs_id_record_t* flecs_get_id_record(
+ecs_id_record_t* flecs_id_record_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
@@ -366,14 +361,14 @@ ecs_id_record_t* flecs_get_id_record(
         flecs_id_record_id(id));
 }
 
-ecs_id_record_t* flecs_get_query_id_record(
+ecs_id_record_t* flecs_query_id_record_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         if (ECS_HAS_ROLE(id, PAIR)) {
-            idr = flecs_get_id_record(world,
+            idr = flecs_id_record_get(world,
                 ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
         }
         return idr;
@@ -382,44 +377,73 @@ ecs_id_record_t* flecs_get_query_id_record(
         ECS_PAIR_SECOND(id) == EcsWildcard && 
         (idr->flags & EcsIdUnion)) 
     {
-        idr = flecs_get_id_record(world, 
+        idr = flecs_id_record_get(world, 
             ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
     }
 
     return idr;
 }
 
-void flecs_remove_id_record(
+void flecs_id_record_claim(
     ecs_world_t *world,
-    ecs_id_t id,
     ecs_id_record_t *idr)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    (void)world;
+    idr->refcount ++;
+}
 
-    /* Free id record resources */
-    if (free_id_record(world, id, idr)) {
-        /* Remove record from world index */
-        ecs_map_remove(&world->id_index, flecs_id_record_id(id));
+int32_t flecs_id_record_release(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    int32_t rc = -- idr->refcount;
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!rc) {
+        flecs_id_record_free(world, idr);
+    }
+
+    return rc;
+}
+
+void flecs_id_record_release_tables(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    /* Cache should not contain tables that aren't empty */
+    ecs_assert(flecs_table_cache_count(&idr->cache) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_empty_iter(&idr->cache, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            /* Tables can hold claims on each other, so releasing a table can
+             * cause the next element to get invalidated. Claim the next table
+             * so that we can safely iterate. */
+            ecs_table_t *next = NULL;
+            if (it.next) {
+                next = it.next->table;
+                flecs_table_claim(world, next);
+            }
+
+            /* Release current table */
+            flecs_table_release(world, tr->hdr.table);
+
+            /* Check if the only thing keeping the next table alive is our
+             * claim. If so, move to the next record before releasing */
+            if (next) {
+                if (next->refcount == 1) {
+                    it.next = it.next->next;
+                }
+
+                flecs_table_release(world, next);
+            }
+        }
     }
 }
 
-void flecs_clear_id_record(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_id_record_t *idr)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    
-    if (world->is_fini) {
-        return;
-    }
-
-    ecs_table_cache_fini_delete_all(world, &idr->cache);
-
-    flecs_remove_id_record(world, id, idr);
-}
-
-bool flecs_set_type_info_for_id_record(
+bool flecs_id_record_set_type_info(
     ecs_world_t *world,
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti)
@@ -443,13 +467,13 @@ bool flecs_set_type_info_for_id_record(
     return changed;
 }
 
-ecs_hashmap_t* flecs_ensure_id_name_index(
+ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_hashmap_t *map = idr->name_index;
@@ -460,13 +484,13 @@ ecs_hashmap_t* flecs_ensure_id_name_index(
     return map;
 }
 
-ecs_hashmap_t* flecs_get_id_name_index(
+ecs_hashmap_t* flecs_id_name_index_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return NULL;
     }
@@ -474,14 +498,14 @@ ecs_hashmap_t* flecs_get_id_name_index(
     return idr->name_index;
 }
 
-ecs_table_record_t* flecs_get_table_record(
+ecs_table_record_t* flecs_table_record_get(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_id_record_t* idr = flecs_get_id_record(world, id);
+    ecs_id_record_t* idr = flecs_id_record_get(world, id);
     if (!idr) {
         return NULL;
     }
@@ -489,30 +513,14 @@ ecs_table_record_t* flecs_get_table_record(
     return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
-const ecs_table_record_t* flecs_id_record_table(
-    ecs_id_record_t *idr,
-    ecs_table_t *table)
+const ecs_table_record_t* flecs_id_record_get_table(
+    const ecs_id_record_t *idr,
+    const ecs_table_t *table)
 {
     if (!idr) {
         return NULL;
     }
     return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
-}
-
-void flecs_register_for_id_record(
-    ecs_world_t *world,
-    ecs_id_t id,
-    const ecs_table_t *table,
-    ecs_table_record_t *tr)
-{
-    ecs_poly_assert(world, ecs_world_t);
-
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    if (!idr) {
-        return;
-    }
-
-    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 }
 
 void flecs_fini_id_records(
@@ -520,10 +528,11 @@ void flecs_fini_id_records(
 {
     ecs_map_iter_t it = ecs_map_iter(&world->id_index);
     ecs_id_record_t *idr;
-    ecs_map_key_t key;
-    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, &key))) {
-        free_id_record(world, key, idr);
+    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, NULL))) {
+        flecs_id_record_release(world, idr);
     }
+
+    ecs_assert(ecs_map_count(&world->id_index) == 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_fini(&world->id_index);
     flecs_sparse_free(world->pending_tables);
@@ -535,7 +544,7 @@ ecs_id_record_t* flecs_table_iter(
     ecs_id_t id,
     ecs_table_cache_iter_t *out)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return NULL;
     }
@@ -553,7 +562,7 @@ ecs_id_record_t* flecs_empty_table_iter(
     ecs_id_t id,
     ecs_table_cache_iter_t *out)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return NULL;
     }

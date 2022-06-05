@@ -108,7 +108,7 @@ void TriggerDelete(ecs_iter_t *it) {
 }
 
 void Trigger_on_add_trigger_before_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -140,7 +140,7 @@ void Trigger_on_add_trigger_before_table() {
 }
 
 void Trigger_on_add_trigger_after_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -176,7 +176,7 @@ void Trigger_on_add_trigger_after_table() {
 }
 
 void Trigger_on_remove_trigger_before_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -212,7 +212,7 @@ void Trigger_on_remove_trigger_before_table() {
 }
 
 void Trigger_on_remove_trigger_after_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -246,7 +246,7 @@ void Trigger_on_remove_trigger_after_table() {
 }
 
 void Trigger_on_add_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -276,7 +276,7 @@ void Trigger_on_add_tag() {
 }
 
 void Trigger_on_add_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -306,7 +306,7 @@ void Trigger_on_add_component() {
 }
 
 void Trigger_on_add_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -352,7 +352,7 @@ void Trigger_on_add_wildcard() {
 }
 
 void Trigger_on_add_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, Obj);
@@ -385,7 +385,7 @@ void Trigger_on_add_pair() {
 }
 
 void Trigger_on_add_pair_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, ObjA);
@@ -434,7 +434,7 @@ void Trigger_on_add_pair_obj_wildcard() {
 }
 
 void Trigger_on_add_pair_pred_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, PredA);
     ECS_TAG(world, PredB);
@@ -483,7 +483,7 @@ void Trigger_on_add_pair_pred_wildcard() {
 }
 
 void Trigger_on_add_pair_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, Obj);
@@ -516,7 +516,7 @@ void Trigger_on_add_pair_wildcard() {
 }
 
 void Trigger_on_add_any() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -587,7 +587,7 @@ void Trigger_on_add_any() {
 }
 
 void Trigger_on_remove_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -620,7 +620,7 @@ void Trigger_on_remove_tag() {
 }
 
 void Trigger_on_remove_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -653,7 +653,7 @@ void Trigger_on_remove_component() {
 }
 
 void Trigger_on_remove_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -704,7 +704,7 @@ void Trigger_on_remove_wildcard() {
 }
 
 void Trigger_on_remove_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, Obj);
@@ -740,7 +740,7 @@ void Trigger_on_remove_pair() {
 }
 
 void Trigger_on_remove_pair_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, ObjA);
@@ -794,7 +794,7 @@ void Trigger_on_remove_pair_obj_wildcard() {
 }
 
 void Trigger_on_remove_pair_pred_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, PredA);
     ECS_TAG(world, PredB);
@@ -846,7 +846,7 @@ void Trigger_on_remove_pair_pred_wildcard() {
 }
 
 void Trigger_on_remove_pair_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, Obj);
@@ -885,7 +885,7 @@ void Trigger_on_remove_pair_wildcard() {
 }
 
 void Trigger_wildcard_pair_w_pred_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
@@ -940,7 +940,7 @@ void Trigger_wildcard_pair_w_pred_component() {
 }
 
 void Trigger_wildcard_pair_w_obj_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -996,7 +996,7 @@ void Trigger_wildcard_pair_w_obj_component() {
 
 
 void Trigger_on_set_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1029,7 +1029,7 @@ void Trigger_on_set_component() {
 }
 
 void Trigger_on_set_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1063,7 +1063,7 @@ void Trigger_on_set_wildcard() {
 }
 
 void Trigger_on_set_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
@@ -1100,7 +1100,7 @@ void Trigger_on_set_pair() {
 }
 
 void Trigger_on_set_pair_w_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
@@ -1137,7 +1137,7 @@ void Trigger_on_set_pair_w_obj_wildcard() {
 }
 
 void Trigger_on_set_pair_pred_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
@@ -1174,7 +1174,7 @@ void Trigger_on_set_pair_pred_wildcard() {
 }
 
 void Trigger_on_set_pair_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
@@ -1211,7 +1211,7 @@ void Trigger_on_set_pair_wildcard() {
 }
 
 void Trigger_on_add_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1256,7 +1256,7 @@ void Trigger_on_add_remove() {
 }
 
 void Trigger_on_set_component_after_modified() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1290,7 +1290,7 @@ void Trigger_on_set_component_after_modified() {
 }
 
 void Trigger_un_set_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1324,7 +1324,7 @@ void Trigger_un_set_component() {
 }
 
 void Trigger_un_set_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1358,7 +1358,7 @@ void Trigger_un_set_wildcard() {
 }
 
 void Trigger_un_set_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1398,7 +1398,7 @@ void Trigger_un_set_pair() {
 }
 
 void Trigger_un_set_pair_w_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1438,7 +1438,7 @@ void Trigger_un_set_pair_w_obj_wildcard() {
 }
 
 void Trigger_un_set_pair_pred_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1478,7 +1478,7 @@ void Trigger_un_set_pair_pred_wildcard() {
 }
 
 void Trigger_un_set_pair_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1521,7 +1521,7 @@ void Trigger_un_set_pair_wildcard() {
 }
 
 void Trigger_on_add_not_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1561,7 +1561,7 @@ void Trigger_on_add_not_tag() {
 }
 
 void Trigger_on_remove_not_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1597,7 +1597,7 @@ void Trigger_on_remove_not_tag() {
 }
 
 void Trigger_on_add_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1643,7 +1643,7 @@ void Trigger_on_add_superset() {
 }
 
 void Trigger_on_add_superset_2_levels() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1693,7 +1693,7 @@ void Trigger_on_add_superset_2_levels() {
 }
 
 void Trigger_on_remove_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1742,7 +1742,7 @@ void Trigger_on_remove_superset() {
 }
 
 void Trigger_on_add_superset_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1791,7 +1791,7 @@ void Trigger_on_add_superset_childof() {
 }
 
 void Trigger_on_remove_superset_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1843,7 +1843,7 @@ void Trigger_on_remove_superset_childof() {
 }
 
 void Trigger_on_add_self_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1916,7 +1916,7 @@ void Trigger_on_add_self_superset() {
 }
 
 void Trigger_on_remove_self_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1991,7 +1991,7 @@ void Trigger_on_remove_self_superset() {
 }
 
 void Trigger_add_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2027,7 +2027,7 @@ void Trigger_add_twice() {
 }
 
 void Trigger_remove_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2065,7 +2065,7 @@ void Trigger_remove_twice() {
 }
 
 void Trigger_on_remove_w_clear() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2098,7 +2098,7 @@ void Trigger_on_remove_w_clear() {
 }
 
 void Trigger_on_remove_w_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2131,7 +2131,7 @@ void Trigger_on_remove_w_delete() {
 }
 
 void Trigger_on_remove_w_world_fini() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2162,7 +2162,7 @@ void Trigger_on_remove_w_world_fini() {
 }
 
 void Trigger_on_add_w_clone() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2207,7 +2207,7 @@ void Trigger_on_add_w_clone() {
 }
 
 void Trigger_add_in_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2228,7 +2228,7 @@ void Trigger_add_in_trigger() {
 }
 
 void Trigger_remove_in_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2251,7 +2251,7 @@ void Trigger_remove_in_trigger() {
 }
 
 void Trigger_clear_in_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2274,7 +2274,7 @@ void Trigger_clear_in_trigger() {
 }
 
 void Trigger_delete_in_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2296,7 +2296,7 @@ void Trigger_delete_in_trigger() {
 }
 
 void Trigger_trigger_w_named_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2339,7 +2339,7 @@ void RemoveSelf(ecs_iter_t *it) {
 }
 
 void Trigger_on_remove_tree() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
 
@@ -2388,7 +2388,7 @@ void Trigger_on_remove_tree() {
 }
 
 void Trigger_set_get_context() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2415,7 +2415,7 @@ void Trigger_set_get_context() {
 }
 
 void Trigger_set_get_binding_context() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2442,7 +2442,7 @@ void Trigger_set_get_binding_context() {
 }
 
 void Trigger_trigger_w_self() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2482,7 +2482,7 @@ void binding_ctx_free(void *ctx) {
 }
 
 void Trigger_delete_trigger_w_delete_ctx() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2509,7 +2509,7 @@ void Trigger_delete_trigger_w_delete_ctx() {
 }
 
 void Trigger_trigger_w_index() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2538,7 +2538,7 @@ void TypeTrigger(ecs_iter_t *it) {
 }
 
 void Trigger_iter_type_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2567,7 +2567,7 @@ void TriggerReadonly(ecs_iter_t *it) {
 }
 
 void Trigger_readonly_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2598,7 +2598,7 @@ void Trigger_readonly_term() {
 }
 
 void Trigger_trigger_on_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2645,7 +2645,7 @@ void Trigger_trigger_on_prefab() {
 }
 
 void Trigger_trigger_on_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2692,7 +2692,7 @@ void Trigger_trigger_on_disabled() {
 }
 
 void Trigger_trigger_on_prefab_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     Probe ctx_1 = {0};
 
@@ -2710,7 +2710,7 @@ void Trigger_trigger_on_prefab_tag() {
 }
 
 void Trigger_trigger_on_disabled_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     Probe ctx_1 = {0};
 
@@ -2728,7 +2728,7 @@ void Trigger_trigger_on_disabled_tag() {
 }
 
 void Trigger_trigger_cleanup_2_w_self_super_id() {
-    ecs_world_t * world = ecs_init();
+    ecs_world_t * world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2753,7 +2753,7 @@ void Trigger_trigger_cleanup_2_w_self_super_id() {
 }
 
 void Trigger_on_add_yield_existing() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2797,7 +2797,7 @@ void Trigger_on_add_yield_existing() {
 }
 
 void Trigger_on_add_yield_existing_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2845,7 +2845,7 @@ void Trigger_on_add_yield_existing_2_tables() {
 }
 
 void Trigger_on_add_yield_existing_wildcard_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
@@ -2892,7 +2892,7 @@ void Trigger_on_add_yield_existing_wildcard_pair() {
 }
 
 void Trigger_on_set_yield_existing() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -2940,7 +2940,7 @@ void Trigger_on_set_yield_existing() {
 }
 
 void Trigger_filter_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -2971,7 +2971,7 @@ void Trigger_filter_term() {
 }
 
 void Trigger_on_add_remove_after_exclusive_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Exclusive);
     ECS_TAG(world, ObjA);
@@ -3034,7 +3034,7 @@ void Trigger_on_add_remove_after_exclusive_add() {
 }
 
 void Trigger_on_add_base() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3074,7 +3074,7 @@ void Trigger_on_add_base() {
 }
 
 void Trigger_on_remove_base() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3118,7 +3118,7 @@ void Trigger_on_remove_base() {
 }
 
 void Trigger_on_set_base() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3169,7 +3169,7 @@ void Trigger_on_set_base() {
 }
 
 void Trigger_on_unset_base() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3213,7 +3213,7 @@ void Trigger_on_unset_base() {
 }
 
 void Trigger_on_add_base_superset_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3251,7 +3251,7 @@ void Trigger_on_add_base_superset_trigger() {
 }
 
 void Trigger_on_add_base_superset_trigger_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3294,7 +3294,7 @@ void Trigger_on_add_base_superset_trigger_2_lvls() {
 }
 
 void Trigger_on_add_base_2_entities() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3336,7 +3336,7 @@ void Trigger_on_add_base_2_entities() {
 }
 
 void Trigger_on_add_base_2_entities_filter() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3379,7 +3379,7 @@ void Trigger_on_add_base_2_entities_filter() {
 }
 
 void Trigger_on_set_base_w_value_2_entities() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3431,7 +3431,7 @@ void Trigger_on_set_base_w_value_2_entities() {
 }
 
 void Trigger_on_set_base_w_value_2_entities_instanced() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3484,7 +3484,7 @@ void Trigger_on_set_base_w_value_2_entities_instanced() {
 }
 
 void Trigger_on_add_base_w_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -3595,7 +3595,7 @@ void Trigger_on_set_base_w_override() {
 }
 
 void Trigger_entity_source_1_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3630,7 +3630,7 @@ void Trigger_entity_source_1_trigger() {
 }
 
 void Trigger_entity_source_2_triggers() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3687,7 +3687,7 @@ void Trigger_entity_source_2_triggers() {
 }
 
 void Trigger_entity_source_base_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3727,7 +3727,7 @@ void Trigger_entity_source_base_set() {
 }
 
 void Trigger_not_from_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -3749,7 +3749,7 @@ void Trigger_not_from_superset() {
 }
 
 void Trigger_create_stresstest() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -3778,7 +3778,7 @@ void Trigger_w_new_entity_value(ecs_iter_t *it) {
 }
 
 void Trigger_add_non_existing_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
 
@@ -3808,7 +3808,7 @@ void Trigger_add_non_existing_entity() {
 }
 
 void Trigger_on_add_self_trigger_with_add_isa() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -4352,7 +4352,7 @@ void Trigger_on_add_base_self_superset_w_owned() {
 }
 
 void Trigger_on_set_self_from_child_of_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4388,7 +4388,7 @@ void Trigger_on_set_self_from_child_of_prefab() {
 }
 
 void Trigger_on_set_self_superset_from_child_of_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4426,7 +4426,7 @@ void Trigger_on_set_self_superset_from_child_of_prefab() {
 void Trigger_on_set_self_from_child_base_of_prefab() {
     test_quarantine("15 May 2022");
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4462,7 +4462,7 @@ void Trigger_on_set_self_from_child_base_of_prefab() {
 }
 
 void Trigger_on_set_self_superset_from_child_base_of_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4501,7 +4501,7 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab() {
 }
 
 void Trigger_on_set_self_auto_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4532,7 +4532,7 @@ void Trigger_on_set_self_auto_override() {
 }
 
 void Trigger_on_set_self_superset_auto_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -4563,7 +4563,7 @@ void Trigger_on_set_self_superset_auto_override() {
 }
 
 void Trigger_on_set_superset_auto_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

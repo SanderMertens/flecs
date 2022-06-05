@@ -558,7 +558,9 @@ void OnDelete_delete_with_component(void);
 void OnDelete_delete_with_pair(void);
 void OnDelete_delete_with_object_wildcard(void);
 void OnDelete_delete_with_relation_wildcard(void);
+void OnDelete_delete_with_component_after_delete_cyclic_self(void);
 void OnDelete_delete_with_component_after_delete_cyclic(void);
+void OnDelete_delete_with_component_after_delete_cyclic_w_alive_moved(void);
 void OnDelete_delete_all_with_entity(void);
 void OnDelete_remove_childof_entity(void);
 void OnDelete_remove_childof_wildcard(void);
@@ -4037,8 +4039,16 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_delete_with_relation_wildcard
     },
     {
+        "delete_with_component_after_delete_cyclic_self",
+        OnDelete_delete_with_component_after_delete_cyclic_self
+    },
+    {
         "delete_with_component_after_delete_cyclic",
         OnDelete_delete_with_component_after_delete_cyclic
+    },
+    {
+        "delete_with_component_after_delete_cyclic_w_alive_moved",
+        OnDelete_delete_with_component_after_delete_cyclic_w_alive_moved
     },
     {
         "delete_all_with_entity",
@@ -9522,7 +9532,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        80,
+        82,
         OnDelete_testcases
     },
     {

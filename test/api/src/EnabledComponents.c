@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void EnabledComponents_is_component_enabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -14,7 +14,7 @@ void EnabledComponents_is_component_enabled() {
 }
 
 void EnabledComponents_is_empty_entity_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -28,7 +28,7 @@ void EnabledComponents_is_empty_entity_disabled() {
 void EnabledComponents_is_0_entity_disabled() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -41,7 +41,7 @@ void EnabledComponents_is_0_entity_disabled() {
 void EnabledComponents_is_0_component_disabled() {
     install_test_abort();
     
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -53,7 +53,7 @@ void EnabledComponents_is_0_component_disabled() {
 }
 
 void EnabledComponents_is_nonexist_component_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -66,7 +66,7 @@ void EnabledComponents_is_nonexist_component_disabled() {
 }
 
 void EnabledComponents_is_enabled_component_enabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -79,7 +79,7 @@ void EnabledComponents_is_enabled_component_enabled() {
 }
 
 void EnabledComponents_is_disabled_component_enabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -92,7 +92,7 @@ void EnabledComponents_is_disabled_component_enabled() {
 }
 
 void EnabledComponents_has_enabled_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -106,7 +106,7 @@ void EnabledComponents_has_enabled_component() {
 }
 
 void EnabledComponents_is_enabled_after_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -124,7 +124,7 @@ void EnabledComponents_is_enabled_after_add() {
 }
 
 void EnabledComponents_is_enabled_after_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -142,7 +142,7 @@ void EnabledComponents_is_enabled_after_remove() {
 }
 
 void EnabledComponents_is_enabled_after_disable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -161,7 +161,7 @@ void EnabledComponents_is_enabled_after_disable() {
 }
 
 void EnabledComponents_is_disabled_after_enable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -180,7 +180,7 @@ void EnabledComponents_is_disabled_after_enable() {
 }
 
 void EnabledComponents_is_enabled_randomized() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -203,7 +203,7 @@ void EnabledComponents_is_enabled_randomized() {
 }
 
 void EnabledComponents_is_enabled_after_add_randomized() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -230,7 +230,7 @@ void EnabledComponents_is_enabled_after_add_randomized() {
 }
 
 void EnabledComponents_is_enabled_after_randomized_add_randomized() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -259,7 +259,7 @@ void EnabledComponents_is_enabled_after_randomized_add_randomized() {
 }
 
 void EnabledComponents_query_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -293,7 +293,7 @@ void EnabledComponents_query_disabled() {
 }
 
 void EnabledComponents_query_disabled_skip_initial() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -325,7 +325,7 @@ void EnabledComponents_query_disabled_skip_initial() {
 }
 
 void EnabledComponents_query_mod_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -362,7 +362,7 @@ void EnabledComponents_query_mod_2() {
 }
 
 void EnabledComponents_query_mod_8() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -399,7 +399,7 @@ void EnabledComponents_query_mod_8() {
 }
 
 void EnabledComponents_query_mod_64() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -436,7 +436,7 @@ void EnabledComponents_query_mod_64() {
 }
 
 void EnabledComponents_query_mod_256() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -473,7 +473,7 @@ void EnabledComponents_query_mod_256() {
 }
 
 void EnabledComponents_query_mod_1024() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -510,7 +510,7 @@ void EnabledComponents_query_mod_1024() {
 }
 
 void EnabledComponents_query_enable_mod_10() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -547,7 +547,7 @@ void EnabledComponents_query_enable_mod_10() {
 }
 
 void EnabledComponents_is_enabled_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -565,7 +565,7 @@ void EnabledComponents_is_enabled_2() {
 }
 
 void EnabledComponents_is_enabled_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -589,7 +589,7 @@ void EnabledComponents_is_enabled_3() {
 }
 
 void EnabledComponents_is_enabled_2_after_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -611,7 +611,7 @@ void EnabledComponents_is_enabled_2_after_add() {
 }
 
 void EnabledComponents_is_enabled_3_after_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -640,7 +640,7 @@ void EnabledComponents_is_enabled_3_after_add() {
 }
 
 void EnabledComponents_query_mod_2_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -689,7 +689,7 @@ void EnabledComponents_query_mod_2_2_bitsets() {
 }
 
 void EnabledComponents_query_mod_8_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -738,7 +738,7 @@ void EnabledComponents_query_mod_8_2_bitsets() {
 }
 
 void EnabledComponents_query_mod_64_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -787,7 +787,7 @@ void EnabledComponents_query_mod_64_2_bitsets() {
 }
 
 void EnabledComponents_query_mod_256_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -836,7 +836,7 @@ void EnabledComponents_query_mod_256_2_bitsets() {
 }
 
 void EnabledComponents_query_mod_1024_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -885,7 +885,7 @@ void EnabledComponents_query_mod_1024_2_bitsets() {
 }
 
 void EnabledComponents_query_randomized_2_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -927,7 +927,7 @@ void EnabledComponents_query_randomized_2_bitsets() {
 }
 
 void EnabledComponents_query_randomized_3_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -974,7 +974,7 @@ void EnabledComponents_query_randomized_3_bitsets() {
 }
 
 void EnabledComponents_query_randomized_4_bitsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1026,7 +1026,7 @@ void EnabledComponents_query_randomized_4_bitsets() {
 }
 
 void EnabledComponents_defer_enable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1051,7 +1051,7 @@ int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const v
 }
 
 void EnabledComponents_sort() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

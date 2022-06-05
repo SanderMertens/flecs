@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Search_search() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -28,7 +28,7 @@ void Search_search() {
 }
 
 void Search_search_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -48,7 +48,7 @@ void Search_search_wildcard() {
 }
 
 void Search_search_wildcard_w_offset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -81,7 +81,7 @@ void Search_search_wildcard_w_offset() {
 }
 
 void Search_search_relation_wildcard_w_offset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelX);
@@ -118,7 +118,7 @@ void Search_search_relation_wildcard_w_offset() {
 }
 
 void Search_search_pair_w_any_rel() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -138,7 +138,7 @@ void Search_search_pair_w_any_rel() {
 }
 
 void Search_search_pair_w_any_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
@@ -158,7 +158,7 @@ void Search_search_pair_w_any_obj() {
 }
 
 void Search_search_follow_relation_lvl_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -183,7 +183,7 @@ void Search_search_follow_relation_lvl_0() {
 }
 
 void Search_search_follow_relation_lvl_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -209,7 +209,7 @@ void Search_search_follow_relation_lvl_1() {
 }
 
 void Search_search_follow_relation_lvl_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -236,7 +236,7 @@ void Search_search_follow_relation_lvl_2() {
 }
 
 void Search_search_follow_relation_lvl_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -264,7 +264,7 @@ void Search_search_follow_relation_lvl_3() {
 }
 
 void Search_search_first_lvl_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -289,7 +289,7 @@ void Search_search_first_lvl_0() {
 }
 
 void Search_search_first_lvl_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -315,7 +315,7 @@ void Search_search_first_lvl_1() {
 }
 
 void Search_search_first_lvl_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -343,7 +343,7 @@ void Search_search_first_lvl_2() {
 }
 
 void Search_search_first_lvl_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -373,7 +373,7 @@ void Search_search_first_lvl_3() {
 }
 
 void Search_search_last_lvl_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -398,7 +398,7 @@ void Search_search_last_lvl_0() {
 }
 
 void Search_search_last_lvl_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -424,7 +424,7 @@ void Search_search_last_lvl_1() {
 }
 
 void Search_search_last_lvl_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -452,7 +452,7 @@ void Search_search_last_lvl_2() {
 }
 
 void Search_search_last_lvl_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -482,7 +482,7 @@ void Search_search_last_lvl_3() {
 }
 
 void Search_search_last_lvl_3_root_without_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -511,7 +511,7 @@ void Search_search_last_lvl_3_root_without_id() {
 }
 
 void Search_search_relation_at_offset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
