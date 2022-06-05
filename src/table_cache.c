@@ -222,38 +222,6 @@ bool ecs_table_cache_set_empty(
     return true;
 }
 
-void ecs_table_cache_fini_delete_all(
-    ecs_world_t *world,
-    ecs_table_cache_t *cache)
-{
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!ecs_map_is_initialized(&cache->index)) {
-        return;
-    }
-
-    /* Temporarily set index to NULL, so that when the table tries to remove
-     * itself from the cache it won't be able to. This keeps the arrays we're
-     * iterating over consistent */
-    ecs_map_t index = cache->index;
-    ecs_os_zeromem(&cache->index);
-
-    ecs_table_cache_hdr_t *cur, *next = cache->tables.first;
-    while ((cur = next)) {
-        flecs_delete_table(world, cur->table);
-        next = cur->next;
-    }
-
-    next = cache->empty_tables.first;
-    while ((cur = next)) {
-        flecs_delete_table(world, cur->table);
-        next = cur->next;
-    }
-
-    cache->index = index;
-
-    ecs_table_cache_fini(cache);
-}
-
 bool flecs_table_cache_iter(
     ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)

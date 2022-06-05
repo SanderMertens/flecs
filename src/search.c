@@ -60,7 +60,7 @@ bool type_can_inherit_id(
     if (idr->flags & EcsIdExclusive) {
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t er = ECS_PAIR_FIRST(id);
-            if (flecs_get_table_record(
+            if (flecs_table_record_get(
                 world, table, ecs_pair(er, EcsWildcard))) 
             {
                 return false;
@@ -118,7 +118,7 @@ int32_t type_search_relation(
         }
 
         if (!idr_r) {
-            idr_r = flecs_get_id_record(world, rel);
+            idr_r = flecs_id_record_get(world, rel);
             if (!idr_r) {
                 return -1;
             }
@@ -196,7 +196,7 @@ int32_t ecs_search_relation(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_record_t *idr = flecs_get_query_id_record(world, id);
+    ecs_id_record_t *idr = flecs_query_id_record_get(world, id);
     if (!idr) {
         return -1;
     }
@@ -221,7 +221,7 @@ int32_t ecs_search(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_record_t *idr = flecs_get_query_id_record(world, id);
+    ecs_id_record_t *idr = flecs_query_id_record_get(world, id);
     if (!idr) {
         return -1;
     }

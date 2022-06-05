@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Singleton_add_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -15,7 +15,7 @@ void Singleton_add_singleton() {
 }
 
 void Singleton_remove_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -33,7 +33,7 @@ void Singleton_remove_singleton() {
 }
 
 void Singleton_set_get_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -48,7 +48,7 @@ void Singleton_set_get_singleton() {
 }
 
 void Singleton_get_mut_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

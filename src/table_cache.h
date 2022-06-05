@@ -39,12 +39,8 @@ bool ecs_table_cache_set_empty(
 bool ecs_table_cache_is_empty(
     const ecs_table_cache_t *cache);
 
-#define ecs_table_cache_count(cache) (cache)->tables.count
-#define ecs_table_cache_empty_count(cache) (cache)->empty_tables.count
-
-void ecs_table_cache_fini_delete_all(
-    ecs_world_t *world,
-    ecs_table_cache_t *cache);
+#define flecs_table_cache_count(cache) (cache)->tables.count
+#define flecs_table_cache_empty_count(cache) (cache)->empty_tables.count
 
 bool flecs_table_cache_iter(
     ecs_table_cache_t *cache,

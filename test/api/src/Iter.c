@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Iter_page_iter_0_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -71,7 +71,7 @@ void Iter_page_iter_0_0() {
 }
 
 void Iter_page_iter_1_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -136,7 +136,7 @@ void Iter_page_iter_1_0() {
 }
 
 void Iter_page_iter_0_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -177,7 +177,7 @@ void Iter_page_iter_0_1() {
 }
 
 void Iter_page_iter_n_0() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -239,7 +239,7 @@ void Iter_page_iter_n_0() {
 }
 
 void Iter_page_iter_0_n() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -281,7 +281,7 @@ void Iter_page_iter_0_n() {
 }
 
 void Iter_page_iter_m_n() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -335,7 +335,7 @@ void Iter_page_iter_m_n() {
 }
 
 void Iter_page_iter_skip_1_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -389,7 +389,7 @@ void Iter_page_iter_skip_1_table() {
 }
 
 void Iter_page_iter_skip_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -432,7 +432,7 @@ void Iter_page_iter_skip_2_tables() {
 }
 
 void Iter_worker_iter_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -499,7 +499,7 @@ void Iter_worker_iter_1() {
 }
 
 void Iter_worker_iter_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -590,7 +590,7 @@ void Iter_worker_iter_2() {
 }
 
 void Iter_worker_iter_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -698,7 +698,7 @@ void Iter_worker_iter_3() {
 }
 
 void Iter_worker_iter_4() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_TAG(world, TagA);
@@ -849,7 +849,7 @@ void Iter_worker_iter_4() {
 }
 
 void Iter_paged_iter_w_shared_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Self);
@@ -941,7 +941,7 @@ void Iter_paged_iter_w_shared_comp() {
 }
 
 void Iter_worker_iter_w_shared_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
     ECS_COMPONENT(world, Position);
@@ -1071,7 +1071,7 @@ void Iter_worker_iter_w_shared_comp() {
 }
 
 void Iter_paged_iter_w_task_query() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
 
@@ -1102,7 +1102,7 @@ void Iter_paged_iter_w_task_query() {
 }
 
 void Iter_worker_iter_w_task_query() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
 
@@ -1140,7 +1140,7 @@ void Iter_worker_iter_w_task_query() {
 }
 
 void Iter_iter_1_term_no_alloc() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1168,7 +1168,7 @@ void Iter_iter_1_term_no_alloc() {
 }
 
 void Iter_iter_cache_size_terms_no_alloc() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_int(ECS_TERM_CACHE_SIZE, 4);
 
@@ -1204,7 +1204,7 @@ void Iter_iter_cache_size_terms_no_alloc() {
 }
 
 void Iter_iter_lt_cache_size_terms_alloc() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_int(ECS_TERM_CACHE_SIZE, 4);
 
@@ -1242,7 +1242,7 @@ void Iter_iter_lt_cache_size_terms_alloc() {
 }
 
 void Iter_worker_iter_w_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
     ECS_COMPONENT(world, Position);
@@ -1287,7 +1287,7 @@ void Iter_worker_iter_w_singleton() {
 }
 
 void Iter_worker_iter_w_singleton_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1355,7 +1355,7 @@ void Iter_worker_iter_w_singleton_component() {
 }
 
 void Iter_worker_iter_w_singleton_instanced() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
     ECS_COMPONENT(world, Position);
@@ -1405,7 +1405,7 @@ void Iter_worker_iter_w_singleton_instanced() {
 }
 
 void Iter_worker_iter_w_singleton_component_instanced() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1462,7 +1462,7 @@ void Iter_worker_iter_w_singleton_component_instanced() {
 }
 
 void Iter_paged_iter_w_singleton() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
     ECS_COMPONENT(world, Position);
@@ -1507,7 +1507,7 @@ void Iter_paged_iter_w_singleton() {
 }
 
 void Iter_paged_iter_w_singleton_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1571,7 +1571,7 @@ void Iter_paged_iter_w_singleton_component() {
 }
 
 void Iter_paged_iter_w_singleton_instanced() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
     ECS_COMPONENT(world, Position);
@@ -1621,7 +1621,7 @@ void Iter_paged_iter_w_singleton_instanced() {
 }
 
 void Iter_paged_iter_w_singleton_component_instanced() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

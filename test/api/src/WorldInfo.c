@@ -373,7 +373,10 @@ void WorldInfo_id_wildcard_count() {
     test_delta(&prev, cur, wildcard_id_count, -1);
 
     ecs_delete(world, c_3);
-    test_delta(&prev, cur, wildcard_id_count, -2);
+    test_delta(&prev, cur, wildcard_id_count, -1);
+
+    ecs_delete(world, c_2);
+    test_delta(&prev, cur, wildcard_id_count, -1);
 
     ecs_fini(world);
 }

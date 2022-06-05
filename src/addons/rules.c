@@ -3176,7 +3176,7 @@ int32_t find_next_column(
     ecs_type_t type = table->type;
 
     if (column == -1) {
-        ecs_table_record_t *tr = flecs_get_table_record(world, table, pattern);
+        ecs_table_record_t *tr = flecs_table_record_get(world, table, pattern);
         if (!tr) {
             return -1;
         }
@@ -3233,8 +3233,8 @@ ecs_id_record_t* find_tables(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr || !ecs_table_cache_count(&idr->cache)) {
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr || !flecs_table_cache_count(&idr->cache)) {
         /* Skip ids that don't have (non-empty) tables */
         return NULL;
     }

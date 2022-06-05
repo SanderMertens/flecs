@@ -1913,7 +1913,7 @@ void OnDelete_delete_child_of_delete_with() {
     ecs_fini(world);
 }
 
-void OnDelete_delete_with_component_after_delete_cyclic() {
+void OnDelete_delete_with_component_after_delete_cyclic_self() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1930,6 +1930,74 @@ void OnDelete_delete_with_component_after_delete_cyclic() {
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(!ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_component_after_delete_cyclic() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add_pair(world, e2, Rel, e3);
+    ecs_add_pair(world, e3, Rel, e2);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_component_after_delete_cyclic_w_alive_moved() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    ecs_add_pair(world, e4, Rel, e2);
+    ecs_add(world, e4, Velocity);
+
+    ecs_add_pair(world, e2, Rel, e3);
+    ecs_add_pair(world, e3, Rel, e2);
+
+    ecs_entity_t e5 = ecs_new_id(world);
+    ecs_add_pair(world, e5, Rel, e2);
+    ecs_add_pair(world, e5, Rel, e3);
+    ecs_add(world, e5, Velocity);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
+    test_assert(ecs_is_alive(world, e5));
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
+    test_assert(ecs_is_alive(world, e5));
+
+    test_assert(ecs_has(world, e4, Velocity));
+    test_assert(ecs_has(world, e5, Velocity));
 
     ecs_fini(world);
 }

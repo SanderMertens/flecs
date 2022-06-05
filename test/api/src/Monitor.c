@@ -6,7 +6,7 @@ void OnPosition(ecs_iter_t *it) {
 }
 
 void Monitor_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -28,7 +28,7 @@ void Monitor_1_comp() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_progress(world, 0);
+    ecs_run_aperiodic(world, 0);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -38,7 +38,7 @@ void Monitor_1_comp() {
 }
 
 void Monitor_2_comps() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -85,7 +85,7 @@ void Monitor_2_comps() {
 }
 
 void Monitor_1_comp_1_not() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -129,7 +129,7 @@ void Monitor_1_comp_1_not() {
 }
 
 void Monitor_1_parent() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -159,7 +159,7 @@ void Monitor_1_parent() {
 }
 
 void Monitor_1_comp_1_parent() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -222,7 +222,7 @@ void Monitor_1_comp_1_parent() {
 }
 
 void Monitor_1_comp_prefab_new() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -235,7 +235,7 @@ void Monitor_1_comp_prefab_new() {
 
     test_int(ctx.invoked, 0);
 
-    ecs_progress(world, 0);
+    ecs_run_aperiodic(world, 0);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, Prefab, Velocity);
@@ -245,7 +245,7 @@ void Monitor_1_comp_prefab_new() {
 }
 
 void Monitor_1_comp_prefab_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -258,7 +258,7 @@ void Monitor_1_comp_prefab_add() {
     ecs_add(world, e, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_progress(world, 0);
+    ecs_run_aperiodic(world, 0);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -268,7 +268,7 @@ void Monitor_1_comp_prefab_add() {
 }
 
 void Monitor_monitor_w_and() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -308,7 +308,7 @@ void Monitor_monitor_w_and() {
 }
 
 void Monitor_monitor_w_or() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -345,7 +345,7 @@ void Monitor_monitor_w_or() {
 }
 
 void Monitor_monitor_w_not() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -379,7 +379,7 @@ void Monitor_monitor_w_not() {
 }
 
 void Monitor_monitor_w_optional() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -419,7 +419,7 @@ void Monitor_monitor_w_optional() {
 }
 
 void Monitor_monitor_w_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -466,7 +466,7 @@ void Monitor_monitor_w_superset() {
 }
 
 void Monitor_monitor_w_self_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -526,7 +526,7 @@ void Monitor_monitor_w_self_superset() {
 }
 
 void Monitor_monitor_w_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Eats);

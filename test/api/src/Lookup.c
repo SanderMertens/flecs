@@ -6,7 +6,7 @@ void Lookup_setup() {
 }
 
 void Lookup_lookup() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MyEntity, 0);
 
@@ -18,7 +18,7 @@ void Lookup_lookup() {
 }
 
 void Lookup_lookup_w_null_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MyEntity, 0);
 
@@ -33,7 +33,7 @@ void Lookup_lookup_w_null_name() {
 }
 
 void Lookup_lookup_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -45,7 +45,7 @@ void Lookup_lookup_component() {
 }
 
 void Lookup_lookup_not_found() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup(world, "foo");
     test_assert(lookup == 0);
@@ -54,7 +54,7 @@ void Lookup_lookup_not_found() {
 }
 
 void Lookup_lookup_child() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Parent1, 0);
     ECS_ENTITY(world, Parent2, 0);
@@ -79,7 +79,7 @@ void Lookup_lookup_child() {
 }
 
 void Lookup_get_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     /* Ensure this doesn't crash the lookup function */
     ecs_entity_t e = ecs_set_name(world, 0, "Entity");
@@ -91,7 +91,7 @@ void Lookup_get_name() {
 }
 
 void Lookup_get_name_no_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -104,7 +104,7 @@ void Lookup_get_name_no_name() {
 }
 
 void Lookup_get_name_from_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     /* Ensure this doesn't crash the lookup function */
     ecs_entity_t e = ecs_new(world, 0);
@@ -115,7 +115,7 @@ void Lookup_get_name_from_empty() {
 }
 
 void Lookup_lookup_by_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup(world, "1000");
     test_int(e, 1000);
@@ -124,7 +124,7 @@ void Lookup_lookup_by_id() {
 }
 
 void Lookup_lookup_recycled_by_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
@@ -148,7 +148,7 @@ void Lookup_lookup_recycled_by_id() {
 }
 
 void Lookup_lookup_name_w_digit() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_set_name(world, 0, "10_id");
     ecs_entity_t e2 = ecs_lookup(world, "10_id");
@@ -158,7 +158,7 @@ void Lookup_lookup_name_w_digit() {
 }
 
 void Lookup_lookup_symbol_by_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup_symbol(world, "1000", true);
     test_int(e, 1000);
@@ -167,7 +167,7 @@ void Lookup_lookup_symbol_by_id() {
 }
 
 void Lookup_lookup_symbol_w_digit() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_set_symbol(world, 0, "10_id");    
     ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id", true);
@@ -177,7 +177,7 @@ void Lookup_lookup_symbol_w_digit() {
 }
 
 void Lookup_lookup_path_w_digit() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "parent");
     ecs_entity_t e1 = ecs_set_name(world, 0, "10_id");
@@ -190,7 +190,7 @@ void Lookup_lookup_path_w_digit() {
 }
 
 void Lookup_set_name_of_existing() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -204,7 +204,7 @@ void Lookup_set_name_of_existing() {
 }
 
 void Lookup_change_name_of_existing() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_set_name(world, 0, "Foo");
     test_assert(e != 0);
@@ -219,7 +219,7 @@ void Lookup_change_name_of_existing() {
 }
 
 void Lookup_lookup_alias() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
     test_assert(e != 0);
@@ -234,7 +234,7 @@ void Lookup_lookup_alias() {
 }
 
 void Lookup_lookup_scoped_alias() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_set_name(world, 0, "MyParent");
     test_assert(p != 0);
@@ -254,7 +254,7 @@ void Lookup_lookup_scoped_alias() {
 void Lookup_define_duplicate_alias() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_set_name(world, 0, "MyEntityA");
     test_assert(e1 != 0);
@@ -269,7 +269,7 @@ void Lookup_define_duplicate_alias() {
 }
 
 void Lookup_lookup_null() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_lookup(world, NULL) == 0);
 
@@ -277,7 +277,7 @@ void Lookup_lookup_null() {
 }
 
 void Lookup_lookup_symbol_null() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_lookup_symbol(world, NULL, true) == 0);
 
@@ -285,7 +285,7 @@ void Lookup_lookup_symbol_null() {
 }
 
 void Lookup_lookup_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup(world, ".");
     test_assert(lookup != 0);
@@ -295,7 +295,7 @@ void Lookup_lookup_this() {
 }
 
 void Lookup_lookup_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup(world, "*");
     test_assert(lookup != 0);
@@ -305,7 +305,7 @@ void Lookup_lookup_wildcard() {
 }
 
 void Lookup_lookup_any() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup(world, "_");
     test_assert(lookup != 0);
@@ -315,7 +315,7 @@ void Lookup_lookup_any() {
 }
 
 void Lookup_lookup_path_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup_path_w_sep(world, 0, ".", NULL, NULL, false);
     test_assert(lookup != 0);
@@ -325,7 +325,7 @@ void Lookup_lookup_path_this() {
 }
 
 void Lookup_lookup_path_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t lookup = ecs_lookup_path_w_sep(world, 0, "*", NULL, NULL, false);
     test_assert(lookup != 0);
@@ -335,7 +335,7 @@ void Lookup_lookup_path_wildcard() {
 }
 
 void Lookup_lookup_path_this_from_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_new_id(world);
 
@@ -347,7 +347,7 @@ void Lookup_lookup_path_this_from_scope() {
 }
 
 void Lookup_lookup_path_wildcard_from_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_new_id(world);
 
@@ -359,7 +359,7 @@ void Lookup_lookup_path_wildcard_from_scope() {
 }
 
 void Lookup_resolve_builtin_symbols() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_lookup_symbol(world, "EcsComponent", false) == ecs_id(EcsComponent));
     test_assert(ecs_lookup_symbol(world, "EcsComponentLifecycle", false) == ecs_id(EcsComponentLifecycle));
@@ -373,7 +373,7 @@ void Lookup_resolve_builtin_symbols() {
 }
 
 void Lookup_lookup_from_scope_staged() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
     ecs_entity_t child = ecs_set_name(world, 0, "Child");
@@ -396,7 +396,7 @@ void Lookup_lookup_from_scope_staged() {
 }
 
 void Lookup_lookup_core() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_lookup_fullpath(world, "Component");
     test_assert(c != 0);
@@ -406,7 +406,7 @@ void Lookup_lookup_core() {
 }
 
 void Lookup_lookup_core_from_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_lookup_fullpath(world, "Component");
     test_assert(c != 0);
@@ -427,7 +427,7 @@ void Lookup_lookup_core_from_stage() {
 }
 
 void Lookup_lookup_custom_search_path() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -450,7 +450,7 @@ void Lookup_lookup_custom_search_path() {
 }
 
 void Lookup_lookup_custom_search_path_from_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -476,7 +476,7 @@ void Lookup_lookup_custom_search_path_from_stage() {
 }
 
 void Lookup_lookup_custom_search_path_n_elems() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -514,7 +514,7 @@ void Lookup_lookup_custom_search_path_n_elems() {
 }
 
 void Lookup_set_same_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "MyName");
     test_assert(e != 0);
@@ -529,7 +529,7 @@ void Lookup_set_same_name() {
 }
 
 void Lookup_defer_set_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "Foo");
     test_assert(e != 0);
@@ -547,7 +547,7 @@ void Lookup_defer_set_name() {
 }
 
 void Lookup_defer_set_same_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "MyName");
     test_assert(e != 0);

@@ -5,7 +5,7 @@ void Reference_setup() {
 }
 
 void Reference_get_ref() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -21,7 +21,7 @@ void Reference_get_ref() {
 }
 
 void Reference_get_ref_after_add() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -45,7 +45,7 @@ void Reference_get_ref_after_add() {
 }
 
 void Reference_get_ref_after_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -70,7 +70,7 @@ void Reference_get_ref_after_remove() {
 }
 
 void Reference_get_ref_after_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -94,7 +94,7 @@ void Reference_get_ref_after_delete() {
 }
 
 void Reference_get_ref_after_realloc() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -121,7 +121,7 @@ void Reference_get_ref_after_realloc() {
 }
 
 void Reference_get_ref_staged() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -153,7 +153,7 @@ void Reference_get_ref_staged() {
 }
 
 void Reference_get_ref_after_new_in_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -187,7 +187,7 @@ void Reference_get_ref_after_new_in_stage() {
 }
 
 void Reference_get_ref_monitored() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -205,7 +205,7 @@ void Reference_get_ref_monitored() {
 }
 
 void Reference_get_nonexisting() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -224,7 +224,7 @@ static ECS_MOVE(Position, dst, src, {
 })
 
 void Reference_get_ref_after_realloc_w_lifecycle() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

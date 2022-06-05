@@ -35,7 +35,7 @@ void Dummy(ecs_iter_t *it) {
 }
 
 void TriggerOnSet_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -68,7 +68,7 @@ void TriggerOnSet_set() {
 }
 
 void TriggerOnSet_set_new() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -98,7 +98,7 @@ void TriggerOnSet_set_new() {
 }
 
 void TriggerOnSet_set_again() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -138,7 +138,7 @@ void TriggerOnSet_set_again() {
 }
 
 void TriggerOnSet_clone() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -176,7 +176,7 @@ void TriggerOnSet_clone() {
 }
 
 void TriggerOnSet_clone_w_value() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -263,7 +263,7 @@ void OnSet_check_order(ecs_iter_t *it) {
 }
 
 void TriggerOnSet_set_and_add_system() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -322,7 +322,7 @@ void OnSetShared(ecs_iter_t *it) {
 }
 
 void TriggerOnSet_on_set_after_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -431,7 +431,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
 }
 
 void TriggerOnSet_on_set_after_override_w_new_w_count() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -468,7 +468,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
 }
 
 void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -506,7 +506,7 @@ void SetPosition(ecs_iter_t *it) {
 }
 
 void TriggerOnSet_on_set_after_snapshot_restore() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, SetPosition, EcsOnSet, Position);
@@ -553,7 +553,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
 }
 
 void TriggerOnSet_emplace() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -578,7 +578,7 @@ void TriggerOnSet_emplace() {
 }
 
 void TriggerOnSet_un_set_tag_w_remove() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -602,7 +602,7 @@ void TriggerOnSet_un_set_tag_w_remove() {
 }
 
 void TriggerOnSet_un_set_tag_w_clear() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -626,7 +626,7 @@ void TriggerOnSet_un_set_tag_w_clear() {
 }
 
 void TriggerOnSet_un_set_tag_w_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 

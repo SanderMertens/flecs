@@ -458,6 +458,9 @@ typedef struct ecs_store_t {
 
     /* Records cache */
     ecs_vector_t *records;
+
+    /* Stack of ids being deleted. */
+    ecs_vector_t *to_delete_stack;
 } ecs_store_t;
 
 /** Supporting type to store looked up component data in specific table */

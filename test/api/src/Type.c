@@ -13,7 +13,7 @@ void Type_setup() {
 }
 
 void Type_type_of_1_tostr() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -29,7 +29,7 @@ void Type_type_of_1_tostr() {
 }
 
 void Type_type_of_2_tostr() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -46,7 +46,7 @@ void Type_type_of_2_tostr() {
 }
 
 void Type_type_of_2_tostr_no_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_type_t t = { .array = (ecs_id_t[]){ 100, 200 }, .count = 2 };
     
@@ -60,7 +60,7 @@ void Type_type_of_2_tostr_no_id() {
 }
 
 void Type_type_redefine() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -82,7 +82,7 @@ void Type_type_redefine() {
 void Type_invalid_container_type_expression() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Position);
@@ -97,7 +97,7 @@ void Type_invalid_container_type_expression() {
 void Type_invalid_entity_type_expression() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Position);
@@ -114,7 +114,7 @@ void Type_invalid_entity_type_expression() {
 void Type_invalid_system_type_expression() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Position);
@@ -127,7 +127,7 @@ void Type_invalid_system_type_expression() {
 }
 
 void Type_get_type() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -145,7 +145,7 @@ void Type_get_type() {
 }
 
 void Type_get_type_from_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
 
@@ -158,7 +158,7 @@ void Type_get_type_from_empty() {
 void Type_get_type_from_0() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
 
@@ -166,7 +166,7 @@ void Type_get_type_from_0() {
 }
 
 void Type_type_to_expr_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -180,7 +180,7 @@ void Type_type_to_expr_1_comp() {
 }
 
 void Type_type_to_expr_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -194,7 +194,7 @@ void Type_type_to_expr_2_comp() {
 }
 
 void Type_type_to_expr_instanceof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -208,7 +208,7 @@ void Type_type_to_expr_instanceof() {
 }
 
 void Type_type_to_expr_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -224,7 +224,7 @@ void Type_type_to_expr_childof() {
 void Type_type_to_expr_pair() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
 
@@ -233,7 +233,7 @@ void Type_type_to_expr_pair() {
 }
 
 void Type_type_to_expr_pair_w_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -247,7 +247,7 @@ void Type_type_to_expr_pair_w_comp() {
 }
 
 void Type_type_to_expr_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -265,7 +265,7 @@ void Type_type_to_expr_scope() {
 }
 
 void Type_entity_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, e, 0);
 
@@ -277,7 +277,7 @@ void Type_entity_str() {
 }
 
 void Type_entity_path_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, parent, 0);
     ECS_ENTITY(world, e, (ChildOf, parent));
@@ -290,7 +290,7 @@ void Type_entity_path_str() {
 }
 
 void Type_entity_instanceof_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -304,7 +304,7 @@ void Type_entity_instanceof_str() {
 }
 
 void Type_entity_childof_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -318,7 +318,7 @@ void Type_entity_childof_str() {
 }
 
 void Type_entity_pair_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
     ECS_ENTITY(world, Bar, 0);
@@ -333,7 +333,7 @@ void Type_entity_pair_str() {
 }
 
 void Type_entity_and_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -347,7 +347,7 @@ void Type_entity_and_str() {
 }
 
 void Type_entity_or_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -361,7 +361,7 @@ void Type_entity_or_str() {
 }
 
 void Type_entity_xor_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -375,7 +375,7 @@ void Type_entity_xor_str() {
 }
 
 void Type_entity_not_str() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -389,7 +389,7 @@ void Type_entity_not_str() {
 }
 
 void Type_entity_str_small_buffer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
 
@@ -438,7 +438,7 @@ void Type_role_disabled_str() {
 }
 
 void Type_large_type_expr() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     int i;
     for (i = 0; i < 64; i ++) {
@@ -480,7 +480,7 @@ void Type_large_type_expr() {
 }
 
 void Type_large_type_expr_limit() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ECS_ID_CACHE_SIZE == 32);
 

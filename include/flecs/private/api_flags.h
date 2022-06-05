@@ -51,6 +51,8 @@ extern "C" {
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet)
 
+#define EcsIdMarkedForDelete            (1u << 30)
+
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \
     ((ecs_entity_t[]){0, EcsRemove, EcsDelete, 0, EcsPanic}\

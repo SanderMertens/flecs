@@ -26,6 +26,9 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
+    /* Refcount */
+    int32_t refcount;
+
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
@@ -46,69 +49,63 @@ struct ecs_id_record_t {
 };
 
 /* Get id record for id */
-ecs_id_record_t* flecs_get_id_record(
+ecs_id_record_t* flecs_id_record_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
 /* Get id record for id for searching.
- * Same as flecs_get_id_record, but replaces (R, *) with (Union, R) if R is a
+ * Same as flecs_id_record_get, but replaces (R, *) with (Union, R) if R is a
  * union relationship. */
-ecs_id_record_t* flecs_get_query_id_record(
+ecs_id_record_t* flecs_query_id_record_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
 /* Ensure id record for id */
-ecs_id_record_t* flecs_ensure_id_record(
+ecs_id_record_t* flecs_id_record_ensure(
     ecs_world_t *world,
     ecs_id_t id);
 
-/* Clear all tables in id record. */
-void flecs_clear_id_record(
+/* Increase refcount of id record */
+void flecs_id_record_claim(
     ecs_world_t *world,
-    ecs_id_t id,
     ecs_id_record_t *idr);
 
-/* Remove id record if empty. If id record only contains empty tables, they will
- * be cleaned up. Id record removal may be deleted if one or more empty tables
- * are referenced as storage table by other tables. */
-void flecs_remove_id_record(
+/* Decrease refcount of id record, delete if 0 */
+int32_t flecs_id_record_release(
     ecs_world_t *world,
-    ecs_id_t id,
     ecs_id_record_t *idr);
 
-/* Register table for id record */
-void flecs_register_for_id_record(
+/* Release all empty tables in id record */
+void flecs_id_record_release_tables(
     ecs_world_t *world,
-    ecs_id_t id,
-    const ecs_table_t *table,
-    ecs_table_record_t *tr);
+    ecs_id_record_t *idr);
 
 /* Set (component) type info for id record */
-bool flecs_set_type_info_for_id_record(
+bool flecs_id_record_set_type_info(
     ecs_world_t *world,
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti);
 
 /* Ensure id record has name index */
-ecs_hashmap_t* flecs_ensure_id_name_index(
+ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id);
 
 /* Get name index for id record */
-ecs_hashmap_t* flecs_get_id_name_index(
+ecs_hashmap_t* flecs_id_name_index_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
 /* Find table record for id */
-ecs_table_record_t* flecs_get_table_record(
+ecs_table_record_t* flecs_table_record_get(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
 
 /* Find table record for id record */
-const ecs_table_record_t* flecs_id_record_table(
-    ecs_id_record_t *idr,
-    ecs_table_t *table);
+const ecs_table_record_t* flecs_id_record_get_table(
+    const ecs_id_record_t *idr,
+    const ecs_table_t *table);
 
 /* Return table iterator for id */
 ecs_id_record_t* flecs_table_iter(
