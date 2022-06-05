@@ -33,7 +33,7 @@ For the specifics on how to compile the source as a static library, check the do
 #define flecs_STATIC
 ```
 
-Alternatively you can define `flecs_STATIC` in the build configuratuin of your project.
+Alternatively you can define `flecs_STATIC` in the build configuration of your project.
 
 ### Where can I ask questions about Flecs?
 You can ask questions on the [Discord channel](https://discord.gg/trycKxA), or by creating an issue in the repository.
