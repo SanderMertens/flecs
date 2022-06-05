@@ -1190,7 +1190,10 @@
                 "match_query_expr_from_scope",
                 "query_long_or_w_ref",
                 "0_query",
-                "query_w_pair_id_and_subj"
+                "query_w_pair_id_and_subj",
+                "table_count",
+                "empty_table_count",
+                "entity_count"
             ]
         }, {
             "id": "Iter",

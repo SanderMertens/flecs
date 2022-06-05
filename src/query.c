@@ -2674,22 +2674,31 @@ char* ecs_query_str(
 int32_t ecs_query_table_count(
     const ecs_query_t *query)
 {
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
     return query->cache.tables.count;
 }
 
 int32_t ecs_query_empty_table_count(
     const ecs_query_t *query)
 {
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
     return query->cache.empty_tables.count;
 }
 
 int32_t ecs_query_entity_count(
     const ecs_query_t *query)
 {
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    
     int32_t result = 0;
     ecs_table_cache_hdr_t *cur, *last = query->cache.tables.last;
-    for (cur = query->cache.tables.first; cur != last; cur = cur->next) {
+    if (!last) {
+        return 0;
+    }
+
+    for (cur = query->cache.tables.first; cur != NULL; cur = cur->next) {
         result += ecs_table_count(cur->table);
     }
+
     return result;
 }

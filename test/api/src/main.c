@@ -1134,6 +1134,9 @@ void Query_match_query_expr_from_scope(void);
 void Query_query_long_or_w_ref(void);
 void Query_0_query(void);
 void Query_query_w_pair_id_and_subj(void);
+void Query_table_count(void);
+void Query_empty_table_count(void);
+void Query_entity_count(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -6282,6 +6285,18 @@ bake_test_case Query_testcases[] = {
     {
         "query_w_pair_id_and_subj",
         Query_query_w_pair_id_and_subj
+    },
+    {
+        "table_count",
+        Query_table_count
+    },
+    {
+        "empty_table_count",
+        Query_empty_table_count
+    },
+    {
+        "entity_count",
+        Query_entity_count
     }
 };
 
@@ -9565,7 +9580,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        166,
+        169,
         Query_testcases
     },
     {
