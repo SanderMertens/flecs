@@ -6,7 +6,7 @@ void system_callback(ecs_iter_t *it) {
 }
 
 void Event_table_1_id_w_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);
@@ -40,7 +40,7 @@ void Event_table_1_id_w_trigger() {
 }
 
 void Event_table_2_ids_w_trigger() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id_a = ecs_new_id(world);
@@ -101,7 +101,7 @@ void Event_table_2_ids_w_trigger() {
 }
 
 void Event_table_1_id_w_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);
@@ -135,7 +135,7 @@ void Event_table_1_id_w_observer() {
 }
 
 void Event_table_2_ids_w_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id_a = ecs_new_id(world);
@@ -180,7 +180,7 @@ void empty_table_callback(ecs_iter_t *it) {
 }
 
 void Event_emit_event_for_empty_table() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -269,7 +269,7 @@ void Event_emit_table_event() {
 }
 
 void Event_emit_staged_from_world() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);
@@ -304,7 +304,7 @@ void Event_emit_staged_from_world() {
 }
 
 void Event_emit_staged_from_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);
@@ -340,7 +340,7 @@ void Event_emit_staged_from_stage() {
 }
 
 void Event_emit_staged_from_world_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);
@@ -375,7 +375,7 @@ void Event_emit_staged_from_world_observer() {
 }
 
 void Event_emit_staged_from_stage_observer() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new_id(world);
     ecs_entity_t id = ecs_new_id(world);

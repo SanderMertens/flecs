@@ -7423,6 +7423,13 @@ void on_delete_id_action(
                         continue;
                     }
 
+                    if (table->flags & EcsTableMarkedForDelete) {
+                        /* Table is already getting cleaned up */
+                        continue;
+                    }
+
+                    table->flags |= EcsTableMarkedForDelete;
+
                     ecs_dbg_3("cleanup table %u", (uint32_t)table->id);
                     ecs_log_push_3();
 

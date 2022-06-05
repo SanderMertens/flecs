@@ -11,7 +11,7 @@ void Entity_init_id() {
 }
 
 void Entity_init_id_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
@@ -28,7 +28,7 @@ void Entity_init_id_name() {
 }
 
 void Entity_init_id_path() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent.child"
@@ -45,7 +45,7 @@ void Entity_init_id_path() {
 }
 
 void Entity_init_id_add_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -59,7 +59,7 @@ void Entity_init_id_add_1_comp() {
 }
 
 void Entity_init_id_add_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -75,7 +75,7 @@ void Entity_init_id_add_2_comp() {
 }
 
 void Entity_init_id_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_new_id(world);
     test_assert(scope != 0);
@@ -92,7 +92,7 @@ void Entity_init_id_w_scope() {
 }
 
 void Entity_init_id_name_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -120,7 +120,7 @@ void Entity_init_id_name_w_scope() {
 }
 
 void Entity_init_id_path_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -147,7 +147,7 @@ void Entity_init_id_path_w_scope() {
 }
 
 void Entity_init_id_name_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -168,7 +168,7 @@ void Entity_init_id_name_1_comp() {
 }
 
 void Entity_init_id_name_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -190,7 +190,7 @@ void Entity_init_id_name_2_comp() {
 }
 
 void Entity_init_id_name_2_comp_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -221,7 +221,7 @@ void Entity_init_id_name_2_comp_w_scope() {
 }
 
 void Entity_id_add_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -240,7 +240,7 @@ void Entity_id_add_1_comp() {
 }
 
 void Entity_id_add_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -261,7 +261,7 @@ void Entity_id_add_2_comp() {
 }
 
 void Entity_init_id_path_w_sep() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent::child",
@@ -279,7 +279,7 @@ void Entity_init_id_path_w_sep() {
 }
 
 void Entity_find_id_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
@@ -297,7 +297,7 @@ void Entity_find_id_name() {
 }
 
 void Entity_find_w_existing_id_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ecs_new_id(world);
 
@@ -319,7 +319,7 @@ void Entity_find_w_existing_id_name() {
 }
 
 void Entity_find_id_name_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -351,7 +351,7 @@ void Entity_find_id_name_w_scope() {
 }
 
 void Entity_find_id_path() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent.child"
@@ -374,7 +374,7 @@ void Entity_find_id_path() {
 }
 
 void Entity_find_id_path_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -406,7 +406,7 @@ void Entity_find_id_path_w_scope() {
 }
 
 void Entity_find_id_name_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
@@ -425,7 +425,7 @@ void Entity_find_id_name_match() {
 }
 
 void Entity_find_id_name_match_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -467,7 +467,7 @@ void Entity_find_id_name_match_w_scope() {
 }
 
 void Entity_find_id_path_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent.child"
@@ -486,7 +486,7 @@ void Entity_find_id_path_match() {
 }
 
 void Entity_find_id_path_match_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -523,7 +523,7 @@ void Entity_find_id_path_match_w_scope() {
 }
 
 void Entity_find_id_name_mismatch() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo"
@@ -545,7 +545,7 @@ void Entity_find_id_name_mismatch() {
 }
 
 void Entity_find_id_name_mismatch_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -572,7 +572,7 @@ void Entity_find_id_name_mismatch_w_scope() {
 }
 
 void Entity_find_id_path_mismatch() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent.child"
@@ -594,7 +594,7 @@ void Entity_find_id_path_mismatch() {
 }
 
 void Entity_find_id_path_mismatch_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -625,7 +625,7 @@ void Entity_find_id_path_mismatch_w_scope() {
 }
 
 void Entity_find_id_add_1_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -646,7 +646,7 @@ void Entity_find_id_add_1_comp() {
 }
 
 void Entity_find_id_add_2_comp() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -669,7 +669,7 @@ void Entity_find_id_add_2_comp() {
 }
 
 void Entity_init_w_scope_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "parent"
@@ -696,7 +696,7 @@ void Entity_init_w_scope_name() {
 }
 
 void Entity_init_w_core_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "Prefab"
@@ -709,7 +709,7 @@ void Entity_init_w_core_name() {
 }
 
 void Entity_init_w_with() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -725,7 +725,7 @@ void Entity_init_w_with() {
 }
 
 void Entity_init_w_with_w_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -745,7 +745,7 @@ void Entity_init_w_with_w_name() {
 }
 
 void Entity_init_w_with_w_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -766,7 +766,7 @@ void Entity_init_w_with_w_scope() {
 }
 
 void Entity_init_w_with_w_name_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -791,7 +791,7 @@ void Entity_init_w_with_w_name_scope() {
 }
 
 void Entity_is_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
@@ -801,7 +801,7 @@ void Entity_is_valid() {
 }
 
 void Entity_is_recycled_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
@@ -819,7 +819,7 @@ void Entity_is_recycled_valid() {
 }
 
 void Entity_is_0_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_bool(ecs_is_valid(world, 0), false);
 
@@ -827,7 +827,7 @@ void Entity_is_0_valid() {
 }
 
 void Entity_is_junk_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_bool(ecs_is_valid(world, 1000), true);
     test_bool(ecs_is_valid(world, 0xFFFFFFFF), true);
@@ -845,7 +845,7 @@ void Entity_is_junk_valid() {
 }
 
 void Entity_is_not_alive_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
@@ -864,7 +864,7 @@ void Entity_is_not_alive_valid() {
 }
 
 void Entity_is_nonzero_gen_valid() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ECS_GENERATION_INC(1000);
     test_int(ECS_GENERATION(id), 1);
@@ -876,7 +876,7 @@ void Entity_is_nonzero_gen_valid() {
 }
 
 void Entity_init_w_name_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -892,7 +892,7 @@ void Entity_init_w_name_deferred() {
 }
 
 void Entity_init_w_name_twice_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -913,7 +913,7 @@ void Entity_init_w_name_twice_deferred() {
 }
 
 void Entity_init_w_nested_name_twice_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -938,7 +938,7 @@ void Entity_init_w_nested_name_twice_deferred() {
 }
 
 void Entity_init_w_scope_name_twice_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -963,7 +963,7 @@ void Entity_init_w_scope_name_twice_deferred() {
 }
 
 void Entity_init_w_childof_name_twice_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -997,7 +997,7 @@ void Entity_init_w_childof_name_twice_deferred() {
 }
 
 void Entity_init_w_childof_nested_name_twice_deferred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -1037,7 +1037,7 @@ void Entity_init_w_childof_nested_name_twice_deferred() {
 }
 
 void Entity_init_w_name_staged() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_staging_begin(world);
 
@@ -1056,7 +1056,7 @@ void Entity_init_w_name_staged() {
 }
 
 void Entity_record_find_for_empty() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -1069,7 +1069,7 @@ void Entity_record_find_for_empty() {
 }
 
 void Entity_record_find() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1084,7 +1084,7 @@ void Entity_record_find() {
 }
 
 void Entity_record_find_from_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -1105,7 +1105,7 @@ void Entity_record_find_from_stage() {
 }
 
 void Entity_ensure_zero_gen() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = 1000;
     test_bool(ecs_is_alive(world, id), false);
@@ -1121,7 +1121,7 @@ void Entity_ensure_zero_gen() {
 }
 
 void Entity_ensure_nonzero_gen() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ECS_GENERATION_INC(1000);
     test_int(ECS_GENERATION(id), 1);
@@ -1138,7 +1138,7 @@ void Entity_ensure_nonzero_gen() {
 }
 
 void Entity_ensure_zero_gen_exists() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_delete(world, e);
@@ -1155,7 +1155,7 @@ void Entity_ensure_zero_gen_exists() {
 }
 
 void Entity_ensure_nonzero_gen_exists() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_delete(world, e);
@@ -1180,7 +1180,7 @@ void Entity_ensure_nonzero_gen_exists() {
 void Entity_ensure_zero_gen_exists_alive() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_delete(world, e);
@@ -1200,7 +1200,7 @@ void Entity_ensure_zero_gen_exists_alive() {
 void Entity_ensure_nonzero_gen_exists_alive() {
     install_test_abort();
     
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_delete(world, e);
@@ -1221,7 +1221,7 @@ void Entity_ensure_nonzero_gen_exists_alive() {
 }
 
 void Entity_set_scope_w_entity_init_from_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1246,7 +1246,7 @@ void Entity_set_scope_w_entity_init_from_stage() {
 }
 
 void Entity_entity_init_w_scope_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
     
@@ -1272,7 +1272,7 @@ void Entity_entity_init_w_scope_twice() {
 }
 
 void Entity_entity_init_w_childof_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
 
@@ -1298,7 +1298,7 @@ void Entity_entity_init_w_childof_twice() {
 }
 
 void Entity_entity_init_w_childof_nested_name_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
 
@@ -1327,7 +1327,7 @@ void Entity_entity_init_w_childof_nested_name_twice() {
 }
 
 void Entity_entity_init_w_childof_and_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
@@ -1351,7 +1351,7 @@ void Entity_entity_init_w_childof_and_scope() {
 }
 
 void Entity_entity_init_w_childof_and_scope_and_scoped_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
@@ -1379,7 +1379,7 @@ void Entity_entity_init_w_childof_and_scope_and_scoped_name() {
 }
 
 void Entity_deferred_entity_init_w_childof_and_scope() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
@@ -1407,7 +1407,7 @@ void Entity_deferred_entity_init_w_childof_and_scope() {
 }
 
 void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
@@ -1439,7 +1439,7 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
 }
 
 void Entity_entity_init_w_empty_string_name() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
         .name = ""
@@ -1452,7 +1452,7 @@ void Entity_entity_init_w_empty_string_name() {
 }
 
 void Entity_entity_init_w_empty_string_symbol() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
         .symbol = ""
@@ -1465,7 +1465,7 @@ void Entity_entity_init_w_empty_string_symbol() {
 }
 
 void Entity_set_name_w_0_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
     ecs_entity_t e2 = ecs_set_name(world, 0, "Foo");
@@ -1477,7 +1477,7 @@ void Entity_set_name_w_0_twice() {
 }
 
 void Entity_new_entity_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_entity(world, "Foo");
     ecs_entity_t e2 = ecs_new_entity(world, "Foo");
@@ -1489,7 +1489,7 @@ void Entity_new_entity_twice() {
 }
 
 void Entity_new_entity_scoped_twice() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_entity(world, "Foo.Bar");
     ecs_entity_t e2 = ecs_new_entity(world, "Foo.Bar");
@@ -1505,7 +1505,7 @@ void Entity_new_entity_scoped_twice() {
 }
 
 void Entity_defer_component_init() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -1530,7 +1530,7 @@ void Entity_defer_component_init() {
 }
 
 void Entity_defer_component_init_w_symbol() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -1557,7 +1557,7 @@ void Entity_defer_component_init_w_symbol() {
 }
 
 void Entity_defer_entity_init_w_symbol() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
 
@@ -1576,7 +1576,7 @@ void Entity_defer_entity_init_w_symbol() {
 }
 
 void Entity_staged_set_name_n_stages() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_set_stages(world, 2);
 
@@ -1597,7 +1597,7 @@ void Entity_staged_set_name_n_stages() {
 }
 
 void Entity_staged_set_symbol_n_stages() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_set_stages(world, 2);
 

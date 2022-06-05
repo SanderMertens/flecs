@@ -1,6 +1,6 @@
 #include <api.h>
 
-void OnDelete_on_delete_flags() {
+void OnDelete_flags() {
     ecs_flags32_t f_remove = EcsIdOnDeleteRemove;
     ecs_flags32_t f_delete = EcsIdOnDeleteDelete;
     ecs_flags32_t f_throw = EcsIdOnDeletePanic;
@@ -34,8 +34,8 @@ void OnDelete_on_delete_flags() {
     test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsPanic), f_obj_throw);
 }
 
-void OnDelete_on_delete_id_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_entity_t e = ecs_new_id(world);
@@ -53,8 +53,8 @@ void OnDelete_on_delete_id_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsRemove);
@@ -72,8 +72,8 @@ void OnDelete_on_delete_id_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsDelete);
@@ -90,8 +90,8 @@ void OnDelete_on_delete_id_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_relation_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_relation_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -110,8 +110,8 @@ void OnDelete_on_delete_relation_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_relation_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_relation_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -131,8 +131,8 @@ void OnDelete_on_delete_relation_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_relation_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_relation_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -151,8 +151,8 @@ void OnDelete_on_delete_relation_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_object_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_object_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -171,8 +171,8 @@ void OnDelete_on_delete_object_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_object_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_object_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -192,8 +192,8 @@ void OnDelete_on_delete_object_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_object_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_object_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -212,8 +212,8 @@ void OnDelete_on_delete_object_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_object_mixed() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_object_mixed() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t t_1 = ecs_new_id(world);
     ecs_entity_t t_2 = ecs_new_id(world);
@@ -250,10 +250,10 @@ void OnDelete_on_delete_object_mixed() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_throw() {
+void OnDelete_id_throw() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsPanic);
@@ -266,10 +266,10 @@ void OnDelete_on_delete_id_throw() {
     ecs_delete(world, c);
 }
 
-void OnDelete_on_delete_relation_throw() {
+void OnDelete_relation_throw() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -283,10 +283,10 @@ void OnDelete_on_delete_relation_throw() {
     ecs_delete(world, r);
 }
 
-void OnDelete_on_delete_object_throw() {
+void OnDelete_object_throw() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -300,8 +300,8 @@ void OnDelete_on_delete_object_throw() {
     ecs_delete(world, o);
 }
 
-void OnDelete_on_delete_id_remove_no_instances() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_remove_no_instances() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsRemove);
@@ -313,8 +313,8 @@ void OnDelete_on_delete_id_remove_no_instances() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_delete_no_instances() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_delete_no_instances() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsDelete);
@@ -326,9 +326,9 @@ void OnDelete_on_delete_id_delete_no_instances() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_throw_no_instances() {
+void OnDelete_id_throw_no_instances() {
     install_test_abort();
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
     ecs_add_pair(world, c, EcsOnDelete, EcsPanic);
@@ -337,8 +337,8 @@ void OnDelete_on_delete_id_throw_no_instances() {
     ecs_delete(world, c);
 }
 
-void OnDelete_on_delete_cyclic_self() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_self() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_entity_t r = ecs_new_id(world);
@@ -352,8 +352,8 @@ void OnDelete_on_delete_cyclic_self() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_nonempty_cyclic_self() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_nonempty_cyclic_self() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -369,8 +369,8 @@ void OnDelete_on_delete_nonempty_cyclic_self() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_id_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_id_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -390,8 +390,8 @@ void OnDelete_on_delete_cyclic_id_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_id_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_id_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -425,8 +425,8 @@ void OnDelete_on_delete_cyclic_id_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_id_remove_both() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_id_remove_both() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -448,8 +448,8 @@ void OnDelete_on_delete_cyclic_id_remove_both() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_id_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_id_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -465,8 +465,8 @@ void OnDelete_on_delete_cyclic_id_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_id_delete_both() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_id_delete_both() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -483,8 +483,8 @@ void OnDelete_on_delete_cyclic_id_delete_both() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_relation_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_relation_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -504,8 +504,8 @@ void OnDelete_on_delete_cyclic_relation_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_relation_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_relation_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -528,8 +528,8 @@ void OnDelete_on_delete_cyclic_relation_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_relation_remove_both() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_relation_remove_both() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -554,8 +554,8 @@ void OnDelete_on_delete_cyclic_relation_remove_both() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_relation_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_relation_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -573,8 +573,8 @@ void OnDelete_on_delete_cyclic_relation_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_relation_delete_both() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_relation_delete_both() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -594,8 +594,8 @@ void OnDelete_on_delete_cyclic_relation_delete_both() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_object_default() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_object_default() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -616,8 +616,8 @@ void OnDelete_on_delete_cyclic_object_default() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_object_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_object_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -639,8 +639,8 @@ void OnDelete_on_delete_cyclic_object_remove() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_object_delete() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_object_delete() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -657,8 +657,8 @@ void OnDelete_on_delete_cyclic_object_delete() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_overlapping_table() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_overlapping_table() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
     ecs_entity_t obj_a = ecs_new_id(world);
@@ -679,8 +679,8 @@ void OnDelete_on_delete_cyclic_overlapping_table() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_overlapping_new_tables() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_overlapping_new_tables() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);
 
@@ -706,8 +706,8 @@ void OnDelete_on_delete_cyclic_overlapping_new_tables() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_object_mixed() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_object_mixed() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
     ecs_entity_t rel_2 = ecs_new_id(world);
@@ -730,8 +730,8 @@ void OnDelete_on_delete_cyclic_object_mixed() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_storage_table() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_storage_table() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -760,8 +760,8 @@ void OnDelete_on_delete_cyclic_storage_table() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_storage_table_2() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_storage_table_2() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -792,8 +792,8 @@ void OnDelete_on_delete_cyclic_storage_table_2() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_storage_table_3() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_storage_table_3() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -822,8 +822,8 @@ void OnDelete_on_delete_cyclic_storage_table_3() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_cyclic_set_empty() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_cyclic_set_empty() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -851,7 +851,7 @@ void OnDelete_on_delete_cyclic_set_empty() {
 void OnDelete_2_acyclic_relations_w_cycle() {
     test_quarantine("May 4th 2022");
     
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r1 = ecs_new_w_id(world, EcsAcyclic);
     ecs_entity_t r2 = ecs_new_w_id(world, EcsAcyclic);
@@ -865,8 +865,8 @@ void OnDelete_2_acyclic_relations_w_cycle() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_2_comps() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_remove_2_comps() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -889,8 +889,8 @@ void OnDelete_on_delete_remove_2_comps() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_2_comps_to_existing_table() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_remove_2_comps_to_existing_table() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -926,8 +926,8 @@ void OnDelete_on_delete_remove_2_comps_to_existing_table() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_delete_recursive() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_delete_recursive() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
@@ -949,9 +949,9 @@ void OnDelete_on_delete_delete_recursive() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_component_throw() {
+void OnDelete_component_throw() {
     install_test_abort();
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -961,8 +961,8 @@ void OnDelete_on_delete_component_throw() {
     ecs_delete(world, ecs_id(Position));
 }
 
-void OnDelete_on_delete_remove_2_relations() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_remove_2_relations() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o_1 = ecs_new_id(world);
@@ -983,7 +983,7 @@ void OnDelete_on_delete_remove_2_relations() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_object_w_2_relations() {
+void OnDelete_remove_object_w_2_relations() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r_1 = ecs_new_id(world);
@@ -1005,7 +1005,7 @@ void OnDelete_on_delete_remove_object_w_2_relations() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_object_w_5_relations() {
+void OnDelete_remove_object_w_5_relations() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r_1 = ecs_new_id(world);
@@ -1036,7 +1036,7 @@ void OnDelete_on_delete_remove_object_w_5_relations() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_object_w_50_relations() {
+void OnDelete_remove_object_w_50_relations() {
     ecs_world_t *world = ecs_mini();
 
     #define NUM 50
@@ -1065,7 +1065,7 @@ void OnDelete_on_delete_remove_object_w_50_relations() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_remove_object_w_50_relations_3_tables() {
+void OnDelete_remove_object_w_50_relations_3_tables() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1109,7 +1109,7 @@ void OnDelete_on_delete_remove_object_w_50_relations_3_tables() {
 }
 
 void OnDelete_remove_id_from_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1135,7 +1135,7 @@ void OnDelete_remove_id_from_2_tables() {
 }
 
 void OnDelete_remove_relation_from_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1162,7 +1162,7 @@ void OnDelete_remove_relation_from_2_tables() {
 }
 
 void OnDelete_remove_object_from_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1189,7 +1189,7 @@ void OnDelete_remove_object_from_2_tables() {
 }
 
 void OnDelete_remove_id_and_relation() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
@@ -1208,7 +1208,7 @@ void OnDelete_remove_id_and_relation() {
 }
 
 void OnDelete_remove_id_and_relation_from_2_tables() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1237,7 +1237,7 @@ void OnDelete_remove_id_and_relation_from_2_tables() {
 }
 
 void OnDelete_stresstest_many_objects() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1273,7 +1273,7 @@ void OnDelete_stresstest_many_objects() {
 }
 
 void OnDelete_stresstest_many_relations() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1309,7 +1309,7 @@ void OnDelete_stresstest_many_relations() {
 }
 
 void OnDelete_stresstest_many_objects_on_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1344,7 +1344,7 @@ void OnDelete_stresstest_many_objects_on_delete() {
 }
 
 void OnDelete_stresstest_many_relations_on_delete() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1400,8 +1400,8 @@ void dummy_on_remove(ecs_iter_t *it) {
     test_int(trigger_count, 1);
 }
 
-void OnDelete_on_delete_empty_table_w_on_remove() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_empty_table_w_on_remove() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1454,7 +1454,7 @@ void delete_self_on_remove(ecs_iter_t *it) {
 }
 
 void OnDelete_delete_table_in_on_remove_during_fini() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1492,7 +1492,7 @@ void OnDelete_delete_table_in_on_remove_during_fini() {
 }
 
 void OnDelete_delete_other_in_on_remove_during_fini() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Entity);
     ECS_TAG(world, Tag);
@@ -1522,8 +1522,8 @@ void OnDelete_delete_other_in_on_remove_during_fini() {
     test_int(trigger_count, 2);
 }
 
-void OnDelete_on_delete_remove_id_w_role() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_remove_id_w_role() {
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = ecs_new_id(world);
 
@@ -1542,8 +1542,8 @@ void OnDelete_on_delete_remove_id_w_role() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_merge_pair_component() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_merge_pair_component() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -1564,7 +1564,7 @@ void OnDelete_on_delete_merge_pair_component() {
 }
 
 void OnDelete_delete_with_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1593,7 +1593,7 @@ void OnDelete_delete_with_tag() {
 }
 
 void OnDelete_delete_with_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1622,7 +1622,7 @@ void OnDelete_delete_with_component() {
 }
 
 void OnDelete_delete_with_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1652,7 +1652,7 @@ void OnDelete_delete_with_pair() {
 }
 
 void OnDelete_delete_with_object_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
@@ -1683,7 +1683,7 @@ void OnDelete_delete_with_object_wildcard() {
 }
 
 void OnDelete_delete_with_relation_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -1714,7 +1714,7 @@ void OnDelete_delete_with_relation_wildcard() {
 }
 
 void OnDelete_delete_all_with_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -1772,7 +1772,7 @@ void OnDelete_delete_all_with_entity() {
 }
 
 void OnDelete_remove_childof_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1818,7 +1818,7 @@ void OnDelete_remove_childof_entity() {
 }
 
 void OnDelete_remove_childof_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -1870,7 +1870,7 @@ void OnDelete_remove_childof_wildcard() {
 }
 
 void OnDelete_delete_child_of_delete_with() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
 
@@ -1913,8 +1913,29 @@ void OnDelete_delete_child_of_delete_with() {
     ecs_fini(world);
 }
 
+void OnDelete_delete_with_component_after_delete_cyclic() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add_pair(world, e2, Rel, e2);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
+
 void OnDelete_deep_clean_64() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
     test_assert(r != 0);
@@ -1945,7 +1966,7 @@ void OnDelete_deep_clean_64() {
 }
 
 void OnDelete_deep_clean_256() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
     test_assert(r != 0);
@@ -1975,8 +1996,8 @@ void OnDelete_deep_clean_256() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_w_switch() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_w_switch() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, C1);
@@ -2009,8 +2030,8 @@ void OnDelete_on_delete_id_w_switch() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_w_disabled() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_w_disabled() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2057,8 +2078,8 @@ void OnDelete_on_delete_id_w_disabled() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_to_no_switch() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_to_no_switch() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, C1);
@@ -2091,8 +2112,8 @@ void OnDelete_on_delete_id_to_no_switch() {
     ecs_fini(world);
 }
 
-void OnDelete_on_delete_id_to_no_disabled() {
-    ecs_world_t *world = ecs_init();
+void OnDelete_id_to_no_disabled() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2127,7 +2148,7 @@ void OnDelete_on_delete_id_to_no_disabled() {
 }
 
 void OnDelete_remove_on_delete_action() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

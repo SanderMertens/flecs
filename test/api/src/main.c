@@ -491,54 +491,54 @@ void Delete_move_w_no_dtor_move(void);
 void Delete_wrap_generation_count(void);
 
 // Testsuite 'OnDelete'
-void OnDelete_on_delete_flags(void);
-void OnDelete_on_delete_id_default(void);
-void OnDelete_on_delete_id_remove(void);
-void OnDelete_on_delete_id_delete(void);
-void OnDelete_on_delete_relation_default(void);
-void OnDelete_on_delete_relation_remove(void);
-void OnDelete_on_delete_relation_delete(void);
-void OnDelete_on_delete_object_default(void);
-void OnDelete_on_delete_object_remove(void);
-void OnDelete_on_delete_object_delete(void);
-void OnDelete_on_delete_id_throw(void);
-void OnDelete_on_delete_relation_throw(void);
-void OnDelete_on_delete_object_throw(void);
-void OnDelete_on_delete_object_mixed(void);
-void OnDelete_on_delete_id_remove_no_instances(void);
-void OnDelete_on_delete_id_delete_no_instances(void);
-void OnDelete_on_delete_id_throw_no_instances(void);
-void OnDelete_on_delete_cyclic_self(void);
-void OnDelete_on_delete_nonempty_cyclic_self(void);
-void OnDelete_on_delete_cyclic_id_default(void);
-void OnDelete_on_delete_cyclic_id_remove(void);
-void OnDelete_on_delete_cyclic_id_remove_both(void);
-void OnDelete_on_delete_cyclic_id_delete(void);
-void OnDelete_on_delete_cyclic_id_delete_both(void);
-void OnDelete_on_delete_cyclic_relation_default(void);
-void OnDelete_on_delete_cyclic_relation_remove(void);
-void OnDelete_on_delete_cyclic_relation_remove_both(void);
-void OnDelete_on_delete_cyclic_relation_delete(void);
-void OnDelete_on_delete_cyclic_object_default(void);
-void OnDelete_on_delete_cyclic_object_remove(void);
-void OnDelete_on_delete_cyclic_object_delete(void);
-void OnDelete_on_delete_cyclic_overlapping_table(void);
-void OnDelete_on_delete_cyclic_overlapping_new_tables(void);
-void OnDelete_on_delete_cyclic_object_mixed(void);
-void OnDelete_on_delete_cyclic_storage_table(void);
-void OnDelete_on_delete_cyclic_storage_table_2(void);
-void OnDelete_on_delete_cyclic_storage_table_3(void);
-void OnDelete_on_delete_cyclic_set_empty(void);
+void OnDelete_flags(void);
+void OnDelete_id_default(void);
+void OnDelete_id_remove(void);
+void OnDelete_id_delete(void);
+void OnDelete_relation_default(void);
+void OnDelete_relation_remove(void);
+void OnDelete_relation_delete(void);
+void OnDelete_object_default(void);
+void OnDelete_object_remove(void);
+void OnDelete_object_delete(void);
+void OnDelete_id_throw(void);
+void OnDelete_relation_throw(void);
+void OnDelete_object_throw(void);
+void OnDelete_object_mixed(void);
+void OnDelete_id_remove_no_instances(void);
+void OnDelete_id_delete_no_instances(void);
+void OnDelete_id_throw_no_instances(void);
+void OnDelete_cyclic_self(void);
+void OnDelete_nonempty_cyclic_self(void);
+void OnDelete_cyclic_id_default(void);
+void OnDelete_cyclic_id_remove(void);
+void OnDelete_cyclic_id_remove_both(void);
+void OnDelete_cyclic_id_delete(void);
+void OnDelete_cyclic_id_delete_both(void);
+void OnDelete_cyclic_relation_default(void);
+void OnDelete_cyclic_relation_remove(void);
+void OnDelete_cyclic_relation_remove_both(void);
+void OnDelete_cyclic_relation_delete(void);
+void OnDelete_cyclic_object_default(void);
+void OnDelete_cyclic_object_remove(void);
+void OnDelete_cyclic_object_delete(void);
+void OnDelete_cyclic_overlapping_table(void);
+void OnDelete_cyclic_overlapping_new_tables(void);
+void OnDelete_cyclic_object_mixed(void);
+void OnDelete_cyclic_storage_table(void);
+void OnDelete_cyclic_storage_table_2(void);
+void OnDelete_cyclic_storage_table_3(void);
+void OnDelete_cyclic_set_empty(void);
 void OnDelete_2_acyclic_relations_w_cycle(void);
-void OnDelete_on_delete_remove_2_comps(void);
-void OnDelete_on_delete_remove_2_comps_to_existing_table(void);
-void OnDelete_on_delete_delete_recursive(void);
-void OnDelete_on_delete_component_throw(void);
-void OnDelete_on_delete_remove_2_relations(void);
-void OnDelete_on_delete_remove_object_w_2_relations(void);
-void OnDelete_on_delete_remove_object_w_5_relations(void);
-void OnDelete_on_delete_remove_object_w_50_relations(void);
-void OnDelete_on_delete_remove_object_w_50_relations_3_tables(void);
+void OnDelete_remove_2_comps(void);
+void OnDelete_remove_2_comps_to_existing_table(void);
+void OnDelete_delete_recursive(void);
+void OnDelete_component_throw(void);
+void OnDelete_remove_2_relations(void);
+void OnDelete_remove_object_w_2_relations(void);
+void OnDelete_remove_object_w_5_relations(void);
+void OnDelete_remove_object_w_50_relations(void);
+void OnDelete_remove_object_w_50_relations_3_tables(void);
 void OnDelete_remove_id_from_2_tables(void);
 void OnDelete_remove_relation_from_2_tables(void);
 void OnDelete_remove_object_from_2_tables(void);
@@ -548,26 +548,27 @@ void OnDelete_stresstest_many_objects(void);
 void OnDelete_stresstest_many_relations(void);
 void OnDelete_stresstest_many_objects_on_delete(void);
 void OnDelete_stresstest_many_relations_on_delete(void);
-void OnDelete_on_delete_empty_table_w_on_remove(void);
+void OnDelete_empty_table_w_on_remove(void);
 void OnDelete_delete_table_in_on_remove_during_fini(void);
 void OnDelete_delete_other_in_on_remove_during_fini(void);
-void OnDelete_on_delete_remove_id_w_role(void);
-void OnDelete_on_delete_merge_pair_component(void);
+void OnDelete_remove_id_w_role(void);
+void OnDelete_merge_pair_component(void);
 void OnDelete_delete_with_tag(void);
 void OnDelete_delete_with_component(void);
 void OnDelete_delete_with_pair(void);
 void OnDelete_delete_with_object_wildcard(void);
 void OnDelete_delete_with_relation_wildcard(void);
+void OnDelete_delete_with_component_after_delete_cyclic(void);
 void OnDelete_delete_all_with_entity(void);
 void OnDelete_remove_childof_entity(void);
 void OnDelete_remove_childof_wildcard(void);
 void OnDelete_delete_child_of_delete_with(void);
 void OnDelete_deep_clean_64(void);
 void OnDelete_deep_clean_256(void);
-void OnDelete_on_delete_id_w_switch(void);
-void OnDelete_on_delete_id_w_disabled(void);
-void OnDelete_on_delete_id_to_no_switch(void);
-void OnDelete_on_delete_id_to_no_disabled(void);
+void OnDelete_id_w_switch(void);
+void OnDelete_id_w_disabled(void);
+void OnDelete_id_to_no_switch(void);
+void OnDelete_id_to_no_disabled(void);
 void OnDelete_remove_on_delete_action(void);
 void OnDelete_delete_with_w_relation(void);
 
@@ -3768,196 +3769,196 @@ bake_test_case Delete_testcases[] = {
 
 bake_test_case OnDelete_testcases[] = {
     {
-        "on_delete_flags",
-        OnDelete_on_delete_flags
+        "flags",
+        OnDelete_flags
     },
     {
-        "on_delete_id_default",
-        OnDelete_on_delete_id_default
+        "id_default",
+        OnDelete_id_default
     },
     {
-        "on_delete_id_remove",
-        OnDelete_on_delete_id_remove
+        "id_remove",
+        OnDelete_id_remove
     },
     {
-        "on_delete_id_delete",
-        OnDelete_on_delete_id_delete
+        "id_delete",
+        OnDelete_id_delete
     },
     {
-        "on_delete_relation_default",
-        OnDelete_on_delete_relation_default
+        "relation_default",
+        OnDelete_relation_default
     },
     {
-        "on_delete_relation_remove",
-        OnDelete_on_delete_relation_remove
+        "relation_remove",
+        OnDelete_relation_remove
     },
     {
-        "on_delete_relation_delete",
-        OnDelete_on_delete_relation_delete
+        "relation_delete",
+        OnDelete_relation_delete
     },
     {
-        "on_delete_object_default",
-        OnDelete_on_delete_object_default
+        "object_default",
+        OnDelete_object_default
     },
     {
-        "on_delete_object_remove",
-        OnDelete_on_delete_object_remove
+        "object_remove",
+        OnDelete_object_remove
     },
     {
-        "on_delete_object_delete",
-        OnDelete_on_delete_object_delete
+        "object_delete",
+        OnDelete_object_delete
     },
     {
-        "on_delete_id_throw",
-        OnDelete_on_delete_id_throw
+        "id_throw",
+        OnDelete_id_throw
     },
     {
-        "on_delete_relation_throw",
-        OnDelete_on_delete_relation_throw
+        "relation_throw",
+        OnDelete_relation_throw
     },
     {
-        "on_delete_object_throw",
-        OnDelete_on_delete_object_throw
+        "object_throw",
+        OnDelete_object_throw
     },
     {
-        "on_delete_object_mixed",
-        OnDelete_on_delete_object_mixed
+        "object_mixed",
+        OnDelete_object_mixed
     },
     {
-        "on_delete_id_remove_no_instances",
-        OnDelete_on_delete_id_remove_no_instances
+        "id_remove_no_instances",
+        OnDelete_id_remove_no_instances
     },
     {
-        "on_delete_id_delete_no_instances",
-        OnDelete_on_delete_id_delete_no_instances
+        "id_delete_no_instances",
+        OnDelete_id_delete_no_instances
     },
     {
-        "on_delete_id_throw_no_instances",
-        OnDelete_on_delete_id_throw_no_instances
+        "id_throw_no_instances",
+        OnDelete_id_throw_no_instances
     },
     {
-        "on_delete_cyclic_self",
-        OnDelete_on_delete_cyclic_self
+        "cyclic_self",
+        OnDelete_cyclic_self
     },
     {
-        "on_delete_nonempty_cyclic_self",
-        OnDelete_on_delete_nonempty_cyclic_self
+        "nonempty_cyclic_self",
+        OnDelete_nonempty_cyclic_self
     },
     {
-        "on_delete_cyclic_id_default",
-        OnDelete_on_delete_cyclic_id_default
+        "cyclic_id_default",
+        OnDelete_cyclic_id_default
     },
     {
-        "on_delete_cyclic_id_remove",
-        OnDelete_on_delete_cyclic_id_remove
+        "cyclic_id_remove",
+        OnDelete_cyclic_id_remove
     },
     {
-        "on_delete_cyclic_id_remove_both",
-        OnDelete_on_delete_cyclic_id_remove_both
+        "cyclic_id_remove_both",
+        OnDelete_cyclic_id_remove_both
     },
     {
-        "on_delete_cyclic_id_delete",
-        OnDelete_on_delete_cyclic_id_delete
+        "cyclic_id_delete",
+        OnDelete_cyclic_id_delete
     },
     {
-        "on_delete_cyclic_id_delete_both",
-        OnDelete_on_delete_cyclic_id_delete_both
+        "cyclic_id_delete_both",
+        OnDelete_cyclic_id_delete_both
     },
     {
-        "on_delete_cyclic_relation_default",
-        OnDelete_on_delete_cyclic_relation_default
+        "cyclic_relation_default",
+        OnDelete_cyclic_relation_default
     },
     {
-        "on_delete_cyclic_relation_remove",
-        OnDelete_on_delete_cyclic_relation_remove
+        "cyclic_relation_remove",
+        OnDelete_cyclic_relation_remove
     },
     {
-        "on_delete_cyclic_relation_remove_both",
-        OnDelete_on_delete_cyclic_relation_remove_both
+        "cyclic_relation_remove_both",
+        OnDelete_cyclic_relation_remove_both
     },
     {
-        "on_delete_cyclic_relation_delete",
-        OnDelete_on_delete_cyclic_relation_delete
+        "cyclic_relation_delete",
+        OnDelete_cyclic_relation_delete
     },
     {
-        "on_delete_cyclic_object_default",
-        OnDelete_on_delete_cyclic_object_default
+        "cyclic_object_default",
+        OnDelete_cyclic_object_default
     },
     {
-        "on_delete_cyclic_object_remove",
-        OnDelete_on_delete_cyclic_object_remove
+        "cyclic_object_remove",
+        OnDelete_cyclic_object_remove
     },
     {
-        "on_delete_cyclic_object_delete",
-        OnDelete_on_delete_cyclic_object_delete
+        "cyclic_object_delete",
+        OnDelete_cyclic_object_delete
     },
     {
-        "on_delete_cyclic_overlapping_table",
-        OnDelete_on_delete_cyclic_overlapping_table
+        "cyclic_overlapping_table",
+        OnDelete_cyclic_overlapping_table
     },
     {
-        "on_delete_cyclic_overlapping_new_tables",
-        OnDelete_on_delete_cyclic_overlapping_new_tables
+        "cyclic_overlapping_new_tables",
+        OnDelete_cyclic_overlapping_new_tables
     },
     {
-        "on_delete_cyclic_object_mixed",
-        OnDelete_on_delete_cyclic_object_mixed
+        "cyclic_object_mixed",
+        OnDelete_cyclic_object_mixed
     },
     {
-        "on_delete_cyclic_storage_table",
-        OnDelete_on_delete_cyclic_storage_table
+        "cyclic_storage_table",
+        OnDelete_cyclic_storage_table
     },
     {
-        "on_delete_cyclic_storage_table_2",
-        OnDelete_on_delete_cyclic_storage_table_2
+        "cyclic_storage_table_2",
+        OnDelete_cyclic_storage_table_2
     },
     {
-        "on_delete_cyclic_storage_table_3",
-        OnDelete_on_delete_cyclic_storage_table_3
+        "cyclic_storage_table_3",
+        OnDelete_cyclic_storage_table_3
     },
     {
-        "on_delete_cyclic_set_empty",
-        OnDelete_on_delete_cyclic_set_empty
+        "cyclic_set_empty",
+        OnDelete_cyclic_set_empty
     },
     {
         "2_acyclic_relations_w_cycle",
         OnDelete_2_acyclic_relations_w_cycle
     },
     {
-        "on_delete_remove_2_comps",
-        OnDelete_on_delete_remove_2_comps
+        "remove_2_comps",
+        OnDelete_remove_2_comps
     },
     {
-        "on_delete_remove_2_comps_to_existing_table",
-        OnDelete_on_delete_remove_2_comps_to_existing_table
+        "remove_2_comps_to_existing_table",
+        OnDelete_remove_2_comps_to_existing_table
     },
     {
-        "on_delete_delete_recursive",
-        OnDelete_on_delete_delete_recursive
+        "delete_recursive",
+        OnDelete_delete_recursive
     },
     {
-        "on_delete_component_throw",
-        OnDelete_on_delete_component_throw
+        "component_throw",
+        OnDelete_component_throw
     },
     {
-        "on_delete_remove_2_relations",
-        OnDelete_on_delete_remove_2_relations
+        "remove_2_relations",
+        OnDelete_remove_2_relations
     },
     {
-        "on_delete_remove_object_w_2_relations",
-        OnDelete_on_delete_remove_object_w_2_relations
+        "remove_object_w_2_relations",
+        OnDelete_remove_object_w_2_relations
     },
     {
-        "on_delete_remove_object_w_5_relations",
-        OnDelete_on_delete_remove_object_w_5_relations
+        "remove_object_w_5_relations",
+        OnDelete_remove_object_w_5_relations
     },
     {
-        "on_delete_remove_object_w_50_relations",
-        OnDelete_on_delete_remove_object_w_50_relations
+        "remove_object_w_50_relations",
+        OnDelete_remove_object_w_50_relations
     },
     {
-        "on_delete_remove_object_w_50_relations_3_tables",
-        OnDelete_on_delete_remove_object_w_50_relations_3_tables
+        "remove_object_w_50_relations_3_tables",
+        OnDelete_remove_object_w_50_relations_3_tables
     },
     {
         "remove_id_from_2_tables",
@@ -3996,8 +3997,8 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_stresstest_many_relations_on_delete
     },
     {
-        "on_delete_empty_table_w_on_remove",
-        OnDelete_on_delete_empty_table_w_on_remove
+        "empty_table_w_on_remove",
+        OnDelete_empty_table_w_on_remove
     },
     {
         "delete_table_in_on_remove_during_fini",
@@ -4008,12 +4009,12 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_delete_other_in_on_remove_during_fini
     },
     {
-        "on_delete_remove_id_w_role",
-        OnDelete_on_delete_remove_id_w_role
+        "remove_id_w_role",
+        OnDelete_remove_id_w_role
     },
     {
-        "on_delete_merge_pair_component",
-        OnDelete_on_delete_merge_pair_component
+        "merge_pair_component",
+        OnDelete_merge_pair_component
     },
     {
         "delete_with_tag",
@@ -4034,6 +4035,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_relation_wildcard",
         OnDelete_delete_with_relation_wildcard
+    },
+    {
+        "delete_with_component_after_delete_cyclic",
+        OnDelete_delete_with_component_after_delete_cyclic
     },
     {
         "delete_all_with_entity",
@@ -4060,20 +4065,20 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_deep_clean_256
     },
     {
-        "on_delete_id_w_switch",
-        OnDelete_on_delete_id_w_switch
+        "id_w_switch",
+        OnDelete_id_w_switch
     },
     {
-        "on_delete_id_w_disabled",
-        OnDelete_on_delete_id_w_disabled
+        "id_w_disabled",
+        OnDelete_id_w_disabled
     },
     {
-        "on_delete_id_to_no_switch",
-        OnDelete_on_delete_id_to_no_switch
+        "id_to_no_switch",
+        OnDelete_id_to_no_switch
     },
     {
-        "on_delete_id_to_no_disabled",
-        OnDelete_on_delete_id_to_no_disabled
+        "id_to_no_disabled",
+        OnDelete_id_to_no_disabled
     },
     {
         "remove_on_delete_action",
@@ -9517,7 +9522,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        79,
+        80,
         OnDelete_testcases
     },
     {
