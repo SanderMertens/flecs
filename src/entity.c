@@ -2554,7 +2554,7 @@ void flecs_on_delete(
     /* Cleanup can happen recursively. If a cleanup action is already in 
      * progress, only append ids to the marked_ids. The topmost cleanup
      * frame will handle the actual cleanup. */
-    int32_t to_delete = ecs_vector_count(world->store.marked_ids);
+    int32_t count = ecs_vector_count(world->store.marked_ids);
 
     /* Make sure we're evaluating a consistent list of non-empty tables */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
@@ -2563,7 +2563,7 @@ void flecs_on_delete(
     flecs_on_delete_mark(world, id, action);
 
     /* Only perform cleanup if we're the first ones doing cleanup */
-    if (!to_delete && ecs_vector_count(world->store.marked_ids)) {
+    if (!count && ecs_vector_count(world->store.marked_ids)) {
         ecs_dbg_2("#[red]delete#[reset]");
         ecs_log_push_2();
 
@@ -2575,6 +2575,19 @@ void flecs_on_delete(
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
+
+        /* Verify deleted ids are no longer in use */
+#ifdef FLECS_DEBUG
+        ecs_marked_id_t *ids = ecs_vector_first(world->store.marked_ids,
+            ecs_marked_id_t);
+        int32_t i;
+        count = ecs_vector_count(world->store.marked_ids);
+        for (i = 0; i < count; i ++) {
+            ecs_assert(!ecs_id_in_use(world, ids[i].id), 
+                ECS_INTERNAL_ERROR, NULL);
+        }
+#endif
+        ecs_assert(!ecs_id_in_use(world, id), ECS_INTERNAL_ERROR, NULL);
 
         /* Ids are deleted, clear stack */
         ecs_vector_clear(world->store.marked_ids);
