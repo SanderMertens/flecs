@@ -696,6 +696,14 @@ void compute_table_diff(
         return;
     }
 
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
+            ECS_PAIR_FIRST(id), EcsWildcard));
+        if (idr->flags & EcsIdUnion) {
+            id = ecs_pair(EcsUnion, ECS_PAIR_FIRST(id));
+        }
+    }
+
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
 
@@ -877,7 +885,7 @@ ecs_table_t* flecs_find_table_with(
             if (res == -1) {
                 return node;
             }
-            return find_or_create(world, &dst_type, true, node);;
+            return find_or_create(world, &dst_type, true, node);
         } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
             const ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);

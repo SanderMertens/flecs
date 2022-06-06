@@ -266,7 +266,9 @@
                 "remove_wildcard",
                 "same_table_after_change",
                 "component_relation",
-                "delete_case_trigger_after_delete_switch"
+                "delete_case_trigger_after_delete_switch",
+                "add_2",
+                "add_2_reverse"
             ]
         }, {
             "id": "EnabledComponents",

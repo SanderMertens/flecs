@@ -248,6 +248,8 @@ void Switch_remove_wildcard(void);
 void Switch_same_table_after_change(void);
 void Switch_component_relation(void);
 void Switch_delete_case_trigger_after_delete_switch(void);
+void Switch_add_2(void);
+void Switch_add_2_reverse(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -2865,6 +2867,14 @@ bake_test_case Switch_testcases[] = {
     {
         "delete_case_trigger_after_delete_switch",
         Switch_delete_case_trigger_after_delete_switch
+    },
+    {
+        "add_2",
+        Switch_add_2
+    },
+    {
+        "add_2_reverse",
+        Switch_add_2_reverse
     }
 };
 
@@ -9472,7 +9482,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        42,
+        44,
         Switch_testcases
     },
     {

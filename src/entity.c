@@ -2562,7 +2562,7 @@ void flecs_on_delete(
     /* Collect all ids that need to be deleted */
     flecs_on_delete_mark(world, id, action);
 
-    /* Only perform cleanup if we're the first ones doing cleanup */
+    /* Only perform cleanup if we're the first stack frame doing it */
     if (!count && ecs_vector_count(world->store.marked_ids)) {
         ecs_dbg_2("#[red]delete#[reset]");
         ecs_log_push_2();

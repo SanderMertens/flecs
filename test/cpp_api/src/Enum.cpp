@@ -4,6 +4,10 @@ enum StandardEnum {
     Red, Green, Blue
 };
 
+enum Movement {
+    Standing, Walking, Running
+};
+
 enum SparseEnum {
     Black = 1, White = 3, Grey = 5
 };
@@ -621,4 +625,71 @@ void Enum_enum_w_incorrect_size() {
 
     test_expect_abort();
     ecs.component<EnumIncorrectType>();
+}
+
+void Enum_add_union_enum() {
+    flecs::world ecs;
+
+    ecs.component<StandardEnum>().add(flecs::Union);
+
+    auto t_color = flecs::enum_type<StandardEnum>(ecs);
+    auto red = t_color.entity(StandardEnum::Red);
+    auto blue = t_color.entity(StandardEnum::Blue);
+
+    auto e1 = ecs.entity().add(StandardEnum::Red);
+    auto e2 = ecs.entity().add(StandardEnum::Blue);
+
+    test_assert(e1.type() == e2.type());
+    test_assert(e1.get_object<StandardEnum>() == red);
+    test_assert(e2.get_object<StandardEnum>() == blue);
+    test_assert(e1.has(StandardEnum::Red));
+    test_assert(e2.has(StandardEnum::Blue));
+}
+
+void Enum_add_2_union_enums() {
+    flecs::world ecs;
+
+    ecs.component<StandardEnum>().add(flecs::Union);
+    ecs.component<Movement>().add(flecs::Union);
+
+    auto e = ecs.entity();
+    e.add(StandardEnum::Red);
+    e.add(Movement::Running);
+
+    test_assert(e.has(StandardEnum::Red));
+    test_assert(e.has(Movement::Running));
+    test_assert(e.get_object<StandardEnum>() != 0);
+    test_assert(e.get_object<Movement>() != 0);
+
+    auto t_color = flecs::enum_type<StandardEnum>(ecs);
+    auto t_movement = flecs::enum_type<Movement>(ecs);
+    auto red = t_color.entity(StandardEnum::Red);
+    auto running = t_movement.entity(Movement::Running);
+
+    test_assert(e.get_object<StandardEnum>() == red);
+    test_assert(e.get_object<Movement>() == running);
+}
+
+void Enum_add_2_union_enums_reverse() {
+    flecs::world ecs;
+
+    ecs.component<StandardEnum>().add(flecs::Union);
+    ecs.component<Movement>().add(flecs::Union);
+
+    auto e = ecs.entity();
+    e.add(Movement::Running);
+    e.add(StandardEnum::Red);
+
+    test_assert(e.has(StandardEnum::Red));
+    test_assert(e.has(Movement::Running));
+    test_assert(e.get_object<StandardEnum>() != 0);
+    test_assert(e.get_object<Movement>() != 0);
+
+    auto t_color = flecs::enum_type<StandardEnum>(ecs);
+    auto t_movement = flecs::enum_type<Movement>(ecs);
+    auto red = t_color.entity(StandardEnum::Red);
+    auto running = t_movement.entity(Movement::Running);
+
+    test_assert(e.get_object<StandardEnum>() == red);
+    test_assert(e.get_object<Movement>() == running);
 }
