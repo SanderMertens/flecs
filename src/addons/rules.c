@@ -828,7 +828,7 @@ ecs_table_range_t table_from_entity(
     entity = ecs_get_alive(world, entity);
     
     ecs_table_range_t slice = {0};
-    ecs_record_t *record = ecs_eis_get(world, entity);
+    ecs_record_t *record = flecs_entities_get(world, entity);
     if (record) {
         slice.table = record->table;
         slice.offset = ECS_RECORD_TO_ROW(record->row);
@@ -4266,7 +4266,7 @@ void populate_iterator(
 
             ecs_entity_t e = reg->entity;
             ecs_assert(ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-            ecs_record_t *record = ecs_eis_get(world, e);
+            ecs_record_t *record = flecs_entities_get(world, e);
             offset = ECS_RECORD_TO_ROW(record->row);
 
             /* If an entity is not stored in a table, it could not have

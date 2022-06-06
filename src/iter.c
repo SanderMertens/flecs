@@ -189,7 +189,7 @@ bool flecs_iter_populate_term_data(
 
             /* Don't use ecs_get_id directly. Instead, go directly to the
              * storage so that we can get both the pointer and size */
-            ecs_record_t *r = ecs_eis_get(world, subj);
+            ecs_record_t *r = flecs_entities_get(world, subj);
             ecs_assert(r != NULL && r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             row = ECS_RECORD_TO_ROW(r->row);
@@ -718,7 +718,7 @@ ecs_table_t* ecs_iter_get_var_as_table(
         /* If table is not set, try to get table from entity */
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->real_world, e);
             if (r) {
                 table = r->table;
                 if (ecs_table_count(table) != 1) {
@@ -761,7 +761,7 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     if (!table) {
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->real_world, e);
             if (r) {
                 result.table = r->table;
                 result.offset = ECS_RECORD_TO_ROW(r->row);
@@ -801,7 +801,7 @@ void ecs_iter_set_var(
     ecs_var_t *var = &it->variables[var_id];
     var->entity = entity;
 
-    ecs_record_t *r = ecs_eis_get(it->real_world, entity);
+    ecs_record_t *r = flecs_entities_get(it->real_world, entity);
     if (r) {
         var->range.table = r->table;
         var->range.offset = ECS_RECORD_TO_ROW(r->row);

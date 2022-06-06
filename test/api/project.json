@@ -611,7 +611,9 @@
                 "id_to_no_switch",
                 "id_to_no_disabled",
                 "remove_on_delete_action",
-                "delete_with_w_relation"
+                "delete_with_w_relation",
+                "delete_self_in_on_remove",
+                "delete_nested_in_on_remove"
             ]
         }, {
             "id": "Set",
