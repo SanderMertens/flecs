@@ -453,7 +453,7 @@ void fini_store(ecs_world_t *world) {
     flecs_sparse_clear(&world->store.entity_index);
     flecs_hashmap_fini(&world->store.table_map);
     ecs_vector_free(world->store.records);
-    ecs_vector_free(world->store.to_delete_stack);
+    ecs_vector_free(world->store.marked_ids);
 
     ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
     while ((cur = next)) {
@@ -1225,7 +1225,7 @@ void ecs_dim(
     int32_t entity_count)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
+    flecs_entities_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
 void flecs_eval_component_monitors(
@@ -1445,7 +1445,7 @@ bool flecs_init_type_info_id(
 {
     bool changed = false;
 
-    ecs_eis_ensure(world, component);
+    flecs_entities_ensure(world, component);
 
     ecs_type_info_t *ti = NULL;
     if (!size || !alignment) {

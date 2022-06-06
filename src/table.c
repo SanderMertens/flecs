@@ -815,13 +815,13 @@ void dtor_all_components(
                 ecs_entity_t e = entities[i];
                 ecs_assert(!e || ecs_is_valid(world, e), 
                     ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                ecs_assert(!e || records[i] == flecs_entities_get(world, e), 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(!e || records[i]->table == table, 
                     ECS_INTERNAL_ERROR, NULL);
 
                 if (is_delete) {
-                    ecs_eis_delete(world, e);
+                    flecs_entities_remove(world, e);
                     ecs_assert(ecs_is_valid(world, e) == false, 
                         ECS_INTERNAL_ERROR, NULL);
                 } else {
@@ -845,19 +845,19 @@ void dtor_all_components(
             for (i = row; i < end; i ++) {
                 ecs_entity_t e = entities[i];
                 ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                ecs_assert(!e || records[i] == flecs_entities_get(world, e), 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(!e || records[i]->table == table, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                ecs_eis_delete(world, e);
+                flecs_entities_remove(world, e);
                 ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
             } 
         } else {
             for (i = row; i < end; i ++) {
                 ecs_entity_t e = entities[i];
                 ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
+                ecs_assert(!e || records[i] == flecs_entities_get(world, e), 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(!e || records[i]->table == table, 
                     ECS_INTERNAL_ERROR, NULL);
@@ -1011,7 +1011,7 @@ void flecs_table_free(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
+            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id %d", 
             expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
@@ -2213,7 +2213,7 @@ void flecs_table_merge(
             record = src_records[i];
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
-            record = ecs_eis_ensure(world, src_entities[i]);
+            record = flecs_entities_ensure(world, src_entities[i]);
         }
 
         uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
@@ -2428,7 +2428,7 @@ ecs_record_t* ecs_record_find(
 
     world = ecs_get_world(world);
 
-    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_record_t *r = flecs_entities_get(world, entity);
     if (r) {
         return r;
     }

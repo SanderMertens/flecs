@@ -440,15 +440,22 @@ typedef struct ecs_monitor_set_t {
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
+/* Data stored for id marked for deletion */
+typedef struct ecs_marked_id_t {
+    ecs_id_record_t *idr;
+    ecs_id_t id;
+    ecs_entity_t action; /* Set explicitly for delete_with, remove_all */
+} ecs_marked_id_t;
+
 typedef struct ecs_store_t {
     /* Entity lookup */
-    ecs_sparse_t entity_index; /* sparse<entity, ecs_record_t> */
+    ecs_sparse_t entity_index;   /* sparse<entity, ecs_record_t> */
 
     /* Table lookup by id */
-    ecs_sparse_t tables;       /* sparse<table_id, ecs_table_t> */
+    ecs_sparse_t tables;         /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_hashmap_t table_map;    /* hashmap<ecs_type_t, ecs_table_t*> */
+    ecs_hashmap_t table_map;     /* hashmap<ecs_type_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;
@@ -460,7 +467,7 @@ typedef struct ecs_store_t {
     ecs_vector_t *records;
 
     /* Stack of ids being deleted. */
-    ecs_vector_t *to_delete_stack;
+    ecs_vector_t *marked_ids;    /* vector<ecs_marked_ids_t> */
 } ecs_store_t;
 
 /** Supporting type to store looked up component data in specific table */

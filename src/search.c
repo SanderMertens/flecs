@@ -135,7 +135,7 @@ int32_t type_search_relation(
             ecs_entity_t obj = ECS_PAIR_SECOND(id_r);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_record_t *rec = ecs_eis_get_any(world, obj);
+            ecs_record_t *rec = flecs_entities_get_any(world, obj);
             ecs_assert(rec != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_table_t *obj_table = rec->table;

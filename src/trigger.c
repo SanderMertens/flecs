@@ -493,7 +493,7 @@ void notify_set_base_triggers(
     ecs_entity_t rel = ECS_PAIR_FIRST(event_id);
     ecs_entity_t obj = ecs_pair_second(world, event_id);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_record_t *obj_record = ecs_eis_get(world, obj);
+    ecs_record_t *obj_record = flecs_entities_get(world, obj);
     if (!obj_record) {
         return;
     }

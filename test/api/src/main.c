@@ -573,6 +573,8 @@ void OnDelete_id_to_no_switch(void);
 void OnDelete_id_to_no_disabled(void);
 void OnDelete_remove_on_delete_action(void);
 void OnDelete_delete_with_w_relation(void);
+void OnDelete_delete_self_in_on_remove(void);
+void OnDelete_delete_nested_in_on_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4097,6 +4099,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_w_relation",
         OnDelete_delete_with_w_relation
+    },
+    {
+        "delete_self_in_on_remove",
+        OnDelete_delete_self_in_on_remove
+    },
+    {
+        "delete_nested_in_on_remove",
+        OnDelete_delete_nested_in_on_remove
     }
 };
 
@@ -9532,7 +9542,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        82,
+        84,
         OnDelete_testcases
     },
     {

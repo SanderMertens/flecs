@@ -2253,3 +2253,86 @@ void OnDelete_delete_with_w_relation() {
 
     ecs_fini(world);
 }
+
+static int delete_target_invoked = 0;
+
+static
+void DeleteTarget(ecs_iter_t *it) {
+    ecs_id_t pair = ecs_term_id(it, 1);
+    test_assert(ecs_id_is_pair(pair));
+    ecs_delete(it->world, ECS_PAIR_SECOND(pair));
+    delete_target_invoked ++;
+}
+
+void OnDelete_delete_self_in_on_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_pair(Rel, EcsWildcard),
+        .events = { EcsOnRemove },
+        .callback = DeleteTarget
+    });
+
+    ecs_entity_t a = ecs_new_id(world);
+    ecs_entity_t b = ecs_new_w_pair(world, Rel, a);
+
+    test_int(0, delete_target_invoked);
+
+    ecs_delete(world, a);
+
+    test_int(1, delete_target_invoked);
+    test_assert( !ecs_is_alive(world, a));
+    test_assert( !ecs_is_alive(world, b));
+    test_assert( !ecs_id_in_use(world, ecs_pair(EcsWildcard, a)));
+    test_assert( !ecs_id_in_use(world, ecs_pair(Rel, a)));
+
+    ecs_fini(world);
+}
+
+static
+void DeleteOther(ecs_iter_t *it) {
+    ecs_entity_t *ctx = it->ctx;
+    test_assert(ctx != NULL);
+
+    ecs_entity_t e = *ctx;
+    test_assert(e != 0);
+
+    ecs_delete(it->world, e);
+    delete_target_invoked ++;
+}
+
+void OnDelete_delete_nested_in_on_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_pair(Rel, EcsWildcard),
+        .events = { EcsOnRemove },
+        .callback = DeleteOther,
+        .ctx = &Tag
+    });
+
+    ecs_entity_t a = ecs_new_id(world);
+    ecs_entity_t b = ecs_new_w_pair(world, Rel, a);
+    ecs_entity_t c = ecs_new(world, Tag);
+
+    test_int(0, delete_target_invoked);
+
+    ecs_delete(world, a);
+
+    test_int(1, delete_target_invoked);
+    test_assert( !ecs_is_alive(world, a));
+    test_assert( !ecs_is_alive(world, b));
+    test_assert( ecs_is_alive(world, c));
+    test_assert( ecs_get_type(world, c) == NULL);
+
+    test_assert( !ecs_id_in_use(world, ecs_pair(EcsWildcard, a)));
+    test_assert( !ecs_id_in_use(world, ecs_pair(Rel, a)));
+    test_assert( !ecs_id_in_use(world, Tag));
+
+    ecs_fini(world);
+}

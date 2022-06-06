@@ -291,13 +291,13 @@ void restore_filtered(
             &snapshot_table->data->entities);
         for (i = 0; i < entity_count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = ecs_eis_get(world, e);
+            ecs_record_t *r = flecs_entities_get(world, e);
             if (r && r->table) {
                 flecs_table_delete(world, r->table, 
                     ECS_RECORD_TO_ROW(r->row), true);
             } else {
                 /* Make sure that the entity has the same generation count */
-                ecs_eis_set_generation(world, e);
+                flecs_entities_set_generation(world, e);
             }
         }
 

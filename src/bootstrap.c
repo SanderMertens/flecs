@@ -503,7 +503,7 @@ void _bootstrap_component(
     ecs_column_t *columns = table->data.columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_record_t *record = ecs_eis_ensure(world, entity);
+    ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
     int32_t index = flecs_table_append(world, table, entity, record, false);
