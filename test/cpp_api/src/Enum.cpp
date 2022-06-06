@@ -4,7 +4,7 @@ enum StandardEnum {
     Red, Green, Blue
 };
 
-enum Movement {
+enum AnotherEnum {
     Standing, Walking, Running
 };
 
@@ -650,46 +650,46 @@ void Enum_add_2_union_enums() {
     flecs::world ecs;
 
     ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<Movement>().add(flecs::Union);
+    ecs.component<AnotherEnum>().add(flecs::Union);
 
     auto e = ecs.entity();
     e.add(StandardEnum::Red);
-    e.add(Movement::Running);
+    e.add(AnotherEnum::Running);
 
     test_assert(e.has(StandardEnum::Red));
-    test_assert(e.has(Movement::Running));
+    test_assert(e.has(AnotherEnum::Running));
     test_assert(e.get_object<StandardEnum>() != 0);
-    test_assert(e.get_object<Movement>() != 0);
+    test_assert(e.get_object<AnotherEnum>() != 0);
 
     auto t_color = flecs::enum_type<StandardEnum>(ecs);
-    auto t_movement = flecs::enum_type<Movement>(ecs);
+    auto t_AnotherEnum = flecs::enum_type<AnotherEnum>(ecs);
     auto red = t_color.entity(StandardEnum::Red);
-    auto running = t_movement.entity(Movement::Running);
+    auto running = t_AnotherEnum.entity(AnotherEnum::Running);
 
     test_assert(e.get_object<StandardEnum>() == red);
-    test_assert(e.get_object<Movement>() == running);
+    test_assert(e.get_object<AnotherEnum>() == running);
 }
 
 void Enum_add_2_union_enums_reverse() {
     flecs::world ecs;
 
     ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<Movement>().add(flecs::Union);
+    ecs.component<AnotherEnum>().add(flecs::Union);
 
     auto e = ecs.entity();
-    e.add(Movement::Running);
+    e.add(AnotherEnum::Running);
     e.add(StandardEnum::Red);
 
     test_assert(e.has(StandardEnum::Red));
-    test_assert(e.has(Movement::Running));
+    test_assert(e.has(AnotherEnum::Running));
     test_assert(e.get_object<StandardEnum>() != 0);
-    test_assert(e.get_object<Movement>() != 0);
+    test_assert(e.get_object<AnotherEnum>() != 0);
 
     auto t_color = flecs::enum_type<StandardEnum>(ecs);
-    auto t_movement = flecs::enum_type<Movement>(ecs);
+    auto t_AnotherEnum = flecs::enum_type<AnotherEnum>(ecs);
     auto red = t_color.entity(StandardEnum::Red);
-    auto running = t_movement.entity(Movement::Running);
+    auto running = t_AnotherEnum.entity(AnotherEnum::Running);
 
     test_assert(e.get_object<StandardEnum>() == red);
-    test_assert(e.get_object<Movement>() == running);
+    test_assert(e.get_object<AnotherEnum>() == running);
 }
