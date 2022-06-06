@@ -1878,3 +1878,34 @@ void Query_change_tracking() {
     test_int(count, 2);
     test_int(change_count, 1);
 }
+
+void Query_not_w_write() {
+    flecs::world ecs;
+
+    struct A {};
+    struct B {};
+
+    auto q = ecs.query_builder()
+        .term<A>()
+        .term<B>().oper(flecs::Not).write()
+        .build();
+
+    auto e = ecs.entity().add<A>();
+
+    int32_t count = 0;
+    ecs.defer([&] {
+        q.each([&](flecs::entity e) {
+            e.add<B>();
+            count ++;
+        });
+    });
+
+    test_int(1, count);
+    test_assert(e.has<B>());
+
+    q.each([&](flecs::entity e) {
+        count ++;
+    });
+
+    test_int(1, count);
+}

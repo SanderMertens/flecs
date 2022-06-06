@@ -303,7 +303,9 @@ struct term_builder_i : term_id_builder_i<Base> {
     Base& add() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
-        m_term->subj.set.mask = flecs::Nothing;
+        if (m_term->oper != EcsNot) {
+            m_term->subj.set.mask = flecs::Nothing;
+        }
         return *this;
     }
 
@@ -311,7 +313,9 @@ struct term_builder_i : term_id_builder_i<Base> {
     Base& write() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
-        m_term->subj.set.mask = flecs::Nothing;
+        if (m_term->oper != EcsNot) {
+            m_term->subj.set.mask = flecs::Nothing;
+        }
         return *this;
     }
 
@@ -319,7 +323,9 @@ struct term_builder_i : term_id_builder_i<Base> {
     Base& read() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::In);
-        m_term->subj.set.mask = flecs::Nothing;
+        if (m_term->oper != EcsNot) {
+            m_term->subj.set.mask = flecs::Nothing;
+        }
         return *this;
     }
 
@@ -327,7 +333,9 @@ struct term_builder_i : term_id_builder_i<Base> {
     Base& read_write() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::InOut);
-        m_term->subj.set.mask = flecs::Nothing;
+        if (m_term->oper != EcsNot) {
+            m_term->subj.set.mask = flecs::Nothing;
+        }
         return *this;
     }
 

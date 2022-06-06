@@ -474,6 +474,7 @@ void Query_query_each_w_func_no_ptr(void);
 void Query_query_iter_w_func_no_ptr(void);
 void Query_query_each_w_iter(void);
 void Query_change_tracking(void);
+void Query_not_w_write(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -2755,6 +2756,10 @@ bake_test_case Query_testcases[] = {
     {
         "change_tracking",
         Query_change_tracking
+    },
+    {
+        "not_w_write",
+        Query_not_w_write
     }
 };
 
@@ -4592,7 +4597,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        62,
+        63,
         Query_testcases
     },
     {
