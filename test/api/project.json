@@ -786,7 +786,8 @@
                 "free_component_new_pair_id_while_fini",
                 "dtor_component_new_pair_id_while_fini",
                 "free_component_new_obj_pair_id_while_fini",
-                "dtor_component_new_obj_pair_id_while_fini"
+                "dtor_component_new_obj_pair_id_while_fini",
+                "ctor_move_dtor_after_resize"
             ]
         }, {
             "id": "Sorting",

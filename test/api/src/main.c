@@ -738,6 +738,7 @@ void ComponentLifecycle_free_component_new_pair_id_while_fini(void);
 void ComponentLifecycle_dtor_component_new_pair_id_while_fini(void);
 void ComponentLifecycle_free_component_new_obj_pair_id_while_fini(void);
 void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void);
+void ComponentLifecycle_ctor_move_dtor_after_resize(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4729,6 +4730,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "dtor_component_new_obj_pair_id_while_fini",
         ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini
+    },
+    {
+        "ctor_move_dtor_after_resize",
+        ComponentLifecycle_ctor_move_dtor_after_resize
     }
 };
 
@@ -9592,7 +9597,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        62,
+        63,
         ComponentLifecycle_testcases
     },
     {

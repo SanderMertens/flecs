@@ -3557,7 +3557,7 @@ void* grow_column(
     /* If the array could possibly realloc and the component has a move action 
      * defined, move old elements manually */
     ecs_move_t move_ctor;
-    if (count && can_realloc && (move_ctor = ti->lifecycle.move_ctor)) {
+    if (count && can_realloc && (move_ctor = ti->lifecycle.ctor_move_dtor)) {
         ecs_xtor_t ctor = ti->lifecycle.ctor;
         ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);

@@ -2333,3 +2333,47 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini() {
     test_int(on_remove_tag_set_position_invoked, 1);
     test_int(dtor_position, 1);
 }
+
+void ComponentLifecycle_ctor_move_dtor_after_resize() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .copy = comp_copy,
+        .move = comp_move,
+        .dtor = comp_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new_id(world);
+
+    ecs_add(world, e1, Position);
+    test_int(ctx.ctor.count, 1);
+    test_int(ctx.copy.count, 0);
+    test_int(ctx.move.count, 0);
+    test_int(ctx.dtor.count, 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, e2, Position);
+    test_int(ctx.ctor.count, 1);
+    test_int(ctx.copy.count, 0);
+    test_int(ctx.move.count, 0);
+    test_int(ctx.dtor.count, 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, e3, Position);
+    test_int(ctx.ctor.count, 3);
+    test_int(ctx.copy.count, 0);
+    test_int(ctx.move.count, 2);
+    test_int(ctx.dtor.count, 2);
+
+    ecs_fini(world);
+}
