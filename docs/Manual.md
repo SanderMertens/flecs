@@ -1405,7 +1405,7 @@ By default this means that an application will not see the effects of an operati
 
 ```c
 // Sets velocity using ecs_set
-ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, :Velocity);
+ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, Velocity());
 
 // Adds Velocity to Position
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
@@ -1426,7 +1426,7 @@ void SetVelocity(ecs_iter_t *it) {
 As `SetVelocity` is using `ecs_set` to set the `Velocity`, the effect of this operation will not be visible until the end of the frame, which means that the `Move` operation will use the `Velocity` value of the previous frame. An application can enforce that the queue is flushed before the `Move` system by annotating the system like this:
 
 ```
-ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, [out] :Velocity);
+ECS_SYSTEM(world, SetVelocity, EcsOnUpdate, Position, [out] Velocity());
 ```
 
 Notice the `[out]` annotation that has been added to the `:Velocity` argument. This indicates to flecs that the system will be deferring operations that write the `Velocity` component, and as a result of that the queue will be flushed before `Velocity` is read. Since the `Move` system is reading the `Velocity` component, the queue will be flushed before the `Move` system is executed.
@@ -1436,7 +1436,7 @@ Note that merging is expensive, especially in multithreaded applications, and sh
 In some cases it can be difficult to predict which components a system will write. This typically happens when a system deletes an entity (all components of the entity will be "written") or when a new entity is created from a prefab and components are overridden automatically. When these operations cannot be deferred, a system can force a sync point without having to specify all possible components that can be written by using a wildcard:
 
 ```c
-ECS_SYSTEM(world, DeleteEntity, EcsOnUpdate, Position, [out] :*);
+ECS_SYSTEM(world, DeleteEntity, EcsOnUpdate, Position, [out] *());
 ```
 
 This is interpreted as the system may write any component, and forces a sync point.
