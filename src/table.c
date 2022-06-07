@@ -2459,3 +2459,14 @@ void* ecs_record_get_column(
 error:
     return NULL;
 }
+
+FLECS_API
+void work_in_progress_temporary_flecs_table_swap_work_in_progress(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    ecs_data_t* data,
+    int32_t row_1,
+    int32_t row_2)
+{
+    flecs_table_swap(world, table, data, row_1, row_2);
+}
