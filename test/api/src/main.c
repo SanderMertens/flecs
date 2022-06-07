@@ -577,6 +577,7 @@ void OnDelete_remove_on_delete_action(void);
 void OnDelete_delete_with_w_relation(void);
 void OnDelete_delete_self_in_on_remove(void);
 void OnDelete_delete_nested_in_on_remove(void);
+void OnDelete_add_deleted_in_on_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4117,6 +4118,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_nested_in_on_remove",
         OnDelete_delete_nested_in_on_remove
+    },
+    {
+        "add_deleted_in_on_remove",
+        OnDelete_add_deleted_in_on_remove
     }
 };
 
@@ -9552,7 +9557,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        84,
+        85,
         OnDelete_testcases
     },
     {

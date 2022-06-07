@@ -6499,6 +6499,7 @@ ecs_entity_t ecs_new_w_id(
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id || ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
@@ -38283,6 +38284,13 @@ bool ecs_id_is_valid(
     if (ecs_id_is_wildcard(id)) {
         return false;
     }
+
+    world = ecs_get_world(world);
+    const ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (idr && idr->flags & EcsIdMarkedForDelete) {
+        return false;
+    }
+
     if (ECS_HAS_ROLE(id, PAIR)) {
         if (!ECS_PAIR_FIRST(id)) {
             return false;

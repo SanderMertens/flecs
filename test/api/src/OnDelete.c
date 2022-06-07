@@ -2336,3 +2336,29 @@ void OnDelete_delete_nested_in_on_remove() {
 
     ecs_fini(world);
 }
+
+static
+void AddRemoved(ecs_iter_t *it) {
+    ecs_id_t id = ecs_term_id(it, 1);
+    for (int i = 0; i < it->count; i ++) {
+        ecs_new_w_id(it->world, id); /* create entity with removed id */
+    }
+}
+
+void OnDelete_add_deleted_in_on_remove() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_new_w_id(world, t);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = t,
+        .events = { EcsOnRemove },
+        .callback = AddRemoved
+    });
+
+    test_expect_abort();
+    ecs_delete(world, t);
+}
