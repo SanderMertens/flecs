@@ -310,8 +310,9 @@ struct ecs_query_t {
 
     /* Used for sorting */
     ecs_entity_t order_by_component;
-    ecs_order_by_action_t order_by;
-    ecs_vector_t *table_slices;     
+    ecs_compare_component_action_t order_by;
+    ecs_sort_table_action_t order_by_table;
+    ecs_vector_t *table_slices;
 
     /* Used for grouping */
     ecs_entity_t group_by_id;

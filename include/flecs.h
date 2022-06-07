@@ -296,12 +296,32 @@ typedef bool (*ecs_iter_next_action_t)(
 typedef void (*ecs_iter_fini_action_t)(
     ecs_iter_t *it); 
 
-/** Callback used for sorting components */
-typedef int (*ecs_order_by_action_t)(
+/** Callback used for comparing components */
+typedef int (*ecs_compare_component_action_t)(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
     const void *ptr2);
+
+/** Callback used for sorting the entire table of components */
+
+// typedef int (*ecs_sort_table_action_t)(
+//     int32_t count,
+//     ecs_entity_t* entities,
+//     struct ecs_column_t* columns,
+//     ecs_type_info_t** type_info,
+//     int32_t column_count,
+//     int32_t column_to_sort);
+
+typedef void (*ecs_sort_table_action_t)(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    struct ecs_data_t* data,
+    ecs_entity_t* entities,
+    void* ptr,
+    int32_t size,
+    int32_t lo,
+    int32_t hi); // WORK IN PROGRESS
 
 /** Callback used for ranking types */
 typedef uint64_t (*ecs_group_by_action_t)(
@@ -686,7 +706,12 @@ typedef struct ecs_query_desc_t {
     /* Callback used for ordering query results. If order_by_id is 0, the 
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
-    ecs_order_by_action_t order_by;
+    ecs_compare_component_action_t order_by;
+
+    /* Callback used for ordering query results. If order_by_id is 0, the
+     * pointer provided to the callback will be NULL. If the callback is not
+     * set, results will not be ordered. */
+    ecs_sort_table_action_t order_by_table;
 
     /* Id to be used by group_by. This id is passed to the group_by function and
      * can be used identify the part of an entity type that should be used for
@@ -4737,6 +4762,14 @@ void* ecs_record_get_column(
     size_t c_size);
 
 /** @} */
+
+FLECS_API
+void work_in_progress_temporary_flecs_table_swap_work_in_progress(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    ecs_data_t* data,
+    int32_t row_1,
+    int32_t row_2); // WORK IN PROGRESS
 
 #include "flecs/addons/flecs_c.h"
 #include "flecs/private/addons.h"
