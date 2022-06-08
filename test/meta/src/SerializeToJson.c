@@ -1176,6 +1176,60 @@ void SerializeToJson_serialize_entity_w_base_override() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_2_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base_a = ecs_new_entity(world, "BaseA");
+    ecs_entity_t base_b = ecs_new_entity(world, "BaseB");
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add_pair(world, e, EcsIsA, base_a);
+    ecs_add_pair(world, e, EcsIsA, base_b);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"is_a\":[{\"path\":\"BaseA\", \"ids\":[]}, "
+                  "{\"path\":\"BaseB\", \"ids\":[]}], "
+        "\"ids\":[]"
+        "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_nested_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base_of_base = ecs_new_entity(world, "BaseOfBase");
+    ecs_entity_t base = ecs_new_entity(world, "Base");
+    ecs_add_pair(world, base, EcsIsA, base_of_base);
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"is_a\":[{\"path\":\"BaseOfBase\", \"ids\":[]}, "
+                  "{\"path\":\"Base\", \"ids\":[]}], "
+        "\"ids\":[]"
+        "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_w_1_component() {
     ecs_world_t *world = ecs_init();
 
@@ -3682,4 +3736,3 @@ void SerializeToJson_serialize_paged_iterator_w_vars() {
 
     ecs_fini(world);
 }
-

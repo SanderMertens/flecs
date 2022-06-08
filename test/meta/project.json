@@ -499,6 +499,8 @@
                 "serialize_entity_w_name_1_pair",
                 "serialize_entity_w_base",
                 "serialize_entity_w_base_override",
+                "serialize_entity_w_2_base",
+                "serialize_entity_w_nested_base",
                 "serialize_entity_w_1_component",
                 "serialize_entity_w_2_components",
                 "serialize_entity_w_primitive_component",

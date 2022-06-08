@@ -30393,6 +30393,7 @@ int append_base(
         }
     }
 
+    ecs_strbuf_list_next(buf);
     flecs_json_object_push(buf);
     flecs_json_member(buf, "path");
     flecs_json_path(buf, world, ent);
