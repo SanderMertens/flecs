@@ -203,6 +203,9 @@ typedef struct ecs_ref_t ecs_ref_t;
 /** Type information */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
+/** Table data */
+typedef struct ecs_data_t ecs_data_t;
+
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
@@ -316,7 +319,7 @@ typedef int (*ecs_compare_component_action_t)(
 typedef void (*ecs_sort_table_action_t)(
     ecs_world_t* world,
     ecs_table_t* table,
-    struct ecs_data_t* data,
+    ecs_data_t* data,
     ecs_entity_t* entities,
     void* ptr,
     int32_t size,
