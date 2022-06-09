@@ -882,8 +882,7 @@ bool match_table(
     return qt != NULL;
 }
 
-static
-ECS_SORT_TABLE_WITH_COMPARE(_, sort_table_generic, order_by)
+ECS_SORT_TABLE_WITH_COMPARE(_, sort_table_generic, order_by, static)
 
 static
 void sort_table(
