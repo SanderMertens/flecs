@@ -143,7 +143,7 @@ const ecs_type_info_t *get_c_info(
 {
     ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
-        return flecs_get_type_info(world, real_id);
+        return flecs_type_info_get(world, real_id);
     } else {
         return NULL;
     }

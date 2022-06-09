@@ -3734,8 +3734,11 @@ typedef struct EcsComponentLifecycle {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    /* User defined context */
-    void *ctx;                  
+    void *ctx;                      /* User defined context */
+    void *binding_ctx;              /* Language binding context */
+
+    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 } EcsComponentLifecycle;
 
 /** Type that contains component information (passed to ctors/dtors/...) */

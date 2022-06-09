@@ -1659,25 +1659,29 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_type_info_t *flecs_get_type_info(
+const ecs_type_info_t *flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_type_info_t* flecs_ensure_type_info(
+ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component);
 
-bool flecs_init_type_info_id(
+bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
     const EcsComponentLifecycle *li);
 
-#define flecs_init_type_info(world, T, ...)\
-    flecs_init_type_info_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
+#define flecs_type_info_init(world, T, ...)\
+    flecs_type_info_init_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
         &(EcsComponentLifecycle)__VA_ARGS__)
+
+void flecs_type_info_fini(
+    ecs_world_t *world,
+    ecs_type_info_t *ti);
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);
@@ -5211,7 +5215,7 @@ const ecs_type_info_t *get_c_info(
 {
     ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
-        return flecs_get_type_info(world, real_id);
+        return flecs_type_info_get(world, real_id);
     } else {
         return NULL;
     }
@@ -9525,7 +9529,7 @@ bool flecs_defer_set(
         const ecs_type_info_t *ti = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
-            ti = flecs_get_type_info(world, real_id);
+            ti = flecs_type_info_get(world, real_id);
         }
 
         if (value) {
@@ -23853,7 +23857,7 @@ int init_type(
 
         /* Ensure that component has a default constructor, to prevent crashing
          * serializers on uninitialized values. */
-        ecs_type_info_t *ti = flecs_ensure_type_info(world, type);
+        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         if (!ti->lifecycle.ctor) {
             ti->lifecycle.ctor = ecs_default_ctor;
         }
@@ -36384,7 +36388,7 @@ void ecs_set_component_actions_w_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
 
-    ecs_type_info_t *ti = flecs_ensure_type_info(world, component);
+    ecs_type_info_t *ti = flecs_type_info_ensure(world, component);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_size_t size = ti->size;
@@ -36501,7 +36505,7 @@ bool ecs_component_has_actions(
     ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
     
     world = ecs_get_world(world);
-    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
     return (ti != NULL) && ti->lifecycle_set;
 error:
     return false;
@@ -36675,13 +36679,13 @@ int ecs_fini(
 
     fini_stages(world);
 
-    fini_component_lifecycle(world);
-
     fini_queries(world);
 
     fini_observers(world);
 
     flecs_fini_id_records(world);
+
+    fini_component_lifecycle(world);
 
     flecs_observable_fini(&world->observable);
 
@@ -36888,7 +36892,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t* flecs_get_type_info(
+const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -36900,14 +36904,14 @@ const ecs_type_info_t* flecs_get_type_info(
     return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_type_info_t* flecs_ensure_type_info(
+ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
     ecs_type_info_t *ti_mut = NULL;
     if (!ti) {
         ti_mut = flecs_sparse_ensure(
@@ -36921,15 +36925,7 @@ ecs_type_info_t* flecs_ensure_type_info(
     return ti_mut;
 }
 
-static
-void flecs_remove_type_info(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    flecs_sparse_remove(world->type_info, component);
-}
-
-bool flecs_init_type_info_id(
+bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_size_t size,
@@ -36945,9 +36941,9 @@ bool flecs_init_type_info_id(
         ecs_assert(size == 0 && alignment == 0, 
             ECS_INVALID_COMPONENT_SIZE, NULL);
         ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        flecs_remove_type_info(world, component);
+        flecs_sparse_remove(world->type_info, component);
     } else {
-        ti = flecs_ensure_type_info(world, component);
+        ti = flecs_type_info_ensure(world, component);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
         changed |= ti->size != size;
         changed |= ti->alignment != alignment;
@@ -36991,6 +36987,19 @@ bool flecs_init_type_info_id(
         type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
+}
+
+void flecs_type_info_fini(
+    ecs_world_t *world,
+    ecs_type_info_t *ti)
+{
+    if (ti->lifecycle.ctx_free) {
+        ti->lifecycle.ctx_free(ti->lifecycle.ctx);
+    }
+    if (ti->lifecycle.binding_ctx_free) {
+        ti->lifecycle.binding_ctx_free(ti->lifecycle.binding_ctx);
+    }
+    flecs_sparse_remove(world->type_info, ti->component);
 }
 
 static
@@ -48174,7 +48183,7 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_init_type_info_id(world, e, c[i].size, c[i].alignment, NULL)){
+        if (flecs_type_info_init_id(world, e, c[i].size, c[i].alignment, NULL)){
             assert_relation_unused(world, e, ecs_id(EcsComponent));
         }
     }
@@ -48445,11 +48454,11 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsAny);
 
     /* Bootstrap builtin components */
-    flecs_init_type_info(world, EcsComponent, { 
+    flecs_type_info_init(world, EcsComponent, { 
         .ctor = ecs_default_ctor 
     });
 
-    flecs_init_type_info(world, EcsIdentifier, {
+    flecs_type_info_init(world, EcsIdentifier, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsIdentifier),
         .copy = ecs_copy(EcsIdentifier),
@@ -48458,20 +48467,20 @@ void flecs_bootstrap(
         .on_remove = ecs_on_set(EcsIdentifier)
     });
 
-    flecs_init_type_info(world, EcsTrigger, {
+    flecs_type_info_init(world, EcsTrigger, {
         .ctor = ecs_default_ctor,
         .on_remove = ecs_on_remove(EcsTrigger)
     });
 
-    flecs_init_type_info(world, EcsObserver, {
+    flecs_type_info_init(world, EcsObserver, {
         .ctor = ecs_default_ctor,
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_init_type_info(world, EcsComponentLifecycle, { 0 });
-    flecs_init_type_info(world, EcsType, { 0 });
-    flecs_init_type_info(world, EcsQuery, { 0 });
-    flecs_init_type_info(world, EcsIterable, { 0 });
+    flecs_type_info_init(world, EcsComponentLifecycle, { 0 });
+    flecs_type_info_init(world, EcsType, { 0 });
+    flecs_type_info_init(world, EcsQuery, { 0 });
+    flecs_type_info_init(world, EcsIterable, { 0 });
 
     /* Cache often used id records on world */
     world->idr_wildcard = flecs_id_record_ensure(world, EcsWildcard);
@@ -49441,7 +49450,7 @@ ecs_id_t flecs_id_record_id(
 }
 
 static
-ecs_id_record_t* new_id_record(
+ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -49500,9 +49509,9 @@ ecs_id_record_t* new_id_record(
     /* Initialize type info if id is not a tag */
     if (!is_wildcard && (!role || (role == ECS_PAIR))) {
         if (!(idr->flags & EcsIdTag)) {
-            const ecs_type_info_t *ti = flecs_get_type_info(world, rel);
+            const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
             if (!ti && obj) {
-                ti = flecs_get_type_info(world, obj);
+                ti = flecs_type_info_get(world, obj);
             }
             idr->type_info = ti;
         }
@@ -49645,6 +49654,12 @@ void flecs_id_record_free(
         world->info.wildcard_id_count --;
     }
 
+    /* Unregister type info if this is the record for the type */
+    ecs_type_info_t *ti = (ecs_type_info_t*)idr->type_info;
+    if (ti && idr->id == ti->component) {
+        flecs_type_info_fini(world, ti);
+    }
+
     /* Unregister the id record from the world */
     ecs_map_remove(&world->id_index, flecs_id_record_id(id));
 
@@ -49670,7 +49685,7 @@ ecs_id_record_t* flecs_id_record_ensure(
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
     if (!idr) {
-        idr = new_id_record(world, id);
+        idr = flecs_id_record_new(world, id);
         idr_ptr = ecs_map_get(&world->id_index, 
             ecs_id_record_t*, flecs_id_record_id(id));
         ecs_assert(idr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);

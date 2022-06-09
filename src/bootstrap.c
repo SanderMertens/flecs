@@ -363,7 +363,7 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_init_type_info_id(world, e, c[i].size, c[i].alignment, NULL)){
+        if (flecs_type_info_init_id(world, e, c[i].size, c[i].alignment, NULL)){
             assert_relation_unused(world, e, ecs_id(EcsComponent));
         }
     }
@@ -634,11 +634,11 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsAny);
 
     /* Bootstrap builtin components */
-    flecs_init_type_info(world, EcsComponent, { 
+    flecs_type_info_init(world, EcsComponent, { 
         .ctor = ecs_default_ctor 
     });
 
-    flecs_init_type_info(world, EcsIdentifier, {
+    flecs_type_info_init(world, EcsIdentifier, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsIdentifier),
         .copy = ecs_copy(EcsIdentifier),
@@ -647,20 +647,20 @@ void flecs_bootstrap(
         .on_remove = ecs_on_set(EcsIdentifier)
     });
 
-    flecs_init_type_info(world, EcsTrigger, {
+    flecs_type_info_init(world, EcsTrigger, {
         .ctor = ecs_default_ctor,
         .on_remove = ecs_on_remove(EcsTrigger)
     });
 
-    flecs_init_type_info(world, EcsObserver, {
+    flecs_type_info_init(world, EcsObserver, {
         .ctor = ecs_default_ctor,
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_init_type_info(world, EcsComponentLifecycle, { 0 });
-    flecs_init_type_info(world, EcsType, { 0 });
-    flecs_init_type_info(world, EcsQuery, { 0 });
-    flecs_init_type_info(world, EcsIterable, { 0 });
+    flecs_type_info_init(world, EcsComponentLifecycle, { 0 });
+    flecs_type_info_init(world, EcsType, { 0 });
+    flecs_type_info_init(world, EcsQuery, { 0 });
+    flecs_type_info_init(world, EcsIterable, { 0 });
 
     /* Cache often used id records on world */
     world->idr_wildcard = flecs_id_record_ensure(world, EcsWildcard);

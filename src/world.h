@@ -15,25 +15,29 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_type_info_t *flecs_get_type_info(
+const ecs_type_info_t *flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_type_info_t* flecs_ensure_type_info(
+ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component);
 
-bool flecs_init_type_info_id(
+bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
     const EcsComponentLifecycle *li);
 
-#define flecs_init_type_info(world, T, ...)\
-    flecs_init_type_info_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
+#define flecs_type_info_init(world, T, ...)\
+    flecs_type_info_init_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
         &(EcsComponentLifecycle)__VA_ARGS__)
+
+void flecs_type_info_fini(
+    ecs_world_t *world,
+    ecs_type_info_t *ti);
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);

@@ -237,7 +237,7 @@ int init_type(
 
         /* Ensure that component has a default constructor, to prevent crashing
          * serializers on uninitialized values. */
-        ecs_type_info_t *ti = flecs_ensure_type_info(world, type);
+        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         if (!ti->lifecycle.ctor) {
             ti->lifecycle.ctor = ecs_default_ctor;
         }

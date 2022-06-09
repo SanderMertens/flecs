@@ -739,6 +739,10 @@ void ComponentLifecycle_dtor_component_new_pair_id_while_fini(void);
 void ComponentLifecycle_free_component_new_obj_pair_id_while_fini(void);
 void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void);
 void ComponentLifecycle_ctor_move_dtor_after_resize(void);
+void ComponentLifecycle_ctx_free(void);
+void ComponentLifecycle_binding_ctx_free(void);
+void ComponentLifecycle_ctx_free_after_delete_component(void);
+void ComponentLifecycle_binding_ctx_free_after_delete_component(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4734,6 +4738,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_move_dtor_after_resize",
         ComponentLifecycle_ctor_move_dtor_after_resize
+    },
+    {
+        "ctx_free",
+        ComponentLifecycle_ctx_free
+    },
+    {
+        "binding_ctx_free",
+        ComponentLifecycle_binding_ctx_free
+    },
+    {
+        "ctx_free_after_delete_component",
+        ComponentLifecycle_ctx_free_after_delete_component
+    },
+    {
+        "binding_ctx_free_after_delete_component",
+        ComponentLifecycle_binding_ctx_free_after_delete_component
     }
 };
 
@@ -9597,7 +9617,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        63,
+        67,
         ComponentLifecycle_testcases
     },
     {

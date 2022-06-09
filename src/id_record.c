@@ -113,7 +113,7 @@ ecs_id_t flecs_id_record_id(
 }
 
 static
-ecs_id_record_t* new_id_record(
+ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -172,9 +172,9 @@ ecs_id_record_t* new_id_record(
     /* Initialize type info if id is not a tag */
     if (!is_wildcard && (!role || (role == ECS_PAIR))) {
         if (!(idr->flags & EcsIdTag)) {
-            const ecs_type_info_t *ti = flecs_get_type_info(world, rel);
+            const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
             if (!ti && obj) {
-                ti = flecs_get_type_info(world, obj);
+                ti = flecs_type_info_get(world, obj);
             }
             idr->type_info = ti;
         }
@@ -317,6 +317,12 @@ void flecs_id_record_free(
         world->info.wildcard_id_count --;
     }
 
+    /* Unregister type info if this is the record for the type */
+    ecs_type_info_t *ti = (ecs_type_info_t*)idr->type_info;
+    if (ti && idr->id == ti->component) {
+        flecs_type_info_fini(world, ti);
+    }
+
     /* Unregister the id record from the world */
     ecs_map_remove(&world->id_index, flecs_id_record_id(id));
 
@@ -342,7 +348,7 @@ ecs_id_record_t* flecs_id_record_ensure(
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
     if (!idr) {
-        idr = new_id_record(world, id);
+        idr = flecs_id_record_new(world, id);
         idr_ptr = ecs_map_get(&world->id_index, 
             ecs_id_record_t*, flecs_id_record_id(id));
         ecs_assert(idr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);

@@ -2377,3 +2377,76 @@ void ComponentLifecycle_ctor_move_dtor_after_resize() {
 
     ecs_fini(world);
 }
+
+static int component_lifecycle_ctx = 0;
+
+static void component_lifecycle_ctx_free(void *ctx) {
+    test_assert(ctx == &component_lifecycle_ctx);
+    component_lifecycle_ctx ++;
+}
+
+void ComponentLifecycle_ctx_free() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctx = &component_lifecycle_ctx,
+        .ctx_free = component_lifecycle_ctx_free
+    });
+
+    ecs_fini(world);
+
+    test_int(1, component_lifecycle_ctx);
+}
+
+void ComponentLifecycle_binding_ctx_free() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .binding_ctx = &component_lifecycle_ctx,
+        .binding_ctx_free = component_lifecycle_ctx_free
+    });
+
+    ecs_fini(world);
+
+    test_int(1, component_lifecycle_ctx);
+}
+
+void ComponentLifecycle_ctx_free_after_delete_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctx = &component_lifecycle_ctx,
+        .ctx_free = component_lifecycle_ctx_free
+    });
+
+    ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
+    ecs_delete(world, ecs_id(Position));
+
+    test_int(1, component_lifecycle_ctx);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_binding_ctx_free_after_delete_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .binding_ctx = &component_lifecycle_ctx,
+        .binding_ctx_free = component_lifecycle_ctx_free
+    });
+
+    ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
+    ecs_delete(world, ecs_id(Position));
+
+    test_int(1, component_lifecycle_ctx);
+
+    ecs_fini(world);
+}

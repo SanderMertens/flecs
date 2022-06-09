@@ -891,7 +891,7 @@ void ecs_set_component_actions_w_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
 
-    ecs_type_info_t *ti = flecs_ensure_type_info(world, component);
+    ecs_type_info_t *ti = flecs_type_info_ensure(world, component);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_size_t size = ti->size;
@@ -1008,7 +1008,7 @@ bool ecs_component_has_actions(
     ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
     
     world = ecs_get_world(world);
-    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
     return (ti != NULL) && ti->lifecycle_set;
 error:
     return false;
@@ -1182,13 +1182,13 @@ int ecs_fini(
 
     fini_stages(world);
 
-    fini_component_lifecycle(world);
-
     fini_queries(world);
 
     fini_observers(world);
 
     flecs_fini_id_records(world);
+
+    fini_component_lifecycle(world);
 
     flecs_observable_fini(&world->observable);
 
@@ -1395,7 +1395,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t* flecs_get_type_info(
+const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -1407,14 +1407,14 @@ const ecs_type_info_t* flecs_get_type_info(
     return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_type_info_t* flecs_ensure_type_info(
+ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
     ecs_type_info_t *ti_mut = NULL;
     if (!ti) {
         ti_mut = flecs_sparse_ensure(
@@ -1428,15 +1428,7 @@ ecs_type_info_t* flecs_ensure_type_info(
     return ti_mut;
 }
 
-static
-void flecs_remove_type_info(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    flecs_sparse_remove(world->type_info, component);
-}
-
-bool flecs_init_type_info_id(
+bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_size_t size,
@@ -1452,9 +1444,9 @@ bool flecs_init_type_info_id(
         ecs_assert(size == 0 && alignment == 0, 
             ECS_INVALID_COMPONENT_SIZE, NULL);
         ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        flecs_remove_type_info(world, component);
+        flecs_sparse_remove(world->type_info, component);
     } else {
-        ti = flecs_ensure_type_info(world, component);
+        ti = flecs_type_info_ensure(world, component);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
         changed |= ti->size != size;
         changed |= ti->alignment != alignment;
@@ -1498,6 +1490,19 @@ bool flecs_init_type_info_id(
         type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
+}
+
+void flecs_type_info_fini(
+    ecs_world_t *world,
+    ecs_type_info_t *ti)
+{
+    if (ti->lifecycle.ctx_free) {
+        ti->lifecycle.ctx_free(ti->lifecycle.ctx);
+    }
+    if (ti->lifecycle.binding_ctx_free) {
+        ti->lifecycle.binding_ctx_free(ti->lifecycle.binding_ctx);
+    }
+    flecs_sparse_remove(world->type_info, ti->component);
 }
 
 static
