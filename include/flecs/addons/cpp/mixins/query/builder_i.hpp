@@ -39,7 +39,7 @@ public:
      */      
     template <typename T>
     Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
-        ecs_compare_component_action_t cmp = reinterpret_cast<ecs_compare_component_action_t>(compare);
+        ecs_order_by_action_t cmp = reinterpret_cast<ecs_order_by_action_t>(compare);
         return this->order_by(_::cpp_type<T>::id(this->world_v()), cmp);
     }
 
@@ -50,7 +50,7 @@ public:
      * @param compare The compare function used to sort the components.
      */    
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        m_desc->order_by = reinterpret_cast<ecs_compare_component_action_t>(compare);
+        m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
         m_desc->order_by_component = component;
         return *this;
     }

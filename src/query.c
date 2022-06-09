@@ -892,7 +892,7 @@ int32_t qsort_partition(
     int32_t elem_size,
     int32_t lo,
     int32_t hi,
-    ecs_compare_component_action_t compare)
+    ecs_order_by_action_t compare)
 {
     int32_t p = (hi + lo) / 2;
     void *pivot = ECS_ELEM(ptr, elem_size, p);
@@ -940,7 +940,7 @@ void qsort_array(
     int32_t size,
     int32_t lo,
     int32_t hi,
-    ecs_compare_component_action_t compare)
+    ecs_order_by_action_t compare)
 {   
     if ((hi - lo) < 1)  {
         return;
@@ -959,7 +959,7 @@ void sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
-    ecs_compare_component_action_t compare,
+    ecs_order_by_action_t compare,
     ecs_sort_table_action_t sort)
 {
     ecs_data_t *data = &table->data;
@@ -1034,7 +1034,7 @@ void build_sorted_table_range(
 {
     ecs_world_t *world = query->world;
     ecs_entity_t id = query->order_by_component;
-    ecs_compare_component_action_t compare = query->order_by;
+    ecs_order_by_action_t compare = query->order_by;
     
     if (!list->count) {
         return;
@@ -1193,7 +1193,7 @@ void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_compare_component_action_t compare = query->order_by;
+    ecs_order_by_action_t compare = query->order_by;
     if (!compare) {
         return;
     }
@@ -1681,7 +1681,7 @@ void query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t order_by_component,
-    ecs_compare_component_action_t order_by,
+    ecs_order_by_action_t order_by,
     ecs_sort_table_action_t sort_table_action)
 {
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
