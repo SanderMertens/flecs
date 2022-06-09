@@ -2005,15 +2005,23 @@ void flecs_table_swap(
 
     ecs_type_info_t **type_info = table->type_info;
 
+    /* Find the maximum size of column elements
+     * and allocate a temporary buffer for swapping */
+    int32_t i, temp_buffer_size = sizeof(uint64_t), column_count = table->storage_count;
+    for (i = 0; i < column_count; i++) {
+        ecs_type_info_t* ti = type_info[i];
+        temp_buffer_size = ECS_MAX(temp_buffer_size, ti->size);
+    }
+
+    void* tmp = ecs_os_alloca(temp_buffer_size);
+
     /* Swap columns */
-    int32_t i, column_count = table->storage_count;
     for (i = 0; i < column_count; i ++) {
         ecs_type_info_t *ti = type_info[i];
         int32_t size = ti->size;
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
         void *ptr = columns[i].array;
-        void *tmp = ecs_os_alloca(size);
 
         void *el_1 = ECS_ELEM(ptr, size, row_1);
         void *el_2 = ECS_ELEM(ptr, size, row_2);
