@@ -139,7 +139,7 @@
         int32_t hi, \
         ecs_order_by_action_t order_by) \
     { \
-        ECS_UNUSED(order_by); \
+        (void)(order_by); \
         int32_t p = (hi + lo) / 2; \
         void *pivot = ECS_ELEM(ptr, elem_size, p); \
         ecs_entity_t pivot_e = entities[p]; \
