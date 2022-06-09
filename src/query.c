@@ -1198,7 +1198,7 @@ void sort_tables(
         return;
     }
 
-    ecs_sort_table_action_t sort = query->order_by_table;
+    ecs_sort_table_action_t sort = query->sort_table;
     
     ecs_entity_t order_by_component = query->order_by_component;
     int32_t i, order_by_term = -1;
@@ -1265,7 +1265,7 @@ void sort_tables(
             continue;
         }
 
-        /* Something has changed, sort the table. Prefer order_by_table when available */
+        /* Something has changed, sort the table. Prefers using sort_table when available */
         sort_table(world, table, column, compare, sort);
         tables_sorted = true;
     }
@@ -1682,14 +1682,14 @@ void query_order_by(
     ecs_query_t *query,
     ecs_entity_t order_by_component,
     ecs_compare_component_action_t order_by,
-    ecs_sort_table_action_t order_by_table)
+    ecs_sort_table_action_t sort_table_action)
 {
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
 
     query->order_by_component = order_by_component;
     query->order_by = order_by;
-    query->order_by_table = order_by_table;
+    query->sort_table = sort_table_action;
 
     ecs_vector_free(query->table_slices);
     query->table_slices = NULL;
@@ -1879,7 +1879,7 @@ ecs_query_t* ecs_query_init(
     if (desc->order_by) {
         query_order_by(
             world, result, desc->order_by_component, desc->order_by,
-            desc->order_by_table);
+            desc->sort_table);
     }
 
     return result;

@@ -2466,7 +2466,7 @@ error:
 }
 
 FLECS_API
-void work_in_progress_temporary_flecs_table_swap_work_in_progress(
+void ecs_table_swap_rows(
     ecs_world_t* world,
     ecs_table_t* table,
     ecs_data_t* data,
