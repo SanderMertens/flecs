@@ -315,7 +315,8 @@ typedef void (*ecs_sort_table_action_t)(
     void* ptr,
     int32_t size,
     int32_t lo,
-    int32_t hi);
+    int32_t hi,
+    ecs_order_by_action_t order_by);
 
 /** Callback used for ranking types */
 typedef uint64_t (*ecs_group_by_action_t)(

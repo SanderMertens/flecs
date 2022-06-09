@@ -883,76 +883,7 @@ bool match_table(
 }
 
 static
-int32_t qsort_partition(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t *entities,
-    void *ptr,    
-    int32_t elem_size,
-    int32_t lo,
-    int32_t hi,
-    ecs_order_by_action_t compare)
-{
-    int32_t p = (hi + lo) / 2;
-    void *pivot = ECS_ELEM(ptr, elem_size, p);
-    ecs_entity_t pivot_e = entities[p];
-    int32_t i = lo - 1, j = hi + 1;
-    void *el;    
-
-repeat:
-    {
-        do {
-            i ++;
-            el = ECS_ELEM(ptr, elem_size, i);
-        } while ( compare(entities[i], el, pivot_e, pivot) < 0);
-
-        do {
-            j --;
-            el = ECS_ELEM(ptr, elem_size, j);
-        } while ( compare(entities[j], el, pivot_e, pivot) > 0);
-
-        if (i >= j) {
-            return j;
-        }
-
-        flecs_table_swap(world, table, data, i, j);
-
-        if (p == i) {
-            pivot = ECS_ELEM(ptr, elem_size, j);
-            pivot_e = entities[j];
-        } else if (p == j) {
-            pivot = ECS_ELEM(ptr, elem_size, i);
-            pivot_e = entities[i];
-        }
-
-        goto repeat;
-    }
-}
-
-static
-void qsort_array(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t *entities,
-    void *ptr,
-    int32_t size,
-    int32_t lo,
-    int32_t hi,
-    ecs_order_by_action_t compare)
-{   
-    if ((hi - lo) < 1)  {
-        return;
-    }
-
-    int32_t p = qsort_partition(
-        world, table, data, entities, ptr, size, lo, hi, compare);
-
-    qsort_array(world, table, data, entities, ptr, size, lo, p, compare);
-
-    qsort_array(world, table, data, entities, ptr, size, p + 1, hi, compare); 
-}
+ECS_SORT_TABLE_WITH_COMPARE(_, sort_table_generic, order_by)
 
 static
 void sort_table(
@@ -985,9 +916,9 @@ void sort_table(
     }
 
     if (sort) {
-        sort(world, table, data, entities, ptr, size, 0, count - 1);
+        sort(world, table, data, entities, ptr, size, 0, count - 1, compare);
     } else {
-        qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
+        sort_table_generic(world, table, data, entities, ptr, size, 0, count - 1, compare);
     }
 }
 

@@ -113,6 +113,16 @@
 
 /* Declare efficient table sorting operation that uses provided compare function.
  * For best results use LTO or make the function body visible in the same compilation unit.
+ * Parameters:
+ *   ecs_world_t *world
+ *   ecs_table_t *table
+ *   ecs_data_t *data
+ *   ecs_entity_t *entities
+ *   void *ptr
+ *   int32_t elem_size
+ *   int32_t lo
+ *   int32_t hi
+ *   ecs_order_by_action_t order_by - Pointer to the original comparison function. You are not supposed to use it.
  * Example:
  *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
  *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
@@ -121,13 +131,15 @@
     int32_t ecs_id(op_name##_partition)( \
         ecs_world_t *world, \
         ecs_table_t *table, \
-        struct ecs_data_t *data, \
+        ecs_data_t *data, \
         ecs_entity_t *entities, \
         void *ptr, \
         int32_t elem_size, \
         int32_t lo, \
-        int32_t hi) \
+        int32_t hi, \
+        ecs_order_by_action_t order_by) \
     { \
+        ECS_UNUSED(order_by); \
         int32_t p = (hi + lo) / 2; \
         void *pivot = ECS_ELEM(ptr, elem_size, p); \
         ecs_entity_t pivot_e = entities[p]; \
@@ -165,14 +177,15 @@
         void *ptr, \
         int32_t size, \
         int32_t lo, \
-        int32_t hi) \
+        int32_t hi, \
+        ecs_order_by_action_t order_by) \
     { \
         if ((hi - lo) < 1)  { \
             return; \
         } \
-        int32_t p = ecs_id(op_name##_partition)(world, table, data, entities, ptr, size, lo, hi); \
-        op_name(world, table, data, entities, ptr, size, lo, p); \
-        op_name(world, table, data, entities, ptr, size, p + 1, hi); \
+        int32_t p = ecs_id(op_name##_partition)(world, table, data, entities, ptr, size, lo, hi, order_by); \
+        op_name(world, table, data, entities, ptr, size, lo, p, order_by); \
+        op_name(world, table, data, entities, ptr, size, p + 1, hi, order_by); \
     }
 
 /* Declare efficient table sorting operation that uses default component comparison operator.
