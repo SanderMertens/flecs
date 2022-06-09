@@ -70,6 +70,18 @@ void ecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *ctx);
 
+/* Increase refcount of table (prevents deletion) */
+FLECS_API
+void flecs_table_claim(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
+/* Decreases refcount of table (may delete) */
+FLECS_API
+bool flecs_table_release(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))

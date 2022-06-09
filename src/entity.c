@@ -2140,6 +2140,10 @@ ecs_entity_t ecs_type_init(
         type_ptr->type = type;
         type_ptr->normalized = normalized;
 
+        if (normalized) {
+            flecs_table_claim(world, normalized);
+        }
+
         /* This will allow the type to show up in debug tools */
         if (type) {
             ecs_map_set(&world->type_handles, (uintptr_t)type, &result);

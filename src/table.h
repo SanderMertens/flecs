@@ -69,16 +69,6 @@ void flecs_table_delete(
     int32_t index,
     bool destruct);
 
-/* Increase refcount of table (prevents deletion) */
-void flecs_table_claim(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
-/* Decrease refcount of table (may delete) */
-bool flecs_table_release(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 /* Make sure table records are in correct table cache list */
 bool flecs_table_records_update_empty(
     ecs_table_t *table);

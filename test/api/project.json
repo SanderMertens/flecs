@@ -1850,7 +1850,8 @@
                 "role_owned_str",
                 "role_disabled_str",
                 "large_type_expr",
-                "large_type_expr_limit"
+                "large_type_expr_limit",
+                "type_w_cleanup_table"
             ]
         }, {
             "id": "DeferredActions",

@@ -2885,6 +2885,18 @@ void ecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *ctx);
 
+/* Increase refcount of table (prevents deletion) */
+FLECS_API
+void flecs_table_claim(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
+/* Decreases refcount of table (may delete) */
+FLECS_API
+bool flecs_table_release(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
@@ -20050,6 +20062,14 @@ private:
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
         tc->type = ecs_table_get_type(m_table);
+
+        if (m_table) {
+            flecs_table_claim(world(), m_table);
+        }
+        if (tc->normalized) {
+            flecs_table_release(world(), tc->normalized);
+        }
+
         tc->normalized = m_table;
         ecs_modified(world(), id(), EcsType);
     }

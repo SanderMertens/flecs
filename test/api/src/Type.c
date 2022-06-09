@@ -519,3 +519,33 @@ void Type_large_type_expr_limit() {
 
     ecs_fini(world);
 }
+
+void Type_type_w_cleanup_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ECS_TYPE(world, TypeA, TagA);
+
+    ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
+    ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
+
+    ECS_TYPE(world, TypeB, TagB, TagC);
+
+    /* Make sure the table referred to by the type didn't get cleaned up */
+
+    const EcsType *t = ecs_get(world, TypeA, EcsType);
+    const ecs_type_t *type = ecs_table_get_type(t->normalized);
+    test_int(type->count, 1);
+    test_uint(type->array[0], TagA);
+
+    t = ecs_get(world, TypeB, EcsType);
+    type = ecs_table_get_type(t->normalized);
+    test_int(type->count, 2);
+    test_uint(type->array[0], TagB);
+    test_uint(type->array[1], TagC);
+
+    ecs_fini(world);
+}

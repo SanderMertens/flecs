@@ -162,6 +162,14 @@ private:
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
         tc->type = ecs_table_get_type(m_table);
+
+        if (m_table) {
+            flecs_table_claim(world(), m_table);
+        }
+        if (tc->normalized) {
+            flecs_table_release(world(), tc->normalized);
+        }
+
         tc->normalized = m_table;
         ecs_modified(world(), id(), EcsType);
     }

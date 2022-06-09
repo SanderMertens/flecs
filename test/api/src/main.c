@@ -1768,6 +1768,7 @@ void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
+void Type_type_w_cleanup_table(void);
 
 // Testsuite 'DeferredActions'
 void DeferredActions_defer_new(void);
@@ -8756,6 +8757,10 @@ bake_test_case Type_testcases[] = {
     {
         "large_type_expr_limit",
         Type_large_type_expr_limit
+    },
+    {
+        "type_w_cleanup_table",
+        Type_type_w_cleanup_table
     }
 };
 
@@ -9751,7 +9756,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        36,
+        37,
         Type_testcases
     },
     {
