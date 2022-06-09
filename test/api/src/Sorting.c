@@ -15,9 +15,8 @@ ECS_COMPARE(Position, {
     const Position *p1 = ptr1;
     const Position *p2 = ptr2;
     return (p1->x > p2->x) - (p1->x < p2->x);
-});
-
-ECS_SORT_TABLE(Position);
+})
+ECS_SORT_TABLE(Position)
 
 void Sorting_sort_by_component() {
     ecs_world_t *world = ecs_mini();
