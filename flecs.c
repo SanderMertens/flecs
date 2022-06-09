@@ -2946,6 +2946,7 @@ void on_component_callback(
     it.event = event;
     it.event_id = id;
     it.ctx = ti->lifecycle.ctx;
+    it.binding_ctx = ti->lifecycle.binding_ctx;
     it.count = count;
     flecs_iter_validate(&it);
     callback(&it);
@@ -6330,6 +6331,7 @@ void flecs_notify_on_set(
                 it.event = EcsOnSet;
                 it.event_id = id;
                 it.ctx = ti->lifecycle.ctx;
+                it.binding_ctx = ti->lifecycle.binding_ctx;
                 it.count = count;
                 flecs_iter_validate(&it);
                 on_set(&it);

@@ -743,6 +743,9 @@ void ComponentLifecycle_ctx_free(void);
 void ComponentLifecycle_binding_ctx_free(void);
 void ComponentLifecycle_ctx_free_after_delete_component(void);
 void ComponentLifecycle_binding_ctx_free_after_delete_component(void);
+void ComponentLifecycle_on_add_ctx(void);
+void ComponentLifecycle_on_remove_ctx(void);
+void ComponentLifecycle_on_set_ctx(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4754,6 +4757,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "binding_ctx_free_after_delete_component",
         ComponentLifecycle_binding_ctx_free_after_delete_component
+    },
+    {
+        "on_add_ctx",
+        ComponentLifecycle_on_add_ctx
+    },
+    {
+        "on_remove_ctx",
+        ComponentLifecycle_on_remove_ctx
+    },
+    {
+        "on_set_ctx",
+        ComponentLifecycle_on_set_ctx
     }
 };
 
@@ -9617,7 +9632,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        67,
+        70,
         ComponentLifecycle_testcases
     },
     {

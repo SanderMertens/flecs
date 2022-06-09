@@ -791,7 +791,10 @@
                 "ctx_free",
                 "binding_ctx_free",
                 "ctx_free_after_delete_component",
-                "binding_ctx_free_after_delete_component"
+                "binding_ctx_free_after_delete_component",
+                "on_add_ctx",
+                "on_remove_ctx",
+                "on_set_ctx"
             ]
         }, {
             "id": "Sorting",
