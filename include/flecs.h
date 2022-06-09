@@ -300,7 +300,7 @@ typedef void (*ecs_iter_fini_action_t)(
     ecs_iter_t *it); 
 
 /** Callback used for comparing components */
-typedef int (*ecs_compare_component_action_t)(
+typedef int (*ecs_order_by_action_t)(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
@@ -700,7 +700,7 @@ typedef struct ecs_query_desc_t {
     /* Callback used for ordering query results. If order_by_id is 0, the 
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
-    ecs_compare_component_action_t order_by;
+    ecs_order_by_action_t order_by;
 
     /* Callback used for ordering query results. Same as order_by,
      * but more efficient. */
