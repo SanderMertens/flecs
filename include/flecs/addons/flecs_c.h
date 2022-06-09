@@ -123,7 +123,7 @@
         ecs_table_t *table, \
         struct ecs_data_t *data, \
         ecs_entity_t *entities, \
-        void *ptr,     \
+        void *ptr, \
         int32_t elem_size, \
         int32_t lo, \
         int32_t hi) \
@@ -132,7 +132,7 @@
         void *pivot = ECS_ELEM(ptr, elem_size, p); \
         ecs_entity_t pivot_e = entities[p]; \
         int32_t i = lo - 1, j = hi + 1; \
-        void *el;     \
+        void *el; \
     repeat: \
         { \
             do { \
@@ -166,7 +166,7 @@
         int32_t size, \
         int32_t lo, \
         int32_t hi) \
-    {    \
+    { \
         if ((hi - lo) < 1)  { \
             return; \
         } \
