@@ -57,12 +57,18 @@
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-
-#define ecs_sort_table_partition(id) ecs_id(id##_sort_table_partition)
 #define ecs_sort_table(id) ecs_id(id##_sort_table)
 
-#define ECS_SORT_TABLE_PARTITION(id, compare_fn) \
-    int32_t ecs_sort_table_partition(id)( \
+#define ecs_compare(id) ecs_id(id##_compare_fn)
+
+/* Declare efficient table sorting operation that uses provided compare function.
+ * For best results use LTO or make the function body visible in the same compilation unit.
+ * Example:
+ *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
+ *   ECS_SORT_TABLE_WITH_COMPARE(MyType, CompareMyType)
+*/
+#define ECS_SORT_TABLE_WITH_COMPARE(id, compare_fn) \
+    int32_t ecs_sort_table(id)_partition( \
         ecs_world_t *world, \
         ecs_table_t *table, \
         struct ecs_data_t *data, \
@@ -100,16 +106,7 @@
             } \
             goto repeat; \
         } \
-    }
-
-/* Declare efficient table sorting operation that uses provided compare function.
- * For best results use LTO or make the function body visible in the same compilation unit.
- * Example:
- *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
- *   ECS_SORT_TABLE(MyType, CompareMyType);
-*/
-#define ECS_SORT_TABLE(id, compare_fn) \
-    ECS_SORT_TABLE_PARTITION(id, compare_fn) \
+    } \
     void ecs_sort_table(id)( \
         ecs_world_t *world, \
         ecs_table_t *table, \
@@ -123,10 +120,19 @@
         if ((hi - lo) < 1)  { \
             return; \
         } \
-        int32_t p = ecs_sort_table_partition(id)(world, table, data, entities, ptr, size, lo, hi); \
+        int32_t p = ecs_sort_table(id)_partition(world, table, data, entities, ptr, size, lo, hi); \
         ecs_sort_table(id)(world, table, data, entities, ptr, size, lo, p); \
         ecs_sort_table(id)(world, table, data, entities, ptr, size, p + 1, hi); \
     }
+
+/* Declare efficient table sorting operation that uses default component comparison operator.
+* For best results use LTO or make the comparison operator is visible in the same compilation unit.
+* Example:
+*   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+*   ECS_SORT_TABLE(MyType)
+*/
+#define ECS_SORT_TABLE(id) \
+    ECS_SORT_TABLE_WITH_COMPARE(id, ecs_compare(id))
 
 /* Declare component comparison operations.
  * Parameters:
@@ -136,14 +142,10 @@
  *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
 */
 
-#define ecs_compare(id) ecs_id(id##_compare_fn)
-
 #define ECS_COMPARE(id, ...) \
     int ecs_compare(id)(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { \
         __VA_ARGS__ \
     }
-
-// #define ecs_sort_table(id) ecs_id(id##sort_table_fn)
 
 /* Use for declaring trigger, observer and system identifiers */
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
