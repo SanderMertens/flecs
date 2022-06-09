@@ -30,9 +30,6 @@ typedef struct ecs_record_t ecs_record_t;
 /** Table column */
 typedef struct ecs_column_t ecs_column_t;
 
-/** Table data */
-typedef struct ecs_data_t ecs_data_t;
-
 /* Sparse set */
 typedef struct ecs_sparse_t ecs_sparse_t;
 
