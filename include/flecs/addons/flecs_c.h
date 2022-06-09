@@ -118,7 +118,7 @@
  *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
 */
 #define ECS_SORT_TABLE_WITH_COMPARE(id, op_name, compare_fn) \
-    int32_t ecs_id(op_name)_partition( \
+    int32_t ecs_id(op_name##_partition)( \
         ecs_world_t *world, \
         ecs_table_t *table, \
         struct ecs_data_t *data, \
@@ -170,7 +170,7 @@
         if ((hi - lo) < 1)  { \
             return; \
         } \
-        int32_t p = ecs_id(op_name)_partition(world, table, data, entities, ptr, size, lo, hi); \
+        int32_t p = ecs_id(op_name##_partition)(world, table, data, entities, ptr, size, lo, hi); \
         op_name(world, table, data, entities, ptr, size, lo, p); \
         op_name(world, table, data, entities, ptr, size, p + 1, hi); \
     }
