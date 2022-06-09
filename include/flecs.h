@@ -307,15 +307,6 @@ typedef int (*ecs_compare_component_action_t)(
     const void *ptr2);
 
 /** Callback used for sorting the entire table of components */
-
-// typedef int (*ecs_sort_table_action_t)(
-//     int32_t count,
-//     ecs_entity_t* entities,
-//     struct ecs_column_t* columns,
-//     ecs_type_info_t** type_info,
-//     int32_t column_count,
-//     int32_t column_to_sort);
-
 typedef void (*ecs_sort_table_action_t)(
     ecs_world_t* world,
     ecs_table_t* table,
@@ -324,7 +315,7 @@ typedef void (*ecs_sort_table_action_t)(
     void* ptr,
     int32_t size,
     int32_t lo,
-    int32_t hi); // WORK IN PROGRESS
+    int32_t hi);
 
 /** Callback used for ranking types */
 typedef uint64_t (*ecs_group_by_action_t)(
@@ -711,10 +702,9 @@ typedef struct ecs_query_desc_t {
      * set, results will not be ordered. */
     ecs_compare_component_action_t order_by;
 
-    /* Callback used for ordering query results. If order_by_id is 0, the
-     * pointer provided to the callback will be NULL. If the callback is not
-     * set, results will not be ordered. */
-    ecs_sort_table_action_t order_by_table;
+    /* Callback used for ordering query results. Same as order_by,
+     * but more efficient. */
+    ecs_sort_table_action_t sort_table;
 
     /* Id to be used by group_by. This id is passed to the group_by function and
      * can be used identify the part of an entity type that should be used for
@@ -4723,6 +4713,23 @@ FLECS_API
 bool ecs_table_has_module(
     ecs_table_t *table);
 
+/** Swaps two elements inside the table. This is useful for implementing custom
+ * table sorting algorithms.
+ * @param world The world
+ * @param table The table to swap elements in
+ * @param data Table data
+ * @param row_1 Table element to swap with row_2
+ * @param row_2 Table element to swap with row_1
+*/
+FLECS_API
+void ecs_table_swap_rows(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    ecs_data_t* data,
+    int32_t row_1,
+    int32_t row_2
+);
+
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified
  * table. This may trigger the following actions:
@@ -4768,14 +4775,6 @@ void* ecs_record_get_column(
     size_t c_size);
 
 /** @} */
-
-FLECS_API
-void work_in_progress_temporary_flecs_table_swap_work_in_progress(
-    ecs_world_t* world,
-    ecs_table_t* table,
-    ecs_data_t* data,
-    int32_t row_1,
-    int32_t row_2); // WORK IN PROGRESS
 
 #include "flecs/addons/flecs_c.h"
 #include "flecs/private/addons.h"
