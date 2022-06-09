@@ -17,7 +17,7 @@ ECS_COMPARE(Position, {
     return (p1->x > p2->x) - (p1->x < p2->x);
 });
 
-ECS_SORT_TABLE(Position, ecs_compare(Position));
+ECS_SORT_TABLE(Position);
 
 void Sorting_sort_by_component() {
     ecs_world_t *world = ecs_mini();
