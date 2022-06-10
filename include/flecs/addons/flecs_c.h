@@ -190,7 +190,7 @@
     }
 
 /* Declare efficient table sorting operation that uses default component comparison operator.
- * For best results use LTO or make the comparison operator is visible in the same compilation unit.
+ * For best results use LTO or make the comparison operator visible in the same compilation unit.
  * Variadic arguments are prepended before generated functions, use it to declare static
  *   or exported functions.
  * Example:
