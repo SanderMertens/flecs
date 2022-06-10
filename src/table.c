@@ -150,22 +150,22 @@ ecs_flags32_t flecs_type_info_flags(
 {
     ecs_flags32_t flags = 0;
 
-    if (ti->lifecycle.ctor) {
+    if (ti->hooks.ctor) {
         flags |= EcsTableHasCtors;
     }
-    if (ti->lifecycle.on_add) {
+    if (ti->hooks.on_add) {
         flags |= EcsTableHasCtors;
     }
-    if (ti->lifecycle.dtor) {
+    if (ti->hooks.dtor) {
         flags |= EcsTableHasDtors;
     }
-    if (ti->lifecycle.on_remove) {
+    if (ti->hooks.on_remove) {
         flags |= EcsTableHasDtors;
     }
-    if (ti->lifecycle.copy) {
+    if (ti->hooks.copy) {
         flags |= EcsTableHasCopy;
     }
-    if (ti->lifecycle.move) {
+    if (ti->hooks.move) {
         flags |= EcsTableHasMove;
     }  
 
@@ -678,8 +678,8 @@ void on_component_callback(
     it.ids[0] = id;
     it.event = event;
     it.event_id = id;
-    it.ctx = ti->lifecycle.ctx;
-    it.binding_ctx = ti->lifecycle.binding_ctx;
+    it.ctx = ti->hooks.ctx;
+    it.binding_ctx = ti->hooks.binding_ctx;
     it.count = count;
     flecs_iter_validate(&it);
     callback(&it);
@@ -694,7 +694,7 @@ void ctor_component(
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_xtor_t ctor = ti->lifecycle.ctor;
+    ecs_xtor_t ctor = ti->hooks.ctor;
     if (ctor) {
         void *ptr = ecs_storage_get(column, ti->size, row);
         ctor(ptr, count, ti);
@@ -718,7 +718,7 @@ void add_component(
     ctor_component(ti, column, row, count);
 
     ecs_iter_action_t on_add;
-    if (added && (on_add = ti->lifecycle.on_add)) {
+    if (added && (on_add = ti->hooks.on_add)) {
         on_component_callback(world, table, on_add, EcsOnAdd, column,
             entities, id, row, count, ti);
     }
@@ -733,7 +733,7 @@ void dtor_component(
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_xtor_t dtor = ti->lifecycle.dtor;
+    ecs_xtor_t dtor = ti->hooks.dtor;
     if (dtor) {
         void *ptr = ecs_storage_get(column, ti->size, row);
         dtor(ptr, count, ti);
@@ -753,7 +753,7 @@ void remove_component(
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_iter_action_t on_remove = ti->lifecycle.on_remove;
+    ecs_iter_action_t on_remove = ti->hooks.on_remove;
     if (on_remove) {
         on_component_callback(world, table, on_remove, EcsOnRemove, column,
             entities, id, row, count, ti);
@@ -795,7 +795,7 @@ void dtor_all_components(
         for (c = 0; c < ids_count; c++) {
             ecs_column_t *column = &data->columns[c];
             ecs_type_info_t *ti = table->type_info[c];
-            ecs_iter_action_t on_remove = ti->lifecycle.on_remove;
+            ecs_iter_action_t on_remove = ti->hooks.on_remove;
             if (on_remove) {
                 on_component_callback(world, table, on_remove, EcsOnRemove, 
                     column, &entities[row], ids[c], row, count, ti);
@@ -1296,8 +1296,8 @@ void* grow_column(
     /* If the array could possibly realloc and the component has a move action 
      * defined, move old elements manually */
     ecs_move_t move_ctor;
-    if (count && can_realloc && (move_ctor = ti->lifecycle.ctor_move_dtor)) {
-        ecs_xtor_t ctor = ti->lifecycle.ctor;
+    if (count && can_realloc && (move_ctor = ti->hooks.ctor_move_dtor)) {
+        ecs_xtor_t ctor = ti->hooks.ctor;
         ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1331,7 +1331,7 @@ void* grow_column(
         result = ecs_storage_grow(column, size, to_add);
 
         ecs_xtor_t ctor;
-        if (construct && (ctor = ti->lifecycle.ctor)) {
+        if (construct && (ctor = ti->hooks.ctor)) {
             /* If new elements need to be constructed and component has a
              * constructor, construct */
             ctor(result, to_add, ti);
@@ -1497,7 +1497,7 @@ int32_t flecs_table_append(
         ecs_type_info_t *ti = type_info[i];        
         grow_column(column, ti, 1, size, construct);
 
-        ecs_iter_action_t on_add = ti->lifecycle.on_add;
+        ecs_iter_action_t on_add = ti->hooks.on_add;
         if (on_add) {
             on_component_callback(world, table, on_add, EcsOnAdd, column,
                 &entities[count], table->storage_ids[i], count, 1, ti);
@@ -1656,13 +1656,13 @@ void flecs_table_delete(
                 void *dst = ecs_storage_get(column, size, index);
                 void *src = ecs_storage_last(column, size);
                 
-                ecs_iter_action_t on_remove = ti->lifecycle.on_remove;
+                ecs_iter_action_t on_remove = ti->hooks.on_remove;
                 if (on_remove) {
                     on_component_callback(world, table, on_remove, EcsOnRemove,
                         column, &entity_to_delete, ids[i], index, 1, ti);
                 }
 
-                ecs_move_t move_dtor = ti->lifecycle.move_dtor;
+                ecs_move_t move_dtor = ti->hooks.move_dtor;
                 if (move_dtor) {
                     move_dtor(dst, src, 1, ti);
                 } else {
@@ -1788,7 +1788,7 @@ void flecs_table_move(
             void *src = ecs_storage_get(src_column, size, src_index);
 
             if (same_entity) {
-                ecs_move_t move = ti->lifecycle.ctor_move_dtor;
+                ecs_move_t move = ti->hooks.ctor_move_dtor;
                 if (move) {
                     /* ctor + move + dtor */
                     move(dst, src, 1, ti);
@@ -1796,7 +1796,7 @@ void flecs_table_move(
                     ecs_os_memcpy(dst, src, size);
                 }
             } else {
-                ecs_copy_t copy = ti->lifecycle.copy_ctor;
+                ecs_copy_t copy = ti->hooks.copy_ctor;
                 if (copy) {
                     copy(dst, src, 1, ti);
                 } else {
@@ -2065,7 +2065,7 @@ void flecs_merge_column(
         /* Move values into column */
         ecs_move_t move = NULL;
         if (ti) {
-            move = ti->lifecycle.move;
+            move = ti->hooks.move;
         }
         if (move) {
             move(dst_ptr, src_ptr, src_count, ti);

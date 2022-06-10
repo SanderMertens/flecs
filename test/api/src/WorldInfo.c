@@ -94,7 +94,7 @@ void WorldInfo_trivial_table_count() {
     ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsWildcard);
     ecs_remove_pair(world, ecs_id(Velocity), EcsOnDelete, EcsWildcard);
 
-    ecs_set_component_actions(world, Velocity, {
+    ecs_set_hooks(world, Velocity, {
         .ctor = ecs_default_ctor
     });
 

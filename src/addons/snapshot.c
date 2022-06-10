@@ -43,14 +43,14 @@ ecs_data_t* duplicate_data(
         ecs_column_t *column = &result->columns[i];
         ecs_type_info_t *ti = table->type_info[i];
         int32_t size = ti->size;
-        ecs_copy_t copy = ti->lifecycle.copy;
+        ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
             ecs_column_t dst = ecs_storage_copy(column, size);
             int32_t count = ecs_storage_count(column);
             void *dst_ptr = ecs_storage_first(&dst);
             void *src_ptr = ecs_storage_first(column);
 
-            ecs_xtor_t ctor = ti->lifecycle.ctor;
+            ecs_xtor_t ctor = ti->hooks.ctor;
             if (ctor) {
                 ctor(dst_ptr, count, ti);
             }

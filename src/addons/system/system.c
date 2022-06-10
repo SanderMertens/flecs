@@ -512,8 +512,8 @@ void FlecsSystemImport(
     ecs_set_scope(world, old_scope);
 
     /* Bootstrap ctor and dtor for EcsSystem */
-    ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
-        &(EcsComponentLifecycle) {
+    ecs_set_hooks_id(world, ecs_id(EcsSystem), 
+        &(EcsComponentHooks) {
             .ctor = ecs_default_ctor,
             .on_remove = ecs_on_remove(EcsSystem)
         });

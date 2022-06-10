@@ -611,7 +611,7 @@ void Delete_move_w_dtor_move() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = ecs_dtor(Position),
         .move = ecs_move(Position),
     });
@@ -658,7 +658,7 @@ void Delete_move_w_dtor_no_move() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = ecs_dtor(Position)
     });
 
@@ -693,7 +693,7 @@ void Delete_move_w_no_dtor_move() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .move = ecs_move(Position)
     });
 

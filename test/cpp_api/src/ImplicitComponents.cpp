@@ -273,9 +273,9 @@ void ImplicitComponents_reinit_w_lifecycle() {
     test_assert(flecs::type_id<Position>() == comp_1.id());
 
     // Explicitly register constructor
-    EcsComponentLifecycle cl{};
+    EcsComponentHooks cl{};
     cl.ctor = ecs_ctor(Position);
-    ecs_set_component_actions_w_id(world.c_ptr(), comp_1.id(), &cl);
+    ecs_set_hooks_id(world.c_ptr(), comp_1.id(), &cl);
 
     auto e = world.entity()
         .add<Position>();

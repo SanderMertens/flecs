@@ -279,9 +279,8 @@ typedef int32_t ecs_size_t;
         }\
     }
 
-
-#define ECS_ON_SET_IMPL(type, var, ...)\
-    void type##_##on_set(ecs_iter_t *_it)\
+#define ECS_HOOK_IMPL(type, func, var, ...)\
+    void func(ecs_iter_t *_it)\
     {\
         for (int32_t i = 0; i < _it->count; i ++) {\
             ecs_entity_t entity = _it->entities[i];\

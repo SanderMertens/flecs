@@ -271,7 +271,7 @@ void flecs_pipeline_monitor_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsPipelineStats);
 
-    ecs_set_component_actions(world, EcsPipelineStats, {
+    ecs_set_hooks(world, EcsPipelineStats, {
         .ctor = ecs_default_ctor,
         .copy = ecs_copy(EcsPipelineStats),
         .move = ecs_move(EcsPipelineStats),

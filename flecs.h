@@ -585,9 +585,8 @@ typedef int32_t ecs_size_t;
         }\
     }
 
-
-#define ECS_ON_SET_IMPL(type, var, ...)\
-    void type##_##on_set(ecs_iter_t *_it)\
+#define ECS_HOOK_IMPL(type, func, var, ...)\
+    void func(ecs_iter_t *_it)\
     {\
         for (int32_t i = 0; i < _it->count; i ++) {\
             ecs_entity_t entity = _it->entities[i];\
@@ -2866,11 +2865,6 @@ FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
-FLECS_API
-bool ecs_component_has_actions(
-    const ecs_world_t *world,
-    ecs_entity_t component);
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
@@ -2878,13 +2872,11 @@ bool ecs_component_has_actions(
 bool ecs_identifier_is_0(
     const char *id);
 
-const char* ecs_identifier_is_var(
-    const char *id);
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Ctor that initializes component to 0
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Constructor that zeromem's a component value */
 FLECS_API
 void ecs_default_ctor(
     void *ptr, 
@@ -3717,8 +3709,8 @@ typedef struct EcsType {
     ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
 
-/** Component that contains lifecycle callbacks for a component. */
-typedef struct EcsComponentLifecycle {
+/** Component that contains component lifecycle callbacks. */
+typedef struct EcsComponentHooks {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
     ecs_copy_t copy;            /* copy assignment */
@@ -3756,20 +3748,19 @@ typedef struct EcsComponentLifecycle {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    void *ctx;                      /* User defined context */
-    void *binding_ctx;              /* Language binding context */
+    void *ctx;                       /* User defined context */
+    void *binding_ctx;               /* Language binding context */
 
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-} EcsComponentLifecycle;
+} EcsComponentHooks;
 
 /** Type that contains component information (passed to ctors/dtors/...) */
 struct ecs_type_info_t {
     ecs_size_t size;
     ecs_size_t alignment;
-    EcsComponentLifecycle lifecycle;
+    EcsComponentHooks hooks;
     ecs_entity_t component;
-    bool lifecycle_set;
 };
 
 /** Component that stores reference to trigger */
@@ -3899,7 +3890,7 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
-FLECS_API extern const ecs_entity_t ecs_id(EcsComponentLifecycle);
+FLECS_API extern const ecs_entity_t ecs_id(EcsComponentHooks);
 FLECS_API extern const ecs_entity_t ecs_id(EcsType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
@@ -4261,17 +4252,19 @@ FLECS_API
 bool ecs_should_quit(
     const ecs_world_t *world);
 
-/** Register ctor, dtor, copy & move actions for component.
+/** Register hooks for component.
+ * Hooks allow for the execution of user code when components are constructed,
+ * copied, moved, destructed, added, removed or set.
  *
  * @param world The world.
  * @param id The component id for which to register the actions
- * @param actions Type that contains the component actions.
+ * @param hooks Type that contains the component actions.
  */
 FLECS_API
-void ecs_set_component_actions_w_id(
+void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_id_t id,
-    const EcsComponentLifecycle *actions);
+    const EcsComponentHooks *hooks);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -7864,8 +7857,8 @@ void* ecs_record_get_column(
 
 /* -- World API -- */
 
-#define ecs_set_component_actions(world, T, ...)\
-    ecs_set_component_actions_w_id(world, ecs_id(T), &(EcsComponentLifecycle)__VA_ARGS__)
+#define ecs_set_hooks(world, T, ...)\
+    ecs_set_hooks_id(world, ecs_id(T), &(EcsComponentHooks)__VA_ARGS__)
 
 /* -- New -- */
 
@@ -8146,12 +8139,16 @@ void* ecs_record_get_column(
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
-/** Declare an on_set action.
+/** Declare component hooks
  * Example:
  *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
  */
+#define ECS_ON_ADD(type, ptr, ...)\
+    ECS_HOOK_IMPL(type, ecs_on_add(type), ptr, __VA_ARGS__)
+#define ECS_ON_REMOVE(type, ptr, ...)\
+    ECS_HOOK_IMPL(type, ecs_on_remove(type), ptr, __VA_ARGS__)
 #define ECS_ON_SET(type, ptr, ...)\
-    ECS_ON_SET_IMPL(type, ptr, __VA_ARGS__)
+    ECS_HOOK_IMPL(type, ecs_on_set(type), ptr, __VA_ARGS__)
 
 /* Map from typename to function name of component lifecycle action */
 #define ecs_ctor(type) type##_ctor
@@ -12857,7 +12854,7 @@ using query_t = ecs_query_t;
 using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
-using ComponentLifecycle = EcsComponentLifecycle;
+using ComponentLifecycle = EcsComponentHooks;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -19624,21 +19621,19 @@ void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    if (!ecs_component_has_actions(world, component)) {
-        EcsComponentLifecycle cl{};
-        cl.ctor = ctor<T>();
-        cl.dtor = dtor<T>();
+    EcsComponentHooks cl{};
+    cl.ctor = ctor<T>();
+    cl.dtor = dtor<T>();
 
-        cl.copy = copy<T>();
-        cl.copy_ctor = copy_ctor<T>();
-        cl.move = move<T>();
-        cl.move_ctor = move_ctor<T>();
+    cl.copy = copy<T>();
+    cl.copy_ctor = copy_ctor<T>();
+    cl.move = move<T>();
+    cl.move_ctor = move_ctor<T>();
 
-        cl.ctor_move_dtor = ctor_move_dtor<T>();
-        cl.move_dtor = move_dtor<T>();
+    cl.ctor_move_dtor = ctor_move_dtor<T>();
+    cl.move_dtor = move_dtor<T>();
 
-        ecs_set_component_actions_w_id( world, component, &cl);
-    }
+    ecs_set_hooks_id( world, component, &cl);
 }
 
 // Class that manages component ids across worlds & binaries.

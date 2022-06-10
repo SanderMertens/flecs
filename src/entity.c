@@ -475,7 +475,7 @@ bool override_from_base(
         int32_t index, data_size = ti->size;
         void *data_ptr = ecs_storage_get(column, data_size, row);
 
-        ecs_copy_t copy = ti->lifecycle.copy;
+        ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
             for (index = 0; index < count; index ++) {
                 copy(data_ptr, base_ptr, 1, ti);
@@ -992,9 +992,9 @@ const ecs_entity_t* new_w_data(
 
             ecs_copy_t copy;
             ecs_move_t move;
-            if (is_move && (move = ti->lifecycle.move)) {
+            if (is_move && (move = ti->hooks.move)) {
                 move(ptr, src_ptr, count, ti);
-            } else if (!is_move && (copy = ti->lifecycle.copy)) {
+            } else if (!is_move && (copy = ti->hooks.copy)) {
                 copy(ptr, src_ptr, count, ti);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
@@ -1238,7 +1238,7 @@ void flecs_notify_on_set(
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
             int32_t column = tr->column;
             const ecs_type_info_t *ti = table->type_info[column];
-            ecs_iter_action_t on_set = ti->lifecycle.on_set;
+            ecs_iter_action_t on_set = ti->hooks.on_set;
             if (on_set) {
                 ecs_column_t *c = &table->data.columns[column];
                 ecs_size_t size = ti->size;
@@ -1257,8 +1257,8 @@ void flecs_notify_on_set(
                 it.ids[0] = id;
                 it.event = EcsOnSet;
                 it.event_id = id;
-                it.ctx = ti->lifecycle.ctx;
-                it.binding_ctx = ti->lifecycle.binding_ctx;
+                it.ctx = ti->hooks.ctx;
+                it.binding_ctx = ti->hooks.binding_ctx;
                 it.count = count;
                 flecs_iter_validate(&it);
                 on_set(&it);
@@ -2993,14 +2993,14 @@ ecs_entity_t set_ptr_w_id(
         const ecs_type_info_t *ti = get_c_info(world, real_id);
         if (ti) {
             if (is_move) {
-                ecs_move_t move = ti->lifecycle.move;
+                ecs_move_t move = ti->hooks.move;
                 if (move) {
                     move(dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             } else {
-                ecs_copy_t copy = ti->lifecycle.copy;
+                ecs_copy_t copy = ti->hooks.copy;
                 if (copy) {
                     copy(dst, ptr, 1, ti);
                 } else {
@@ -3879,7 +3879,7 @@ void free_value(
 {
     const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_xtor_t dtor = ti->lifecycle.dtor;
+    ecs_xtor_t dtor = ti->hooks.dtor;
     if (dtor) {
         ecs_size_t size = ti->size;
         void *ptr;

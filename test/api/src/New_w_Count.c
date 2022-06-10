@@ -580,7 +580,7 @@ void New_w_Count_add_after_bulk_w_ctor() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .ctor = ecs_default_ctor
     });
 

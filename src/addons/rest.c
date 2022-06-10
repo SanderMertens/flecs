@@ -706,7 +706,7 @@ void FlecsRestImport(
 
     flecs_bootstrap_component(world, EcsRest);
 
-    ecs_set_component_actions(world, EcsRest, { 
+    ecs_set_hooks(world, EcsRest, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsRest),
         .copy = ecs_copy(EcsRest),
