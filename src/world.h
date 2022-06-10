@@ -29,11 +29,11 @@ bool flecs_type_info_init_id(
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
-    const EcsComponentHooks *li);
+    const ecs_type_hooks_t *li);
 
 #define flecs_type_info_init(world, T, ...)\
     flecs_type_info_init_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
-        &(EcsComponentHooks)__VA_ARGS__)
+        &(ecs_type_hooks_t)__VA_ARGS__)
 
 void flecs_type_info_fini(
     ecs_world_t *world,

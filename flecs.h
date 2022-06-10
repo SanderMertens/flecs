@@ -2159,6 +2159,9 @@ typedef struct ecs_iter_t ecs_iter_t;
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
 
+/** Type hooks (callbacks) */
+typedef struct ecs_type_hooks_t ecs_type_hooks_t;
+
 /** Type information */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
@@ -2512,7 +2515,7 @@ struct ecs_observer_t {
 };
 
 /** Type that contains component lifecycle callbacks. */
-typedef struct EcsComponentHooks {
+struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
     ecs_copy_t copy;            /* copy assignment */
@@ -2521,7 +2524,7 @@ typedef struct EcsComponentHooks {
     /* Ctor + copy */
     ecs_copy_t copy_ctor;
 
-    /* Ctor + move */  
+    /* Ctor + move */
     ecs_move_t move_ctor;
 
     /* Ctor + move + dtor (or move_ctor + dtor).
@@ -2555,13 +2558,13 @@ typedef struct EcsComponentHooks {
 
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-} EcsComponentHooks;
+};
 
 /** Type that contains component information (passed to ctors/dtors/...) */
 struct ecs_type_info_t {
     ecs_size_t size;         /* Size of type */
     ecs_size_t alignment;    /* Alignment of type */
-    EcsComponentHooks hooks; /* Type hooks */
+    ecs_type_hooks_t hooks;  /* Type hooks */
     ecs_entity_t component;  /* Handle to component (do not set) */
 };
 
@@ -3889,7 +3892,6 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
-FLECS_API extern const ecs_entity_t ecs_id(EcsComponentHooks);
 FLECS_API extern const ecs_entity_t ecs_id(EcsType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
@@ -4241,7 +4243,10 @@ bool ecs_should_quit(
 
 /** Register hooks for component.
  * Hooks allow for the execution of user code when components are constructed,
- * copied, moved, destructed, added, removed or set.
+ * copied, moved, destructed, added, removed or set. Hooks can be assigned as
+ * as long as a component has not yet been used (added to an entity).
+ * 
+ * The hooks that are currently set can be accessed with ecs_get_type_info.
  *
  * @param world The world.
  * @param id The component id for which to register the actions
@@ -4250,8 +4255,19 @@ bool ecs_should_quit(
 FLECS_API
 void ecs_set_hooks_id(
     ecs_world_t *world,
-    ecs_id_t id,
-    const EcsComponentHooks *hooks);
+    ecs_entity_t id,
+    const ecs_type_hooks_t *hooks);
+
+/** Get hooks for component.
+ * 
+ * @param world The world.
+ * @param id The component id for which to retrieve the hooks.
+ * @return The hooks for the component, or NULL if not registered.
+ */
+FLECS_API
+const ecs_type_hooks_t* ecs_get_hooks_id(
+    ecs_world_t *world,
+    ecs_entity_t id);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -7845,7 +7861,10 @@ void* ecs_record_get_column(
 /* -- World API -- */
 
 #define ecs_set_hooks(world, T, ...)\
-    ecs_set_hooks_id(world, ecs_id(T), &(EcsComponentHooks)__VA_ARGS__)
+    ecs_set_hooks_id(world, ecs_id(T), &(ecs_type_hooks_t)__VA_ARGS__)
+
+#define ecs_get_hooks(world, T)\
+    ecs_get_hooks_id(world, ecs_id(T));
 
 /* -- New -- */
 
@@ -12841,7 +12860,8 @@ using query_t = ecs_query_t;
 using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
-using ComponentHooks = EcsComponentHooks;
+using type_info_t = ecs_type_info_t;
+using type_hooks_t = ecs_type_hooks_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -14704,6 +14724,14 @@ inline void err(const char *fmt, ...) {
     va_start(args, fmt);
     ecs_logv(-3, fmt, args);
     va_end(args);
+}
+
+inline void push(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(0, fmt, args);
+    va_end(args);
+    ecs_log_push();
 }
 
 inline void push() {
@@ -19608,7 +19636,7 @@ void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    EcsComponentHooks cl{};
+    ecs_type_hooks_t cl{};
     cl.ctor = ctor<T>();
     cl.dtor = dtor<T>();
 
@@ -20017,15 +20045,15 @@ struct component : untyped_component {
     component<T>& on_add(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_add == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_add = Invoker::run_add;
-        binding_ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_add = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_add = Invoker::run_add;
+        ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
@@ -20034,15 +20062,15 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_remove == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION, 
             "on_remove hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_remove = Invoker::run_remove;
-        binding_ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_remove = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_remove = Invoker::run_remove;
+        ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
@@ -20051,30 +20079,39 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_set == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION, 
             "on_set hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_set = Invoker::run_set;
-        binding_ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_set = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_set = Invoker::run_set;
+        ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
 private:
     using BindingCtx = _::component_binding_ctx;
 
-    BindingCtx* get_binding_ctx(flecs::ComponentHooks *li){        
-        BindingCtx *result = static_cast<BindingCtx*>(li->binding_ctx);
+    BindingCtx* get_binding_ctx(flecs::type_hooks_t& h){        
+        BindingCtx *result = static_cast<BindingCtx*>(h.binding_ctx);
         if (!result) {
             result = new BindingCtx;
-            li->binding_ctx = result;
-            li->binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
+            h.binding_ctx = result;
+            h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
                 _::free_obj<BindingCtx>);
         }
         return result;
+    }
+
+    flecs::type_hooks_t get_hooks() {
+        const flecs::type_hooks_t* h = ecs_get_hooks_id(m_world, m_id);
+        if (h) {
+            return *h;
+        } else {
+            return {};
+        }
     }
 };
 

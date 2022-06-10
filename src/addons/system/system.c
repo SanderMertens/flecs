@@ -59,7 +59,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_dbg_1("#[green]system#[reset] %s %s", 
+    ecs_dbg_2("#[green]system#[reset] %s %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -513,7 +513,7 @@ void FlecsSystemImport(
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_hooks_id(world, ecs_id(EcsSystem), 
-        &(EcsComponentHooks) {
+        &(ecs_type_hooks_t) {
             .ctor = ecs_default_ctor,
             .on_remove = ecs_on_remove(EcsSystem)
         });

@@ -50,8 +50,6 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
-    ecs_doc_set_brief(world, ecs_id(EcsComponentHooks), "Callbacks for component constructors, destructors, copy and move operations");
-
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
     ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");

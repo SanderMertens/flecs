@@ -83,7 +83,7 @@ void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    EcsComponentHooks cl{};
+    ecs_type_hooks_t cl{};
     cl.ctor = ctor<T>();
     cl.dtor = dtor<T>();
 
@@ -397,15 +397,15 @@ struct component : untyped_component {
     component<T>& on_add(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_add == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_add = Invoker::run_add;
-        binding_ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_add = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_add = Invoker::run_add;
+        ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
@@ -414,15 +414,15 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_remove == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION, 
             "on_remove hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_remove = Invoker::run_remove;
-        binding_ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_remove = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_remove = Invoker::run_remove;
+        ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
@@ -431,30 +431,39 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
-        ecs_assert(li->on_set == nullptr, ECS_INVALID_OPERATION, 
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION, 
             "on_set hook is already set");
-        auto binding_ctx = get_binding_ctx(li);
-        li->on_set = Invoker::run_set;
-        binding_ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        binding_ctx->free_on_set = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentHooks>();
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_set = Invoker::run_set;
+        ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
+            _::free_obj<Invoker>);
+        ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
 
 private:
     using BindingCtx = _::component_binding_ctx;
 
-    BindingCtx* get_binding_ctx(flecs::ComponentHooks *li){        
-        BindingCtx *result = static_cast<BindingCtx*>(li->binding_ctx);
+    BindingCtx* get_binding_ctx(flecs::type_hooks_t& h){        
+        BindingCtx *result = static_cast<BindingCtx*>(h.binding_ctx);
         if (!result) {
             result = new BindingCtx;
-            li->binding_ctx = result;
-            li->binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
+            h.binding_ctx = result;
+            h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
                 _::free_obj<BindingCtx>);
         }
         return result;
+    }
+
+    flecs::type_hooks_t get_hooks() {
+        const flecs::type_hooks_t* h = ecs_get_hooks_id(m_world, m_id);
+        if (h) {
+            return *h;
+        } else {
+            return {};
+        }
     }
 };
 

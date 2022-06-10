@@ -1,0 +1,9 @@
+{
+    "id": "hooks",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

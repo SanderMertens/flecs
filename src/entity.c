@@ -2057,6 +2057,14 @@ ecs_entity_t ecs_component_init(
 
     ecs_modified(world, result, EcsComponent);
 
+    if (desc->type.size && 
+        !ecs_id_in_use(world, result) && 
+        !ecs_id_in_use(world, ecs_pair(result, EcsWildcard)) &&
+        !ecs_id_in_use(world, ecs_pair(EcsWildcard, result)))
+    {
+        ecs_set_hooks_id(world, result, &desc->type.hooks);
+    }
+
     if (e >= world->info.last_component_id && e < ECS_HI_COMPONENT_ID) {
         world->info.last_component_id = e + 1;
     }

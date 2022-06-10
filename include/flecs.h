@@ -200,6 +200,9 @@ typedef struct ecs_iter_t ecs_iter_t;
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
 
+/** Type hooks (callbacks) */
+typedef struct ecs_type_hooks_t ecs_type_hooks_t;
+
 /** Type information */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
@@ -553,7 +556,7 @@ struct ecs_observer_t {
 };
 
 /** Type that contains component lifecycle callbacks. */
-typedef struct EcsComponentHooks {
+struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
     ecs_copy_t copy;            /* copy assignment */
@@ -562,7 +565,7 @@ typedef struct EcsComponentHooks {
     /* Ctor + copy */
     ecs_copy_t copy_ctor;
 
-    /* Ctor + move */  
+    /* Ctor + move */
     ecs_move_t move_ctor;
 
     /* Ctor + move + dtor (or move_ctor + dtor).
@@ -596,13 +599,13 @@ typedef struct EcsComponentHooks {
 
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-} EcsComponentHooks;
+};
 
 /** Type that contains component information (passed to ctors/dtors/...) */
 struct ecs_type_info_t {
     ecs_size_t size;         /* Size of type */
     ecs_size_t alignment;    /* Alignment of type */
-    EcsComponentHooks hooks; /* Type hooks */
+    ecs_type_hooks_t hooks;  /* Type hooks */
     ecs_entity_t component;  /* Handle to component (do not set) */
 };
 
@@ -1028,7 +1031,6 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
-FLECS_API extern const ecs_entity_t ecs_id(EcsComponentHooks);
 FLECS_API extern const ecs_entity_t ecs_id(EcsType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
@@ -1380,7 +1382,10 @@ bool ecs_should_quit(
 
 /** Register hooks for component.
  * Hooks allow for the execution of user code when components are constructed,
- * copied, moved, destructed, added, removed or set.
+ * copied, moved, destructed, added, removed or set. Hooks can be assigned as
+ * as long as a component has not yet been used (added to an entity).
+ * 
+ * The hooks that are currently set can be accessed with ecs_get_type_info.
  *
  * @param world The world.
  * @param id The component id for which to register the actions
@@ -1389,8 +1394,19 @@ bool ecs_should_quit(
 FLECS_API
 void ecs_set_hooks_id(
     ecs_world_t *world,
-    ecs_id_t id,
-    const EcsComponentHooks *hooks);
+    ecs_entity_t id,
+    const ecs_type_hooks_t *hooks);
+
+/** Get hooks for component.
+ * 
+ * @param world The world.
+ * @param id The component id for which to retrieve the hooks.
+ * @return The hooks for the component, or NULL if not registered.
+ */
+FLECS_API
+const ecs_type_hooks_t* ecs_get_hooks_id(
+    ecs_world_t *world,
+    ecs_entity_t id);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world

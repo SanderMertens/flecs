@@ -38,6 +38,14 @@ inline void err(const char *fmt, ...) {
     va_end(args);
 }
 
+inline void push(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(0, fmt, args);
+    va_end(args);
+    ecs_log_push();
+}
+
 inline void push() {
     ecs_log_push();
 }
