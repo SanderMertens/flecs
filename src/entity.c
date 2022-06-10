@@ -2037,8 +2037,8 @@ ecs_entity_t ecs_component_init(
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
 
     if (added) {
-        ptr->size = flecs_utosize(desc->size);
-        ptr->alignment = flecs_utosize(desc->alignment);
+        ptr->size = desc->type.size;
+        ptr->alignment = desc->type.alignment;
         if (!ptr->size) {
             ecs_trace("#[green]tag#[reset] %s created", 
                 ecs_get_name(world, result));
@@ -2047,10 +2047,10 @@ ecs_entity_t ecs_component_init(
                 ecs_get_name(world, result));
         }
     } else {
-        if (ptr->size != flecs_utosize(desc->size)) {
+        if (ptr->size != desc->type.size) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
-        if (ptr->alignment != flecs_utosize(desc->alignment)) {
+        if (ptr->alignment != desc->type.alignment) {
             ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }

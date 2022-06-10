@@ -552,6 +552,60 @@ struct ecs_observer_t {
                                  * the event happened. */
 };
 
+/** Type that contains component lifecycle callbacks. */
+typedef struct EcsComponentHooks {
+    ecs_xtor_t ctor;            /* ctor */
+    ecs_xtor_t dtor;            /* dtor */
+    ecs_copy_t copy;            /* copy assignment */
+    ecs_move_t move;            /* move assignment */
+
+    /* Ctor + copy */
+    ecs_copy_t copy_ctor;
+
+    /* Ctor + move */  
+    ecs_move_t move_ctor;
+
+    /* Ctor + move + dtor (or move_ctor + dtor).
+     * This combination is typically used when a component is moved from one
+     * location to a new location, like when it is moved to a new table. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_t ctor_move_dtor;
+
+    /* Move + dtor.
+     * This combination is typically used when a component is moved from one
+     * location to an existing location, like what happens during a remove. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_t move_dtor;
+
+    /* Callback that is invoked when an instance of a component is added. This
+     * callback is invoked before triggers are invoked. */
+    ecs_iter_action_t on_add;
+
+    /* Callback that is invoked when an instance of the component is set. This
+     * callback is invoked before triggers are invoked, and enable the component
+     * to respond to changes on itself before others can. */
+    ecs_iter_action_t on_set;
+
+    /* Callback that is invoked when an instance of the component is removed. 
+     * This callback is invoked after the triggers are invoked, and before the
+     * destructor is invoked. */
+    ecs_iter_action_t on_remove;
+
+    void *ctx;                       /* User defined context */
+    void *binding_ctx;               /* Language binding context */
+
+    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+} EcsComponentHooks;
+
+/** Type that contains component information (passed to ctors/dtors/...) */
+struct ecs_type_info_t {
+    ecs_size_t size;         /* Size of type */
+    ecs_size_t alignment;    /* Alignment of type */
+    EcsComponentHooks hooks; /* Type hooks */
+    ecs_entity_t component;  /* Handle to component (do not set) */
+};
+
 /** @} */
 
 
@@ -632,9 +686,8 @@ typedef struct ecs_bulk_desc_t {
 typedef struct ecs_component_desc_t {
     int32_t _canary;
 
-    ecs_entity_desc_t entity;           /* Parameters for component entity */
-    size_t size;                        /* Component size */
-    size_t alignment;                   /* Component alignment */
+    ecs_entity_desc_t entity;  /* Parameters for component entity */
+    ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
 
@@ -868,60 +921,6 @@ typedef struct EcsType {
     const ecs_type_t *type;          /* Preserved nested types */
     ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
-
-/** Component that contains component lifecycle callbacks. */
-typedef struct EcsComponentHooks {
-    ecs_xtor_t ctor;            /* ctor */
-    ecs_xtor_t dtor;            /* dtor */
-    ecs_copy_t copy;            /* copy assignment */
-    ecs_move_t move;            /* move assignment */
-
-    /* Ctor + copy */
-    ecs_copy_t copy_ctor;
-
-    /* Ctor + move */  
-    ecs_move_t move_ctor;
-
-    /* Ctor + move + dtor (or move_ctor + dtor).
-     * This combination is typically used when a component is moved from one
-     * location to a new location, like when it is moved to a new table. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_t ctor_move_dtor;
-
-    /* Move + dtor.
-     * This combination is typically used when a component is moved from one
-     * location to an existing location, like what happens during a remove. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_t move_dtor;
-
-    /* Callback that is invoked when an instance of a component is added. This
-     * callback is invoked before triggers are invoked. */
-    ecs_iter_action_t on_add;
-
-    /* Callback that is invoked when an instance of the component is set. This
-     * callback is invoked before triggers are invoked, and enable the component
-     * to respond to changes on itself before others can. */
-    ecs_iter_action_t on_set;
-
-    /* Callback that is invoked when an instance of the component is removed. 
-     * This callback is invoked after the triggers are invoked, and before the
-     * destructor is invoked. */
-    ecs_iter_action_t on_remove;
-
-    void *ctx;                       /* User defined context */
-    void *binding_ctx;               /* Language binding context */
-
-    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-} EcsComponentHooks;
-
-/** Type that contains component information (passed to ctors/dtors/...) */
-struct ecs_type_info_t {
-    ecs_size_t size;
-    ecs_size_t alignment;
-    EcsComponentHooks hooks;
-    ecs_entity_t component;
-};
 
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
@@ -1221,18 +1220,6 @@ FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
 FLECS_API extern const ecs_entity_t EcsOnTableFill;
-
-/* Event. Triggers when a trigger is created. */
-// FLECS_API extern const ecs_entity_t EcsOnCreateTrigger;
-
-/* Event. Triggers when a trigger is deleted. */
-// FLECS_API extern const ecs_entity_t EcsOnDeleteTrigger;
-
-/* Event. Triggers when observable is deleted. */
-// FLECS_API extern const ecs_entity_t EcsOnDeleteObservable;
-
-/* Event. Triggers when lifecycle methods for a component are registered */
-// FLECS_API extern const ecs_entity_t EcsOnComponentLifecycle;
 
 /* Relationship used to define what should happen when an entity is deleted that
  * is added to other entities. For details see: 

@@ -201,7 +201,7 @@ ecs_entity_t ecs_module_init(
     private_desc.entity.entity = e;
     private_desc.entity.name = NULL;
 
-    if (desc->size) {
+    if (desc->type.size) {
         ecs_entity_t result = ecs_component_init(world, &private_desc);
         ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);

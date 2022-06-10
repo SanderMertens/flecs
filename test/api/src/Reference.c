@@ -258,13 +258,13 @@ void Reference_get_ref_w_low_id_tag() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_component_init(world, &(ecs_component_desc_t) {
-        .size = 0,
-        .alignment = 0
+        .type.size = 0,
+        .type.alignment = 0
     });
 
     ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t) {
-        .size = 4,
-        .alignment = 4
+        .type.size = 4,
+        .type.alignment = 4
     });
 
     ecs_entity_t e = ecs_new_id(world);
@@ -284,15 +284,15 @@ void Reference_get_ref_w_low_id_tag_after_add() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_component_init(world, &(ecs_component_desc_t) {
-        .size = 0,
-        .alignment = 0
+        .type.size = 0,
+        .type.alignment = 0
     });
 
     ecs_entity_t id = ecs_new_low_id(world);
 
     ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t) {
-        .size = 4,
-        .alignment = 4
+        .type.size = 4,
+        .type.alignment = 4
     });
 
     ecs_entity_t e = ecs_new_id(world);

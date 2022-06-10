@@ -35,8 +35,8 @@ void flecs_bootstrap(
             .name = #id,\
             .symbol = #id\
         },\
-        .size = sizeof(id),\
-        .alignment = ECS_ALIGNOF(id)\
+        .type.size = sizeof(id),\
+        .type.alignment = ECS_ALIGNOF(id)\
     });
 
 #define flecs_bootstrap_tag(world, name)\

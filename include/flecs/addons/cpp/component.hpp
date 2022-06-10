@@ -397,7 +397,7 @@ struct component : untyped_component {
     component<T>& on_add(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -405,7 +405,7 @@ struct component : untyped_component {
         binding_ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_add = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
@@ -414,7 +414,7 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_remove == nullptr, ECS_INVALID_OPERATION, 
             "on_remove hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -422,7 +422,7 @@ struct component : untyped_component {
         binding_ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_remove = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
@@ -431,7 +431,7 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_set == nullptr, ECS_INVALID_OPERATION, 
             "on_set hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -439,14 +439,14 @@ struct component : untyped_component {
         binding_ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_set = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
 private:
     using BindingCtx = _::component_binding_ctx;
 
-    BindingCtx* get_binding_ctx(flecs::ComponentLifecycle *li){        
+    BindingCtx* get_binding_ctx(flecs::ComponentHooks *li){        
         BindingCtx *result = static_cast<BindingCtx*>(li->binding_ctx);
         if (!result) {
             result = new BindingCtx;

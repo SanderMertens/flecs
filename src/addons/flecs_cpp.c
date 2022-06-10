@@ -234,8 +234,8 @@ void ecs_cpp_component_validate(
      * If the component was registered already, nothing will change. */
     ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.entity = id,
-        .size = size,
-        .alignment = alignment
+        .type.size = size,
+        .type.alignment = alignment
     });
     (void)ent;
     ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
@@ -358,8 +358,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .entity.sep = "::",
             .entity.root_sep = "::",
             .entity.symbol = symbol,
-            .size = size,
-            .alignment = alignment
+            .type.size = size,
+            .type.alignment = alignment
         });
     } else {
         entity = ecs_entity_init(world, &(ecs_entity_desc_t){

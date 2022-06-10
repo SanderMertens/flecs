@@ -1074,8 +1074,8 @@ void World_redefine_component() {
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.name = "flecs.core.Component",
         .entity.symbol = "EcsComponent",
-        .size = ECS_SIZEOF(EcsComponent),
-        .alignment = ECS_ALIGNOF(EcsComponent)
+        .type.size = ECS_SIZEOF(EcsComponent),
+        .type.alignment = ECS_ALIGNOF(EcsComponent)
     });
 
     test_assert(c == ecs_id(EcsComponent));

@@ -1663,8 +1663,8 @@ void RegisterComponent(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_component_init(it->world, 
         &(ecs_component_desc_t){
             .entity = {.name = "Position"},
-            .size = sizeof(Position),
-            .alignment = ECS_ALIGNOF(Position)
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
         });    
 
     test_assert(ecs_id(Position) != 0);
@@ -1710,8 +1710,8 @@ void DeferredActions_register_component_while_staged() {
     ecs_entity_t ecs_id(Position) = ecs_component_init(stage, 
         &(ecs_component_desc_t){
             .entity = {.name = "Position"},
-            .size = sizeof(Position),
-            .alignment = ECS_ALIGNOF(Position)
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
         });
 
     test_assert(ecs_id(Position) != 0);
@@ -1747,8 +1747,8 @@ void DeferredActions_register_component_while_deferred() {
     ecs_entity_t ecs_id(Position) = ecs_component_init(world, 
         &(ecs_component_desc_t){
             .entity = {.name = "Position"},
-            .size = sizeof(Position),
-            .alignment = ECS_ALIGNOF(Position)
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
         });
 
     test_assert(ecs_id(Position) != 0);

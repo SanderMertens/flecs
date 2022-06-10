@@ -1511,8 +1511,8 @@ void Entity_defer_component_init() {
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.name = "Position",
-        .size = ECS_SIZEOF(Position),
-        .alignment = ECS_ALIGNOF(Position)
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
     });
 
     ecs_defer_end(world);
@@ -1537,8 +1537,8 @@ void Entity_defer_component_init_w_symbol() {
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.name = "Position",
         .entity.symbol = "Position",
-        .size = ECS_SIZEOF(Position),
-        .alignment = ECS_ALIGNOF(Position)
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
     });
 
     ecs_defer_end(world);
