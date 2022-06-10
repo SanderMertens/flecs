@@ -24,16 +24,16 @@ static
 void TestInteropModuleImport(ecs_world_t *world) {
     ecs_component_desc_t module_desc = {};
     module_desc.entity.name = "TestInteropModule";
-    module_desc.size = sizeof(TestInteropModule);
-    module_desc.alignment = alignof(TestInteropModule);
+    module_desc.type.size = ECS_SIZEOF(TestInteropModule);
+    module_desc.type.alignment = ECS_ALIGNOF(TestInteropModule);
     ecs_entity_t m = ecs_module_init(world, &module_desc);
     ecs_set_scope(world, m);
 
     ecs_component_desc_t desc = {};
     desc.entity.name = "Position";
     desc.entity.symbol = "Position";
-    desc.size = sizeof(Position);
-    desc.alignment = alignof(Position);
+    desc.type.size = ECS_SIZEOF(Position);
+    desc.type.alignment = ECS_ALIGNOF(Position);
     ecs_component_init(world, &desc);
 }
 

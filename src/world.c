@@ -89,7 +89,7 @@ const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsOnComponentLifecycle =  ECS_HI_COMPONENT_ID + 42;
+const ecs_entity_t EcsOnComponentHooks =  ECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 43;
 
 /* Actions */

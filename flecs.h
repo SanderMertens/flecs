@@ -2511,6 +2511,60 @@ struct ecs_observer_t {
                                  * the event happened. */
 };
 
+/** Type that contains component lifecycle callbacks. */
+typedef struct EcsComponentHooks {
+    ecs_xtor_t ctor;            /* ctor */
+    ecs_xtor_t dtor;            /* dtor */
+    ecs_copy_t copy;            /* copy assignment */
+    ecs_move_t move;            /* move assignment */
+
+    /* Ctor + copy */
+    ecs_copy_t copy_ctor;
+
+    /* Ctor + move */  
+    ecs_move_t move_ctor;
+
+    /* Ctor + move + dtor (or move_ctor + dtor).
+     * This combination is typically used when a component is moved from one
+     * location to a new location, like when it is moved to a new table. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_t ctor_move_dtor;
+
+    /* Move + dtor.
+     * This combination is typically used when a component is moved from one
+     * location to an existing location, like what happens during a remove. If
+     * not set explicitly it will be derived from other callbacks. */
+    ecs_move_t move_dtor;
+
+    /* Callback that is invoked when an instance of a component is added. This
+     * callback is invoked before triggers are invoked. */
+    ecs_iter_action_t on_add;
+
+    /* Callback that is invoked when an instance of the component is set. This
+     * callback is invoked before triggers are invoked, and enable the component
+     * to respond to changes on itself before others can. */
+    ecs_iter_action_t on_set;
+
+    /* Callback that is invoked when an instance of the component is removed. 
+     * This callback is invoked after the triggers are invoked, and before the
+     * destructor is invoked. */
+    ecs_iter_action_t on_remove;
+
+    void *ctx;                       /* User defined context */
+    void *binding_ctx;               /* Language binding context */
+
+    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+} EcsComponentHooks;
+
+/** Type that contains component information (passed to ctors/dtors/...) */
+struct ecs_type_info_t {
+    ecs_size_t size;         /* Size of type */
+    ecs_size_t alignment;    /* Alignment of type */
+    EcsComponentHooks hooks; /* Type hooks */
+    ecs_entity_t component;  /* Handle to component (do not set) */
+};
+
 /** @} */
 
 
@@ -3472,9 +3526,8 @@ typedef struct ecs_bulk_desc_t {
 typedef struct ecs_component_desc_t {
     int32_t _canary;
 
-    ecs_entity_desc_t entity;           /* Parameters for component entity */
-    size_t size;                        /* Component size */
-    size_t alignment;                   /* Component alignment */
+    ecs_entity_desc_t entity;  /* Parameters for component entity */
+    ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
 
@@ -3708,60 +3761,6 @@ typedef struct EcsType {
     const ecs_type_t *type;          /* Preserved nested types */
     ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
-
-/** Component that contains component lifecycle callbacks. */
-typedef struct EcsComponentHooks {
-    ecs_xtor_t ctor;            /* ctor */
-    ecs_xtor_t dtor;            /* dtor */
-    ecs_copy_t copy;            /* copy assignment */
-    ecs_move_t move;            /* move assignment */
-
-    /* Ctor + copy */
-    ecs_copy_t copy_ctor;
-
-    /* Ctor + move */  
-    ecs_move_t move_ctor;
-
-    /* Ctor + move + dtor (or move_ctor + dtor).
-     * This combination is typically used when a component is moved from one
-     * location to a new location, like when it is moved to a new table. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_t ctor_move_dtor;
-
-    /* Move + dtor.
-     * This combination is typically used when a component is moved from one
-     * location to an existing location, like what happens during a remove. If
-     * not set explicitly it will be derived from other callbacks. */
-    ecs_move_t move_dtor;
-
-    /* Callback that is invoked when an instance of a component is added. This
-     * callback is invoked before triggers are invoked. */
-    ecs_iter_action_t on_add;
-
-    /* Callback that is invoked when an instance of the component is set. This
-     * callback is invoked before triggers are invoked, and enable the component
-     * to respond to changes on itself before others can. */
-    ecs_iter_action_t on_set;
-
-    /* Callback that is invoked when an instance of the component is removed. 
-     * This callback is invoked after the triggers are invoked, and before the
-     * destructor is invoked. */
-    ecs_iter_action_t on_remove;
-
-    void *ctx;                       /* User defined context */
-    void *binding_ctx;               /* Language binding context */
-
-    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-} EcsComponentHooks;
-
-/** Type that contains component information (passed to ctors/dtors/...) */
-struct ecs_type_info_t {
-    ecs_size_t size;
-    ecs_size_t alignment;
-    EcsComponentHooks hooks;
-    ecs_entity_t component;
-};
 
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
@@ -4082,18 +4081,6 @@ FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
 FLECS_API extern const ecs_entity_t EcsOnTableFill;
-
-/* Event. Triggers when a trigger is created. */
-// FLECS_API extern const ecs_entity_t EcsOnCreateTrigger;
-
-/* Event. Triggers when a trigger is deleted. */
-// FLECS_API extern const ecs_entity_t EcsOnDeleteTrigger;
-
-/* Event. Triggers when observable is deleted. */
-// FLECS_API extern const ecs_entity_t EcsOnDeleteObservable;
-
-/* Event. Triggers when lifecycle methods for a component are registered */
-// FLECS_API extern const ecs_entity_t EcsOnComponentLifecycle;
 
 /* Relationship used to define what should happen when an entity is deleted that
  * is added to other entities. For details see: 
@@ -7681,8 +7668,8 @@ void* ecs_record_get_column(
         desc.entity.entity = ecs_id(id); \
         desc.entity.name = #id; \
         desc.entity.symbol = #id; \
-        desc.size = sizeof(id); \
-        desc.alignment = ECS_ALIGNOF(id); \
+        desc.type.size = ECS_SIZEOF(id); \
+        desc.type.alignment = ECS_ALIGNOF(id); \
         ecs_id(id) = ecs_component_init(world, &desc);\
         ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
@@ -12854,7 +12841,7 @@ using query_t = ecs_query_t;
 using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
-using ComponentLifecycle = EcsComponentHooks;
+using ComponentHooks = EcsComponentHooks;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -20030,7 +20017,7 @@ struct component : untyped_component {
     component<T>& on_add(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -20038,7 +20025,7 @@ struct component : untyped_component {
         binding_ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_add = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
@@ -20047,7 +20034,7 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_remove == nullptr, ECS_INVALID_OPERATION, 
             "on_remove hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -20055,7 +20042,7 @@ struct component : untyped_component {
         binding_ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_remove = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
@@ -20064,7 +20051,7 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, T>;
-        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        flecs::ComponentHooks *li = this->get_mut<ComponentHooks>();
         ecs_assert(li->on_set == nullptr, ECS_INVALID_OPERATION, 
             "on_set hook is already set");
         auto binding_ctx = get_binding_ctx(li);
@@ -20072,14 +20059,14 @@ struct component : untyped_component {
         binding_ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
         binding_ctx->free_on_set = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
-        this->modified<ComponentLifecycle>();
+        this->modified<ComponentHooks>();
         return *this;
     }
 
 private:
     using BindingCtx = _::component_binding_ctx;
 
-    BindingCtx* get_binding_ctx(flecs::ComponentLifecycle *li){        
+    BindingCtx* get_binding_ctx(flecs::ComponentHooks *li){        
         BindingCtx *result = static_cast<BindingCtx*>(li->binding_ctx);
         if (!result) {
             result = new BindingCtx;

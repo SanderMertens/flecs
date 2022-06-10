@@ -120,8 +120,8 @@ void GlobalComponentIds_reuse_300_component_ids() {
 
     for (int i = 0; i < 300; i ++) {
         ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
-            .size = 1,
-            .alignment = 1
+            .type.size = 1,
+            .type.alignment = 1
         });
     }
 
@@ -137,8 +137,8 @@ void GlobalComponentIds_reuse_300_component_ids() {
     for (int i = 0; i < 300; i ++) {
         ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
             .entity.entity = ids[i],
-            .size = 1,
-            .alignment = 1
+            .type.size = 1,
+            .type.alignment = 1
         });
     }
 

@@ -46,8 +46,8 @@
         desc.entity.entity = ecs_id(id); \
         desc.entity.name = #id; \
         desc.entity.symbol = #id; \
-        desc.size = sizeof(id); \
-        desc.alignment = ECS_ALIGNOF(id); \
+        desc.type.size = ECS_SIZEOF(id); \
+        desc.type.alignment = ECS_ALIGNOF(id); \
         ecs_id(id) = ecs_component_init(world, &desc);\
         ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
     }

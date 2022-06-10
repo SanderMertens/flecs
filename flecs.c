@@ -2022,8 +2022,8 @@ void flecs_bootstrap(
             .name = #id,\
             .symbol = #id\
         },\
-        .size = sizeof(id),\
-        .alignment = ECS_ALIGNOF(id)\
+        .type.size = sizeof(id),\
+        .type.alignment = ECS_ALIGNOF(id)\
     });
 
 #define flecs_bootstrap_tag(world, name)\
@@ -7118,8 +7118,8 @@ ecs_entity_t ecs_component_init(
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
 
     if (added) {
-        ptr->size = flecs_utosize(desc->size);
-        ptr->alignment = flecs_utosize(desc->alignment);
+        ptr->size = desc->type.size;
+        ptr->alignment = desc->type.alignment;
         if (!ptr->size) {
             ecs_trace("#[green]tag#[reset] %s created", 
                 ecs_get_name(world, result));
@@ -7128,10 +7128,10 @@ ecs_entity_t ecs_component_init(
                 ecs_get_name(world, result));
         }
     } else {
-        if (ptr->size != flecs_utosize(desc->size)) {
+        if (ptr->size != desc->type.size) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
-        if (ptr->alignment != flecs_utosize(desc->alignment)) {
+        if (ptr->alignment != desc->type.alignment) {
             ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }
@@ -16540,8 +16540,8 @@ void ecs_cpp_component_validate(
      * If the component was registered already, nothing will change. */
     ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.entity = id,
-        .size = size,
-        .alignment = alignment
+        .type.size = size,
+        .type.alignment = alignment
     });
     (void)ent;
     ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
@@ -16664,8 +16664,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .entity.sep = "::",
             .entity.root_sep = "::",
             .entity.symbol = symbol,
-            .size = size,
-            .alignment = alignment
+            .type.size = size,
+            .type.alignment = alignment
         });
     } else {
         entity = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -23028,7 +23028,7 @@ ecs_entity_t ecs_module_init(
     private_desc.entity.entity = e;
     private_desc.entity.name = NULL;
 
-    if (desc->size) {
+    if (desc->type.size) {
         ecs_entity_t result = ecs_component_init(world, &private_desc);
         ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
@@ -35600,7 +35600,7 @@ const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsOnComponentLifecycle =  ECS_HI_COMPONENT_ID + 42;
+const ecs_entity_t EcsOnComponentHooks =  ECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 43;
 
 /* Actions */
