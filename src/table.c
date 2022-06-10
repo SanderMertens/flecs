@@ -2002,7 +2002,7 @@ void flecs_table_swap(
 
     /* Find the maximum size of column elements
      * and allocate a temporary buffer for swapping */
-    int32_t i, temp_buffer_size = sizeof(uint64_t), column_count = table->storage_count;
+    int32_t i, temp_buffer_size = ECS_SIZEOF(uint64_t), column_count = table->storage_count;
     for (i = 0; i < column_count; i++) {
         ecs_type_info_t* ti = type_info[i];
         temp_buffer_size = ECS_MAX(temp_buffer_size, ti->size);
