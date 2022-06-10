@@ -1951,14 +1951,12 @@ void swap_bitset_columns(
 void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {    
     (void)world;
 
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -1971,11 +1969,11 @@ void flecs_table_swap(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(world, table, 0);    
 
-    ecs_entity_t *entities = data->entities.array;
+    ecs_entity_t *entities = table->data.entities.array;
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
 
-    ecs_record_t **records = data->records.array;
+    ecs_record_t **records = table->data.records.array;
     ecs_record_t *record_ptr_1 = records[row_1];
     ecs_record_t *record_ptr_2 = records[row_2];
 
@@ -1994,10 +1992,10 @@ void flecs_table_swap(
     records[row_1] = record_ptr_2;
     records[row_2] = record_ptr_1;
 
-    swap_switch_columns(table, data, row_1, row_2);
-    swap_bitset_columns(table, data, row_1, row_2);  
+    swap_switch_columns(table, &table->data, row_1, row_2);
+    swap_bitset_columns(table, &table->data, row_1, row_2);  
 
-    ecs_column_t *columns = data->columns;
+    ecs_column_t *columns = table->data.columns;
     if (!columns) {
         check_table_sanity(table);
         return;
@@ -2472,9 +2470,8 @@ FLECS_API
 void ecs_table_swap_rows(
     ecs_world_t* world,
     ecs_table_t* table,
-    ecs_data_t* data,
     int32_t row_1,
     int32_t row_2)
 {
-    flecs_table_swap(world, table, data, row_1, row_2);
+    flecs_table_swap(world, table, row_1, row_2);
 }
