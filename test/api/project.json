@@ -794,7 +794,10 @@
                 "on_remove_ctx",
                 "on_set_ctx",
                 "on_add_w_existing_component",
-                "on_remove_w_existing_component"
+                "on_remove_w_existing_component",
+                "component_init_set_hooks",
+                "on_add_after_ctor_w_add",
+                "on_add_after_ctor_w_add_to"
             ]
         }, {
             "id": "Sorting",

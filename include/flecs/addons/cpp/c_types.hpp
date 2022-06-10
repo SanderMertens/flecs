@@ -14,7 +14,8 @@ using query_t = ecs_query_t;
 using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
-using ComponentHooks = EcsComponentHooks;
+using type_info_t = ecs_type_info_t;
+using type_hooks_t = ecs_type_hooks_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,

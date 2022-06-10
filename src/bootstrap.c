@@ -382,18 +382,6 @@ void on_set_component(ecs_iter_t *it) {
 }
 
 static
-void on_set_component_lifecycle(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsComponentHooks *cl = ecs_term(it, EcsComponentHooks, 1);
-
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_set_hooks_id(world, e, &cl[i]);   
-    }
-}
-
-static
 void ensure_module_tag(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
@@ -674,11 +662,6 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_type_info_init(world, EcsComponentHooks, {
-        .ctor = ecs_default_ctor,
-        .on_set = on_set_component_lifecycle
-    });
-
     flecs_type_info_init(world, EcsType, { 0 });
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
@@ -695,7 +678,6 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsComponentHooks);
 
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);

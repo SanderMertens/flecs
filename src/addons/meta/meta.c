@@ -977,7 +977,7 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
          * when for example inspecting string fields. */
         if (!type->existing) {
             ecs_set_hooks_id(world, it->entities[i], 
-                &(EcsComponentHooks){ 
+                &(ecs_type_hooks_t){ 
                     .ctor = ecs_default_ctor
                 });
         }

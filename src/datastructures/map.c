@@ -8,7 +8,7 @@
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
-static 
+static
 ecs_block_allocator_chunk_header_t *ecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {

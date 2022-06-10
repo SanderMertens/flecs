@@ -7,7 +7,6 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
-const ecs_entity_t ecs_id(EcsComponentHooks) = 2;
 const ecs_entity_t ecs_id(EcsType) =               3;
 const ecs_entity_t ecs_id(EcsIdentifier) =         4;
 const ecs_entity_t ecs_id(EcsTrigger) =            5;
@@ -818,7 +817,7 @@ static
 void default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
@@ -827,7 +826,7 @@ static
 void default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
 }
@@ -836,7 +835,7 @@ static
 void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
@@ -846,7 +845,7 @@ static
 void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move_ctor(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
@@ -855,7 +854,7 @@ static
 void default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
@@ -866,7 +865,7 @@ void default_dtor(void *dst_ptr, void *src_ptr,
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->dtor(dst_ptr, count, ti);
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
@@ -878,7 +877,7 @@ void default_move_w_dtor(void *dst_ptr, void *src_ptr,
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
@@ -886,7 +885,7 @@ void default_move_w_dtor(void *dst_ptr, void *src_ptr,
 void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
-    const EcsComponentHooks *h)
+    const ecs_type_hooks_t *h)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -987,6 +986,17 @@ void ecs_set_hooks_id(
 
 error:
     return;
+}
+
+const ecs_type_hooks_t* ecs_get_hooks_id(
+    ecs_world_t *world,
+    ecs_entity_t id)
+{
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti) {
+        return &ti->hooks;
+    }
+    return NULL;
 }
 
 void ecs_atfini(
@@ -1408,7 +1418,7 @@ bool flecs_type_info_init_id(
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
-    const EcsComponentHooks *li)
+    const ecs_type_hooks_t *li)
 {
     bool changed = false;
 

@@ -746,6 +746,9 @@ void ComponentLifecycle_on_remove_ctx(void);
 void ComponentLifecycle_on_set_ctx(void);
 void ComponentLifecycle_on_add_w_existing_component(void);
 void ComponentLifecycle_on_remove_w_existing_component(void);
+void ComponentLifecycle_component_init_set_hooks(void);
+void ComponentLifecycle_on_add_after_ctor_w_add(void);
+void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4805,6 +4808,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_remove_w_existing_component",
         ComponentLifecycle_on_remove_w_existing_component
+    },
+    {
+        "component_init_set_hooks",
+        ComponentLifecycle_component_init_set_hooks
+    },
+    {
+        "on_add_after_ctor_w_add",
+        ComponentLifecycle_on_add_after_ctor_w_add
+    },
+    {
+        "on_add_after_ctor_w_add_to",
+        ComponentLifecycle_on_add_after_ctor_w_add_to
     }
 };
 
@@ -9807,7 +9822,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        70,
+        73,
         ComponentLifecycle_testcases
     },
     {

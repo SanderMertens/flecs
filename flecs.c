@@ -1663,11 +1663,11 @@ bool flecs_type_info_init_id(
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
-    const EcsComponentHooks *li);
+    const ecs_type_hooks_t *li);
 
 #define flecs_type_info_init(world, T, ...)\
     flecs_type_info_init_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
-        &(EcsComponentHooks)__VA_ARGS__)
+        &(ecs_type_hooks_t)__VA_ARGS__)
 
 void flecs_type_info_fini(
     ecs_world_t *world,
@@ -2967,15 +2967,14 @@ void add_component(
     ecs_entity_t *entities,
     ecs_id_t id,
     int32_t row,
-    int32_t count,
-    bool added)
+    int32_t count)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ctor_component(ti, column, row, count);
 
-    ecs_iter_action_t on_add;
-    if (added && (on_add = ti->hooks.on_add)) {
+    ecs_iter_action_t on_add = ti->hooks.on_add;
+    if (on_add) {
         on_component_callback(world, table, on_add, EcsOnAdd, column,
             entities, id, row, count, ti);
     }
@@ -3751,11 +3750,11 @@ int32_t flecs_table_append(
     int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
-        ecs_type_info_t *ti = type_info[i];        
+        ecs_type_info_t *ti = type_info[i];  
         grow_column(column, ti, 1, size, construct);
 
-        ecs_iter_action_t on_add = ti->hooks.on_add;
-        if (on_add) {
+        ecs_iter_action_t on_add;
+        if (construct && (on_add = ti->hooks.on_add)) {
             on_component_callback(world, table, on_add, EcsOnAdd, column,
                 &entities[count], table->storage_ids[i], count, 1, ti);
         }
@@ -4065,7 +4064,7 @@ void flecs_table_move(
                 if (construct) {
                     add_component(world, dst_table, dst_type_info[i_new],
                         &dst_columns[i_new], &dst_entity, dst_id, 
-                            dst_index, 1, false);
+                            dst_index, 1);
                 }
             } else {
                 remove_component(world, src_table, src_type_info[i_old],
@@ -4081,8 +4080,7 @@ void flecs_table_move(
     if (construct) {
         for (; (i_new < dst_column_count); i_new ++) {
             add_component(world, dst_table, dst_type_info[i_new],
-                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1, 
-                    true);
+                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1);
         }
     }
 
@@ -7137,6 +7135,14 @@ ecs_entity_t ecs_component_init(
     }
 
     ecs_modified(world, result, EcsComponent);
+
+    if (desc->type.size && 
+        !ecs_id_in_use(world, result) && 
+        !ecs_id_in_use(world, ecs_pair(result, EcsWildcard)) &&
+        !ecs_id_in_use(world, ecs_pair(EcsWildcard, result)))
+    {
+        ecs_set_hooks_id(world, result, &desc->type.hooks);
+    }
 
     if (e >= world->info.last_component_id && e < ECS_HI_COMPONENT_ID) {
         world->info.last_component_id = e + 1;
@@ -12990,7 +12996,7 @@ int32_t ecs_strbuf_written(
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
-static 
+static
 ecs_block_allocator_chunk_header_t *ecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {
@@ -15672,7 +15678,7 @@ void FlecsPipelineImport(
     flecs_bootstrap_tag(world, EcsPostFrame);
 
     /* Set ctor and dtor for PipelineQuery */
-    ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentHooks, {
+    ecs_set_hooks(world, EcsPipelineQuery, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsPipelineQuery)
     });
@@ -16540,8 +16546,8 @@ void ecs_cpp_component_validate(
      * If the component was registered already, nothing will change. */
     ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t) {
         .entity.entity = id,
-        .type.size = size,
-        .type.alignment = alignment
+        .type.size = flecs_uto(int32_t, size),
+        .type.alignment = flecs_uto(int32_t, alignment)
     });
     (void)ent;
     ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
@@ -16664,8 +16670,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .entity.sep = "::",
             .entity.root_sep = "::",
             .entity.symbol = symbol,
-            .type.size = size,
-            .type.alignment = alignment
+            .type.size = flecs_uto(int32_t, size),
+            .type.alignment = flecs_uto(int32_t, alignment)
         });
     } else {
         entity = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -24611,7 +24617,7 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
          * when for example inspecting string fields. */
         if (!type->existing) {
             ecs_set_hooks_id(world, it->entities[i], 
-                &(EcsComponentHooks){ 
+                &(ecs_type_hooks_t){ 
                     .ctor = ecs_default_ctor
                 });
         }
@@ -28953,7 +28959,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_dbg_1("#[green]system#[reset] %s %s", 
+    ecs_dbg_2("#[green]system#[reset] %s %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -29407,7 +29413,7 @@ void FlecsSystemImport(
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_hooks_id(world, ecs_id(EcsSystem), 
-        &(EcsComponentHooks) {
+        &(ecs_type_hooks_t) {
             .ctor = ecs_default_ctor,
             .on_remove = ecs_on_remove(EcsSystem)
         });
@@ -32221,8 +32227,6 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
-
-    ecs_doc_set_brief(world, ecs_id(EcsComponentHooks), "Callbacks for component constructors, destructors, copy and move operations");
 
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
     ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
@@ -35518,7 +35522,6 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
-const ecs_entity_t ecs_id(EcsComponentHooks) = 2;
 const ecs_entity_t ecs_id(EcsType) =               3;
 const ecs_entity_t ecs_id(EcsIdentifier) =         4;
 const ecs_entity_t ecs_id(EcsTrigger) =            5;
@@ -36329,7 +36332,7 @@ static
 void default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
@@ -36338,7 +36341,7 @@ static
 void default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
 }
@@ -36347,7 +36350,7 @@ static
 void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
@@ -36357,7 +36360,7 @@ static
 void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move_ctor(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
@@ -36366,7 +36369,7 @@ static
 void default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
@@ -36377,7 +36380,7 @@ void default_dtor(void *dst_ptr, void *src_ptr,
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->dtor(dst_ptr, count, ti);
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
@@ -36389,7 +36392,7 @@ void default_move_w_dtor(void *dst_ptr, void *src_ptr,
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
-    const EcsComponentHooks *cl = &ti->hooks;
+    const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
@@ -36397,7 +36400,7 @@ void default_move_w_dtor(void *dst_ptr, void *src_ptr,
 void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
-    const EcsComponentHooks *h)
+    const ecs_type_hooks_t *h)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -36498,6 +36501,17 @@ void ecs_set_hooks_id(
 
 error:
     return;
+}
+
+const ecs_type_hooks_t* ecs_get_hooks_id(
+    ecs_world_t *world,
+    ecs_entity_t id)
+{
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti) {
+        return &ti->hooks;
+    }
+    return NULL;
 }
 
 void ecs_atfini(
@@ -36919,7 +36933,7 @@ bool flecs_type_info_init_id(
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
-    const EcsComponentHooks *li)
+    const ecs_type_hooks_t *li)
 {
     bool changed = false;
 
@@ -48110,18 +48124,6 @@ void on_set_component(ecs_iter_t *it) {
 }
 
 static
-void on_set_component_lifecycle(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsComponentHooks *cl = ecs_term(it, EcsComponentHooks, 1);
-
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_set_hooks_id(world, e, &cl[i]);   
-    }
-}
-
-static
 void ensure_module_tag(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
@@ -48402,11 +48404,6 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_type_info_init(world, EcsComponentHooks, {
-        .ctor = ecs_default_ctor,
-        .on_set = on_set_component_lifecycle
-    });
-
     flecs_type_info_init(world, EcsType, { 0 });
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
@@ -48423,7 +48420,6 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsComponentHooks);
 
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);

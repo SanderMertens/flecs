@@ -223,7 +223,10 @@
 /* -- World API -- */
 
 #define ecs_set_hooks(world, T, ...)\
-    ecs_set_hooks_id(world, ecs_id(T), &(EcsComponentHooks)__VA_ARGS__)
+    ecs_set_hooks_id(world, ecs_id(T), &(ecs_type_hooks_t)__VA_ARGS__)
+
+#define ecs_get_hooks(world, T)\
+    ecs_get_hooks_id(world, ecs_id(T));
 
 /* -- New -- */
 
