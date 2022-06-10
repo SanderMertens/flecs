@@ -115,12 +115,6 @@ typedef int32_t ecs_size_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(ECS_TARGET_GNU)
-#define ECS_UNUSED __attribute__((unused))
-#else
-#define ECS_UNUSED
-#endif
-
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))

@@ -421,12 +421,6 @@ typedef int32_t ecs_size_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(ECS_TARGET_GNU)
-#define ECS_UNUSED __attribute__((unused))
-#else
-#define ECS_UNUSED
-#endif
-
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -453,6 +447,7 @@ typedef int32_t ecs_size_t;
 #define ECS_CAST(T, V) (static_cast<T>(V))
 #endif
 
+#define ECS_CONCAT(a, b) a ## b
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity id macro's
@@ -2261,12 +2256,23 @@ typedef bool (*ecs_iter_next_action_t)(
 typedef void (*ecs_iter_fini_action_t)(
     ecs_iter_t *it); 
 
-/** Callback used for sorting components */
+/** Callback used for comparing components */
 typedef int (*ecs_order_by_action_t)(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
     const void *ptr2);
+
+/** Callback used for sorting the entire table of components */
+typedef void (*ecs_sort_table_action_t)(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    ecs_entity_t* entities,
+    void* ptr,
+    int32_t size,
+    int32_t lo,
+    int32_t hi,
+    ecs_order_by_action_t order_by);
 
 /** Callback used for ranking types */
 typedef uint64_t (*ecs_group_by_action_t)(
@@ -3540,6 +3546,10 @@ typedef struct ecs_query_desc_t {
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
     ecs_order_by_action_t order_by;
+
+    /* Callback used for ordering query results. Same as order_by,
+     * but more efficient. */
+    ecs_sort_table_action_t sort_table;
 
     /* Id to be used by group_by. This id is passed to the group_by function and
      * can be used identify the part of an entity type that should be used for
@@ -7569,6 +7579,21 @@ FLECS_API
 bool ecs_table_has_module(
     ecs_table_t *table);
 
+/** Swaps two elements inside the table. This is useful for implementing custom
+ * table sorting algorithms.
+ * @param world The world
+ * @param table The table to swap elements in
+ * @param row_1 Table element to swap with row_2
+ * @param row_2 Table element to swap with row_1
+*/
+FLECS_API
+void ecs_table_swap_rows(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    int32_t row_1,
+    int32_t row_2
+);
+
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified
  * table. This may trigger the following actions:
@@ -7719,6 +7744,117 @@ void* ecs_record_get_column(
 
 /** @} */
 
+/**
+ * @defgroup sorting_macros Convenience macros that help with component comparison and sorting
+ * @{
+ */
+#define ecs_sort_table(id) ecs_id(id##_sort_table)
+
+#define ecs_compare(id) ecs_id(id##_compare_fn)
+
+/* Declare efficient table sorting operation that uses provided compare function.
+ * For best results use LTO or make the function body visible in the same compilation unit.
+ * Variadic arguments are prepended before generated functions, use it to declare static
+ *   or exported functions.
+ * Parameters of the comparison function:
+ *   ecs_entity_t e1, const void* ptr1,
+ *   ecs_entity_t e2, const void* ptr2
+ * Parameters of the sort functions:
+ *   ecs_world_t *world
+ *   ecs_table_t *table
+ *   ecs_entity_t *entities
+ *   void *ptr
+ *   int32_t elem_size
+ *   int32_t lo
+ *   int32_t hi
+ *   ecs_order_by_action_t order_by - Pointer to the original comparison function. You are not supposed to use it.
+ * Example:
+ *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
+ *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ */
+#define ECS_SORT_TABLE_WITH_COMPARE(id, op_name, compare_fn, ...) \
+    static int32_t ECS_CONCAT(op_name, _partition)( \
+        ecs_world_t *world, \
+        ecs_table_t *table, \
+        ecs_entity_t *entities, \
+        void *ptr, \
+        int32_t elem_size, \
+        int32_t lo, \
+        int32_t hi, \
+        ecs_order_by_action_t order_by) \
+    { \
+        (void)(order_by); \
+        int32_t p = (hi + lo) / 2; \
+        void *pivot = ECS_ELEM(ptr, elem_size, p); \
+        ecs_entity_t pivot_e = entities[p]; \
+        int32_t i = lo - 1, j = hi + 1; \
+        void *el; \
+    repeat: \
+        { \
+            do { \
+                i ++; \
+                el = ECS_ELEM(ptr, elem_size, i); \
+            } while ( compare_fn(entities[i], el, pivot_e, pivot) < 0); \
+            do { \
+                j --; \
+                el = ECS_ELEM(ptr, elem_size, j); \
+            } while ( compare_fn(entities[j], el, pivot_e, pivot) > 0); \
+            if (i >= j) { \
+                return j; \
+            } \
+            ecs_table_swap_rows(world, table, i, j); \
+            if (p == i) { \
+                pivot = ECS_ELEM(ptr, elem_size, j); \
+                pivot_e = entities[j]; \
+            } else if (p == j) { \
+                pivot = ECS_ELEM(ptr, elem_size, i); \
+                pivot_e = entities[i]; \
+            } \
+            goto repeat; \
+        } \
+    } \
+    __VA_ARGS__ void op_name( \
+        ecs_world_t *world, \
+        ecs_table_t *table, \
+        ecs_entity_t *entities, \
+        void *ptr, \
+        int32_t size, \
+        int32_t lo, \
+        int32_t hi, \
+        ecs_order_by_action_t order_by) \
+    { \
+        if ((hi - lo) < 1)  { \
+            return; \
+        } \
+        int32_t p = ECS_CONCAT(op_name, _partition)(world, table, entities, ptr, size, lo, hi, order_by); \
+        op_name(world, table, entities, ptr, size, lo, p, order_by); \
+        op_name(world, table, entities, ptr, size, p + 1, hi, order_by); \
+    }
+
+/* Declare efficient table sorting operation that uses default component comparison operator.
+ * For best results use LTO or make the comparison operator visible in the same compilation unit.
+ * Variadic arguments are prepended before generated functions, use it to declare static
+ *   or exported functions.
+ * Example:
+ *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ *   ECS_SORT_TABLE(MyType)
+ */
+#define ECS_SORT_TABLE(id, ...) \
+    ECS_SORT_TABLE_WITH_COMPARE(id, ecs_sort_table(id), ecs_compare(id), __VA_ARGS__)
+
+/* Declare component comparison operations.
+ * Parameters:
+ *   ecs_entity_t e1, const void* ptr1,
+ *   ecs_entity_t e2, const void* ptr2
+ * Example:
+ *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ */
+#define ECS_COMPARE(id, ...) \
+    int ecs_compare(id)(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { \
+        __VA_ARGS__ \
+    }
+
+/** @} */
 
 /**
  * @defgroup function_macros Convenience macro's that wrap ECS operations

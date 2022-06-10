@@ -591,7 +591,8 @@ struct ecs_query_t {
     /* Used for sorting */
     ecs_entity_t order_by_component;
     ecs_order_by_action_t order_by;
-    ecs_vector_t *table_slices;     
+    ecs_sort_table_action_t sort_table;
+    ecs_vector_t *table_slices;
 
     /* Used for grouping */
     ecs_entity_t group_by_id;
@@ -1414,7 +1415,6 @@ void flecs_table_merge(
 void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2);
 
@@ -4208,14 +4208,12 @@ void swap_bitset_columns(
 void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {    
     (void)world;
 
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -4228,11 +4226,11 @@ void flecs_table_swap(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(world, table, 0);    
 
-    ecs_entity_t *entities = data->entities.array;
+    ecs_entity_t *entities = table->data.entities.array;
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
 
-    ecs_record_t **records = data->records.array;
+    ecs_record_t **records = table->data.records.array;
     ecs_record_t *record_ptr_1 = records[row_1];
     ecs_record_t *record_ptr_2 = records[row_2];
 
@@ -4251,10 +4249,10 @@ void flecs_table_swap(
     records[row_1] = record_ptr_2;
     records[row_2] = record_ptr_1;
 
-    swap_switch_columns(table, data, row_1, row_2);
-    swap_bitset_columns(table, data, row_1, row_2);  
+    swap_switch_columns(table, &table->data, row_1, row_2);
+    swap_bitset_columns(table, &table->data, row_1, row_2);  
 
-    ecs_column_t *columns = data->columns;
+    ecs_column_t *columns = table->data.columns;
     if (!columns) {
         check_table_sanity(table);
         return;
@@ -4262,15 +4260,23 @@ void flecs_table_swap(
 
     ecs_type_info_t **type_info = table->type_info;
 
+    /* Find the maximum size of column elements
+     * and allocate a temporary buffer for swapping */
+    int32_t i, temp_buffer_size = ECS_SIZEOF(uint64_t), column_count = table->storage_count;
+    for (i = 0; i < column_count; i++) {
+        ecs_type_info_t* ti = type_info[i];
+        temp_buffer_size = ECS_MAX(temp_buffer_size, ti->size);
+    }
+
+    void* tmp = ecs_os_alloca(temp_buffer_size);
+
     /* Swap columns */
-    int32_t i, column_count = table->storage_count;
     for (i = 0; i < column_count; i ++) {
         ecs_type_info_t *ti = type_info[i];
         int32_t size = ti->size;
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
         void *ptr = columns[i].array;
-        void *tmp = ecs_os_alloca(size);
 
         void *el_1 = ECS_ELEM(ptr, size, row_1);
         void *el_2 = ECS_ELEM(ptr, size, row_2);
@@ -4715,6 +4721,16 @@ void* ecs_record_get_column(
     return ecs_storage_get(c, ti->size, ECS_RECORD_TO_ROW(r->row));
 error:
     return NULL;
+}
+
+FLECS_API
+void ecs_table_swap_rows(
+    ecs_world_t* world,
+    ecs_table_t* table,
+    int32_t row_1,
+    int32_t row_2)
+{
+    flecs_table_swap(world, table, row_1, row_2);
 }
 
 #include <stddef.h>
@@ -42402,84 +42418,15 @@ bool match_table(
     return qt != NULL;
 }
 
-static
-int32_t qsort_partition(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t *entities,
-    void *ptr,    
-    int32_t elem_size,
-    int32_t lo,
-    int32_t hi,
-    ecs_order_by_action_t compare)
-{
-    int32_t p = (hi + lo) / 2;
-    void *pivot = ECS_ELEM(ptr, elem_size, p);
-    ecs_entity_t pivot_e = entities[p];
-    int32_t i = lo - 1, j = hi + 1;
-    void *el;    
-
-repeat:
-    {
-        do {
-            i ++;
-            el = ECS_ELEM(ptr, elem_size, i);
-        } while ( compare(entities[i], el, pivot_e, pivot) < 0);
-
-        do {
-            j --;
-            el = ECS_ELEM(ptr, elem_size, j);
-        } while ( compare(entities[j], el, pivot_e, pivot) > 0);
-
-        if (i >= j) {
-            return j;
-        }
-
-        flecs_table_swap(world, table, data, i, j);
-
-        if (p == i) {
-            pivot = ECS_ELEM(ptr, elem_size, j);
-            pivot_e = entities[j];
-        } else if (p == j) {
-            pivot = ECS_ELEM(ptr, elem_size, i);
-            pivot_e = entities[i];
-        }
-
-        goto repeat;
-    }
-}
-
-static
-void qsort_array(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t *entities,
-    void *ptr,
-    int32_t size,
-    int32_t lo,
-    int32_t hi,
-    ecs_order_by_action_t compare)
-{   
-    if ((hi - lo) < 1)  {
-        return;
-    }
-
-    int32_t p = qsort_partition(
-        world, table, data, entities, ptr, size, lo, hi, compare);
-
-    qsort_array(world, table, data, entities, ptr, size, lo, p, compare);
-
-    qsort_array(world, table, data, entities, ptr, size, p + 1, hi, compare); 
-}
+ECS_SORT_TABLE_WITH_COMPARE(_, sort_table_generic, order_by, static)
 
 static
 void sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
-    ecs_order_by_action_t compare)
+    ecs_order_by_action_t compare,
+    ecs_sort_table_action_t sort)
 {
     ecs_data_t *data = &table->data;
     if (!ecs_storage_count(&data->entities)) {
@@ -42503,7 +42450,11 @@ void sort_table(
         ptr = ecs_storage_first(column);
     }
 
-    qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
+    if (sort) {
+        sort(world, table, entities, ptr, size, 0, count - 1, compare);
+    } else {
+        sort_table_generic(world, table, entities, ptr, size, 0, count - 1, compare);
+    }
 }
 
 /* Helper struct for building sorted table ranges */
@@ -42712,6 +42663,8 @@ void sort_tables(
     if (!compare) {
         return;
     }
+
+    ecs_sort_table_action_t sort = query->sort_table;
     
     ecs_entity_t order_by_component = query->order_by_component;
     int32_t i, order_by_term = -1;
@@ -42778,8 +42731,8 @@ void sort_tables(
             continue;
         }
 
-        /* Something has changed, sort the table */
-        sort_table(world, table, column, compare);
+        /* Something has changed, sort the table. Prefers using sort_table when available */
+        sort_table(world, table, column, compare, sort);
         tables_sorted = true;
     }
 
@@ -43194,13 +43147,15 @@ void query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t order_by_component,
-    ecs_order_by_action_t order_by)
+    ecs_order_by_action_t order_by,
+    ecs_sort_table_action_t sort_table_action)
 {
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
 
     query->order_by_component = order_by_component;
     query->order_by = order_by;
+    query->sort_table = sort_table_action;
 
     ecs_vector_free(query->table_slices);
     query->table_slices = NULL;
@@ -43389,7 +43344,8 @@ ecs_query_t* ecs_query_init(
 
     if (desc->order_by) {
         query_order_by(
-            world, result, desc->order_by_component, desc->order_by);
+            world, result, desc->order_by_component, desc->order_by,
+            desc->sort_table);
     }
 
     return result;
