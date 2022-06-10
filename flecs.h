@@ -18573,6 +18573,16 @@ namespace flecs
 namespace _ 
 {
 
+// Binding ctx for component hooks
+struct component_binding_ctx {
+    void *on_add = nullptr;
+    void *on_remove = nullptr;
+    void *on_set = nullptr;
+    ecs_ctx_free_t free_on_add = nullptr;
+    ecs_ctx_free_t free_on_remove = nullptr;
+    ecs_ctx_free_t free_on_set = nullptr;
+};
+
 // Utility to convert template argument pack to array of term ptrs
 struct term_ptr {
     void *ptr;
@@ -18751,6 +18761,30 @@ struct each_invoker : public invoker {
         auto self = static_cast<const each_invoker*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
+    }
+
+    // Static function to call for component on_add hook
+    static void run_add(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_add;
+        run(iter);
+    }
+
+    // Static function to call for component on_remove hook
+    static void run_remove(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_remove;
+        run(iter);
+    }
+
+    // Static function to call for component on_set hook
+    static void run_set(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_set;
+        run(iter);
     }
 
     // Each invokers always use instanced iterators
@@ -19849,15 +19883,80 @@ struct component : untyped_component {
 
             /* Initialize static component data */
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
-        }
 
-        /* Initialize lifecycle actions (ctor, dtor, copy, move) */
-        if (_::cpp_type<T>::size()) {
-            _::register_lifecycle_actions<T>(world, id);
+            /* Initialize lifecycle actions (ctor, dtor, copy, move) */
+            if (_::cpp_type<T>::size()) {
+                _::register_lifecycle_actions<T>(world, id);
+            }
         }
 
         m_world = world;
         m_id = id;
+    }
+
+    /** Register on_add hook. */
+    template <typename Func>
+    component<T>& on_add(Func&& func) {
+        using Invoker = typename _::each_invoker<
+            typename std::decay<Func>::type, T>;
+        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        ecs_assert(li->on_add == nullptr, ECS_INVALID_OPERATION, 
+            "on_add hook is already set");
+        auto binding_ctx = get_binding_ctx(li);
+        li->on_add = Invoker::run_add;
+        binding_ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        binding_ctx->free_on_add = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+        this->modified<ComponentLifecycle>();
+        return *this;
+    }
+
+    /** Register on_remove hook. */
+    template <typename Func>
+    component<T>& on_remove(Func&& func) {
+        using Invoker = typename _::each_invoker<
+            typename std::decay<Func>::type, T>;
+        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        ecs_assert(li->on_remove == nullptr, ECS_INVALID_OPERATION, 
+            "on_remove hook is already set");
+        auto binding_ctx = get_binding_ctx(li);
+        li->on_remove = Invoker::run_remove;
+        binding_ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        binding_ctx->free_on_remove = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+        this->modified<ComponentLifecycle>();
+        return *this;
+    }
+
+    /** Register on_set hook. */
+    template <typename Func>
+    component<T>& on_set(Func&& func) {
+        using Invoker = typename _::each_invoker<
+            typename std::decay<Func>::type, T>;
+        flecs::ComponentLifecycle *li = this->get_mut<ComponentLifecycle>();
+        ecs_assert(li->on_set == nullptr, ECS_INVALID_OPERATION, 
+            "on_set hook is already set");
+        auto binding_ctx = get_binding_ctx(li);
+        li->on_set = Invoker::run_set;
+        binding_ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        binding_ctx->free_on_set = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+        this->modified<ComponentLifecycle>();
+        return *this;
+    }
+
+private:
+    using BindingCtx = _::component_binding_ctx;
+
+    BindingCtx* get_binding_ctx(flecs::ComponentLifecycle *li){        
+        BindingCtx *result = static_cast<BindingCtx*>(li->binding_ctx);
+        if (!result) {
+            result = new BindingCtx;
+            li->binding_ctx = result;
+            li->binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
+                _::free_obj<BindingCtx>);
+        }
+        return result;
     }
 };
 

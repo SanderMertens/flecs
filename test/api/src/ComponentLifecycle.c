@@ -1184,48 +1184,6 @@ void ComponentLifecycle_copy_on_set_pair_tag() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_prevent_lifecycle_overwrite() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    test_expect_abort();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        .ctor = comp_ctor
-    });
-
-    /* Should trigger assert */
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        .ctor = ecs_ctor(Position)
-    });
-
-    ecs_fini(world);    
-}
-
-void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    test_expect_abort();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        NULL
-    });
-
-    /* Should trigger assert */
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        .ctor = ecs_ctor(Position)
-    });
-
-    ecs_fini(world);  
-}
-
 void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks() {
     ecs_world_t *world = ecs_mini();
 
@@ -2528,4 +2486,56 @@ void ComponentLifecycle_on_set_ctx() {
 
     test_int(1, component_lifecycle_ctx);
     test_int(1, component_lifecycle_binding_ctx);
+}
+
+static int test_on_event_invoked = 0;
+
+static void test_on_event(ecs_iter_t *it) {
+    test_assert(it->ctx != NULL);
+    test_assert(*(ecs_entity_t*)it->ctx == it->event);
+    test_on_event_invoked ++;
+}
+
+void ComponentLifecycle_on_add_w_existing_component() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .on_add = test_on_event,
+        .ctx = (void*)&EcsOnAdd
+    });
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add(world, e, Position);
+
+    test_int(1, test_on_event_invoked);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_remove_w_existing_component() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .on_remove = test_on_event,
+        .ctx = (void*)&EcsOnRemove
+    });
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add(world, e, Position);
+
+    test_int(0, test_on_event_invoked);
+    
+    ecs_remove(world, e, Position);
+
+    test_int(1, test_on_event_invoked);
+
+    ecs_fini(world);
 }

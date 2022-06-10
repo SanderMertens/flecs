@@ -674,7 +674,11 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_type_info_init(world, EcsComponentLifecycle, { 0 });
+    flecs_type_info_init(world, EcsComponentLifecycle, {
+        .ctor = ecs_default_ctor,
+        .on_set = on_set_component_lifecycle
+    });
+
     flecs_type_info_init(world, EcsType, { 0 });
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
@@ -880,13 +884,6 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = ensure_module_tag
     });
-
-    /* Define trigger for when component lifecycle is set for component */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsComponentLifecycle), .subj.set.mask = EcsSelf },
-        .events = {EcsOnSet},
-        .callback = on_set_component_lifecycle
-    });  
 
     /* Acyclic components */
     ecs_add_id(world, EcsIsA, EcsAcyclic);

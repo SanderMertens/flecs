@@ -1022,3 +1022,208 @@ void ComponentLifecycle_delete_no_default_ctor() {
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
     test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
 }
+
+void ComponentLifecycle_on_add_hook() {
+    int count = 0;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_add([&](Position& p) {
+            count ++;
+        });
+
+        test_int(0, count);
+
+        auto e = ecs.entity().add<Position>();
+        test_int(1, count);
+
+        e.add<Position>();
+        test_int(1, count);
+    }
+
+    test_int(1, count);
+}
+
+void ComponentLifecycle_on_remove_hook() {
+    int count = 0;
+    
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_remove([&](Position& p) {
+            count ++;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.remove<Position>();
+        test_int(1, count);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_set_hook() {
+    int count = 0;
+    Position v = {0};
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_set([&](Position& p) {
+            count ++;
+            v = p;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.set<Position>({10, 20});
+        test_int(1, count);
+        test_int(10, v.x);
+        test_int(20, v.y);
+
+        ecs.entity().set<Position>({30, 40});
+        test_int(2, count);
+        test_int(30, v.x);
+        test_int(40, v.y);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_add_hook_w_entity() {
+    int count = 0;
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_add([&](flecs::entity arg, Position& p) {
+            e_arg = arg;
+            count ++;
+        });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e = ecs.entity().add<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e);
+
+        e.add<Position>();
+        test_int(1, count);
+    }
+
+    test_int(1, count);
+}
+
+void ComponentLifecycle_on_remove_hook_w_entity() {
+    int count = 0;
+    flecs::entity e_arg;
+    flecs::entity e2;
+    
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_remove([&](flecs::entity arg, Position& p){
+            e_arg = arg;
+            count ++;
+        });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e1 = ecs.entity().add<Position>();
+        e2 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.remove<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e1);
+    }
+
+    test_int(2, count);
+    test_assert(e_arg == e2);
+}
+
+void ComponentLifecycle_on_set_hook_w_entity() {
+    int count = 0;
+    Position v = {0};
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().on_set([&](flecs::entity arg, Position& p) {
+            count ++;
+            v = p;
+            e_arg = arg;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.set<Position>({10, 20});
+        test_int(1, count);
+        test_assert(e_arg == e1);
+        test_int(10, v.x);
+        test_int(20, v.y);
+
+        auto e2 = ecs.entity().set<Position>({30, 40});
+        test_int(2, count);
+        test_assert(e_arg == e2);
+        test_int(30, v.x);
+        test_int(40, v.y);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_chained_hooks() {
+    flecs::world ecs;
+
+    int32_t add_count = 0;
+    int32_t remove_count = 0;
+    int32_t set_count = 0;
+
+    ecs.component<Position>()
+        .on_add([&](Position& p){
+            add_count ++;
+        })
+        .on_set([&](Position& p){
+            set_count ++;
+        })
+        .on_remove([&](Position& p){
+            remove_count ++;
+        });
+
+    auto e = ecs.entity();
+    test_int(0, add_count);
+    test_int(0, set_count);
+    test_int(0, remove_count);
+
+    e.add<Position>();
+    test_int(1, add_count);
+    test_int(0, set_count);
+    test_int(0, remove_count);
+
+    e.set<Position>({10, 20});
+    test_int(1, add_count);
+    test_int(1, set_count);
+    test_int(0, remove_count);
+
+    e.remove<Position>();
+    test_int(1, add_count);
+    test_int(1, set_count);
+    test_int(1, remove_count);
+}
