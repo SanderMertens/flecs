@@ -1592,7 +1592,7 @@ void SortingEntireTable_sort_relation_marked() {
     ecs_fini(world);
 }
 
-bool dummy_compare_invoked;
+static bool dummy_compare_invoked = false;
 
 static
 int dummy_compare(
