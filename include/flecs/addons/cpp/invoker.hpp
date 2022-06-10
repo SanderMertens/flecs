@@ -9,6 +9,16 @@ namespace flecs
 namespace _ 
 {
 
+// Binding ctx for component hooks
+struct component_binding_ctx {
+    void *on_add = nullptr;
+    void *on_remove = nullptr;
+    void *on_set = nullptr;
+    ecs_ctx_free_t free_on_add = nullptr;
+    ecs_ctx_free_t free_on_remove = nullptr;
+    ecs_ctx_free_t free_on_set = nullptr;
+};
+
 // Utility to convert template argument pack to array of term ptrs
 struct term_ptr {
     void *ptr;
@@ -187,6 +197,30 @@ struct each_invoker : public invoker {
         auto self = static_cast<const each_invoker*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
+    }
+
+    // Static function to call for component on_add hook
+    static void run_add(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_add;
+        run(iter);
+    }
+
+    // Static function to call for component on_remove hook
+    static void run_remove(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_remove;
+        run(iter);
+    }
+
+    // Static function to call for component on_set hook
+    static void run_set(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->binding_ctx);
+        iter->binding_ctx = ctx->on_set;
+        run(iter);
     }
 
     // Each invokers always use instanced iterators

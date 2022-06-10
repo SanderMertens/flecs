@@ -705,8 +705,6 @@ void ComponentLifecycle_copy_on_override_pair(void);
 void ComponentLifecycle_copy_on_override_pair_tag(void);
 void ComponentLifecycle_copy_on_set_pair(void);
 void ComponentLifecycle_copy_on_set_pair_tag(void);
-void ComponentLifecycle_prevent_lifecycle_overwrite(void);
-void ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks(void);
 void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void);
 void ComponentLifecycle_set_lifecycle_after_trigger(void);
 void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
@@ -746,6 +744,8 @@ void ComponentLifecycle_binding_ctx_free_after_delete_component(void);
 void ComponentLifecycle_on_add_ctx(void);
 void ComponentLifecycle_on_remove_ctx(void);
 void ComponentLifecycle_on_set_ctx(void);
+void ComponentLifecycle_on_add_w_existing_component(void);
+void ComponentLifecycle_on_remove_w_existing_component(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4608,14 +4608,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_set_pair_tag
     },
     {
-        "prevent_lifecycle_overwrite",
-        ComponentLifecycle_prevent_lifecycle_overwrite
-    },
-    {
-        "prevent_lifecycle_overwrite_null_callbacks",
-        ComponentLifecycle_prevent_lifecycle_overwrite_null_callbacks
-    },
-    {
         "allow_lifecycle_overwrite_equal_callbacks",
         ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks
     },
@@ -4770,6 +4762,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_ctx",
         ComponentLifecycle_on_set_ctx
+    },
+    {
+        "on_add_w_existing_component",
+        ComponentLifecycle_on_add_w_existing_component
+    },
+    {
+        "on_remove_w_existing_component",
+        ComponentLifecycle_on_remove_w_existing_component
     }
 };
 

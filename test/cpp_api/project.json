@@ -769,7 +769,14 @@
                 "grow_no_default_ctor",
                 "grow_no_default_ctor_move",
                 "grow_no_default_ctor_move_w_component",
-                "delete_no_default_ctor"
+                "delete_no_default_ctor",
+                "on_add_hook",
+                "on_remove_hook",
+                "on_set_hook",
+                "on_add_hook_w_entity",
+                "on_remove_hook_w_entity",
+                "on_set_hook_w_entity",
+                "chained_hooks"
             ]
         }, {
             "id": "Refs",

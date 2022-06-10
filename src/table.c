@@ -710,14 +710,15 @@ void add_component(
     ecs_entity_t *entities,
     ecs_id_t id,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool added)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ctor_component(ti, column, row, count);
 
-    ecs_iter_action_t on_add = ti->lifecycle.on_add;
-    if (on_add) {
+    ecs_iter_action_t on_add;
+    if (added && (on_add = ti->lifecycle.on_add)) {
         on_component_callback(world, table, on_add, EcsOnAdd, column,
             entities, id, row, count, ti);
     }
@@ -1807,7 +1808,7 @@ void flecs_table_move(
                 if (construct) {
                     add_component(world, dst_table, dst_type_info[i_new],
                         &dst_columns[i_new], &dst_entity, dst_id, 
-                            dst_index, 1);
+                            dst_index, 1, false);
                 }
             } else {
                 remove_component(world, src_table, src_type_info[i_old],
@@ -1823,7 +1824,8 @@ void flecs_table_move(
     if (construct) {
         for (; (i_new < dst_column_count); i_new ++) {
             add_component(world, dst_table, dst_type_info[i_new],
-                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1);
+                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1, 
+                    true);
         }
     }
 

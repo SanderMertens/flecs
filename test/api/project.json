@@ -754,8 +754,6 @@
                 "copy_on_override_pair_tag",
                 "copy_on_set_pair",
                 "copy_on_set_pair_tag",
-                "prevent_lifecycle_overwrite",
-                "prevent_lifecycle_overwrite_null_callbacks",
                 "allow_lifecycle_overwrite_equal_callbacks",
                 "set_lifecycle_after_trigger",
                 "valid_entity_in_dtor_after_delete",
@@ -794,7 +792,9 @@
                 "binding_ctx_free_after_delete_component",
                 "on_add_ctx",
                 "on_remove_ctx",
-                "on_set_ctx"
+                "on_set_ctx",
+                "on_add_w_existing_component",
+                "on_remove_w_existing_component"
             ]
         }, {
             "id": "Sorting",

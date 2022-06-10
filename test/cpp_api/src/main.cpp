@@ -730,6 +730,13 @@ void ComponentLifecycle_grow_no_default_ctor(void);
 void ComponentLifecycle_grow_no_default_ctor_move(void);
 void ComponentLifecycle_grow_no_default_ctor_move_w_component(void);
 void ComponentLifecycle_delete_no_default_ctor(void);
+void ComponentLifecycle_on_add_hook(void);
+void ComponentLifecycle_on_remove_hook(void);
+void ComponentLifecycle_on_set_hook(void);
+void ComponentLifecycle_on_add_hook_w_entity(void);
+void ComponentLifecycle_on_remove_hook_w_entity(void);
+void ComponentLifecycle_on_set_hook_w_entity(void);
+void ComponentLifecycle_chained_hooks(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -3740,6 +3747,34 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_no_default_ctor",
         ComponentLifecycle_delete_no_default_ctor
+    },
+    {
+        "on_add_hook",
+        ComponentLifecycle_on_add_hook
+    },
+    {
+        "on_remove_hook",
+        ComponentLifecycle_on_remove_hook
+    },
+    {
+        "on_set_hook",
+        ComponentLifecycle_on_set_hook
+    },
+    {
+        "on_add_hook_w_entity",
+        ComponentLifecycle_on_add_hook_w_entity
+    },
+    {
+        "on_remove_hook_w_entity",
+        ComponentLifecycle_on_remove_hook_w_entity
+    },
+    {
+        "on_set_hook_w_entity",
+        ComponentLifecycle_on_set_hook_w_entity
+    },
+    {
+        "chained_hooks",
+        ComponentLifecycle_chained_hooks
     }
 };
 
@@ -4653,7 +4688,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        40,
+        47,
         ComponentLifecycle_testcases
     },
     {
