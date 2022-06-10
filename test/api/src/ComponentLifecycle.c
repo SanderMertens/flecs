@@ -35,7 +35,7 @@ void comp_ctor(
     int32_t count,
     const ecs_type_info_t *info)
 {
-    cl_ctx *data = info->lifecycle.ctx;
+    cl_ctx *data = info->hooks.ctx;
     data->ctor.component = info->component;
     data->ctor.size = info->size;
     data->ctor.count += count;
@@ -55,7 +55,7 @@ void comp_dtor(
     int32_t count,
     const ecs_type_info_t *info)
 {
-    cl_ctx *data = info->lifecycle.ctx;
+    cl_ctx *data = info->hooks.ctx;
     data->dtor.component = info->component;
     data->dtor.size = info->size;
     data->dtor.count += count;
@@ -69,7 +69,7 @@ void comp_copy(
     int32_t count,
     const ecs_type_info_t *info)
 {
-    cl_ctx *data = info->lifecycle.ctx;
+    cl_ctx *data = info->hooks.ctx;
     data->copy.component = info->component;
     data->copy.size = info->size;
     data->copy.count += count;
@@ -85,7 +85,7 @@ void comp_move(
     int32_t count,
     const ecs_type_info_t *info)
 {
-    cl_ctx *data = info->lifecycle.ctx;
+    cl_ctx *data = info->hooks.ctx;
     data->move.component = info->component;
     data->move.size = info->size;
     data->move.count = count;
@@ -101,7 +101,7 @@ void ComponentLifecycle_ctor_on_add() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -125,7 +125,7 @@ void ComponentLifecycle_ctor_on_new() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -146,7 +146,7 @@ void ComponentLifecycle_dtor_on_remove() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = comp_dtor,
         .ctx = &ctx
     });
@@ -170,7 +170,7 @@ void ComponentLifecycle_dtor_on_delete() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = comp_dtor,
         .ctx = &ctx
     });
@@ -194,7 +194,7 @@ void ComponentLifecycle_copy_on_set() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -218,7 +218,7 @@ void ComponentLifecycle_copy_on_override() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -245,7 +245,7 @@ void ComponentLifecycle_copy_on_clone() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -271,7 +271,7 @@ void ComponentLifecycle_no_copy_on_move() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -293,7 +293,7 @@ void ComponentLifecycle_copy_on_snapshot() {
     ECS_COMPONENT(world, Position);
     
     cl_ctx ctx = { { 0 } };
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -341,7 +341,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
     ECS_COMPONENT(world, Position);
     
     cl_ctx ctx = { { 0 } };
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .copy = comp_copy,
         .ctx = &ctx
@@ -394,7 +394,7 @@ void ComponentLifecycle_dtor_on_restore() {
     ECS_COMPONENT(world, Position);
     
     cl_ctx ctx = { { 0 } };
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = comp_dtor,
         .ctx = &ctx
     });
@@ -453,7 +453,7 @@ void ComponentLifecycle_ctor_on_tag() {
 
     test_expect_abort();
 
-    ecs_set(world, Tag, EcsComponentLifecycle, {
+    ecs_set(world, Tag, EcsComponentHooks, {
         .ctor = comp_ctor
     });
 
@@ -469,7 +469,7 @@ void ComponentLifecycle_dtor_on_tag() {
 
     test_expect_abort();
 
-    ecs_set(world, Tag, EcsComponentLifecycle, {
+    ecs_set(world, Tag, EcsComponentHooks, {
         .dtor = comp_dtor
     });
 
@@ -485,7 +485,7 @@ void ComponentLifecycle_copy_on_tag() {
 
     test_expect_abort();
 
-    ecs_set(world, Tag, EcsComponentLifecycle, {
+    ecs_set(world, Tag, EcsComponentHooks, {
         .copy = comp_copy
     });
 
@@ -501,7 +501,7 @@ void ComponentLifecycle_move_on_tag() {
 
     test_expect_abort();
 
-    ecs_set(world, Tag, EcsComponentLifecycle, {
+    ecs_set(world, Tag, EcsComponentHooks, {
         .move = comp_move
     });
 
@@ -622,28 +622,28 @@ void ComponentLifecycle_merge_to_different_table() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position),
         .dtor = ecs_dtor(Position),
         .copy = ecs_copy(Position),
         .move = ecs_move(Position)
     });
 
-    ecs_set(world, ecs_id(Velocity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Velocity), EcsComponentHooks, {
         .ctor = ecs_ctor(Velocity),
         .dtor = ecs_dtor(Velocity),
         .copy = ecs_copy(Velocity),
         .move = ecs_move(Velocity)
     });   
 
-    ecs_set(world, ecs_id(Mass), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Mass), EcsComponentHooks, {
         .ctor = ecs_ctor(Mass),
         .dtor = ecs_dtor(Mass),
         .copy = ecs_copy(Mass),
         .move = ecs_move(Mass)
     });
 
-    ecs_set(world, ecs_id(Rotation), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Rotation), EcsComponentHooks, {
         .ctor = ecs_ctor(Rotation),
         .dtor = ecs_dtor(Rotation),
         .copy = ecs_copy(Rotation),
@@ -746,7 +746,7 @@ void ComponentLifecycle_merge_to_new_table() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position),
         .dtor = ecs_dtor(Position),
         .copy = ecs_copy(Position),
@@ -772,21 +772,21 @@ void ComponentLifecycle_delete_in_stage() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position),
         .dtor = ecs_dtor(Position),
         .copy = ecs_copy(Position),
         .move = ecs_move(Position)
     });
 
-    ecs_set(world, ecs_id(Velocity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Velocity), EcsComponentHooks, {
         .ctor = ecs_ctor(Velocity),
         .dtor = ecs_dtor(Velocity),
         .copy = ecs_copy(Velocity),
         .move = ecs_move(Velocity)
     });   
 
-    ecs_set(world, ecs_id(Mass), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Mass), EcsComponentHooks, {
         .ctor = ecs_ctor(Mass),
         .dtor = ecs_dtor(Mass),
         .copy = ecs_copy(Mass),
@@ -858,7 +858,7 @@ void ComponentLifecycle_ctor_on_add_pair() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Pair), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Pair), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -883,7 +883,7 @@ void ComponentLifecycle_ctor_on_add_pair_tag() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -909,7 +909,7 @@ void ComponentLifecycle_ctor_on_move_pair() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Pair), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Pair), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -936,7 +936,7 @@ void ComponentLifecycle_move_on_realloc() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .move = comp_move,
         .ctx = &ctx
@@ -970,7 +970,7 @@ void ComponentLifecycle_move_on_bulk_new() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .move = comp_move,
         .ctx = &ctx
@@ -1003,7 +1003,7 @@ void ComponentLifecycle_move_on_delete() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .move = comp_move,
         .ctx = &ctx
@@ -1033,7 +1033,7 @@ void ComponentLifecycle_move_dtor_on_delete() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .dtor = comp_dtor,
         .move = comp_move,
         .ctx = &ctx
@@ -1068,7 +1068,7 @@ void ComponentLifecycle_copy_on_override_pair() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Pair), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Pair), EcsComponentHooks, {
         .ctor = comp_ctor,
         .copy = comp_copy,
         .ctx = &ctx
@@ -1105,7 +1105,7 @@ void ComponentLifecycle_copy_on_override_pair_tag() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .copy = comp_copy,
         .ctx = &ctx
@@ -1142,7 +1142,7 @@ void ComponentLifecycle_copy_on_set_pair() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Pair), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Pair), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -1167,7 +1167,7 @@ void ComponentLifecycle_copy_on_set_pair_tag() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .copy = comp_copy,
         .ctx = &ctx
     });
@@ -1189,12 +1189,12 @@ void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position)
     });
 
     /* Same actions, should be ok */
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position)
     });
 
@@ -1214,7 +1214,7 @@ void ComponentLifecycle_set_lifecycle_after_trigger() {
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position)
     });
 
@@ -1254,7 +1254,7 @@ void ComponentLifecycle_valid_entity_in_dtor_after_delete() {
 
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = dummy_dtor
     });
 
@@ -1278,7 +1278,7 @@ void ComponentLifecycle_ctor_w_emplace() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .ctx = &ctx
     });
@@ -1298,7 +1298,7 @@ void ComponentLifecycle_dtor_on_fini() {
 
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = dummy_dtor
     });
 
@@ -1494,7 +1494,7 @@ void ComponentLifecycle_valid_type_in_dtor_on_fini() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = type_dtor
     });
 
@@ -1518,7 +1518,7 @@ void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_type_dtor
     });
 
@@ -1543,11 +1543,11 @@ void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_fini() {
     ECS_COMPONENT_DEFINE(world, String);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_comp_dtor
     });
 
@@ -1574,11 +1574,11 @@ void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_delete_parent(
     ECS_COMPONENT_DEFINE(world, String);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_comp_dtor
     });
 
@@ -1612,11 +1612,11 @@ void ComponentLifecycle_delete_in_dtor_same_type_on_fini() {
     ECS_COMPONENT_DEFINE(world, String);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1645,11 +1645,11 @@ void ComponentLifecycle_delete_in_dtor_other_type_on_fini() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1675,7 +1675,7 @@ void ComponentLifecycle_delete_self_in_dtor_on_fini() {
 
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = self_delete_dtor
     });
 
@@ -1700,11 +1700,11 @@ void ComponentLifecycle_delete_in_dtor_same_type_on_delete_parent() {
     ECS_COMPONENT_DEFINE(world, String);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1743,11 +1743,11 @@ void ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1783,7 +1783,7 @@ void ComponentLifecycle_delete_self_in_dtor_on_delete_parent() {
 
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = self_delete_dtor
     });
 
@@ -1820,11 +1820,11 @@ void ComponentLifecycle_delete_in_dtor_same_type_on_delete() {
     ECS_COMPONENT_DEFINE(world, String);
     ECS_COMPONENT_DEFINE(world, Entity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1864,11 +1864,11 @@ void ComponentLifecycle_delete_in_dtor_other_type_on_delete() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set(world, ecs_id(String), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(String), EcsComponentHooks, {
         .dtor = string_dtor
     });
 
-    ecs_set(world, ecs_id(Entity), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Entity), EcsComponentHooks, {
         .dtor = other_delete_dtor
     });
 
@@ -1897,7 +1897,7 @@ void ComponentLifecycle_delete_self_in_dtor_on_delete() {
 
     ECS_COMPONENT(world, Dummy);
 
-    ecs_set(world, ecs_id(Dummy), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Dummy), EcsComponentHooks, {
         .dtor = self_delete_dtor
     });
 
@@ -1940,7 +1940,7 @@ void ComponentLifecycle_on_set_after_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_ctor(Position),
         .on_set = ecs_on_set(Position)
     });
@@ -1984,7 +1984,7 @@ void ComponentLifecycle_on_add_after_new() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .ctor = ecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
@@ -2004,7 +2004,7 @@ void ComponentLifecycle_on_add_after_add() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .ctor = ecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
@@ -2028,7 +2028,7 @@ void ComponentLifecycle_on_add_after_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .ctor = ecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
@@ -2062,7 +2062,7 @@ void ComponentLifecycle_on_remove_after_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .on_remove = ecs_on_remove(Position)
     });
 
@@ -2085,7 +2085,7 @@ void ComponentLifecycle_on_remove_after_clear() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .on_remove = ecs_on_remove(Position)
     });
 
@@ -2108,7 +2108,7 @@ void ComponentLifecycle_on_remove_after_delete() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .on_remove = ecs_on_remove(Position)
     });
 
@@ -2185,7 +2185,7 @@ void ComponentLifecycle_dtor_component_new_id_while_fini() {
         .callback = on_remove_tag_set_position
     });
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
@@ -2231,7 +2231,7 @@ void ComponentLifecycle_dtor_component_new_pair_id_while_fini() {
         .callback = on_remove_tag_set_position_pair
     });
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
@@ -2277,7 +2277,7 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini() {
         .callback = on_remove_tag_set_position_obj_pair
     });
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
@@ -2299,7 +2299,7 @@ void ComponentLifecycle_ctor_move_dtor_after_resize() {
 
     cl_ctx ctx = { { 0 } };
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctor = comp_ctor,
         .copy = comp_copy,
         .move = comp_move,
@@ -2349,7 +2349,7 @@ void ComponentLifecycle_ctx_free() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctx = &component_lifecycle_ctx,
         .ctx_free = component_lifecycle_ctx_free
     });
@@ -2364,7 +2364,7 @@ void ComponentLifecycle_binding_ctx_free() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .binding_ctx = &component_lifecycle_ctx,
         .binding_ctx_free = component_lifecycle_ctx_free
     });
@@ -2379,7 +2379,7 @@ void ComponentLifecycle_ctx_free_after_delete_component() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .ctx = &component_lifecycle_ctx,
         .ctx_free = component_lifecycle_ctx_free
     });
@@ -2397,7 +2397,7 @@ void ComponentLifecycle_binding_ctx_free_after_delete_component() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .binding_ctx = &component_lifecycle_ctx,
         .binding_ctx_free = component_lifecycle_ctx_free
     });
@@ -2422,7 +2422,7 @@ void ComponentLifecycle_on_add_ctx() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .on_add = test_lifecycle_ctx,
         .ctx = &component_lifecycle_ctx,
         .binding_ctx = &component_lifecycle_binding_ctx
@@ -2443,7 +2443,7 @@ void ComponentLifecycle_on_remove_ctx() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .on_remove = test_lifecycle_ctx,
         .ctx = &component_lifecycle_ctx,
         .binding_ctx = &component_lifecycle_binding_ctx
@@ -2468,7 +2468,7 @@ void ComponentLifecycle_on_set_ctx() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .on_set = test_lifecycle_ctx,
         .ctx = &component_lifecycle_ctx,
         .binding_ctx = &component_lifecycle_binding_ctx
@@ -2503,7 +2503,7 @@ void ComponentLifecycle_on_add_w_existing_component() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .on_add = test_on_event,
         .ctx = (void*)&EcsOnAdd
     });
@@ -2523,7 +2523,7 @@ void ComponentLifecycle_on_remove_w_existing_component() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .on_remove = test_on_event,
         .ctx = (void*)&EcsOnRemove
     });

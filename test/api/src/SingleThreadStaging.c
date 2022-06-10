@@ -2403,7 +2403,7 @@ void SingleThreadStaging_clear_stage_after_merge() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(Position), EcsComponentHooks, {
         .move = ecs_move(Position)
     });
 

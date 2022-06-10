@@ -232,8 +232,7 @@ ecs_entity_t term_id_entity(
         }
     } else if (term_id->name) {
         if (term_id->var == EcsVarIsEntity || 
-           (term_id->var == EcsVarDefault && 
-            !ecs_identifier_is_var(term_id->name))) 
+           (term_id->var == EcsVarDefault)) 
         {
             ecs_entity_t e = ecs_lookup_fullpath(world, term_id->name);
             if (e != EcsWildcard && e != EcsThis && e != EcsAny) {
@@ -647,26 +646,6 @@ bool ecs_identifier_is_0(
     const char *id)
 {
     return id[0] == '0' && !id[1];
-}
-
-const char* ecs_identifier_is_var(
-    const char *id)
-{
-    if (!id) {
-        return NULL;
-    }
-
-    /* Variable identifiers cannot start with a number */
-    if (isdigit(id[0])) {
-        return NULL;
-    }
-
-    /* Identifiers that start with _ are variables */
-    if (id[0] == '_' && id[1] != 0) {
-        return &id[1];
-    }
-
-    return NULL;
 }
 
 bool ecs_id_match(

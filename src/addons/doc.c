@@ -122,7 +122,7 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocDetail);
     flecs_bootstrap_tag(world, EcsDocLink);
 
-    ecs_set_component_actions(world, EcsDocDescription, { 
+    ecs_set_hooks(world, EcsDocDescription, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsDocDescription),
         .copy = ecs_copy(EcsDocDescription),

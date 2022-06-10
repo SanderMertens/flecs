@@ -3376,7 +3376,7 @@ void Prefab_override_dont_inherit() {
 
     ecs_add_id(world, ecs_id(Position), EcsDontInherit);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .ctor = ecs_default_ctor
     });
 

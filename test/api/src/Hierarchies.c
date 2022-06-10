@@ -1342,7 +1342,7 @@ void Hierarchies_delete_tree_w_dtor() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_component_actions(world, Position, {
+    ecs_set_hooks(world, Position, {
         .dtor = ecs_dtor(Position)
     });
 

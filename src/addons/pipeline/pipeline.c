@@ -870,7 +870,7 @@ void FlecsPipelineImport(
     flecs_bootstrap_tag(world, EcsPostFrame);
 
     /* Set ctor and dtor for PipelineQuery */
-    ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
+    ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentHooks, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsPipelineQuery)
     });

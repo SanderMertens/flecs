@@ -238,8 +238,8 @@ int init_type(
         /* Ensure that component has a default constructor, to prevent crashing
          * serializers on uninitialized values. */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
-        if (!ti->lifecycle.ctor) {
-            ti->lifecycle.ctor = ecs_default_ctor;
+        if (!ti->hooks.ctor) {
+            ti->hooks.ctor = ecs_default_ctor;
         }
     } else {
         if (meta_type->kind != kind) {
@@ -976,8 +976,8 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
          * contain uninitialized memory, which could cause serializers to crash
          * when for example inspecting string fields. */
         if (!type->existing) {
-            ecs_set_component_actions_w_id(world, it->entities[i], 
-                &(EcsComponentLifecycle){ 
+            ecs_set_hooks_id(world, it->entities[i], 
+                &(EcsComponentHooks){ 
                     .ctor = ecs_default_ctor
                 });
         }
@@ -1014,49 +1014,49 @@ void FlecsMetaImport(
     flecs_bootstrap_tag(world, EcsConstant);
     flecs_bootstrap_tag(world, EcsQuantity);
 
-    ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
+    ecs_set_hooks(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
-    ecs_set_component_actions(world, EcsMetaTypeSerialized, { 
+    ecs_set_hooks(world, EcsMetaTypeSerialized, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsMetaTypeSerialized),
         .copy = ecs_copy(EcsMetaTypeSerialized),
         .dtor = ecs_dtor(EcsMetaTypeSerialized)
     });
 
-    ecs_set_component_actions(world, EcsStruct, { 
+    ecs_set_hooks(world, EcsStruct, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsStruct),
         .copy = ecs_copy(EcsStruct),
         .dtor = ecs_dtor(EcsStruct)
     });
 
-    ecs_set_component_actions(world, EcsMember, { 
+    ecs_set_hooks(world, EcsMember, { 
         .ctor = ecs_default_ctor,
         .on_set = member_on_set
     });
 
-    ecs_set_component_actions(world, EcsEnum, { 
+    ecs_set_hooks(world, EcsEnum, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsEnum),
         .copy = ecs_copy(EcsEnum),
         .dtor = ecs_dtor(EcsEnum)
     });
 
-    ecs_set_component_actions(world, EcsBitmask, { 
+    ecs_set_hooks(world, EcsBitmask, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsBitmask),
         .copy = ecs_copy(EcsBitmask),
         .dtor = ecs_dtor(EcsBitmask)
     });
 
-    ecs_set_component_actions(world, EcsUnit, { 
+    ecs_set_hooks(world, EcsUnit, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsUnit),
         .copy = ecs_copy(EcsUnit),
         .dtor = ecs_dtor(EcsUnit)
     });
 
-    ecs_set_component_actions(world, EcsUnitPrefix, { 
+    ecs_set_hooks(world, EcsUnitPrefix, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsUnitPrefix),
         .copy = ecs_copy(EcsUnitPrefix),

@@ -1322,10 +1322,10 @@ void World_use_after_clear_empty_w_component_w_lifecycle() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set_component_actions(world, Position, { 
+    ecs_set_hooks(world, Position, { 
         .ctor = ecs_default_ctor 
     });
-    ecs_set_component_actions(world, Velocity, { 
+    ecs_set_hooks(world, Velocity, { 
         .ctor = ecs_default_ctor 
     });
 

@@ -7,7 +7,7 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
-const ecs_entity_t ecs_id(EcsComponentLifecycle) = 2;
+const ecs_entity_t ecs_id(EcsComponentHooks) = 2;
 const ecs_entity_t ecs_id(EcsType) =               3;
 const ecs_entity_t ecs_id(EcsIdentifier) =         4;
 const ecs_entity_t ecs_id(EcsTrigger) =            5;
@@ -818,7 +818,7 @@ static
 void default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
@@ -827,7 +827,7 @@ static
 void default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
 }
@@ -836,7 +836,7 @@ static
 void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->ctor(dst_ptr, count, ti);
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
@@ -846,7 +846,7 @@ static
 void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->move_ctor(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
@@ -855,7 +855,7 @@ static
 void default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
@@ -866,7 +866,7 @@ void default_dtor(void *dst_ptr, void *src_ptr,
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->dtor(dst_ptr, count, ti);
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
@@ -878,15 +878,15 @@ void default_move_w_dtor(void *dst_ptr, void *src_ptr,
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
-    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    const EcsComponentHooks *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
 
-void ecs_set_component_actions_w_id(
+void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
-    const EcsComponentLifecycle *li)
+    const EcsComponentHooks *h)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -917,90 +917,76 @@ void ecs_set_component_actions_w_id(
         ti->alignment = component_ptr->alignment;
     }
 
-    if (li->ctor) ti->lifecycle.ctor = li->ctor;
-    if (li->dtor) ti->lifecycle.dtor = li->dtor;
-    if (li->copy) ti->lifecycle.copy = li->copy;
-    if (li->move) ti->lifecycle.move = li->move;
-    if (li->copy_ctor) ti->lifecycle.copy_ctor = li->copy_ctor;
-    if (li->move_ctor) ti->lifecycle.move_ctor = li->move_ctor;
-    if (li->ctor_move_dtor) ti->lifecycle.ctor_move_dtor = li->ctor_move_dtor;
-    if (li->move_dtor) ti->lifecycle.move_dtor = li->move_dtor;
+    if (h->ctor) ti->hooks.ctor = h->ctor;
+    if (h->dtor) ti->hooks.dtor = h->dtor;
+    if (h->copy) ti->hooks.copy = h->copy;
+    if (h->move) ti->hooks.move = h->move;
+    if (h->copy_ctor) ti->hooks.copy_ctor = h->copy_ctor;
+    if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
+    if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
+    if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
 
-    if (li->on_add) ti->lifecycle.on_add = li->on_add;
-    if (li->on_remove) ti->lifecycle.on_remove = li->on_remove;
-    if (li->on_set) ti->lifecycle.on_set = li->on_set;
+    if (h->on_add) ti->hooks.on_add = h->on_add;
+    if (h->on_remove) ti->hooks.on_remove = h->on_remove;
+    if (h->on_set) ti->hooks.on_set = h->on_set;
 
-    if (li->ctx) ti->lifecycle.ctx = li->ctx;
-    if (li->binding_ctx) ti->lifecycle.binding_ctx = li->binding_ctx;
-    if (li->ctx_free) ti->lifecycle.ctx_free = li->ctx_free;
-    if (li->binding_ctx_free) ti->lifecycle.binding_ctx_free = li->binding_ctx_free;
+    if (h->ctx) ti->hooks.ctx = h->ctx;
+    if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
+    if (h->ctx_free) ti->hooks.ctx_free = h->ctx_free;
+    if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
 
     /* If no constructor is set, invoking any of the other lifecycle actions 
      * is not safe as they will potentially access uninitialized memory. For 
      * ease of use, if no constructor is specified, set a default one that 
      * initializes the component to 0. */
-    if (!li->ctor && (li->dtor || li->copy || li->move)) {
-        ti->lifecycle.ctor = ecs_default_ctor;   
+    if (!h->ctor && (h->dtor || h->copy || h->move)) {
+        ti->hooks.ctor = ecs_default_ctor;   
     }
 
     /* Set default copy ctor, move ctor and merge */
-    if (li->copy && !li->copy_ctor) {
-        ti->lifecycle.copy_ctor = default_copy_ctor;
+    if (h->copy && !h->copy_ctor) {
+        ti->hooks.copy_ctor = default_copy_ctor;
     }
 
-    if (li->move && !li->move_ctor) {
-        ti->lifecycle.move_ctor = default_move_ctor;
+    if (h->move && !h->move_ctor) {
+        ti->hooks.move_ctor = default_move_ctor;
     }
 
-    if (!li->ctor_move_dtor) {
-        if (li->move) {
-            if (li->dtor) {
-                if (li->move_ctor) {
+    if (!h->ctor_move_dtor) {
+        if (h->move) {
+            if (h->dtor) {
+                if (h->move_ctor) {
                     /* If an explicit move ctor has been set, use callback 
                      * that uses the move ctor vs. using a ctor+move */
-                    ti->lifecycle.ctor_move_dtor = default_move_ctor_w_dtor;
+                    ti->hooks.ctor_move_dtor = default_move_ctor_w_dtor;
                 } else {
                     /* If no explicit move_ctor has been set, use
                      * combination of ctor + move + dtor */
-                    ti->lifecycle.ctor_move_dtor = default_ctor_w_move_w_dtor;
+                    ti->hooks.ctor_move_dtor = default_ctor_w_move_w_dtor;
                 }
             } else {
                 /* If no dtor has been set, this is just a move ctor */
-                ti->lifecycle.ctor_move_dtor = ti->lifecycle.move_ctor;
+                ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
             }            
         }
     }
 
-    if (!li->move_dtor) {
-        if (li->move) {
-            if (li->dtor) {
-                ti->lifecycle.move_dtor = default_move_w_dtor;
+    if (!h->move_dtor) {
+        if (h->move) {
+            if (h->dtor) {
+                ti->hooks.move_dtor = default_move_w_dtor;
             } else {
-                ti->lifecycle.move_dtor = default_move;
+                ti->hooks.move_dtor = default_move;
             }
         } else {
-            if (li->dtor) {
-                ti->lifecycle.move_dtor = default_dtor;
+            if (h->dtor) {
+                ti->hooks.move_dtor = default_dtor;
             }
         }
     }
 
 error:
     return;
-}
-
-bool ecs_component_has_actions(
-    const ecs_world_t *world,
-    ecs_entity_t component)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
-    
-    world = ecs_get_world(world);
-    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
-    return (ti != NULL) && ti->lifecycle_set;
-error:
-    return false;
 }
 
 void ecs_atfini(
@@ -1422,7 +1408,7 @@ bool flecs_type_info_init_id(
     ecs_entity_t component,
     ecs_size_t size,
     ecs_size_t alignment,
-    const EcsComponentLifecycle *li)
+    const EcsComponentHooks *li)
 {
     bool changed = false;
 
@@ -1442,7 +1428,7 @@ bool flecs_type_info_init_id(
         ti->size = size;
         ti->alignment = alignment;
         if (li) {
-            ecs_set_component_actions_w_id(world, component, li);
+            ecs_set_hooks_id(world, component, li);
         }
     }
 
@@ -1485,11 +1471,11 @@ void flecs_type_info_fini(
     ecs_world_t *world,
     ecs_type_info_t *ti)
 {
-    if (ti->lifecycle.ctx_free) {
-        ti->lifecycle.ctx_free(ti->lifecycle.ctx);
+    if (ti->hooks.ctx_free) {
+        ti->hooks.ctx_free(ti->hooks.ctx);
     }
-    if (ti->lifecycle.binding_ctx_free) {
-        ti->lifecycle.binding_ctx_free(ti->lifecycle.binding_ctx);
+    if (ti->hooks.binding_ctx_free) {
+        ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
     }
     flecs_sparse_remove(world->type_info, ti->component);
 }

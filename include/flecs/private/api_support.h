@@ -45,11 +45,6 @@ FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
-FLECS_API
-bool ecs_component_has_actions(
-    const ecs_world_t *world,
-    ecs_entity_t component);
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,13 +52,11 @@ bool ecs_component_has_actions(
 bool ecs_identifier_is_0(
     const char *id);
 
-const char* ecs_identifier_is_var(
-    const char *id);
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Ctor that initializes component to 0
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Constructor that zeromem's a component value */
 FLECS_API
 void ecs_default_ctor(
     void *ptr, 
