@@ -915,9 +915,9 @@ void sort_table(
     }
 
     if (sort) {
-        sort(world, table, data, entities, ptr, size, 0, count - 1, compare);
+        sort(world, table, entities, ptr, size, 0, count - 1, compare);
     } else {
-        sort_table_generic(world, table, data, entities, ptr, size, 0, count - 1, compare);
+        sort_table_generic(world, table, entities, ptr, size, 0, count - 1, compare);
     }
 }
 

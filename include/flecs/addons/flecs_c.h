@@ -114,10 +114,12 @@
  * For best results use LTO or make the function body visible in the same compilation unit.
  * Variadic arguments are prepended before generated functions, use it to declare static
  *   or exported functions.
- * Parameters:
+ * Parameters of the comparison function:
+ *   ecs_entity_t e1, const void* ptr1,
+ *   ecs_entity_t e2, const void* ptr2
+ * Parameters of the sort functions:
  *   ecs_world_t *world
  *   ecs_table_t *table
- *   ecs_data_t *data
  *   ecs_entity_t *entities
  *   void *ptr
  *   int32_t elem_size
@@ -126,13 +128,12 @@
  *   ecs_order_by_action_t order_by - Pointer to the original comparison function. You are not supposed to use it.
  * Example:
  *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
-  *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
-*/
+ *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ */
 #define ECS_SORT_TABLE_WITH_COMPARE(id, op_name, compare_fn, ...) \
     static int32_t ECS_CONCAT(op_name, _partition)( \
         ecs_world_t *world, \
         ecs_table_t *table, \
-        ecs_data_t *data, \
         ecs_entity_t *entities, \
         void *ptr, \
         int32_t elem_size, \
@@ -159,7 +160,7 @@
             if (i >= j) { \
                 return j; \
             } \
-            ecs_table_swap_rows(world, table, data, i, j); \
+            ecs_table_swap_rows(world, table, i, j); \
             if (p == i) { \
                 pivot = ECS_ELEM(ptr, elem_size, j); \
                 pivot_e = entities[j]; \
@@ -173,7 +174,6 @@
     __VA_ARGS__ void op_name( \
         ecs_world_t *world, \
         ecs_table_t *table, \
-        ecs_data_t *data, \
         ecs_entity_t *entities, \
         void *ptr, \
         int32_t size, \
@@ -184,9 +184,9 @@
         if ((hi - lo) < 1)  { \
             return; \
         } \
-        int32_t p = ECS_CONCAT(op_name, _partition)(world, table, data, entities, ptr, size, lo, hi, order_by); \
-        op_name(world, table, data, entities, ptr, size, lo, p, order_by); \
-        op_name(world, table, data, entities, ptr, size, p + 1, hi, order_by); \
+        int32_t p = ECS_CONCAT(op_name, _partition)(world, table, entities, ptr, size, lo, hi, order_by); \
+        op_name(world, table, entities, ptr, size, lo, p, order_by); \
+        op_name(world, table, entities, ptr, size, p + 1, hi, order_by); \
     }
 
 /* Declare efficient table sorting operation that uses default component comparison operator.
@@ -202,11 +202,11 @@
 
 /* Declare component comparison operations.
  * Parameters:
- *   ecs_entity_t e1, e2;
- *   const void* ptr1, ptr2;
+ *   ecs_entity_t e1, const void* ptr1,
+ *   ecs_entity_t e2, const void* ptr2
  * Example:
  *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
-*/
+ */
 #define ECS_COMPARE(id, ...) \
     int ecs_compare(id)(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { \
         __VA_ARGS__ \

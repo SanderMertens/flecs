@@ -158,7 +158,6 @@ void flecs_table_merge(
 void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2);
 
