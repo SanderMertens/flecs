@@ -707,14 +707,8 @@ void ComponentLifecycle_ctor_w_emplace(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
-void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_fini(void);
-void ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_delete_parent(void);
-void ComponentLifecycle_delete_in_dtor_same_type_on_fini(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_fini(void);
-void ComponentLifecycle_delete_self_in_dtor_on_fini(void);
-void ComponentLifecycle_delete_in_dtor_same_type_on_delete_parent(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent(void);
-void ComponentLifecycle_delete_self_in_dtor_on_delete_parent(void);
 void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
 void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
@@ -4647,36 +4641,12 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini
     },
     {
-        "valid_same_type_comp_of_entity_in_dtor_on_fini",
-        ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_fini
-    },
-    {
-        "valid_same_type_comp_of_entity_in_dtor_on_delete_parent",
-        ComponentLifecycle_valid_same_type_comp_of_entity_in_dtor_on_delete_parent
-    },
-    {
-        "delete_in_dtor_same_type_on_fini",
-        ComponentLifecycle_delete_in_dtor_same_type_on_fini
-    },
-    {
         "delete_in_dtor_other_type_on_fini",
         ComponentLifecycle_delete_in_dtor_other_type_on_fini
     },
     {
-        "delete_self_in_dtor_on_fini",
-        ComponentLifecycle_delete_self_in_dtor_on_fini
-    },
-    {
-        "delete_in_dtor_same_type_on_delete_parent",
-        ComponentLifecycle_delete_in_dtor_same_type_on_delete_parent
-    },
-    {
         "delete_in_dtor_other_type_on_delete_parent",
         ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent
-    },
-    {
-        "delete_self_in_dtor_on_delete_parent",
-        ComponentLifecycle_delete_self_in_dtor_on_delete_parent
     },
     {
         "delete_in_dtor_same_type_on_delete",
@@ -9787,7 +9757,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        73,
+        67,
         ComponentLifecycle_testcases
     },
     {
