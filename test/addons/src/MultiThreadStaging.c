@@ -342,7 +342,7 @@ void MultiThreadStaging_custom_thread_auto_merge() {
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
 
     ecs_frame_begin(world, 0);
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -362,7 +362,7 @@ void MultiThreadStaging_custom_thread_auto_merge() {
     test_assert(!ecs_has(world, e2, Position));
     test_assert(!ecs_has(ctx_2, e2, Position));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
     ecs_frame_end(world);
 
     test_assert(ecs_has(world, e1, Position));
@@ -395,7 +395,7 @@ void MultiThreadStaging_custom_thread_manual_merge() {
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
 
     ecs_frame_begin(world, 0);
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -415,7 +415,7 @@ void MultiThreadStaging_custom_thread_manual_merge() {
     test_assert(!ecs_has(world, e2, Position));
     test_assert(!ecs_has(ctx_2, e2, Position));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
     ecs_frame_end(world);
 
     test_assert(!ecs_has(world, e1, Position));
@@ -454,7 +454,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
     ecs_set_automerge(ctx_2, false);
 
     ecs_frame_begin(world, 0);
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -474,7 +474,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
     test_assert(!ecs_has(world, e2, Position));
     test_assert(!ecs_has(ctx_2, e2, Position));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
     ecs_frame_end(world);
 
     test_assert(ecs_has(world, e1, Position));

@@ -508,7 +508,7 @@ error:
     return NULL;
 }
 
-bool ecs_staging_begin(
+bool ecs_readonly_begin(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -531,7 +531,7 @@ bool ecs_staging_begin(
     return is_readonly;
 }
 
-void ecs_staging_end(
+void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);

@@ -2532,7 +2532,7 @@ void Filter_term_iter_in_stage() {
     ecs_entity_t e2 = ecs_new(world, Tag);
     ecs_add(world, e2, TagB);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);
@@ -2551,7 +2551,7 @@ void Filter_term_iter_in_stage() {
     test_int(it.entities[0], e2);
     test_int(it.ids[0], Tag);
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_fini(world);
 }
@@ -3620,7 +3620,7 @@ void Filter_filter_iter_in_stage() {
 
     ecs_entity_t e = ecs_new(world, Tag);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);
@@ -3639,7 +3639,7 @@ void Filter_filter_iter_in_stage() {
     test_int(it.entities[0], e);
     test_int(it.ids[0], Tag);
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_filter_fini(&f);
 

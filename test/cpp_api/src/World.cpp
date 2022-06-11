@@ -554,13 +554,13 @@ void World_staged_count() {
 
     flecs::world stage = ecs.get_stage(0);
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     test_int(stage.count<Position>(), 0);
 
-    ecs.staging_end();
+    ecs.readonly_end();
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     stage.entity().add<Position>();
     stage.entity().add<Position>();
@@ -571,7 +571,7 @@ void World_staged_count() {
 
     test_int(stage.count<Position>(), 0);
 
-    ecs.staging_end();
+    ecs.readonly_end();
 
     test_int(stage.count<Position>(), 6);
 }
@@ -834,11 +834,11 @@ void World_with_scope_type_staged() {
     flecs::entity e;
     flecs::world stage = ecs.get_stage(0);
     
-    ecs.staging_begin();
+    ecs.readonly_begin();
     stage.scope<ParentScope>([&]{
         e = stage.entity("Child");
     });
-    ecs.staging_end();
+    ecs.readonly_end();
 
     test_assert( e.has(flecs::ChildOf, ecs.id<ParentScope>()) );
 

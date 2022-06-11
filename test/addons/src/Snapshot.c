@@ -828,7 +828,7 @@ void Snapshot_snapshot_from_stage() {
     ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -837,7 +837,7 @@ void Snapshot_snapshot_from_stage() {
     ecs_delete(stage, e1);
     ecs_delete(stage, e2);
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(!ecs_is_alive(world, e2));

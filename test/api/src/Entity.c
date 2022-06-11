@@ -1039,7 +1039,7 @@ void Entity_init_w_childof_nested_name_twice_deferred() {
 void Entity_init_w_name_staged() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1048,7 +1048,7 @@ void Entity_init_w_name_staged() {
     });
     test_assert(e != 0);
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_str(ecs_get_name(world, e), "Foo");
 
@@ -1091,7 +1091,7 @@ void Entity_record_find_from_stage() {
     ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1099,7 +1099,7 @@ void Entity_record_find_from_stage() {
     test_assert(r != NULL);
     test_assert(r->table != NULL);
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_fini(world);
 }
@@ -1225,14 +1225,14 @@ void Entity_set_scope_w_entity_init_from_stage() {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_entity_t parent = ecs_set_name(stage, 0, "Parent");
     ecs_set_scope(stage, parent);
     ecs_entity_t child = ecs_entity_init(stage, &(ecs_entity_desc_t) {
         .name = "Child"
     });
     ecs_set_scope(stage, 0);
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -1580,7 +1580,7 @@ void Entity_staged_set_name_n_stages() {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *s = ecs_get_stage(world, 1);
 
@@ -1588,7 +1588,7 @@ void Entity_staged_set_name_n_stages() {
         .name = "Foo"
     });
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "Foo");
@@ -1601,7 +1601,7 @@ void Entity_staged_set_symbol_n_stages() {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *s = ecs_get_stage(world, 1);
 
@@ -1610,7 +1610,7 @@ void Entity_staged_set_symbol_n_stages() {
         .symbol = "Bar"
     });
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "Foo");

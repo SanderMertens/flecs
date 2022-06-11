@@ -429,12 +429,12 @@ void Enum_enum_type_from_stage() {
 
     auto stage = ecs.get_stage(0);
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     auto enum_type = flecs::enum_type<StandardEnum>(stage);
     test_assert(enum_type.entity() == ecs.component<StandardEnum>());
 
-    ecs.staging_end();
+    ecs.readonly_end();
 }
 
 void Enum_add_enum_from_stage() {
@@ -442,12 +442,12 @@ void Enum_add_enum_from_stage() {
 
     auto stage = ecs.get_stage(0);
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     auto e = stage.entity().add(StandardEnum::Red);
     test_assert(!e.has(StandardEnum::Red));
 
-    ecs.staging_end();
+    ecs.readonly_end();
 
     test_assert(e.has(StandardEnum::Red));
 }

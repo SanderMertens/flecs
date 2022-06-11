@@ -284,14 +284,14 @@ void Event_emit_staged_from_world() {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -319,7 +319,7 @@ void Event_emit_staged_from_stage() {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_emit(stage, &(ecs_event_desc_t) {
         .event = evt,
@@ -327,7 +327,7 @@ void Event_emit_staged_from_stage() {
         .table = table,
         .observable = world
     });
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -355,14 +355,14 @@ void Event_emit_staged_from_world_observer() {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -391,7 +391,7 @@ void Event_emit_staged_from_stage_observer() {
         .ctx = &ctx
     });
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_emit(stage, &(ecs_event_desc_t) {
@@ -400,7 +400,7 @@ void Event_emit_staged_from_stage_observer() {
         .table = table,
         .observable = world
     });
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);

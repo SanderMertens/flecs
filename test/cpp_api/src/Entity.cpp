@@ -1386,14 +1386,14 @@ void Entity_entity_view_to_entity_stage() {
 
     auto stage = world.get_stage(0);
 
-    world.staging_begin();
+    world.readonly_begin();
 
     flecs::entity ew = ev.mut(stage);
 
     ew.set<Position>({10, 20});
     test_assert(!ew.has<Position>());
 
-    world.staging_end();
+    world.readonly_end();
 
     test_assert(ew.has<Position>());
     test_assert(ev.has<Position>());
@@ -1409,12 +1409,12 @@ void Entity_create_entity_view_from_stage() {
 
     auto stage = world.get_stage(0);
 
-    world.staging_begin();
+    world.readonly_begin();
 
     flecs::entity_view ev = stage.entity();
     test_assert(ev != 0);
 
-    world.staging_end();
+    world.readonly_end();
 
     // Ensure we can use created ev out of stage
     auto ew = ev.mut(world);
@@ -3005,7 +3005,7 @@ void Entity_each_in_stage() {
     auto e = world.entity().add<Rel, Obj>();
     test_assert((e.has<Rel, Obj>()));
 
-    world.staging_begin();
+    world.readonly_begin();
 
     auto s = world.get_stage(0);
     auto em = e.mut(s);
@@ -3020,7 +3020,7 @@ void Entity_each_in_stage() {
 
     test_int(count, 1);
 
-    world.staging_end();
+    world.readonly_end();
 }
 
 void Entity_iter_recycled_parent() {
@@ -3049,7 +3049,7 @@ void Entity_get_lambda_from_stage() {
 
     auto e = ecs.entity().set<Position>({10, 20});
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     flecs::world stage = ecs.get_stage(0);
 
@@ -3061,7 +3061,7 @@ void Entity_get_lambda_from_stage() {
     });
     test_bool(invoked, true);
     
-    ecs.staging_end();
+    ecs.readonly_end();
 }
 
 void Entity_default_ctor() {

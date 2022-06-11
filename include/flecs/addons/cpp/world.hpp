@@ -237,11 +237,11 @@ struct world {
      * When an application does not use ecs_progress to control the main loop, it
      * can still use Flecs features such as the defer queue. When an application
      * needs to stage changes, it needs to call this function after ecs_frame_begin.
-     * A call to ecs_staging_begin must be followed by a call to ecs_staging_end.
+     * A call to ecs_readonly_begin must be followed by a call to ecs_readonly_end.
      * 
      * When staging is enabled, modifications to entities are stored to a stage.
      * This ensures that arrays are not modified while iterating. Modifications are
-     * merged back to the "main stage" when ecs_staging_end is invoked.
+     * merged back to the "main stage" when ecs_readonly_end is invoked.
      *
      * While the world is in staging mode, no structural changes (add/remove/...)
      * can be made to the world itself. Operations must be executed on a stage
@@ -251,8 +251,8 @@ struct world {
      *
      * @return Whether world is currently staged.
      */
-    bool staging_begin() {
-        return ecs_staging_begin(m_world);
+    bool readonly_begin() {
+        return ecs_readonly_begin(m_world);
     }
 
     /** End staging.
@@ -262,8 +262,8 @@ struct world {
      *
      * This function should only be ran from the main thread.
      */
-    void staging_end() {
-        ecs_staging_end(m_world);
+    void readonly_end() {
+        ecs_readonly_end(m_world);
     }
 
     /** Defer operations until end of frame. 
@@ -298,17 +298,17 @@ struct world {
      * merged when threads are synchronized.
      *
      * Note that set_threads() already creates the appropriate number of stages. 
-     * The set_stages() operation is useful for applications that want to manage 
+     * The set_stage_count() operation is useful for applications that want to manage 
      * their own stages and/or threads.
      * 
      * @param stages The number of stages.
      */
-    void set_stages(int32_t stages) const {
+    void set_stage_count(int32_t stages) const {
         ecs_set_stage_count(m_world, stages);
     }
 
     /** Get number of configured stages.
-     * Return number of stages set by set_stages.
+     * Return number of stages set by set_stage_count.
      *
      * @return The number of stages used for threading.
      */
@@ -329,7 +329,7 @@ struct world {
     /** Enable/disable automerging for world or stage.
      * When automerging is enabled, staged data will automatically be merged 
      * with the world when staging ends. This happens at the end of progress(), 
-     * at a sync point or when staging_end() is called.
+     * at a sync point or when readonly_end() is called.
      *
      * Applications can exercise more control over when data from a stage is 
      * merged by disabling automerging. This requires an application to 
@@ -350,7 +350,7 @@ struct world {
      * When automatic merging is disabled, an application can call this
      * operation on either an individual stage, or on the world which will merge
      * all stages. This operation may only be called when staging is not enabled
-     * (either after progress() or after staging_end()).
+     * (either after progress() or after readonly_end()).
      *
      * This operation may be called on an already merged stage or world.
      */

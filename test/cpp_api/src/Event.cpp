@@ -383,14 +383,14 @@ void Event_emit_staged_from_world() {
             count ++;
         });
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     ecs.event(evt)
         .id<Tag>()
         .entity(e1)
         .emit();
 
-    ecs.staging_end();
+    ecs.readonly_end();
 
     test_int(count, 1);
 }
@@ -411,14 +411,14 @@ void Event_emit_staged_from_stage() {
             count ++;
         });
 
-    ecs.staging_begin();
+    ecs.readonly_begin();
 
     ecs.get_stage(0).event(evt)
         .id<Tag>()
         .entity(e1)
         .emit();
 
-    ecs.staging_end();
+    ecs.readonly_end();
 
     test_int(count, 1);
 }
