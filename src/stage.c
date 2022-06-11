@@ -72,7 +72,7 @@ void merge_stages(
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             ecs_poly_assert(s, ecs_stage_t);
             if (force_merge || s->auto_merge) {
-                ecs_defer_end((ecs_world_t*)s);
+                flecs_defer_flush(world, s);
             }
         }
     }
@@ -412,38 +412,43 @@ void flecs_stage_deinit(
     ecs_vector_free(stage->defer_queue);
 }
 
-void ecs_set_stages(
+void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stage_count)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_stage_t *stages;
-    int32_t i, count = ecs_vector_count(world->worker_stages);
+    /* World must have at least one default stage */
+    ecs_assert(stage_count >= 1 || world->is_fini, ECS_INTERNAL_ERROR, NULL);
 
+    bool auto_merge = true;
+    if (world->stage_count >= 1) {
+        auto_merge = world->stages[0].auto_merge;
+    }
+
+    int32_t i, count = world->stage_count;
     if (count && count != stage_count) {
-        stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+        ecs_stage_t *stages = world->stages;
 
         for (i = 0; i < count; i ++) {
             /* If stage contains a thread handle, ecs_set_threads was used to
-             * create the stages. ecs_set_threads and ecs_set_stages should not
+             * create the stages. ecs_set_threads and ecs_set_stage_count should not
              * be mixed. */
             ecs_poly_assert(&stages[i], ecs_stage_t);
             ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
             flecs_stage_deinit(world, &stages[i]);
         }
 
-        ecs_vector_free(world->worker_stages);
+        ecs_os_free(world->stages);
     }
-    
+
     if (stage_count) {
-        world->worker_stages = ecs_vector_new(ecs_stage_t, stage_count);
+        world->stages = ecs_os_malloc_n(ecs_stage_t, stage_count);
 
         for (i = 0; i < stage_count; i ++) {
-            ecs_stage_t *stage = ecs_vector_add(
-                &world->worker_stages, ecs_stage_t);
+            ecs_stage_t *stage = &world->stages[i];
             flecs_stage_init(world, stage);
-            stage->id = 1 + i; /* 0 is reserved for main/temp stage */
+            stage->id = i;
 
             /* Set thread_ctx to stage, as this stage might be used in a
              * multithreaded context */
@@ -451,16 +456,17 @@ void ecs_set_stages(
         }
     } else {
         /* Set to NULL to prevent double frees */
-        world->worker_stages = NULL;
+        world->stages = NULL;
     }
 
     /* Regardless of whether the stage was just initialized or not, when the
-     * ecs_set_stages function is called, all stages inherit the auto_merge
+     * ecs_set_stage_count function is called, all stages inherit the auto_merge
      * property from the world */
     for (i = 0; i < stage_count; i ++) {
-        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-        stage->auto_merge = world->stage.auto_merge;
+        world->stages[i].auto_merge = auto_merge;
     }
+
+    world->stage_count = stage_count;
 error:
     return;
 }
@@ -469,7 +475,7 @@ int32_t ecs_get_stage_count(
     const ecs_world_t *world)
 {
     world = ecs_get_world(world);
-    return ecs_vector_count(world->worker_stages);
+    return world->stage_count;
 }
 
 int32_t ecs_get_stage_id(
@@ -481,7 +487,7 @@ int32_t ecs_get_stage_id(
         ecs_stage_t *stage = (ecs_stage_t*)world;
 
         /* Index 0 is reserved for main stage */
-        return stage->id - 1;
+        return stage->id;
     } else if (ecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
@@ -496,11 +502,8 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_vector_count(world->worker_stages) > stage_id, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return (ecs_world_t*)ecs_vector_get(
-        world->worker_stages, ecs_stage_t, stage_id);
+    ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, NULL);
+    return (ecs_world_t*)&world->stages[stage_id];
 error:
     return NULL;
 }
@@ -514,9 +517,9 @@ bool ecs_staging_begin(
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
-        ecs_world_t *stage = ecs_get_stage(world, i);
-        ((ecs_stage_t*)stage)->lookup_path = world->stage.lookup_path;
-        ecs_defer_begin(stage);
+        ecs_stage_t *stage = &world->stages[i];
+        stage->lookup_path = world->stages[0].lookup_path;
+        ecs_defer_begin((ecs_world_t*)stage);
     }
 
     bool is_readonly = world->is_readonly;
@@ -563,7 +566,7 @@ void ecs_set_automerge(
      * doesn't actually do anything (the main stage never merges) but it serves
      * as the default for when stages are created. */
     if (ecs_poly_is(world, ecs_world_t)) {
-        world->stage.auto_merge = auto_merge;
+        world->stages[0].auto_merge = auto_merge;
 
         /* Propagate change to all stages */
         int i, stage_count = ecs_get_stage_count(world);

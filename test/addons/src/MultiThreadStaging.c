@@ -336,7 +336,7 @@ void MultiThreadStaging_custom_thread_auto_merge() {
     ecs_entity_t e1 = ecs_new_id(world);
     ecs_entity_t e2 = ecs_new_id(world);
 
-    ecs_set_stages(world, 2);
+    ecs_set_stage_count(world, 2);
 
     ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
@@ -389,7 +389,7 @@ void MultiThreadStaging_custom_thread_manual_merge() {
 
     ecs_set_automerge(world, false);
 
-    ecs_set_stages(world, 2);
+    ecs_set_stage_count(world, 2);
 
     ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
@@ -445,7 +445,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
     ecs_entity_t e1 = ecs_new_id(world);
     ecs_entity_t e2 = ecs_new_id(world);
 
-    ecs_set_stages(world, 2);
+    ecs_set_stage_count(world, 2);
 
     ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);

@@ -82,6 +82,6 @@ void deactivate_systems() const;
 void set_threads(int32_t threads) const;
 
 /** Set number of threads.
- * @see ecs_get_threads
+ * @see ecs_get_stage_count
  */
 int32_t get_threads() const;

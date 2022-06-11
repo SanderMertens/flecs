@@ -107,6 +107,7 @@ void Add_in_progress(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_add(it->world, e, Velocity);
+        test_assert(!ecs_has(it->world, e, Velocity));
     }
 }
 

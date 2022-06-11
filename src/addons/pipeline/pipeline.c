@@ -789,7 +789,7 @@ void ecs_deactivate_systems(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    flecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stages[0]);
 
     while( ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
@@ -805,7 +805,7 @@ void ecs_deactivate_systems(
         }
     }
 
-    flecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stages[0]);
 }
 
 void ecs_set_pipeline(

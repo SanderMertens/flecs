@@ -1578,7 +1578,7 @@ void Entity_defer_entity_init_w_symbol() {
 void Entity_staged_set_name_n_stages() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_set_stages(world, 2);
+    ecs_set_stage_count(world, 2);
 
     ecs_staging_begin(world);
 
@@ -1599,7 +1599,7 @@ void Entity_staged_set_name_n_stages() {
 void Entity_staged_set_symbol_n_stages() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_set_stages(world, 2);
+    ecs_set_stage_count(world, 2);
 
     ecs_staging_begin(world);
 

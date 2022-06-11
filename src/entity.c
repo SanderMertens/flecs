@@ -588,16 +588,16 @@ void components_override(
                 ECS_CONSTRAINT_VIOLATED, NULL);
             ecs_check(base != 0, ECS_INVALID_PARAMETER, NULL);
 
-            if (!world->stage.base) {
+            if (!world->stages[0].base) {
                 /* Setting base prevents instantiating the hierarchy multiple
                  * times. The instantiate function recursively iterates the
                  * hierarchy to instantiate children. While this is happening,
                  * new tables are created which end up calling this function,
                  * which would call instantiate multiple times for the same
                  * level in the hierarchy. */
-                world->stage.base = base;
+                world->stages[0].base = base;
                 instantiate(world, base, table, row, count);
-                world->stage.base = 0;
+                world->stages[0].base = 0;
             }
         }
 
@@ -959,7 +959,7 @@ const ecs_entity_t* new_w_data(
             });
     }
 
-    flecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, diff, 
         component_data == NULL);
@@ -1005,7 +1005,7 @@ const ecs_entity_t* new_w_data(
         flecs_notify_on_set(world, table, row, count, &diff->on_set, false);
     }
 
-    flecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stages[0]);
 
     if (row_out) {
         *row_out = row;

@@ -4474,10 +4474,10 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     FLECS_FLOAT fps);     
 
-/** Get current number of threads. */
+/** Get current number of stages. */
 FLECS_API
-int32_t ecs_get_threads(
-    ecs_world_t *world);
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world);
 
 /** Force aperiodic actions.
  * The world may delay certain operations until they are necessary for the
@@ -7194,12 +7194,12 @@ void ecs_set_automerge(
  * @param stages The number of stages.
  */
 FLECS_API
-void ecs_set_stages(
+void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stages);
 
 /** Get number of configured stages.
- * Return number of stages set by ecs_set_stages.
+ * Return number of stages set by ecs_set_stage_count.
  *
  * @param world The world.
  * @return The number of stages used for threading.
@@ -15518,7 +15518,7 @@ struct world {
      * @param stages The number of stages.
      */
     void set_stages(int32_t stages) const {
-        ecs_set_stages(m_world, stages);
+        ecs_set_stage_count(m_world, stages);
     }
 
     /** Get number of configured stages.
@@ -16360,7 +16360,7 @@ void deactivate_systems() const;
 void set_threads(int32_t threads) const;
 
 /** Set number of threads.
- * @see ecs_get_threads
+ * @see ecs_get_stage_count
  */
 int32_t get_threads() const;
 
@@ -22898,7 +22898,7 @@ inline void world::set_threads(int32_t threads) const {
 }
 
 inline int32_t world::get_threads() const {
-    return ecs_get_threads(m_world);
+    return ecs_get_stage_count(m_world);
 }
 
 }

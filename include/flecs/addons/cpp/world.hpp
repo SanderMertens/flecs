@@ -304,7 +304,7 @@ struct world {
      * @param stages The number of stages.
      */
     void set_stages(int32_t stages) const {
-        ecs_set_stages(m_world, stages);
+        ecs_set_stage_count(m_world, stages);
     }
 
     /** Get number of configured stages.
