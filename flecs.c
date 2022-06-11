@@ -9723,7 +9723,7 @@ error:
     return NULL;
 }
 
-bool ecs_staging_begin(
+bool ecs_readonly_begin(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -9746,7 +9746,7 @@ bool ecs_staging_begin(
     return is_readonly;
 }
 
-void ecs_staging_end(
+void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -14651,7 +14651,7 @@ void ecs_worker_begin(
 
         ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
         if (!op || !op->no_staging) {
-            ecs_staging_begin(world);
+            ecs_readonly_begin(world);
         }
     }
 }
@@ -14671,7 +14671,7 @@ int32_t ecs_worker_sync(
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
         if (!op_out[0]->no_staging) {
-            ecs_staging_end(world);
+            ecs_readonly_end(world);
         }
 
         ecs_pipeline_update(world, world->pipeline, false);
@@ -14690,7 +14690,7 @@ int32_t ecs_worker_sync(
 
     if (stage_count == 1) {
         if (!op_out[0]->no_staging) {
-            ecs_staging_begin(world);
+            ecs_readonly_begin(world);
         }
     }
 
@@ -14708,7 +14708,7 @@ void ecs_worker_end(
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
         if (ecs_stage_is_readonly(world)) {
-            ecs_staging_end(world);
+            ecs_readonly_end(world);
         }
 
     /* Synchronize all workers. The last worker to reach the sync point will
@@ -14751,7 +14751,7 @@ void ecs_workers_progress(
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
             if (!op->no_staging) {
-                ecs_staging_begin(world);
+                ecs_readonly_begin(world);
             }
 
             /* Signal workers that they should start running systems */
@@ -14763,7 +14763,7 @@ void ecs_workers_progress(
 
             /* Merge */
             if (!op->no_staging) {
-                ecs_staging_end(world);
+                ecs_readonly_end(world);
             }
 
             if (ecs_pipeline_update(world, pipeline, false)) {

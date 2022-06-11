@@ -199,10 +199,10 @@ void World_entity_range_add_existing_staged() {
 
     ecs_set_entity_range(world, 1000, 1500);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_fini(world);
 }
@@ -218,10 +218,10 @@ void World_entity_range_add_in_range_staged() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e == 500);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_fini(world);
 }
@@ -251,10 +251,10 @@ void World_entity_range_add_out_of_range_staged() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e == 500);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     ecs_fini(world);
 }

@@ -334,7 +334,7 @@ void DeferredActions_defer_twice_in_progress() {
     ecs_entity_t e = ecs_new(world, Position);
 
     ecs_frame_begin(world, 0);
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_defer_begin(stage);
@@ -347,7 +347,7 @@ void DeferredActions_defer_twice_in_progress() {
     ecs_defer_end(stage);
     test_assert(!ecs_has(stage, e, Velocity));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
     test_assert(ecs_has(world, e, Velocity));
     ecs_frame_end(world);
     test_assert(ecs_has(world, e, Velocity));
@@ -1701,7 +1701,7 @@ void DeferredActions_register_component_while_staged() {
     ecs_entity_t e = ecs_new_id(world);
     ecs_entity_t canary = ecs_new_id(world);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1720,7 +1720,7 @@ void DeferredActions_register_component_while_staged() {
     test_assert(!ecs_has_id(world, e, ecs_id(Position)));
     test_assert(!ecs_has_id(world, canary, Tag));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(ecs_has_id(world, e, ecs_id(Position)));
 

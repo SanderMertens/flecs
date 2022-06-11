@@ -178,14 +178,14 @@ void SystemManual_no_automerge() {
 
     ecs_set_automerge(world, false);
 
-    ecs_staging_begin(world);
+    ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_run(stage, AddVelocity, 1, NULL);
 
     test_assert(!ecs_has(stage, e1, Velocity));
 
-    ecs_staging_end(world);
+    ecs_readonly_end(world);
 
     test_assert(!ecs_has(world, e1, Velocity));
 
