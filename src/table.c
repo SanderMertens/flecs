@@ -784,13 +784,10 @@ void dtor_all_components(
 
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
-        /* Prevent the storage from getting modified while deleting */
-        ecs_defer_begin(world);
-
         /* Throw up a lock just to be sure */
         table->lock = true;
 
-        /* Run on_remove callbacks in bulk for improved performance */
+        /* Run on_remove callbacks first before destructing components */
         for (c = 0; c < ids_count; c++) {
             ecs_column_t *column = &data->columns[c];
             ecs_type_info_t *ti = table->type_info[c];
@@ -801,15 +798,15 @@ void dtor_all_components(
             }
         }
 
+        /* Destruct components */
+        for (c = 0; c < ids_count; c++) {
+            dtor_component(table->type_info[c], &data->columns[c], row, count);
+        }
+
         /* Iterate entities first, then components. This ensures that only one
          * entity is invalidated at a time, which ensures that destructors can
          * safely access other entities. */
         for (i = row; i < end; i ++) {
-            for (c = 0; c < ids_count; c++) {
-                ecs_column_t *column = &data->columns[c];
-                dtor_component(table->type_info[c], column, i, 1);
-            }
-
             /* Update entity index after invoking destructors so that entity can
              * be safely used in destructor callbacks. */
             if (update_entity_index) {
@@ -837,8 +834,6 @@ void dtor_all_components(
         }
 
         table->lock = false;
-
-        ecs_defer_end(world);
 
     /* If table does not have destructors, just update entity index */
     } else if (update_entity_index) {
