@@ -82,6 +82,10 @@ void flecs_notify_on_set(
     ecs_type_t *type,
     bool owned);
 
+int32_t flecs_relation_depth(
+    const ecs_world_t *world,
+    ecs_entity_t r,
+    ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API

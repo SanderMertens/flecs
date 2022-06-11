@@ -620,17 +620,11 @@ uint64_t group_by_cascade(
     ecs_id_t id,
     void *ctx)
 {
+    (void)id;
     ecs_term_t *term = ctx;
     ecs_entity_t rel = term->subj.set.relation;
-    int32_t depth = 0;
-
-    if (-1 != ecs_search_relation_last(
-        world, table, 0, id, rel, 0, 0, 0, 0, &depth, 0))
-    {
-        return flecs_ito(uint64_t, depth);
-    } else {
-        return 0;
-    }
+    int32_t depth = flecs_relation_depth(world, rel, table);
+    return flecs_ito(uint64_t, depth);
 }
 
 static

@@ -113,11 +113,6 @@ void Search_search_first_lvl_0(void);
 void Search_search_first_lvl_1(void);
 void Search_search_first_lvl_2(void);
 void Search_search_first_lvl_3(void);
-void Search_search_last_lvl_0(void);
-void Search_search_last_lvl_1(void);
-void Search_search_last_lvl_2(void);
-void Search_search_last_lvl_3(void);
-void Search_search_last_lvl_3_root_without_id(void);
 void Search_search_relation_at_offset(void);
 
 // Testsuite 'Event'
@@ -1180,6 +1175,7 @@ void Query_isa_rematch_2_lvls(void);
 void Query_childof_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls_2_relations(void);
+void Query_cascade_topological(void);
 void Query_childof_rematch_from_isa(void);
 void Query_rematch_optional_ref(void);
 void Query_rematch_optional_ref_w_2_refs(void);
@@ -2404,26 +2400,6 @@ bake_test_case Search_testcases[] = {
     {
         "search_first_lvl_3",
         Search_search_first_lvl_3
-    },
-    {
-        "search_last_lvl_0",
-        Search_search_last_lvl_0
-    },
-    {
-        "search_last_lvl_1",
-        Search_search_last_lvl_1
-    },
-    {
-        "search_last_lvl_2",
-        Search_search_last_lvl_2
-    },
-    {
-        "search_last_lvl_3",
-        Search_search_last_lvl_3
-    },
-    {
-        "search_last_lvl_3_root_without_id",
-        Search_search_last_lvl_3_root_without_id
     },
     {
         "search_relation_at_offset",
@@ -6521,6 +6497,10 @@ bake_test_case Query_testcases[] = {
         Query_cascade_rematch_2_lvls_2_relations
     },
     {
+        "cascade_topological",
+        Query_cascade_topological
+    },
+    {
         "childof_rematch_from_isa",
         Query_childof_rematch_from_isa
     },
@@ -9682,7 +9662,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        20,
+        15,
         Search_testcases
     },
     {
@@ -9857,7 +9837,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        169,
+        170,
         Query_testcases
     },
     {

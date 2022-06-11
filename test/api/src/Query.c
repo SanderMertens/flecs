@@ -6357,6 +6357,57 @@ void Query_cascade_rematch_2_lvls_2_relations() {
     ecs_fini(world);
 }
 
+void Query_cascade_topological() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, R, Acyclic);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+
+    ecs_add_pair(world, e3, R, e1);
+    ecs_add_pair(world, e3, R, e2);
+    ecs_add_pair(world, e3, R, e4);
+    ecs_add_pair(world, e1, R, e5);
+    ecs_add_pair(world, e2, R, e6);
+    ecs_add_pair(world, e4, R, e1);
+    ecs_add_pair(world, e4, R, e2);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, ?Tag(cascade(R))");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(it.entities[0], e5);
+    test_uint(it.entities[1], e6);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], e1);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], e2);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], e4);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], e3);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_childof_rematch_from_isa() {
     ecs_world_t *world = ecs_mini();
 

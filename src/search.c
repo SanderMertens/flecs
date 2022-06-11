@@ -252,62 +252,48 @@ int32_t ecs_search_offset(
     return type_offset_search(offset, id, ids, count, id_out);
 }
 
-int32_t ecs_search_relation_last(
+static
+int32_t flecs_relation_depth_walk(
     const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id,
-    ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
-    ecs_entity_t *subject_out,
-    ecs_id_t *id_out,
-    int32_t *depth_out,
-    struct ecs_table_record_t **tr_out)
+    ecs_id_record_t *idr,
+    ecs_table_t *first,
+    ecs_table_t *table)
 {
-    int32_t depth = 0;
-    ecs_entity_t subj = 0;
-    int32_t cur, result = ecs_search_relation(
-        world, table, offset, id, rel, min_depth, max_depth, &subj,
-        id_out, &depth, tr_out);
-    if (result == -1) {
-        return -1;
+    int32_t result = 0;
+
+    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr) {
+        return 0;
     }
 
-    if (!subj) {
-        cur = ecs_search_relation(
-            world, table, offset, id, rel, 1, max_depth, &subj,
-            id_out, &depth, tr_out);
-        if (cur == -1) {
-            goto done;
+    int32_t i = tr->column, end = i + tr->count;
+    for (; i != end; i ++) {
+        ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
+        ecs_assert(o != 0, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_table_t *ot = ecs_get_table(world, o);
+        if (!ot) {
+            continue;
+        }
+        
+        ecs_assert(ot != first, ECS_CYCLE_DETECTED, NULL);
+        int32_t cur = flecs_relation_depth_walk(world, idr, first, ot);
+        if (cur > result) {
+            result = cur;
         }
     }
+    
+    return result + 1;
+}
 
-    do {
-        ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
-        table = ecs_get_table(world, subj);
-        int32_t cur_depth = 0;
-        ecs_entity_t cur_subj = 0;
-        cur = ecs_search_relation(
-            world, table, 0, id, rel, 1, max_depth, &cur_subj,
-            id_out, &cur_depth, tr_out);
-        if (cur == -1) {
-            break;
-        }
-
-        ecs_assert(subj != cur_subj, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t actual_depth = depth + cur_depth;
-        if (max_depth && (actual_depth > max_depth)) {
-            break;
-        }
-
-        subj = cur_subj;
-        depth = actual_depth;
-    } while(true);
-
-done:
-    if (depth_out) depth_out[0] = depth;
-    if (subject_out) subject_out[0] = subj;
-    return result;
+int32_t flecs_relation_depth(
+    const ecs_world_t *world,
+    ecs_entity_t r,
+    ecs_table_t *table)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
+    if (!idr) {
+        return 0;
+    }
+    return flecs_relation_depth_walk(world, idr, table, table);
 }

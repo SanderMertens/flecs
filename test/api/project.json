@@ -122,11 +122,6 @@
                 "search_first_lvl_1",
                 "search_first_lvl_2",
                 "search_first_lvl_3",
-                "search_last_lvl_0",
-                "search_last_lvl_1",
-                "search_last_lvl_2",
-                "search_last_lvl_3",
-                "search_last_lvl_3_root_without_id",
                 "search_relation_at_offset"
             ]
         }, {
@@ -1239,6 +1234,7 @@
                 "childof_rematch_2_lvls",
                 "cascade_rematch_2_lvls",
                 "cascade_rematch_2_lvls_2_relations",
+                "cascade_topological",
                 "childof_rematch_from_isa",
                 "rematch_optional_ref",
                 "rematch_optional_ref_w_2_refs",
