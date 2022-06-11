@@ -990,6 +990,16 @@ typedef struct ecs_world_info_t {
     int32_t empty_table_count;        /* Number of tables without entities */
     int32_t table_record_count;       /* Total number of table records (entries in table caches) */
     int32_t table_storage_count;      /* Total number of table storages */
+
+    /* -- Defered operation counts -- */
+    int32_t new_count;
+    int32_t bulk_new_count;
+    int32_t delete_count;
+    int32_t clear_count;
+    int32_t add_count;
+    int32_t remove_count;
+    int32_t set_count;
+    int32_t discard_count;
 } ecs_world_info_t;
 
 /** @} */

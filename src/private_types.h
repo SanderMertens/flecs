@@ -585,19 +585,6 @@ struct ecs_world_t {
     ecs_os_mutex_t thr_sync;     /* Used to signal threads at end of frame */
     ecs_os_cond_t thr_cond;      /* Used to signal threads at end of frame */
 
-
-    /* -- Defered operation count -- */
-    
-    int32_t new_count;
-    int32_t bulk_new_count;
-    int32_t delete_count;
-    int32_t clear_count;
-    int32_t add_count;
-    int32_t remove_count;
-    int32_t set_count;
-    int32_t discard_count;
-
-
     /* -- World state -- */
 
     bool quit_workers;           /* Signals worker threads to quit */

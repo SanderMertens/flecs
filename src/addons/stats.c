@@ -288,14 +288,14 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->table_create_count, t, world->info.table_create_total);
     ECS_COUNTER_RECORD(&s->table_delete_count, t, world->info.table_delete_total);
 
-    ECS_COUNTER_RECORD(&s->new_count, t, world->new_count);
-    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->bulk_new_count);
-    ECS_COUNTER_RECORD(&s->delete_count, t, world->delete_count);
-    ECS_COUNTER_RECORD(&s->clear_count, t, world->clear_count);
-    ECS_COUNTER_RECORD(&s->add_count, t, world->add_count);
-    ECS_COUNTER_RECORD(&s->remove_count, t, world->remove_count);
-    ECS_COUNTER_RECORD(&s->set_count, t, world->set_count);
-    ECS_COUNTER_RECORD(&s->discard_count, t, world->discard_count);
+    ECS_COUNTER_RECORD(&s->new_count, t, world->info.new_count);
+    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->info.bulk_new_count);
+    ECS_COUNTER_RECORD(&s->delete_count, t, world->info.delete_count);
+    ECS_COUNTER_RECORD(&s->clear_count, t, world->info.clear_count);
+    ECS_COUNTER_RECORD(&s->add_count, t, world->info.add_count);
+    ECS_COUNTER_RECORD(&s->remove_count, t, world->info.remove_count);
+    ECS_COUNTER_RECORD(&s->set_count, t, world->info.set_count);
+    ECS_COUNTER_RECORD(&s->discard_count, t, world->info.discard_count);
 
     ECS_GAUGE_RECORD(&s->table_count, t, world->info.table_count);
     ECS_GAUGE_RECORD(&s->empty_table_count, t, world->info.empty_table_count);

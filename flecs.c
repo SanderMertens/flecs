@@ -865,19 +865,6 @@ struct ecs_world_t {
     ecs_os_mutex_t thr_sync;     /* Used to signal threads at end of frame */
     ecs_os_cond_t thr_cond;      /* Used to signal threads at end of frame */
 
-
-    /* -- Defered operation count -- */
-    
-    int32_t new_count;
-    int32_t bulk_new_count;
-    int32_t delete_count;
-    int32_t clear_count;
-    int32_t add_count;
-    int32_t remove_count;
-    int32_t set_count;
-    int32_t discard_count;
-
-
     /* -- World state -- */
 
     bool quit_workers;           /* Signals worker threads to quit */
@@ -9098,7 +9085,7 @@ bool flecs_defer_flush(
                 if (e && !ecs_is_alive(world, e) && flecs_entities_exists(world, e)) {
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
-                    world->discard_count ++;
+                    world->info.discard_count ++;
                     discard_op(world, op);
                     continue;
                 }
@@ -9109,7 +9096,7 @@ bool flecs_defer_flush(
                     ecs_assert(op->id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (remove_invalid(world, &op->id)) {
                         if (op->id) {
-                            world->add_count ++;
+                            world->info.add_count ++;
                             add_id(world, e, op->id);
                         }
                     } else {
@@ -9242,11 +9229,11 @@ bool defer_add_remove(
         op->is._1.entity = entity;
 
         if (op_kind == EcsOpNew) {
-            world->new_count ++;
+            world->info.new_count ++;
         } else if (op_kind == EcsOpAdd) {
-            world->add_count ++;
+            world->info.add_count ++;
         } else if (op_kind == EcsOpRemove) {
-            world->remove_count ++;
+            world->info.remove_count ++;
         }
 
         return true;
@@ -9384,7 +9371,7 @@ bool flecs_defer_delete(
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
         op->is._1.entity = entity;
-        world->delete_count ++;
+        world->info.delete_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -9403,7 +9390,7 @@ bool flecs_defer_clear(
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
         op->is._1.entity = entity;
-        world->clear_count ++;
+        world->info.clear_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -9424,7 +9411,7 @@ bool flecs_defer_on_delete_action(
         op->kind = EcsOpOnDeleteAction;
         op->id = id;
         op->is._1.entity = action;
-        world->clear_count ++;
+        world->info.clear_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -9463,7 +9450,7 @@ bool flecs_defer_bulk_new(
     if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
-        world->bulk_new_count ++;
+        world->info.bulk_new_count ++;
 
         /* Use ecs_new_id as this is thread safe */
         int i;
@@ -9528,7 +9515,7 @@ bool flecs_defer_set(
 {
     if (stage->defer_suspend) return false;
     if (stage->defer) {
-        world->set_count ++;
+        world->info.set_count ++;
         if (!size) {
             ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
             ecs_check(idr != NULL && idr->type_info != NULL, 
@@ -27045,14 +27032,14 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->table_create_count, t, world->info.table_create_total);
     ECS_COUNTER_RECORD(&s->table_delete_count, t, world->info.table_delete_total);
 
-    ECS_COUNTER_RECORD(&s->new_count, t, world->new_count);
-    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->bulk_new_count);
-    ECS_COUNTER_RECORD(&s->delete_count, t, world->delete_count);
-    ECS_COUNTER_RECORD(&s->clear_count, t, world->clear_count);
-    ECS_COUNTER_RECORD(&s->add_count, t, world->add_count);
-    ECS_COUNTER_RECORD(&s->remove_count, t, world->remove_count);
-    ECS_COUNTER_RECORD(&s->set_count, t, world->set_count);
-    ECS_COUNTER_RECORD(&s->discard_count, t, world->discard_count);
+    ECS_COUNTER_RECORD(&s->new_count, t, world->info.new_count);
+    ECS_COUNTER_RECORD(&s->bulk_new_count, t, world->info.bulk_new_count);
+    ECS_COUNTER_RECORD(&s->delete_count, t, world->info.delete_count);
+    ECS_COUNTER_RECORD(&s->clear_count, t, world->info.clear_count);
+    ECS_COUNTER_RECORD(&s->add_count, t, world->info.add_count);
+    ECS_COUNTER_RECORD(&s->remove_count, t, world->info.remove_count);
+    ECS_COUNTER_RECORD(&s->set_count, t, world->info.set_count);
+    ECS_COUNTER_RECORD(&s->discard_count, t, world->info.discard_count);
 
     ECS_GAUGE_RECORD(&s->table_count, t, world->info.table_count);
     ECS_GAUGE_RECORD(&s->empty_table_count, t, world->info.empty_table_count);

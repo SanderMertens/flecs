@@ -4015,7 +4015,7 @@ bool flecs_defer_flush(
                 if (e && !ecs_is_alive(world, e) && flecs_entities_exists(world, e)) {
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
-                    world->discard_count ++;
+                    world->info.discard_count ++;
                     discard_op(world, op);
                     continue;
                 }
@@ -4026,7 +4026,7 @@ bool flecs_defer_flush(
                     ecs_assert(op->id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (remove_invalid(world, &op->id)) {
                         if (op->id) {
-                            world->add_count ++;
+                            world->info.add_count ++;
                             add_id(world, e, op->id);
                         }
                     } else {

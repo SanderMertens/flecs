@@ -27,11 +27,11 @@ bool defer_add_remove(
         op->is._1.entity = entity;
 
         if (op_kind == EcsOpNew) {
-            world->new_count ++;
+            world->info.new_count ++;
         } else if (op_kind == EcsOpAdd) {
-            world->add_count ++;
+            world->info.add_count ++;
         } else if (op_kind == EcsOpRemove) {
-            world->remove_count ++;
+            world->info.remove_count ++;
         }
 
         return true;
@@ -169,7 +169,7 @@ bool flecs_defer_delete(
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
         op->is._1.entity = entity;
-        world->delete_count ++;
+        world->info.delete_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -188,7 +188,7 @@ bool flecs_defer_clear(
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
         op->is._1.entity = entity;
-        world->clear_count ++;
+        world->info.clear_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -209,7 +209,7 @@ bool flecs_defer_on_delete_action(
         op->kind = EcsOpOnDeleteAction;
         op->id = id;
         op->is._1.entity = action;
-        world->clear_count ++;
+        world->info.clear_count ++;
         return true;
     } else {
         stage->defer ++;
@@ -248,7 +248,7 @@ bool flecs_defer_bulk_new(
     if (stage->defer_suspend) return false;
     if (stage->defer) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
-        world->bulk_new_count ++;
+        world->info.bulk_new_count ++;
 
         /* Use ecs_new_id as this is thread safe */
         int i;
@@ -313,7 +313,7 @@ bool flecs_defer_set(
 {
     if (stage->defer_suspend) return false;
     if (stage->defer) {
-        world->set_count ++;
+        world->info.set_count ++;
         if (!size) {
             ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
             ecs_check(idr != NULL && idr->type_info != NULL, 
