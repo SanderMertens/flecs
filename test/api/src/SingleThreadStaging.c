@@ -2788,3 +2788,58 @@ void SingleThreadStaging_get_object_from_stage() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_add_to_world_while_readonly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_staging_begin(world);
+    ecs_add(world, e, Tag);
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_staging_end(world);
+
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_add_to_world_and_stage_while_readonly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_staging_begin(world);
+    ecs_add(world, e, TagA);
+    ecs_add(stage, e, TagB);
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+    ecs_staging_end(world);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_add_to_world_while_readonly_n_stages() {
+    install_test_abort();
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_set_stage_count(world, 2);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_staging_begin(world);
+    test_expect_abort();
+    ecs_add(world, e, Tag);
+}
+

@@ -834,8 +834,8 @@ struct ecs_world_t {
 
     /* -- Staging -- */
 
-    ecs_stage_t stage;           /* Main stage */
-    ecs_vector_t *worker_stages; /* Stages for threads */
+    ecs_stage_t *stages;         /* Stages */
+    int32_t stage_count;         /* Number of stages */
 
 
     /* -- Multithreading -- */
@@ -5671,16 +5671,16 @@ void components_override(
                 ECS_CONSTRAINT_VIOLATED, NULL);
             ecs_check(base != 0, ECS_INVALID_PARAMETER, NULL);
 
-            if (!world->stage.base) {
+            if (!world->stages[0].base) {
                 /* Setting base prevents instantiating the hierarchy multiple
                  * times. The instantiate function recursively iterates the
                  * hierarchy to instantiate children. While this is happening,
                  * new tables are created which end up calling this function,
                  * which would call instantiate multiple times for the same
                  * level in the hierarchy. */
-                world->stage.base = base;
+                world->stages[0].base = base;
                 instantiate(world, base, table, row, count);
-                world->stage.base = 0;
+                world->stages[0].base = 0;
             }
         }
 
@@ -6042,7 +6042,7 @@ const ecs_entity_t* new_w_data(
             });
     }
 
-    flecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, diff, 
         component_data == NULL);
@@ -6088,7 +6088,7 @@ const ecs_entity_t* new_w_data(
         flecs_notify_on_set(world, table, row, count, &diff->on_set, false);
     }
 
-    flecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stages[0]);
 
     if (row_out) {
         *row_out = row;
@@ -9287,7 +9287,7 @@ void merge_stages(
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             ecs_poly_assert(s, ecs_stage_t);
             if (force_merge || s->auto_merge) {
-                ecs_defer_end((ecs_world_t*)s);
+                flecs_defer_flush(world, s);
             }
         }
     }
@@ -9627,38 +9627,43 @@ void flecs_stage_deinit(
     ecs_vector_free(stage->defer_queue);
 }
 
-void ecs_set_stages(
+void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stage_count)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_stage_t *stages;
-    int32_t i, count = ecs_vector_count(world->worker_stages);
+    /* World must have at least one default stage */
+    ecs_assert(stage_count >= 1 || world->is_fini, ECS_INTERNAL_ERROR, NULL);
 
+    bool auto_merge = true;
+    if (world->stage_count >= 1) {
+        auto_merge = world->stages[0].auto_merge;
+    }
+
+    int32_t i, count = world->stage_count;
     if (count && count != stage_count) {
-        stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+        ecs_stage_t *stages = world->stages;
 
         for (i = 0; i < count; i ++) {
             /* If stage contains a thread handle, ecs_set_threads was used to
-             * create the stages. ecs_set_threads and ecs_set_stages should not
+             * create the stages. ecs_set_threads and ecs_set_stage_count should not
              * be mixed. */
             ecs_poly_assert(&stages[i], ecs_stage_t);
             ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
             flecs_stage_deinit(world, &stages[i]);
         }
 
-        ecs_vector_free(world->worker_stages);
+        ecs_os_free(world->stages);
     }
-    
+
     if (stage_count) {
-        world->worker_stages = ecs_vector_new(ecs_stage_t, stage_count);
+        world->stages = ecs_os_malloc_n(ecs_stage_t, stage_count);
 
         for (i = 0; i < stage_count; i ++) {
-            ecs_stage_t *stage = ecs_vector_add(
-                &world->worker_stages, ecs_stage_t);
+            ecs_stage_t *stage = &world->stages[i];
             flecs_stage_init(world, stage);
-            stage->id = 1 + i; /* 0 is reserved for main/temp stage */
+            stage->id = i;
 
             /* Set thread_ctx to stage, as this stage might be used in a
              * multithreaded context */
@@ -9666,16 +9671,17 @@ void ecs_set_stages(
         }
     } else {
         /* Set to NULL to prevent double frees */
-        world->worker_stages = NULL;
+        world->stages = NULL;
     }
 
     /* Regardless of whether the stage was just initialized or not, when the
-     * ecs_set_stages function is called, all stages inherit the auto_merge
+     * ecs_set_stage_count function is called, all stages inherit the auto_merge
      * property from the world */
     for (i = 0; i < stage_count; i ++) {
-        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-        stage->auto_merge = world->stage.auto_merge;
+        world->stages[i].auto_merge = auto_merge;
     }
+
+    world->stage_count = stage_count;
 error:
     return;
 }
@@ -9684,7 +9690,7 @@ int32_t ecs_get_stage_count(
     const ecs_world_t *world)
 {
     world = ecs_get_world(world);
-    return ecs_vector_count(world->worker_stages);
+    return world->stage_count;
 }
 
 int32_t ecs_get_stage_id(
@@ -9696,7 +9702,7 @@ int32_t ecs_get_stage_id(
         ecs_stage_t *stage = (ecs_stage_t*)world;
 
         /* Index 0 is reserved for main stage */
-        return stage->id - 1;
+        return stage->id;
     } else if (ecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
@@ -9711,11 +9717,8 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_vector_count(world->worker_stages) > stage_id, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    return (ecs_world_t*)ecs_vector_get(
-        world->worker_stages, ecs_stage_t, stage_id);
+    ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, NULL);
+    return (ecs_world_t*)&world->stages[stage_id];
 error:
     return NULL;
 }
@@ -9729,9 +9732,9 @@ bool ecs_staging_begin(
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
-        ecs_world_t *stage = ecs_get_stage(world, i);
-        ((ecs_stage_t*)stage)->lookup_path = world->stage.lookup_path;
-        ecs_defer_begin(stage);
+        ecs_stage_t *stage = &world->stages[i];
+        stage->lookup_path = world->stages[0].lookup_path;
+        ecs_defer_begin((ecs_world_t*)stage);
     }
 
     bool is_readonly = world->is_readonly;
@@ -9778,7 +9781,7 @@ void ecs_set_automerge(
      * doesn't actually do anything (the main stage never merges) but it serves
      * as the default for when stages are created. */
     if (ecs_poly_is(world, ecs_world_t)) {
-        world->stage.auto_merge = auto_merge;
+        world->stages[0].auto_merge = auto_merge;
 
         /* Propagate change to all stages */
         int i, stage_count = ecs_get_stage_count(world);
@@ -14506,7 +14509,7 @@ void start_workers(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_set_stages(world, threads);
+    ecs_set_stage_count(world, threads);
 
     ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
 
@@ -14515,8 +14518,6 @@ void start_workers(
         ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
         ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_poly_assert(stage, ecs_stage_t);
-
-        ecs_vector_get(world->worker_stages, ecs_stage_t, i);
         stage->thread = ecs_os_thread_new(worker, stage);
         ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
     }
@@ -14596,13 +14597,16 @@ bool ecs_stop_threads(
 
     /* Test if threads are created. Cannot use workers_running, since this is
      * a potential race if threads haven't spun up yet. */
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+    ecs_stage_t *stages = world->stages;
+    int i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        ecs_stage_t *stage = &stages[i];
         if (stage->thread) {
             threads_active = true;
             break;
         }
         stage->thread = 0;
-    });
+    };
 
     /* If no threads are active, just return */
     if (!threads_active) {
@@ -14617,8 +14621,6 @@ bool ecs_stop_threads(
     signal_workers(world);
 
     /* Join all threads with main */
-    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
-    int32_t i, count = ecs_vector_count(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_os_thread_join(stages[i].thread);
         stages[i].thread = 0;
@@ -14628,7 +14630,7 @@ bool ecs_stop_threads(
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Deinitialize stages */
-    ecs_set_stages(world, 0);
+    ecs_set_stage_count(world, 1);
 
     return true;
 }
@@ -15601,7 +15603,7 @@ void ecs_deactivate_systems(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    flecs_defer_none(world, &world->stage);
+    flecs_defer_none(world, &world->stages[0]);
 
     while( ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
@@ -15617,7 +15619,7 @@ void ecs_deactivate_systems(
         }
     }
 
-    flecs_defer_flush(world, &world->stage);
+    flecs_defer_flush(world, &world->stages[0]);
 }
 
 void ecs_set_pipeline(
@@ -35677,7 +35679,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        return &world->stage;
+        return &world->stages[0];
 
     } else if (ecs_poly_is(world, ecs_stage_t)) {
         return (ecs_stage_t*)world;
@@ -35697,8 +35699,9 @@ ecs_stage_t *flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
-        return &world->stage;
+        ecs_assert(!world->is_readonly || (ecs_get_stage_count(world) <= 1), 
+            ECS_INVALID_OPERATION, NULL);
+        return &world->stages[0];
 
     } else if (ecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
@@ -35745,15 +35748,10 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
     state->defer_queue = stage->defer_queue;
-    state->scope = world->stage.scope;
-    state->with = world->stage.with;
+    state->scope = stage->scope;
+    state->with = stage->with;
     stage->defer = 0;
     stage->defer_queue = NULL;
-
-    if (&world->stage != (ecs_stage_t*)stage_world) {
-        world->stage.scope = stage->scope;
-        world->stage.with = stage->with;
-    }
     
     return world;
 }
@@ -35777,8 +35775,8 @@ void flecs_resume_readonly(
         world->is_readonly = state->is_readonly;
         stage->defer = state->defer_count;
         stage->defer_queue = state->defer_queue;
-        world->stage.scope = state->scope;
-        world->stage.with = state->with;
+        stage->scope = state->scope;
+        stage->with = state->with;
     }
 }
 
@@ -36169,8 +36167,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_os_get_time(&world->world_start_time);
     }
 
-    flecs_stage_init(world, &world->stage);
-    ecs_set_stages(world, 1);
+    ecs_set_stage_count(world, 1);
 
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
@@ -36611,15 +36608,6 @@ void fini_observers(
     flecs_sparse_free(world->observers);
 }
 
-/* Cleanup stages */
-static
-void fini_stages(
-    ecs_world_t *world)
-{
-    flecs_stage_deinit(world, &world->stage);
-    ecs_set_stages(world, 0);
-}
-
 ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -36671,7 +36659,7 @@ int ecs_fini(
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
-    flecs_defer_purge(world, &world->stage);
+    flecs_defer_purge(world, &world->stages[0]);
 
     /* Entity index is kept alive until this point so that user code can do
      * validity checks on entity ids, even though after store cleanup the index
@@ -36684,7 +36672,7 @@ int ecs_fini(
 
     ecs_trace("table store deinitialized");
 
-    fini_stages(world);
+    ecs_set_stage_count(world, 0);
 
     fini_queries(world);
 
@@ -36833,12 +36821,6 @@ void ecs_set_entity_generation(
 {
     flecs_sparse_set_generation(
         &world->store.entity_index, entity_with_generation);
-}
-
-int32_t ecs_get_threads(
-    ecs_world_t *world)
-{
-    return ecs_vector_count(world->worker_stages);
 }
 
 bool ecs_enable_locking(
@@ -37138,10 +37120,12 @@ void ecs_frame_end(
     ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->info.frame_count_total ++;
-
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        flecs_stage_merge_post_frame(world, stage);
-    });        
+    
+    ecs_stage_t *stages = world->stages;
+    int32_t i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        flecs_stage_merge_post_frame(world, &stages[i]);
+    }
 
     if (world->locking_enabled) {
         ecs_unlock(world);

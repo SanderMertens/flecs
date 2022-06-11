@@ -1937,6 +1937,9 @@ void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
 void SingleThreadStaging_get_case_from_stage(void);
 void SingleThreadStaging_get_object_from_stage(void);
+void SingleThreadStaging_add_to_world_while_readonly(void);
+void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
+void SingleThreadStaging_add_to_world_while_readonly_n_stages(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
@@ -9448,6 +9451,18 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "get_object_from_stage",
         SingleThreadStaging_get_object_from_stage
+    },
+    {
+        "add_to_world_while_readonly",
+        SingleThreadStaging_add_to_world_while_readonly
+    },
+    {
+        "add_to_world_and_stage_while_readonly",
+        SingleThreadStaging_add_to_world_and_stage_while_readonly
+    },
+    {
+        "add_to_world_while_readonly_n_stages",
+        SingleThreadStaging_add_to_world_while_readonly_n_stages
     }
 };
 
@@ -9942,7 +9957,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        63,
+        66,
         SingleThreadStaging_testcases
     },
     {

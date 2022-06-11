@@ -45,7 +45,7 @@ void start_workers(
     ecs_world_t *world,
     int32_t threads)
 {
-    ecs_set_stages(world, threads);
+    ecs_set_stage_count(world, threads);
 
     ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
 
@@ -54,8 +54,6 @@ void start_workers(
         ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
         ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_poly_assert(stage, ecs_stage_t);
-
-        ecs_vector_get(world->worker_stages, ecs_stage_t, i);
         stage->thread = ecs_os_thread_new(worker, stage);
         ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
     }
@@ -135,13 +133,16 @@ bool ecs_stop_threads(
 
     /* Test if threads are created. Cannot use workers_running, since this is
      * a potential race if threads haven't spun up yet. */
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+    ecs_stage_t *stages = world->stages;
+    int i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        ecs_stage_t *stage = &stages[i];
         if (stage->thread) {
             threads_active = true;
             break;
         }
         stage->thread = 0;
-    });
+    };
 
     /* If no threads are active, just return */
     if (!threads_active) {
@@ -156,8 +157,6 @@ bool ecs_stop_threads(
     signal_workers(world);
 
     /* Join all threads with main */
-    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
-    int32_t i, count = ecs_vector_count(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_os_thread_join(stages[i].thread);
         stages[i].thread = 0;
@@ -167,7 +166,7 @@ bool ecs_stop_threads(
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Deinitialize stages */
-    ecs_set_stages(world, 0);
+    ecs_set_stage_count(world, 1);
 
     return true;
 }

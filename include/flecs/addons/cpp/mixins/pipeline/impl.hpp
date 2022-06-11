@@ -81,7 +81,7 @@ inline void world::set_threads(int32_t threads) const {
 }
 
 inline int32_t world::get_threads() const {
-    return ecs_get_threads(m_world);
+    return ecs_get_stage_count(m_world);
 }
 
 }

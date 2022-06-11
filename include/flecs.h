@@ -1613,10 +1613,10 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     FLECS_FLOAT fps);     
 
-/** Get current number of threads. */
+/** Get current number of stages. */
 FLECS_API
-int32_t ecs_get_threads(
-    ecs_world_t *world);
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world);
 
 /** Force aperiodic actions.
  * The world may delay certain operations until they are necessary for the
@@ -4333,12 +4333,12 @@ void ecs_set_automerge(
  * @param stages The number of stages.
  */
 FLECS_API
-void ecs_set_stages(
+void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stages);
 
 /** Get number of configured stages.
- * Return number of stages set by ecs_set_stages.
+ * Return number of stages set by ecs_set_stage_count.
  *
  * @param world The world.
  * @return The number of stages used for threading.

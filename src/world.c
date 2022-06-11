@@ -158,7 +158,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        return &world->stage;
+        return &world->stages[0];
 
     } else if (ecs_poly_is(world, ecs_stage_t)) {
         return (ecs_stage_t*)world;
@@ -178,8 +178,9 @@ ecs_stage_t *flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
-        return &world->stage;
+        ecs_assert(!world->is_readonly || (ecs_get_stage_count(world) <= 1), 
+            ECS_INVALID_OPERATION, NULL);
+        return &world->stages[0];
 
     } else if (ecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
@@ -226,15 +227,10 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
     state->defer_queue = stage->defer_queue;
-    state->scope = world->stage.scope;
-    state->with = world->stage.with;
+    state->scope = stage->scope;
+    state->with = stage->with;
     stage->defer = 0;
     stage->defer_queue = NULL;
-
-    if (&world->stage != (ecs_stage_t*)stage_world) {
-        world->stage.scope = stage->scope;
-        world->stage.with = stage->with;
-    }
     
     return world;
 }
@@ -258,8 +254,8 @@ void flecs_resume_readonly(
         world->is_readonly = state->is_readonly;
         stage->defer = state->defer_count;
         stage->defer_queue = state->defer_queue;
-        world->stage.scope = state->scope;
-        world->stage.with = state->with;
+        stage->scope = state->scope;
+        stage->with = state->with;
     }
 }
 
@@ -650,8 +646,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_os_get_time(&world->world_start_time);
     }
 
-    flecs_stage_init(world, &world->stage);
-    ecs_set_stages(world, 1);
+    ecs_set_stage_count(world, 1);
 
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
@@ -1092,15 +1087,6 @@ void fini_observers(
     flecs_sparse_free(world->observers);
 }
 
-/* Cleanup stages */
-static
-void fini_stages(
-    ecs_world_t *world)
-{
-    flecs_stage_deinit(world, &world->stage);
-    ecs_set_stages(world, 0);
-}
-
 ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -1152,7 +1138,7 @@ int ecs_fini(
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
-    flecs_defer_purge(world, &world->stage);
+    flecs_defer_purge(world, &world->stages[0]);
 
     /* Entity index is kept alive until this point so that user code can do
      * validity checks on entity ids, even though after store cleanup the index
@@ -1165,7 +1151,7 @@ int ecs_fini(
 
     ecs_trace("table store deinitialized");
 
-    fini_stages(world);
+    ecs_set_stage_count(world, 0);
 
     fini_queries(world);
 
@@ -1314,12 +1300,6 @@ void ecs_set_entity_generation(
 {
     flecs_sparse_set_generation(
         &world->store.entity_index, entity_with_generation);
-}
-
-int32_t ecs_get_threads(
-    ecs_world_t *world)
-{
-    return ecs_vector_count(world->worker_stages);
 }
 
 bool ecs_enable_locking(
@@ -1619,10 +1599,12 @@ void ecs_frame_end(
     ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->info.frame_count_total ++;
-
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        flecs_stage_merge_post_frame(world, stage);
-    });        
+    
+    ecs_stage_t *stages = world->stages;
+    int32_t i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        flecs_stage_merge_post_frame(world, &stages[i]);
+    }
 
     if (world->locking_enabled) {
         ecs_unlock(world);

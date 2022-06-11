@@ -554,8 +554,8 @@ struct ecs_world_t {
 
     /* -- Staging -- */
 
-    ecs_stage_t stage;           /* Main stage */
-    ecs_vector_t *worker_stages; /* Stages for threads */
+    ecs_stage_t *stages;         /* Stages */
+    int32_t stage_count;         /* Number of stages */
 
 
     /* -- Multithreading -- */
