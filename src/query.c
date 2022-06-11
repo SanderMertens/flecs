@@ -5,7 +5,7 @@
 #endif
 
 static
-void compute_group_id(
+void flecs_query_compute_group_id(
     ecs_query_t *query,
     ecs_query_table_match_t *match)
 {
@@ -23,7 +23,7 @@ void compute_group_id(
 }
 
 static
-ecs_query_table_list_t* get_group(
+ecs_query_table_list_t* flecs_query_get_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
@@ -31,7 +31,7 @@ ecs_query_table_list_t* get_group(
 }
 
 static
-ecs_query_table_list_t* ensure_group(
+ecs_query_table_list_t* flecs_query_ensure_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
@@ -40,7 +40,7 @@ ecs_query_table_list_t* ensure_group(
 
 /* Find the last node of the group after which this group should be inserted */
 static
-ecs_query_table_node_t* find_group_insertion_node(
+ecs_query_table_node_t* flecs_query_find_group_insertion_node(
     ecs_query_t *query,
     uint64_t group_id)
 {
@@ -77,7 +77,7 @@ ecs_query_table_node_t* find_group_insertion_node(
 
 /* Initialize group with first node */
 static
-void create_group(
+void flecs_query_create_group(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
@@ -86,7 +86,7 @@ void create_group(
 
     /* If query has grouping enabled & this is a new/empty group, find
      * the insertion point for the group */
-    ecs_query_table_node_t *insert_after = find_group_insertion_node(
+    ecs_query_table_node_t *insert_after = flecs_query_find_group_insertion_node(
         query, group_id);
 
     if (!insert_after) {
@@ -125,7 +125,7 @@ void create_group(
 }
 
 static
-void remove_group(
+void flecs_query_remove_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
@@ -134,13 +134,13 @@ void remove_group(
 
 /* Find the list the node should be part of */
 static
-ecs_query_table_list_t* get_node_list(
+ecs_query_table_list_t* flecs_query_get_node_list(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
     ecs_query_table_match_t *match = node->match;
     if (query->group_by) {
-        return get_group(query, match->group_id);
+        return flecs_query_get_group(query, match->group_id);
     } else {
         return &query->list;
     }
@@ -148,13 +148,13 @@ ecs_query_table_list_t* get_node_list(
 
 /* Find or create the list the node should be part of */
 static
-ecs_query_table_list_t* ensure_node_list(
+ecs_query_table_list_t* flecs_query_ensure_node_list(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
     ecs_query_table_match_t *match = node->match;
     if (query->group_by) {
-        return ensure_group(query, match->group_id);
+        return flecs_query_ensure_group(query, match->group_id);
     } else {
         return &query->list;
     }
@@ -162,7 +162,7 @@ ecs_query_table_list_t* ensure_node_list(
 
 /* Remove node from list */
 static
-void remove_table_node(
+void flecs_query_remove_table_node(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
@@ -173,7 +173,7 @@ void remove_table_node(
     ecs_assert(next != node, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!prev || prev != next, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_query_table_list_t *list = get_node_list(query, node);
+    ecs_query_table_list_t *list = flecs_query_get_node_list(query, node);
 
     if (!list || !list->first) {
         /* If list contains no nodes, the node must be empty */
@@ -230,7 +230,7 @@ void remove_table_node(
         /* Do check again, in case both prev & next belonged to another group */
         if (prev && prev->match->group_id != group_id) {
             /* There are no more matches left in this group */
-            remove_group(query, group_id);
+            flecs_query_remove_group(query, group_id);
             list = NULL;
         }
     }
@@ -258,7 +258,7 @@ void remove_table_node(
 
 /* Add node to list */
 static
-void insert_table_node(
+void flecs_query_insert_table_node(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
@@ -273,9 +273,9 @@ void insert_table_node(
     }
 #endif
 
-    compute_group_id(query, node->match);
+    flecs_query_compute_group_id(query, node->match);
 
-    ecs_query_table_list_t *list = ensure_node_list(query, node);
+    ecs_query_table_list_t *list = flecs_query_ensure_node_list(query, node);
     if (list->last) {
         ecs_assert(query->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(query->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -308,7 +308,7 @@ void insert_table_node(
 
         if (query->group_by) {
             /* Initialize group with its first node */
-            create_group(query, node);
+            flecs_query_create_group(query, node);
         }
     }
 
@@ -332,7 +332,7 @@ void insert_table_node(
 }
 
 static
-ecs_query_table_match_t* cache_add(
+ecs_query_table_match_t* flecs_query_cache_add(
     ecs_query_table_t *elem)
 {
     ecs_query_table_match_t *result = ecs_os_calloc_t(ecs_query_table_match_t);
@@ -358,7 +358,7 @@ typedef struct {
 } table_dirty_state_t;
 
 static
-void get_dirty_state(
+void flecs_query_get_dirty_state(
     ecs_query_t *query,
     ecs_query_table_match_t *match,
     int32_t term,
@@ -391,7 +391,7 @@ void get_dirty_state(
 /* Get match monitor. Monitors are used to keep track of whether components 
  * matched by the query in a table have changed. */
 static
-bool get_match_monitor(
+bool flecs_query_get_match_monitor(
     ecs_query_t *query,
     ecs_query_table_match_t *match)
 {
@@ -428,7 +428,7 @@ bool get_match_monitor(
             continue; /* Don't track terms that aren't matched */
         }
 
-        get_dirty_state(query, match, t, &cur_dirty_state);
+        flecs_query_get_dirty_state(query, match, t, &cur_dirty_state);
         if (cur_dirty_state.column == -1) {
             continue; /* Don't track terms that aren't stored */
         }
@@ -445,14 +445,14 @@ bool get_match_monitor(
 
 /* Synchronize match monitor with table dirty state */
 static
-void sync_match_monitor(
+void flecs_query_sync_match_monitor(
     ecs_query_t *query,
     ecs_query_table_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!match->monitor) {
         if (query->flags & EcsQueryHasMonitor) {
-            get_match_monitor(query, match);
+            flecs_query_get_match_monitor(query, match);
         } else {
             return;
         }
@@ -473,7 +473,7 @@ void sync_match_monitor(
             continue;
         }
                 
-        get_dirty_state(query, match, t, &cur);
+        flecs_query_get_dirty_state(query, match, t, &cur);
         ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
     }
@@ -481,14 +481,14 @@ void sync_match_monitor(
 
 /* Check if single match term has changed */
 static
-bool check_match_monitor_term(
+bool flecs_query_check_match_monitor_term(
     ecs_query_t *query,
     ecs_query_table_match_t *match,
     int32_t term)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (get_match_monitor(query, match)) {
+    if (flecs_query_get_match_monitor(query, match)) {
         return true;
     }
     
@@ -507,7 +507,7 @@ bool check_match_monitor_term(
         return monitor[0] != dirty_state[0];
     }
 
-    get_dirty_state(query, match, term - 1, &cur);
+    flecs_query_get_dirty_state(query, match, term - 1, &cur);
     ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
 
     return monitor[term] != cur.dirty_state[cur.column + 1];
@@ -515,13 +515,13 @@ bool check_match_monitor_term(
 
 /* Check if any term for match has changed */
 static
-bool check_match_monitor(
+bool flecs_query_check_match_monitor(
     ecs_query_t *query,
     ecs_query_table_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (get_match_monitor(query, match)) {
+    if (flecs_query_get_match_monitor(query, match)) {
         return true;
     }
 
@@ -544,7 +544,7 @@ bool check_match_monitor(
             continue;
         }
 
-        get_dirty_state(query, match, t, &cur);
+        flecs_query_get_dirty_state(query, match, t, &cur);
         ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
 
         if (monitor[t + 1] != cur.dirty_state[cur.column + 1]) {
@@ -557,7 +557,7 @@ bool check_match_monitor(
 
 /* Check if any term for matched table has changed */
 static
-bool check_table_monitor(
+bool flecs_query_check_table_monitor(
     ecs_query_t *query,
     ecs_query_table_t *table,
     int32_t term)
@@ -567,11 +567,11 @@ bool check_table_monitor(
     for (cur = &table->first->node; cur != end; cur = cur->next) {
         ecs_query_table_match_t *match = (ecs_query_table_match_t*)cur;
         if (term == -1) {
-            if (check_match_monitor(query, match)) {
+            if (flecs_query_check_match_monitor(query, match)) {
                 return true;
             }
         } else {
-            if (check_match_monitor_term(query, match, term)) {
+            if (flecs_query_check_match_monitor_term(query, match, term)) {
                 return true;
             } 
         }
@@ -581,14 +581,14 @@ bool check_table_monitor(
 }
 
 static
-bool check_query_monitor(
+bool flecs_query_check_query_monitor(
     ecs_query_t *query)
 {
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&query->cache, &it)) {
         ecs_query_table_t *qt;
         while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            if (check_table_monitor(query, qt, -1)) {
+            if (flecs_query_check_table_monitor(query, qt, -1)) {
                 return true;
             }
         }
@@ -598,7 +598,7 @@ bool check_query_monitor(
 }
 
 static
-void init_query_monitors(
+void flecs_query_init_query_monitors(
     ecs_query_t *query)
 {
     ecs_query_table_node_t *cur = query->list.first;
@@ -606,7 +606,7 @@ void init_query_monitors(
     /* Ensure each match has a monitor */
     for (; cur != NULL; cur = cur->next) {
         ecs_query_table_match_t *match = (ecs_query_table_match_t*)cur;
-        get_match_monitor(query, match);
+        flecs_query_get_match_monitor(query, match);
     }
 }
 
@@ -614,7 +614,7 @@ void init_query_monitors(
  * This causes tables in the query cache to be ordered by depth, which ensures
  * breadth-first iteration order. */
 static
-uint64_t group_by_cascade(
+uint64_t flecs_query_group_by_cascade(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -628,7 +628,7 @@ uint64_t group_by_cascade(
 }
 
 static
-ecs_vector_t* add_ref(
+ecs_vector_t* flecs_query_add_ref(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_vector_t *references,
@@ -661,7 +661,7 @@ ecs_vector_t* add_ref(
 }
 
 static
-ecs_query_table_match_t* add_table_match(
+ecs_query_table_match_t* flecs_query_add_table_match(
     ecs_query_t *query,
     ecs_query_table_t *qt,
     ecs_table_t *table)
@@ -671,7 +671,7 @@ ecs_query_table_match_t* add_table_match(
 
     /* Add match for table. One table can have more than one match, if
      * the query contains wildcards. */
-    ecs_query_table_match_t *qm = cache_add(qt);
+    ecs_query_table_match_t *qm = flecs_query_cache_add(qt);
     qm->table = table;
     qm->columns = ecs_os_malloc_n(int32_t, term_count);
     qm->ids = ecs_os_malloc_n(ecs_id_t, term_count);
@@ -680,14 +680,14 @@ ecs_query_table_match_t* add_table_match(
 
     /* Insert match to iteration list if table is not empty */
     if (!table || ecs_table_count(table) != 0) {
-        insert_table_node(query, &qm->node);
+        flecs_query_insert_table_node(query, &qm->node);
     }
 
     return qm;
 }
 
 static
-void set_table_match(
+void flecs_query_set_table_match(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_table_match_t *qm,
@@ -791,9 +791,7 @@ void set_table_match(
                 ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
                 if (id) {
-                    ecs_assert(ecs_id_is_valid(world, id), 
-                        ECS_INTERNAL_ERROR, NULL);
-                    refs = add_ref(world, query, refs, term, id, src, size);
+                    refs = flecs_query_add_ref(world, query, refs, term, id, src, size);
 
                     /* Use column index to bind term and ref */
                     if (qm->columns[actual_index] != 0) {
@@ -813,7 +811,7 @@ void set_table_match(
 
 /** Populate query cache with tables */
 static
-void match_tables(
+void flecs_query_match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -833,13 +831,13 @@ void match_tables(
             table = it.table;
         }
 
-        ecs_query_table_match_t *qm = add_table_match(query, qt, table);
-        set_table_match(world, query, qm, table, &it);
+        ecs_query_table_match_t *qm = flecs_query_add_table_match(query, qt, table);
+        flecs_query_set_table_match(world, query, qm, table, &it);
     }
 }
 
 static
-bool match_table(
+bool flecs_query_match_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table)
@@ -869,17 +867,17 @@ bool match_table(
             table = it.table;
         }
 
-        ecs_query_table_match_t *qm = add_table_match(query, qt, table);
-        set_table_match(world, query, qm, table, &it);
+        ecs_query_table_match_t *qm = flecs_query_add_table_match(query, qt, table);
+        flecs_query_set_table_match(world, query, qm, table, &it);
     }
 
     return qt != NULL;
 }
 
-ECS_SORT_TABLE_WITH_COMPARE(_, sort_table_generic, order_by, static)
+ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_sort_table_generic, order_by, static)
 
 static
-void sort_table(
+void flecs_query_sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -911,7 +909,7 @@ void sort_table(
     if (sort) {
         sort(world, table, entities, ptr, size, 0, count - 1, compare);
     } else {
-        sort_table_generic(world, table, entities, ptr, size, 0, count - 1, compare);
+        flecs_query_sort_table_generic(world, table, entities, ptr, size, 0, count - 1, compare);
     }
 }
 
@@ -952,7 +950,7 @@ ecs_entity_t e_from_helper(
 }
 
 static
-void build_sorted_table_range(
+void flecs_query_build_sorted_table_range(
     ecs_query_t *query,
     ecs_query_table_list_t *list)
 {
@@ -1082,7 +1080,7 @@ void build_sorted_table_range(
 }
 
 static
-void build_sorted_tables(
+void flecs_query_build_sorted_tables(
     ecs_query_t *query)
 {
     ecs_vector_clear(query->table_slices);
@@ -1101,19 +1099,19 @@ void build_sorted_tables(
                 ecs_assert(list != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 /* Sort tables in current group */
-                build_sorted_table_range(query, list);
+                flecs_query_build_sorted_table_range(query, list);
                 
                 /* Find next group to sort */
                 cur = list->last->next;
             } while (cur);
         }
     } else {
-        build_sorted_table_range(query, &query->list);
+        flecs_query_build_sorted_table_range(query, &query->list);
     }
 }
 
 static
-void sort_tables(
+void flecs_query_sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -1159,13 +1157,13 @@ void sort_tables(
         ecs_table_t *table = qt->hdr.table;
         bool dirty = false;
 
-        if (check_table_monitor(query, qt, 0)) {
+        if (flecs_query_check_table_monitor(query, qt, 0)) {
             dirty = true;
         }
 
         int32_t column = -1;
         if (order_by_component) {
-            if (check_table_monitor(query, qt, order_by_term + 1)) {
+            if (flecs_query_check_table_monitor(query, qt, order_by_term + 1)) {
                 dirty = true;
             }
 
@@ -1189,19 +1187,19 @@ void sort_tables(
             continue;
         }
 
-        /* Something has changed, sort the table. Prefers using sort_table when available */
-        sort_table(world, table, column, compare, sort);
+        /* Something has changed, sort the table. Prefers using flecs_query_sort_table when available */
+        flecs_query_sort_table(world, table, column, compare, sort);
         tables_sorted = true;
     }
 
     if (tables_sorted || query->match_count != query->prev_match_count) {
-        build_sorted_tables(query);
+        flecs_query_build_sorted_tables(query);
         query->match_count ++; /* Increase version if tables changed */
     }
 }
 
 static
-bool has_refs(
+bool flecs_query_has_refs(
     ecs_query_t *query)
 {
     ecs_term_t *terms = query->filter.terms;
@@ -1227,7 +1225,7 @@ bool has_refs(
 }
 
 static
-void for_each_component_monitor(
+void flecs_query_for_each_component_monitor(
     ecs_world_t *world,
     ecs_query_t *query,
     void(*callback)(
@@ -1256,7 +1254,7 @@ void for_each_component_monitor(
 }
 
 static
-bool is_term_id_supported(
+bool flecs_query_is_term_id_supported(
     ecs_term_id_t *term_id)
 {
     if (term_id->var != EcsVarIsVariable) {
@@ -1269,7 +1267,7 @@ bool is_term_id_supported(
 }
 
 static
-void process_signature(
+void flecs_query_process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -1283,9 +1281,9 @@ void process_signature(
         ecs_term_id_t *obj = &term->obj;
         ecs_inout_kind_t inout = term->inout;
 
-        bool is_pred_supported = is_term_id_supported(pred);
-        bool is_subj_supported = is_term_id_supported(subj);
-        bool is_obj_supported = is_term_id_supported(obj);
+        bool is_pred_supported = flecs_query_is_term_id_supported(pred);
+        bool is_subj_supported = flecs_query_is_term_id_supported(subj);
+        bool is_obj_supported = flecs_query_is_term_id_supported(obj);
 
         (void)pred;
         (void)obj;
@@ -1316,10 +1314,10 @@ void process_signature(
         }
     }
 
-    query->flags |= (ecs_flags32_t)(has_refs(query) * EcsQueryHasRefs);
+    query->flags |= (ecs_flags32_t)(flecs_query_has_refs(query) * EcsQueryHasRefs);
 
     if (!(query->flags & EcsQueryIsSubquery)) {
-        for_each_component_monitor(world, query, flecs_monitor_register);
+        flecs_query_for_each_component_monitor(world, query, flecs_monitor_register);
     }
 error:
     return;
@@ -1327,7 +1325,7 @@ error:
 
 /** When a table becomes empty remove it from the query list, or vice versa. */
 static
-void update_table(
+void flecs_query_update_table(
     ecs_query_t *query,
     ecs_table_t *table,
     bool empty)
@@ -1348,11 +1346,11 @@ void update_table(
                 ecs_assert(ecs_table_count(table) == 0, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                remove_table_node(query, &cur->node);
+                flecs_query_remove_table_node(query, &cur->node);
             } else {
                 ecs_assert(ecs_table_count(table) != 0, 
                     ECS_INTERNAL_ERROR, NULL);
-                insert_table_node(query, &cur->node);
+                flecs_query_insert_table_node(query, &cur->node);
             }
         }
     }
@@ -1362,7 +1360,7 @@ void update_table(
 }
 
 static
-void add_subquery(
+void flecs_query_add_subquery(
     ecs_world_t *world, 
     ecs_query_t *parent, 
     ecs_query_t *subquery) 
@@ -1375,17 +1373,17 @@ void add_subquery(
     ecs_query_table_t *qt;
     flecs_table_cache_iter(cache, &it);
     while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-        match_table(world, subquery, qt->hdr.table);
+        flecs_query_match_table(world, subquery, qt->hdr.table);
     }
     
     flecs_table_cache_empty_iter(cache, &it);
     while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-        match_table(world, subquery, qt->hdr.table);
+        flecs_query_match_table(world, subquery, qt->hdr.table);
     }
 }
 
 static
-void notify_subqueries(
+void flecs_query_notify_subqueries(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_event_t *event)
@@ -1406,7 +1404,7 @@ void notify_subqueries(
 
 /* Remove table */
 static
-void query_table_match_free(
+void flecs_query_table_match_free(
     ecs_query_t *query,
     ecs_query_table_t *elem,
     ecs_query_table_match_t *first)
@@ -1424,7 +1422,7 @@ void query_table_match_free(
         ecs_os_free(cur->monitor);
 
         if (!elem->hdr.empty) {
-            remove_table_node(query, &cur->node);
+            flecs_query_remove_table_node(query, &cur->node);
         }
 
         next = cur->next_match;
@@ -1434,29 +1432,29 @@ void query_table_match_free(
 }
 
 static
-void query_table_free(
+void flecs_query_table_free(
     ecs_query_t *query,
     ecs_query_table_t *elem)
 {
-    query_table_match_free(query, elem, elem->first);
+    flecs_query_table_match_free(query, elem, elem->first);
     ecs_os_free(elem);
 }
 
 static
-void unmatch_table(
+void flecs_query_unflecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
     ecs_query_table_t *qt = ecs_table_cache_remove(
         &query->cache, table, NULL);
     if (qt) {
-        query_table_free(query, qt);
+        flecs_query_table_free(query, qt);
     }
 }
 
 /* Rematch system with tables after a change happened to a watched entity */
 static
-void rematch_tables(
+void flecs_query_reflecs_query_match_tables(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_t *parent_query)
@@ -1482,7 +1480,7 @@ void rematch_tables(
     while (ecs_iter_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
-                query_table_match_free(query, qt, qm->next_match);
+                flecs_query_table_match_free(query, qt, qm->next_match);
                 qm->next_match = NULL;
             }
 
@@ -1504,20 +1502,20 @@ void rematch_tables(
             qm = qm->next_match;
         }
         if (!qm) {
-            qm = add_table_match(query, qt, table);
+            qm = flecs_query_add_table_match(query, qt, table);
         }
 
-        set_table_match(world, query, qm, table, &it);
+        flecs_query_set_table_match(world, query, qm, table, &it);
 
         if (table && ecs_table_count(table) && query->group_by) {
             /* If grouping is enabled, make sure match is in the right place */
-            remove_table_node(query, &qm->node);
-            insert_table_node(query, &qm->node);
+            flecs_query_remove_table_node(query, &qm->node);
+            flecs_query_insert_table_node(query, &qm->node);
         }
     }
 
     if (qm && qm->next_match) {
-        query_table_match_free(query, qt, qm->next_match);
+        flecs_query_table_match_free(query, qt, qm->next_match);
         qm->next_match = NULL;
     }
 
@@ -1526,7 +1524,7 @@ void rematch_tables(
     if (flecs_table_cache_iter(&query->cache, &cache_it)) {
         while ((qt = flecs_table_cache_next(&cache_it, ecs_query_table_t))) {
             if (qt->rematch_count != rematch_count) {
-                unmatch_table(query, qt->hdr.table);
+                flecs_query_unflecs_query_match_table(query, qt->hdr.table);
             }
         }
     }
@@ -1534,14 +1532,14 @@ void rematch_tables(
     if (flecs_table_cache_empty_iter(&query->cache, &cache_it)) {
         while ((qt = flecs_table_cache_next(&cache_it, ecs_query_table_t))) {
             if (qt->rematch_count != rematch_count) {
-                unmatch_table(query, qt->hdr.table);
+                flecs_query_unflecs_query_match_table(query, qt->hdr.table);
             }
         }
     }    
 }
 
 static
-void remove_subquery(
+void flecs_query_remove_subquery(
     ecs_query_t *parent, 
     ecs_query_t *sub)
 {
@@ -1573,20 +1571,20 @@ void flecs_query_notify(
     switch(event->kind) {
     case EcsQueryTableMatch:
         /* Creation of new table */
-        if (match_table(world, query, event->table)) {
+        if (flecs_query_match_table(world, query, event->table)) {
             if (query->subqueries) {
-                notify_subqueries(world, query, event);
+                flecs_query_notify_subqueries(world, query, event);
             }
         }
         notify = false;
         break;
     case EcsQueryTableUnmatch:
         /* Deletion of table */
-        unmatch_table(query, event->table);
+        flecs_query_unflecs_query_match_table(query, event->table);
         break;
     case EcsQueryTableRematch:
         /* Rematch tables of query */
-        rematch_tables(world, query, event->parent_query);
+        flecs_query_reflecs_query_match_tables(world, query, event->parent_query);
         break;        
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
@@ -1596,39 +1594,39 @@ void flecs_query_notify(
     }
 
     if (notify) {
-        notify_subqueries(world, query, event);
+        flecs_query_notify_subqueries(world, query, event);
     }
 }
 
 static
-void query_order_by(
+void flecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t order_by_component,
     ecs_order_by_action_t order_by,
-    ecs_sort_table_action_t sort_table_action)
+    ecs_sort_table_action_t action)
 {
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
 
     query->order_by_component = order_by_component;
     query->order_by = order_by;
-    query->sort_table = sort_table_action;
+    query->sort_table = action;
 
     ecs_vector_free(query->table_slices);
     query->table_slices = NULL;
 
-    sort_tables(world, query);  
+    flecs_query_sort_tables(world, query);  
 
     if (!query->table_slices) {
-        build_sorted_tables(query);
+        flecs_query_build_sorted_tables(query);
     }
 error:
     return;
 }
 
 static
-void query_group_by(
+void flecs_query_group_by(
     ecs_query_t *query,
     ecs_entity_t sort_component,
     ecs_group_by_action_t group_by)
@@ -1646,7 +1644,7 @@ error:
 
 /* Implementation for iterable mixin */
 static
-void query_iter_init(
+void flecs_query_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
@@ -1663,7 +1661,7 @@ void query_iter_init(
 }
 
 static
-void query_on_event(
+void flecs_query_on_event(
     ecs_iter_t *it) 
 {
     /* Because this is the observer::run callback, checking if this is event is
@@ -1687,10 +1685,10 @@ void query_on_event(
 
     ecs_entity_t event = it->event;
     if (event == EcsOnTableEmpty) {
-        update_table(query, table, true);
+        flecs_query_update_table(query, table, true);
     } else
     if (event == EcsOnTableFill) {
-        update_table(query, table, false);
+        flecs_query_update_table(query, table, false);
     }
 }
 
@@ -1725,7 +1723,7 @@ ecs_query_t* ecs_query_init(
     }
 
     if (result->filter.term_count) {
-        observer_desc.run = query_on_event;
+        observer_desc.run = flecs_query_on_event;
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
@@ -1744,17 +1742,17 @@ ecs_query_t* ecs_query_init(
     }
 
     result->world = world;
-    result->iterable.init = query_iter_init;
+    result->iterable.init = flecs_query_iter_init;
     result->system = desc->system;
     result->prev_match_count = -1;
 
-    process_signature(world, result);
+    flecs_query_process_signature(world, result);
 
     /* Group before matching so we won't have to move tables around later */
     int32_t cascade_by = result->cascade_by;
     if (cascade_by) {
-        query_group_by(result, result->filter.terms[cascade_by - 1].id,
-            group_by_cascade);
+        flecs_query_group_by(result, result->filter.terms[cascade_by - 1].id,
+            flecs_query_group_by_cascade);
         result->group_by_ctx = &result->filter.terms[cascade_by - 1];
     }
 
@@ -1762,7 +1760,7 @@ ecs_query_t* ecs_query_init(
         /* Can't have a cascade term and group by at the same time, as cascade
          * uses the group_by mechanism */
         ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
-        query_group_by(result, desc->group_by_id, desc->group_by);
+        flecs_query_group_by(result, desc->group_by_id, desc->group_by);
         result->group_by_ctx = desc->group_by_ctx;
         result->group_by_ctx_free = desc->group_by_ctx_free;
     }
@@ -1794,14 +1792,14 @@ ecs_query_t* ecs_query_init(
     ecs_table_cache_init(&result->cache);
 
     if (!desc->parent) {
-        match_tables(world, result);
+        flecs_query_match_tables(world, result);
     } else {
-        add_subquery(world, desc->parent, result);
+        flecs_query_add_subquery(world, desc->parent, result);
         result->parent = desc->parent;
     }
 
     if (desc->order_by) {
-        query_order_by(
+        flecs_query_order_by(
             world, result, desc->order_by_component, desc->order_by,
             desc->sort_table);
     }
@@ -1827,13 +1825,13 @@ void table_cache_free(
 
     if (flecs_table_cache_iter(&query->cache, &it)) {
         while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            query_table_free(query, qt);
+            flecs_query_table_free(query, qt);
         }
     }
 
     if (flecs_table_cache_empty_iter(&query->cache, &it)) {
         while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            query_table_free(query, qt);
+            flecs_query_table_free(query, qt);
         }
     }
 
@@ -1862,14 +1860,14 @@ void ecs_query_fini(
     if ((query->flags & EcsQueryIsSubquery) &&
         !(query->flags & EcsQueryIsOrphaned))
     {
-        remove_subquery(query->parent, query);
+        flecs_query_remove_subquery(query->parent, query);
     }
 
-    notify_subqueries(world, query, &(ecs_query_event_t){
+    flecs_query_notify_subqueries(world, query, &(ecs_query_event_t){
         .kind = EcsQueryOrphan
     });
 
-    for_each_component_monitor(world, query, flecs_monitor_unregister);
+    flecs_query_for_each_component_monitor(world, query, flecs_monitor_unregister);
 
     table_cache_free(query);
 
@@ -1911,7 +1909,7 @@ ecs_iter_t ecs_query_iter(
     flecs_process_pending_tables(world);
 
     /* If query has order_by, apply sort */
-    sort_tables(world, query);
+    flecs_query_sort_tables(world, query);
 
     /* If monitors changed, do query rematching */
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
@@ -2403,7 +2401,7 @@ bool ecs_query_next_instanced(
     if ((prev = iter->prev)) {
         /* Match has been iterated, update monitor for change tracking */
         if (flags & EcsQueryHasMonitor) {
-            sync_match_monitor(query, prev->match);
+            flecs_query_sync_match_monitor(query, prev->match);
         }
         if (flags & EcsQueryHasOutColumns) {
             mark_columns_dirty(query, prev->match);
@@ -2550,7 +2548,7 @@ bool ecs_query_changed(
 
         flecs_process_pending_tables(it->real_world);
 
-        return check_match_monitor(query, qt);
+        return flecs_query_check_match_monitor(query, qt);
     }
 
     ecs_poly_assert(query, ecs_query_t);
@@ -2561,7 +2559,7 @@ bool ecs_query_changed(
 
     if (!(query->flags & EcsQueryHasMonitor)) {
         query->flags |= EcsQueryHasMonitor;
-        init_query_monitors(query);
+        flecs_query_init_query_monitors(query);
         return true; /* Monitors didn't exist yet */
     }
 
@@ -2569,7 +2567,7 @@ bool ecs_query_changed(
         return true;
     }
 
-    return check_query_monitor(query);
+    return flecs_query_check_query_monitor(query);
 error:
     return false;
 }

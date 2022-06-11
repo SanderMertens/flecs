@@ -2362,3 +2362,70 @@ void OnDelete_add_deleted_in_on_remove() {
     test_expect_abort();
     ecs_delete(world, t);
 }
+
+void OnDelete_delete_tree_w_query() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(super(Rel))");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_add_pair(world, e2, Rel, e1);
+    ecs_add_id(world, e1, Foo);
+
+    ecs_fini(world);
+
+    // Make sure query can handle matching with tables while entities are 
+    // getting deleted.
+    test_assert(true);
+}
+
+static int test_alive_parent_count = 0;
+static ecs_entity_t last_deleted = 0;
+
+static void TestAlive(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_object(it->world, e, EcsChildOf, 0);
+        if (parent) {
+            test_assert(ecs_is_alive(it->world, parent));
+            test_alive_parent_count ++;
+        }
+
+        test_assert(!last_deleted || e < last_deleted);
+        last_deleted = e;
+    }
+}
+
+void OnDelete_fini_cleanup_order() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+        ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+            ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+                ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, e3);
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e2, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = TestAlive
+    });
+
+    ecs_fini(world);
+
+    test_int(test_alive_parent_count, 3);
+}

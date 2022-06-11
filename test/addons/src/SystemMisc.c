@@ -825,7 +825,7 @@ void SystemMisc_add_own_component() {
     ECS_SYSTEM(world, FooSystem, 0, Position);
     ECS_SYSTEM(world, BarSystem, 0, Position);
 
-    ecs_set_ptr(world, BarSystem, Position, NULL );
+    ecs_set_ptr(world, BarSystem, Position, NULL);
 
     /* Make sure code didn't assert */
     test_assert(true);
