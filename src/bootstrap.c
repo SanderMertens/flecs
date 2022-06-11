@@ -705,6 +705,7 @@ void flecs_bootstrap(
     /* Initialize builtin modules */
     ecs_set_name(world, EcsFlecs, "flecs");
     ecs_add_id(world, EcsFlecs, EcsModule);
+    ecs_add_pair(world, EcsFlecs, EcsOnDelete, EcsPanic);
 
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
     ecs_set_name(world, EcsFlecsCore, "core");

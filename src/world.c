@@ -440,6 +440,95 @@ void clean_tables(
 }
 
 static
+void fini_roots(ecs_world_t *world) {
+    ecs_dbg_2("cleanup root entities");
+    ecs_log_push();
+
+    ecs_id_record_t *on_delete_panic = flecs_id_record_get(world, 
+        ecs_pair(EcsOnDelete, EcsPanic));
+    ecs_id_record_t *on_delete_obj_panic = flecs_id_record_get(world, 
+        ecs_pair(EcsOnDeleteObject, EcsPanic));
+    ecs_id_record_t *triggers = flecs_id_record_get(world, ecs_id(EcsTrigger));
+    ecs_id_record_t *observers = flecs_id_record_get(world, ecs_id(EcsObserver));
+    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+
+    ecs_table_cache_iter_t it;
+    bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
+    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
+    (void)has_roots;
+
+    /* Delete root entities that are not modules. This prioritizes deleting 
+     * regular entities first, which reduces the chance of components getting
+     * destructed in random order because it got deleted before entities,
+     * thereby bypassing the OnDeleteObject policy. */
+    ecs_defer_begin(world);
+
+    const ecs_table_record_t *tr;
+    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        ecs_table_t *table = tr->hdr.table;
+        if (table->flags & EcsTableHasModule) {
+            continue; /* Filter out modules */
+        }
+
+        if ((flecs_id_record_get_table(on_delete_panic, table) != NULL) ||
+            (flecs_id_record_get_table(on_delete_obj_panic, table) != NULL) ||
+            (flecs_id_record_get_table(triggers, table) != NULL) ||
+            (flecs_id_record_get_table(observers, table) != NULL)) 
+        {
+            continue; /* Postpone deleting tables with panic policies */
+        }
+
+        int32_t i, count = table->data.entities.count;
+        ecs_entity_t *entities = table->data.entities.array;
+
+        /* Count backwards so that we're always deleting the last entity in the
+         * table which reduces moving components around */
+        for (i = count - 1; i >= 0; i --) {
+            ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
+            if (!(flags & EcsEntityObservedObject)) {
+                continue; /* Filter out entities that aren't objects */
+            }
+
+            ecs_delete(world, entities[i]);
+        }
+    }
+
+    ecs_defer_end(world);
+
+    /* Update table administration */
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+
+    /* Delete remaining root entities */
+    has_roots = flecs_table_cache_iter(&idr->cache, &it);
+    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
+    ecs_defer_begin(world);
+
+    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        ecs_table_t *table = tr->hdr.table;
+        if ((flecs_id_record_get_table(on_delete_panic, table) != NULL) ||
+            (flecs_id_record_get_table(on_delete_obj_panic, table) != NULL) ||
+            (flecs_id_record_get_table(triggers, table) != NULL) ||
+            (flecs_id_record_get_table(observers, table) != NULL)) 
+        {
+            continue; /* Postpone deleting tables with panic policies */
+        }
+
+        int32_t i, count = table->data.entities.count;
+        ecs_entity_t *entities = table->data.entities.array;
+        for (i = count - 1; i >= 0; i --) {
+            ecs_delete(world, entities[i]);
+        }
+    }
+
+    ecs_defer_end(world);
+
+    ecs_log_pop();
+}
+
+static
 void fini_store(ecs_world_t *world) {
     clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
@@ -1107,6 +1196,10 @@ int ecs_fini(
     ecs_trace("#[bold]shutting down world");
     ecs_log_push();
 
+    /* Delete root entities first using regular APIs. This ensures that cleanup
+     * policies get a chance to execute. */
+    fini_roots(world);
+
     world->is_fini = true;
 
     /* Run fini actions (simple callbacks ran when world is deleted) before
@@ -1682,6 +1775,11 @@ void flecs_process_pending_tables(
         world->pending_tables = world->pending_buffer;
         world->pending_buffer = NULL;
 
+        /* Make sure that any ECS operations that occur while delivering the
+         * events does not cause inconsistencies, like sending an Empty 
+         * notification for a table that just became non-empty. */
+        ecs_defer_begin(world);
+
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense(
                 pending_tables, ecs_table_t*, i)[0];
@@ -1714,6 +1812,8 @@ void flecs_process_pending_tables(
             }
         }
         flecs_sparse_clear(pending_tables);
+
+        ecs_defer_end(world);
 
         world->pending_buffer = pending_tables;
     } while ((count = flecs_sparse_count(world->pending_tables)));

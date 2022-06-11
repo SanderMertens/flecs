@@ -1184,6 +1184,9 @@ void move_switch_columns(
                     ECS_INTERNAL_ERROR, NULL);
                 flecs_switch_clear(src_switch);
             }
+        } else if (dst_id > src_id) {
+            ecs_switch_t *src_switch = &src_columns[i_old];
+            flecs_switch_clear(src_switch);
         }
 
         i_new += dst_id <= src_id;
@@ -1226,14 +1229,14 @@ void move_bitset_columns(
     int32_t offset_new = dst_table->bs_offset;
     int32_t offset_old = src_table->bs_offset;
 
-    ecs_id_t *dst_components = dst_type.array;
-    ecs_id_t *src_components = src_type.array;
+    ecs_id_t *dst_ids = dst_type.array;
+    ecs_id_t *src_ids = src_type.array;
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
-        ecs_id_t dst_component = dst_components[i_new + offset_new];
-        ecs_id_t src_component = src_components[i_old + offset_old];
+        ecs_id_t dst_id = dst_ids[i_new + offset_new];
+        ecs_id_t src_id = src_ids[i_old + offset_old];
 
-        if (dst_component == src_component) {
+        if (dst_id == src_id) {
             ecs_bitset_t *src_bs = &src_columns[i_old];
             ecs_bitset_t *dst_bs = &dst_columns[i_new];
 
@@ -1250,10 +1253,13 @@ void move_bitset_columns(
                     ECS_INTERNAL_ERROR, NULL);
                 flecs_bitset_fini(src_bs);
             }
+        } else if (dst_id > src_id) {
+            ecs_bitset_t *src_bs = &src_columns[i_old];
+            flecs_bitset_fini(src_bs);
         }
 
-        i_new += dst_component <= src_component;
-        i_old += dst_component >= src_component;
+        i_new += dst_id <= src_id;
+        i_old += dst_id >= src_id;
     }
 
     /* Clear remaining columns */
