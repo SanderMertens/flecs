@@ -149,6 +149,7 @@ ecs_entity_t ecs_system_init(
         ecs_system_desc_t desc = {0}; \
         desc.entity.name = #id; \
         desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
+        desc.entity.add[1] = (phase); \
         desc.query.filter.expr = #__VA_ARGS__; \
         desc.callback = id; \
         ecs_id(id) = ecs_system_init(world, &desc); \

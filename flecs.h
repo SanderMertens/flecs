@@ -9556,6 +9556,7 @@ ecs_entity_t ecs_system_init(
         ecs_system_desc_t desc = {0}; \
         desc.entity.name = #id; \
         desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
+        desc.entity.add[1] = (phase); \
         desc.query.filter.expr = #__VA_ARGS__; \
         desc.callback = id; \
         ecs_id(id) = ecs_system_init(world, &desc); \
@@ -22574,6 +22575,7 @@ public:
      */
     Base& kind(entity_t phase) {
         m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
+        m_desc->entity.add[1] = phase;
         return *this;
     }
 
@@ -22585,6 +22587,7 @@ public:
     Base& kind() {
         m_desc->entity.add[0] = ecs_dependson(
             _::cpp_type<Phase>::id(world_v()));
+        m_desc->entity.add[1] = _::cpp_type<Phase>::id(world_v());
         return *this;
     }
 
@@ -22689,6 +22692,7 @@ struct system_builder final : _::system_builder_base<Components...> {
 
 #ifdef FLECS_PIPELINE
         this->m_desc.entity.add[0] = ecs_dependson(flecs::OnUpdate);
+        this->m_desc.entity.add[1] = flecs::OnUpdate;
 #endif
     }
 };

@@ -1144,6 +1144,48 @@ void System_custom_pipeline() {
     test_int(count, 3);
 }
 
+void System_custom_pipeline_w_kind() {
+    flecs::world world;
+
+    auto Tag = world.entity();
+
+    flecs::entity pip = world.pipeline()
+        .term(flecs::System)
+        .term(Tag)
+        .build();
+
+    int count = 0;
+
+    world.system()
+        .kind(Tag)
+        .iter([&](flecs::iter it) {
+            test_int(count, 0);
+            count ++;
+        });
+
+    world.system()
+        .kind(Tag)
+        .iter([&](flecs::iter it) {
+            test_int(count, 1);
+            count ++;
+        });
+
+    world.system()
+        .kind(Tag)
+        .iter([&](flecs::iter it) {
+            test_int(count, 2);
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    world.set_pipeline(pip);
+
+    world.progress();
+
+    test_int(count, 3);
+}
+
 void System_system_w_self() {
     flecs::world world;
 
