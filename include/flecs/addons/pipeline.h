@@ -34,23 +34,35 @@
 extern "C" {
 #endif
 
-#ifndef FLECS_LEGACY
 #define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_type_init(world, &(ecs_type_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsPipeline}\
-        },\
-        .ids_expr = #__VA_ARGS__\
+    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) { \
+        .entity.name = #id, \
+        .query.filter.expr = #__VA_ARGS__\
     });\
-    ecs_id(id) = id;
+    ecs_id(id) = id;\
+    ecs_assert(id != 0, ECS_INVALID_OPERATION, NULL);
 
 #define ECS_PIPELINE(world, id, ...) \
     ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
-    (void)ecs_id(id)
+    (void)ecs_id(id);
+
+/* Pipeline descriptor (used with ecs_pipeline_init) */
+typedef struct ecs_pipeline_desc_t {
+    /* Entity descriptor */
+    ecs_entity_desc_t entity;
     
-#endif
+    /* Query descriptor. The first term of the query must match the EcsSystem
+     * component. */
+    ecs_query_desc_t query;
+} ecs_pipeline_desc_t;
+
+/** Create a custom pipeline.
+ */
+FLECS_API
+ecs_entity_t ecs_pipeline_init(
+    ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc);
 
 /** Set a custom pipeline.
  * This operation sets the pipeline to run when ecs_progress is invoked.

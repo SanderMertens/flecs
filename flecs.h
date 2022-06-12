@@ -4024,11 +4024,11 @@ FLECS_API extern const ecs_entity_t EcsSymbol;
 /* Tag to indicate alias identifier */
 FLECS_API extern const ecs_entity_t EcsAlias;
 
-/* Used to express parent-child relations. */
+/* Used to express parent-child relationships. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
 
-/* Used to express is-a relations. An IsA relation indicates that the subject is
- * a subset of the relation object. For example:
+/* Used to express is-a relationships. An IsA relationship indicates that the 
+ * subject is a subset of the relation object. For example:
  *   ecs_add_pair(world, Freighter, EcsIsA, SpaceShip);
  *
  * Here the Freighter is considered a subset of SpaceShip, meaning that every
@@ -4047,6 +4047,9 @@ FLECS_API extern const ecs_entity_t EcsChildOf;
  * member of a query term.
  */
 FLECS_API extern const ecs_entity_t EcsIsA;
+
+/* Used to express dependency relationships */
+FLECS_API extern const ecs_entity_t EcsDependsOn;
 
 /* Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
@@ -4125,7 +4128,7 @@ FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 FLECS_API extern const ecs_entity_t EcsInactive;
 
 /* Pipeline module tags */
-FLECS_API extern const ecs_entity_t EcsPipeline;
+FLECS_API extern const ecs_entity_t ecs_id(EcsPipeline);
 FLECS_API extern const ecs_entity_t EcsPreFrame;
 FLECS_API extern const ecs_entity_t EcsOnLoad;
 FLECS_API extern const ecs_entity_t EcsPostLoad;
@@ -4136,6 +4139,7 @@ FLECS_API extern const ecs_entity_t EcsPostUpdate;
 FLECS_API extern const ecs_entity_t EcsPreStore;
 FLECS_API extern const ecs_entity_t EcsOnStore;
 FLECS_API extern const ecs_entity_t EcsPostFrame;
+FLECS_API extern const ecs_entity_t EcsPhase;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
@@ -8088,9 +8092,9 @@ void* ecs_record_get_column(
  * @{
  */
 
-#define ecs_childof(parent) ecs_pair(EcsChildOf, parent)
-
-#define ecs_isa(base) ecs_pair(EcsIsA, base)
+#define ecs_isa(e)       ecs_pair(EcsIsA, e)
+#define ecs_childof(e)   ecs_pair(EcsChildOf, e)
+#define ecs_dependson(e) ecs_pair(EcsDependsOn, e)
 
 /** @} */
 
@@ -9233,23 +9237,35 @@ void FlecsTimerImport(
 extern "C" {
 #endif
 
-#ifndef FLECS_LEGACY
 #define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_type_init(world, &(ecs_type_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsPipeline}\
-        },\
-        .ids_expr = #__VA_ARGS__\
+    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) { \
+        .entity.name = #id, \
+        .query.filter.expr = #__VA_ARGS__\
     });\
-    ecs_id(id) = id;
+    ecs_id(id) = id;\
+    ecs_assert(id != 0, ECS_INVALID_OPERATION, NULL);
 
 #define ECS_PIPELINE(world, id, ...) \
     ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
-    (void)ecs_id(id)
+    (void)ecs_id(id);
+
+/* Pipeline descriptor (used with ecs_pipeline_init) */
+typedef struct ecs_pipeline_desc_t {
+    /* Entity descriptor */
+    ecs_entity_desc_t entity;
     
-#endif
+    /* Query descriptor. The first term of the query must match the EcsSystem
+     * component. */
+    ecs_query_desc_t query;
+} ecs_pipeline_desc_t;
+
+/** Create a custom pipeline.
+ */
+FLECS_API
+ecs_entity_t ecs_pipeline_init(
+    ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc);
 
 /** Set a custom pipeline.
  * This operation sets the pipeline to run when ecs_progress is invoked.
@@ -9535,19 +9551,19 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM_DEFINE(world, id, kind, ...) \
+#define ECS_SYSTEM_DEFINE(world, id, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
         desc.entity.name = #id; \
-        desc.entity.add[0] = kind; \
+        desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
         desc.query.filter.expr = #__VA_ARGS__; \
         desc.callback = id; \
         ecs_id(id) = ecs_system_init(world, &desc); \
     } \
     ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
 
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
+#define ECS_SYSTEM(world, id, phase, ...) \
+    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;
@@ -12901,7 +12917,8 @@ static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;
 static const flecs::entity_t Inactive = EcsInactive;
 static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t Pipeline = EcsPipeline;
+static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+static const flecs::entity_t Phase = EcsPhase;
 
 /* Trigger tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -12936,6 +12953,7 @@ static const flecs::entity_t OneOf = EcsOneOf;
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
+static const flecs::entity_t DependsOn = EcsDependsOn;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
@@ -14130,7 +14148,11 @@ void system_init(flecs::world& world);
 
 namespace flecs {
 
+template <typename ... Components>
 struct pipeline;
+
+template <typename ... Components>
+struct pipeline_builder;
 
 /* Builtin pipeline tags */
 static const flecs::entity_t PreFrame = EcsPreFrame;
@@ -16292,24 +16314,22 @@ flecs::entity import();
 
 /** Create a new pipeline.
  *
- * @tparam Args Arguments to pass into the constructor of flecs::system.
- * @return The pipeline.
+ * @return A pipeline builder.
  */
-template <typename... Args>
-flecs::pipeline pipeline(Args &&... args) const;
+flecs::pipeline_builder<> pipeline() const;
 
 /** Create a new pipeline.
  *
  * @tparam Pipeline Type associated with pipeline.
- * @return The pipeline.
+ * @return A pipeline builder.
  */
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
-flecs::pipeline pipeline() const;
+flecs::pipeline_builder<> pipeline() const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
  */
-void set_pipeline(const flecs::pipeline& pip) const;
+void set_pipeline(const flecs::entity pip) const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
@@ -16320,7 +16340,7 @@ void set_pipeline() const;
 /** Get pipeline.
  * @see ecs_get_pipeline
  */
-flecs::pipeline get_pipeline() const;
+flecs::entity get_pipeline() const;
 
 /** Progress world one tick.
  * @see ecs_progress
@@ -16330,7 +16350,7 @@ bool progress(FLECS_FLOAT delta_time = 0.0) const;
 /** Run pipeline.
  * @see ecs_run_pipeline
  */
-void run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time = 0.0) const;
+void run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time = 0.0) const;
 
 /** Set timescale
  * @see ecs_set_time_scale
@@ -17879,6 +17899,14 @@ struct entity_builder : entity_view {
         return this->add(flecs::ChildOf, object);
     }
 
+    /** Shortcut for add(DependsOn, obj).
+     *
+     * @param object The object.
+     */
+    Self& depends_on(entity_t object) {
+        return this->add(flecs::DependsOn, object);
+    }
+
     /** Shortcut for add(ChildOf, obj).
      *
      * @tparam T the type associated with the O.
@@ -17888,6 +17916,15 @@ struct entity_builder : entity_view {
         return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
     }
  
+    /** Shortcut for add(DependsOn, obj).
+     *
+     * @tparam T the type associated with the O.
+     */
+    template <typename T>
+    Self& depends_on() {
+        return this->add(flecs::DependsOn, _::cpp_type<T>::id(this->m_world));
+    }
+
     /** Add a pair with O type.
      * This operation adds a pair to the entity. The R part of the pair
      * should not be a component.
@@ -22536,7 +22573,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        m_desc->entity.add[0] = phase;
+        m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
         return *this;
     }
 
@@ -22546,7 +22583,8 @@ public:
      */
     template <typename Phase>
     Base& kind() {
-        m_desc->entity.add[0] = _::cpp_type<Phase>::id(world_v());
+        m_desc->entity.add[0] = ecs_dependson(
+            _::cpp_type<Phase>::id(world_v()));
         return *this;
     }
 
@@ -22650,7 +22688,7 @@ struct system_builder final : _::system_builder_base<Components...> {
         this->m_desc.query.filter.instanced = this->m_instanced;
 
 #ifdef FLECS_PIPELINE
-        this->m_desc.entity.add[0] = flecs::OnUpdate;
+        this->m_desc.entity.add[0] = ecs_dependson(flecs::OnUpdate);
 #endif
     }
 };
@@ -22830,32 +22868,78 @@ inline void system_init(flecs::world& world) {
 #ifdef FLECS_PIPELINE
 #pragma once
 
+#pragma once
+
+#pragma once
+
+
 namespace flecs {
 
-struct pipeline : type_base<pipeline> {
-    explicit pipeline(world_t *world, entity_t e) : type_base(world, e)
-    { 
-        this->entity().add(flecs::Pipeline);
-    }
+// Query builder interface
+template<typename Base>
+struct pipeline_builder_i : query_builder_i<Base> {
+    pipeline_builder_i(ecs_pipeline_desc_t *desc, int32_t term_index = 0) 
+        : query_builder_i<Base>(&desc->query, term_index)
+        , m_desc(desc) { }
 
-    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
-    { 
-        this->entity().add(flecs::Pipeline);
+private:
+    ecs_pipeline_desc_t *m_desc;
+};
+
+}
+
+
+namespace flecs {
+namespace _ {
+    template <typename ... Components>
+    using pipeline_builder_base = builder<
+        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>, 
+        pipeline_builder_i, Components ...>;
+}
+
+template <typename ... Components>
+struct pipeline_builder final : _::pipeline_builder_base<Components...> {
+    pipeline_builder(flecs::world_t* world, flecs::entity_t id = 0)
+        : _::pipeline_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+        this->m_desc.entity.entity = id;
     }
 };
 
-template <typename... Args>
-inline flecs::pipeline world::pipeline(Args &&... args) const {
-    return flecs::pipeline(m_world, FLECS_FWD(args)...);
+}
+
+
+namespace flecs {
+
+template <typename ... Components>
+struct pipeline : entity {
+    pipeline(world_t *world, ecs_pipeline_desc_t *desc) 
+        : entity(world)
+    {
+        m_id = ecs_pipeline_init(world, desc);
+
+        if (!m_id) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->query.filter.terms_buffer) {
+            ecs_os_free(desc->query.filter.terms_buffer);
+        }
+    }
+};
+
+inline flecs::pipeline_builder<> world::pipeline() const {
+    return flecs::pipeline_builder<>(m_world);
 }
 
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
-inline flecs::pipeline world::pipeline() const {
-    return flecs::pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
+inline flecs::pipeline_builder<> world::pipeline() const {
+    return flecs::pipeline_builder<>(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
-inline void world::set_pipeline(const flecs::pipeline& pip) const {
-    return ecs_set_pipeline(m_world, pip.id());
+inline void world::set_pipeline(const flecs::entity pip) const {
+    return ecs_set_pipeline(m_world, pip);
 }
 
 template <typename Pipeline>
@@ -22863,16 +22947,16 @@ inline void world::set_pipeline() const {
     return ecs_set_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
-inline flecs::pipeline world::get_pipeline() const {
-    return flecs::pipeline(m_world, ecs_get_pipeline(m_world));
+inline flecs::entity world::get_pipeline() const {
+    return flecs::entity(m_world, ecs_get_pipeline(m_world));
 }
 
 inline bool world::progress(FLECS_FLOAT delta_time) const {
     return ecs_progress(m_world, delta_time);
 }
 
-inline void world::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
-    return ecs_run_pipeline(m_world, pip.id(), delta_time);
+inline void world::run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time) const {
+    return ecs_run_pipeline(m_world, pip, delta_time);
 }
 
 inline void world::set_time_scale(FLECS_FLOAT mul) const {

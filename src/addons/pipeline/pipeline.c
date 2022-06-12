@@ -4,71 +4,9 @@
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
-static ECS_DTOR(EcsPipelineQuery, ptr, {
+static ECS_DTOR(EcsPipeline, ptr, {
     ecs_vector_free(ptr->ops);
 })
-
-static
-int compare_entity(
-    ecs_entity_t e1, 
-    const void *ptr1, 
-    ecs_entity_t e2, 
-    const void *ptr2) 
-{
-    (void)ptr1;
-    (void)ptr2;
-    return (e1 > e2) - (e1 < e2);
-}
-
-static
-uint64_t group_by_phase(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t pipeline,
-    void *ctx) 
-{
-    (void)ctx;
-    
-    const EcsType *pt = ecs_get(world, pipeline, EcsType);
-    ecs_assert(pt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Find tag in system that belongs to pipeline */
-    const ecs_type_t *type = ecs_table_get_type(table);
-    ecs_id_t *sys_comps = type->array;
-    int32_t c, t, count = type->count;
-    
-    const ecs_type_t *pipeline_type = NULL;
-    if (pt->normalized) {
-        pipeline_type = &pt->normalized->type;
-    }
-
-    if (!pipeline_type || !pipeline_type->count) {
-        return 0;
-    }
-
-    ecs_id_t *tags = pipeline_type->array;
-    int32_t tag_count = pipeline_type->count;
-
-    ecs_id_t result = 0;
-
-    for (c = 0; c < count; c ++) {
-        ecs_id_t comp = sys_comps[c];
-        for (t = 0; t < tag_count; t ++) {
-            if (comp == tags[t]) {
-                result = comp;
-                break;
-            }
-        }
-        if (result) {
-            break;
-        }
-    }
-
-    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(result < INT_MAX, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
-}
 
 typedef enum ComponentWriteState {
     NotWritten = 0,
@@ -255,10 +193,18 @@ bool check_terms(
 }
 
 static
-bool build_pipeline(
+bool flecs_pipeline_is_inactive(
+    const EcsPipeline *pq,
+    ecs_table_t *table)
+{
+    return flecs_id_record_get_table(pq->idr_inactive, table) != NULL;
+}
+
+static
+bool flecs_pipeline_build(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    EcsPipelineQuery *pq)
+    EcsPipeline *pq)
 {
     (void)pipeline;
 
@@ -279,7 +225,7 @@ bool build_pipeline(
 
     ecs_pipeline_op_t *op = NULL;
     ecs_vector_t *ops = NULL;
-    ecs_query_t *query = pq->build_query;
+    ecs_query_t *query = pq->query;
 
     if (pq->ops) {
         ecs_vector_free(pq->ops);
@@ -384,6 +330,10 @@ bool build_pipeline(
         
         it = ecs_query_iter(world, pq->query);
         while (ecs_query_next(&it)) {
+            if (flecs_pipeline_is_inactive(pq, it.table)) {
+                continue;
+            }
+
             EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
             for (i = 0; i < it.count; i ++) {
                 if (ecs_should_log_1()) {
@@ -432,7 +382,7 @@ bool build_pipeline(
 
 int32_t ecs_pipeline_reset_iter(
     ecs_world_t *world,
-    const EcsPipelineQuery *pq,
+    const EcsPipeline *pq,
     ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
     ecs_pipeline_op_t **last_op_out)
@@ -451,6 +401,9 @@ int32_t ecs_pipeline_reset_iter(
     /* Move iterator to last ran system */
     *iter_out = ecs_query_iter(world, pq->query);
     while (ecs_query_next(iter_out)) {
+        if (flecs_pipeline_is_inactive(pq, iter_out->table)) {
+            continue;
+        }
         for (i = 0; i < iter_out->count; i ++) {
             ran_since_merge ++;
             if (ran_since_merge == op[op_index].count) {
@@ -488,12 +441,12 @@ bool ecs_pipeline_update(
     }
 
     bool added = false;
-    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, &added);
+    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline, &added);
     ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return build_pipeline(world, pipeline, pq);
+    return flecs_pipeline_build(world, pipeline, pq);
 }
 
 void ecs_run_pipeline(
@@ -527,8 +480,8 @@ void ecs_run_pipeline(
     }
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
-    
-    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+
+    const EcsPipeline *pq = ecs_get(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -544,12 +497,14 @@ void ecs_run_pipeline(
 
     ecs_iter_t it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
+        if (flecs_pipeline_is_inactive(pq, it.table)) {
+            continue; /* Skip inactive systems */
+        }
+
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
-
-        int32_t i;
-        for(i = 0; i < it.count; i ++) {
+        int32_t i, count = it.count;
+        for(i = 0; i < count; i ++) {
             ecs_entity_t e = it.entities[i];
-
             if (!stage_index) {
                 ecs_dbg_3("pipeline: run system %s", ecs_get_name(world, e));
             }
@@ -583,165 +538,13 @@ void ecs_run_pipeline(
                  * should happen infrequently. */
                 i = ecs_worker_sync(world, pq, &it, i, &op, &op_last);
                 sys = ecs_term(&it, EcsSystem, 1);
+                count = it.count;
             }
         }
     }
 
     ecs_worker_end(stage->thread_ctx);
 }
-
-static
-void add_pipeline_tags_to_sig(
-    ecs_world_t *world,
-    ecs_term_t *terms,
-    const ecs_type_t *type)
-{
-    (void)world;
-    
-    int32_t i, count = type->count;
-    ecs_id_t *ids = type->array;
-
-    for (i = 0; i < count; i ++) {
-        terms[i] = (ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsOr,
-            .pred.entity = ids[i],
-            .subj = {
-                .entity = EcsThis,
-                .set.mask = EcsSelf | EcsSuperSet
-            }
-        };
-    }
-}
-
-static
-ecs_query_t* build_pipeline_query(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    const char *name,
-    bool not_inactive)
-{
-    const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
-    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    const ecs_type_t *type = NULL;
-    if (type_ptr->normalized) {
-        type = &type_ptr->normalized->type;
-    }
-
-    int32_t type_count = type ? type->count : 0;
-    int32_t term_count = 1;
-
-    if (not_inactive) {
-        term_count ++;
-    }
-
-    ecs_term_t *terms = ecs_os_malloc(
-        (type_count + term_count) * ECS_SIZEOF(ecs_term_t));
-
-    terms[0] = (ecs_term_t){
-        .inout = EcsIn,
-        .oper = EcsAnd,
-        .pred.entity = ecs_id(EcsSystem),
-        .subj = {
-            .entity = EcsThis,
-            .set.mask = EcsSelf | EcsSuperSet
-        }
-    };
-
-    if (not_inactive) {
-        terms[1] = (ecs_term_t){
-            .inout = EcsIn,
-            .oper = EcsNot,
-            .pred.entity = EcsInactive,
-            .subj = {
-                .entity = EcsThis,
-                .set.mask = EcsSelf | EcsSuperSet
-            }
-        };
-    }
-
-    if (type) {
-        add_pipeline_tags_to_sig(world, &terms[term_count], type);
-    }
-
-    ecs_query_t *result = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter = {
-            .name = name,
-            .terms_buffer = terms,
-            .terms_buffer_count = term_count + type_count
-        },
-        .order_by = compare_entity,
-        .group_by = group_by_phase,
-        .group_by_id = pipeline
-    });
-
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_os_free(terms);
-
-    return result;
-}
-
-static 
-void OnUpdatePipeline(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t *entities = it->entities;
-
-    int32_t i;
-    for (i = it->count - 1; i >= 0; i --) {
-        ecs_entity_t pipeline = entities[i];
-        
-        ecs_trace("#[green]pipeline#[reset] %s created",
-            ecs_get_name(world, pipeline));
-        ecs_log_push();
-
-        /* Build signature for pipeline query that matches EcsSystems, has the
-         * pipeline phases as OR columns, and ignores systems with EcsInactive. 
-         * Note that EcsDisabled is automatically ignored 
-         * by the regular query matching */
-        ecs_query_t *query = build_pipeline_query(
-            world, pipeline, "BuiltinPipelineQuery", true);
-        ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        /* Build signature for pipeline build query. The build query includes
-         * systems that are inactive, as an inactive system may become active as
-         * a result of another system, and as a result the correct merge 
-         * operations need to be put in place. */
-        ecs_query_t *build_query = build_pipeline_query(
-            world, pipeline, "BuiltinPipelineBuildQuery", false);
-        ecs_assert(build_query != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        bool added = false;
-        EcsPipelineQuery *pq = ecs_get_mut(
-            world, pipeline, EcsPipelineQuery, &added);
-        ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (added) {
-            /* Should not modify pipeline after it has been used */
-            ecs_assert(pq->ops == NULL, ECS_INVALID_OPERATION, NULL);
-
-            if (pq->query) {
-                ecs_query_fini(pq->query);
-            }
-            if (pq->build_query) {
-                ecs_query_fini(pq->build_query);
-            }
-        }
-
-        pq->query = query;
-        pq->build_query = build_query;
-        pq->match_count = -1;
-        pq->ops = NULL;
-        pq->last_system = 0;
-
-        ecs_log_pop();
-    }
-}
-
-/* -- Public API -- */
 
 bool ecs_progress(
     ecs_world_t *world,
@@ -780,12 +583,12 @@ void ecs_deactivate_systems(
     ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t pipeline = world->pipeline;
-    const EcsPipelineQuery *pq = ecs_get( world, pipeline, EcsPipelineQuery);
+    const EcsPipeline *pq = ecs_get( world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
      * with any tables */
-    ecs_iter_t it = ecs_query_iter(world, pq->build_query);
+    ecs_iter_t it = ecs_query_iter(world, pq->query);
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
@@ -813,7 +616,7 @@ void ecs_set_pipeline(
     ecs_entity_t pipeline)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
+    ecs_check( ecs_get(world, pipeline, EcsPipeline) != NULL, 
         ECS_INVALID_PARAMETER, "not a pipeline");
 
     world->pipeline = pipeline;
@@ -831,6 +634,41 @@ error:
     return 0;
 }
 
+ecs_entity_t ecs_pipeline_init(
+    ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
+    if (!result) {
+        return 0;
+    }
+
+    ecs_query_desc_t qd = desc->query;
+    if (!qd.order_by) {
+        qd.order_by = flecs_entity_compare;
+    }
+
+    ecs_query_t *query = ecs_query_init(world, &qd);
+    if (!query) {
+        ecs_delete(world, result);
+        return 0;
+    }
+
+    ecs_assert(query->filter.terms[0].id == ecs_id(EcsSystem),
+        ECS_INVALID_PARAMETER, NULL);
+
+    ecs_set(world, result, EcsPipeline, {
+        .query = query,
+        .match_count = -1,
+        .idr_inactive = flecs_id_record_ensure(world, EcsInactive)
+    });
+
+    return result;
+}
+
 /* -- Module implementation -- */
 
 static
@@ -844,58 +682,59 @@ void FlecsPipelineFini(
     }
 }
 
+#define flecs_bootstrap_phase(world, phase, depends_on)\
+    flecs_bootstrap_tag(world, phase);\
+    _flecs_bootstrap_phase(world, phase, depends_on)
+static
+void _flecs_bootstrap_phase(
+    ecs_world_t *world,
+    ecs_entity_t phase,
+    ecs_entity_t depends_on)
+{
+    ecs_add_id(world, phase, EcsPhase);
+    if (depends_on) {
+        ecs_add_pair(world, phase, EcsDependsOn, depends_on);
+    }
+}
+
 void FlecsPipelineImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsPipeline);
-
     ECS_IMPORT(world, FlecsSystem);
 
     ecs_set_name_prefix(world, "Ecs");
 
-    flecs_bootstrap_tag(world, EcsPipeline);
-    flecs_bootstrap_component(world, EcsPipelineQuery);
+    flecs_bootstrap_component(world, EcsPipeline);
+    flecs_bootstrap_tag(world, EcsPhase);
 
-    /* Phases of the builtin pipeline are regular entities. Names are set so
-     * they can be resolved by type expressions. */
-    flecs_bootstrap_tag(world, EcsPreFrame);
-    flecs_bootstrap_tag(world, EcsOnLoad);
-    flecs_bootstrap_tag(world, EcsPostLoad);
-    flecs_bootstrap_tag(world, EcsPreUpdate);
-    flecs_bootstrap_tag(world, EcsOnUpdate);
-    flecs_bootstrap_tag(world, EcsOnValidate);
-    flecs_bootstrap_tag(world, EcsPostUpdate);
-    flecs_bootstrap_tag(world, EcsPreStore);
-    flecs_bootstrap_tag(world, EcsOnStore);
-    flecs_bootstrap_tag(world, EcsPostFrame);
+    flecs_bootstrap_phase(world, EcsPreFrame,   0);
+    flecs_bootstrap_phase(world, EcsOnLoad,     EcsPreFrame);
+    flecs_bootstrap_phase(world, EcsPostLoad,   EcsOnLoad);
+    flecs_bootstrap_phase(world, EcsPreUpdate,  EcsPostLoad);
+    flecs_bootstrap_phase(world, EcsOnUpdate,   EcsPreUpdate);
+    flecs_bootstrap_phase(world, EcsOnValidate, EcsOnUpdate);
+    flecs_bootstrap_phase(world, EcsPostUpdate, EcsOnValidate);
+    flecs_bootstrap_phase(world, EcsPreStore,   EcsPostUpdate);
+    flecs_bootstrap_phase(world, EcsOnStore,    EcsPreStore);
+    flecs_bootstrap_phase(world, EcsPostFrame,  EcsOnStore);
 
-    /* Set ctor and dtor for PipelineQuery */
-    ecs_set_hooks(world, EcsPipelineQuery, {
+    ecs_set_hooks(world, EcsPipeline, {
         .ctor = ecs_default_ctor,
-        .dtor = ecs_dtor(EcsPipelineQuery)
+        .dtor = ecs_dtor(EcsPipeline)
     });
 
-    /* When the Pipeline tag is added a pipeline will be created */
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .entity.name = "OnUpdatePipeline",
-        .filter.terms = {
-            { .id = EcsPipeline },
-            { .id = ecs_id(EcsType) }
-        },
-        .events = { EcsOnSet },
-        .callback = OnUpdatePipeline
-    });
-
-    /* Create the builtin pipeline */
-    world->pipeline = ecs_type_init(world, &(ecs_type_desc_t){
-        .entity = {
-            .name = "BuiltinPipeline",
-            .add = {EcsPipeline}
-        },
-        .ids = {
-            EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,
-            EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame
-         }
+    world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) {
+        .entity = { .name = "BuiltinPipeline" },
+        .query = {
+            .filter.terms = {
+                { .id = ecs_id(EcsSystem) },
+                { .id = EcsPhase, .subj.set = { 
+                    .mask = EcsCascade, .relation = EcsDependsOn
+                }}
+            },
+            .order_by = flecs_entity_compare
+        }
     });
 
     /* Cleanup thread administration when world is destroyed */

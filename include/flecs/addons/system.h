@@ -144,19 +144,19 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM_DEFINE(world, id, kind, ...) \
+#define ECS_SYSTEM_DEFINE(world, id, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
         desc.entity.name = #id; \
-        desc.entity.add[0] = kind; \
+        desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
         desc.query.filter.expr = #__VA_ARGS__; \
         desc.callback = id; \
         ecs_id(id) = ecs_system_init(world, &desc); \
     } \
     ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
 
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
+#define ECS_SYSTEM(world, id, phase, ...) \
+    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;

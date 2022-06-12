@@ -2,7 +2,11 @@
 
 namespace flecs {
 
+template <typename ... Components>
 struct pipeline;
+
+template <typename ... Components>
+struct pipeline_builder;
 
 /* Builtin pipeline tags */
 static const flecs::entity_t PreFrame = EcsPreFrame;

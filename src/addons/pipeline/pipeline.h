@@ -12,14 +12,16 @@ typedef struct ecs_pipeline_op_t {
     bool no_staging;            /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
-typedef struct EcsPipelineQuery {
-    ecs_query_t *query;
-    ecs_query_t *build_query;
-    ecs_vector_t *ops;
-    int32_t match_count;
-    int32_t rebuild_count;
-    ecs_entity_t last_system;
-} EcsPipelineQuery;
+typedef struct {
+    ecs_query_t *query;         /* Pipeline query */
+    
+    ecs_vector_t *ops;          /* Pipeline schedule */
+    int32_t match_count;        /* Used to track of rebuild is necessary */
+    int32_t rebuild_count;      /* Number of pipeline rebuilds */
+    ecs_entity_t last_system;   /* Last system ran by pipeline */
+
+    ecs_id_record_t *idr_inactive; /* Cached record for quick inactive test */
+} EcsPipeline;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Pipeline API
@@ -50,7 +52,7 @@ bool ecs_pipeline_update(
 
 int32_t ecs_pipeline_reset_iter(
     ecs_world_t *world,
-    const EcsPipelineQuery *pq,
+    const EcsPipeline *q,
     ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
     ecs_pipeline_op_t **last_op_out);
@@ -64,7 +66,7 @@ void ecs_worker_begin(
 
 int32_t ecs_worker_sync(
     ecs_world_t *world,
-    const EcsPipelineQuery *pq,
+    const EcsPipeline *p,
     ecs_iter_t *it,
     int32_t i,
     ecs_pipeline_op_t **op_out,

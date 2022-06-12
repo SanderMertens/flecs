@@ -182,7 +182,7 @@ void ecs_worker_begin(
     
     if (stage_count == 1) {
         ecs_entity_t pipeline = world->pipeline;
-        const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+        const EcsPipeline *pq = ecs_get(world, pipeline, EcsPipeline);
         ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
@@ -194,7 +194,7 @@ void ecs_worker_begin(
 
 int32_t ecs_worker_sync(
     ecs_world_t *world,
-    const EcsPipelineQuery *pq,
+    const EcsPipeline *pq,
     ecs_iter_t *it,
     int32_t i,
     ecs_pipeline_op_t **op_out,
@@ -276,10 +276,13 @@ void ecs_workers_progress(
     } else {
         ecs_pipeline_update(world, pipeline, true);
 
-        const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+        const EcsPipeline *pq = ecs_get(world, pipeline, EcsPipeline);
         ecs_vector_t *ops = pq->ops;
         ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
         ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
+        if (!op) {
+            return;
+        }
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
@@ -304,7 +307,7 @@ void ecs_workers_progress(
 
             if (ecs_pipeline_update(world, pipeline, false)) {
                 /* Refetch, in case pipeline itself has moved */
-                pq = ecs_get(world, pipeline, EcsPipelineQuery);
+                pq = ecs_get(world, pipeline, EcsPipeline);
 
                 /* Pipeline has changed, reset position in pipeline */
                 ecs_iter_t it;

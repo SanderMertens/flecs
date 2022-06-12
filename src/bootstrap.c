@@ -763,6 +763,7 @@ void flecs_bootstrap(
     /* Builtin relations */
     flecs_bootstrap_tag(world, EcsIsA);
     flecs_bootstrap_tag(world, EcsChildOf);
+    flecs_bootstrap_tag(world, EcsDependsOn);
 
     /* Builtin events */
     bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
@@ -869,6 +870,7 @@ void flecs_bootstrap(
 
     /* Acyclic components */
     ecs_add_id(world, EcsIsA, EcsAcyclic);
+    ecs_add_id(world, EcsDependsOn, EcsAcyclic);
     ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* DontInherit components */

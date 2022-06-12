@@ -471,13 +471,6 @@ typedef struct ecs_store_t {
     ecs_vector_t *marked_ids;    /* vector<ecs_marked_ids_t> */
 } ecs_store_t;
 
-/** Supporting type to store looked up component data in specific table */
-typedef struct ecs_column_info_t {
-    ecs_entity_t id;
-    const ecs_type_info_t *ci;
-    int32_t column;
-} ecs_column_info_t;
-
 /* fini actions */
 typedef struct ecs_action_elem_t {
     ecs_fini_action_t action;

@@ -73,7 +73,8 @@ static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;
 static const flecs::entity_t Inactive = EcsInactive;
 static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t Pipeline = EcsPipeline;
+static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+static const flecs::entity_t Phase = EcsPhase;
 
 /* Trigger tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -108,6 +109,7 @@ static const flecs::entity_t OneOf = EcsOneOf;
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
+static const flecs::entity_t DependsOn = EcsDependsOn;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;

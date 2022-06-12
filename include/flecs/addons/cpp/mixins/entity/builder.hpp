@@ -183,6 +183,14 @@ struct entity_builder : entity_view {
         return this->add(flecs::ChildOf, object);
     }
 
+    /** Shortcut for add(DependsOn, obj).
+     *
+     * @param object The object.
+     */
+    Self& depends_on(entity_t object) {
+        return this->add(flecs::DependsOn, object);
+    }
+
     /** Shortcut for add(ChildOf, obj).
      *
      * @tparam T the type associated with the O.
@@ -192,6 +200,15 @@ struct entity_builder : entity_view {
         return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
     }
  
+    /** Shortcut for add(DependsOn, obj).
+     *
+     * @tparam T the type associated with the O.
+     */
+    template <typename T>
+    Self& depends_on() {
+        return this->add(flecs::DependsOn, _::cpp_type<T>::id(this->m_world));
+    }
+
     /** Add a pair with O type.
      * This operation adds a pair to the entity. The R part of the pair
      * should not be a component.
