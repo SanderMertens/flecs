@@ -715,27 +715,28 @@ move_sys.remove(flecs::PostUpdate);
 Inside a phase, systems are guaranteed to be ran in their declaration order.
 
 ### Custom Pipeline
-When building your own pipeline for the world to use, make sure to set both `PreFrame` and `PostFrame` as the first and last phase systems of your pipeline, respectively. These two builtin tags are used to run internal systems.
+Under the hood a pipeline is a query that finds all the systems to run in a pipeline. To customize how and which systems are matched by a pipeline, applications can create custom pipelines:
 
 ```c
-    ecs_entity_t pipeline = ecs_type_init(world, &(ecs_type_desc_t){
-        .entity = {
-            .name = "CustomPipeline",
-            .add = {EcsPipeline}
-        },
-        .ids = {
-            EcsPreFrame,
-            // Add all your custom system phases
-            EcsPostFrame
-         }
-    });
-```
+// Create a pipeline that matches systems with the "Foo" tag
+ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+    .entity = { .name = "CustomPipeline" },
+    .query.filter.terms = {
+        { .id = ecs_id(EcsSystem) }, // mandatory, pipeline must match systems
+        { .id = Foo }
+    }
+});
 
+ecs_set_pipeline(world, pipeline);
+```
 ```cpp
-	auto pipeline = world.pipeline("CustomPipeline");
-	pipeline.add(flecs::PreFrame)
-		// Add all your custom system phases
-		.add(flecs::PostFrame);
+// Create a pipeline that matches systems with the "Foo" tag
+auto pipeline = world.pipeline()
+    .term(flecs::System)
+    .term(Foo)
+    .build();
+
+world.set_pipeline(pipeline);
 ```
 
 ## Trigger

@@ -1463,32 +1463,49 @@ ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 ECS_SYSTEM(world, DetectCollisions, EcsOnValidate, Position);
 ```
 
-An application can create a custom pipeline, like is shown here:
+An application can create custom phases, which can be branched off of existing ones:
 
 ```c
-// Create a tag for each phase in the custom pipeline.
-// The tags must be created in the phase execution order.
-ECS_TAG(world, BeforeFrame);
-ECS_TAG(world, OnFrame);
-ECS_TAG(world, AfterFrame);
+// Phases must have the EcsPhase tag
+ecs_entity_t Physics = ecs_new_w_id(ecs, EcsPhase);
+ecs_entity_t Collisions = ecs_new_w_id(ecs, EcsPhase);
 
-// Create the pipeline
-ECS_PIPELINE(world, MyPipeline, BeforeFrame, OnFrame, AfterFrame);
+// Phases can (but don't have to) depend on other phases which forces ordering
+ecs_add_pair(ecs, Physics, EcsDependsOn, EcsOnUpdate);
+ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
 
-// Make sure the world uses the correct pipeline
-ecs_set_pipeline(world, MyPipeline);
+// Custom phases can be used just like regular phases
+ECS_SYSTEM(world, Collide, Collisions, Position, Velocity);
 ```
 
-Now the application can create systems for the custom pipeline:
+Pipelines are implemented using queries that return matching systems. The builtin pipeline has a query that returns systems with a DependsOn relationship on a phase, topology-sorted by the depth in the DependsOn graph:
 
 ```c
-// System ran in the OnFrame phase
-ECS_SYSTEM(world, Move, OnFrame, Position, Velocity);
+flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn))
+```
 
-// System ran in the AfterFrame phase
-ECS_SYSTEM(world, DetectCollisions, AfterFrame, Position);
+Applications can create their own pipelines which fully customize which systems are matched, and in which order they are executed. Custom pipelines can use phases and DependsOn, or they may use a completely different approach. This example shows how to create a pipeline that matches all systems with the `Foo` tag:
 
-// This will now run systems in the custom pipeline
+```c
+ECS_TAG(world, Foo);
+
+ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) {
+    .query.filter.terms = {
+        { .id = ecs_id(EcsSystem) }, // mandatory
+        { .id = Foo }
+    }
+});
+
+// Configure the world to use the custom pipeline
+ecs_set_pipeline(world, pipeline);
+
+// Create system
+ECS_SYSTEM(world, Move, 0, Position, Velocity);
+
+// Add Foo to system. That this can be done in one step with ecs_system_init.
+ecs_add(world, ecs_id(Move), Foo);
+
+// Runs the pipeline & system
 ecs_progress(world, 0);
 ```
 
