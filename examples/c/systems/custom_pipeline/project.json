@@ -1,0 +1,10 @@
+{
+    "id": "custom_pipeline",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

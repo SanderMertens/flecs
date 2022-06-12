@@ -1509,6 +1509,8 @@ ecs_add(world, ecs_id(Move), Foo);
 ecs_progress(world, 0);
 ```
 
+Custom pipelines can specify their own `order_by` and `group_by` functions. If no `order_by` function is provided, the pipeline will specify one that sorts by entity id. This ensures that regardless of whether systems are moved around in the storage, the pipeline query will always return them in a well-defined order.
+
 ## Time management
 
 ## Timers

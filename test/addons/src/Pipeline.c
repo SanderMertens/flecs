@@ -1625,3 +1625,26 @@ void Pipeline_empty_pipeline() {
 
     ecs_fini(world);
 }
+
+void Pipeline_custom_pipeline_w_system_macro() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, E, Position);
+
+    ECS_PIPELINE(world, P, flecs.system.System, Tag);
+
+    ECS_SYSTEM(world, SysA, Tag, Position);
+    ECS_SYSTEM(world, SysB, Tag, Position);
+    ECS_SYSTEM(world, SysC, Tag, Position);
+
+    ecs_set_pipeline(world, P);
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    ecs_fini(world);
+}

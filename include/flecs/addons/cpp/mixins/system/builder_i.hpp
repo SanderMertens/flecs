@@ -22,6 +22,7 @@ public:
      */
     Base& kind(entity_t phase) {
         m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
+        m_desc->entity.add[1] = phase;
         return *this;
     }
 
@@ -33,6 +34,7 @@ public:
     Base& kind() {
         m_desc->entity.add[0] = ecs_dependson(
             _::cpp_type<Phase>::id(world_v()));
+        m_desc->entity.add[1] = _::cpp_type<Phase>::id(world_v());
         return *this;
     }
 

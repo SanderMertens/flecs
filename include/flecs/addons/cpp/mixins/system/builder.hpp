@@ -22,6 +22,7 @@ struct system_builder final : _::system_builder_base<Components...> {
 
 #ifdef FLECS_PIPELINE
         this->m_desc.entity.add[0] = ecs_dependson(flecs::OnUpdate);
+        this->m_desc.entity.add[1] = flecs::OnUpdate;
 #endif
     }
 };

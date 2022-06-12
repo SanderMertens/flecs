@@ -374,7 +374,8 @@
                 "multi_threaded_pipeline_change",
                 "activate_after_add",
                 "match_all_after_pipeline_rebuild",
-                "empty_pipeline"
+                "empty_pipeline",
+                "custom_pipeline_w_system_macro"
             ]
         }, {
             "id": "SystemMisc",

@@ -373,6 +373,7 @@ void System_default_ctor(void);
 void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
+void System_custom_pipeline_w_kind(void);
 void System_system_w_self(void);
 void System_instanced_query_w_singleton_each(void);
 void System_instanced_query_w_base_each(void);
@@ -2373,6 +2374,10 @@ bake_test_case System_testcases[] = {
     {
         "custom_pipeline",
         System_custom_pipeline
+    },
+    {
+        "custom_pipeline_w_kind",
+        System_custom_pipeline_w_kind
     },
     {
         "system_w_self",
@@ -4606,7 +4611,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        52,
+        53,
         System_testcases
     },
     {
