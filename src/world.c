@@ -1151,8 +1151,6 @@ int ecs_fini(
 
     ecs_trace("table store deinitialized");
 
-    ecs_set_stage_count(world, 0);
-
     fini_queries(world);
 
     fini_observers(world);
@@ -1169,6 +1167,8 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     
     fini_misc(world);
+
+    ecs_set_stage_count(world, 0);
 
     ecs_os_enable_high_timer_resolution(false);
 
