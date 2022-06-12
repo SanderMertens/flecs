@@ -1163,11 +1163,11 @@ FLECS_API extern const ecs_entity_t EcsSymbol;
 /* Tag to indicate alias identifier */
 FLECS_API extern const ecs_entity_t EcsAlias;
 
-/* Used to express parent-child relations. */
+/* Used to express parent-child relationships. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
 
-/* Used to express is-a relations. An IsA relation indicates that the subject is
- * a subset of the relation object. For example:
+/* Used to express is-a relationships. An IsA relationship indicates that the 
+ * subject is a subset of the relation object. For example:
  *   ecs_add_pair(world, Freighter, EcsIsA, SpaceShip);
  *
  * Here the Freighter is considered a subset of SpaceShip, meaning that every
@@ -1186,6 +1186,9 @@ FLECS_API extern const ecs_entity_t EcsChildOf;
  * member of a query term.
  */
 FLECS_API extern const ecs_entity_t EcsIsA;
+
+/* Used to express dependency relationships */
+FLECS_API extern const ecs_entity_t EcsDependsOn;
 
 /* Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
@@ -1264,7 +1267,7 @@ FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 FLECS_API extern const ecs_entity_t EcsInactive;
 
 /* Pipeline module tags */
-FLECS_API extern const ecs_entity_t EcsPipeline;
+FLECS_API extern const ecs_entity_t ecs_id(EcsPipeline);
 FLECS_API extern const ecs_entity_t EcsPreFrame;
 FLECS_API extern const ecs_entity_t EcsOnLoad;
 FLECS_API extern const ecs_entity_t EcsPostLoad;
@@ -1275,6 +1278,7 @@ FLECS_API extern const ecs_entity_t EcsPostUpdate;
 FLECS_API extern const ecs_entity_t EcsPreStore;
 FLECS_API extern const ecs_entity_t EcsOnStore;
 FLECS_API extern const ecs_entity_t EcsPostFrame;
+FLECS_API extern const ecs_entity_t EcsPhase;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */

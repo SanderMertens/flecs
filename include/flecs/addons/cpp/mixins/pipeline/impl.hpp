@@ -1,31 +1,37 @@
 #pragma once
 
+#include "builder.hpp"
+
 namespace flecs {
 
-struct pipeline : type_base<pipeline> {
-    explicit pipeline(world_t *world, entity_t e) : type_base(world, e)
-    { 
-        this->entity().add(flecs::Pipeline);
-    }
+template <typename ... Components>
+struct pipeline : entity {
+    pipeline(world_t *world, ecs_pipeline_desc_t *desc) 
+        : entity(world)
+    {
+        m_id = ecs_pipeline_init(world, desc);
 
-    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
-    { 
-        this->entity().add(flecs::Pipeline);
+        if (!m_id) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->query.filter.terms_buffer) {
+            ecs_os_free(desc->query.filter.terms_buffer);
+        }
     }
 };
 
-template <typename... Args>
-inline flecs::pipeline world::pipeline(Args &&... args) const {
-    return flecs::pipeline(m_world, FLECS_FWD(args)...);
+inline flecs::pipeline_builder<> world::pipeline() const {
+    return flecs::pipeline_builder<>(m_world);
 }
 
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
-inline flecs::pipeline world::pipeline() const {
-    return flecs::pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
+inline flecs::pipeline_builder<> world::pipeline() const {
+    return flecs::pipeline_builder<>(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
-inline void world::set_pipeline(const flecs::pipeline& pip) const {
-    return ecs_set_pipeline(m_world, pip.id());
+inline void world::set_pipeline(const flecs::entity pip) const {
+    return ecs_set_pipeline(m_world, pip);
 }
 
 template <typename Pipeline>
@@ -33,16 +39,16 @@ inline void world::set_pipeline() const {
     return ecs_set_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
-inline flecs::pipeline world::get_pipeline() const {
-    return flecs::pipeline(m_world, ecs_get_pipeline(m_world));
+inline flecs::entity world::get_pipeline() const {
+    return flecs::entity(m_world, ecs_get_pipeline(m_world));
 }
 
 inline bool world::progress(FLECS_FLOAT delta_time) const {
     return ecs_progress(m_world, delta_time);
 }
 
-inline void world::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
-    return ecs_run_pipeline(m_world, pip.id(), delta_time);
+inline void world::run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time) const {
+    return ecs_run_pipeline(m_world, pip, delta_time);
 }
 
 inline void world::set_time_scale(FLECS_FLOAT mul) const {

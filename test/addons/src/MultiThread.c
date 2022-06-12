@@ -591,7 +591,7 @@ void MultiThread_2_thread_1_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
-        .entity.add = {EcsOnUpdate},
+        .entity.add = {ecs_dependson(EcsOnUpdate)},
         .callback = Progress,
         .query.filter = {
             .expr = "Position",
@@ -630,7 +630,7 @@ void MultiThread_2_thread_5_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
-        .entity.add = {EcsOnUpdate},
+        .entity.add = {ecs_dependson(EcsOnUpdate)},
         .callback = Progress,
         .query.filter = {
             .expr = "Position",
@@ -669,7 +669,7 @@ void MultiThread_2_thread_10_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
-        .entity.add = {EcsOnUpdate},
+        .entity.add = {ecs_dependson(EcsOnUpdate)},
         .callback = Progress,
         .query.filter = {
             .expr = "Position",

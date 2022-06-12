@@ -1,24 +1,22 @@
 
 /** Create a new pipeline.
  *
- * @tparam Args Arguments to pass into the constructor of flecs::system.
- * @return The pipeline.
+ * @return A pipeline builder.
  */
-template <typename... Args>
-flecs::pipeline pipeline(Args &&... args) const;
+flecs::pipeline_builder<> pipeline() const;
 
 /** Create a new pipeline.
  *
  * @tparam Pipeline Type associated with pipeline.
- * @return The pipeline.
+ * @return A pipeline builder.
  */
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
-flecs::pipeline pipeline() const;
+flecs::pipeline_builder<> pipeline() const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
  */
-void set_pipeline(const flecs::pipeline& pip) const;
+void set_pipeline(const flecs::entity pip) const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
@@ -29,7 +27,7 @@ void set_pipeline() const;
 /** Get pipeline.
  * @see ecs_get_pipeline
  */
-flecs::pipeline get_pipeline() const;
+flecs::entity get_pipeline() const;
 
 /** Progress world one tick.
  * @see ecs_progress
@@ -39,7 +37,7 @@ bool progress(FLECS_FLOAT delta_time = 0.0) const;
 /** Run pipeline.
  * @see ecs_run_pipeline
  */
-void run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time = 0.0) const;
+void run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time = 0.0) const;
 
 /** Set timescale
  * @see ecs_set_time_scale

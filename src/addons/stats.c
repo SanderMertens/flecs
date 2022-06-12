@@ -496,7 +496,7 @@ bool ecs_pipeline_stats_get(
     ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
-    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+    const EcsPipeline *pq = ecs_get(world, pipeline, EcsPipeline);
     if (!pq) {
         return false;
     }
@@ -506,11 +506,14 @@ bool ecs_pipeline_stats_get(
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
+        if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+            continue;
+        }
         active_sys_count += it.count;
     }
 
     /* Count total number of systems in pipeline */
-    it = ecs_query_iter(stage, pq->build_query);
+    it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
         sys_count += it.count;
     }   
@@ -543,6 +546,10 @@ bool ecs_pipeline_stats_get(
         
         int32_t i, i_system = 0, ran_since_merge = 0;
         while (ecs_query_next(&it)) {
+            if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+                continue;
+            }
+
             for (i = 0; i < it.count; i ++) {
                 systems[i_system ++] = it.entities[i];
                 ran_since_merge ++;
@@ -563,7 +570,7 @@ bool ecs_pipeline_stats_get(
 
     /* Separately populate system stats map from build query, which includes
      * systems that aren't currently active */
-    it = ecs_query_iter(stage, pq->build_query);
+    it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
         int i;
         for (i = 0; i < it.count; i ++) {

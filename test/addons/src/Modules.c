@@ -72,7 +72,7 @@ void SimpleModuleImport(
     ECS_TAG_DEFINE(world, SimpleFooTag);
     ECS_ENTITY_DEFINE(world, SimpleFooEntity, 0);
     ECS_PREFAB_DEFINE(world, SimpleFooPrefab, 0);
-    ECS_PIPELINE_DEFINE(world, SimpleFooPipeline, Tag);
+    ECS_PIPELINE_DEFINE(world, SimpleFooPipeline, flecs.system.System, Tag);
     ECS_TAG_DEFINE(world, Simple_underscore);
 }
 

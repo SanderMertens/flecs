@@ -21,7 +21,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        m_desc->entity.add[0] = phase;
+        m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
         return *this;
     }
 
@@ -31,7 +31,8 @@ public:
      */
     template <typename Phase>
     Base& kind() {
-        m_desc->entity.add[0] = _::cpp_type<Phase>::id(world_v());
+        m_desc->entity.add[0] = ecs_dependson(
+            _::cpp_type<Phase>::id(world_v()));
         return *this;
     }
 

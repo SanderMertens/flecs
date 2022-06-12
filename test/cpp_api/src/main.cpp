@@ -383,7 +383,6 @@ void System_instanced_query_w_base_iter(void);
 void System_un_instanced_query_w_singleton_iter(void);
 void System_un_instanced_query_w_base_iter(void);
 void System_create_w_no_template_args(void);
-void System_system_w_type_kind(void);
 void System_system_w_type_kind_type_pipeline(void);
 void System_default_ctor(void);
 void System_entity_ctor(void);
@@ -2414,10 +2413,6 @@ bake_test_case System_testcases[] = {
     {
         "create_w_no_template_args",
         System_create_w_no_template_args
-    },
-    {
-        "system_w_type_kind",
-        System_system_w_type_kind
     },
     {
         "system_w_type_kind_type_pipeline",
@@ -4611,7 +4606,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        53,
+        52,
         System_testcases
     },
     {

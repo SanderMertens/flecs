@@ -468,9 +468,9 @@
  * @{
  */
 
-#define ecs_childof(parent) ecs_pair(EcsChildOf, parent)
-
-#define ecs_isa(base) ecs_pair(EcsIsA, base)
+#define ecs_isa(e)       ecs_pair(EcsIsA, e)
+#define ecs_childof(e)   ecs_pair(EcsChildOf, e)
+#define ecs_dependson(e) ecs_pair(EcsDependsOn, e)
 
 /** @} */
 

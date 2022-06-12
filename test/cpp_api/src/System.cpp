@@ -1098,37 +1098,42 @@ void System_test_auto_defer_iter() {
 void System_custom_pipeline() {
     flecs::world world;
 
-    auto PreFrame = world.entity();
-    auto OnFrame = world.entity();
-    auto PostFrame = world.entity();
-    
-    flecs::pipeline pip = world.pipeline("FooPipeline")
-        .add(PreFrame)
-        .add(OnFrame)
-        .add(PostFrame);
+    auto PreFrame = world.entity().add(flecs::Phase);
+    auto OnFrame = world.entity().add(flecs::Phase).depends_on(PreFrame);
+    auto PostFrame = world.entity().add(flecs::Phase).depends_on(OnFrame);
+    auto Tag = world.entity();
+
+    flecs::entity pip = world.pipeline()
+        .term(flecs::System)
+        .term(flecs::Phase).set(flecs::Cascade, flecs::DependsOn)
+        .term(Tag)
+        .build();
 
     int count = 0;
 
-    world.system<>()
+    world.system()
         .kind(PostFrame)
         .iter([&](flecs::iter it) {
             test_int(count, 2);
             count ++;
-        });
+        })
+        .add(Tag);
 
-    world.system<>()
+    world.system()
         .kind(OnFrame)
         .iter([&](flecs::iter it) {
             test_int(count, 1);
             count ++;
-        });
+        })
+        .add(Tag);
 
-    world.system<>()
+    world.system()
         .kind(PreFrame)
         .iter([&](flecs::iter it) {
             test_int(count, 0);
             count ++;
-        });
+        })
+        .add(Tag);
 
     test_int(count, 0);
 
@@ -1674,54 +1679,24 @@ void System_create_w_no_template_args() {
     test_int(count, 1);
 }
 
-struct PipelineType {
-    struct PreUpdate { };
-    struct OnUpdate { };
-};
-
-void System_system_w_type_kind() {
-    flecs::world world;
-
-    auto pipeline = world.pipeline("MyPipeline")
-        .add<PipelineType::PreUpdate>()
-        .add<PipelineType::OnUpdate>();
-
-    world.set_pipeline(pipeline);
-
-    auto entity = world.entity().add<Tag>();
-
-    int32_t s1_count = 0;
-    int32_t s2_count = 0;
-
-    world.system<Tag>()
-        .kind<PipelineType::OnUpdate>()
-        .each([&](flecs::entity e, Tag) {
-            test_assert(e == entity);
-            test_int(s1_count, 0);
-            test_int(s2_count, 1);
-            s1_count ++;
-        });
-
-    world.system<Tag>()
-        .kind<PipelineType::PreUpdate>()
-        .each([&](flecs::entity e, Tag) {
-            test_assert(e == entity);
-            test_int(s1_count, 0);
-            s2_count ++;
-        });
-
-    world.progress();
-    
-    test_int(s1_count, 1);
-    test_int(s2_count, 1);
-}
+struct PipelineType {};
+struct First {};
+struct Second {};
 
 void System_system_w_type_kind_type_pipeline() {
     flecs::world world;
 
+    world.component<Second>()
+        .add(flecs::Phase)
+        .depends_on(
+            world.component<First>()
+                .add(flecs::Phase)
+        );
+
     world.pipeline<PipelineType>()
-        .add<PipelineType::PreUpdate>()
-        .add<PipelineType::OnUpdate>();
+        .term(flecs::System)
+        .term(flecs::Phase).set(flecs::Cascade, flecs::DependsOn)
+        .build();
 
     world.set_pipeline<PipelineType>();
 
@@ -1731,7 +1706,7 @@ void System_system_w_type_kind_type_pipeline() {
     int32_t s2_count = 0;
 
     world.system<Tag>()
-        .kind<PipelineType::OnUpdate>()
+        .kind<Second>()
         .each([&](flecs::entity e, Tag) {
             test_assert(e == entity);
             test_int(s1_count, 0);
@@ -1740,7 +1715,7 @@ void System_system_w_type_kind_type_pipeline() {
         });
 
     world.system<Tag>()
-        .kind<PipelineType::PreUpdate>()
+        .kind<First>()
         .each([&](flecs::entity e, Tag) {
             test_assert(e == entity);
             test_int(s1_count, 0);
