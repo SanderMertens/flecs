@@ -32082,6 +32082,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsPanic, "Panic relation cleanup property");
     ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relation");
     ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relation");
+    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relation");
     ecs_doc_set_brief(world, EcsOnAdd, "Builtin OnAdd event");
     ecs_doc_set_brief(world, EcsOnRemove, "Builtin OnRemove event");
     ecs_doc_set_brief(world, EcsOnSet, "Builtin OnSet event");
