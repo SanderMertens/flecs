@@ -28,7 +28,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -72,7 +72,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -116,7 +116,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -160,7 +160,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -204,7 +204,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 

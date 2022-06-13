@@ -150,13 +150,6 @@ struct term_builder_i : term_id_builder_i<Base> {
         return this->id(id);
     }
 
-    /** Set (component) id to type.
-     * Type must be associated with an entity (e.g. created by world::type) and
-     * not an entity type (e.g. returned from entity::type). */
-    Base& id(const flecs::type& type);
-
-    Base& id(const flecs::type& type, id_t id);
-
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);

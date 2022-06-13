@@ -5955,7 +5955,6 @@ void Filter_filter_iter_2_terms_switch_term_filter() {
     ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
@@ -7127,7 +7126,7 @@ void Filter_and_term() {
     ECS_TAG(world, Foo);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_entity_t e1 = ecs_new_w_id(world, TagA);
     ecs_add(world, e1, TagB);
@@ -7175,7 +7174,7 @@ void Filter_or_term() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_entity_t e1 = ecs_new(world, TagA);
     ecs_table_t *table1 = ecs_get_table(world, e1);

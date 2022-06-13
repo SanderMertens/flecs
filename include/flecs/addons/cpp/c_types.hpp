@@ -47,7 +47,6 @@ enum var_kind_t {
 
 /* Builtin components */
 using Component = EcsComponent;
-using Type = EcsType;
 using Identifier = EcsIdentifier;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;

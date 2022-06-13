@@ -1172,7 +1172,7 @@ void Query_iter_type() {
 
     q.iter([&](flecs::iter it) {
         test_assert(it.type().count() >= 1);
-        test_assert(it.type().has<Position>());
+        test_assert(it.table().has<Position>());
     });
 }
 

@@ -314,7 +314,7 @@ void Query_simple_query_existing_empty_type() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_query_t *q = ecs_query_new(world, "TagA");
     test_assert(q != NULL);
@@ -441,7 +441,7 @@ void Query_2_component_query_existing_empty_table() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tag);
-    ECS_TYPE(world, MyType, Position, Velocity);
+    ECS_PREFAB(world, MyType, Position, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -472,7 +472,7 @@ void Query_2_component_query_existing_empty_type() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, MyType, Position, Velocity);
+    ECS_PREFAB(world, MyType, Position, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
     test_assert(q != NULL);
@@ -1983,7 +1983,7 @@ void Query_query_and_type() {
     ECS_TAG(world, Foo);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_entity_t e1 = ecs_new_w_id(world, TagA);
     ecs_add(world, e1, TagB);
@@ -2027,7 +2027,7 @@ void Query_query_or_type() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_entity_t e1 = ecs_new(world, TagA);
     ecs_table_t *table1 = ecs_get_table(world, e1);
@@ -2077,7 +2077,7 @@ void Query_query_and_type_match_after() {
     ECS_TAG(world, Foo);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .expr =  "AND | TypeX"
@@ -2121,7 +2121,7 @@ void Query_query_or_type_match_after() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
+    ECS_PREFAB(world, TypeX, TagA, TagB);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .expr =  "OR | TypeX"
@@ -2735,7 +2735,7 @@ void Query_subquery_match_existing() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ecs_bulk_new(world, Position, 3);
     ecs_bulk_new(world, Velocity, 3);

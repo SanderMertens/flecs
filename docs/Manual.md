@@ -1143,10 +1143,10 @@ When referencing entities or components in a signature or type expression that a
 ECS_SYSTEM(world, Move, EcsOnUpdate, transform.Position);
 ```
 
-The same goes for other parts of the API that accept a type expression, like `ECS_ENTITY` or `ECS_TYPE`:
+The same goes for other parts of the API that accept a type expression, like `ECS_ENTITY`:
 
 ```c
-ECS_TYPE(world, Movable, transform.Position);
+ECS_ENTITY(world, Movable, transform.Position);
 ```
 
 If the system would be defined in the same scope as the `Position` component, it would not need to specify the path:

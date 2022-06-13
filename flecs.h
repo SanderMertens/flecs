@@ -3533,17 +3533,6 @@ typedef struct ecs_component_desc_t {
     ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
-
-/** Used with ecs_type_init. */
-typedef struct ecs_type_desc_t {
-    int32_t _canary;
-
-    ecs_entity_desc_t entity;           /* Parameters for type entity */
-    ecs_id_t ids[ECS_ID_CACHE_SIZE];   /* Ids to include in type */
-    const char *ids_expr;               /* Id expression to include in type */
-} ecs_type_desc_t;
-
-
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
     int32_t _canary;
@@ -3757,14 +3746,6 @@ typedef struct EcsComponent {
     ecs_size_t alignment;      /* Component alignment */
 } EcsComponent;
 
-/** Component that stores an ecs_type_t. 
- * This component allows for the creation of entities that represent a type, and
- * therefore the creation of named types. */
-typedef struct EcsType {
-    const ecs_type_t *type;          /* Preserved nested types */
-    ecs_table_t *normalized;  /* Table with union of type + nested AND types */
-} EcsType;
-
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
     const ecs_trigger_t *trigger;
@@ -3902,7 +3883,6 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
-FLECS_API extern const ecs_entity_t ecs_id(EcsType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
 FLECS_API extern const ecs_entity_t ecs_id(EcsQuery);
@@ -4666,30 +4646,7 @@ const ecs_entity_t* ecs_bulk_init(
 FLECS_API
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
-    const ecs_component_desc_t *desc);
-
-/** Create a new type entity. 
- * This operation creates a new type entity, or finds an existing one. The find 
- * or create behavior is the same as ecs_entity_init.
- *
- * A type entity is an entity with the EcsType component. This component
- * a pointer to an ecs_type_t, which allows for the creation of named types.
- * Named types are used in a few places, such as for pipelines and filter terms
- * with the EcsAndFrom or EcsOrFrom operators.
- *
- * When an existing type entity is found, its types are verified with the
- * provided values. If the values do not match, the operation will fail.
- *
- * See the documentation of ecs_type_desc_t for more details.
- *
- * @param world The world.
- * @param desc Type entity init parameters.
- * @return A handle to the new or existing type, or 0 if failed.
-*/
-FLECS_API
-ecs_entity_t ecs_type_init(
-    ecs_world_t *world,
-    const ecs_type_desc_t *desc);    
+    const ecs_component_desc_t *desc); 
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities
@@ -5395,7 +5352,7 @@ char* ecs_type_str(
 FLECS_API
 char* ecs_table_str(
     const ecs_world_t *world,
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
@@ -5978,6 +5935,19 @@ bool ecs_id_is_wildcard(
  */
 FLECS_API
 bool ecs_id_is_valid(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+/** Get flags associated with id.
+ * This operation returns the internal flags (see api_flags.h) that are 
+ * associated with the provided id.
+ * 
+ * @param world The world.
+ * @param id The id.
+ * @return Flags associated with the id, or 0 if the id is not in use.
+ */
+FLECS_API
+ecs_flags32_t ecs_id_get_flags(
     const ecs_world_t *world,
     ecs_id_t id);
 
@@ -7647,6 +7617,7 @@ void* ecs_record_get_column(
         desc.add_expr = #__VA_ARGS__; \
         id = ecs_entity_init(world, &desc); \
         ecs_id(id) = id; \
+        ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
     (void)id; \
     (void)ecs_id(id);
@@ -8160,14 +8131,6 @@ void* ecs_record_get_column(
     ecs_rule_init(world, &(ecs_filter_desc_t){\
         .expr = q_expr\
     })
-
-#define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
-        .entity.name = #id,\
-        .ids_expr = #__VA_ARGS__\
-    });\
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)id;
 
 /** @} */
 
@@ -8732,8 +8695,6 @@ int ecs_log_last_error(void);
 #define ECS_COLUMN_IS_NOT_SHARED (42)
 #define ECS_COLUMN_IS_SHARED (43)
 #define ECS_COLUMN_TYPE_MISMATCH (45)
-
-#define ECS_TYPE_INVALID_CASE (62)
 
 #define ECS_INVALID_WHILE_ITERATING (70)
 #define ECS_LOCKED_STORAGE (71)
@@ -12826,6 +12787,8 @@ struct world_async_stage;
 struct iter;
 struct entity_view;
 struct entity;
+struct type;
+struct table;
 struct untyped_component;
 
 template <typename T>
@@ -12892,7 +12855,6 @@ enum var_kind_t {
 
 /* Builtin components */
 using Component = EcsComponent;
-using Type = EcsType;
 using Identifier = EcsIdentifier;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
@@ -13922,14 +13884,6 @@ protected:
 
 namespace flecs {
 
-struct type;
-
-}
-
-#pragma once
-
-namespace flecs {
-
 struct term;
 struct term_builder;
 
@@ -14779,7 +14733,7 @@ struct pair : _::pair_base {
         return ref_;
     }
 
-    operator const Type&() const { 
+    operator const type&() const { 
         return ref_;
     }    
 
@@ -16281,17 +16235,6 @@ template <typename... Comps, typename... Args>
 flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 
 
-/** Create a type.
- */
-template <typename... Args>
-flecs::type type(Args &&... args) const;  
-
-/** Create a type associated with a component.
- */
-template <typename T>
-flecs::type type(const char *name = nullptr) const;
-
-
 #   ifdef FLECS_MODULE
 
 /** Create a module.
@@ -16754,6 +16697,8 @@ public:
 
     flecs::type type() const;
 
+    flecs::table table() const;
+
     /** Is current type a module or does it contain module contents? */
     bool has_module() const {
         return ecs_table_has_module(m_iter->table);
@@ -17194,19 +17139,17 @@ struct entity_view : public id {
         return !ecs_has_id(m_world, m_id, flecs::Disabled);
     }
 
-    /** Return the type.
+    /** Get the entity's type.
      *
-     * @return Returns the entity type.
+     * @return The entity's type.
      */
     flecs::type type() const;
 
-    /** Return the table.
+    /** Get the entity's table.
      *
-     * @return Returns the entity type.
+     * @return Returns the entity's table.
      */
-    flecs::table_t* table() const {
-        return ecs_get_table(m_world, m_id);
-    }
+    flecs::table table() const;
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
@@ -20176,197 +20119,100 @@ inline void reset() {
 
 namespace flecs {
 
-template <typename Base>
-struct type_base {
-    explicit type_base(
-        world_t *world, const char *name = nullptr, const char *expr = nullptr)
-    { 
-        ecs_type_desc_t desc = {};
-        desc.entity.name = name;
-        desc.ids_expr = expr;
-        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
-        sync_from_flecs();
-    }
+struct type {
+    type() : m_world(nullptr), m_type(nullptr) { }
 
-    explicit type_base(
-        world_t *world, entity_t e)
-    { 
-        ecs_type_desc_t desc = {};
-        desc.entity.entity = e;
-        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
-        ecs_assert(!e || e == m_entity, ECS_INTERNAL_ERROR, nullptr);
-        sync_from_flecs();
-    }
-
-    explicit type_base(world_t *world, table_t *t)
-        : m_entity( flecs::entity::null(world) )
-        , m_table( t )
-    { }
-
-    type_base(table_t *t)
-        : m_table( t ) { }
-
-    Base& add(id_t id) {
-        flecs::world_t *world = this->world();
-
-        if (!m_table) {
-            const ecs_type_t *type = ecs_table_get_type(m_table);
-            if (type) {
-                for (int i = 0; i < type->count; i ++) {
-                    m_table = ecs_table_add_id(world, m_table, type->array[i]);
-                }
-            }
-        }
-
-        m_table = ecs_table_add_id(world, m_table, id);
-        sync_from_me();
-        return *this;
-    }
-
-    template <typename T>
-    Base& add() {
-        return this->add(_::cpp_type<T>::id(world()));
-    }
-
-    Base& add(entity_t relation, entity_t object) {
-        return this->add(ecs_pair(relation, object));
-    }
-
-    template <typename Relation, typename Object>
-    Base& add() {
-        return this->add<Relation>(_::cpp_type<Object>::id(world()));
-    }
-
-    Base& is_a(entity_t object) {
-        return this->add(flecs::IsA, object);
-    }
-
-    Base& child_of(entity_t object) {
-        return this->add(flecs::ChildOf, object);
-    }    
-
-    template <typename Relation>
-    Base& add(entity_t object) {
-        return this->add(_::cpp_type<Relation>::id(world()), object);
-    }     
-
-    template <typename Object>
-    Base& add_w_object(entity_t relation) {
-        return this->add(relation, _::cpp_type<Object>::id(world()));
-    }
-
-    bool has(id_t id) {
-        const flecs::world_t *w = ecs_get_world(world());
-        return ecs_search(w, m_table, id, 0) != -1;
-    }
-
-    bool has(id_t relation, id_t object) {
-        return this->has(ecs_pair(relation, object));
-    }    
-
-    template <typename T>
-    bool has() {
-        return this->has(_::cpp_type<T>::id(world()));
-    }
-
-    template <typename Relation, typename Object>
-    bool has() {
-        return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
-    }
+    type(world_t *world, const type_t *t)
+        : m_world(world)
+        , m_type(t) { }
 
     flecs::string str() const {
-        const flecs::world_t *w = ecs_get_world(world());
-        char *str = ecs_type_str(w, ecs_table_get_type(m_table));
-        return flecs::string(str);
+        return flecs::string(ecs_type_str(m_world, m_type));
     }
 
-    const type_t* c_ptr() const {
-        return ecs_table_get_type(m_table);
-    }
-
-    flecs::id_t id() const { 
-        return m_entity.id(); 
-    }
-
-    flecs::entity entity() const {
-        return m_entity;
-    }
-
-    flecs::world world() const { 
-        return m_entity.world();
-    } 
-
-    void enable() const {
-        ecs_enable(world(), id(), true);
-    }
-
-    void disable() const {
-        ecs_enable(world(), id(), false);
-    }
-
-    flecs::id get(int32_t index) {
-        const ecs_type_t *type = ecs_table_get_type(m_table);
-        if (!type || index >= type->count) {
-            ecs_abort(ECS_OUT_OF_RANGE, 0);
-            return flecs::id(world(), 0);
-        }
-        const flecs::world_t *w = ecs_get_world(world());
-        return flecs::id(const_cast<flecs::world_t*>(w), type->array[index]);
-    }
-
-    size_t count() {
-        const ecs_type_t *type = ecs_table_get_type(m_table);
-        if (!type) {
+    int32_t count() const {
+        if (!m_type) {
             return 0;
         }
-        return static_cast<size_t>(type->count);
+        return m_type->count;
+    }
+
+    flecs::id_t* array() const {
+        if (!m_type) {
+            return nullptr;
+        }
+        return m_type->array;
+    }
+
+    flecs::id get(int32_t index) const {
+        ecs_assert(m_type != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_type->count > index, ECS_OUT_OF_RANGE, NULL);
+        if (!m_type) {
+            return flecs::id();
+        }
+        return flecs::id(m_world, m_type->array[index]);
     }
 
     /* Implicit conversion to type_t */
-    operator const type_t*() const { return ecs_table_get_type(m_table); }
-
-    operator Base&() { return *static_cast<Base*>(this); }
-
+    operator const type_t*() const {
+        return m_type;
+    }
 private:
-    void sync_from_me() {
-        if (!id()) {
-            return;
-        }
-
-        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
-        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
-        tc->type = ecs_table_get_type(m_table);
-
-        if (m_table) {
-            flecs_table_claim(world(), m_table);
-        }
-        if (tc->normalized) {
-            flecs_table_release(world(), tc->normalized);
-        }
-
-        tc->normalized = m_table;
-        ecs_modified(world(), id(), EcsType);
-    }
-
-    void sync_from_flecs() {
-        if (!id()) {
-            return;
-        }
-
-        const EcsType *tc = ecs_get(world(), id(), EcsType);
-        if (!tc) {
-            m_table = nullptr;
-        } else {
-            m_table = tc->normalized;
-        }
-    }
-
-    flecs::entity m_entity;
-    table_t *m_table = nullptr;
+    world_t *m_world;
+    const type_t *m_type;
 };
 
-struct type : type_base<type> { 
-    using type_base<type>::type_base;
+}
+
+#pragma once
+
+namespace flecs {
+
+struct table {
+    table() : m_world(nullptr), m_table(nullptr) { }
+
+    table(world_t *world, table_t *t)
+        : m_world(world)
+        , m_table(t) { }
+
+    flecs::string str() const {
+        return flecs::string(ecs_table_str(m_world, m_table));
+    }
+
+    flecs::type type() const {
+        return flecs::type(m_world, ecs_table_get_type(m_table));
+    }
+
+    bool has(flecs::id_t id) const {
+        return ecs_search(m_world, m_table, id, 0) != -1;
+    }
+
+    template <typename T>
+    bool has() const {
+        return has(_::cpp_type<T>::id(m_world));
+    }
+
+    bool has(flecs::entity_t r, flecs::entity_t o) const {
+        return has(ecs_pair(r, o));
+    }
+
+    template <typename R>
+    bool has(flecs::entity_t o) const {
+        return has(_::cpp_type<R>::id(m_world), o);
+    }
+
+    template <typename R, typename O>
+    bool has() const {
+        return has<R>(_::cpp_type<O>::id(m_world));
+    }
+
+    /* Implicit conversion to table_t */
+    operator table_t*() const {
+        return m_table;
+    }
+private:
+    world_t *m_world;
+    table_t *m_table;
 };
 
 }
@@ -20569,7 +20415,11 @@ inline flecs::entity entity_view::set_stage(world_t *stage) {
 }   
 
 inline flecs::type entity_view::type() const {
-    return flecs::type(m_world, ecs_get_table(m_world, m_id));
+    return flecs::type(m_world, ecs_get_type(m_world, m_id));
+}
+
+inline flecs::table entity_view::table() const {
+    return flecs::table(m_world, ecs_get_table(m_world, m_id));
 }
 
 template <typename Func>
@@ -20705,24 +20555,6 @@ inline flecs::untyped_component world::component(Args &&... args) const {
 }
 
 } // namespace flecs
-
-#pragma once
-
-namespace flecs {
-
-// Type mixin implementation
-template <typename... Args>
-inline flecs::type world::type(Args &&... args) const {
-    return flecs::type(m_world, FLECS_FWD(args)...);
-}
-
-template <typename T>
-inline flecs::type world::type(const char *name) const {
-    flecs::entity result = flecs::component<T>(m_world, name, true);
-    return flecs::type(m_world, result);
-}
-
-}
 
 #pragma once
 
@@ -20932,13 +20764,6 @@ struct term_builder_i : term_id_builder_i<Base> {
     Base& term(id_t id) {
         return this->id(id);
     }
-
-    /** Set (component) id to type.
-     * Type must be associated with an entity (e.g. created by world::type) and
-     * not an entity type (e.g. returned from entity::type). */
-    Base& id(const flecs::type& type);
-
-    Base& id(const flecs::type& type, id_t id);
 
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
@@ -21319,23 +21144,6 @@ inline flecs::term world::term(Args &&... args) const {
     return flecs::term(m_world, FLECS_FWD(args)...).id<R, O>();
 }
 
-// Builder implementation
-template<typename Base>
-inline Base& term_builder_i<Base>::id(const flecs::type& type) {
-    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-    m_term->pred.entity = type.id();
-    return *this;
-}
-
-template<typename Base>
-inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
-    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-    m_term->pred.entity = type.id();
-    m_term->obj.entity = o;
-    m_term->role = ECS_PAIR;
-    return *this;
-}
-
 }
 
 #pragma once
@@ -21503,18 +21311,6 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term(id_t r, id_t o) {
         this->term();
         *this->m_term = flecs::term(this->world_v()).id(r, o).move();
-        return *this;
-    }
-
-    Base& term(const flecs::type& type) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type).move();
-        return *this;
-    }
-
-    Base& term(const flecs::type& type, flecs::id_t o) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type, o).move();
         return *this;
     }
 
@@ -23647,7 +23443,8 @@ inline flecs::world iter::world() const {
 }
 
 inline flecs::entity iter::entity(size_t row) const {
-    ecs_assert(row < static_cast<size_t>(m_iter->count), ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    ecs_assert(row < static_cast<size_t>(m_iter->count), 
+        ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
@@ -23672,9 +23469,12 @@ error:
     return flecs::id();
 }
 
-/* Obtain type of iter */
 inline flecs::type iter::type() const {
-    return flecs::type(m_iter->world, m_iter->table);
+    return flecs::type(m_iter->world, ecs_table_get_type(m_iter->table));
+}
+
+inline flecs::table iter::table() const {
+    return flecs::table(m_iter->world, m_iter->table);
 }
 
 #ifdef FLECS_RULES
@@ -23714,7 +23514,6 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
 
 inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
-    component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
     component<Trigger>("flecs::core::Trigger");
     component<Observer>("flecs::core::Observer");

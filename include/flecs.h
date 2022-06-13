@@ -693,17 +693,6 @@ typedef struct ecs_component_desc_t {
     ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
-
-/** Used with ecs_type_init. */
-typedef struct ecs_type_desc_t {
-    int32_t _canary;
-
-    ecs_entity_desc_t entity;           /* Parameters for type entity */
-    ecs_id_t ids[ECS_ID_CACHE_SIZE];   /* Ids to include in type */
-    const char *ids_expr;               /* Id expression to include in type */
-} ecs_type_desc_t;
-
-
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
     int32_t _canary;
@@ -917,14 +906,6 @@ typedef struct EcsComponent {
     ecs_size_t alignment;      /* Component alignment */
 } EcsComponent;
 
-/** Component that stores an ecs_type_t. 
- * This component allows for the creation of entities that represent a type, and
- * therefore the creation of named types. */
-typedef struct EcsType {
-    const ecs_type_t *type;          /* Preserved nested types */
-    ecs_table_t *normalized;  /* Table with union of type + nested AND types */
-} EcsType;
-
 /** Component that stores reference to trigger */
 typedef struct EcsTrigger {
     const ecs_trigger_t *trigger;
@@ -1041,7 +1022,6 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
-FLECS_API extern const ecs_entity_t ecs_id(EcsType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
 FLECS_API extern const ecs_entity_t ecs_id(EcsQuery);
@@ -1805,30 +1785,7 @@ const ecs_entity_t* ecs_bulk_init(
 FLECS_API
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
-    const ecs_component_desc_t *desc);
-
-/** Create a new type entity. 
- * This operation creates a new type entity, or finds an existing one. The find 
- * or create behavior is the same as ecs_entity_init.
- *
- * A type entity is an entity with the EcsType component. This component
- * a pointer to an ecs_type_t, which allows for the creation of named types.
- * Named types are used in a few places, such as for pipelines and filter terms
- * with the EcsAndFrom or EcsOrFrom operators.
- *
- * When an existing type entity is found, its types are verified with the
- * provided values. If the values do not match, the operation will fail.
- *
- * See the documentation of ecs_type_desc_t for more details.
- *
- * @param world The world.
- * @param desc Type entity init parameters.
- * @return A handle to the new or existing type, or 0 if failed.
-*/
-FLECS_API
-ecs_entity_t ecs_type_init(
-    ecs_world_t *world,
-    const ecs_type_desc_t *desc);    
+    const ecs_component_desc_t *desc); 
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities
@@ -2534,7 +2491,7 @@ char* ecs_type_str(
 FLECS_API
 char* ecs_table_str(
     const ecs_world_t *world,
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
@@ -3117,6 +3074,19 @@ bool ecs_id_is_wildcard(
  */
 FLECS_API
 bool ecs_id_is_valid(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+/** Get flags associated with id.
+ * This operation returns the internal flags (see api_flags.h) that are 
+ * associated with the provided id.
+ * 
+ * @param world The world.
+ * @param id The id.
+ * @return Flags associated with the id, or 0 if the id is not in use.
+ */
+FLECS_API
+ecs_flags32_t ecs_id_get_flags(
     const ecs_world_t *world,
     ecs_id_t id);
 

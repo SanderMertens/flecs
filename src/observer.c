@@ -314,14 +314,19 @@ ecs_entity_t ecs_observer_init(
 
             /* AndFrom & OrFrom terms insert multiple triggers */
             if (oper == EcsAndFrom || oper == EcsOrFrom) {
-                const EcsType *type = ecs_get(world, id, EcsType);
-                int32_t ti, ti_count = type->normalized->type.count;
-                ecs_id_t *ti_ids = type->normalized->type.array;
+                const ecs_type_t *type = ecs_get_type(world, id);
+                int32_t ti, ti_count = type->count;
+                ecs_id_t *ti_ids = type->array;
 
                 /* Correct operator will be applied when a trigger occurs, and
                  * the observer is evaluated on the trigger source */
                 tdesc.term.oper = EcsAnd;
                 for (ti = 0; ti < ti_count; ti ++) {
+                    ecs_id_t ti_id = ti_ids[ti];
+                    ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
+                    if (idr->flags & EcsIdDontInherit) {
+                        continue;
+                    }
                     tdesc.term.pred.name = NULL;
                     tdesc.term.pred.entity = ti_ids[ti];
                     tdesc.term.id = ti_ids[ti];

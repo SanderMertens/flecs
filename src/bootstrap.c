@@ -103,17 +103,6 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     }
 }
 
-static void ecs_on_remove(EcsType)(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsType *ptr = ecs_term(it, EcsType, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (ptr[i].normalized) {
-            flecs_table_release(world, ptr[i].normalized);
-        }
-    }
-}
-
 /* Component lifecycle actions for EcsTrigger */
 static void ecs_on_remove(EcsTrigger)(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -638,11 +627,6 @@ void flecs_bootstrap(
         .ctor = ecs_default_ctor 
     });
 
-    flecs_type_info_init(world, EcsType, { 
-        .ctor = ecs_default_ctor,
-        .on_remove = ecs_on_remove(EcsType)
-    });
-
     flecs_type_info_init(world, EcsIdentifier, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsIdentifier),
@@ -662,7 +646,6 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
-    flecs_type_info_init(world, EcsType, { 0 });
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
 
@@ -679,7 +662,6 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
 
-    bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsObserver);

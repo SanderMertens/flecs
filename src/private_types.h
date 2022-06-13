@@ -533,11 +533,6 @@ struct ecs_world_t {
     ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
 
 
-    /* -- Lookup Indices -- */
-
-    ecs_map_t type_handles;     /* Handles to named types */
-
-
     /* -- Identifiers -- */
 
     ecs_hashmap_t aliases;

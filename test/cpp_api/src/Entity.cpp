@@ -1175,12 +1175,10 @@ void Entity_get_type() {
     test_assert(entity);
 
     auto type_1 = entity.type();
-    test_assert(type_1.id() == 0);
     test_int(type_1.count(), 0);
 
     auto type_2 = entity.type();
-    test_assert(type_2.id() == 0);
-    test_int(type_1.count(), 0);
+    test_int(type_2.count(), 0);
 }
 
 #include <stdio.h>
@@ -1193,12 +1191,12 @@ void Entity_get_nonempty_type() {
     test_assert(entity);
 
     auto type_1 = entity.type();
-    test_assert(type_1.id() == 0);
     test_int(type_1.count(), 1);
+    test_int(type_1.get(0), world.id<Position>());
 
     auto type_2 = entity.type();
-    test_assert(type_2.id() == 0);
-    test_int(type_1.count(), 1);
+    test_int(type_2.count(), 1);
+    test_int(type_2.get(0), world.id<Position>());
 }
 
 void Entity_set_no_copy() {

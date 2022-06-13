@@ -1250,7 +1250,7 @@ void SystemPeriodic_disabled_feature() {
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
 
-    ECS_TYPE(world, Type, NormalSystem, NormalSystem2);
+    ECS_PREFAB(world, Type, NormalSystem, NormalSystem2);
 
     ecs_progress(world, 0);
 
@@ -1285,8 +1285,8 @@ void SystemPeriodic_disabled_nested_feature() {
     ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem3, EcsOnUpdate, Position);
 
-    ECS_TYPE(world, NestedType, NormalSystem2, NormalSystem3);
-    ECS_TYPE(world, Type, NormalSystem, NestedType);
+    ECS_PREFAB(world, NestedType, NormalSystem2, NormalSystem3);
+    ECS_PREFAB(world, Type, NormalSystem, NestedType);
 
     ecs_progress(world, 0);
 
@@ -1940,7 +1940,7 @@ void SystemPeriodic_and_type() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, MyType, Position, Velocity);
+    ECS_PREFAB(world, MyType, Position, Velocity);
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, AND | MyType);
 
@@ -1971,7 +1971,7 @@ void SystemPeriodic_or_type() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, MyType, Position, Velocity);
+    ECS_PREFAB(world, MyType, Position, Velocity);
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, OR | MyType);
 

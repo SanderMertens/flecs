@@ -362,7 +362,6 @@ void Lookup_resolve_builtin_symbols() {
     ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_lookup_symbol(world, "EcsComponent", false) == ecs_id(EcsComponent));
-    test_assert(ecs_lookup_symbol(world, "EcsType", false) == ecs_id(EcsType));
     test_assert(ecs_lookup_symbol(world, "EcsIdentifier", false) == ecs_id(EcsIdentifier));
 
     test_assert(ecs_lookup_symbol(world, "EcsName", false) == EcsName);

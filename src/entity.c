@@ -1532,23 +1532,6 @@ ecs_table_t *traverse_from_expr(
             if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
                 table = table_append(world, table, term.id, diff);
-            } else if (term.oper == EcsAndFrom) {
-                /* Add all components from the specified type */
-                const EcsType *t = ecs_get(world, term.id, EcsType);
-                if (!t) {
-                    if (error) {
-                        *error = true;
-                    }
-                    ecs_parser_error(name, expr, (ptr - expr), 
-                        "expected type for AND role");
-                    return NULL;
-                }
-                
-                ecs_id_t *ids = t->normalized->type.array;
-                int32_t i, count =t->normalized->type.count;
-                for (i = 0; i < count; i ++) {
-                    table = table_append(world, table, ids[i], diff);
-                }
             }
 
             ecs_term_fini(&term);
@@ -1600,24 +1583,6 @@ void defer_from_expr(
                     ecs_add_id(world, entity, term.id);
                 } else {
                     ecs_remove_id(world, entity, term.id);
-                }
-            } else if (term.oper == EcsAndFrom) {
-                /* Add all components from the specified type */
-                const EcsType *t = ecs_get(world, term.id, EcsType);
-                if (!t) {
-                    ecs_parser_error(name, expr, (ptr - expr), 
-                        "expected type for AND role");
-                    return;
-                }
-                
-                ecs_id_t *ids = t->normalized->type.array;
-                int32_t i, count = t->normalized->type.count;
-                for (i = 0; i < count; i ++) {
-                    if (is_add) {
-                        ecs_add_id(world, entity, ids[i]);
-                    } else {
-                        ecs_remove_id(world, entity, ids[i]);
-                    }
                 }
             }
 
@@ -2076,94 +2041,6 @@ ecs_entity_t ecs_component_init(
     
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
-
-    return result;
-error:
-    return 0;
-}
-
-ecs_entity_t ecs_type_init(
-    ecs_world_t *world,
-    const ecs_type_desc_t *desc)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
-    if (!result) {
-        goto error;
-    }
-
-    ecs_table_t *table = NULL, *normalized = NULL;
-    ecs_table_diff_t temp_diff;
-    ecs_diff_buffer_t diff = ECS_DIFF_INIT;
-
-    /* Find destination table (and type) */
-
-    /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->ids;
-    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
-        normalized = flecs_table_traverse_add(
-            world, normalized, &id, &temp_diff);
-        table = flecs_table_traverse_add(world, table, &id, NULL);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        diff_append(&diff, &temp_diff);
-    }
-
-    /* If expression is set, add it to the table */
-    if (desc->ids_expr) {
-#ifdef FLECS_PARSER
-        bool error = false;
-
-        normalized = traverse_from_expr(world, normalized, desc->entity.name, 
-            desc->ids_expr, &diff, true, &error);
-        if (error) {
-            goto error;
-        }
-
-        table = traverse_from_expr(world, table, desc->entity.name, 
-            desc->ids_expr, &diff, false, &error);
-        if (error) {
-            goto error;
-        }
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
-    }
-
-    diff_free(&diff);
-
-    ecs_type_t *type = NULL;
-    
-    if (table) {
-        type = &table->type;
-    }
-
-    bool add = false;
-    EcsType *type_ptr = ecs_get_mut(world, result, EcsType, &add);
-    if (add) {
-        type_ptr->type = type;
-        type_ptr->normalized = normalized;
-
-        if (normalized) {
-            flecs_table_claim(world, normalized);
-        }
-
-        /* This will allow the type to show up in debug tools */
-        if (type) {
-            ecs_map_set(&world->type_handles, (uintptr_t)type, &result);
-        }
-
-        ecs_modified(world, result, EcsType);
-    } else {
-        ecs_check(type_ptr->type == type, ECS_ALREADY_DEFINED, 
-            desc->entity.name);
-        ecs_check(type_ptr->normalized == normalized, ECS_ALREADY_DEFINED,
-            desc->entity.name);      
-    }
 
     return result;
 error:
@@ -3678,14 +3555,18 @@ void ecs_enable(
     ecs_entity_t entity,
     bool enabled)
 {
-    const EcsType *type_ptr = ecs_get(world, entity, EcsType);
-    if (type_ptr) {
-        /* If entity is a type, disable all entities in the type */
-        const ecs_type_t *type = &type_ptr->normalized->type;
+    if (ecs_has_id(world, entity, EcsPrefab)) {
+        /* If entity is a type, enable/disable all entities in the type */
+        const ecs_type_t *type = ecs_get_type(world, entity);
+        ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_id_t *ids = type->array;
         int32_t i, count = type->count;
         for (i = 0; i < count; i ++) {
-            ecs_enable(world, ids[i], enabled);
+            ecs_id_t id = ids[i];
+            if (ecs_id_get_flags(world, id) & EcsIdDontInherit) {
+                continue;
+            }
+            ecs_enable(world, id, enabled);
         }
     } else {
         if (enabled) {
@@ -3856,7 +3737,7 @@ char* ecs_type_str(
 
 char* ecs_table_str(
     const ecs_world_t *world,
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
     return ecs_type_str(world, &table->type);
 }

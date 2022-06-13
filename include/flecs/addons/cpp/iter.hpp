@@ -195,6 +195,8 @@ public:
 
     flecs::type type() const;
 
+    flecs::table table() const;
+
     /** Is current type a module or does it contain module contents? */
     bool has_module() const {
         return ecs_table_has_module(m_iter->table);

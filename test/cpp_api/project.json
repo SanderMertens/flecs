@@ -335,21 +335,6 @@
                 "alias_entity_by_scoped_name"
             ]
         }, {
-            "id": "Type",
-            "testcases": [
-                "type_no_name",
-                "null_args",
-                "has_type",
-                "has_entity",
-                "has_pair_type",
-                "has_pair_entity",
-                "get",
-                "get_out_of_range",
-                "has_from_stage",
-                "type_from_iter",
-                "type_from_staged_iter"
-            ]
-        }, {
             "id": "System",
             "testcases": [
                 "iter",
@@ -843,8 +828,6 @@
                 "entity_w_id",
                 "prefab",
                 "prefab_w_name",
-                "type",
-                "type_w_name",
                 "system",
                 "system_w_name",
                 "system_w_expr",
@@ -916,8 +899,6 @@
                 "entity_as_component_2_worlds",
                 "entity_as_namespaced_component_2_worlds",
                 "entity_as_component_2_worlds_implicit_namespaced",
-                "type_as_component",
-                "type_w_name_as_component",
                 "delete_with_id",
                 "delete_with_type",
                 "delete_with_pair",
