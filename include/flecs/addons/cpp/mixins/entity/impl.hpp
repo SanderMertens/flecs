@@ -88,7 +88,11 @@ inline flecs::entity entity_view::set_stage(world_t *stage) {
 }   
 
 inline flecs::type entity_view::type() const {
-    return flecs::type(m_world, ecs_get_table(m_world, m_id));
+    return flecs::type(m_world, ecs_get_type(m_world, m_id));
+}
+
+inline flecs::table entity_view::table() const {
+    return flecs::table(m_world, ecs_get_table(m_world, m_id));
 }
 
 template <typename Func>

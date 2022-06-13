@@ -1769,17 +1769,12 @@ void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
-void Type_type_redefine(void);
 void Type_invalid_entity_type_expression(void);
 void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
 void Type_get_type_from_0(void);
-void Type_type_to_expr_1_comp(void);
-void Type_type_to_expr_2_comp(void);
-void Type_type_to_expr_instanceof(void);
-void Type_type_to_expr_childof(void);
 void Type_type_to_expr_pair(void);
 void Type_type_to_expr_pair_w_comp(void);
 void Type_type_to_expr_scope(void);
@@ -1802,7 +1797,6 @@ void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
-void Type_type_w_cleanup_table(void);
 
 // Testsuite 'DeferredActions'
 void DeferredActions_defer_new(void);
@@ -8795,10 +8789,6 @@ bake_test_case Type_testcases[] = {
         Type_type_of_2_tostr_no_id
     },
     {
-        "type_redefine",
-        Type_type_redefine
-    },
-    {
         "invalid_entity_type_expression",
         Type_invalid_entity_type_expression
     },
@@ -8821,22 +8811,6 @@ bake_test_case Type_testcases[] = {
     {
         "get_type_from_0",
         Type_get_type_from_0
-    },
-    {
-        "type_to_expr_1_comp",
-        Type_type_to_expr_1_comp
-    },
-    {
-        "type_to_expr_2_comp",
-        Type_type_to_expr_2_comp
-    },
-    {
-        "type_to_expr_instanceof",
-        Type_type_to_expr_instanceof
-    },
-    {
-        "type_to_expr_childof",
-        Type_type_to_expr_childof
     },
     {
         "type_to_expr_pair",
@@ -8925,10 +8899,6 @@ bake_test_case Type_testcases[] = {
     {
         "large_type_expr_limit",
         Type_large_type_expr_limit
-    },
-    {
-        "type_w_cleanup_table",
-        Type_type_w_cleanup_table
     }
 };
 
@@ -9943,7 +9913,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        37,
+        31,
         Type_testcases
     },
     {

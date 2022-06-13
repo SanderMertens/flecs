@@ -1352,13 +1352,11 @@ void Prefab_prefab_auto_override_child_component() {
 
     test_assert( ecs_has(world, child_1, Position));
     test_assert( ecs_has(world, child_1, Velocity));
-    test_assert( !ecs_has(world, child_1, EcsType));
 
     ecs_entity_t child_2 = ecs_lookup_child(world, e2, "Child");
     test_assert(child_2 != 0);
     test_assert( ecs_has(world, child_2, Position));
     test_assert( ecs_has(world, child_2, Velocity));
-    test_assert( !ecs_has(world, child_2, EcsType));
 
     const Position *child_p1 = ecs_get(world, child_1, Position);
     test_assert(child_p1 != NULL);

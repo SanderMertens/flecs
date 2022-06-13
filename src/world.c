@@ -7,19 +7,15 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
-const ecs_entity_t ecs_id(EcsType) =               3;
-const ecs_entity_t ecs_id(EcsIdentifier) =         4;
-const ecs_entity_t ecs_id(EcsTrigger) =            5;
-const ecs_entity_t ecs_id(EcsQuery) =              6;
-const ecs_entity_t ecs_id(EcsObserver) =           7;
-const ecs_entity_t ecs_id(EcsIterable) =           8;
+const ecs_entity_t ecs_id(EcsIdentifier) =         2;
+const ecs_entity_t ecs_id(EcsTrigger) =            3;
+const ecs_entity_t ecs_id(EcsQuery) =              4;
+const ecs_entity_t ecs_id(EcsObserver) =           5;
+const ecs_entity_t ecs_id(EcsIterable) =           6;
 
 /* System module component ids */
 const ecs_entity_t ecs_id(EcsSystem) =             10;
 const ecs_entity_t ecs_id(EcsTickSource) =         11;
-
-/** Pipeline module component ids */
-const ecs_entity_t ecs_id(EcsPipelineQuery) =      12;
 
 /** Timer module component ids */
 const ecs_entity_t ecs_id(EcsTimer) =              13;
@@ -641,7 +637,6 @@ ecs_world_t *ecs_mini(void) {
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     flecs_name_index_init(&world->aliases);
     flecs_name_index_init(&world->symbols);
-    ecs_map_init(&world->type_handles, ecs_entity_t, 0);
 
     world->info.time_scale = 1.0;
 
@@ -1101,15 +1096,6 @@ ecs_entity_t flecs_get_oneof(
     }
 }
 
-/* Cleanup misc structures */
-static
-void fini_misc(
-    ecs_world_t *world)
-{
-    ecs_map_fini(&world->type_handles);
-    ecs_vector_free(world->fini_tasks);
-}
-
 /* The destroyer of worlds */
 int ecs_fini(
     ecs_world_t *world)
@@ -1168,8 +1154,7 @@ int ecs_fini(
 
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
-    
-    fini_misc(world);
+    ecs_vector_free(world->fini_tasks);
 
     ecs_set_stage_count(world, 0);
 

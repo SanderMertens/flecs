@@ -830,7 +830,7 @@ void test_combs_100_entity_2_types(int THREADS) {
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
@@ -892,7 +892,7 @@ void MultiThread_change_thread_count() {
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_PREFAB(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());

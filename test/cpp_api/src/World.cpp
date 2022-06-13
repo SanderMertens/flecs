@@ -87,7 +87,6 @@ void World_builtin_components() {
 
     test_assert(ecs.component<flecs::Component>() == ecs_id(EcsComponent));
     test_assert(ecs.component<flecs::Identifier>() == ecs_id(EcsIdentifier));
-    test_assert(ecs.component<flecs::Type>() == ecs_id(EcsType));
     test_assert(ecs.component<flecs::Trigger>() == ecs_id(EcsTrigger));
     test_assert(ecs.component<flecs::Observer>() == ecs_id(EcsObserver));
     test_assert(ecs.component<flecs::Query>() == ecs_id(EcsQuery));
@@ -1158,42 +1157,6 @@ struct PositionDerived : Position {
     PositionDerived() { }
     PositionDerived(float x, float y) : Position{x, y} { }
 };
-
-void World_type_as_component() {
-    flecs::world ecs;
-
-    auto e = ecs.type<Position>();
-    test_assert(e.id() != 0);
-
-    auto t = ecs.component<Position>();
-    test_assert(t.id() != 0);
-    test_assert(e.id() == t);
-
-    auto e2 = ecs.entity()
-        .set<Position>({10, 20});
-
-    test_bool(e2.has<Position>(), true);
-
-    test_str(t.name(), "Position");
-}
-
-void World_type_w_name_as_component() {
-    flecs::world ecs;
-
-    auto e = ecs.type<Position>("Foo");
-    test_assert(e.id() != 0);
-
-    auto t = ecs.component<Position>();
-    test_assert(t.id() != 0);
-    test_assert(e.id() == t);
-
-    auto e2 = ecs.entity()
-        .set<Position>({10, 20});
-
-    test_bool(e2.has<Position>(), true);
-
-    test_str(t.name(), "Foo");
-}
 
 void World_delete_with_id() {
     flecs::world ecs;

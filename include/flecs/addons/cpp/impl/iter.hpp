@@ -23,7 +23,8 @@ inline flecs::world iter::world() const {
 }
 
 inline flecs::entity iter::entity(size_t row) const {
-    ecs_assert(row < static_cast<size_t>(m_iter->count), ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    ecs_assert(row < static_cast<size_t>(m_iter->count), 
+        ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
@@ -48,9 +49,12 @@ error:
     return flecs::id();
 }
 
-/* Obtain type of iter */
 inline flecs::type iter::type() const {
-    return flecs::type(m_iter->world, m_iter->table);
+    return flecs::type(m_iter->world, ecs_table_get_type(m_iter->table));
+}
+
+inline flecs::table iter::table() const {
+    return flecs::table(m_iter->world, m_iter->table);
 }
 
 #ifdef FLECS_RULES

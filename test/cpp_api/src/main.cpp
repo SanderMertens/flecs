@@ -320,19 +320,6 @@ void Paths_alias_entity(void);
 void Paths_alias_entity_by_name(void);
 void Paths_alias_entity_by_scoped_name(void);
 
-// Testsuite 'Type'
-void Type_type_no_name(void);
-void Type_null_args(void);
-void Type_has_type(void);
-void Type_has_entity(void);
-void Type_has_pair_type(void);
-void Type_has_pair_entity(void);
-void Type_get(void);
-void Type_get_out_of_range(void);
-void Type_has_from_stage(void);
-void Type_type_from_iter(void);
-void Type_type_from_staged_iter(void);
-
 // Testsuite 'System'
 void System_iter(void);
 void System_iter_const(void);
@@ -793,8 +780,6 @@ void WorldFactory_entity_w_name(void);
 void WorldFactory_entity_w_id(void);
 void WorldFactory_prefab(void);
 void WorldFactory_prefab_w_name(void);
-void WorldFactory_type(void);
-void WorldFactory_type_w_name(void);
 void WorldFactory_system(void);
 void WorldFactory_system_w_name(void);
 void WorldFactory_system_w_expr(void);
@@ -864,8 +849,6 @@ void World_entity_w_name_as_component(void);
 void World_entity_as_component_2_worlds(void);
 void World_entity_as_namespaced_component_2_worlds(void);
 void World_entity_as_component_2_worlds_implicit_namespaced(void);
-void World_type_as_component(void);
-void World_type_w_name_as_component(void);
 void World_delete_with_id(void);
 void World_delete_with_type(void);
 void World_delete_with_pair(void);
@@ -2168,53 +2151,6 @@ bake_test_case Paths_testcases[] = {
     {
         "alias_entity_by_scoped_name",
         Paths_alias_entity_by_scoped_name
-    }
-};
-
-bake_test_case Type_testcases[] = {
-    {
-        "type_no_name",
-        Type_type_no_name
-    },
-    {
-        "null_args",
-        Type_null_args
-    },
-    {
-        "has_type",
-        Type_has_type
-    },
-    {
-        "has_entity",
-        Type_has_entity
-    },
-    {
-        "has_pair_type",
-        Type_has_pair_type
-    },
-    {
-        "has_pair_entity",
-        Type_has_pair_entity
-    },
-    {
-        "get",
-        Type_get
-    },
-    {
-        "get_out_of_range",
-        Type_get_out_of_range
-    },
-    {
-        "has_from_stage",
-        Type_has_from_stage
-    },
-    {
-        "type_from_iter",
-        Type_type_from_iter
-    },
-    {
-        "type_from_staged_iter",
-        Type_type_from_staged_iter
     }
 };
 
@@ -3976,14 +3912,6 @@ bake_test_case WorldFactory_testcases[] = {
         WorldFactory_prefab_w_name
     },
     {
-        "type",
-        WorldFactory_type
-    },
-    {
-        "type_w_name",
-        WorldFactory_type_w_name
-    },
-    {
         "system",
         WorldFactory_system
     },
@@ -4253,14 +4181,6 @@ bake_test_case World_testcases[] = {
     {
         "entity_as_component_2_worlds_implicit_namespaced",
         World_entity_as_component_2_worlds_implicit_namespaced
-    },
-    {
-        "type_as_component",
-        World_type_as_component
-    },
-    {
-        "type_w_name_as_component",
-        World_type_w_name_as_component
     },
     {
         "delete_with_id",
@@ -4601,13 +4521,6 @@ static bake_test_suite suites[] = {
         Paths_testcases
     },
     {
-        "Type",
-        NULL,
-        NULL,
-        11,
-        Type_testcases
-    },
-    {
         "System",
         NULL,
         NULL,
@@ -4723,14 +4636,14 @@ static bake_test_suite suites[] = {
         "WorldFactory",
         NULL,
         NULL,
-        14,
+        12,
         WorldFactory_testcases
     },
     {
         "World",
         NULL,
         NULL,
-        90,
+        88,
         World_testcases
     },
     {
@@ -4764,5 +4677,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 28);
+    return bake_test_run("cpp_api", argc, argv, suites, 27);
 }

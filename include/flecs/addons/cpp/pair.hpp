@@ -27,7 +27,7 @@ struct pair : _::pair_base {
         return ref_;
     }
 
-    operator const Type&() const { 
+    operator const type&() const { 
         return ref_;
     }    
 

@@ -1381,7 +1381,6 @@ void SystemMisc_activate_system_for_table_w_n_pairs() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, (Pair, TagA), (Pair, TagB));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);    

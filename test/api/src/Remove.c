@@ -48,8 +48,6 @@ void Remove_1_of_2() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-
     ECS_ENTITY(world, e, Position, Velocity);
     test_assert(e != 0);
 

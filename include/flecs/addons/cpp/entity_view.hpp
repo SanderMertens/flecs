@@ -86,19 +86,17 @@ struct entity_view : public id {
         return !ecs_has_id(m_world, m_id, flecs::Disabled);
     }
 
-    /** Return the type.
+    /** Get the entity's type.
      *
-     * @return Returns the entity type.
+     * @return The entity's type.
      */
     flecs::type type() const;
 
-    /** Return the table.
+    /** Get the entity's table.
      *
-     * @return Returns the entity type.
+     * @return Returns the entity's table.
      */
-    flecs::table_t* table() const {
-        return ecs_get_table(m_world, m_id);
-    }
+    flecs::table table() const;
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:

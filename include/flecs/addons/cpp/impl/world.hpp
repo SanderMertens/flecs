@@ -13,7 +13,6 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
 
 inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
-    component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
     component<Trigger>("flecs::core::Trigger");
     component<Observer>("flecs::core::Observer");

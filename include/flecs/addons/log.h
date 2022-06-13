@@ -464,8 +464,6 @@ int ecs_log_last_error(void);
 #define ECS_COLUMN_IS_SHARED (43)
 #define ECS_COLUMN_TYPE_MISMATCH (45)
 
-#define ECS_TYPE_INVALID_CASE (62)
-
 #define ECS_INVALID_WHILE_ITERATING (70)
 #define ECS_LOCKED_STORAGE (71)
 #define ECS_INVALID_FROM_WORKER (72)

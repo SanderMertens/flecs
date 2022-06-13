@@ -2189,7 +2189,7 @@ void Observer_and_from() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
+    ECS_PREFAB(world, Type, TagA, TagB);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -2224,7 +2224,7 @@ void Observer_or_from() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
+    ECS_PREFAB(world, Type, TagA, TagB);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){

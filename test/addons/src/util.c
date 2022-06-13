@@ -81,14 +81,20 @@ void install_test_abort() {
 const ecs_entity_t* bulk_new_w_type(
     ecs_world_t *world, ecs_entity_t type_ent, int32_t count) 
 {
-    const EcsType *type_comp = ecs_get(world, type_ent, EcsType);
-    test_assert(type_comp != NULL);
-    const ecs_type_t *type = ecs_table_get_type(type_comp->normalized);
+    const ecs_type_t *type = ecs_get_type(world, type_ent);
+    test_assert(type != NULL);
 
     ecs_id_t *ids = type->array;
-    const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[0], count);
-    for (int i = 1; i < type->count; i ++) {
+    int i = 0;
+    while ((ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit)) {
+        i ++;
+    }
+    const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[i], count);
+    for (; i < type->count; i ++) {
         for (int e = 0; e < count; e ++) {
+            if (ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit) {
+                continue;
+            }
             ecs_add_id(world, result[e], ids[i]);
         }
     }

@@ -3,9 +3,9 @@
 
 static
 char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
-    const EcsType *type_comp = ecs_get(world, type_ent, EcsType);
-    test_assert(type_comp != NULL);
-    return ecs_type_str(world, ecs_table_get_type(type_comp->normalized));
+    const ecs_type_t *t = ecs_get_type(world, type_ent);
+    test_assert(t != NULL);
+    return ecs_type_str(world, t);
 }
 
 void Type_setup() {
@@ -17,9 +17,9 @@ void Type_type_of_1_tostr() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TYPE(world, Type, Position);
+    ecs_type_t t = { .array = (ecs_id_t[]){ ecs_id(Position) }, .count = 1 };
 
-    char *str = type_str(world, Type);
+    char *str = ecs_type_str(world, &t);
     
     test_str(str, "Position");
 
@@ -34,9 +34,11 @@ void Type_type_of_2_tostr() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TYPE(world, Type, Position, Velocity);
+    ecs_type_t t = { .array = (ecs_id_t[]){ 
+        ecs_id(Position), ecs_id(Velocity) 
+    }, .count = 2 };
 
-    char *str = type_str(world, Type);
+    char *str = ecs_type_str(world, &t);
     
     test_str(str, "Position, Velocity");
 
@@ -59,26 +61,6 @@ void Type_type_of_2_tostr_no_id() {
     ecs_fini(world);
 }
 
-void Type_type_redefine() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t type = ecs_type_init(world, &(ecs_type_desc_t){
-        .entity.name = "Type",
-        .ids_expr = "Position"
-    });
-
-    ecs_entity_t type_2 = ecs_type_init(world, &(ecs_type_desc_t){
-        .entity.name = "Type",
-        .ids_expr = "Position"
-    });    
-
-    test_assert(type == type_2);
-
-    ecs_fini(world);
-}
-
 void Type_invalid_container_type_expression() {
     install_test_abort();
 
@@ -89,7 +71,7 @@ void Type_invalid_container_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, Position(parent), Velocity);
+    ECS_PREFAB(world, Type, Position(parent), Velocity);
 
     ecs_fini(world);
 }
@@ -106,7 +88,7 @@ void Type_invalid_entity_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, Entity:Position, Velocity);
+    ECS_PREFAB(world, Type, Entity:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -121,7 +103,7 @@ void Type_invalid_system_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, Position(Type), Velocity);
+    ECS_PREFAB(world, Type, Position(Type), Velocity);
 
     ecs_fini(world);
 }
@@ -165,71 +147,18 @@ void Type_get_type_from_0() {
     ecs_get_type(world, 0);
 }
 
-void Type_type_to_expr_1_comp() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position);
-
-    char *expr = type_str(world, Type);
-    test_str(expr, "Position");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
-}
-
-void Type_type_to_expr_2_comp() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-
-    char *expr = type_str(world, Type);
-    test_str(expr, "Position, Velocity");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
-}
-
-void Type_type_to_expr_instanceof() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, (IsA, Position));
-
-    char *expr = type_str(world, Type);
-    test_str(expr, "(IsA,Position)");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
-}
-
-void Type_type_to_expr_childof() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, (ChildOf, Position));
-
-    char *expr = type_str(world, Type);
-    test_str(expr, "(ChildOf,Position)");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
-}
-
 void Type_type_to_expr_pair() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
-    test_expect_abort();
+    ecs_type_t t = { .array = (ecs_id_t[]){ ecs_pair(100, 200) }, .count = 1 };
+    
+    char *str = ecs_type_str(world, &t);
 
-    /* Cannot create a type that just sets the hi id */
-    ECS_TYPE(world, Type, (Position, *));
+    test_str(str, "(100,200)");
+
+    ecs_os_free(str);
+
+    ecs_fini(world);
 }
 
 void Type_type_to_expr_pair_w_comp() {
@@ -237,11 +166,16 @@ void Type_type_to_expr_pair_w_comp() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, (Position, Velocity));
 
-    char *expr = type_str(world, Type);
-    test_str(expr, "(Position,Velocity)");
-    ecs_os_free(expr);
+    ecs_type_t t = { .array = (ecs_id_t[]){ 
+        ecs_pair(ecs_id(Position), ecs_id(Velocity)) 
+    }, .count = 1 };
+    
+    char *str = ecs_type_str(world, &t);
+
+    test_str(str, "(Position,Velocity)");
+
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -254,12 +188,17 @@ void Type_type_to_expr_scope() {
     ECS_ENTITY(world, scope, 0);
     ecs_set_scope(world, scope);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
     ecs_set_scope(world, 0);
 
-    char *expr = type_str(world, Type);
-    test_str(expr, "Position, scope.Velocity");
-    ecs_os_free(expr);
+    ecs_type_t t = { .array = (ecs_id_t[]){ 
+        ecs_pair(ecs_id(Position), ecs_id(Velocity)) 
+    }, .count = 1 };
+    
+    char *str = ecs_type_str(world, &t);
+
+    test_str(str, "(Position,scope.Velocity)");
+
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -449,8 +388,8 @@ void Type_large_type_expr() {
         });
     }
 
-    ecs_entity_t type_ent = ecs_type_init(world, &(ecs_type_desc_t) {
-        .ids_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
+    ecs_entity_t type_ent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
                 "e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,"
                 "e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,"
                 "e31, e32, e33, e34, e35, e36, e37, e38, e39, e40,"
@@ -461,10 +400,10 @@ void Type_large_type_expr() {
 
     test_assert(type_ent != 0);
 
-    const EcsType *ptr = ecs_get(world, type_ent, EcsType);
-    test_assert(ptr != NULL);
-    test_assert(ptr->type->count == 64);
-    test_assert(ecs_table_get_type(ptr->normalized)->count == 64);
+    const ecs_type_t *type = ecs_get_type(world, type_ent);
+    const ecs_table_t *table = ecs_get_table(world, type_ent);
+    test_assert(type != NULL);
+    test_assert(type->count == 64);
 
     for (i = 0; i < 64; i ++) {
         char buff[4] = { 'e' };
@@ -472,8 +411,7 @@ void Type_large_type_expr() {
         ecs_entity_t e = ecs_lookup(world, buff);
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
-
-        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
+        test_assert(ecs_search(world, table, e, 0) != -1);
     }
 
     ecs_fini(world);
@@ -493,8 +431,8 @@ void Type_large_type_expr_limit() {
         });
     }
 
-    ecs_entity_t type_ent = ecs_type_init(world, &(ecs_type_desc_t) {
-        .ids_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
+    ecs_entity_t type_ent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add_expr = "e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,"
                 "e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,"
                 "e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,"
                 "e31, e32"
@@ -502,10 +440,10 @@ void Type_large_type_expr_limit() {
 
     test_assert(type_ent != 0);
 
-    const EcsType *ptr = ecs_get(world, type_ent, EcsType);
-    test_assert(ptr != NULL);
-    test_assert(ptr->type->count == 32);
-    test_assert(ecs_table_get_type(ptr->normalized)->count == 32);
+    const ecs_type_t *type = ecs_get_type(world, type_ent);
+    const ecs_table_t *table = ecs_get_table(world, type_ent);
+    test_assert(type != NULL);
+    test_assert(type->count == 32);
 
     for (i = 0; i < 32; i ++) {
         char buff[4] = { 'e' };
@@ -513,39 +451,8 @@ void Type_large_type_expr_limit() {
         ecs_entity_t e = ecs_lookup(world, buff);
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
-
-        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
+        test_assert(ecs_search(world, table, e, 0) != -1);
     }
-
-    ecs_fini(world);
-}
-
-void Type_type_w_cleanup_table() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, TagC);
-
-    ECS_TYPE(world, TypeA, TagA);
-
-    ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
-    ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
-
-    ECS_TYPE(world, TypeB, TagB, TagC);
-
-    /* Make sure the table referred to by the type didn't get cleaned up */
-
-    const EcsType *t = ecs_get(world, TypeA, EcsType);
-    const ecs_type_t *type = ecs_table_get_type(t->normalized);
-    test_int(type->count, 1);
-    test_uint(type->array[0], TagA);
-
-    t = ecs_get(world, TypeB, EcsType);
-    type = ecs_table_get_type(t->normalized);
-    test_int(type->count, 2);
-    test_uint(type->array[0], TagB);
-    test_uint(type->array[1], TagC);
 
     ecs_fini(world);
 }

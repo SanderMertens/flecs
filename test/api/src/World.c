@@ -1365,7 +1365,6 @@ void World_use_after_clear_unused() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);

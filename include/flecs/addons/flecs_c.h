@@ -23,6 +23,7 @@
         desc.add_expr = #__VA_ARGS__; \
         id = ecs_entity_init(world, &desc); \
         ecs_id(id) = id; \
+        ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
     (void)id; \
     (void)ecs_id(id);
@@ -536,14 +537,6 @@
     ecs_rule_init(world, &(ecs_filter_desc_t){\
         .expr = q_expr\
     })
-
-#define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
-        .entity.name = #id,\
-        .ids_expr = #__VA_ARGS__\
-    });\
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)id;
 
 /** @} */
 

@@ -39,30 +39,6 @@ void WorldFactory_prefab_w_name() {
     test_str(e.name().c_str(), "MyName");
 }
 
-void WorldFactory_type() {
-    flecs::world ecs;
-
-    auto t = ecs.type()
-        .add<Position>()
-        .add<Velocity>();
-
-    test_assert(t.has<Position>());
-    test_assert(t.has<Velocity>());
-}
-
-void WorldFactory_type_w_name() {
-    flecs::world ecs;
-
-    auto t = ecs.type("MyName")
-        .add<Position>()
-        .add<Velocity>();
-
-    test_assert(t.has<Position>());
-    test_assert(t.has<Velocity>());
-
-    test_assert(ecs.lookup("MyName").id() != 0);
-}
-
 void WorldFactory_system() {
     flecs::world ecs;
 

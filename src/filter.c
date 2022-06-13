@@ -753,6 +753,18 @@ bool ecs_id_is_valid(
     return true;
 }
 
+ecs_flags32_t ecs_id_get_flags(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (idr) {
+        return idr->flags;
+    } else {
+        return 0;
+    }
+}
+
 bool ecs_term_id_is_set(
     const ecs_term_id_t *id)
 {
@@ -1394,6 +1406,8 @@ bool flecs_n_term_match_table(
     ecs_world_t *world,
     const ecs_term_t *term,
     const ecs_table_t *table,
+    ecs_entity_t type_id,
+    ecs_oper_kind_t oper,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -1402,22 +1416,33 @@ bool flecs_n_term_match_table(
     ecs_flags32_t iter_flags)
 {
     (void)column_out;
-    
-    ecs_entity_t type_id = term->id;
-    ecs_oper_kind_t oper = term->oper;
 
-    const EcsType *term_type = ecs_get(world, type_id, EcsType);
-    ecs_check(term_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_type_t *type = ecs_get_type(world, type_id);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_id_t *ids = term_type->normalized->type.array;
-    int32_t i, count = term_type->normalized->type.count;
+    ecs_id_t *ids = type->array;
+    int32_t i, count = type->count;
     ecs_term_t temp = *term;
     temp.oper = EcsAnd;
 
     for (i = 0; i < count; i ++) {
-        temp.id = ids[i];
-        bool result = flecs_term_match_table(world, &temp, table, id_out, 
-            0, subject_out, match_index_out, first, iter_flags);
+        ecs_id_t id = ids[i];
+        if (ecs_id_get_flags(world, id) & EcsIdDontInherit) {
+            continue;
+        }
+        bool result;
+        if (ECS_HAS_ROLE(id, AND) || ECS_HAS_ROLE(id, OR)) {
+            ecs_oper_kind_t id_oper = ECS_HAS_ROLE(id, AND)
+                ? EcsAndFrom : ECS_HAS_ROLE(id, OR)
+                    ? EcsOrFrom : 0;
+            result = flecs_n_term_match_table(world, term, table, 
+                id & ECS_COMPONENT_MASK, id_oper, id_out, column_out, 
+                subject_out, match_index_out, first, iter_flags);
+        } else {
+            temp.id = id;
+            result = flecs_term_match_table(world, &temp, table, id_out, 
+                0, subject_out, match_index_out, first, iter_flags);
+        }
         if (!result && oper == EcsAndFrom) {
             return false;
         } else
@@ -1436,7 +1461,6 @@ bool flecs_n_term_match_table(
         return false;
     }
 
-error:
     return false;
 }
 
@@ -1463,8 +1487,9 @@ bool flecs_term_match_table(
     }
 
     if (oper == EcsAndFrom || oper == EcsOrFrom) {
-        return flecs_n_term_match_table(world, term, table, id_out, column_out, 
-            subject_out, match_index_out, first, iter_flags);
+        return flecs_n_term_match_table(world, term, table, term->id, 
+            term->oper, id_out, column_out, subject_out, match_index_out, first, 
+            iter_flags);
     }
 
     /* If source is not This, search in table of source */

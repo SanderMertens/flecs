@@ -74,7 +74,6 @@ void Clone_2_component() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_ENTITY(world, e1, Position, Velocity);
     test_assert(e1 != 0);

@@ -113,18 +113,6 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& term(const flecs::type& type) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type).move();
-        return *this;
-    }
-
-    Base& term(const flecs::type& type, flecs::id_t o) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type, o).move();
-        return *this;
-    }
-
     Base& term(const char *expr) {
         this->term();
         *this->m_term = flecs::term(this->world_v(), expr).move();
