@@ -92,6 +92,7 @@ static const flecs::entity_t World = EcsWorld;
 
 /* Relation properties */
 static const flecs::entity_t Wildcard = EcsWildcard;
+static const flecs::entity_t Any = EcsAny;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;

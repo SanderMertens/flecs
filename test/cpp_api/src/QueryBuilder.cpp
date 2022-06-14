@@ -1557,3 +1557,27 @@ void QueryBuilder_create_w_no_template_args() {
     
     test_int(count, 1);
 }
+
+void QueryBuilder_any_wildcard() {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Apple = ecs.entity();
+    auto Mango = ecs.entity();
+
+    auto e1 = ecs.entity()
+        .add(Likes, Apple)
+        .add(Likes, Mango);
+
+    auto q = ecs.query_builder()
+        .term(Likes, flecs::Any)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}

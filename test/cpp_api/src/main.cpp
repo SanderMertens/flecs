@@ -522,6 +522,7 @@ void QueryBuilder_20_terms(void);
 void QueryBuilder_group_by_raw(void);
 void QueryBuilder_group_by_template(void);
 void QueryBuilder_create_w_no_template_args(void);
+void QueryBuilder_any_wildcard(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -2938,6 +2939,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "create_w_no_template_args",
         QueryBuilder_create_w_no_template_args
+    },
+    {
+        "any_wildcard",
+        QueryBuilder_any_wildcard
     }
 };
 
@@ -4552,7 +4557,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        58,
+        59,
         QueryBuilder_testcases
     },
     {

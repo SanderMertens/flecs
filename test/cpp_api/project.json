@@ -545,7 +545,8 @@
                 "20_terms",
                 "group_by_raw",
                 "group_by_template",
-                "create_w_no_template_args"
+                "create_w_no_template_args",
+                "any_wildcard"
             ]         
         }, {
             "id": "FilterBuilder",
