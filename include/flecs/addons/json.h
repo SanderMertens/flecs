@@ -151,6 +151,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_label;      /* Serialize doc name */
     bool serialize_brief;      /* Serialize brief doc description */
     bool serialize_link;       /* Serialize doc link (URL) */
+    bool serialize_color;      /* Serialize doc color */
     bool serialize_id_labels;  /* Serialize labels of (component) ids */
     bool serialize_base;       /* Serialize base components */
     bool serialize_private;    /* Serialize private components */
@@ -159,8 +160,8 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
-#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, false, false, false, false, false, true, false, false, false, false }
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {true, false,\
+    false, false, false, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -204,6 +205,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entities;    /* Include entities (for This terms) */
     bool serialize_entity_labels; /* Include doc name for entities */
     bool serialize_variable_labels; /* Include doc name for variables */
+    bool serialize_color;       /* Include doc color for entities */
     bool measure_eval_duration; /* Include evaluation duration */
     bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;

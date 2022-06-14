@@ -139,6 +139,7 @@ const ecs_entity_t ecs_id(EcsDocDescription) =ECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t EcsDocBrief =              ECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t EcsDocDetail =             ECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t EcsDocColor =              ECS_HI_COMPONENT_ID + 104;
 
 /* REST module components */
 const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;

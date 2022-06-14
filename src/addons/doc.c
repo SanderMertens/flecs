@@ -58,6 +58,16 @@ void ecs_doc_set_link(
     });
 }
 
+void ecs_doc_set_color(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *color)
+{
+    ecs_set_pair(world, entity, EcsDocDescription, EcsDocColor, {
+        .value = color
+    });
+}
+
 const char* ecs_doc_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity)
@@ -110,6 +120,19 @@ const char* ecs_doc_get_link(
     }
 }
 
+const char* ecs_doc_get_color(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsDocColor);
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return NULL;
+    }
+}
+
 void FlecsDocImport(
     ecs_world_t *world)
 {    
@@ -121,6 +144,7 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocBrief);
     flecs_bootstrap_tag(world, EcsDocDetail);
     flecs_bootstrap_tag(world, EcsDocLink);
+    flecs_bootstrap_tag(world, EcsDocColor);
 
     ecs_set_hooks(world, EcsDocDescription, { 
         .ctor = ecs_default_ctor,

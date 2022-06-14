@@ -845,6 +845,14 @@ int ecs_entity_to_json_buf(
             flecs_json_string(buf, doc_link);
         }
     }
+
+    if (desc && desc->serialize_color) {
+        const char *doc_color = ecs_doc_get_color(world, entity);
+        if (doc_color) {
+            flecs_json_member(buf, "color");
+            flecs_json_string(buf, doc_color);
+        }
+    }
 #endif
 
     const ecs_type_t *type = ecs_get_type(world, entity);
@@ -1167,6 +1175,30 @@ void serialize_iter_result_entity_labels(
 }
 
 static
+void serialize_iter_result_colors(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    flecs_json_member(buf, "colors");
+    flecs_json_array_push(buf);
+
+    ecs_entity_t *entities = it->entities;
+
+    for (int i = 0; i < count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_color(buf, world, entities[i]);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
 void serialize_iter_result_values(
     const ecs_world_t *world,
     const ecs_iter_t *it,
@@ -1285,6 +1317,11 @@ void serialize_iter_result(
     /* Write labels for entities */
     if (desc && desc->serialize_entity_labels) {
         serialize_iter_result_entity_labels(world, it, buf);
+    }
+
+    /* Write colors for entities */
+    if (desc && desc->serialize_color) {
+        serialize_iter_result_colors(world, it, buf);
     }
 
     /* Serialize component values */

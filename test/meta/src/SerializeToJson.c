@@ -1853,6 +1853,32 @@ void SerializeToJson_serialize_entity_w_link_no_link() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_color() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add(world, e, Tag);
+    ecs_doc_set_color(world, e, "#47B576");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_color = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"color\":\"#47B576\", "
+        "\"ids\":["
+            "[\"Tag\"]"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_w_meta_ids() {
     ecs_world_t *world = ecs_init();
 
@@ -3042,6 +3068,58 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
     ecs_os_free(json);
 
     ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_color() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "foo_bar");
+    ecs_entity_t e2 = ecs_new_entity(world, "hello_world");
+    ecs_doc_set_color(world, e2, "#47B576");
+
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_color = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Tag\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Tag\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"foo_bar\""
+            "], "
+            "\"colors\":["
+                "0"
+            "], "
+            "\"values\":[0]"
+        "}, {"
+            "\"ids\":[\"Tag\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"hello_world\""
+            "], "
+            "\"colors\":["
+                "\"#47B576\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }

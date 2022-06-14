@@ -53,6 +53,11 @@ void flecs_json_label(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+void flecs_json_color(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 void flecs_json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,

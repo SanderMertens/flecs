@@ -10123,6 +10123,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
 FLECS_API extern const ecs_entity_t EcsDocBrief;
 FLECS_API extern const ecs_entity_t EcsDocDetail;
 FLECS_API extern const ecs_entity_t EcsDocLink;
+FLECS_API extern const ecs_entity_t EcsDocColor;
 
 typedef struct EcsDocDescription {
     const char *value;
@@ -10178,6 +10179,19 @@ void ecs_doc_set_link(
     ecs_entity_t entity,
     const char *link);
 
+/** Add color to entity.
+ * UIs can use color as hint to improve visualizing entities.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the link.
+ * @param color The color to add.
+ */
+FLECS_API
+void ecs_doc_set_color(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *color);
+
 /** Get human readable name from entity.
  * If entity does not have an explicit human readable name, this operation will
  * return the entity name.
@@ -10226,6 +10240,17 @@ const char* ecs_doc_get_detail(
  */
 FLECS_API
 const char* ecs_doc_get_link(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get color from entity.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the link.
+ * @return The color.
+ */
+FLECS_API
+const char* ecs_doc_get_color(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -10400,6 +10425,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_label;      /* Serialize doc name */
     bool serialize_brief;      /* Serialize brief doc description */
     bool serialize_link;       /* Serialize doc link (URL) */
+    bool serialize_color;      /* Serialize doc color */
     bool serialize_id_labels;  /* Serialize labels of (component) ids */
     bool serialize_base;       /* Serialize base components */
     bool serialize_private;    /* Serialize private components */
@@ -10408,8 +10434,8 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
-#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, false, false, false, false, false, true, false, false, false, false }
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {true, false,\
+    false, false, false, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -10453,6 +10479,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entities;    /* Include entities (for This terms) */
     bool serialize_entity_labels; /* Include doc name for entities */
     bool serialize_variable_labels; /* Include doc name for variables */
+    bool serialize_color;       /* Include doc color for entities */
     bool measure_eval_duration; /* Include evaluation duration */
     bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;

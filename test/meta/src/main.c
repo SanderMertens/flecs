@@ -490,6 +490,7 @@ void SerializeToJson_serialize_entity_w_brief_no_brief(void);
 void SerializeToJson_serialize_entity_w_link(void);
 void SerializeToJson_serialize_entity_w_link_no_link(void);
 void SerializeToJson_serialize_entity_w_meta_ids(void);
+void SerializeToJson_serialize_entity_color(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
 void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
 void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table(void);
@@ -523,6 +524,7 @@ void SerializeToJson_serialize_iterator_w_inout_out_tag(void);
 void SerializeToJson_serialize_iterator_w_inout_out_component(void);
 void SerializeToJson_serialize_iterator_w_inout_out_reflected_component(void);
 void SerializeToJson_serialize_iterator_component_from_var(void);
+void SerializeToJson_serialize_iterator_color(void);
 void SerializeToJson_serialize_paged_iterator(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_component(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_tag(void);
@@ -2432,6 +2434,10 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_meta_ids
     },
     {
+        "serialize_entity_color",
+        SerializeToJson_serialize_entity_color
+    },
+    {
         "serialize_iterator_1_comps_empty",
         SerializeToJson_serialize_iterator_1_comps_empty
     },
@@ -2562,6 +2568,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_component_from_var",
         SerializeToJson_serialize_iterator_component_from_var
+    },
+    {
+        "serialize_iterator_color",
+        SerializeToJson_serialize_iterator_color
     },
     {
         "serialize_paged_iterator",
@@ -2839,7 +2849,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        102,
+        104,
         SerializeToJson_testcases
     },
     {

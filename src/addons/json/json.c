@@ -118,6 +118,25 @@ void flecs_json_label(
     }
 }
 
+void flecs_json_color(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *color = NULL;
+#ifdef FLECS_DOC
+    color = ecs_doc_get_color(world, e);
+#endif
+
+    if (color) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstr(buf, color);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        ecs_strbuf_appendstr(buf, "0");
+    }
+}
+
 void flecs_json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
