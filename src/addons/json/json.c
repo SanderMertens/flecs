@@ -123,6 +123,9 @@ void flecs_json_color(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
+    (void)world;
+    (void)e;
+
     const char *color = NULL;
 #ifdef FLECS_DOC
     color = ecs_doc_get_color(world, e);
