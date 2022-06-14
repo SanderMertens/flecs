@@ -12072,8 +12072,8 @@ void flecs_bitset_set(
     bool value)
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    int32_t hi = elem >> 6;
-    int32_t lo = elem & 0x3F;
+    uint32_t hi = ((uint32_t)elem) >> 6;
+    uint32_t lo = ((uint32_t)elem) & 0x3F;
     uint64_t v = bs->data[hi];
     bs->data[hi] = (v & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
 error:

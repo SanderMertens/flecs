@@ -211,7 +211,7 @@ typedef struct ecs_iter_to_json_desc_t {
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
-    true, true, true, true, true, true, true, false, false, false, false }
+    true, true, true, true, true, true, true, false, false, false, false, false }
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them
