@@ -3088,7 +3088,7 @@ void SerializeToJson_serialize_iterator_color() {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_color = true;
+    desc.serialize_colors = true;
     char *json = ecs_iter_to_json(world, &it, &desc);
 
     test_str(json, 

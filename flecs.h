@@ -10479,7 +10479,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entities;    /* Include entities (for This terms) */
     bool serialize_entity_labels; /* Include doc name for entities */
     bool serialize_variable_labels; /* Include doc name for variables */
-    bool serialize_color;       /* Include doc color for entities */
+    bool serialize_colors;      /* Include doc color for entities */
     bool measure_eval_duration; /* Include evaluation duration */
     bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;

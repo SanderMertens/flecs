@@ -1320,7 +1320,7 @@ void serialize_iter_result(
     }
 
     /* Write colors for entities */
-    if (desc && desc->serialize_color) {
+    if (desc && desc->serialize_colors) {
         serialize_iter_result_colors(world, it, buf);
     }
 
