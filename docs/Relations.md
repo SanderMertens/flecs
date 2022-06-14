@@ -684,39 +684,43 @@ Take an example with a parent and a child that both have the `Node` tag:
 ```cpp
 world.trigger<Node>()
   .event(flecs::OnRemove)
-  .each( ... );
+  .each([](flecs::entity e) { });
 
 flecs::entity p = world.entity().add<Node>();
 flecs::entity c = world.entity().add<Node>().child_of(p);
 ```
 
-It would be reasonable to expect that the trigger for `Node` is invoked first for the child, and then for the parent, and this is what would happen when calling `p.destruct()`. However, an application may also choose to delete `Node`! This would remove `Node` from all entities, but the order in which this happens, and therefore the order in which triggers are executed, is undefined.
+In this example, when calling `p.destruct()` the trigger is first invoked for the child, and then for the parent, which is to be expected as the child is deleted before the parent. Cleanup policies do not however guarantee that this is always the case.
 
-While the simple solution to this is to just "not do that" things are a bit less straightforward during world cleanup. The world has no knowledge of which entities should be cleaned up first, which could result in an unexpected ordering of trigger invocations.
+An application could also call `world.component<Node>().destruct()` which would delete the `Node` component and all of its instances. In this scenario the cleanup policies for the `ChildOf` relationship are not considered, and therefore the ordering is undefined. Another typical scenario in which ordering is undefined is when an application has cyclical relationships with a `Delete` cleanup action.
 
-Applications can however organize entities in a way that helps world cleanup to do the right thing. To know how, it is good to have an understanding of the different steps that are executed during world cleanup:
-
-1. **Find all root entities**
-World cleanup starts by finding all root entities. These are entities that do not have the builtin `ChildOf` relationship.
-
-2. **Filter out modules, components, triggers, observers and systems** 
-Filtering out these entities ensures that components are not cleaned up before the entities that use them. Triggers, observers and systems aren't deleted yet as they may still be invoked during cleanup.
-
-3. **Filter out entities that have no children**
-If entities have no children they cannot trigger complex cleanup logic. Furthermore, this decreases the likelyhood that we delete an entity (or component) that was added to another entity for which we want to run triggers.
-
-4. **Delete root entities**
-The root entities that were not filtered out will be deleted.
-
-5. **Delete everything else**
-The last step will delete all remaining entities. At this point cleanup policies are no longer considered.
-
-This condenses down into one recommendations that when followed will improve cleanup behavior significantly during world shutdown:
+#### Cleanup order during world teardown
+Cleanup issues often show up during world teardown as the ordering in which entities are deleted is controlled by the application. While world teardown respects cleanup policies, there can be many entity delete orderings that are valid according to the cleanup policies, but not all of them are equally useful. There are ways to organize entities that helps world cleanup to do the right thing. These are:
 
 **Organize components, triggers, observers and systems in modules.**
 Storing these entities in modules ensures that they stay alive for as long as possible. This leads to more predictable cleanup ordering as components will be deleted as their entities are, vs. when the component is deleted. It also ensures that triggers and observers are not deleted while matching events are still being generated.
 
 **Avoid organizing components, triggers, observers and systems under entities that are not modules**. If a non-module entity with children is stored in the root, it will get cleaned up along with other regular entities. If you have entities such as these organized in a non-module scope, consider adding the `EcsModule`/`flecs::Module` tag to the root of that scope.
+
+The next section goes into more detail on why this improves cleanup behavior and what happens during world teardown.
+
+#### World teardown sequence
+To understand why some ways to organize entities work better than others, having an overview of what happens during world teardown is useful. Here is a list of the steps that happen when a world is deleted:
+
+1. **Find all root entities**
+World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship.
+
+2. **Filter out modules, components, triggers, observers and systems** 
+This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
+
+3. **Filter out entities that have no children**
+If entities have no children they cannot trigger complex cleanup logic. This also decreases the likelyhood of initiating cleanup actions that could impact other entities.
+
+4. **Delete root entities**
+The root entities that were not filtered out will be deleted.
+
+5. **Delete everything else**
+The last step will delete all remaining entities. At this point cleanup policies are no longer considered and cleanup order is undefined.
 
 ## Relation properties
 Relation properties are tags that can be added to relations to modify their behavior.
