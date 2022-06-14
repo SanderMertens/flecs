@@ -546,127 +546,189 @@ auto parent = world.entity().scope([&]{
 
 Scopes are the mechanism that ensure contents of a module are created as children of the module, without having to explicitly add the module as a parent.
 
+## Cleanup properties
+When entities that are used as tags, components, relationships or relationship targets are deleted, cleanup policies ensure that the store does not contain any dangling references. Any cleanup policy provides this guarantee, so while they are configurable, applications cannot configure policies that allows for dangling references.
+
+**Note**: this only applies to entities (like tags, components, relationships) that are added _to_ other entities. It does not apply to components that store an entity value, so:
+
+```c
+struct MyComponent {
+  entity e; // not covered by cleanup policies
+}
+```
+```c
+e.add(ChildOf, parent); // covered by cleanup policies
+```
+
+The default policy is that any references to the entity will be **removed**. For example, when the tag `Archer` is deleted, it will be removed from all entities that  have it, which is similar to invoking the `remove_all` operation:
+
+```c
+ecs_remove_all(world, Archer);
+```
+```cpp
+world.remove_all(Archer);
+```
+
+Since entities can be used in relationship pairs, just calling `remove_all` on just the entity itself does not guarantee that no dangling references are left. A more comprehensive description of what happens is:
+
+```c
+ecs_remove_all(world, Archer);
+ecs_remove_all(world, ecs_pair(Archer, EcsWildcard));
+ecs_remove_all(world, ecs_pair(EcsWildcard, Archer));
+```
+```cpp
+world.remove_all(Archer);
+world.remove_all(Archer, flecs::Wildcard);
+world.remove_all(flecs::Wildcard, Archer);
+```
+
+This succeeds in removing all possible references to `Archer`. Sometimes this behavior is not what we want however. Consider a parent-child hierarchy, where we want to delete the child entities when the parent is deleted. Instead of removing `(ChildOf, parent)` from all children, we need to _delete_ the children.
+
+We also want to specify this per relationship. If an entity has `(Likes, parent)` we may not want to delete that entity, meaning the cleanup we want to perform for `Likes` and `ChildOf` may not be the same.
+
+This is what cleanup policies are for: to specify which action needs to be executed under which condition. They are applied _to_ entities that have a reference to the entity being deleted: if I delete the `Archer` tag I remove the tag _from_ all entities that have it. 
+
+To configure a cleanup policy for an entity, a `(Condition, Action)` pair can be added to it. If no policy is specified, the default cleanup action (`Remove`) is performed.
+
+There are three cleanup actions:
+
+- `Remove`: as if doing `remove_all(entity)` (default)
+- `Delete`: as if doing `delete_with(entity)`
+- `Panic`: throw a fatal error (default for components)
+
+There are two cleanup conditions:
+
+- `OnDelete`: the component, tag or relationship is deleted
+- `OnDeleteObject`: a target used with the relationship is deleted
+
+Policies apply to both regular and pair instances, so to all entities with `T` as well as `(T, *)`. 
+
+### Examples
+The following examples show how to use cleanup policies
+
+**(OnDelete, Remove)**
+```c
+// Remove Archer from entities when Archer is deleted
+ECS_TAG(world, Archer);
+ecs_add_pair(world, EcsOnDelete, EcsRemove);
+
+ecs_entity_t e = ecs_new_w_id(world, Archer);
+
+// This will remove Archer from e
+ecs_delete(world, Archer);
+```
+```cpp
+// Delete entities with Archer when Archer is deleted
+world.component<Archer>()
+  .add(flecs::OnDelete, flecs::Remove);
+
+auto e = world.entity().add<Archer>();
+
+// This will remove Archer from e
+world.component<Archer>().destruct();
+```
+
+**(OnDelete, Delete)**
+```c
+// Delete entities with Archer when Archer is deleted
+ECS_TAG(world, Archer);
+ecs_add_pair(world, EcsOnDelete, EcsDelete);
+
+ecs_entity_t e = ecs_new_w_id(world, Archer);
+
+// This will delete e
+ecs_delete(world, Archer);
+```
+```cpp
+// Delete entities with Archer when Archer is deleted
+world.component<Archer>()
+  .add(flecs::OnDelete, flecs::Delete);
+
+auto e = world.entity().add<Archer>();
+
+// This will delete e
+world.component<Archer>().destruct();
+```
+
+**(OnDeleteObject, Delete)**
+```c
+// Delete children when deleting parent
+ECS_TAG(world, ChildOf);
+ecs_add_pair(world, EcsOnDeleteObject, EcsDelete);
+
+ecs_entity_t p = ecs_new_id(world);
+ecs_entity_t e = ecs_new_w_pair(world, ChildOf, p);
+
+// This will delete both p and e
+ecs_delete(world, p);
+```
+```cpp
+// Delete children when deleting parent
+world.component<ChildOf>()
+  .add(flecs::OnDeleteObject, flecs::Delete);
+
+auto p = world.entity();
+auto e = world.entity().add<ChildOf>(p);
+
+// This will delete both p and e
+p.destruct();
+```
+
+### Cleanup order
+While cleanup actions allow for specifying what needs to happen when a particular entity is deleted, or when an entity used with a particular relationship is deleted, they do not enforce a strict cleanup _order_. The reason for this is that there can be many orderings that satisfy the cleanup policies.
+
+This is important to consider especially when writing `OnRemove` triggers or hooks, as the order in which they are invoked highly depends on the order in which entities are cleaned up.
+
+Take an example with a parent and a child that both have the `Node` tag:
+
+```cpp
+world.trigger<Node>()
+  .event(flecs::OnRemove)
+  .each( ... );
+
+flecs::entity p = world.entity().add<Node>();
+flecs::entity c = world.entity().add<Node>().child_of(p);
+```
+
+It would be reasonable to expect that the trigger for `Node` is invoked first for the child, and then for the parent, and this is what would happen when calling `p.destruct()`. However, an application may also choose to delete `Node`! This would remove `Node` from all entities, but the order in which this happens, and therefore the order in which triggers are executed, is undefined.
+
+While the simple solution to this is to just "not do that" things are a bit less straightforward during world cleanup. The world has no knowledge of which entities should be cleaned up first, which could result in an unexpected ordering of trigger invocations.
+
+Applications can however organize entities in a way that helps world cleanup to do the right thing. To know how, it is good to have an understanding of the different steps that are executed during world cleanup:
+
+1. **Find all root entities**
+World cleanup starts by finding all root entities. These are entities that do not have the builtin `ChildOf` relationship.
+
+2. **Filter out modules.** 
+Modules are skipped initially because they are likely to contain components, and we want to cleanup those last to avoid the above ordering issues. All entities that have the builtin `Module` tag are considered modules.
+
+3. **Filter out all triggers/observers**
+If the root contains any trigger or observer entities, those will not be deleted until later. This gives them a chance to run while the world is being cleaned up.
+
+4. **Filter out entities that have no children**
+If entities have no children they cannot trigger complex cleanup logic. Furthermore, this decreases the likelyhood that we delete an entity (or component) that was added to another entity for which we want to run triggers.
+
+5. **Filter out entities that have a Panic cleanup action**
+Entities with a `Panic` action will be cleaned up last.
+
+6. **Delete entities**
+The entities that were not filtered out will be deleted.
+
+7. **Delete modules and child-less entities**
+The module entities and entities without children will be deleted.
+
+8. **Delete everything else**
+The last step will delete all remaining entities. At this point cleanup policies are no longer invoked.
+
+This condenses down to two recommendations to make sure cleanup policies are predictable:
+
+- Organize tags, components and relationships in modules
+- Make sure that the entities you want to delete first are in the root
+
+When this is not sufficient, for example because an application does not use modules or the builtin `ChildOf` relationship, an application should manually cleanup entities before cleaning up the world.
+
 ## Relation properties
 Relation properties are tags that can be added to relations to modify their behavior.
-
-### Cleanup properties
-Cleanup properties determine what happens when a component, tag, relation or relation object is deleted. The default behavior is that all instances of the deleted id will be removed. Consider the following example:
-
-```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
-
-ecs_add_pair(world, Bob, Likes, Alice);
-
-// This removes (Likes, Alice) from Bob, and all other entities that had a 
-// relation with Alice
-ecs_delete(world, Alice);
-```
-```cpp
-auto Likes = world.entity();
-auto Bob = world.entity();
-auto Alice = world.entity();
-
-Bob.add(Likes, Alice);
-
-// This removes (Likes, Alice) from Bob, and all other entities that had a 
-// relation with Alice
-Alice.destruct();
-```
-
-This behavior can be customized with cleanup properties as the above behavior is not always what you want. A typical example is the builtin `ChildOf` relation, where child entities should be deleted when the parent is deleted:
-
-```c
-ecs_entity_t Spaceship = ecs_new_id(world);
-ecs_entity_t Cockpit = ecs_new_id(world);
-
-ecs_add_pair(world, Cockpit, EcsChildOf, Spaceship);
-
-// This deletes both the spaceship and the cockpit entity
-ecs_delete(world, Spaceship);
-```
-```cpp
-auto Spaceship = world.entity();
-auto Cockpit = world.entity();
-
-Cockpit.child_of(Spaceship);
-
-// This deletes both the spaceship and the cockpit entity
-Spaceship.destruct();
-```
-
-To customize this behavior, an application can add the `OnDeleteObject` policy to the relation. The following examples show how:
-
-```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
-
-ecs_add_pair(world, Bob, Likes, Alice);
-
-// When Alice is deleted, remove (Likes, Alice) from Bob
-ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsRemove);
-
-// When Alice is deleted, delete Bob 
-ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsDelete);
-
-// When Alice is deleted, throw an error (assert)
-ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsPanic);
-```
-```cpp
-auto Likes = world.entity();
-auto Bob = world.entity();
-auto Alice = world.entity();
-
-Bob.add(Likes, Alice);
-
-// When Alice is deleted, remove (Likes, Alice) from Bob
-Likes.add(flecs::OnDeleteObject, flecs::Remove)
-
-// When Alice is deleted, delete Bob 
-Likes.add(flecs::OnDeleteObject, flecs::Delete);
-
-// When Alice is deleted, throw an error (assert)
-Likes.add(flecs::OnDeleteObject, flecs::Panic);
-```
-
-An application may also specify what cleanup action should be performed if the relation itself is deleted with the `OnDelete` policy:
-
-```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
-
-ecs_add_pair(world, Bob, Likes, Alice);
-
-// When Likes is deleted, remove (Likes, Alice) from Bob
-ecs_add_pair(world, Likes, EcsOnDelete, EcsRemove);
-
-// When Likes is deleted, delete Bob 
-ecs_add_pair(world, Likes, EcsOnDelete, EcsDelete);
-
-// When Likes is deleted, throw an error (assert)
-ecs_add_pair(world, Likes, EcsOnDelete, EcsPanic);
-```
-```cpp
-auto Likes = world.entity();
-auto Bob = world.entity();
-auto Alice = world.entity();
-
-Bob.add(Likes, Alice);
-
-// When Likes is deleted, remove (Likes, Alice) from Bob
-Likes.add(flecs::OnDelete, flecs::Remove)
-
-// When Likes is deleted, delete Bob 
-Likes.add(flecs::OnDelete, flecs::Delete);
-
-// When Likes is deleted, throw an error (assert)
-Likes.add(flecs::OnDelete, flecs::Panic);
-```
-
-To prevent accidentally deleting a component, components are created by default with the `(OnDelete, Panic)` policy.
 
 ### Tag property
 A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:
