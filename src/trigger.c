@@ -823,10 +823,10 @@ ecs_entity_t ecs_trigger_init(
     char *name = NULL;
     
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
     const char *expr = desc->expr;
     ecs_trigger_t *trigger = NULL;

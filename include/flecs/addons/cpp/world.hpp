@@ -638,26 +638,6 @@ struct world {
             _::cpp_type<Obj>::id(m_world));
     }
 
-    /** Enable locking.
-     * 
-     * @param enabled True if locking should be enabled, false if not.
-     */
-    bool enable_locking(bool enabled) {
-        return ecs_enable_locking(m_world, enabled);
-    }
-
-    /** Lock world.
-     */
-    void lock() {
-        ecs_lock(m_world);
-    }
-
-    /** Unlock world.
-     */
-    void unlock() {
-        ecs_unlock(m_world);
-    }
-
     /** All entities created in function are created with id.
      */
     template <typename Func>

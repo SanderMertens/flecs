@@ -72,7 +72,7 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_COLUMN_IS_NOT_SHARED) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_IS_SHARED) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_TYPE_MISMATCH) != NULL);
-    test_assert(ecs_strerror(ECS_INVALID_WHILE_ITERATING) != NULL);
+    test_assert(ecs_strerror(ECS_INVALID_WHILE_READONLY) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_FROM_WORKER) != NULL);
     test_assert(ecs_strerror(ECS_OUT_OF_RANGE) != NULL);
     test_assert(ecs_strerror(ECS_OPERATION_FAILED) != NULL);

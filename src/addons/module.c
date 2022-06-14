@@ -31,7 +31,8 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name)
 {
-    ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), 
+        ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;

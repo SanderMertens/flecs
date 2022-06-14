@@ -177,7 +177,7 @@ ecs_stage_t *flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!world->is_readonly || (ecs_get_stage_count(world) <= 1), 
+        ecs_assert(!(world->flags & EcsWorldReadonly) || (ecs_get_stage_count(world) <= 1), 
             ECS_INVALID_OPERATION, NULL);
         return &world->stages[0];
 
@@ -200,10 +200,10 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage_world);
     ecs_poly_assert(world, ecs_world_t);
 
-    bool is_readonly = world->is_readonly;
+    bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
     bool is_deferred = ecs_is_deferred(world);
 
-    if (!world->is_readonly && !is_deferred) {
+    if (!is_readonly && !is_deferred) {
         state->is_readonly = false;
         state->is_deferred = false;
         return world;
@@ -213,13 +213,13 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Cannot suspend when running with multiple threads */
     ecs_assert(ecs_get_stage_count(world) <= 1, 
-        ECS_INVALID_WHILE_ITERATING, NULL);
+        ECS_INVALID_WHILE_READONLY, NULL);
 
     state->is_readonly = is_readonly;
     state->is_deferred = is_deferred;
 
     /* Silence readonly checks */
-    world->is_readonly = false;
+    world->flags &= ~EcsWorldReadonly;
 
     /* Hack around safety checks (this ought to look ugly) */
     ecs_world_t *temp_world = world;
@@ -250,7 +250,7 @@ void flecs_resume_readonly(
         ecs_run_aperiodic(world, 0);
 
         /* Restore readonly state / defer count */
-        world->is_readonly = state->is_readonly;
+        ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
         stage->defer_queue = state->defer_queue;
         stage->scope = state->scope;
@@ -444,12 +444,6 @@ void fini_roots(ecs_world_t *world) {
     ecs_dbg_2("cleanup root entities");
     ecs_log_push();
 
-    ecs_id_record_t *on_delete_panic = flecs_id_record_get(world, 
-        ecs_pair(EcsOnDelete, EcsPanic));
-    ecs_id_record_t *on_delete_obj_panic = flecs_id_record_get(world, 
-        ecs_pair(EcsOnDeleteObject, EcsPanic));
-    ecs_id_record_t *triggers = flecs_id_record_get(world, ecs_id(EcsTrigger));
-    ecs_id_record_t *observers = flecs_id_record_get(world, ecs_id(EcsObserver));
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
@@ -468,16 +462,8 @@ void fini_roots(ecs_world_t *world) {
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
         ecs_table_t *table = tr->hdr.table;
-        if (table->flags & EcsTableHasModule) {
+        if (table->flags & EcsTableHasBuiltins) {
             continue; /* Filter out modules */
-        }
-
-        if ((flecs_id_record_get_table(on_delete_panic, table) != NULL) ||
-            (flecs_id_record_get_table(on_delete_obj_panic, table) != NULL) ||
-            (flecs_id_record_get_table(triggers, table) != NULL) ||
-            (flecs_id_record_get_table(observers, table) != NULL)) 
-        {
-            continue; /* Postpone deleting tables with panic policies */
         }
 
         int32_t i, count = table->data.entities.count;
@@ -492,33 +478,6 @@ void fini_roots(ecs_world_t *world) {
                 continue; /* Filter out entities that aren't objects */
             }
 
-            ecs_delete(world, entities[i]);
-        }
-    }
-
-    ecs_defer_end(world);
-
-    /* Update table administration */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
-
-    /* Delete remaining root entities */
-    has_roots = flecs_table_cache_iter(&idr->cache, &it);
-    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
-    ecs_defer_begin(world);
-
-    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-        ecs_table_t *table = tr->hdr.table;
-        if ((flecs_id_record_get_table(on_delete_panic, table) != NULL) ||
-            (flecs_id_record_get_table(on_delete_obj_panic, table) != NULL) ||
-            (flecs_id_record_get_table(triggers, table) != NULL) ||
-            (flecs_id_record_get_table(observers, table) != NULL)) 
-        {
-            continue; /* Postpone deleting tables with panic policies */
-        }
-
-        int32_t i, count = table->data.entities.count;
-        ecs_entity_t *entities = table->data.entities.array;
-        for (i = count - 1; i >= 0; i --) {
             ecs_delete(world, entities[i]);
         }
     }
@@ -834,7 +793,7 @@ void ecs_quit(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
-    world->should_quit = true;
+    world->flags |= EcsWorldQuit;
 error:
     return;
 }
@@ -844,7 +803,7 @@ bool ecs_should_quit(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
-    return world->should_quit;
+    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
 error:
     return true;
 }
@@ -1190,17 +1149,19 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
     ecs_trace("#[bold]shutting down world");
     ecs_log_push();
+
+    world->flags |= EcsWorldQuit;
 
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
     fini_roots(world);
 
-    world->is_fini = true;
+    world->flags |= EcsWorldFini;
 
     /* Run fini actions (simple callbacks ran when world is deleted) before
      * destroying the storage */
@@ -1226,10 +1187,6 @@ int ecs_fini(
      * validity checks on entity ids, even though after store cleanup the index
      * will be empty, so all entity ids are invalid. */
     flecs_sparse_fini(&world->store.entity_index);
-    
-    if (world->locking_enabled) {
-        ecs_os_mutex_free(world->mutex);
-    }
 
     ecs_trace("table store deinitialized");
 
@@ -1269,7 +1226,7 @@ bool ecs_is_fini(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
-    return world->is_fini;
+    return ECS_BIT_IS_SET(world->flags, EcsWorldFini);
 }
 
 void ecs_dim(
@@ -1296,7 +1253,7 @@ void ecs_measure_frame_time(
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->info.target_fps == 0.0f || enable) {
-        world->measure_frame_time = enable;
+        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
     }
 error:
     return;
@@ -1308,7 +1265,7 @@ void ecs_measure_system_time(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-    world->measure_system_time = enable;
+    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
 error:
     return;
 }
@@ -1381,64 +1338,6 @@ void ecs_set_entity_generation(
 {
     flecs_sparse_set_generation(
         &world->store.entity_index, entity_with_generation);
-}
-
-bool ecs_enable_locking(
-    ecs_world_t *world,
-    bool enable)
-{
-    ecs_poly_assert(world, ecs_world_t);
-
-    if (enable) {
-        if (!world->locking_enabled) {
-            world->mutex = ecs_os_mutex_new();
-            world->thr_sync = ecs_os_mutex_new();
-            world->thr_cond = ecs_os_cond_new();
-        }
-    } else {
-        if (world->locking_enabled) {
-            ecs_os_mutex_free(world->mutex);
-            ecs_os_mutex_free(world->thr_sync);
-            ecs_os_cond_free(world->thr_cond);
-        }
-    }
-
-    bool old = world->locking_enabled;
-    world->locking_enabled = enable;
-    return old;
-}
-
-void ecs_lock(
-    ecs_world_t *world)
-{
-    ecs_poly_assert(world, ecs_world_t);    
-    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
-    ecs_os_mutex_lock(world->mutex);
-}
-
-void ecs_unlock(
-    ecs_world_t *world)
-{
-    ecs_poly_assert(world, ecs_world_t);    
-    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
-    ecs_os_mutex_unlock(world->mutex);
-}
-
-void ecs_begin_wait(
-    ecs_world_t *world)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
-    ecs_os_mutex_lock(world->thr_sync);
-    ecs_os_cond_wait(world->thr_cond, world->thr_sync);
-}
-
-void ecs_end_wait(
-    ecs_world_t *world)
-{
-    ecs_poly_assert(world, ecs_world_t);    
-    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
-    ecs_os_mutex_unlock(world->thr_sync);
 }
 
 const ecs_type_info_t* flecs_type_info_get(
@@ -1600,7 +1499,7 @@ FLECS_FLOAT start_measure_frame(
 
     FLECS_FLOAT delta_time = 0;
 
-    if (world->measure_frame_time || (user_delta_time == 0)) {
+    if ((world->flags & EcsWorldMeasureFrameTime) || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
@@ -1635,7 +1534,7 @@ void stop_measure_frame(
 {
     ecs_poly_assert(world, ecs_world_t);  
 
-    if (world->measure_frame_time) {
+    if (world->flags & EcsWorldMeasureFrameTime) {
         ecs_time_t t = world->frame_start_time;
         world->info.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
     }
@@ -1646,13 +1545,9 @@ FLECS_FLOAT ecs_frame_begin(
     FLECS_FLOAT user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_check(user_delta_time != 0 || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
-
-    if (world->locking_enabled) {
-        ecs_lock(world);
-    }
 
     /* Start measuring total frame time */
     FLECS_FLOAT delta_time = start_measure_frame(world, user_delta_time);
@@ -1677,7 +1572,7 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
 
     world->info.frame_count_total ++;
     
@@ -1685,14 +1580,6 @@ void ecs_frame_end(
     int32_t i, count = world->stage_count;
     for (i = 0; i < count; i ++) {
         flecs_stage_merge_post_frame(world, &stages[i]);
-    }
-
-    if (world->locking_enabled) {
-        ecs_unlock(world);
-
-        ecs_os_mutex_lock(world->thr_sync);
-        ecs_os_cond_broadcast(world->thr_cond);
-        ecs_os_mutex_unlock(world->thr_sync);
     }
 
     stop_measure_frame(world);
@@ -1741,7 +1628,7 @@ void flecs_process_pending_tables(
 
     /* We can't update the administration while in readonly mode, but we can
      * ensure that when this function is called there are no pending events. */
-    if (world_r->is_readonly) {
+    if (world_r->flags & EcsWorldReadonly) {
         ecs_assert(flecs_sparse_count(world_r->pending_tables) == 0,
             ECS_INTERNAL_ERROR, NULL);
         return;
@@ -1824,7 +1711,7 @@ void flecs_table_set_empty(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_table_count(table)) {
         table->generation = 0;

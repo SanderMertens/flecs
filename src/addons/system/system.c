@@ -25,7 +25,7 @@ void ecs_system_activate(
     bool activate,
     const EcsSystem *system_data)
 {
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
         /* If activating system, ensure that it doesn't have the Inactive tag.
@@ -73,7 +73,7 @@ void ecs_enable_system(
     bool enabled)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_t *query = system_data->query;
     if (!query) {
@@ -136,7 +136,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     ecs_time_t time_start;
-    bool measure_time = world->measure_system_time;
+    bool measure_time = ECS_BIT_IS_SET(world->flags, EcsWorldMeasureSystemTime);
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
@@ -364,7 +364,8 @@ ecs_entity_t ecs_system_init(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), 
+        ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {

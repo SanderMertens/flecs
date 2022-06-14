@@ -248,7 +248,7 @@ void flecs_query_remove_table_node(
     node->next = NULL;
 
 #ifdef FLECS_SYSTEM
-    if (query->list.first == NULL && query->system && !query->world->is_fini) {
+    if (query->list.first == NULL && query->system) {
         ecs_system_activate(query->world, query->system, false, NULL);
     }
 #endif
@@ -1703,7 +1703,7 @@ ecs_query_t* ecs_query_init(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
     /* Ensure that while initially populating the query with tables, they are
      * in the right empty/non-empty list. This ensures the query won't miss
@@ -1845,7 +1845,7 @@ void ecs_query_fini(
     ecs_world_t *world = query->world;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (!world->is_fini) {
+    if (!(world->flags & EcsWorldFini)) {
         if (query->observer) {
             ecs_delete(world, query->observer);
         }
@@ -1912,7 +1912,7 @@ ecs_iter_t ecs_query_iter(
     flecs_query_sort_tables(world, query);
 
     /* If monitors changed, do query rematching */
-    if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
+    if (!(world->flags & EcsWorldReadonly) && query->flags & EcsQueryHasRefs) {
         flecs_eval_component_monitors(world);
     }
 

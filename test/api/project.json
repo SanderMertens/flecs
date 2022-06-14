@@ -613,7 +613,9 @@
                 "delete_nested_in_on_remove",
                 "add_deleted_in_on_remove",
                 "delete_tree_w_query",
-                "fini_cleanup_order"
+                "fini_cleanup_order",
+                "on_delete_parent_w_in_use_id_w_remove",
+                "on_delete_parent_w_in_use_id_w_delete"
             ]
         }, {
             "id": "Set",

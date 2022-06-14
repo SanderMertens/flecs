@@ -1055,7 +1055,7 @@ void flecs_table_free(
         world->info.trivial_table_count -= !(table->flags & EcsTableIsComplex);
     }
 
-    if (!world->is_fini) {
+    if (!(world->flags & EcsWorldFini)) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(table);
         flecs_sparse_remove(&world->store.tables, table->id);
@@ -1412,7 +1412,7 @@ int32_t grow_data(
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(world, table, 0);
 
-    if (!world->is_readonly && !cur_count) {
+    if (!(world->flags & EcsWorldReadonly) && !cur_count) {
         flecs_table_set_empty(world, table);
     }
 
@@ -2311,7 +2311,7 @@ void flecs_table_notify(
     ecs_table_t *table,
     ecs_table_event_t *event)
 {
-    if (world->is_fini) {
+    if (world->flags & EcsWorldFini) {
         return;
     }
 
@@ -2329,7 +2329,7 @@ void ecs_table_lock(
     ecs_table_t *table)
 {
     if (table) {
-        if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
+        if (ecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
             table->lock ++;
         }
     }
@@ -2340,7 +2340,7 @@ void ecs_table_unlock(
     ecs_table_t *table)
 {
     if (table) {
-        if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
+        if (ecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
             table->lock --;
             ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
         }

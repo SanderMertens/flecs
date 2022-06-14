@@ -838,7 +838,7 @@ void commit(
     bool construct,
     bool notify_on_set)
 {
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
     
     ecs_table_t *src_table = record ? record->table : NULL;
     if (src_table == dst_table) {
@@ -1404,10 +1404,10 @@ ecs_entity_t ecs_new_low_id(
      * the few functions that may modify the world while it is in readonly mode,
      * but only if single threaded. */
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-    if (unsafe_world->is_readonly) {
+    if (unsafe_world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_check(ecs_get_stage_count(world) <= 1,
-            ECS_INVALID_WHILE_ITERATING, NULL);
+            ECS_INVALID_WHILE_READONLY, NULL);
     }
 
     ecs_entity_t id = 0;
@@ -2114,8 +2114,11 @@ void flecs_throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    char *id_str = ecs_id_str(world, id);
-    ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
+    char *id_str = NULL;
+    if (!(world->flags & EcsWorldQuit)) {
+        id_str = ecs_id_str(world, id);
+        ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
+    }
 error:
     ecs_os_free(id_str);
 }
@@ -2167,15 +2170,18 @@ void flecs_targets_mark_for_delete(
         ecs_entity_t e = entities[i];
         if (flags & EcsEntityObservedId) {
             if ((idr = flecs_id_record_get(world, e))) {
-                flecs_id_mark_for_delete(world, idr, 0);
+                flecs_id_mark_for_delete(world, idr, 
+                    ECS_ID_ON_DELETE(idr->flags));
             }
             if ((idr = flecs_id_record_get(world, ecs_pair(e, EcsWildcard)))) {
-                flecs_id_mark_for_delete(world, idr, 0);
+                flecs_id_mark_for_delete(world, idr, 
+                    ECS_ID_ON_DELETE(idr->flags));
             }
         }
         if (flags & EcsEntityObservedObject) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
-                flecs_id_mark_for_delete(world, idr, 0);
+                flecs_id_mark_for_delete(world, idr, 
+                    ECS_ID_ON_DELETE_OBJECT(idr->flags));
             }
         }
     }
@@ -2423,6 +2429,7 @@ bool flecs_on_delete_clear_ids(
 
     for (i = 0; i < count; i ++) {
         ecs_id_record_t *idr = ids[i].idr;
+
         flecs_id_record_release_tables(world, idr);
 
         /* Release the claim taken by flecs_marked_id_push. This may delete the

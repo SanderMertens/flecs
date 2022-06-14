@@ -430,7 +430,7 @@ bool ecs_pipeline_update(
     bool start_of_frame)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* If any entity mutations happened that could have affected query matching
@@ -465,7 +465,8 @@ void ecs_run_pipeline(
     /* If the world is passed to ecs_run_pipeline, the function will take care
      * of staging, so the world should not be in staged mode when called. */
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(!(world->flags & EcsWorldReadonly), 
+            ECS_INVALID_OPERATION, NULL);
 
         /* Forward to worker_progress. This function handles staging, threading
          * and synchronization across workers. */
@@ -560,7 +561,7 @@ bool ecs_progress(
 
     ecs_frame_end(world);
 
-    return !world->should_quit;
+    return !ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
 }
 
 void ecs_set_time_scale(
@@ -580,7 +581,8 @@ void ecs_reset_clock(
 void ecs_deactivate_systems(
     ecs_world_t *world)
 {
-    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), 
+        ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t pipeline = world->pipeline;
     const EcsPipeline *pq = ecs_get( world, pipeline, EcsPipeline);
