@@ -292,7 +292,7 @@ void graph_edge_free(
     ecs_world_t *world,
     ecs_graph_edge_t *edge)
 {
-    if (world->is_fini) {
+    if (world->flags & EcsWorldFini) {
         ecs_os_free(edge);
     } else {
         edge->hdr.next = world->store.first_free;
@@ -527,7 +527,7 @@ ecs_table_t* find_or_create(
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {

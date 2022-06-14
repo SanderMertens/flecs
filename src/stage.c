@@ -50,7 +50,8 @@ void merge_stages(
     bool is_stage = ecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    bool measure_frame_time = world->measure_frame_time;
+    bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
+        EcsWorldMeasureFrameTime);
 
     ecs_time_t t_start;
     if (measure_frame_time) {
@@ -419,7 +420,8 @@ void ecs_set_stage_count(
     ecs_poly_assert(world, ecs_world_t);
 
     /* World must have at least one default stage */
-    ecs_assert(stage_count >= 1 || world->is_fini, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
+        ECS_INTERNAL_ERROR, NULL);
 
     bool auto_merge = true;
     if (world->stage_count >= 1) {
@@ -522,11 +524,11 @@ bool ecs_readonly_begin(
         ecs_defer_begin((ecs_world_t*)stage);
     }
 
-    bool is_readonly = world->is_readonly;
+    bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
 
     /* From this point on, the world is "locked" for mutations, and it is only 
      * allowed to enqueue commands from stages */
-    world->is_readonly = true;
+    ECS_BIT_SET(world->flags, EcsWorldReadonly);
 
     return is_readonly;
 }
@@ -535,10 +537,10 @@ void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, NULL);
 
     /* After this it is safe again to mutate the world directly */
-    world->is_readonly = false;
+    ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
 
     ecs_dbg_3("staging: end");
 
@@ -596,7 +598,7 @@ bool ecs_stage_is_readonly(
         }
     }
 
-    if (world->is_readonly) {
+    if (world->flags & EcsWorldReadonly) {
         if (ecs_poly_is(stage, ecs_world_t)) {
             return true;
         }

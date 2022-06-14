@@ -1233,7 +1233,7 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 
 /* Specifies that whenever a component/relation/object of relation is deleted an
  * error should be thrown. Must be combined with EcsOnDelete or 
- * EcsOnDeleteObject. */
+ * EcsOnDeleteObject. Panic actions are ignored after ecs_quit is called. */
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /* Used like (EcsDefaultChildComponent, Component). When added to an entity,
@@ -1494,69 +1494,6 @@ FLECS_API
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
-
-/** Enable world locking while in progress.
- * When locking is enabled, Flecs will lock the world while in progress. This
- * allows applications to interact with the world from other threads without
- * running into race conditions.
- *
- * This is a better alternative to applications putting a lock around calls to
- * ecs_progress, since ecs_progress can sleep when FPS control is enabled,
- * which is time during which other threads could perform work.
- *
- * Locking must be enabled before applications can use the ecs_lock and
- * ecs_unlock functions. Locking is turned off by default.
- *
- * @param world The world.
- * @param enable True if locking is to be enabled.
- * @result The previous value of the setting.
- */
-FLECS_API
-bool ecs_enable_locking(
-    ecs_world_t *world,
-    bool enable);
-
-/** Locks the world.
- * See ecs_enable_locking for details.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_lock(
-    ecs_world_t *world);
-
-/** Unlocks the world.
- * See ecs_enable_locking for details.
- * 
- * @param world The world.
- */
-FLECS_API
-void ecs_unlock(
-    ecs_world_t *world);
-
-/** Wait until world becomes available.
- * When a non-flecs thread needs to interact with the world, it should invoke
- * this function to wait until the world becomes available (as in, it is not
- * progressing the frame). Invoking this function guarantees that the thread
- * will not starve. (as opposed to simply taking the world lock).
- *
- * An application will have to invoke ecs_end_wait after this function returns.
- * 
- * @param world The world.
- */
-FLECS_API 
-void ecs_begin_wait(
-    ecs_world_t *world);
-
-/** Release world after calling ecs_begin_wait.
- * This operation should be invoked after invoking ecs_begin_wait, and will
- * release the world back to the thread running the main loop.
- *
- * @param world The world.
- */
-FLECS_API 
-void ecs_end_wait(
-    ecs_world_t *world);
 
 /** Measure frame time. 
  * Frame time measurements measure the total time passed in a single frame, and 

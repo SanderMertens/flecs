@@ -899,6 +899,8 @@ void World_quit() {
         count ++;
     }
 
+    test_int(count, 1);
+
     ecs_fini(world);
 }
 

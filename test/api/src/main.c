@@ -575,6 +575,8 @@ void OnDelete_delete_nested_in_on_remove(void);
 void OnDelete_add_deleted_in_on_remove(void);
 void OnDelete_delete_tree_w_query(void);
 void OnDelete_fini_cleanup_order(void);
+void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
+void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4146,6 +4148,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_cleanup_order",
         OnDelete_fini_cleanup_order
+    },
+    {
+        "on_delete_parent_w_in_use_id_w_remove",
+        OnDelete_on_delete_parent_w_in_use_id_w_remove
+    },
+    {
+        "on_delete_parent_w_in_use_id_w_delete",
+        OnDelete_on_delete_parent_w_in_use_id_w_delete
     }
 };
 
@@ -9732,7 +9742,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        87,
+        89,
         OnDelete_testcases
     },
     {

@@ -136,9 +136,21 @@ void assert_relation_unused(
     ecs_entity_t rel,
     ecs_entity_t property)
 {
-    if (world->is_fini) {
+    if (world->flags & EcsWorldFini) {
         return;
     }
+
+    ecs_vector_t *marked_ids = world->store.marked_ids;
+    int32_t i, count = ecs_vector_count(marked_ids);
+    for (i = 0; i < count; i ++) {
+        ecs_marked_id_t *mid = ecs_vector_get(marked_ids, ecs_marked_id_t, i);
+        if (mid->id == ecs_pair(rel, EcsWildcard)) {
+            /* If id is being cleaned up, no need to throw error as tables will
+             * be cleaned up */
+            return;
+        }
+    }
+
     if (ecs_id_in_use(world, ecs_pair(rel, EcsWildcard))) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);

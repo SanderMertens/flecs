@@ -506,19 +506,16 @@ struct ecs_world_t {
 
 
     /* --  Data storage -- */
-
     ecs_store_t store;
 
 
     /* --  Storages for API objects -- */
-
     ecs_sparse_t *queries;         /* sparse<query_id, ecs_query_t> */
     ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
     ecs_sparse_t *observers;       /* sparse<query_id, ecs_observer_t> */
 
 
     /* --  Pending table event buffers -- */
-
     ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
     
@@ -528,26 +525,22 @@ struct ecs_world_t {
 
 
     /* -- Systems -- */
-
     ecs_entity_t pipeline;             /* Current pipeline */
     ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
 
 
     /* -- Identifiers -- */
-
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
     const char *name_prefix;     /* Remove prefix from C names in modules */
 
 
     /* -- Staging -- */
-
     ecs_stage_t *stages;         /* Stages */
     int32_t stage_count;         /* Number of stages */
 
 
     /* -- Multithreading -- */
-
     ecs_os_cond_t worker_cond;   /* Signal that worker threads can start */
     ecs_os_cond_t sync_cond;     /* Signal that worker thread job is done */
     ecs_os_mutex_t sync_mutex;   /* Mutex for job_cond */
@@ -556,32 +549,18 @@ struct ecs_world_t {
 
 
     /* -- Time management -- */
-
     ecs_time_t world_start_time; /* Timestamp of simulation start */
     ecs_time_t frame_start_time; /* Timestamp of frame start */
     FLECS_FLOAT fps_sleep;       /* Sleep time to prevent fps overshoot */
 
 
     /* -- Metrics -- */
-
     ecs_world_info_t info;
 
 
-    /* -- World lock -- */
+    /* -- World flags -- */
+    ecs_flags32_t flags;
 
-    ecs_os_mutex_t mutex;        /* Locks the world if locking enabled */
-    ecs_os_mutex_t thr_sync;     /* Used to signal threads at end of frame */
-    ecs_os_cond_t thr_cond;      /* Used to signal threads at end of frame */
-
-    /* -- World state -- */
-
-    bool quit_workers;           /* Signals worker threads to quit */
-    bool is_readonly;            /* Is world being progressed */
-    bool is_fini;                /* Is the world being cleaned up? */
-    bool measure_frame_time;     /* Time spent on each frame */
-    bool measure_system_time;    /* Time spent by each system */
-    bool should_quit;            /* Did a system signal that app should quit */
-    bool locking_enabled;        /* Lock world when in progress */ 
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */

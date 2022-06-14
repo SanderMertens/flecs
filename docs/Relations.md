@@ -699,33 +699,24 @@ Applications can however organize entities in a way that helps world cleanup to 
 1. **Find all root entities**
 World cleanup starts by finding all root entities. These are entities that do not have the builtin `ChildOf` relationship.
 
-2. **Filter out modules.** 
-Modules are skipped initially because they are likely to contain components, and we want to cleanup those last to avoid the above ordering issues. All entities that have the builtin `Module` tag are considered modules.
+2. **Filter out modules, components, triggers, observers and systems** 
+Filtering out these entities ensures that components are not cleaned up before the entities that use them. Triggers, observers and systems aren't deleted yet as they may still be invoked during cleanup.
 
-3. **Filter out all triggers/observers**
-If the root contains any trigger or observer entities, those will not be deleted until later. This gives them a chance to run while the world is being cleaned up.
-
-4. **Filter out entities that have no children**
+3. **Filter out entities that have no children**
 If entities have no children they cannot trigger complex cleanup logic. Furthermore, this decreases the likelyhood that we delete an entity (or component) that was added to another entity for which we want to run triggers.
 
-5. **Filter out entities that have a Panic cleanup action**
-Entities with a `Panic` action will be cleaned up last.
+4. **Delete root entities**
+The root entities that were not filtered out will be deleted.
 
-6. **Delete entities**
-The entities that were not filtered out will be deleted.
+5. **Delete everything else**
+The last step will delete all remaining entities. At this point cleanup policies are no longer considered.
 
-7. **Delete modules and child-less entities**
-The module entities and entities without children will be deleted.
+This condenses down into one recommendations that when followed will improve cleanup behavior significantly during world shutdown:
 
-8. **Delete everything else**
-The last step will delete all remaining entities. At this point cleanup policies are no longer invoked.
+**Organize components, triggers, observers and systems in modules.**
+Storing these entities in modules ensures that they stay alive for as long as possible. This leads to more predictable cleanup ordering as components will be deleted as their entities are, vs. when the component is deleted. It also ensures that triggers and observers are not deleted while matching events are still being generated.
 
-This condenses down to two recommendations to make sure cleanup policies are predictable:
-
-- Organize tags, components and relationships in modules
-- Make sure that the entities you want to delete first are in the root
-
-When this is not sufficient, for example because an application does not use modules or the builtin `ChildOf` relationship, an application should manually cleanup entities before cleaning up the world.
+**Avoid organizing components, triggers, observers and systems under entities that are not modules**. If a non-module entity with children is stored in the root, it will get cleaned up along with other regular entities. If you have entities such as these organized in a non-module scope, consider adding the `EcsModule`/`flecs::Module` tag to the root of that scope.
 
 ## Relation properties
 Relation properties are tags that can be added to relations to modify their behavior.

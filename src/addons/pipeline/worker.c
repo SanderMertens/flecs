@@ -15,13 +15,13 @@ void* worker(void *arg) {
     ecs_os_mutex_lock(world->sync_mutex);
     world->workers_running ++;
 
-    if (!world->quit_workers) {
+    if (!(world->flags & EcsWorldQuitWorkers)) {
         ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
     }
 
     ecs_os_mutex_unlock(world->sync_mutex);
 
-    while (!world->quit_workers) {
+    while (!(world->flags & EcsWorldQuitWorkers)) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
  
         ecs_run_pipeline(
@@ -153,7 +153,7 @@ bool ecs_stop_threads(
     wait_for_workers(world);
 
     /* Signal threads should quit */
-    world->quit_workers = true;
+    world->flags |= EcsWorldQuitWorkers;
     signal_workers(world);
 
     /* Join all threads with main */
@@ -162,7 +162,7 @@ bool ecs_stop_threads(
         stages[i].thread = 0;
     }
 
-    world->quit_workers = false;
+    world->flags &= ~EcsWorldQuitWorkers;
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Deinitialize stages */
@@ -263,7 +263,7 @@ void ecs_workers_progress(
     int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_time_t start = {0};
-    if (world->measure_frame_time) {
+    if (world->flags & EcsWorldMeasureFrameTime) {
         ecs_time_measure(&start);
     }
 
@@ -317,7 +317,7 @@ void ecs_workers_progress(
         }
     }
 
-    if (world->measure_frame_time) {
+    if (world->flags & EcsWorldMeasureFrameTime) {
         world->info.system_time_total += (float)ecs_time_measure(&start);
     }    
 }
