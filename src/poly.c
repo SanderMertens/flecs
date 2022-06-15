@@ -30,7 +30,8 @@ ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_t, world),
-        [EcsMixinIterable] = offsetof(ecs_query_t, iterable)
+        [EcsMixinIterable] = offsetof(ecs_query_t, iterable),
+        [EcsMixinDtor] = offsetof(ecs_query_t, dtor)
     }
 };
 
@@ -180,4 +181,10 @@ const ecs_world_t* ecs_get_world(
     const ecs_poly_t *poly)
 {
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
+}
+
+ecs_poly_dtor_t* ecs_get_dtor(
+    const ecs_poly_t *poly)
+{
+    return (ecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }

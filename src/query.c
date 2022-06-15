@@ -1699,7 +1699,6 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
-    ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
@@ -1711,9 +1710,7 @@ ecs_query_t* ecs_query_init(
      * change back to being in sync before processing pending events. */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
-    result = flecs_sparse_add(world->queries, ecs_query_t);
-    ecs_poly_init(result, ecs_query_t);
-    result->id = flecs_sparse_last_id(world->queries);
+    ecs_query_t *result = ecs_poly_new(ecs_query_t);
 
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
@@ -1743,6 +1740,7 @@ ecs_query_t* ecs_query_init(
 
     result->world = world;
     result->iterable.init = flecs_query_iter_init;
+    result->dtor = (ecs_poly_dtor_t)ecs_query_fini;
     result->system = desc->system;
     result->prev_match_count = -1;
 
@@ -1804,6 +1802,10 @@ ecs_query_t* ecs_query_init(
             desc->sort_table);
     }
 
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, EcsPoly, { .poly = result });
+    result->entity = e;
+
     return result;
 error:
     if (result) {
@@ -1811,7 +1813,7 @@ error:
         if (result->observer) {
             ecs_delete(world, result->observer);
         }
-        flecs_sparse_remove(world->queries, result->id);
+        ecs_os_free(result);
     }
     return NULL;
 }
@@ -1845,6 +1847,14 @@ void ecs_query_fini(
     ecs_world_t *world = query->world;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    if (query->entity) {
+        /* If query is associated with entity, delete it first */
+        ecs_entity_t entity = query->entity;
+        query->entity = 0;
+        ecs_delete(query->world, entity);
+        return;
+    }
+
     if (!(world->flags & EcsWorldFini)) {
         if (query->observer) {
             ecs_delete(world, query->observer);
@@ -1877,10 +1887,8 @@ void ecs_query_fini(
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
 
-    ecs_poly_fini(query, ecs_query_t);
-    
-    /* Remove query from storage */
-    flecs_sparse_remove(world->queries, query->id);
+    ecs_poly_free(query, ecs_query_t);
+
 error:
     return;
 }

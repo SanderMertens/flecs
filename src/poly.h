@@ -60,4 +60,7 @@ ecs_iterable_t* ecs_get_iterable(
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
 
+ecs_poly_dtor_t* ecs_get_dtor(
+    const ecs_poly_t *poly);
+
 #endif
