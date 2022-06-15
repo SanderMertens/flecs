@@ -127,6 +127,13 @@ static void ecs_on_remove(EcsObserver)(ecs_iter_t *it) {
     }
 }
 
+/* Destructor for poly component */
+ECS_DTOR(EcsPoly, ptr, {
+    ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+    ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+    dtor[0](ptr->poly);
+})
+
 
 /* -- Builtin triggers -- */
 
@@ -666,6 +673,11 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
+    flecs_type_info_init(world, EcsPoly, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsPoly)
+    });
+
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
 
@@ -686,6 +698,7 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsObserver);
     bootstrap_component(world, table, EcsIterable);
+    bootstrap_component(world, table, EcsPoly);
 
     world->info.last_component_id = EcsFirstUserComponentId;
     world->info.last_id = EcsFirstUserEntityId;

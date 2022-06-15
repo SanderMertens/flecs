@@ -12,6 +12,7 @@ const ecs_entity_t ecs_id(EcsTrigger) =            3;
 const ecs_entity_t ecs_id(EcsQuery) =              4;
 const ecs_entity_t ecs_id(EcsObserver) =           5;
 const ecs_entity_t ecs_id(EcsIterable) =           6;
+const ecs_entity_t ecs_id(EcsPoly) =               7;
 
 /* System module component ids */
 const ecs_entity_t ecs_id(EcsSystem) =             10;

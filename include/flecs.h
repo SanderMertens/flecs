@@ -926,6 +926,11 @@ typedef struct EcsQuery {
     ecs_query_t *query;
 } EcsQuery;
 
+/** Component for storing a poly object */
+typedef struct EcsPoly {
+    ecs_poly_t *poly;
+} EcsPoly;
+
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
 
@@ -1032,6 +1037,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
 FLECS_API extern const ecs_entity_t ecs_id(EcsQuery);
 FLECS_API extern const ecs_entity_t ecs_id(EcsObserver);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
+FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
 /* System module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsSystem);

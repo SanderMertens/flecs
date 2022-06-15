@@ -323,6 +323,7 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
     EcsMixinObservable,
     EcsMixinIterable,
+    EcsMixinDtor,
     EcsMixinBase,        /* If mixin can't be found in object, look in base */
     EcsMixinMax
 } ecs_mixin_kind_t;
@@ -341,6 +342,9 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_filter_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
+
+typedef void (*ecs_poly_dtor_t)(
+    ecs_poly_t *poly);
 
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
@@ -607,7 +611,6 @@ struct ecs_query_t {
     /* Flags for query properties */
     ecs_flags32_t flags;
 
-    uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Track if sorting is needed */
@@ -616,6 +619,8 @@ struct ecs_query_t {
     /* Mixins */
     ecs_world_t *world;
     ecs_iterable_t iterable;
+    ecs_poly_dtor_t dtor;
+    ecs_entity_t entity;
 };
 
 /** All triggers for a specific (component) id */
@@ -1474,6 +1479,9 @@ ecs_iterable_t* ecs_get_iterable(
 
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
+
+ecs_poly_dtor_t* ecs_get_dtor(
+    const ecs_poly_t *poly);
 
 #endif
 
@@ -4724,7 +4732,8 @@ ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_t, world),
-        [EcsMixinIterable] = offsetof(ecs_query_t, iterable)
+        [EcsMixinIterable] = offsetof(ecs_query_t, iterable),
+        [EcsMixinDtor] = offsetof(ecs_query_t, dtor)
     }
 };
 
@@ -4874,6 +4883,12 @@ const ecs_world_t* ecs_get_world(
     const ecs_poly_t *poly)
 {
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
+}
+
+ecs_poly_dtor_t* ecs_get_dtor(
+    const ecs_poly_t *poly)
+{
+    return (ecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }
 
 
@@ -35360,6 +35375,7 @@ const ecs_entity_t ecs_id(EcsTrigger) =            3;
 const ecs_entity_t ecs_id(EcsQuery) =              4;
 const ecs_entity_t ecs_id(EcsObserver) =           5;
 const ecs_entity_t ecs_id(EcsIterable) =           6;
+const ecs_entity_t ecs_id(EcsPoly) =               7;
 
 /* System module component ids */
 const ecs_entity_t ecs_id(EcsSystem) =             10;
@@ -43043,7 +43059,6 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
-    ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
@@ -43055,9 +43070,7 @@ ecs_query_t* ecs_query_init(
      * change back to being in sync before processing pending events. */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
-    result = flecs_sparse_add(world->queries, ecs_query_t);
-    ecs_poly_init(result, ecs_query_t);
-    result->id = flecs_sparse_last_id(world->queries);
+    ecs_query_t *result = ecs_poly_new(ecs_query_t);
 
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
@@ -43087,6 +43100,7 @@ ecs_query_t* ecs_query_init(
 
     result->world = world;
     result->iterable.init = flecs_query_iter_init;
+    result->dtor = (ecs_poly_dtor_t)ecs_query_fini;
     result->system = desc->system;
     result->prev_match_count = -1;
 
@@ -43148,6 +43162,10 @@ ecs_query_t* ecs_query_init(
             desc->sort_table);
     }
 
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, EcsPoly, { .poly = result });
+    result->entity = e;
+
     return result;
 error:
     if (result) {
@@ -43155,7 +43173,7 @@ error:
         if (result->observer) {
             ecs_delete(world, result->observer);
         }
-        flecs_sparse_remove(world->queries, result->id);
+        ecs_os_free(result);
     }
     return NULL;
 }
@@ -43189,6 +43207,14 @@ void ecs_query_fini(
     ecs_world_t *world = query->world;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    if (query->entity) {
+        /* If query is associated with entity, delete it first */
+        ecs_entity_t entity = query->entity;
+        query->entity = 0;
+        ecs_delete(query->world, entity);
+        return;
+    }
+
     if (!(world->flags & EcsWorldFini)) {
         if (query->observer) {
             ecs_delete(world, query->observer);
@@ -43221,10 +43247,8 @@ void ecs_query_fini(
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
 
-    ecs_poly_fini(query, ecs_query_t);
-    
-    /* Remove query from storage */
-    flecs_sparse_remove(world->queries, query->id);
+    ecs_poly_free(query, ecs_query_t);
+
 error:
     return;
 }
@@ -47672,6 +47696,13 @@ static void ecs_on_remove(EcsObserver)(ecs_iter_t *it) {
     }
 }
 
+/* Destructor for poly component */
+ECS_DTOR(EcsPoly, ptr, {
+    ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+    ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+    dtor[0](ptr->poly);
+})
+
 
 /* -- Builtin triggers -- */
 
@@ -48211,6 +48242,11 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsObserver)
     });
 
+    flecs_type_info_init(world, EcsPoly, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsPoly)
+    });
+
     flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
 
@@ -48231,6 +48267,7 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsObserver);
     bootstrap_component(world, table, EcsIterable);
+    bootstrap_component(world, table, EcsPoly);
 
     world->info.last_component_id = EcsFirstUserComponentId;
     world->info.last_id = EcsFirstUserEntityId;

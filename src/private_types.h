@@ -43,6 +43,7 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
     EcsMixinObservable,
     EcsMixinIterable,
+    EcsMixinDtor,
     EcsMixinBase,        /* If mixin can't be found in object, look in base */
     EcsMixinMax
 } ecs_mixin_kind_t;
@@ -61,6 +62,9 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_filter_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
+
+typedef void (*ecs_poly_dtor_t)(
+    ecs_poly_t *poly);
 
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
@@ -327,7 +331,6 @@ struct ecs_query_t {
     /* Flags for query properties */
     ecs_flags32_t flags;
 
-    uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Track if sorting is needed */
@@ -336,6 +339,8 @@ struct ecs_query_t {
     /* Mixins */
     ecs_world_t *world;
     ecs_iterable_t iterable;
+    ecs_poly_dtor_t dtor;
+    ecs_entity_t entity;
 };
 
 /** All triggers for a specific (component) id */
