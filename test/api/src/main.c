@@ -926,6 +926,7 @@ void Filter_filter_iter_pair_w_2_wildcards_1_match(void);
 void Filter_filter_iter_pair_w_2_wildcards_2x1_matches(void);
 void Filter_filter_iter_pair_w_2_wildcards_2x2_matches(void);
 void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches(void);
+void Filter_filter_iter_pair_w_wildcard_and_nothing(void);
 void Filter_filter_iter_any(void);
 void Filter_filter_iter_any_match_wildcard(void);
 void Filter_filter_iter_any_match_tag_and_wildcard(void);
@@ -5509,6 +5510,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches
     },
     {
+        "filter_iter_pair_w_wildcard_and_nothing",
+        Filter_filter_iter_pair_w_wildcard_and_nothing
+    },
+    {
         "filter_iter_any",
         Filter_filter_iter_any
     },
@@ -9813,7 +9818,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        190,
+        191,
         Filter_testcases
     },
     {

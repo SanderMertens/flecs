@@ -981,6 +981,7 @@
                 "filter_iter_pair_w_2_wildcards_2x1_matches",
                 "filter_iter_pair_w_2_wildcards_2x2_matches",
                 "filter_iter_pair_w_3_wildcards_2x2x2_matches",
+                "filter_iter_pair_w_wildcard_and_nothing",
                 "filter_iter_any",
                 "filter_iter_any_match_wildcard",
                 "filter_iter_any_match_tag_and_wildcard",

@@ -4770,6 +4770,43 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_pair_w_wildcard_and_nothing() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, R1);
+    ECS_TAG(world, R2);
+    ECS_TAG(world, O);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, R1, O);
+    ecs_add_pair(world, e, R2, O);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_pair(EcsWildcard, O) },
+            { .id = ecs_pair(EcsWildcard, O), .subj.set.mask = EcsNothing }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(R1, O), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(EcsWildcard, O), ecs_term_id(&it, 2));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(R2, O), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(EcsWildcard, O), ecs_term_id(&it, 2));
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_any() {
     ecs_world_t *world = ecs_mini();
 

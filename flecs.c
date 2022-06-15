@@ -39740,6 +39740,8 @@ bool ecs_filter_next_instanced(
                         /* Without a pivot term, we're iterating all tables with
                          * a wildcard, so the match count is meaningless. */
                         term_iter->match_count = 1;
+                    } else {
+                        it->match_indices[pivot_term] = term_iter->match_count;
                     }
 
                     iter->matches_left = term_iter->match_count;
@@ -39792,12 +39794,15 @@ bool ecs_filter_next_instanced(
              * is matched more than once, iterate remaining matches */
             if (!first && (iter->matches_left > 0)) {
                 table = it->table;
-                
+
                 /* Find first term that still has matches left */
                 int32_t i, j, count = it->term_count;
                 for (i = count - 1; i >= 0; i --) {
                     int32_t mi = -- it->match_indices[i];
                     if (mi) {
+                        if (mi < 0) {
+                            continue;
+                        }
                         break;
                     }
                 }
