@@ -41,6 +41,7 @@
 /* Mixin kinds */
 typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
+    EcsMixinEntity,
     EcsMixinObservable,
     EcsMixinIterable,
     EcsMixinDtor,
@@ -62,9 +63,7 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_filter_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
-
-typedef void (*ecs_poly_dtor_t)(
-    ecs_poly_t *poly);
+extern ecs_mixins_t ecs_observer_t_mixins;
 
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
@@ -515,9 +514,7 @@ struct ecs_world_t {
 
 
     /* --  Storages for API objects -- */
-    ecs_sparse_t *queries;         /* sparse<query_id, ecs_query_t> */
     ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
-    ecs_sparse_t *observers;       /* sparse<query_id, ecs_observer_t> */
 
 
     /* --  Pending table event buffers -- */

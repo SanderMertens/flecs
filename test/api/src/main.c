@@ -1377,7 +1377,6 @@ void Trigger_trigger_w_named_entity(void);
 void Trigger_on_remove_tree(void);
 void Trigger_set_get_context(void);
 void Trigger_set_get_binding_context(void);
-void Trigger_trigger_w_self(void);
 void Trigger_delete_trigger_w_delete_ctx(void);
 void Trigger_trigger_w_index(void);
 void Trigger_iter_type_set(void);
@@ -1456,7 +1455,6 @@ void Observer_3_terms_2_or_on_remove(void);
 void Observer_2_terms_w_from_entity_on_add(void);
 void Observer_2_terms_on_remove_on_clear(void);
 void Observer_2_terms_on_remove_on_delete(void);
-void Observer_observer_w_self(void);
 void Observer_add_after_delete_observer(void);
 void Observer_remove_after_delete_observer(void);
 void Observer_delete_observer_w_ctx(void);
@@ -7296,10 +7294,6 @@ bake_test_case Trigger_testcases[] = {
         Trigger_set_get_binding_context
     },
     {
-        "trigger_w_self",
-        Trigger_trigger_w_self
-    },
-    {
         "delete_trigger_w_delete_ctx",
         Trigger_delete_trigger_w_delete_ctx
     },
@@ -7605,10 +7599,6 @@ bake_test_case Observer_testcases[] = {
     {
         "2_terms_on_remove_on_delete",
         Observer_2_terms_on_remove_on_delete
-    },
-    {
-        "observer_w_self",
-        Observer_observer_w_self
     },
     {
         "add_after_delete_observer",
@@ -9888,14 +9878,18 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        110,
+        109,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
+<<<<<<< HEAD
         65,
+=======
+        63,
+>>>>>>> 076ac077 (Store observers in Poly component)
         Observer_testcases
     },
     {

@@ -2444,6 +2444,23 @@ error:
     return NULL;
 }
 
+void* ecs_table_get_column(
+    ecs_table_t *table,
+    int32_t index)
+{
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t storage_index = table->storage_map[index];
+    if (storage_index == -1) {
+        return NULL;
+    }
+
+    return table->data.columns[storage_index].array;
+error:
+    return NULL;
+}
+
 void* ecs_record_get_column(
     ecs_record_t *r,
     int32_t column,

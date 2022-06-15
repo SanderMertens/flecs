@@ -32,9 +32,32 @@ void _ecs_poly_fini(
     ecs_poly_fini(obj, type);\
     ecs_os_free(obj)
 
+/* Bind entity with poly object */
+void ecs_poly_bind(
+    ecs_poly_t *poly,
+    ecs_entity_t kind,
+    ecs_entity_t entity);
+
+/* Get or create poly component for an entity */
+EcsPoly* ecs_poly_bind_ensure(
+    ecs_world_t *world,
+    ecs_entity_t kind,
+    ecs_entity_t entity);
+
+/* Get poly component for an entity */
+const EcsPoly* ecs_poly_bind_get(
+    const ecs_world_t *world,
+    ecs_entity_t kind,
+    ecs_entity_t entity);
+
+/* Create entity for poly */
+ecs_entity_t ecs_poly_entity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc);
+
 /* Utilities for testing/asserting an object type */
 #ifndef FLECS_NDEBUG
-void _ecs_poly_assert(
+void* _ecs_poly_assert(
     const ecs_poly_t *object,
     int32_t type,
     const char *file,
@@ -42,8 +65,11 @@ void _ecs_poly_assert(
 
 #define ecs_poly_assert(object, type)\
     _ecs_poly_assert(object, type##_magic, __FILE__, __LINE__)
+
+#define ecs_poly(object, T) ((T*)ecs_poly_assert(object, T))
 #else
 #define ecs_poly_assert(object, type)
+#define ecs_poly(object, T) object
 #endif
 
 bool _ecs_poly_is(

@@ -84,24 +84,6 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     test_int(m[0], 100);
 }
 
-static
-void Observer_w_self(ecs_iter_t *it) {
-    probe_system_w_ctx(it, it->ctx);
-
-    test_int(it->count, 1);
-    test_assert(it->entities != NULL);
-    test_assert(it->entities[0] != 0);
-
-    Self *s = ecs_term(it, Self, 1);
-    test_assert(s != NULL);
-    test_int(s->value, it->entities[0]);
-
-    if (it->term_count > 1) {
-        Self *s_2 = ecs_term(it, Self, 2);
-        test_int(s_2->value, it->entities[0]);
-    }
-}
-
 static bool dummy_called = false;
 
 static
@@ -613,7 +595,7 @@ void Observer_on_set_n_entities() {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ecs_id(Self)}},
         .events = {EcsOnSet},
-        .callback = Observer_w_self,
+        .callback = Observer,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -674,7 +656,7 @@ void Observer_on_set_n_entities_2_comp() {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ecs_id(Self)}, {ecs_pair(ecs_id(Self), EcsWildcard)}},
         .events = {EcsOnSet},
-        .callback = Observer_w_self,
+        .callback = Observer,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -1172,32 +1154,6 @@ void Observer_2_terms_on_remove_on_delete() {
 
     ecs_delete(world, e);
     test_int(ctx.invoked, 1);
-
-    ecs_fini(world);
-}
-
-void Observer_observer_w_self() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t self = ecs_new_id(world);
-
-    Probe ctx = {0};
-    ecs_entity_t system = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{Tag}},
-        .events = {EcsOnAdd},
-        .callback = Observer,
-        .ctx = &ctx,
-        .self = self
-    });
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_add_id(world, e, Tag);
-
-    test_int(ctx.count, 1);
-    test_assert(ctx.system == system);
-    test_assert(ctx.self == self);
 
     ecs_fini(world);
 }

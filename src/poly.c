@@ -4,8 +4,10 @@
 static const char* mixin_kind_str[] = {
     [EcsMixinBase] = "base (should never be requested by application)",
     [EcsMixinWorld] = "world",
+    [EcsMixinEntity] = "entity",
     [EcsMixinObservable] = "observable",
     [EcsMixinIterable] = "iterable",
+    [EcsMixinDtor] = "dtor",
     [EcsMixinMax] = "max (should never be requested by application)"
 };
 
@@ -30,8 +32,18 @@ ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_t, world),
+        [EcsMixinEntity] = offsetof(ecs_query_t, entity),
         [EcsMixinIterable] = offsetof(ecs_query_t, iterable),
         [EcsMixinDtor] = offsetof(ecs_query_t, dtor)
+    }
+};
+
+ecs_mixins_t ecs_observer_t_mixins = {
+    .type_name = "ecs_observer_t",
+    .elems = {
+        [EcsMixinWorld] = offsetof(ecs_observer_t, world),
+        [EcsMixinEntity] = offsetof(ecs_observer_t, entity),
+        [EcsMixinDtor] = offsetof(ecs_observer_t, dtor)
     }
 };
 
@@ -135,12 +147,60 @@ void _ecs_poly_fini(
     hdr->magic = 0;
 }
 
+void ecs_poly_bind(
+    ecs_poly_t *poly,
+    ecs_entity_t entity,
+    ecs_entity_t kind)
+{
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(poly);
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    EcsPoly *p = ecs_get_mut_pair(world, entity, EcsPoly, kind, 0);
+    ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+    p->poly = poly;
+
+    ecs_entity_t *ent = assert_mixin(poly, EcsMixinEntity);
+    *ent = entity;
+}
+
+EcsPoly* ecs_poly_bind_ensure(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t kind)
+{
+    /* If this is a new poly, leave the actual creation up to the caller so they
+     * call tell the difference between a create or an update */
+    return ecs_get_mut_pair(world, entity, EcsPoly, kind, NULL);
+}
+
+const EcsPoly* ecs_poly_bind_get(
+    const ecs_world_t *world,
+    ecs_entity_t kind,
+    ecs_entity_t entity)
+{
+    return ecs_get_pair(world, entity, EcsPoly, kind);
+}
+
+ecs_entity_t ecs_poly_entity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc)
+{
+    ecs_entity_t existing = desc->entity;
+    ecs_entity_t result = ecs_entity_init(world, desc);
+    if (!existing && (ecs_get_name(world, result) == NULL)) {
+        /* If not associated with an existing entity and is anonymous, add it to
+         * the flecs.hidden scope so it won't clutter up the root. */
+        ecs_add_pair(world, result, EcsChildOf, EcsFlecsHidden);
+    }
+    return result;
+}
+
 #define assert_object(cond, file, line)\
     _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
     assert(cond)
 
 #ifndef FLECS_NDEBUG
-void _ecs_poly_assert(
+void* _ecs_poly_assert(
     const ecs_poly_t *poly,
     int32_t type,
     const char *file,
@@ -151,6 +211,7 @@ void _ecs_poly_assert(
     const ecs_header_t *hdr = poly;
     assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
     assert_object(hdr->type == type, file, line);
+    return (ecs_poly_t*)poly;
 }
 #endif
 
