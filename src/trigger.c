@@ -407,7 +407,6 @@ void invoke_trigger(
 {
     ECS_BIT_COND(it->flags, EcsIterIsFilter, t->term.inout == EcsInOutFilter);
     it->system = t->entity;
-    it->self = t->self;
     it->ctx = t->ctx;
     it->binding_ctx = t->binding_ctx;
     it->term_index = t->term.index;
@@ -878,7 +877,6 @@ ecs_entity_t ecs_trigger_init(
         ecs_os_memcpy(trigger->events, desc->events, 
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
         trigger->entity = entity;
-        trigger->self = desc->self;
         trigger->observable = observable;
         trigger->match_prefab = desc->match_prefab;
         trigger->match_disabled = desc->match_disabled;

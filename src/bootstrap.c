@@ -115,18 +115,6 @@ static void ecs_on_remove(EcsTrigger)(ecs_iter_t *it) {
     }
 }
 
-/* Component lifecycle actions for EcsObserver */
-static void ecs_on_remove(EcsObserver)(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsObserver *ptr = ecs_term(it, EcsObserver, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (ptr[i].observer) {
-            flecs_observer_fini(world, (ecs_observer_t*)ptr[i].observer);
-        }
-    }
-}
-
 /* Destructor for poly component */
 ECS_DTOR(EcsPoly, ptr, {
     ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
@@ -668,17 +656,11 @@ void flecs_bootstrap(
         .on_remove = ecs_on_remove(EcsTrigger)
     });
 
-    flecs_type_info_init(world, EcsObserver, {
-        .ctor = ecs_default_ctor,
-        .on_remove = ecs_on_remove(EcsObserver)
-    });
-
     flecs_type_info_init(world, EcsPoly, {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsPoly)
     });
 
-    flecs_type_info_init(world, EcsQuery, { 0 });
     flecs_type_info_init(world, EcsIterable, { 0 });
 
     /* Cache often used id records on world */
@@ -694,9 +676,7 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
 
-    bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
-    bootstrap_component(world, table, EcsObserver);
     bootstrap_component(world, table, EcsIterable);
     bootstrap_component(world, table, EcsPoly);
 
@@ -722,6 +702,9 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsName);
     flecs_bootstrap_tag(world, EcsSymbol);
     flecs_bootstrap_tag(world, EcsAlias);
+
+    flecs_bootstrap_tag(world, EcsQuery);
+    flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrivate);

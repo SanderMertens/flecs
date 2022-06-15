@@ -9,10 +9,11 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 const ecs_entity_t ecs_id(EcsComponent) =          1;
 const ecs_entity_t ecs_id(EcsIdentifier) =         2;
 const ecs_entity_t ecs_id(EcsTrigger) =            3;
-const ecs_entity_t ecs_id(EcsQuery) =              4;
-const ecs_entity_t ecs_id(EcsObserver) =           5;
 const ecs_entity_t ecs_id(EcsIterable) =           6;
 const ecs_entity_t ecs_id(EcsPoly) =               7;
+
+const ecs_entity_t EcsQuery =                      4;
+const ecs_entity_t EcsObserver =                   5;
 
 /* System module component ids */
 const ecs_entity_t ecs_id(EcsSystem) =             10;
@@ -677,9 +678,7 @@ ecs_world_t *ecs_mini(void) {
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
 
-    world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);
-    world->observers = flecs_sparse_new(ecs_observer_t);
     
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
@@ -1120,28 +1119,6 @@ void fini_type_info(
     flecs_sparse_free(world->type_info);
 }
 
-/* Cleanup queries */
-static
-void fini_queries(
-    ecs_world_t *world)
-{
-    monitors_fini(world);
-    
-    int32_t i, count = flecs_sparse_count(world->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = flecs_sparse_get_dense(world->queries, ecs_query_t, 0);
-        ecs_query_fini(query);
-    }
-    flecs_sparse_free(world->queries);
-}
-
-static
-void fini_observers(
-    ecs_world_t *world)
-{
-    flecs_sparse_free(world->observers);
-}
-
 ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -1198,10 +1175,6 @@ int ecs_fini(
     flecs_sparse_fini(&world->store.entity_index);
 
     ecs_trace("table store deinitialized");
-
-    fini_queries(world);
-
-    fini_observers(world);
 
     flecs_fini_id_records(world);
 
@@ -1625,15 +1598,32 @@ void flecs_notify_queries(
 {
     ecs_poly_assert(world, ecs_world_t); 
 
-    int32_t i, count = flecs_sparse_count(world->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = flecs_sparse_get_dense(
-            world->queries, ecs_query_t, i);
-        if (query->flags & EcsQueryIsSubquery) {
-            continue;
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_pair(ecs_id(EcsPoly), EcsQuery));
+    if (!idr) {
+        return;
+    }
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    if (flecs_table_cache_iter(&idr->cache, &it)) {
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            int32_t i, count = ecs_table_count(table);
+
+            for (i = 0; i < count; i ++) {
+                ecs_query_t *query = queries[i].poly;
+                if (query->flags & EcsQueryIsSubquery) {
+                    continue;
+                }
+
+                ecs_poly_assert(query, ecs_query_t);
+                flecs_query_notify(world, query, event);
+            }
         }
-        
-        flecs_query_notify(world, query, event);
     }    
 }
 

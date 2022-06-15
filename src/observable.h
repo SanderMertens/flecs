@@ -35,7 +35,6 @@ void flecs_trigger_fini(
     ecs_trigger_t *trigger);
 
 void flecs_observer_fini(
-    ecs_world_t *world,
     ecs_observer_t *observer);
 
 void flecs_emit( 

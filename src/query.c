@@ -1692,6 +1692,69 @@ void flecs_query_on_event(
     }
 }
 
+static
+void flecs_query_table_cache_free(
+    ecs_query_t *query)
+{
+    ecs_table_cache_iter_t it;
+    ecs_query_table_t *qt;
+
+    if (flecs_table_cache_iter(&query->cache, &it)) {
+        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+            flecs_query_table_free(query, qt);
+        }
+    }
+
+    if (flecs_table_cache_empty_iter(&query->cache, &it)) {
+        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+            flecs_query_table_free(query, qt);
+        }
+    }
+
+    ecs_table_cache_fini(&query->cache);
+}
+
+static
+void flecs_query_fini(
+    ecs_query_t *query)
+{
+    ecs_world_t *world = query->world;
+
+    if (!(world->flags & EcsWorldFini)) {
+        if (query->observer) {
+            ecs_delete(world, query->observer);
+        }
+    }
+
+    if (query->group_by_ctx_free) {
+        if (query->group_by_ctx) {
+            query->group_by_ctx_free(query->group_by_ctx);
+        }
+    }
+
+    if ((query->flags & EcsQueryIsSubquery) &&
+        !(query->flags & EcsQueryIsOrphaned))
+    {
+        flecs_query_remove_subquery(query->parent, query);
+    }
+
+    flecs_query_notify_subqueries(world, query, &(ecs_query_event_t){
+        .kind = EcsQueryOrphan
+    });
+
+    flecs_query_for_each_component_monitor(world, query, 
+        flecs_monitor_unregister);
+    flecs_query_table_cache_free(query);
+
+    ecs_map_fini(&query->groups);
+
+    ecs_vector_free(query->subqueries);
+    ecs_vector_free(query->table_slices);
+    ecs_filter_fini(&query->filter);
+
+    ecs_poly_free(query, ecs_query_t);
+}
+
 
 /* -- Public API -- */
 
@@ -1711,7 +1774,6 @@ ecs_query_t* ecs_query_init(
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
     ecs_query_t *result = ecs_poly_new(ecs_query_t);
-
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
 
@@ -1740,9 +1802,17 @@ ecs_query_t* ecs_query_init(
 
     result->world = world;
     result->iterable.init = flecs_query_iter_init;
-    result->dtor = (ecs_poly_dtor_t)ecs_query_fini;
+    result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
     result->system = desc->system;
     result->prev_match_count = -1;
+
+    if (ecs_should_log_1()) {
+        char *filter_expr = ecs_filter_str(world, &result->filter);
+        ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
+        ecs_os_free(filter_expr);
+    }
+
+    ecs_log_push_1();
 
     flecs_query_process_signature(world, result);
 
@@ -1781,12 +1851,6 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-    if (ecs_should_log_1()) {
-        char *filter_expr = ecs_filter_str(world, &result->filter);
-        ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
-        ecs_os_free(filter_expr);
-    }
-
     ecs_table_cache_init(&result->cache);
 
     if (!desc->parent) {
@@ -1802,9 +1866,14 @@ ecs_query_t* ecs_query_init(
             desc->sort_table);
     }
 
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_set(world, e, EcsPoly, { .poly = result });
+    ecs_entity_t e = desc->system;
+    if (!e) {
+        e = ecs_new_w_pair(world, EcsChildOf, EcsFlecsHidden);
+    }
+    ecs_set_pair(world, e, EcsPoly, EcsQuery, { .poly = result });
     result->entity = e;
+
+    ecs_log_pop_1();
 
     return result;
 error:
@@ -1818,79 +1887,11 @@ error:
     return NULL;
 }
 
-static
-void table_cache_free(
-    ecs_query_t *query)
-{
-    ecs_table_cache_iter_t it;
-    ecs_query_table_t *qt;
-
-    if (flecs_table_cache_iter(&query->cache, &it)) {
-        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            flecs_query_table_free(query, qt);
-        }
-    }
-
-    if (flecs_table_cache_empty_iter(&query->cache, &it)) {
-        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            flecs_query_table_free(query, qt);
-        }
-    }
-
-    ecs_table_cache_fini(&query->cache);
-}
-
 void ecs_query_fini(
     ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
-    ecs_world_t *world = query->world;
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (query->entity) {
-        /* If query is associated with entity, delete it first */
-        ecs_entity_t entity = query->entity;
-        query->entity = 0;
-        ecs_delete(query->world, entity);
-        return;
-    }
-
-    if (!(world->flags & EcsWorldFini)) {
-        if (query->observer) {
-            ecs_delete(world, query->observer);
-        }
-    }
-
-    if (query->group_by_ctx_free) {
-        if (query->group_by_ctx) {
-            query->group_by_ctx_free(query->group_by_ctx);
-        }
-    }
-
-    if ((query->flags & EcsQueryIsSubquery) &&
-        !(query->flags & EcsQueryIsOrphaned))
-    {
-        flecs_query_remove_subquery(query->parent, query);
-    }
-
-    flecs_query_notify_subqueries(world, query, &(ecs_query_event_t){
-        .kind = EcsQueryOrphan
-    });
-
-    flecs_query_for_each_component_monitor(world, query, flecs_monitor_unregister);
-
-    table_cache_free(query);
-
-    ecs_map_fini(&query->groups);
-
-    ecs_vector_free(query->subqueries);
-    ecs_vector_free(query->table_slices);
-    ecs_filter_fini(&query->filter);
-
-    ecs_poly_free(query, ecs_query_t);
-
-error:
-    return;
+    ecs_delete(query->world, query->entity);
 }
 
 const ecs_filter_t* ecs_query_get_filter(

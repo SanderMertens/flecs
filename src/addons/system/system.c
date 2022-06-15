@@ -254,16 +254,11 @@ ecs_query_t* ecs_system_get_query(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
-    const EcsQuery *q = ecs_get(world, system, EcsQuery);
-    if (q) {
-        return q->query;
+    const EcsSystem *s = ecs_get(world, system, EcsSystem);
+    if (s) {
+        return s->query;
     } else {
-        const EcsSystem *s = ecs_get(world, system, EcsSystem);
-        if (s) {
-            return s->query;
-        } else {
-            return NULL;
-        }
+        return NULL;
     }
 }
 

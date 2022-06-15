@@ -80,7 +80,6 @@ bool observer_run(ecs_iter_t *it) {
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
-        user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
         flecs_iter_validate(&user_it);
@@ -181,7 +180,6 @@ ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
 {
-    ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
@@ -189,21 +187,16 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc->callback != NULL || desc->run != NULL, 
         ECS_INVALID_OPERATION, NULL);
 
-    /* If entity is provided, create it */
-    ecs_entity_t existing = desc->entity.entity;
-    entity = ecs_entity_init(world, &desc->entity);
-    if (!existing && !desc->entity.name) {
-        ecs_add_pair(world, entity, EcsChildOf, EcsFlecsHidden);
-    }
-
-    bool added = false;
-    EcsObserver *comp = ecs_get_mut(world, entity, EcsObserver, &added);
-    if (added) {
-        ecs_observer_t *observer = flecs_sparse_add(
-            world->observers, ecs_observer_t);
+    ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+    EcsPoly *poly = ecs_poly_bind_ensure(world, entity, EcsObserver);
+    if (!poly->poly) {
+        ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->id = flecs_sparse_last_id(world->observers);
-        comp->observer = observer;
+        
+        poly->poly = observer;
+        observer->world = world;
+        observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
+        observer->entity = entity;
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
@@ -214,7 +207,7 @@ ecs_entity_t ecs_observer_init(
         /* Parse filter */
         ecs_filter_t *filter = &observer->filter;
         if (ecs_filter_init(world, filter, &filter_desc)) {
-            flecs_observer_fini(world, observer);
+            flecs_observer_fini(observer);
             return 0;
         }
 
@@ -249,13 +242,11 @@ ecs_entity_t ecs_observer_init(
 
         observer->callback = desc->callback;
         observer->run = desc->run;
-        observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
         observer->ctx_free = desc->ctx_free;
         observer->binding_ctx_free = desc->binding_ctx_free;
         observer->entity = entity;
-        comp->observer = observer;
 
         /* Create a trigger for each term in the filter */
         ecs_trigger_desc_t tdesc = {
@@ -359,21 +350,18 @@ ecs_entity_t ecs_observer_init(
             observer_yield_existing(world, observer);
         }
     } else {
-        ecs_assert(comp->observer != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_observer_t *observer = ecs_poly(poly->poly, ecs_observer_t);
 
         /* If existing entity handle was provided, override existing params */
-        if (existing) {
-            if (desc->callback) {
-                ((ecs_observer_t*)comp->observer)->callback = desc->callback;
-            }
-            if (desc->ctx) {
-                ((ecs_observer_t*)comp->observer)->ctx = desc->ctx;
-            }
-            if (desc->binding_ctx) {
-                ((ecs_observer_t*)comp->observer)->binding_ctx = 
-                    desc->binding_ctx;
-            }
-        }        
+        if (desc->callback) {
+            observer->callback = desc->callback;
+        }
+        if (desc->ctx) {
+            observer->ctx = desc->ctx;
+        }
+        if (desc->binding_ctx) {
+            observer->binding_ctx = desc->binding_ctx;
+        }
     }
 
     return entity; 
@@ -385,7 +373,6 @@ error:
 }
 
 void flecs_observer_fini(
-    ecs_world_t *world,
     ecs_observer_t *observer)
 {
     /* Cleanup triggers */
@@ -394,7 +381,7 @@ void flecs_observer_fini(
     for (i = 0; i < count; i ++) {
         ecs_entity_t t = triggers[i];
         if (!t) continue;
-        ecs_delete(world, triggers[i]);
+        ecs_delete(observer->world, triggers[i]);
     }
     ecs_vector_free(observer->triggers);
 
@@ -410,17 +397,17 @@ void flecs_observer_fini(
         observer->binding_ctx_free(observer->binding_ctx);
     }
 
-    /* Cleanup observer storage */
-    flecs_sparse_remove(world->observers, observer->id);
+    ecs_poly_free(observer, ecs_observer_t);
 }
 
 void* ecs_get_observer_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsObserver *o = ecs_get(world, observer, EcsObserver);
+    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
     if (o) {
-        return o->observer->ctx;
+        ecs_poly_assert(o->poly, ecs_observer_t);
+        return ((ecs_observer_t*)o->poly)->ctx;
     } else {
         return NULL;
     }     
@@ -430,9 +417,10 @@ void* ecs_get_observer_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsObserver *o = ecs_get(world, observer, EcsObserver);
+    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
     if (o) {
-        return o->observer->binding_ctx;
+        ecs_poly_assert(o->poly, ecs_observer_t);
+        return ((ecs_observer_t*)o->poly)->binding_ctx;
     } else {
         return NULL;
     }      

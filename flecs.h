@@ -2344,6 +2344,10 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
+/* Destructor function for poly objects */
+typedef void (*ecs_poly_dtor_t)(
+    ecs_poly_t *poly);
+
 /** @} */
 
 /**
@@ -2487,7 +2491,6 @@ struct ecs_trigger_t {
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
     
     ecs_entity_t entity;        /* Trigger entity */
-    ecs_entity_t self;          /* Entity associated with observer */
 
     ecs_observable_t *observable;  /* Observable for trigger */
 
@@ -2502,6 +2505,8 @@ struct ecs_trigger_t {
 
 /* An observer reacts to events matching a filter */
 struct ecs_observer_t {
+    ecs_header_t hdr;
+    
     ecs_filter_t filter;
 
     /* Triggers created by observer */
@@ -2519,9 +2524,6 @@ struct ecs_observer_t {
 
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-    
-    ecs_entity_t entity;        /* Observer entity */
-    ecs_entity_t self;          /* Entity associated with observer */
 
     ecs_observable_t *observable;  /* Observable for observer */
 
@@ -2531,6 +2533,11 @@ struct ecs_observer_t {
     bool is_monitor;            /* If true, the observer only triggers when the
                                  * filter did not match with the entity before
                                  * the event happened. */
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    ecs_poly_dtor_t dtor;
 };
 
 /** Type that contains component lifecycle callbacks. */
@@ -3671,9 +3678,6 @@ typedef struct ecs_trigger_desc_t {
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
-    /* Associate with entity */
-    ecs_entity_t self;
-
     /* User context to pass to callback */
     void *ctx;
 
@@ -3723,9 +3727,6 @@ typedef struct ecs_observer_desc_t {
      * the general purpose query matcher. */
     ecs_run_action_t run;
 
-    /* Associate with entity */
-    ecs_entity_t self;
-
     /* User context to pass to callback */
     void *ctx;
 
@@ -3769,16 +3770,6 @@ typedef struct EcsComponent {
 typedef struct EcsTrigger {
     const ecs_trigger_t *trigger;
 } EcsTrigger;
-
-/** Component that stores reference to observer */
-typedef struct EcsObserver {
-    const ecs_observer_t *observer;
-} EcsObserver;
-
-/** Component for storing a query */
-typedef struct EcsQuery {
-    ecs_query_t *query;
-} EcsQuery;
 
 /** Component for storing a poly object */
 typedef struct EcsPoly {
@@ -3909,10 +3900,11 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
-FLECS_API extern const ecs_entity_t ecs_id(EcsQuery);
-FLECS_API extern const ecs_entity_t ecs_id(EcsObserver);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
+
+FLECS_API extern const ecs_entity_t EcsQuery;
+FLECS_API extern const ecs_entity_t EcsObserver;
 
 /* System module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsSystem);
@@ -7389,6 +7381,16 @@ int32_t ecs_search_relation(
 FLECS_API
 const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table);
+
+/** Get column from table.
+ * This operation returns the component array for the provided index.
+ * 
+ * @param table The table.
+ * @return The component array, or NULL if the index is not a component.
+ */
+void* ecs_table_get_column(
+    ecs_table_t *table,
+    int32_t index);
 
 /** Get storage type for table.
  *

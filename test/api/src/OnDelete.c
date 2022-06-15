@@ -1448,8 +1448,9 @@ void delete_on_remove(ecs_iter_t *it) {
 
 static 
 void delete_self_on_remove(ecs_iter_t *it) {
+    ecs_entity_t e = *(ecs_entity_t*)it->ctx;
     test_int(it->count, 1);
-    ecs_delete(it->world, it->self);
+    ecs_delete(it->world, e);
     trigger_count ++;
 }
 
@@ -1475,14 +1476,14 @@ void OnDelete_delete_table_in_on_remove_during_fini() {
         .events = {EcsOnRemove},
         .term.id = e1,
         .callback = delete_self_on_remove,
-        .self = e2
+        .ctx = &e2
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .events = {EcsOnRemove},
         .term.id = e2,
         .callback = delete_self_on_remove,
-        .self = e1
+        .ctx = &e1
     });    
 
     ecs_fini(world);
