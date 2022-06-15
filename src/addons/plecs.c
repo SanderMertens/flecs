@@ -204,6 +204,10 @@ void plecs_apply_annotations(
     ecs_entity_t subj,
     plecs_state_t *state)
 {
+    (void)world;
+    (void)subj;
+    (void)state;
+#ifdef FLECS_DOC
     int32_t i = 0, count = state->annot_count;
     for (i = 0; i < count; i ++) {
         char *annot = state->annot[i];
@@ -217,6 +221,9 @@ void plecs_apply_annotations(
             ecs_doc_set_color(world, subj, annot + 7);
         }
     }
+#else
+    ecs_warn("cannot apply annotations, doc addon is missing");
+#endif
 }
 
 static
