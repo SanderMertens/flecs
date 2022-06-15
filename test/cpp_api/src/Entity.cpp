@@ -3000,8 +3000,6 @@ void Entity_each_in_stage() {
     struct Rel { };
     struct Obj { };
 
-    flecs::log::set_level(3);
-
     auto e = world.entity().add<Rel, Obj>();
     test_assert((e.has<Rel, Obj>()));
 

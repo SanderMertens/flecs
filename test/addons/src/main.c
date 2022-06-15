@@ -302,12 +302,6 @@ void Plecs_default_child_component_w_assign(void);
 void Plecs_struct_type_w_default_child_component(void);
 void Plecs_struct_type_w_default_child_component_nested_member(void);
 void Plecs_enum_type_w_default_child_component(void);
-void Plecs_comment_as_brief_doc(void);
-void Plecs_comment_as_brief_doc_after_using(void);
-void Plecs_comment_as_brief_doc_2_stmts(void);
-void Plecs_comment_type(void);
-void Plecs_empty_doc_comment(void);
-void Plecs_newline_after_doc_comment(void);
 void Plecs_default_type_from_with(void);
 void Plecs_scope_w_1_subj_and_2_pairs(void);
 void Plecs_inherit_from_multiple(void);
@@ -316,6 +310,11 @@ void Plecs_assign_pair_component_in_scope(void);
 void Plecs_set_entity_names(void);
 void Plecs_oneof(void);
 void Plecs_invalid_oneof(void);
+void Plecs_brief_annotation(void);
+void Plecs_name_annotation(void);
+void Plecs_link_annotation(void);
+void Plecs_color_annotation(void);
+void Plecs_multiple_annotations(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2086,30 +2085,6 @@ bake_test_case Plecs_testcases[] = {
         Plecs_enum_type_w_default_child_component
     },
     {
-        "comment_as_brief_doc",
-        Plecs_comment_as_brief_doc
-    },
-    {
-        "comment_as_brief_doc_after_using",
-        Plecs_comment_as_brief_doc_after_using
-    },
-    {
-        "comment_as_brief_doc_2_stmts",
-        Plecs_comment_as_brief_doc_2_stmts
-    },
-    {
-        "comment_type",
-        Plecs_comment_type
-    },
-    {
-        "empty_doc_comment",
-        Plecs_empty_doc_comment
-    },
-    {
-        "newline_after_doc_comment",
-        Plecs_newline_after_doc_comment
-    },
-    {
         "default_type_from_with",
         Plecs_default_type_from_with
     },
@@ -2140,6 +2115,26 @@ bake_test_case Plecs_testcases[] = {
     {
         "invalid_oneof",
         Plecs_invalid_oneof
+    },
+    {
+        "brief_annotation",
+        Plecs_brief_annotation
+    },
+    {
+        "name_annotation",
+        Plecs_name_annotation
+    },
+    {
+        "link_annotation",
+        Plecs_link_annotation
+    },
+    {
+        "color_annotation",
+        Plecs_color_annotation
+    },
+    {
+        "multiple_annotations",
+        Plecs_multiple_annotations
     }
 };
 
@@ -4412,7 +4407,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        133,
+        132,
         Plecs_testcases
     },
     {

@@ -309,12 +309,6 @@
                 "struct_type_w_default_child_component",
                 "struct_type_w_default_child_component_nested_member",
                 "enum_type_w_default_child_component",
-                "comment_as_brief_doc",
-                "comment_as_brief_doc_after_using",
-                "comment_as_brief_doc_2_stmts",
-                "comment_type",
-                "empty_doc_comment",
-                "newline_after_doc_comment",
                 "default_type_from_with",
                 "scope_w_1_subj_and_2_pairs",
                 "inherit_from_multiple",
@@ -322,7 +316,12 @@
                 "assign_pair_component_in_scope",
                 "set_entity_names",
                 "oneof",
-                "invalid_oneof"
+                "invalid_oneof",
+                "brief_annotation",
+                "name_annotation",
+                "link_annotation",
+                "color_annotation",
+                "multiple_annotations"
             ]
         }, {
             "id": "Doc",
