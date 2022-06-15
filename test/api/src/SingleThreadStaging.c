@@ -2839,3 +2839,13 @@ void SingleThreadStaging_add_to_world_while_readonly_n_stages() {
     ecs_add(world, e, Tag);
 }
 
+void SingleThreadStaging_lookup_after_stage_count_change() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_set_stage_count(world, 2);
+
+    /* Make sure we can still lookup entities from flecs.core */
+    test_assert(ecs_lookup_fullpath(world, "$") != 0);
+
+    ecs_fini(world);
+}

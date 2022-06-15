@@ -387,7 +387,6 @@ void flecs_stage_init(
     ecs_stage_t *stage)
 {
     ecs_poly_assert(world, ecs_world_t);
-
     ecs_poly_init(stage, ecs_stage_t);
 
     stage->world = world;
@@ -424,8 +423,10 @@ void ecs_set_stage_count(
         ECS_INTERNAL_ERROR, NULL);
 
     bool auto_merge = true;
+    ecs_entity_t *lookup_path = NULL;
     if (world->stage_count >= 1) {
         auto_merge = world->stages[0].auto_merge;
+        lookup_path = world->stages[0].lookup_path;
     }
 
     int32_t i, count = world->stage_count;
@@ -466,6 +467,7 @@ void ecs_set_stage_count(
      * property from the world */
     for (i = 0; i < stage_count; i ++) {
         world->stages[i].auto_merge = auto_merge;
+        world->stages[i].lookup_path = lookup_path;
     }
 
     world->stage_count = stage_count;
