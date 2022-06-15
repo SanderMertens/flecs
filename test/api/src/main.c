@@ -1933,6 +1933,8 @@ void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
 void SingleThreadStaging_add_to_world_while_readonly_n_stages(void);
 void SingleThreadStaging_lookup_after_stage_count_change(void);
+void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void);
+void SingleThreadStaging_with_after_stage_count_change(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
@@ -9428,6 +9430,14 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "lookup_after_stage_count_change",
         SingleThreadStaging_lookup_after_stage_count_change
+    },
+    {
+        "lookup_w_scope_after_stage_count_change",
+        SingleThreadStaging_lookup_w_scope_after_stage_count_change
+    },
+    {
+        "with_after_stage_count_change",
+        SingleThreadStaging_with_after_stage_count_change
     }
 };
 
@@ -9922,7 +9932,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        67,
+        69,
         SingleThreadStaging_testcases
     },
     {

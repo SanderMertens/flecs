@@ -424,9 +424,13 @@ void ecs_set_stage_count(
 
     bool auto_merge = true;
     ecs_entity_t *lookup_path = NULL;
+    ecs_entity_t scope = 0;
+    ecs_entity_t with = 0;
     if (world->stage_count >= 1) {
         auto_merge = world->stages[0].auto_merge;
         lookup_path = world->stages[0].lookup_path;
+        scope = world->stages[0].scope;
+        with = world->stages[0].with;
     }
 
     int32_t i, count = world->stage_count;
@@ -468,6 +472,8 @@ void ecs_set_stage_count(
     for (i = 0; i < stage_count; i ++) {
         world->stages[i].auto_merge = auto_merge;
         world->stages[i].lookup_path = lookup_path;
+        world->stages[0].scope = scope;
+        world->stages[0].with = with;
     }
 
     world->stage_count = stage_count;

@@ -2849,3 +2849,40 @@ void SingleThreadStaging_lookup_after_stage_count_change() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_lookup_w_scope_after_stage_count_change() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t child = ecs_new_entity(world, "child");
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
+    ecs_set_scope(world, parent);
+    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
+    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+
+    ecs_set_stage_count(world, 2);
+
+    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
+    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_with_after_stage_count_change() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+    ecs_set_with(world, tag);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    test_assert(ecs_has_id(world, e1, tag));
+
+    ecs_set_stage_count(world, 2);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(ecs_has_id(world, e2, tag));
+
+    ecs_fini(world);
+}
