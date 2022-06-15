@@ -932,6 +932,13 @@ void TableLock_multi_get_locked(void);
 void TableLock_multi_set(void);
 void TableLock_multi_set_locked(void);
 
+// Testsuite 'Doc'
+void Doc_set_brief(void);
+void Doc_set_name(void);
+void Doc_set_link(void);
+void Doc_set_color(void);
+void Doc_get_name_no_doc_name(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -4489,6 +4496,29 @@ bake_test_case TableLock_testcases[] = {
     }
 };
 
+bake_test_case Doc_testcases[] = {
+    {
+        "set_brief",
+        Doc_set_brief
+    },
+    {
+        "set_name",
+        Doc_set_name
+    },
+    {
+        "set_link",
+        Doc_set_link
+    },
+    {
+        "set_color",
+        Doc_set_color
+    },
+    {
+        "get_name_no_doc_name",
+        Doc_get_name_no_doc_name
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -4678,9 +4708,16 @@ static bake_test_suite suites[] = {
         NULL,
         12,
         TableLock_testcases
+    },
+    {
+        "Doc",
+        NULL,
+        NULL,
+        5,
+        Doc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 27);
+    return bake_test_run("cpp_api", argc, argv, suites, 28);
 }

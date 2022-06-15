@@ -14142,6 +14142,7 @@ using Description = EcsDocDescription;
 static const flecs::entity_t Brief = EcsDocBrief;
 static const flecs::entity_t Detail = EcsDocDetail;
 static const flecs::entity_t Link = EcsDocLink;
+static const flecs::entity_t Color = EcsDocColor;
 
 namespace _ {
 void init(flecs::world& world);
@@ -17608,6 +17609,10 @@ const char* doc_link() {
     return ecs_doc_get_link(m_world, m_id);
 }
 
+const char* doc_color() {
+    return ecs_doc_get_color(m_world, m_id);
+}
+
 #   endif
 
 private:
@@ -18289,6 +18294,11 @@ Self& set_doc_detail(const char *detail) {
 
 Self& set_doc_link(const char *link) {
     ecs_doc_set_link(m_world, m_id, link);
+    return to_base();
+}
+
+Self& set_doc_color(const char *link) {
+    ecs_doc_set_color(m_world, m_id, link);
     return to_base();
 }
 

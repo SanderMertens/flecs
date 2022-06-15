@@ -14,3 +14,7 @@ const char* doc_detail() {
 const char* doc_link() {
     return ecs_doc_get_link(m_world, m_id);
 }
+
+const char* doc_color() {
+    return ecs_doc_get_color(m_world, m_id);
+}

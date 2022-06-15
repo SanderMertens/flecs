@@ -18,3 +18,8 @@ Self& set_doc_link(const char *link) {
     ecs_doc_set_link(m_world, m_id, link);
     return to_base();
 }
+
+Self& set_doc_color(const char *link) {
+    ecs_doc_set_color(m_world, m_id, link);
+    return to_base();
+}

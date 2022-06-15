@@ -990,6 +990,15 @@
                 "multi_set",
                 "multi_set_locked"
             ]
+        }, {
+            "id": "Doc",
+            "testcases": [
+                "set_brief",
+                "set_name",
+                "set_link",
+                "set_color",
+                "get_name_no_doc_name"
+            ]
         }]
     }
 }
