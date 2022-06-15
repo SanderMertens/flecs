@@ -452,7 +452,7 @@ bool ecs_pipeline_update(
 void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
 
@@ -549,7 +549,7 @@ void ecs_run_pipeline(
 
 bool ecs_progress(
     ecs_world_t *world,
-    FLECS_FLOAT user_delta_time)
+    ecs_ftime_t user_delta_time)
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
@@ -566,7 +566,7 @@ bool ecs_progress(
 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    FLECS_FLOAT scale)
+    ecs_ftime_t scale)
 {
     world->info.time_scale = scale;
 }

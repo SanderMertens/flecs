@@ -274,8 +274,8 @@ struct ecs_iter_t {
     void *binding_ctx;            /* Binding context */
 
     /* Time */
-    FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
-    FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
+    ecs_ftime_t delta_time;       /* Time elapsed since last frame */
+    ecs_ftime_t delta_system_time;/* Time elapsed since last system invocation */
 
     /* Iterator counters */
     int32_t frame_offset;         /* Offset relative to start of iteration */

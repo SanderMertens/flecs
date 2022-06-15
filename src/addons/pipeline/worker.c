@@ -257,7 +257,7 @@ void ecs_worker_end(
 void ecs_workers_progress(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
     int32_t stage_count = ecs_get_stage_count(world);

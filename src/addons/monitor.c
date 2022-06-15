@@ -42,7 +42,7 @@ void MonitorStats(ecs_iter_t *it) {
     ecs_id_t kind = ecs_pair_first(it->world, ecs_term_id(it, 1));
     void *stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
 
-    FLECS_FLOAT elapsed = hdr->elapsed;
+    ecs_ftime_t elapsed = hdr->elapsed;
     hdr->elapsed += it->delta_time;
 
     int32_t t_last = (int32_t)(elapsed * 60);

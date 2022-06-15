@@ -241,7 +241,7 @@ static
 void flecs_rest_array_append(
     ecs_strbuf_t *reply,
     const char *field,
-    const FLECS_FLOAT *values,
+    const ecs_float_t *values,
     int32_t t)
 {
     ecs_strbuf_list_append(reply, "\"%s\"", field);
@@ -684,7 +684,7 @@ static
 void DequeueRest(ecs_iter_t *it) {
     EcsRest *rest = ecs_term(it, EcsRest, 1);
 
-    if (it->delta_system_time > (FLECS_FLOAT)1.0) {
+    if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
             "detected large progress interval (%.2fs), REST request may timeout",
             (double)it->delta_system_time);

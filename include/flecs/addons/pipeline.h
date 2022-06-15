@@ -106,7 +106,7 @@ ecs_entity_t ecs_get_pipeline(
 FLECS_API
 bool ecs_progress(
     ecs_world_t *world,
-    FLECS_FLOAT delta_time);   
+    ecs_ftime_t delta_time);   
 
 /** Set time scale.
  * Increase or decrease simulation speed by the provided multiplier.
@@ -117,7 +117,7 @@ bool ecs_progress(
 FLECS_API 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    FLECS_FLOAT scale);
+    ecs_ftime_t scale);
 
 /** Reset world clock.
  * Reset the clock that keeps track of the total time passed in the simulation.
@@ -150,7 +150,7 @@ FLECS_API
 void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);    
+    ecs_ftime_t delta_time);    
     
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.

@@ -104,7 +104,7 @@ void ecs_metric_reduce(
     dst->gauge.min[t_dst] = 0;
     dst->gauge.max[t_dst] = 0;
 
-    FLECS_FLOAT fwindow = (FLECS_FLOAT)ECS_STAT_WINDOW;
+    ecs_float_t fwindow = (ecs_float_t)ECS_STAT_WINDOW;
 
     int32_t i;
     for (i = 0; i < ECS_STAT_WINDOW; i ++) {
@@ -142,9 +142,9 @@ void ecs_metric_reduce_last(
         m->gauge.max[prev] = m->gauge.max[t];
     }
 
-    FLECS_FLOAT fcount = (FLECS_FLOAT)(count + 1);
-    FLECS_FLOAT cur = m->gauge.avg[prev];
-    FLECS_FLOAT next = m->gauge.avg[t];
+    ecs_float_t fcount = (ecs_float_t)(count + 1);
+    ecs_float_t cur = m->gauge.avg[prev];
+    ecs_float_t next = m->gauge.avg[t];
 
     cur *= ((fcount - 1) / fcount);
     next *= 1 / fcount;

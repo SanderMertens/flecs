@@ -14,8 +14,13 @@
  */
 
 /* Customizable precision for floating point operations (such as time ops) */
-#ifndef FLECS_FLOAT
-#define FLECS_FLOAT float
+#ifndef ecs_float_t
+#define ecs_float_t float
+#endif
+
+/* Customizable precision for time scalar values */
+#ifndef ecs_ftime_t
+#define ecs_ftime_t ecs_float_t
 #endif
 
 /* FLECS_LEGACY should be defined when building for C89 */
@@ -939,15 +944,15 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /* First allowed entity id */
     ecs_entity_t max_id;              /* Last allowed entity id */
 
-    FLECS_FLOAT delta_time_raw;       /* Raw delta time (no time scaling) */
-    FLECS_FLOAT delta_time;           /* Time passed to or computed by ecs_progress */
-    FLECS_FLOAT time_scale;           /* Time scale applied to delta_time */
-    FLECS_FLOAT target_fps;           /* Target fps */
-    FLECS_FLOAT frame_time_total;     /* Total time spent processing a frame */
+    ecs_ftime_t delta_time_raw;       /* Raw delta time (no time scaling) */
+    ecs_ftime_t delta_time;           /* Time passed to or computed by ecs_progress */
+    ecs_ftime_t time_scale;           /* Time scale applied to delta_time */
+    ecs_ftime_t target_fps;           /* Target fps */
+    ecs_ftime_t frame_time_total;     /* Total time spent processing a frame */
     float system_time_total;          /* Total time spent in systems */
     float merge_time_total;           /* Total time spent in merges */
-    FLECS_FLOAT world_time_total;     /* Time elapsed in simulation */
-    FLECS_FLOAT world_time_total_raw; /* Time elapsed in simulation (no scaling) */
+    ecs_ftime_t world_time_total;     /* Time elapsed in simulation */
+    ecs_ftime_t world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
     int32_t frame_count_total;        /* Total number of frames */
     int32_t merge_count_total;        /* Total number of merges */
@@ -1542,7 +1547,7 @@ FLECS_API void ecs_measure_system_time(
 FLECS_API
 void ecs_set_target_fps(
     ecs_world_t *world,
-    FLECS_FLOAT fps);     
+    ecs_ftime_t fps);     
 
 /** Force aperiodic actions.
  * The world may delay certain operations until they are necessary for the
@@ -4094,9 +4099,9 @@ size_t ecs_iter_column_size(
  * @return The provided delta_time, or measured time if 0 was provided.
  */
 FLECS_API
-FLECS_FLOAT ecs_frame_begin(
+ecs_ftime_t ecs_frame_begin(
     ecs_world_t *world,
-    FLECS_FLOAT delta_time);
+    ecs_ftime_t delta_time);
 
 /** End frame. 
  * This operation must be called at the end of the frame, and always after

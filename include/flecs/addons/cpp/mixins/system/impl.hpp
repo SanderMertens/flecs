@@ -11,7 +11,7 @@ struct system_runner_fluent {
         entity_t id, 
         int32_t stage_current, 
         int32_t stage_count, 
-        FLECS_FLOAT delta_time, 
+        ecs_ftime_t delta_time, 
         void *param)
         : m_stage(world)
         , m_id(id)
@@ -51,7 +51,7 @@ struct system_runner_fluent {
 private:
     world_t *m_stage;
     entity_t m_id;
-    FLECS_FLOAT m_delta_time;
+    ecs_ftime_t m_delta_time;
     void *m_param;
     int32_t m_offset;
     int32_t m_limit;
@@ -91,14 +91,14 @@ struct system final : entity
         return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
     }
 
-    system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
+    system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {
         return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
     }
 
     system_runner_fluent run_worker(
         int32_t stage_current, 
         int32_t stage_count, 
-        FLECS_FLOAT delta_time = 0.0f, 
+        ecs_ftime_t delta_time = 0.0f, 
         void *param = nullptr) const 
     {
         return system_runner_fluent(

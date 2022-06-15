@@ -2,22 +2,22 @@
 /** Set interval.
  * @see ecs_set_interval
  */
-void interval(FLECS_FLOAT interval);
+void interval(ecs_ftime_t interval);
 
 /** Get interval.
  * @see ecs_get_interval.
  */
-FLECS_FLOAT interval();
+ecs_ftime_t interval();
 
 /** Set timeout.
  * @see ecs_set_timeout
  */
-void timeout(FLECS_FLOAT timeout);
+void timeout(ecs_ftime_t timeout);
 
 /** Get timeout.
  * @see ecs_get_timeout
  */
-FLECS_FLOAT timeout();
+ecs_ftime_t timeout();
 
 /** Set system rate (system is its own tick source).
  * @see ecs_set_rate

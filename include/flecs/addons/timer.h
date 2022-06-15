@@ -30,8 +30,8 @@ extern "C" {
 
 /** Component used for one shot/interval timer functionality */
 typedef struct EcsTimer {
-    FLECS_FLOAT timeout;         /* Timer timeout period */
-    FLECS_FLOAT time;            /* Incrementing time value */
+    ecs_ftime_t timeout;         /* Timer timeout period */
+    ecs_ftime_t time;            /* Incrementing time value */
     int32_t fired_count;         /* Number of times ticked */
     bool active;                 /* Is the timer active or not */
     bool single_shot;            /* Is this a single shot timer */
@@ -42,7 +42,7 @@ typedef struct EcsRateFilter {
     ecs_entity_t src;            /* Source of the rate filter */
     int32_t rate;                /* Rate of the rate filter */
     int32_t tick_count;          /* Number of times the rate filter ticked */
-    FLECS_FLOAT time_elapsed;    /* Time elapsed since last tick */
+    ecs_ftime_t time_elapsed;    /* Time elapsed since last tick */
 } EcsRateFilter;
 
 
@@ -72,7 +72,7 @@ FLECS_API
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t tick_source,
-    FLECS_FLOAT timeout);
+    ecs_ftime_t timeout);
 
 /** Get current timeout value for the specified timer.
  * This operation returns the value set by ecs_set_timeout. If no timer is
@@ -94,7 +94,7 @@ ecs_entity_t ecs_set_timeout(
  * @return The current timeout value, or 0 if no timer is active.
  */
 FLECS_API
-FLECS_FLOAT ecs_get_timeout(
+ecs_ftime_t ecs_get_timeout(
     const ecs_world_t *world,
     ecs_entity_t tick_source);
 
@@ -119,7 +119,7 @@ FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t tick_source,
-    FLECS_FLOAT interval);   
+    ecs_ftime_t interval);   
 
 /** Get current interval value for the specified timer.
  * This operation returns the value set by ecs_set_interval. If the entity is
@@ -130,7 +130,7 @@ ecs_entity_t ecs_set_interval(
  * @return The current interval value, or 0 if no timer is active.
  */
 FLECS_API
-FLECS_FLOAT ecs_get_interval(
+ecs_ftime_t ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t tick_source);
 

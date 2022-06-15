@@ -101,12 +101,12 @@ ecs_entity_t ecs_run_intern(
     EcsSystem *system_data,
     int32_t stage_current,
     int32_t stage_count,    
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     int32_t offset,
     int32_t limit,
     void *param) 
 {
-    FLECS_FLOAT time_elapsed = delta_time;
+    ecs_ftime_t time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
     /* Support legacy behavior */
@@ -207,7 +207,7 @@ ecs_entity_t ecs_run_intern(
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     int32_t offset,
     int32_t limit,
     void *param)
@@ -227,7 +227,7 @@ ecs_entity_t ecs_run_worker(
     ecs_entity_t system,
     int32_t stage_current,
     int32_t stage_count,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -244,7 +244,7 @@ ecs_entity_t ecs_run_worker(
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, param);

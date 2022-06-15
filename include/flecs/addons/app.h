@@ -27,8 +27,8 @@ typedef int(*ecs_app_init_action_t)(
 
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
-    FLECS_FLOAT target_fps;   /* Target FPS. */
-    FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
+    ecs_ftime_t target_fps; /* Target FPS. */
+    ecs_ftime_t delta_time; /* Frame time increment (0 for measured values) */
     int32_t threads;          /* Number of threads. */
     bool enable_rest;         /* Allows HTTP clients to access ECS data */
     bool enable_monitor;      /* Periodically collect statistics */

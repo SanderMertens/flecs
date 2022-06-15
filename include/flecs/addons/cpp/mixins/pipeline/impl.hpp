@@ -43,19 +43,19 @@ inline flecs::entity world::get_pipeline() const {
     return flecs::entity(m_world, ecs_get_pipeline(m_world));
 }
 
-inline bool world::progress(FLECS_FLOAT delta_time) const {
+inline bool world::progress(ecs_ftime_t delta_time) const {
     return ecs_progress(m_world, delta_time);
 }
 
-inline void world::run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time) const {
+inline void world::run_pipeline(const flecs::entity pip, ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(m_world, pip, delta_time);
 }
 
-inline void world::set_time_scale(FLECS_FLOAT mul) const {
+inline void world::set_time_scale(ecs_ftime_t mul) const {
     ecs_set_time_scale(m_world, mul);
 }  
 
-inline FLECS_FLOAT world::get_time_scale() const {
+inline ecs_ftime_t world::get_time_scale() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->time_scale;
 }
@@ -65,12 +65,12 @@ inline int32_t world::get_tick() const {
     return stats->frame_count_total;
 }
 
-inline FLECS_FLOAT world::get_target_fps() const {
+inline ecs_ftime_t world::get_target_fps() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->target_fps;
 } 
 
-inline void world::set_target_fps(FLECS_FLOAT target_fps) const {
+inline void world::set_target_fps(ecs_ftime_t target_fps) const {
     ecs_set_target_fps(m_world, target_fps);
 }
 

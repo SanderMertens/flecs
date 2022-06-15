@@ -28,11 +28,11 @@ void ProgressTimers(ecs_iter_t *it) {
         }
 
         const ecs_world_info_t *info = ecs_get_world_info(it->world);
-        FLECS_FLOAT time_elapsed = timer[i].time + info->delta_time_raw;
-        FLECS_FLOAT timeout = timer[i].timeout;
+        ecs_ftime_t time_elapsed = timer[i].time + info->delta_time_raw;
+        ecs_ftime_t timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {
-            FLECS_FLOAT t = time_elapsed - timeout;
+            ecs_ftime_t t = time_elapsed - timeout;
             if (t > timeout) {
                 t = 0;
             }
@@ -103,7 +103,7 @@ void ProgressTickSource(ecs_iter_t *it) {
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t timer,
-    FLECS_FLOAT timeout)
+    ecs_ftime_t timeout)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -122,7 +122,7 @@ error:
     return timer;
 }
 
-FLECS_FLOAT ecs_get_timeout(
+ecs_ftime_t ecs_get_timeout(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {
@@ -140,7 +140,7 @@ error:
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
-    FLECS_FLOAT interval)
+    ecs_ftime_t interval)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -157,7 +157,7 @@ error:
     return timer;  
 }
 
-FLECS_FLOAT ecs_get_interval(
+ecs_ftime_t ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {

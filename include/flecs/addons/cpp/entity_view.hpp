@@ -524,7 +524,7 @@ struct entity_view : public id {
      *
      * @return Current delta_time.
      */
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }

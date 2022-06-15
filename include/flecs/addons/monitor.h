@@ -35,7 +35,7 @@ FLECS_API extern ECS_DECLARE(EcsPeriod1d);
 FLECS_API extern ECS_DECLARE(EcsPeriod1w);
 
 typedef struct {
-    FLECS_FLOAT elapsed;
+    ecs_ftime_t elapsed;
     int32_t reduce_count;
 } EcsStatsHeader;
 

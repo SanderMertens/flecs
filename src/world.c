@@ -1273,7 +1273,7 @@ error:
 
 void ecs_set_target_fps(
     ecs_world_t *world,
-    FLECS_FLOAT fps)
+    ecs_ftime_t fps)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
@@ -1452,29 +1452,29 @@ void flecs_type_info_fini(
 }
 
 static
-FLECS_FLOAT insert_sleep(
+ecs_ftime_t flecs_insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
     ecs_poly_assert(world, ecs_world_t);  
 
     ecs_time_t start = *stop;
-    FLECS_FLOAT delta_time = (FLECS_FLOAT)ecs_time_measure(stop);
+    ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
 
-    if (world->info.target_fps == (FLECS_FLOAT)0.0) {
+    if (world->info.target_fps == (ecs_ftime_t)0.0) {
         return delta_time;
     }
 
-    FLECS_FLOAT target_delta_time = 
-        ((FLECS_FLOAT)1.0 / (FLECS_FLOAT)world->info.target_fps);
+    ecs_ftime_t target_delta_time = 
+        ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
-    FLECS_FLOAT sleep = target_delta_time - delta_time;
+    ecs_ftime_t sleep = target_delta_time - delta_time;
 
     /* Pick a sleep interval that is 4 times smaller than the time one frame
      * should take. */
-    FLECS_FLOAT sleep_time = sleep / (FLECS_FLOAT)4.0;
+    ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)4.0;
 
     do {
         /* Only call sleep when sleep_time is not 0. On some platforms, even
@@ -1484,36 +1484,36 @@ FLECS_FLOAT insert_sleep(
         }
 
         ecs_time_t now = start;
-        delta_time = (FLECS_FLOAT)ecs_time_measure(&now);
+        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } while ((target_delta_time - delta_time) > 
-        (sleep_time / (FLECS_FLOAT)2.0));
+        (sleep_time / (ecs_ftime_t)2.0));
 
     return delta_time;
 }
 
 static
-FLECS_FLOAT start_measure_frame(
+ecs_ftime_t flecs_start_measure_frame(
     ecs_world_t *world,
-    FLECS_FLOAT user_delta_time)
+    ecs_ftime_t user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);  
 
-    FLECS_FLOAT delta_time = 0;
+    ecs_ftime_t delta_time = 0;
 
     if ((world->flags & EcsWorldMeasureFrameTime) || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
-                delta_time = insert_sleep(world, &t);
+                delta_time = flecs_insert_sleep(world, &t);
 
                 ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
                 if (world->info.target_fps != 0) {
-                    delta_time = (FLECS_FLOAT)1.0 / world->info.target_fps;
+                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
                 } else {
                     /* Best guess */
-                    delta_time = (FLECS_FLOAT)1.0 / (FLECS_FLOAT)60.0; 
+                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0; 
                 }
             }
         
@@ -1523,27 +1523,27 @@ FLECS_FLOAT start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->info.world_time_total_raw += (FLECS_FLOAT)delta_time;
+        world->info.world_time_total_raw += (ecs_ftime_t)delta_time;
     }
 
-    return (FLECS_FLOAT)delta_time;
+    return (ecs_ftime_t)delta_time;
 }
 
 static
-void stop_measure_frame(
+void flecs_stop_measure_frame(
     ecs_world_t* world)
 {
     ecs_poly_assert(world, ecs_world_t);  
 
     if (world->flags & EcsWorldMeasureFrameTime) {
         ecs_time_t t = world->frame_start_time;
-        world->info.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
+        world->info.frame_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
 }
 
-FLECS_FLOAT ecs_frame_begin(
+ecs_ftime_t ecs_frame_begin(
     ecs_world_t *world,
-    FLECS_FLOAT user_delta_time)
+    ecs_ftime_t user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
@@ -1551,7 +1551,7 @@ FLECS_FLOAT ecs_frame_begin(
         ECS_MISSING_OS_API, "get_time");
 
     /* Start measuring total frame time */
-    FLECS_FLOAT delta_time = start_measure_frame(world, user_delta_time);
+    ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
     if (user_delta_time == 0) {
         user_delta_time = delta_time;
     }  
@@ -1566,7 +1566,7 @@ FLECS_FLOAT ecs_frame_begin(
 
     return world->info.delta_time;
 error:
-    return (FLECS_FLOAT)0;
+    return (ecs_ftime_t)0;
 }
 
 void ecs_frame_end(
@@ -1583,7 +1583,7 @@ void ecs_frame_end(
         flecs_stage_merge_post_frame(world, &stages[i]);
     }
 
-    stop_measure_frame(world);
+    flecs_stop_measure_frame(world);
 error:
     return;
 }

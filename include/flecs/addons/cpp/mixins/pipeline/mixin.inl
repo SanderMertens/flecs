@@ -32,22 +32,22 @@ flecs::entity get_pipeline() const;
 /** Progress world one tick.
  * @see ecs_progress
  */
-bool progress(FLECS_FLOAT delta_time = 0.0) const;
+bool progress(ecs_ftime_t delta_time = 0.0) const;
 
 /** Run pipeline.
  * @see ecs_run_pipeline
  */
-void run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time = 0.0) const;
+void run_pipeline(const flecs::entity pip, ecs_ftime_t delta_time = 0.0) const;
 
 /** Set timescale
  * @see ecs_set_time_scale
  */
-void set_time_scale(FLECS_FLOAT mul) const;
+void set_time_scale(ecs_ftime_t mul) const;
 
 /** Get timescale
  * @see ecs_get_time_scale
  */
-FLECS_FLOAT get_time_scale() const;
+ecs_ftime_t get_time_scale() const;
 
 /** Get tick
  * @return Monotonically increasing frame count.
@@ -57,12 +57,12 @@ int32_t get_tick() const;
 /** Set target FPS
  * @see ecs_set_target_fps
  */
-void set_target_fps(FLECS_FLOAT target_fps) const;
+void set_target_fps(ecs_ftime_t target_fps) const;
 
 /** Get target FPS
  * @return Configured frames per second.
  */
-FLECS_FLOAT get_target_fps() const;
+ecs_ftime_t get_target_fps() const;
 
 /** Reset simulation clock.
  * @see ecs_reset_clock

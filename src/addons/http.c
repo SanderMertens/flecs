@@ -97,11 +97,11 @@ struct ecs_http_server_t {
     uint16_t port;
     const char *ipaddr;
 
-    FLECS_FLOAT dequeue_timeout; /* used to not lock request queue too often */
-    FLECS_FLOAT stats_timeout; /* used for periodic reporting of statistics */
+    ecs_ftime_t dequeue_timeout; /* used to not lock request queue too often */
+    ecs_ftime_t stats_timeout; /* used for periodic reporting of statistics */
 
-    FLECS_FLOAT request_time; /* time spent on requests in last stats interval */
-    FLECS_FLOAT request_time_total; /* total time spent on requests */
+    ecs_ftime_t request_time; /* time spent on requests in last stats interval */
+    ecs_ftime_t request_time_total; /* total time spent on requests */
     int32_t requests_processed; /* requests processed in last stats interval */
     int32_t requests_processed_total; /* total requests processed */
     int32_t dequeue_count; /* number of dequeues in last stats interval */
@@ -153,7 +153,7 @@ typedef struct {
     /* Connection is purged after both timeout expires and connection has
      * exceeded retry count. This ensures that a connection does not immediately
      * timeout when a frame takes longer than usual */
-    FLECS_FLOAT dequeue_timeout;
+    ecs_ftime_t dequeue_timeout;
     int32_t dequeue_retries;    
 } ecs_http_connection_impl_t;
 
@@ -882,7 +882,7 @@ int32_t dequeue_requests(
         conn->dequeue_retries ++;
         
         if ((conn->dequeue_timeout > 
-            (FLECS_FLOAT)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) &&
+            (ecs_ftime_t)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) &&
              (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
         {
             ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
@@ -1046,7 +1046,7 @@ void ecs_http_server_dequeue(
     srv->stats_timeout += delta_time;
 
     if ((1000 * srv->dequeue_timeout) > 
-        (FLECS_FLOAT)ECS_HTTP_MIN_DEQUEUE_INTERVAL) 
+        (ecs_ftime_t)ECS_HTTP_MIN_DEQUEUE_INTERVAL) 
     {
         srv->dequeue_timeout = 0;
 
@@ -1055,19 +1055,19 @@ void ecs_http_server_dequeue(
         int32_t request_count = dequeue_requests(srv, srv->dequeue_timeout);
         srv->requests_processed += request_count;
         srv->requests_processed_total += request_count;
-        FLECS_FLOAT time_spent = (FLECS_FLOAT)ecs_time_measure(&t);
+        ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&t);
         srv->request_time += time_spent;
         srv->request_time_total += time_spent;
         srv->dequeue_count ++;
     }
 
     if ((1000 * srv->stats_timeout) > 
-        (FLECS_FLOAT)ECS_HTTP_MIN_STATS_INTERVAL) 
+        (ecs_ftime_t)ECS_HTTP_MIN_STATS_INTERVAL) 
     {
         srv->stats_timeout = 0;
         ecs_dbg("http: processed %d requests in %.3fs (avg %.3fs / dequeue)",
             srv->requests_processed, (double)srv->request_time, 
-            (double)(srv->request_time / (FLECS_FLOAT)srv->dequeue_count));
+            (double)(srv->request_time / (ecs_ftime_t)srv->dequeue_count));
         srv->requests_processed = 0;
         srv->request_time = 0;
         srv->dequeue_count = 0;

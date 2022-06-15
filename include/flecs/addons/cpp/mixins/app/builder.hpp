@@ -10,17 +10,17 @@ struct app_builder {
     {
         const ecs_world_info_t *stats = ecs_get_world_info(world);
         m_desc.target_fps = stats->target_fps;
-        if (m_desc.target_fps == static_cast<FLECS_FLOAT>(0.0)) {
+        if (m_desc.target_fps == static_cast<ecs_ftime_t>(0.0)) {
             m_desc.target_fps = 60;
         }
     }
 
-    app_builder& target_fps(FLECS_FLOAT value) {
+    app_builder& target_fps(ecs_ftime_t value) {
         m_desc.target_fps = value;
         return *this;
     }
 
-    app_builder& delta_time(FLECS_FLOAT value) {
+    app_builder& delta_time(ecs_ftime_t value) {
         m_desc.delta_time = value;
         return *this;
     }

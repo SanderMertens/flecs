@@ -20,7 +20,7 @@ typedef struct EcsSystem {
 
     int32_t invoke_count;           /* Number of times system is invoked */
     float time_spent;               /* Time spent on running system */
-    FLECS_FLOAT time_passed;        /* Time passed since last invocation */
+    ecs_ftime_t time_passed;        /* Time passed since last invocation */
     int32_t last_frame;             /* Last frame for which the system was considered */
 
     ecs_entity_t self;              /* Entity associated with system */
@@ -49,7 +49,7 @@ ecs_entity_t ecs_run_intern(
     EcsSystem *system_data,
     int32_t stage_current,
     int32_t stage_count,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     int32_t offset,
     int32_t limit,
     void *param);

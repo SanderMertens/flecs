@@ -185,11 +185,11 @@ public:
         return static_cast<size_t>(m_iter->count);
     }
 
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         return m_iter->delta_time;
     }
 
-    FLECS_FLOAT delta_system_time() const {
+    ecs_ftime_t delta_system_time() const {
         return m_iter->delta_system_time;
     }
 

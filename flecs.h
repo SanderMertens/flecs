@@ -16,8 +16,13 @@
  */
 
 /* Customizable precision for floating point operations (such as time ops) */
-#ifndef FLECS_FLOAT
-#define FLECS_FLOAT float
+#ifndef ecs_float_t
+#define ecs_float_t float
+#endif
+
+/* Customizable precision for time scalar values */
+#ifndef ecs_ftime_t
+#define ecs_ftime_t ecs_float_t
 #endif
 
 /* FLECS_LEGACY should be defined when building for C89 */
@@ -2859,8 +2864,8 @@ struct ecs_iter_t {
     void *binding_ctx;            /* Binding context */
 
     /* Time */
-    FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
-    FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
+    ecs_ftime_t delta_time;       /* Time elapsed since last frame */
+    ecs_ftime_t delta_system_time;/* Time elapsed since last system invocation */
 
     /* Iterator counters */
     int32_t frame_offset;         /* Offset relative to start of iteration */
@@ -3792,15 +3797,15 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /* First allowed entity id */
     ecs_entity_t max_id;              /* Last allowed entity id */
 
-    FLECS_FLOAT delta_time_raw;       /* Raw delta time (no time scaling) */
-    FLECS_FLOAT delta_time;           /* Time passed to or computed by ecs_progress */
-    FLECS_FLOAT time_scale;           /* Time scale applied to delta_time */
-    FLECS_FLOAT target_fps;           /* Target fps */
-    FLECS_FLOAT frame_time_total;     /* Total time spent processing a frame */
+    ecs_ftime_t delta_time_raw;       /* Raw delta time (no time scaling) */
+    ecs_ftime_t delta_time;           /* Time passed to or computed by ecs_progress */
+    ecs_ftime_t time_scale;           /* Time scale applied to delta_time */
+    ecs_ftime_t target_fps;           /* Target fps */
+    ecs_ftime_t frame_time_total;     /* Total time spent processing a frame */
     float system_time_total;          /* Total time spent in systems */
     float merge_time_total;           /* Total time spent in merges */
-    FLECS_FLOAT world_time_total;     /* Time elapsed in simulation */
-    FLECS_FLOAT world_time_total_raw; /* Time elapsed in simulation (no scaling) */
+    ecs_ftime_t world_time_total;     /* Time elapsed in simulation */
+    ecs_ftime_t world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
     int32_t frame_count_total;        /* Total number of frames */
     int32_t merge_count_total;        /* Total number of merges */
@@ -4416,7 +4421,7 @@ FLECS_API void ecs_measure_system_time(
 FLECS_API
 void ecs_set_target_fps(
     ecs_world_t *world,
-    FLECS_FLOAT fps);     
+    ecs_ftime_t fps);     
 
 /** Force aperiodic actions.
  * The world may delay certain operations until they are necessary for the
@@ -6968,9 +6973,9 @@ size_t ecs_iter_column_size(
  * @return The provided delta_time, or measured time if 0 was provided.
  */
 FLECS_API
-FLECS_FLOAT ecs_frame_begin(
+ecs_ftime_t ecs_frame_begin(
     ecs_world_t *world,
-    FLECS_FLOAT delta_time);
+    ecs_ftime_t delta_time);
 
 /** End frame. 
  * This operation must be called at the end of the frame, and always after
@@ -8713,8 +8718,8 @@ typedef int(*ecs_app_init_action_t)(
 
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
-    FLECS_FLOAT target_fps;   /* Target FPS. */
-    FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
+    ecs_ftime_t target_fps; /* Target FPS. */
+    ecs_ftime_t delta_time; /* Frame time increment (0 for measured values) */
     int32_t threads;          /* Number of threads. */
     bool enable_rest;         /* Allows HTTP clients to access ECS data */
     bool enable_monitor;      /* Periodically collect statistics */
@@ -8895,8 +8900,8 @@ extern "C" {
 
 /** Component used for one shot/interval timer functionality */
 typedef struct EcsTimer {
-    FLECS_FLOAT timeout;         /* Timer timeout period */
-    FLECS_FLOAT time;            /* Incrementing time value */
+    ecs_ftime_t timeout;         /* Timer timeout period */
+    ecs_ftime_t time;            /* Incrementing time value */
     int32_t fired_count;         /* Number of times ticked */
     bool active;                 /* Is the timer active or not */
     bool single_shot;            /* Is this a single shot timer */
@@ -8907,7 +8912,7 @@ typedef struct EcsRateFilter {
     ecs_entity_t src;            /* Source of the rate filter */
     int32_t rate;                /* Rate of the rate filter */
     int32_t tick_count;          /* Number of times the rate filter ticked */
-    FLECS_FLOAT time_elapsed;    /* Time elapsed since last tick */
+    ecs_ftime_t time_elapsed;    /* Time elapsed since last tick */
 } EcsRateFilter;
 
 
@@ -8937,7 +8942,7 @@ FLECS_API
 ecs_entity_t ecs_set_timeout(
     ecs_world_t *world,
     ecs_entity_t tick_source,
-    FLECS_FLOAT timeout);
+    ecs_ftime_t timeout);
 
 /** Get current timeout value for the specified timer.
  * This operation returns the value set by ecs_set_timeout. If no timer is
@@ -8959,7 +8964,7 @@ ecs_entity_t ecs_set_timeout(
  * @return The current timeout value, or 0 if no timer is active.
  */
 FLECS_API
-FLECS_FLOAT ecs_get_timeout(
+ecs_ftime_t ecs_get_timeout(
     const ecs_world_t *world,
     ecs_entity_t tick_source);
 
@@ -8984,7 +8989,7 @@ FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t tick_source,
-    FLECS_FLOAT interval);   
+    ecs_ftime_t interval);   
 
 /** Get current interval value for the specified timer.
  * This operation returns the value set by ecs_set_interval. If the entity is
@@ -8995,7 +9000,7 @@ ecs_entity_t ecs_set_interval(
  * @return The current interval value, or 0 if no timer is active.
  */
 FLECS_API
-FLECS_FLOAT ecs_get_interval(
+ecs_ftime_t ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t tick_source);
 
@@ -9220,7 +9225,7 @@ ecs_entity_t ecs_get_pipeline(
 FLECS_API
 bool ecs_progress(
     ecs_world_t *world,
-    FLECS_FLOAT delta_time);   
+    ecs_ftime_t delta_time);   
 
 /** Set time scale.
  * Increase or decrease simulation speed by the provided multiplier.
@@ -9231,7 +9236,7 @@ bool ecs_progress(
 FLECS_API 
 void ecs_set_time_scale(
     ecs_world_t *world,
-    FLECS_FLOAT scale);
+    ecs_ftime_t scale);
 
 /** Reset world clock.
  * Reset the clock that keeps track of the total time passed in the simulation.
@@ -9264,7 +9269,7 @@ FLECS_API
 void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);    
+    ecs_ftime_t delta_time);    
     
 /** Deactivate systems that are not matched with tables.
  * By default Flecs deactivates systems that are not matched with any tables.
@@ -9345,8 +9350,8 @@ extern "C" {
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
-    bool tick;                 /* True if providing tick */
-    FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
+    bool tick;                   /* True if providing tick */
+    ecs_ftime_t time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9439,7 +9444,7 @@ typedef struct ecs_system_desc_t {
     ecs_ctx_free_t binding_ctx_free;   
 
     /* Interval in seconds at which the system should run */
-    FLECS_FLOAT interval;
+    ecs_ftime_t interval;
 
     /* Rate at which the system should run */
     int32_t rate;
@@ -9512,7 +9517,7 @@ FLECS_API
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param);
 
 /** Same as ecs_run, but subdivides entities across number of provided stages.
@@ -9531,7 +9536,7 @@ ecs_entity_t ecs_run_worker(
     ecs_entity_t system,
     int32_t stage_current,
     int32_t stage_count,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param);
 
 /** Run system with offset/limit and type filter.
@@ -9558,7 +9563,7 @@ FLECS_API
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     int32_t offset,
     int32_t limit,
     void *param);
@@ -10020,7 +10025,7 @@ FLECS_API extern ECS_DECLARE(EcsPeriod1d);
 FLECS_API extern ECS_DECLARE(EcsPeriod1w);
 
 typedef struct {
-    FLECS_FLOAT elapsed;
+    ecs_ftime_t elapsed;
     int32_t reduce_count;
 } EcsStatsHeader;
 
@@ -14569,17 +14574,17 @@ struct app_builder {
     {
         const ecs_world_info_t *stats = ecs_get_world_info(world);
         m_desc.target_fps = stats->target_fps;
-        if (m_desc.target_fps == static_cast<FLECS_FLOAT>(0.0)) {
+        if (m_desc.target_fps == static_cast<ecs_ftime_t>(0.0)) {
             m_desc.target_fps = 60;
         }
     }
 
-    app_builder& target_fps(FLECS_FLOAT value) {
+    app_builder& target_fps(ecs_ftime_t value) {
         m_desc.target_fps = value;
         return *this;
     }
 
-    app_builder& delta_time(FLECS_FLOAT value) {
+    app_builder& delta_time(ecs_ftime_t value) {
         m_desc.delta_time = value;
         return *this;
     }
@@ -15346,7 +15351,7 @@ struct world {
 
     /** Get last delta_time.
      */
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
@@ -15360,7 +15365,7 @@ struct world {
 
     /** Get current simulation time.
      */
-    FLECS_FLOAT time() const {
+    ecs_ftime_t time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->world_time_total;
     }
@@ -15402,7 +15407,7 @@ struct world {
      * @param delta_time Time elapsed since the last frame.
      * @return The provided delta_time, or measured time if 0 was provided.
      */
-    FLECS_FLOAT frame_begin(float delta_time = 0) {
+    ecs_ftime_t frame_begin(float delta_time = 0) {
         return ecs_frame_begin(m_world, delta_time);
     }
 
@@ -16248,22 +16253,22 @@ flecs::entity get_pipeline() const;
 /** Progress world one tick.
  * @see ecs_progress
  */
-bool progress(FLECS_FLOAT delta_time = 0.0) const;
+bool progress(ecs_ftime_t delta_time = 0.0) const;
 
 /** Run pipeline.
  * @see ecs_run_pipeline
  */
-void run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time = 0.0) const;
+void run_pipeline(const flecs::entity pip, ecs_ftime_t delta_time = 0.0) const;
 
 /** Set timescale
  * @see ecs_set_time_scale
  */
-void set_time_scale(FLECS_FLOAT mul) const;
+void set_time_scale(ecs_ftime_t mul) const;
 
 /** Get timescale
  * @see ecs_get_time_scale
  */
-FLECS_FLOAT get_time_scale() const;
+ecs_ftime_t get_time_scale() const;
 
 /** Get tick
  * @return Monotonically increasing frame count.
@@ -16273,12 +16278,12 @@ int32_t get_tick() const;
 /** Set target FPS
  * @see ecs_set_target_fps
  */
-void set_target_fps(FLECS_FLOAT target_fps) const;
+void set_target_fps(ecs_ftime_t target_fps) const;
 
 /** Get target FPS
  * @return Configured frames per second.
  */
-FLECS_FLOAT get_target_fps() const;
+ecs_ftime_t get_target_fps() const;
 
 /** Reset simulation clock.
  * @see ecs_reset_clock
@@ -16646,11 +16651,11 @@ public:
         return static_cast<size_t>(m_iter->count);
     }
 
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         return m_iter->delta_time;
     }
 
-    FLECS_FLOAT delta_system_time() const {
+    ecs_ftime_t delta_system_time() const {
         return m_iter->delta_system_time;
     }
 
@@ -17536,7 +17541,7 @@ struct entity_view : public id {
      *
      * @return Current delta_time.
      */
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
@@ -22380,7 +22385,7 @@ public:
      *
      * @param interval The interval value.
      */
-    Base& interval(FLECS_FLOAT interval) {
+    Base& interval(ecs_ftime_t interval) {
         m_desc->interval = interval;
         return *this;
     }
@@ -22473,7 +22478,7 @@ struct system_runner_fluent {
         entity_t id, 
         int32_t stage_current, 
         int32_t stage_count, 
-        FLECS_FLOAT delta_time, 
+        ecs_ftime_t delta_time, 
         void *param)
         : m_stage(world)
         , m_id(id)
@@ -22513,7 +22518,7 @@ struct system_runner_fluent {
 private:
     world_t *m_stage;
     entity_t m_id;
-    FLECS_FLOAT m_delta_time;
+    ecs_ftime_t m_delta_time;
     void *m_param;
     int32_t m_offset;
     int32_t m_limit;
@@ -22553,14 +22558,14 @@ struct system final : entity
         return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
     }
 
-    system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
+    system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {
         return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
     }
 
     system_runner_fluent run_worker(
         int32_t stage_current, 
         int32_t stage_count, 
-        FLECS_FLOAT delta_time = 0.0f, 
+        ecs_ftime_t delta_time = 0.0f, 
         void *param = nullptr) const 
     {
         return system_runner_fluent(
@@ -22572,22 +22577,22 @@ struct system final : entity
 /** Set interval.
  * @see ecs_set_interval
  */
-void interval(FLECS_FLOAT interval);
+void interval(ecs_ftime_t interval);
 
 /** Get interval.
  * @see ecs_get_interval.
  */
-FLECS_FLOAT interval();
+ecs_ftime_t interval();
 
 /** Set timeout.
  * @see ecs_set_timeout
  */
-void timeout(FLECS_FLOAT timeout);
+void timeout(ecs_ftime_t timeout);
 
 /** Get timeout.
  * @see ecs_get_timeout
  */
-FLECS_FLOAT timeout();
+ecs_ftime_t timeout();
 
 /** Set system rate (system is its own tick source).
  * @see ecs_set_rate
@@ -22719,19 +22724,19 @@ inline flecs::entity world::get_pipeline() const {
     return flecs::entity(m_world, ecs_get_pipeline(m_world));
 }
 
-inline bool world::progress(FLECS_FLOAT delta_time) const {
+inline bool world::progress(ecs_ftime_t delta_time) const {
     return ecs_progress(m_world, delta_time);
 }
 
-inline void world::run_pipeline(const flecs::entity pip, FLECS_FLOAT delta_time) const {
+inline void world::run_pipeline(const flecs::entity pip, ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(m_world, pip, delta_time);
 }
 
-inline void world::set_time_scale(FLECS_FLOAT mul) const {
+inline void world::set_time_scale(ecs_ftime_t mul) const {
     ecs_set_time_scale(m_world, mul);
 }  
 
-inline FLECS_FLOAT world::get_time_scale() const {
+inline ecs_ftime_t world::get_time_scale() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->time_scale;
 }
@@ -22741,12 +22746,12 @@ inline int32_t world::get_tick() const {
     return stats->frame_count_total;
 }
 
-inline FLECS_FLOAT world::get_target_fps() const {
+inline ecs_ftime_t world::get_target_fps() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->target_fps;
 } 
 
-inline void world::set_target_fps(FLECS_FLOAT target_fps) const {
+inline void world::set_target_fps(ecs_ftime_t target_fps) const {
     ecs_set_target_fps(m_world, target_fps);
 }
 
@@ -22780,19 +22785,19 @@ struct timer final : entity {
     timer(Args&&... args) : entity(FLECS_FWD(args)...) { }
 };
 
-inline void system::interval(FLECS_FLOAT interval) {
+inline void system::interval(ecs_ftime_t interval) {
     ecs_set_interval(m_world, m_id, interval);
 }
 
-inline FLECS_FLOAT system::interval() {
+inline ecs_ftime_t system::interval() {
     return ecs_get_interval(m_world, m_id);
 }
 
-inline void system::timeout(FLECS_FLOAT timeout) {
+inline void system::timeout(ecs_ftime_t timeout) {
     ecs_set_timeout(m_world, m_id, timeout);
 }
 
-inline FLECS_FLOAT system::timeout() {
+inline ecs_ftime_t system::timeout() {
     return ecs_get_timeout(m_world, m_id);
 }
 

@@ -27,8 +27,8 @@ extern "C" {
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
-    bool tick;                 /* True if providing tick */
-    FLECS_FLOAT time_elapsed;  /* Time elapsed since last tick */
+    bool tick;                   /* True if providing tick */
+    ecs_ftime_t time_elapsed;  /* Time elapsed since last tick */
 } EcsTickSource;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ typedef struct ecs_system_desc_t {
     ecs_ctx_free_t binding_ctx_free;   
 
     /* Interval in seconds at which the system should run */
-    FLECS_FLOAT interval;
+    ecs_ftime_t interval;
 
     /* Rate at which the system should run */
     int32_t rate;
@@ -194,7 +194,7 @@ FLECS_API
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param);
 
 /** Same as ecs_run, but subdivides entities across number of provided stages.
@@ -213,7 +213,7 @@ ecs_entity_t ecs_run_worker(
     ecs_entity_t system,
     int32_t stage_current,
     int32_t stage_count,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     void *param);
 
 /** Run system with offset/limit and type filter.
@@ -240,7 +240,7 @@ FLECS_API
 ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
-    FLECS_FLOAT delta_time,
+    ecs_ftime_t delta_time,
     int32_t offset,
     int32_t limit,
     void *param);

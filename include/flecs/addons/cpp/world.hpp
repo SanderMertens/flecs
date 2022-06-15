@@ -163,7 +163,7 @@ struct world {
 
     /** Get last delta_time.
      */
-    FLECS_FLOAT delta_time() const {
+    ecs_ftime_t delta_time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
@@ -177,7 +177,7 @@ struct world {
 
     /** Get current simulation time.
      */
-    FLECS_FLOAT time() const {
+    ecs_ftime_t time() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->world_time_total;
     }
@@ -219,7 +219,7 @@ struct world {
      * @param delta_time Time elapsed since the last frame.
      * @return The provided delta_time, or measured time if 0 was provided.
      */
-    FLECS_FLOAT frame_begin(float delta_time = 0) {
+    ecs_ftime_t frame_begin(float delta_time = 0) {
         return ecs_frame_begin(m_world, delta_time);
     }
 

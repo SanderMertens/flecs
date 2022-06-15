@@ -8,19 +8,19 @@ struct timer final : entity {
     timer(Args&&... args) : entity(FLECS_FWD(args)...) { }
 };
 
-inline void system::interval(FLECS_FLOAT interval) {
+inline void system::interval(ecs_ftime_t interval) {
     ecs_set_interval(m_world, m_id, interval);
 }
 
-inline FLECS_FLOAT system::interval() {
+inline ecs_ftime_t system::interval() {
     return ecs_get_interval(m_world, m_id);
 }
 
-inline void system::timeout(FLECS_FLOAT timeout) {
+inline void system::timeout(ecs_ftime_t timeout) {
     ecs_set_timeout(m_world, m_id, timeout);
 }
 
-inline FLECS_FLOAT system::timeout() {
+inline ecs_ftime_t system::timeout() {
     return ecs_get_timeout(m_world, m_id);
 }
 
