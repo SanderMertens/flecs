@@ -188,7 +188,7 @@ ecs_entity_t ecs_observer_init(
         ECS_INVALID_OPERATION, NULL);
 
     ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
-    EcsPoly *poly = ecs_poly_bind_ensure(world, entity, EcsObserver);
+    EcsPoly *poly = ecs_poly_bind(world, entity, EcsObserver);
     if (!poly->poly) {
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -404,7 +404,7 @@ void* ecs_get_observer_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, EcsObserver);
     if (o) {
         ecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->ctx;
@@ -417,7 +417,7 @@ void* ecs_get_observer_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, EcsObserver);
     if (o) {
         ecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->binding_ctx;

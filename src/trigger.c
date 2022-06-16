@@ -164,7 +164,7 @@ void register_trigger_for_id(
             ecs_map_init(triggers, ecs_trigger_t*, 1);
         }
 
-        ecs_map_ensure(triggers, ecs_trigger_t*, trigger->id)[0] = trigger;
+        ecs_map_ensure(triggers, ecs_trigger_t*, trigger->entity)[0] = trigger;
 
         inc_trigger_count(world, event, evt, term_id, 1);
         if (term_id != id) {
@@ -228,7 +228,7 @@ void unregister_trigger_for_id(
 
         ecs_map_t *id_triggers = ECS_OFFSET(idt, triggers_offset);
 
-        if (ecs_map_remove(id_triggers, trigger->id) == 0) {
+        if (ecs_map_remove(id_triggers, trigger->entity) == 0) {
             ecs_map_fini(id_triggers);
         }
 
@@ -800,38 +800,23 @@ void flecs_set_triggers_notify(
 ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc)
-{
-    char *name = NULL;
-    
+{    
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
-
-    const char *expr = desc->expr;
-    ecs_trigger_t *trigger = NULL;
     
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
         observable = ecs_get_observable(world);
     }
 
-    /* If entity is provided, create it */
-    ecs_entity_t existing = desc->entity.entity;
-    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
-    if (!existing && !desc->entity.name) {
-        ecs_add_pair(world, entity, EcsChildOf, EcsFlecsHidden);
-    }
-
-    bool added = false;
-    EcsTrigger *comp = ecs_get_mut(world, entity, EcsTrigger, &added);
-    if (added) {
-        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        /* Something went wrong with the construction of the entity */
-        ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-        name = ecs_get_fullpath(world, entity);
+    ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+    EcsPoly *poly = ecs_poly_bind(world, entity, EcsTrigger);
+    if (!poly->poly) {        
+        const char *name = ecs_get_name(world, entity);
+        const char *expr = desc->expr;
 
         ecs_term_t term;
         if (expr) {
@@ -864,8 +849,12 @@ ecs_entity_t ecs_trigger_init(
             goto error;
         }
 
-        trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->id = flecs_sparse_last_id(world->triggers);
+        ecs_trigger_t *trigger = ecs_poly_new(ecs_trigger_t);
+        ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
+        poly->poly = trigger;
+        trigger->world = world;
+        trigger->dtor = (ecs_poly_dtor_t)flecs_trigger_fini;
+        trigger->entity = entity;
 
         trigger->term = ecs_term_move(&term);
         trigger->callback = desc->callback;
@@ -891,8 +880,6 @@ ecs_entity_t ecs_trigger_init(
             trigger->match_disabled = true;
         }
 
-        comp->trigger = trigger;
-
         /* Trigger must have at least one event */
         ecs_check(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -909,26 +896,20 @@ ecs_entity_t ecs_trigger_init(
             trigger_yield_existing(world, trigger);
         }
     } else {
-        ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
-
         /* If existing entity handle was provided, override existing params */
-        if (existing) {
-            if (desc->callback) {
-                ((ecs_trigger_t*)comp->trigger)->callback = desc->callback;
-            }
-            if (desc->ctx) {
-                ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
-            }
-            if (desc->binding_ctx) {
-                ((ecs_trigger_t*)comp->trigger)->binding_ctx = desc->binding_ctx;
-            }
+        if (desc->callback) {
+            ecs_poly(poly->poly, ecs_trigger_t)->callback = desc->callback;
+        }
+        if (desc->ctx) {
+            ecs_poly(poly->poly, ecs_trigger_t)->ctx = desc->ctx;
+        }
+        if (desc->binding_ctx) {
+            ecs_poly(poly->poly, ecs_trigger_t)->binding_ctx = desc->binding_ctx;
         }
     }
 
-    ecs_os_free(name);
     return entity;
 error:
-    ecs_os_free(name);
     ecs_delete(world, entity);
     return 0;
 }
@@ -937,9 +918,9 @@ void* ecs_get_trigger_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
-    if (t) {
-        return t->trigger->ctx;
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    if (p) {
+        return ecs_poly(p->poly, ecs_trigger_t)->ctx;
     } else {
         return NULL;
     }     
@@ -949,19 +930,18 @@ void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
-    if (t) {
-        return t->trigger->binding_ctx;
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    if (p) {
+        return ecs_poly(p->poly, ecs_trigger_t)->binding_ctx;
     } else {
         return NULL;
     }      
 }
 
 void flecs_trigger_fini(
-    ecs_world_t *world,
     ecs_trigger_t *trigger)
-{    
-    unregister_trigger(world, trigger->observable, trigger);
+{        
+    unregister_trigger(trigger->world, trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
     if (trigger->ctx_free) {
@@ -972,5 +952,5 @@ void flecs_trigger_fini(
         trigger->binding_ctx_free(trigger->binding_ctx);
     }
 
-    flecs_sparse_remove(world->triggers, trigger->id);
+    ecs_poly_free(trigger, ecs_trigger_t);
 }

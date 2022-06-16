@@ -280,8 +280,10 @@ void ecs_world_stats_get(
 
     ECS_GAUGE_RECORD(&s->query_count, t, 
         ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsQuery)));
-    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count(world, EcsTrigger));
-    ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsObserver)));
+    ECS_GAUGE_RECORD(&s->trigger_count, t, 
+        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsTrigger)));
+    ECS_GAUGE_RECORD(&s->observer_count, t, 
+        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsObserver)));
     ECS_GAUGE_RECORD(&s->system_count, t, ecs_count(world, EcsSystem));
 
     ECS_COUNTER_RECORD(&s->id_create_count, t, world->info.id_create_total);

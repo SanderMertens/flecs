@@ -31,7 +31,6 @@ bool flecs_check_triggers_for_event(
     ecs_entity_t event);
 
 void flecs_trigger_fini(
-    ecs_world_t *world,
     ecs_trigger_t *trigger);
 
 void flecs_observer_fini(

@@ -1,8 +1,6 @@
 #include "private_api.h"
 
-/* -- Component lifecycle -- */
-
-/* Component lifecycle actions for EcsIdentifier */
+/* -- Identifier Component -- */
 static ECS_DTOR(EcsIdentifier, ptr, {
     ecs_os_strset(&ptr->value, NULL);
 })
@@ -103,23 +101,32 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     }
 }
 
-/* Component lifecycle actions for EcsTrigger */
-static void ecs_on_remove(EcsTrigger)(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsTrigger *ptr = ecs_term(it, EcsTrigger, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (ptr[i].trigger) {
-            flecs_trigger_fini(world, (ecs_trigger_t*)ptr[i].trigger);
-        }
-    }
-}
 
-/* Destructor for poly component */
+/* -- Poly component -- */
+
+ECS_COPY(EcsPoly, dst, src, {
+    (void)dst;
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
+})
+
+ECS_MOVE(EcsPoly, dst, src, {
+    if (dst->poly && (dst->poly != src->poly)) {
+        ecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
+        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        dtor[0](dst->poly);
+    }
+
+    dst->poly = src->poly;
+    src->poly = NULL;
+})
+
 ECS_DTOR(EcsPoly, ptr, {
-    ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
-    ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
-    dtor[0](ptr->poly);
+    if (ptr->poly) {
+        ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        dtor[0](ptr->poly);
+    }
 })
 
 
@@ -651,13 +658,10 @@ void flecs_bootstrap(
         .on_remove = ecs_on_set(EcsIdentifier)
     });
 
-    flecs_type_info_init(world, EcsTrigger, {
-        .ctor = ecs_default_ctor,
-        .on_remove = ecs_on_remove(EcsTrigger)
-    });
-
     flecs_type_info_init(world, EcsPoly, {
         .ctor = ecs_default_ctor,
+        .copy = ecs_copy(EcsPoly),
+        .move = ecs_move(EcsPoly),
         .dtor = ecs_dtor(EcsPoly)
     });
 
@@ -675,8 +679,6 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
-
-    bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsIterable);
     bootstrap_component(world, table, EcsPoly);
 
@@ -704,6 +706,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsAlias);
 
     flecs_bootstrap_tag(world, EcsQuery);
+    flecs_bootstrap_tag(world, EcsTrigger);
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);

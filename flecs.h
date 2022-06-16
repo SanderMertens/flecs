@@ -2476,6 +2476,8 @@ struct ecs_filter_t {
 
 /** A trigger reacts to events matching a single term */
 struct ecs_trigger_t {
+    ecs_header_t hdr;
+
     ecs_term_t term;            /* Term describing the trigger condition id */
 
     /* Trigger events */
@@ -2489,8 +2491,6 @@ struct ecs_trigger_t {
 
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-    
-    ecs_entity_t entity;        /* Trigger entity */
 
     ecs_observable_t *observable;  /* Observable for trigger */
 
@@ -2498,9 +2498,13 @@ struct ecs_trigger_t {
     bool match_disabled;        /* Should trigger ignore disabled entities */
     bool instanced;             /* See ecs_filter_desc_t */
 
-    uint64_t id;                /* Internal id */
     int32_t *last_event_id;     /* Optional pointer to observer last_event_id */
     ecs_id_t register_id;       /* Id with with trigger is registered */
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    ecs_poly_dtor_t dtor;
 };
 
 /* An observer reacts to events matching a filter */
@@ -2527,7 +2531,6 @@ struct ecs_observer_t {
 
     ecs_observable_t *observable;  /* Observable for observer */
 
-    uint64_t id;                /* Internal id */  
     int32_t last_event_id;      /* Last handled event id */
 
     bool is_monitor;            /* If true, the observer only triggers when the
@@ -3766,11 +3769,6 @@ typedef struct EcsComponent {
     ecs_size_t alignment;      /* Component alignment */
 } EcsComponent;
 
-/** Component that stores reference to trigger */
-typedef struct EcsTrigger {
-    const ecs_trigger_t *trigger;
-} EcsTrigger;
-
 /** Component for storing a poly object */
 typedef struct EcsPoly {
     ecs_poly_t *poly;
@@ -3899,11 +3897,11 @@ FLECS_API extern const ecs_id_t ECS_DISABLED;
 /** Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
-FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
 FLECS_API extern const ecs_entity_t EcsQuery;
+FLECS_API extern const ecs_entity_t EcsTrigger;
 FLECS_API extern const ecs_entity_t EcsObserver;
 
 /* System module component ids */

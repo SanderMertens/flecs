@@ -383,7 +383,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
-    }   
+    }
 
     ecs_fini(world);
 }

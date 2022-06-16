@@ -38,6 +38,15 @@ ecs_mixins_t ecs_query_t_mixins = {
     }
 };
 
+ecs_mixins_t ecs_trigger_t_mixins = {
+    .type_name = "ecs_trigger_t",
+    .elems = {
+        [EcsMixinWorld] = offsetof(ecs_trigger_t, world),
+        [EcsMixinEntity] = offsetof(ecs_trigger_t, entity),
+        [EcsMixinDtor] = offsetof(ecs_trigger_t, dtor)
+    }
+};
+
 ecs_mixins_t ecs_observer_t_mixins = {
     .type_name = "ecs_observer_t",
     .elems = {
@@ -147,23 +156,7 @@ void _ecs_poly_fini(
     hdr->magic = 0;
 }
 
-void ecs_poly_bind(
-    ecs_poly_t *poly,
-    ecs_entity_t entity,
-    ecs_entity_t kind)
-{
-    ecs_world_t *world = (ecs_world_t*)ecs_get_world(poly);
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    EcsPoly *p = ecs_get_mut_pair(world, entity, EcsPoly, kind, 0);
-    ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
-    p->poly = poly;
-
-    ecs_entity_t *ent = assert_mixin(poly, EcsMixinEntity);
-    *ent = entity;
-}
-
-EcsPoly* ecs_poly_bind_ensure(
+EcsPoly* ecs_poly_bind(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t kind)
@@ -175,8 +168,8 @@ EcsPoly* ecs_poly_bind_ensure(
 
 const EcsPoly* ecs_poly_bind_get(
     const ecs_world_t *world,
-    ecs_entity_t kind,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    ecs_entity_t kind)
 {
     return ecs_get_pair(world, entity, EcsPoly, kind);
 }

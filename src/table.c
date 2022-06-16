@@ -341,6 +341,8 @@ void flecs_table_init_flags(
                         table->sw_offset = flecs_ito(int16_t, i);
                     }
                     table->sw_count ++;
+                } else if (r == ecs_id(EcsPoly)) {
+                    table->flags |= EcsTableHasBuiltins;
                 }
             } else if (role == ECS_DISABLED) {
                 table->flags |= EcsTableHasDisabled;
