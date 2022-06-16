@@ -113,7 +113,7 @@ ecs_entity_t ecs_set_timeout(
         .active = true
     });
 
-    EcsSystem *system_data = ecs_get_mut(world, timer, EcsSystem, NULL);
+    ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -149,7 +149,7 @@ ecs_entity_t ecs_set_interval(
         .active = true
     });
 
-    EcsSystem *system_data = ecs_get_mut(world, timer, EcsSystem, NULL);
+    ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -211,7 +211,7 @@ ecs_entity_t ecs_set_rate(
         .src = source
     });
 
-    EcsSystem *system_data = ecs_get_mut(world, filter, EcsSystem, NULL);
+    ecs_system_t *system_data = ecs_poly_get(world, filter, ecs_system_t);
     if (system_data) {
         system_data->tick_source = filter;
     }  
@@ -229,7 +229,7 @@ void ecs_set_tick_source(
     ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
+    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
     ecs_check(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;

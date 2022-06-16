@@ -9885,11 +9885,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-<<<<<<< HEAD
-        65,
-=======
-        63,
->>>>>>> 076ac077 (Store observers in Poly component)
+        64,
         Observer_testcases
     },
     {

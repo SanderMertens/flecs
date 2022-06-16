@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     // DependsOn relationship. 
     ecs_entity_t pipeline = ecs_pipeline_init(ecs, &(ecs_pipeline_desc_t) {
         .query.filter.terms = {
-            { .id = ecs_id(EcsSystem) }, // Mandatory, must always match systems
+            { .id = EcsSystem }, // Mandatory, must always match systems
             { .id = Physics }
         }
     });

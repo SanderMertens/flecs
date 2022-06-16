@@ -449,7 +449,7 @@ private:
     BindingCtx* get_binding_ctx(flecs::type_hooks_t& h){        
         BindingCtx *result = static_cast<BindingCtx*>(h.binding_ctx);
         if (!result) {
-            result = new BindingCtx;
+            result = FLECS_NEW(BindingCtx);
             h.binding_ctx = result;
             h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
                 _::free_obj<BindingCtx>);

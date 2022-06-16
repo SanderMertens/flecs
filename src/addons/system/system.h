@@ -5,12 +5,19 @@
 
 #include "../../private_api.h"
 
-typedef struct EcsSystem {
+#define ecs_system_t_magic     (0x65637383)
+#define ecs_system_t_tag       EcsSystem
+
+extern ecs_mixins_t ecs_system_t_mixins;
+
+typedef struct ecs_system_t {
+    ecs_header_t hdr;
+
     ecs_run_action_t run;           /* See ecs_system_desc_t */
     ecs_iter_action_t action;       /* See ecs_system_desc_t */
 
-    ecs_entity_t entity;            /* Entity id of system, used for ordering */
     ecs_query_t *query;             /* System query */
+    ecs_entity_t query_entity;      /* Entity associated with query */
     ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     
@@ -31,22 +38,27 @@ typedef struct EcsSystem {
 
     ecs_ctx_free_t ctx_free;
     ecs_ctx_free_t status_ctx_free;
-    ecs_ctx_free_t binding_ctx_free;      
-} EcsSystem;
+    ecs_ctx_free_t binding_ctx_free;
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    ecs_poly_dtor_t dtor;      
+} ecs_system_t;
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
     bool activate,
-    const EcsSystem *system_data);
+    const ecs_system_t *system_data);
 
 /* Internal function to run a system */
 ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
-    EcsSystem *system_data,
+    ecs_system_t *system_data,
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,

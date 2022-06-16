@@ -526,6 +526,8 @@ typedef int32_t ecs_size_t;
 #define ecs_pair_relation ecs_pair_first
 #define ecs_pair_object ecs_pair_second
 
+#define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Debug macro's
 ////////////////////////////////////////////////////////////////////////////////
@@ -3905,7 +3907,7 @@ FLECS_API extern const ecs_entity_t EcsTrigger;
 FLECS_API extern const ecs_entity_t EcsObserver;
 
 /* System module component ids */
-FLECS_API extern const ecs_entity_t ecs_id(EcsSystem);
+FLECS_API extern const ecs_entity_t EcsSystem;
 FLECS_API extern const ecs_entity_t ecs_id(EcsTickSource);
 
 /** Pipeline module component ids */
@@ -4138,7 +4140,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
-#define EcsLastInternalComponentId (ecs_id(EcsSystem))
+#define EcsLastInternalComponentId (ecs_id(EcsPoly))
 
 /* The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -12852,7 +12854,7 @@ static const flecs::entity_t Trigger = EcsTrigger;
 static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */
-static const flecs::entity_t System = ecs_id(EcsSystem);
+static const flecs::entity_t System = EcsSystem;
 
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
@@ -18674,6 +18676,18 @@ struct component_binding_ctx {
     ecs_ctx_free_t free_on_add = nullptr;
     ecs_ctx_free_t free_on_remove = nullptr;
     ecs_ctx_free_t free_on_set = nullptr;
+
+    ~component_binding_ctx() {
+        if (on_add && free_on_add) {
+            free_on_add(on_add);
+        }
+        if (on_remove && free_on_remove) {
+            free_on_remove(on_remove);
+        }
+        if (on_set && free_on_set) {
+            free_on_set(on_set);
+        }
+    }
 };
 
 // Utility to convert template argument pack to array of term ptrs
@@ -20042,7 +20056,7 @@ private:
     BindingCtx* get_binding_ctx(flecs::type_hooks_t& h){        
         BindingCtx *result = static_cast<BindingCtx*>(h.binding_ctx);
         if (!result) {
-            result = new BindingCtx;
+            result = FLECS_NEW(BindingCtx);
             h.binding_ctx = result;
             h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
                 _::free_obj<BindingCtx>);
