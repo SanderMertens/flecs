@@ -25,6 +25,19 @@ void Observer_w_value(ecs_iter_t *it) {
 }
 
 static
+void Observer_w_1_value(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_term(it, Position, 1);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+static
 void Observer_w_filter_term(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -835,6 +848,7 @@ void Observer_2_terms_1_not_w_on_add() {
     test_int(ctx.invoked, 0);
 
     ecs_clear(world, e);
+    test_int(ctx.invoked, 0);
     test_assert(!ecs_has(world, e, TagB));
 
     ecs_add_id(world, e, TagA);
@@ -2831,5 +2845,35 @@ void Observer_custom_run_action_w_iter_next() {
     test_int(ctx.e[0], e);
     test_int(ctx.event, EcsOnAdd);
     
+    ecs_fini(world);
+}
+
+void Observer_read_in_on_remove_after_add_other_w_not() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, O);
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {
+            { .id = ecs_pair(ecs_id(Position), O)},
+            { .id = Tag, .oper = EcsNot }
+        },
+        .events = {EcsOnRemove},
+        .callback = Observer_w_1_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_set_pair(world, 0, Position, O, { 10, 20 });
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Tag);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+
     ecs_fini(world);
 }

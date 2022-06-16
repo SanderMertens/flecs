@@ -40210,19 +40210,8 @@ bool observer_run(ecs_iter_t *it) {
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int32_t pivot_term = it->term_index;
+    int32_t ignore_term = -1;
     ecs_term_t *term = &o->filter.terms[pivot_term];
-
-    if (term->oper == EcsNot) {
-        table = it->other_table;
-        prev_table = it->table;
-    }
-
-    if (!table) {
-        table = &world->store.root;
-    }
-    if (!prev_table) {
-        prev_table = &world->store.root;
-    }
 
     static int obs_count = 0;
     obs_count ++;
@@ -40234,6 +40223,24 @@ bool observer_run(ecs_iter_t *it) {
 
     /* Normalize id */
     int32_t column = it->columns[0];
+    if (term->oper == EcsNot) {
+        column = 0;
+        if (it->event == EcsOnAdd) {
+            ignore_term = pivot_term;
+            prev_table = it->table;
+        } else if (it->event == EcsOnRemove) {
+            table = it->other_table;
+            prev_table = it->table;
+        }
+    }
+
+    if (!table) {
+        table = &world->store.root;
+    }
+    if (!prev_table) {
+        prev_table = &world->store.root;
+    }
+
     if (column < 0) {
         column = -column;
     }
@@ -40241,7 +40248,7 @@ bool observer_run(ecs_iter_t *it) {
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+        user_it.columns, user_it.subjects, NULL, NULL, false, ignore_term, 
         user_it.flags))
     {
         /* Monitor observers only trigger when the filter matches for the first
@@ -40266,7 +40273,7 @@ bool observer_run(ecs_iter_t *it) {
         }
 
         flecs_iter_populate_data(world, &user_it, 
-            it->table, it->offset, it->count, user_it.ptrs, user_it.sizes);
+            table, it->offset, it->count, user_it.ptrs, user_it.sizes);
 
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;

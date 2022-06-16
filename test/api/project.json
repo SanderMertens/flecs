@@ -1561,7 +1561,8 @@
                 "mixed_un_set_w_tag",
                 "match_base_w_id_at_offset",
                 "custom_run_action",
-                "custom_run_action_w_iter_next"
+                "custom_run_action_w_iter_next",
+                "read_in_on_remove_after_add_other_w_not"
             ]                
         }, {
             "id": "ObserverOnSet",
