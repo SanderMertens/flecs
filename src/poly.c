@@ -1,5 +1,4 @@
 #include "private_api.h"
-#include <stddef.h>
 
 static const char* mixin_kind_str[] = {
     [EcsMixinBase] = "base (should never be requested by application)",
@@ -156,22 +155,38 @@ void _ecs_poly_fini(
     hdr->magic = 0;
 }
 
-EcsPoly* ecs_poly_bind(
+EcsPoly* _ecs_poly_bind(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t kind)
+    ecs_entity_t tag)
 {
+    /* Add tag to the entity for easy querying. This will make it possible to
+     * query for `Query` instead of `(Poly, Query) */
+    ecs_add_id(world, entity, tag);
+
     /* If this is a new poly, leave the actual creation up to the caller so they
      * call tell the difference between a create or an update */
-    return ecs_get_mut_pair(world, entity, EcsPoly, kind, NULL);
+    return ecs_get_mut_pair(world, entity, EcsPoly, tag, NULL);
 }
 
-const EcsPoly* ecs_poly_bind_get(
+const EcsPoly* _ecs_poly_bind_get(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t kind)
+    ecs_entity_t tag)
 {
-    return ecs_get_pair(world, entity, EcsPoly, kind);
+    return ecs_get_pair(world, entity, EcsPoly, tag);
+}
+
+ecs_poly_t* _ecs_poly_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag)
+{
+    const EcsPoly *p = _ecs_poly_bind_get(world, entity, tag);
+    if (p) {
+        return p->poly;
+    }
+    return NULL;
 }
 
 ecs_entity_t ecs_poly_entity_init(
@@ -188,8 +203,8 @@ ecs_entity_t ecs_poly_entity_init(
     return result;
 }
 
-#define assert_object(cond, file, line)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
+#define assert_object(cond, file, line, type_name)\
+    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
     assert(cond)
 
 #ifndef FLECS_NDEBUG
@@ -199,11 +214,12 @@ void* _ecs_poly_assert(
     const char *file,
     int32_t line)
 {
-    assert_object(poly != NULL, file, line);
+    assert_object(poly != NULL, file, line, 0);
     
     const ecs_header_t *hdr = poly;
-    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
-    assert_object(hdr->type == type, file, line);
+    const char *type_name = hdr->mixins->type_name;
+    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line, type_name);
+    assert_object(hdr->type == type, file, line, type_name);
     return (ecs_poly_t*)poly;
 }
 #endif

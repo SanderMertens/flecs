@@ -1871,7 +1871,7 @@ ecs_query_t* ecs_query_init(
         e = ecs_new_w_pair(world, EcsChildOf, EcsFlecsHidden);
     }
 
-    EcsPoly *poly = ecs_poly_bind(world, e, EcsQuery);
+    EcsPoly *poly = ecs_poly_bind(world, e, ecs_query_t);
     poly->poly = result;
     result->entity = e;
 

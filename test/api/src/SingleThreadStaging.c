@@ -2073,7 +2073,6 @@ void SingleThreadStaging_match_table_created_w_new_in_progress() {
     ecs_fini(world);
 }
 
-
 void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     ecs_world_t *world = ecs_init();
 

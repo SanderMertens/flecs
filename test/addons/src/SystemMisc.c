@@ -609,6 +609,7 @@ void SystemMisc_status_activate_after_new() {
 
     /* Add entity with Position. Should activate system. */
     reset_status();
+
     ecs_new(world, Position);
     ecs_run_aperiodic(world, 0);
 

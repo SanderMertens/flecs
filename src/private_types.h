@@ -38,6 +38,16 @@
 #define ecs_trigger_t_magic   (0x65637372)
 #define ecs_observer_t_magic  (0x65637362)
 
+/* Tags associated with poly for (Poly, tag) components */
+#define ecs_world_t_tag     invalid
+#define ecs_stage_t_tag     invalid
+#define ecs_query_t_tag     EcsQuery
+#define ecs_rule_t_tag      invalid
+#define ecs_table_t_tag     invalid
+#define ecs_filter_t_tag    invalid
+#define ecs_trigger_t_tag   EcsTrigger
+#define ecs_observer_t_tag  EcsObserver
+
 /* Mixin kinds */
 typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,

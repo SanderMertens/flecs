@@ -8,15 +8,15 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
 const ecs_entity_t ecs_id(EcsIdentifier) =         2;
-const ecs_entity_t ecs_id(EcsIterable) =           6;
-const ecs_entity_t ecs_id(EcsPoly) =               7;
+const ecs_entity_t ecs_id(EcsIterable) =           3;
+const ecs_entity_t ecs_id(EcsPoly) =               4;
 
-const ecs_entity_t EcsQuery =                      4;
-const ecs_entity_t EcsTrigger =                    3;
-const ecs_entity_t EcsObserver =                   5;
+const ecs_entity_t EcsQuery =                      5;
+const ecs_entity_t EcsTrigger =                    6;
+const ecs_entity_t EcsObserver =                   7;
 
 /* System module component ids */
-const ecs_entity_t ecs_id(EcsSystem) =             10;
+const ecs_entity_t EcsSystem =                     10;
 const ecs_entity_t ecs_id(EcsTickSource) =         11;
 
 /** Timer module component ids */

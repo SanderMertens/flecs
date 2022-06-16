@@ -278,13 +278,10 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->wildcard_id_count, t, world->info.wildcard_id_count);
     ECS_GAUGE_RECORD(&s->component_count, t, ecs_sparse_count(world->type_info));
 
-    ECS_GAUGE_RECORD(&s->query_count, t, 
-        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsQuery)));
-    ECS_GAUGE_RECORD(&s->trigger_count, t, 
-        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsTrigger)));
-    ECS_GAUGE_RECORD(&s->observer_count, t, 
-        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsObserver)));
-    ECS_GAUGE_RECORD(&s->system_count, t, ecs_count(world, EcsSystem));
+    ECS_GAUGE_RECORD(&s->query_count, t, ecs_count_id(world, EcsQuery));
+    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count_id(world, EcsTrigger));
+    ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count_id(world, EcsObserver));
+    ECS_GAUGE_RECORD(&s->system_count, t, ecs_count_id(world, EcsSystem));
 
     ECS_COUNTER_RECORD(&s->id_create_count, t, world->info.id_create_total);
     ECS_COUNTER_RECORD(&s->id_delete_count, t, world->info.id_delete_total);
@@ -426,7 +423,7 @@ bool ecs_system_stats_get(
 
     world = ecs_get_world(world);
 
-    const EcsSystem *ptr = ecs_get(world, system, EcsSystem);
+    const ecs_system_t *ptr = ecs_poly_get(world, system, ecs_system_t);
     if (!ptr) {
         return false;
     }

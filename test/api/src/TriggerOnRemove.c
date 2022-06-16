@@ -325,7 +325,8 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger() {
     dummy_called = 0;
 
     ecs_delete(world, trigger);
-    test_int(dummy_called, 0);
+    
+    test_int(dummy_called, 1);
 
     dummy_called = 0;
 

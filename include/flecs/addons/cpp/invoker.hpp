@@ -17,6 +17,18 @@ struct component_binding_ctx {
     ecs_ctx_free_t free_on_add = nullptr;
     ecs_ctx_free_t free_on_remove = nullptr;
     ecs_ctx_free_t free_on_set = nullptr;
+
+    ~component_binding_ctx() {
+        if (on_add && free_on_add) {
+            free_on_add(on_add);
+        }
+        if (on_remove && free_on_remove) {
+            free_on_remove(on_remove);
+        }
+        if (on_set && free_on_set) {
+            free_on_set(on_set);
+        }
+    }
 };
 
 // Utility to convert template argument pack to array of term ptrs

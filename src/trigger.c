@@ -813,7 +813,7 @@ ecs_entity_t ecs_trigger_init(
     }
 
     ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
-    EcsPoly *poly = ecs_poly_bind(world, entity, EcsTrigger);
+    EcsPoly *poly = ecs_poly_bind(world, entity, ecs_trigger_t);
     if (!poly->poly) {        
         const char *name = ecs_get_name(world, entity);
         const char *expr = desc->expr;
@@ -841,7 +841,8 @@ ecs_entity_t ecs_trigger_init(
             ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
     #endif
         } else {
-            term = ecs_term_copy(&desc->term);
+            term = desc->term;
+            term.move = false;
         }
 
         if (ecs_term_finalize(world, name, &term)) {
@@ -918,7 +919,7 @@ void* ecs_get_trigger_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, ecs_trigger_t);
     if (p) {
         return ecs_poly(p->poly, ecs_trigger_t)->ctx;
     } else {
@@ -930,7 +931,7 @@ void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, ecs_trigger_t);
     if (p) {
         return ecs_poly(p->poly, ecs_trigger_t)->binding_ctx;
     } else {

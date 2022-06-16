@@ -257,7 +257,7 @@ error:
 }
 
 static
-void notify(
+void flecs_notify(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -511,7 +511,7 @@ bool override_from_base(
             int32_t c = ecs_search_relation(world, other_table, 0, component, 
                 EcsIsA, 1, 0, 0, 0, 0, 0);
             if (c == -1) {
-                notify(
+                flecs_notify(
                     world, table, other_table, row, count, EcsOnSet, &ids, 0);
             }
         }
@@ -829,7 +829,7 @@ void update_component_monitors(
 }
 
 static
-void commit(
+void flecs_commit(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -1037,7 +1037,7 @@ void add_id_w_record(
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
 
-    commit(world, entity, record, dst_table, &diff, construct, 
+    flecs_commit(world, entity, record, dst_table, &diff, construct, 
         false); /* notify_on_set = false, this function is only called from
                  * functions that are about to set the component. */
 }
@@ -1060,7 +1060,7 @@ void add_id(
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
 
-    commit(world, entity, r, dst_table, &diff, true, true);
+    flecs_commit(world, entity, r, dst_table, &diff, true, true);
 
     flecs_defer_flush(world, stage);
 }
@@ -1087,7 +1087,7 @@ void remove_id(
     ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, &id, &diff);
 
-    commit(world, entity, r, dst_table, &diff, true, true);
+    flecs_commit(world, entity, r, dst_table, &diff, true, true);
 
 done:
     flecs_defer_flush(world, stage);
@@ -1163,7 +1163,7 @@ void flecs_notify_on_add(
         }
 
         if (table->flags & EcsTableHasOnAdd) {
-            notify(world, table, other_table, row, count, EcsOnAdd, 
+            flecs_notify(world, table, other_table, row, count, EcsOnAdd, 
                 &diff->added, 0);
         }
     }
@@ -1172,7 +1172,7 @@ void flecs_notify_on_add(
      * components from the base. Send OnSet notifications so that an application
      * can respond to these new components. */
     if (run_on_set && diff->on_set.count) {
-        notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set, 
+        flecs_notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set, 
             EcsIsA);
     }
 }
@@ -1189,16 +1189,16 @@ void flecs_notify_on_remove(
 
     if (count) {
         if (diff->un_set.count) {
-            notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set, 0);
+            flecs_notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set, 0);
         }
 
         if (table->flags & EcsTableHasOnRemove && diff->removed.count) {
-            notify(world, table, other_table, row, count, EcsOnRemove, 
+            flecs_notify(world, table, other_table, row, count, EcsOnRemove, 
                 &diff->removed, 0);
         }
 
         if (table->flags & EcsTableHasIsA && diff->on_set.count) {
-            notify(world, table, other_table, row, count, EcsOnSet, 
+            flecs_notify(world, table, other_table, row, count, EcsOnSet, 
                 &diff->on_set, 0);
         }
     }
@@ -1268,7 +1268,7 @@ void flecs_notify_on_set(
 
     /* Run OnSet notifications */
     if (table->flags & EcsTableHasOnSet && ids->count) {
-        notify(world, table, NULL, row, count, EcsOnSet, ids, 0);
+        flecs_notify(world, table, NULL, row, count, EcsOnSet, ids, 0);
     }
 }
 
@@ -1330,7 +1330,7 @@ bool ecs_commit(
         diff.added = *removed;
     }
     
-    commit(world, entity, record, table, &diff, true, true);
+    flecs_commit(world, entity, record, table, &diff, true, true);
 
     return src_table != table;
 error:
@@ -1678,7 +1678,7 @@ int traverse_add(
     if (src_table != table) {
         ecs_defer_begin(world);
         ecs_table_diff_t table_diff = diff_to_table_diff(&diff);
-        commit(world, result, r, table, &table_diff, true, true);
+        flecs_commit(world, result, r, table, &table_diff, true, true);
         ecs_defer_end(world);
     }
 
@@ -2858,7 +2858,7 @@ ecs_entity_t set_ptr_w_id(
     size_t size,
     void *ptr,
     bool is_move,
-    bool notify)
+    bool flecs_notify)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -2908,7 +2908,7 @@ ecs_entity_t set_ptr_w_id(
 
     flecs_table_mark_dirty(world, r->table, id);
 
-    if (notify) {
+    if (flecs_notify) {
         ecs_type_t ids = { .array = &id, .count = 1 };
         flecs_notify_on_set(
             world, r->table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);

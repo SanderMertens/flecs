@@ -55,7 +55,7 @@ static const flecs::entity_t Trigger = EcsTrigger;
 static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */
-static const flecs::entity_t System = ecs_id(EcsSystem);
+static const flecs::entity_t System = EcsSystem;
 
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;

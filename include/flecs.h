@@ -1030,7 +1030,7 @@ FLECS_API extern const ecs_entity_t EcsTrigger;
 FLECS_API extern const ecs_entity_t EcsObserver;
 
 /* System module component ids */
-FLECS_API extern const ecs_entity_t ecs_id(EcsSystem);
+FLECS_API extern const ecs_entity_t EcsSystem;
 FLECS_API extern const ecs_entity_t ecs_id(EcsTickSource);
 
 /** Pipeline module component ids */
@@ -1263,7 +1263,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /* Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
-#define EcsLastInternalComponentId (ecs_id(EcsSystem))
+#define EcsLastInternalComponentId (ecs_id(EcsPoly))
 
 /* The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */

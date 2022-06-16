@@ -19,6 +19,8 @@
 #ifndef FLECS_POLY_H
 #define FLECS_POLY_H
 
+#include <stddef.h>
+
 /* Initialize object header & mixins for specified type */
 void* _ecs_poly_init(
     ecs_poly_t *object,
@@ -46,16 +48,30 @@ void _ecs_poly_fini(
     ecs_os_free(obj)
 
 /* Get or create poly component for an entity */
-EcsPoly* ecs_poly_bind(
+EcsPoly* _ecs_poly_bind(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t kind);
+    ecs_entity_t tag);
+
+#define ecs_poly_bind(world, entity, T) \
+    _ecs_poly_bind(world, entity, T##_tag)
 
 /* Get poly component for an entity */
-const EcsPoly* ecs_poly_bind_get(
+const EcsPoly* _ecs_poly_bind_get(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t kind);
+    ecs_entity_t tag);
+
+#define ecs_poly_bind_get(world, entity, T) \
+    _ecs_poly_bind_get(world, entity, T##_tag)
+
+ecs_poly_t* _ecs_poly_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag);
+
+#define ecs_poly_get(world, entity, T) \
+    ((T*)_ecs_poly_get(world, entity, T##_tag))
 
 /* Create entity for poly */
 ecs_entity_t ecs_poly_entity_init(
