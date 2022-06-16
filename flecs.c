@@ -343,6 +343,7 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_filter_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
+extern ecs_mixins_t ecs_trigger_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
 
 /* Types that have no mixins */
@@ -793,10 +794,6 @@ struct ecs_world_t {
     ecs_store_t store;
 
 
-    /* --  Storages for API objects -- */
-    ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
-
-
     /* --  Pending table event buffers -- */
     ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
@@ -1070,7 +1067,6 @@ bool flecs_check_triggers_for_event(
     ecs_entity_t event);
 
 void flecs_trigger_fini(
-    ecs_world_t *world,
     ecs_trigger_t *trigger);
 
 void flecs_observer_fini(
@@ -1417,6 +1413,19 @@ int32_t flecs_table_column_to_union_index(
 /**
  * @file poly.h
  * @brief Functions for managing poly objects.
+ * 
+ * The poly framework makes it possible to generalize common functionality for
+ * different kinds of API objects, as well as improved type safety checks. Poly
+ * objects have a header that identifiers what kind of object it is. This can
+ * then be used to discover a set of "mixins" implemented by the type.
+ * 
+ * Mixins are like a vtable, but for members. Each type populates the table with
+ * offsets to the members that correspond with the mixin. If an entry in the
+ * mixin table is not set, the type does not support the mixin.
+ * 
+ * An example is the Iterable mixin, which makes it possible to create an 
+ * iterator for any poly object (like filters, queries, the world) that 
+ * implements the Iterable mixin.
  */
 
 #ifndef FLECS_POLY_H
@@ -1448,6 +1457,7 @@ void _ecs_poly_fini(
     ecs_poly_fini(obj, type);\
     ecs_os_free(obj)
 
+<<<<<<< HEAD
 /* Bind entity with poly object */
 void ecs_poly_bind(
     ecs_poly_t *poly,
@@ -1459,12 +1469,24 @@ EcsPoly* ecs_poly_bind_ensure(
     ecs_world_t *world,
     ecs_entity_t kind,
     ecs_entity_t entity);
+=======
+/* Get or create poly component for an entity */
+EcsPoly* ecs_poly_bind(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t kind);
+>>>>>>> 8ce026ce (Store triggers in Poly component)
 
 /* Get poly component for an entity */
 const EcsPoly* ecs_poly_bind_get(
     const ecs_world_t *world,
+<<<<<<< HEAD
     ecs_entity_t kind,
     ecs_entity_t entity);
+=======
+    ecs_entity_t entity,
+    ecs_entity_t kind);
+>>>>>>> 8ce026ce (Store triggers in Poly component)
 
 /* Create entity for poly */
 ecs_entity_t ecs_poly_entity_init(
@@ -3672,7 +3694,7 @@ void register_trigger_for_id(
             ecs_map_init(triggers, ecs_trigger_t*, 1);
         }
 
-        ecs_map_ensure(triggers, ecs_trigger_t*, trigger->id)[0] = trigger;
+        ecs_map_ensure(triggers, ecs_trigger_t*, trigger->entity)[0] = trigger;
 
         inc_trigger_count(world, event, evt, term_id, 1);
         if (term_id != id) {
@@ -3736,7 +3758,7 @@ void unregister_trigger_for_id(
 
         ecs_map_t *id_triggers = ECS_OFFSET(idt, triggers_offset);
 
-        if (ecs_map_remove(id_triggers, trigger->id) == 0) {
+        if (ecs_map_remove(id_triggers, trigger->entity) == 0) {
             ecs_map_fini(id_triggers);
         }
 
@@ -4308,38 +4330,23 @@ void flecs_set_triggers_notify(
 ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc)
-{
-    char *name = NULL;
-    
+{    
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
-
-    const char *expr = desc->expr;
-    ecs_trigger_t *trigger = NULL;
     
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
         observable = ecs_get_observable(world);
     }
 
-    /* If entity is provided, create it */
-    ecs_entity_t existing = desc->entity.entity;
-    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
-    if (!existing && !desc->entity.name) {
-        ecs_add_pair(world, entity, EcsChildOf, EcsFlecsHidden);
-    }
-
-    bool added = false;
-    EcsTrigger *comp = ecs_get_mut(world, entity, EcsTrigger, &added);
-    if (added) {
-        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        /* Something went wrong with the construction of the entity */
-        ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-        name = ecs_get_fullpath(world, entity);
+    ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+    EcsPoly *poly = ecs_poly_bind(world, entity, EcsTrigger);
+    if (!poly->poly) {        
+        const char *name = ecs_get_name(world, entity);
+        const char *expr = desc->expr;
 
         ecs_term_t term;
         if (expr) {
@@ -4372,8 +4379,12 @@ ecs_entity_t ecs_trigger_init(
             goto error;
         }
 
-        trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->id = flecs_sparse_last_id(world->triggers);
+        ecs_trigger_t *trigger = ecs_poly_new(ecs_trigger_t);
+        ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
+        poly->poly = trigger;
+        trigger->world = world;
+        trigger->dtor = (ecs_poly_dtor_t)flecs_trigger_fini;
+        trigger->entity = entity;
 
         trigger->term = ecs_term_move(&term);
         trigger->callback = desc->callback;
@@ -4399,8 +4410,6 @@ ecs_entity_t ecs_trigger_init(
             trigger->match_disabled = true;
         }
 
-        comp->trigger = trigger;
-
         /* Trigger must have at least one event */
         ecs_check(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -4417,26 +4426,20 @@ ecs_entity_t ecs_trigger_init(
             trigger_yield_existing(world, trigger);
         }
     } else {
-        ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
-
         /* If existing entity handle was provided, override existing params */
-        if (existing) {
-            if (desc->callback) {
-                ((ecs_trigger_t*)comp->trigger)->callback = desc->callback;
-            }
-            if (desc->ctx) {
-                ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
-            }
-            if (desc->binding_ctx) {
-                ((ecs_trigger_t*)comp->trigger)->binding_ctx = desc->binding_ctx;
-            }
+        if (desc->callback) {
+            ecs_poly(poly->poly, ecs_trigger_t)->callback = desc->callback;
+        }
+        if (desc->ctx) {
+            ecs_poly(poly->poly, ecs_trigger_t)->ctx = desc->ctx;
+        }
+        if (desc->binding_ctx) {
+            ecs_poly(poly->poly, ecs_trigger_t)->binding_ctx = desc->binding_ctx;
         }
     }
 
-    ecs_os_free(name);
     return entity;
 error:
-    ecs_os_free(name);
     ecs_delete(world, entity);
     return 0;
 }
@@ -4445,9 +4448,9 @@ void* ecs_get_trigger_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
-    if (t) {
-        return t->trigger->ctx;
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    if (p) {
+        return ecs_poly(p->poly, ecs_trigger_t)->ctx;
     } else {
         return NULL;
     }     
@@ -4457,19 +4460,18 @@ void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger)
 {
-    const EcsTrigger *t = ecs_get(world, trigger, EcsTrigger);
-    if (t) {
-        return t->trigger->binding_ctx;
+    const EcsPoly *p = ecs_poly_bind_get(world, trigger, EcsTrigger);
+    if (p) {
+        return ecs_poly(p->poly, ecs_trigger_t)->binding_ctx;
     } else {
         return NULL;
     }      
 }
 
 void flecs_trigger_fini(
-    ecs_world_t *world,
     ecs_trigger_t *trigger)
-{    
-    unregister_trigger(world, trigger->observable, trigger);
+{        
+    unregister_trigger(trigger->world, trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
     if (trigger->ctx_free) {
@@ -4480,7 +4482,7 @@ void flecs_trigger_fini(
         trigger->binding_ctx_free(trigger->binding_ctx);
     }
 
-    flecs_sparse_remove(world->triggers, trigger->id);
+    ecs_poly_free(trigger, ecs_trigger_t);
 }
 
 
@@ -13063,11 +13065,11 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
 const ecs_entity_t ecs_id(EcsIdentifier) =         2;
-const ecs_entity_t ecs_id(EcsTrigger) =            3;
 const ecs_entity_t ecs_id(EcsIterable) =           6;
 const ecs_entity_t ecs_id(EcsPoly) =               7;
 
 const ecs_entity_t EcsQuery =                      4;
+const ecs_entity_t EcsTrigger =                    3;
 const ecs_entity_t EcsObserver =                   5;
 
 /* System module component ids */
@@ -13499,9 +13501,6 @@ void clean_tables(
 
 static
 void fini_roots(ecs_world_t *world) {
-    ecs_dbg_2("cleanup root entities");
-    ecs_log_push();
-
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
@@ -13541,8 +13540,6 @@ void fini_roots(ecs_world_t *world) {
     }
 
     ecs_defer_end(world);
-
-    ecs_log_pop();
 }
 
 static
@@ -13732,8 +13729,11 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
+<<<<<<< HEAD
 
     world->triggers = flecs_sparse_new(ecs_trigger_t);
+=======
+>>>>>>> 8ce026ce (Store triggers in Poly component)
     
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
@@ -14200,13 +14200,22 @@ int ecs_fini(
 
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
+    ecs_dbg_1("#[bold]cleanup root entities");
+    ecs_log_push_1();
     fini_roots(world);
+    ecs_log_pop_1();
 
     world->flags |= EcsWorldFini;
 
     /* Run fini actions (simple callbacks ran when world is deleted) before
      * destroying the storage */
+    ecs_dbg_1("#[bold]run fini actions");
+    ecs_log_push_1();
     fini_actions(world);
+    ecs_log_pop_1();
+
+    ecs_dbg_1("#[bold]cleanup remaining entities");
+    ecs_log_push_1();
 
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
@@ -14223,11 +14232,12 @@ int ecs_fini(
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
     flecs_defer_purge(world, &world->stages[0]);
+    ecs_log_pop_1();
 
-    /* Entity index is kept alive until this point so that user code can do
-     * validity checks on entity ids, even though after store cleanup the index
-     * will be empty, so all entity ids are invalid. */
+    ecs_dbg_1("#[bold]cleanup world datastructures");
+    ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
+<<<<<<< HEAD
 
     ecs_trace("table store deinitialized");
 
@@ -14235,22 +14245,21 @@ int ecs_fini(
 
     fini_type_info(world);
 
+=======
+    flecs_fini_id_records(world);
+    fini_type_info(world);
+>>>>>>> 8ce026ce (Store triggers in Poly component)
     flecs_observable_fini(&world->observable);
-
-    flecs_sparse_free(world->triggers);
-
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_vector_free(world->fini_tasks);
-
     ecs_set_stage_count(world, 0);
-
     ecs_os_enable_high_timer_resolution(false);
+    ecs_log_pop_1();
 
     /* End of the world */
     ecs_poly_free(world, ecs_world_t);
-
-    ecs_os_fini(); 
+    ecs_os_fini();
 
     ecs_trace("world destroyed, bye!");
     ecs_log_pop();
@@ -14917,12 +14926,35 @@ bool observer_run(ecs_iter_t *it) {
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int32_t pivot_term = it->term_index;
+    int32_t ignore_term = -1;
     ecs_term_t *term = &o->filter.terms[pivot_term];
 
+<<<<<<< HEAD
     int32_t column = it->columns[0];
     if (term->oper == EcsNot) {
         table = it->other_table;
         prev_table = it->table;
+=======
+    static int obs_count = 0;
+    obs_count ++;
+
+    /* Populate the column for the term that triggered. This will allow the
+     * matching algorithm to pick the right column in case the term is a
+     * wildcard matching multiple columns. */
+    user_it.columns[0] = 0;
+
+    /* Normalize id */
+    int32_t column = it->columns[0];
+    if (term->oper == EcsNot) {
+        column = 0;
+        if (it->event == EcsOnAdd) {
+            ignore_term = pivot_term;
+            prev_table = it->table;
+        } else if (it->event == EcsOnRemove) {
+            table = it->other_table;
+            prev_table = it->table;
+        }
+>>>>>>> 8ce026ce (Store triggers in Poly component)
     }
 
     if (!table) {
@@ -14940,7 +14972,7 @@ bool observer_run(ecs_iter_t *it) {
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+        user_it.columns, user_it.subjects, NULL, NULL, false, ignore_term, 
         user_it.flags))
     {
         /* Monitor observers only trigger when the filter matches for the first
@@ -14953,6 +14985,7 @@ bool observer_run(ecs_iter_t *it) {
             }
         }
 
+<<<<<<< HEAD
         /* While filter matching needs to be reversed for a Not term, the
          * component data must be fetched from the table we got notified for.
          * Repeat the matching process for the non-matching table so we get the
@@ -14965,6 +14998,10 @@ bool observer_run(ecs_iter_t *it) {
 
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
+=======
+        flecs_iter_populate_data(world, &user_it, 
+            table, it->offset, it->count, user_it.ptrs, user_it.sizes);
+>>>>>>> 8ce026ce (Store triggers in Poly component)
 
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
@@ -15077,7 +15114,11 @@ ecs_entity_t ecs_observer_init(
         ECS_INVALID_OPERATION, NULL);
 
     ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+<<<<<<< HEAD
     EcsPoly *poly = ecs_poly_bind_ensure(world, entity, EcsObserver);
+=======
+    EcsPoly *poly = ecs_poly_bind(world, entity, EcsObserver);
+>>>>>>> 8ce026ce (Store triggers in Poly component)
     if (!poly->poly) {
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15293,7 +15334,7 @@ void* ecs_get_observer_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, EcsObserver);
     if (o) {
         ecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->ctx;
@@ -15306,7 +15347,7 @@ void* ecs_get_observer_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_get_pair(world, observer, EcsPoly, EcsObserver);
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, EcsObserver);
     if (o) {
         ecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->binding_ctx;
@@ -15333,13 +15374,9 @@ void flecs_observable_fini(
             ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
         ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_iter_t it = ecs_map_iter(&et->event_ids);
-        ecs_event_id_record_t *idt;
-        while ((idt = ecs_map_next(&it, ecs_event_id_record_t, NULL))) {
-            ecs_map_fini(&idt->triggers);
-            ecs_map_fini(&idt->set_triggers);
-        }
-        ecs_map_fini(&et->event_ids);
+        /* All triggers should've unregistered by now */
+        ecs_assert(!ecs_map_is_initialized(&et->event_ids), 
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     flecs_sparse_free(observable->events);
@@ -17413,7 +17450,9 @@ ecs_query_t* ecs_query_init(
     if (!e) {
         e = ecs_new_w_pair(world, EcsChildOf, EcsFlecsHidden);
     }
-    ecs_set_pair(world, e, EcsPoly, EcsQuery, { .poly = result });
+
+    EcsPoly *poly = ecs_poly_bind(world, e, EcsQuery);
+    poly->poly = result;
     result->entity = e;
 
     ecs_log_pop_1();
@@ -19315,9 +19354,7 @@ error:
 }
 
 
-/* -- Component lifecycle -- */
-
-/* Component lifecycle actions for EcsIdentifier */
+/* -- Identifier Component -- */
 static ECS_DTOR(EcsIdentifier, ptr, {
     ecs_os_strset(&ptr->value, NULL);
 })
@@ -19418,23 +19455,32 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     }
 }
 
-/* Component lifecycle actions for EcsTrigger */
-static void ecs_on_remove(EcsTrigger)(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsTrigger *ptr = ecs_term(it, EcsTrigger, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (ptr[i].trigger) {
-            flecs_trigger_fini(world, (ecs_trigger_t*)ptr[i].trigger);
-        }
-    }
-}
 
-/* Destructor for poly component */
+/* -- Poly component -- */
+
+ECS_COPY(EcsPoly, dst, src, {
+    (void)dst;
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
+})
+
+ECS_MOVE(EcsPoly, dst, src, {
+    if (dst->poly && (dst->poly != src->poly)) {
+        ecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
+        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        dtor[0](dst->poly);
+    }
+
+    dst->poly = src->poly;
+    src->poly = NULL;
+})
+
 ECS_DTOR(EcsPoly, ptr, {
-    ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
-    ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
-    dtor[0](ptr->poly);
+    if (ptr->poly) {
+        ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        dtor[0](ptr->poly);
+    }
 })
 
 
@@ -19966,13 +20012,10 @@ void flecs_bootstrap(
         .on_remove = ecs_on_set(EcsIdentifier)
     });
 
-    flecs_type_info_init(world, EcsTrigger, {
-        .ctor = ecs_default_ctor,
-        .on_remove = ecs_on_remove(EcsTrigger)
-    });
-
     flecs_type_info_init(world, EcsPoly, {
         .ctor = ecs_default_ctor,
+        .copy = ecs_copy(EcsPoly),
+        .move = ecs_move(EcsPoly),
         .dtor = ecs_dtor(EcsPoly)
     });
 
@@ -19990,8 +20033,6 @@ void flecs_bootstrap(
 
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
-
-    bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsIterable);
     bootstrap_component(world, table, EcsPoly);
 
@@ -20019,6 +20060,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsAlias);
 
     flecs_bootstrap_tag(world, EcsQuery);
+    flecs_bootstrap_tag(world, EcsTrigger);
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
@@ -20800,6 +20842,8 @@ void flecs_table_init_flags(
                         table->sw_offset = flecs_ito(int16_t, i);
                     }
                     table->sw_count ++;
+                } else if (r == ecs_id(EcsPoly)) {
+                    table->flags |= EcsTableHasBuiltins;
                 }
             } else if (role == ECS_DISABLED) {
                 table->flags |= EcsTableHasDisabled;
@@ -22990,6 +23034,15 @@ ecs_mixins_t ecs_query_t_mixins = {
     }
 };
 
+ecs_mixins_t ecs_trigger_t_mixins = {
+    .type_name = "ecs_trigger_t",
+    .elems = {
+        [EcsMixinWorld] = offsetof(ecs_trigger_t, world),
+        [EcsMixinEntity] = offsetof(ecs_trigger_t, entity),
+        [EcsMixinDtor] = offsetof(ecs_trigger_t, dtor)
+    }
+};
+
 ecs_mixins_t ecs_observer_t_mixins = {
     .type_name = "ecs_observer_t",
     .elems = {
@@ -23099,6 +23152,7 @@ void _ecs_poly_fini(
     hdr->magic = 0;
 }
 
+<<<<<<< HEAD
 void ecs_poly_bind(
     ecs_poly_t *poly,
     ecs_entity_t entity,
@@ -23116,6 +23170,9 @@ void ecs_poly_bind(
 }
 
 EcsPoly* ecs_poly_bind_ensure(
+=======
+EcsPoly* ecs_poly_bind(
+>>>>>>> 8ce026ce (Store triggers in Poly component)
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t kind)
@@ -23127,8 +23184,13 @@ EcsPoly* ecs_poly_bind_ensure(
 
 const EcsPoly* ecs_poly_bind_get(
     const ecs_world_t *world,
+<<<<<<< HEAD
     ecs_entity_t kind,
     ecs_entity_t entity)
+=======
+    ecs_entity_t entity,
+    ecs_entity_t kind)
+>>>>>>> 8ce026ce (Store triggers in Poly component)
 {
     return ecs_get_pair(world, entity, EcsPoly, kind);
 }
@@ -35345,8 +35407,10 @@ void ecs_world_stats_get(
 
     ECS_GAUGE_RECORD(&s->query_count, t, 
         ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsQuery)));
-    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count(world, EcsTrigger));
-    ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsObserver)));
+    ECS_GAUGE_RECORD(&s->trigger_count, t, 
+        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsTrigger)));
+    ECS_GAUGE_RECORD(&s->observer_count, t, 
+        ecs_count_id(world, ecs_pair(ecs_id(EcsPoly), EcsObserver)));
     ECS_GAUGE_RECORD(&s->system_count, t, ecs_count(world, EcsSystem));
 
     ECS_COUNTER_RECORD(&s->id_create_count, t, world->info.id_create_total);

@@ -1,6 +1,19 @@
 /**
  * @file poly.h
  * @brief Functions for managing poly objects.
+ * 
+ * The poly framework makes it possible to generalize common functionality for
+ * different kinds of API objects, as well as improved type safety checks. Poly
+ * objects have a header that identifiers what kind of object it is. This can
+ * then be used to discover a set of "mixins" implemented by the type.
+ * 
+ * Mixins are like a vtable, but for members. Each type populates the table with
+ * offsets to the members that correspond with the mixin. If an entry in the
+ * mixin table is not set, the type does not support the mixin.
+ * 
+ * An example is the Iterable mixin, which makes it possible to create an 
+ * iterator for any poly object (like filters, queries, the world) that 
+ * implements the Iterable mixin.
  */
 
 #ifndef FLECS_POLY_H
@@ -32,23 +45,17 @@ void _ecs_poly_fini(
     ecs_poly_fini(obj, type);\
     ecs_os_free(obj)
 
-/* Bind entity with poly object */
-void ecs_poly_bind(
-    ecs_poly_t *poly,
-    ecs_entity_t kind,
-    ecs_entity_t entity);
-
 /* Get or create poly component for an entity */
-EcsPoly* ecs_poly_bind_ensure(
+EcsPoly* ecs_poly_bind(
     ecs_world_t *world,
-    ecs_entity_t kind,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    ecs_entity_t kind);
 
 /* Get poly component for an entity */
 const EcsPoly* ecs_poly_bind_get(
     const ecs_world_t *world,
-    ecs_entity_t kind,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    ecs_entity_t kind);
 
 /* Create entity for poly */
 ecs_entity_t ecs_poly_entity_init(

@@ -63,6 +63,7 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_filter_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
+extern ecs_mixins_t ecs_trigger_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
 
 /* Types that have no mixins */
@@ -511,10 +512,6 @@ struct ecs_world_t {
 
     /* --  Data storage -- */
     ecs_store_t store;
-
-
-    /* --  Storages for API objects -- */
-    ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
 
 
     /* --  Pending table event buffers -- */

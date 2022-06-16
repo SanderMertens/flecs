@@ -1870,7 +1870,9 @@ ecs_query_t* ecs_query_init(
     if (!e) {
         e = ecs_new_w_pair(world, EcsChildOf, EcsFlecsHidden);
     }
-    ecs_set_pair(world, e, EcsPoly, EcsQuery, { .poly = result });
+
+    EcsPoly *poly = ecs_poly_bind(world, e, EcsQuery);
+    poly->poly = result;
     result->entity = e;
 
     ecs_log_pop_1();

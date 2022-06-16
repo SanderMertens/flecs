@@ -8,11 +8,11 @@ const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
 const ecs_entity_t ecs_id(EcsIdentifier) =         2;
-const ecs_entity_t ecs_id(EcsTrigger) =            3;
 const ecs_entity_t ecs_id(EcsIterable) =           6;
 const ecs_entity_t ecs_id(EcsPoly) =               7;
 
 const ecs_entity_t EcsQuery =                      4;
+const ecs_entity_t EcsTrigger =                    3;
 const ecs_entity_t EcsObserver =                   5;
 
 /* System module component ids */
@@ -444,9 +444,6 @@ void clean_tables(
 
 static
 void fini_roots(ecs_world_t *world) {
-    ecs_dbg_2("cleanup root entities");
-    ecs_log_push();
-
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
@@ -486,8 +483,6 @@ void fini_roots(ecs_world_t *world) {
     }
 
     ecs_defer_end(world);
-
-    ecs_log_pop();
 }
 
 static
@@ -677,8 +672,6 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
-
-    world->triggers = flecs_sparse_new(ecs_trigger_t);
     
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
@@ -1145,13 +1138,22 @@ int ecs_fini(
 
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
+    ecs_dbg_1("#[bold]cleanup root entities");
+    ecs_log_push_1();
     fini_roots(world);
+    ecs_log_pop_1();
 
     world->flags |= EcsWorldFini;
 
     /* Run fini actions (simple callbacks ran when world is deleted) before
      * destroying the storage */
+    ecs_dbg_1("#[bold]run fini actions");
+    ecs_log_push_1();
     fini_actions(world);
+    ecs_log_pop_1();
+
+    ecs_dbg_1("#[bold]cleanup remaining entities");
+    ecs_log_push_1();
 
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
@@ -1168,34 +1170,24 @@ int ecs_fini(
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
     flecs_defer_purge(world, &world->stages[0]);
+    ecs_log_pop_1();
 
-    /* Entity index is kept alive until this point so that user code can do
-     * validity checks on entity ids, even though after store cleanup the index
-     * will be empty, so all entity ids are invalid. */
+    ecs_dbg_1("#[bold]cleanup world datastructures");
+    ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
-
-    ecs_trace("table store deinitialized");
-
     flecs_fini_id_records(world);
-
     fini_type_info(world);
-
     flecs_observable_fini(&world->observable);
-
-    flecs_sparse_free(world->triggers);
-
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_vector_free(world->fini_tasks);
-
     ecs_set_stage_count(world, 0);
-
     ecs_os_enable_high_timer_resolution(false);
+    ecs_log_pop_1();
 
     /* End of the world */
     ecs_poly_free(world, ecs_world_t);
-
-    ecs_os_fini(); 
+    ecs_os_fini();
 
     ecs_trace("world destroyed, bye!");
     ecs_log_pop();

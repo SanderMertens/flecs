@@ -17,13 +17,9 @@ void flecs_observable_fini(
             ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
         ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_iter_t it = ecs_map_iter(&et->event_ids);
-        ecs_event_id_record_t *idt;
-        while ((idt = ecs_map_next(&it, ecs_event_id_record_t, NULL))) {
-            ecs_map_fini(&idt->triggers);
-            ecs_map_fini(&idt->set_triggers);
-        }
-        ecs_map_fini(&et->event_ids);
+        /* All triggers should've unregistered by now */
+        ecs_assert(!ecs_map_is_initialized(&et->event_ids), 
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     flecs_sparse_free(observable->events);
