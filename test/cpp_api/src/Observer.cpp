@@ -108,25 +108,6 @@ void Observer_2_terms_un_set() {
     test_int(count, 1); 
 }
 
-void Observer_observer_w_self() {
-    flecs::world world;
-
-    auto self = world.entity();
-
-    bool invoked = false;
-    world.observer<Position>()
-        .event(flecs::OnAdd)
-        .self(self)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.self() == self);
-            invoked = true;
-        });
-
-    world.entity().set<Position>({10, 20});
-
-    test_bool(invoked, true);
-}
-
 void Observer_10_terms() {
     flecs::world ecs;
 

@@ -16,6 +16,7 @@ void flecs_observable_fini(
         ecs_event_record_t *et = 
             ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
         ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
+        (void)et;
 
         /* All triggers should've unregistered by now */
         ecs_assert(!ecs_map_is_initialized(&et->event_ids), 

@@ -76,7 +76,7 @@ void* _ecs_poly_assert(
 #define ecs_poly(object, T) ((T*)ecs_poly_assert(object, T))
 #else
 #define ecs_poly_assert(object, type)
-#define ecs_poly(object, T) object
+#define ecs_poly(object, T) ((T*)object)
 #endif
 
 bool _ecs_poly_is(

@@ -789,35 +789,27 @@ struct ecs_world_t {
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 
-
     /* --  Data storage -- */
     ecs_store_t store;
-
 
     /* --  Pending table event buffers -- */
     ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
-    
 
     /* Used to track when cache needs to be updated */
     ecs_monitor_set_t monitors;    /* map<id, ecs_monitor_t> */
 
-
     /* -- Systems -- */
     ecs_entity_t pipeline;             /* Current pipeline */
-    ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
-
 
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
     const char *name_prefix;     /* Remove prefix from C names in modules */
 
-
     /* -- Staging -- */
     ecs_stage_t *stages;         /* Stages */
     int32_t stage_count;         /* Number of stages */
-
 
     /* -- Multithreading -- */
     ecs_os_cond_t worker_cond;   /* Signal that worker threads can start */
@@ -826,20 +818,16 @@ struct ecs_world_t {
     int32_t workers_running;     /* Number of threads running */
     int32_t workers_waiting;     /* Number of workers waiting on sync */
 
-
     /* -- Time management -- */
     ecs_time_t world_start_time; /* Timestamp of simulation start */
     ecs_time_t frame_start_time; /* Timestamp of frame start */
     ecs_ftime_t fps_sleep;       /* Sleep time to prevent fps overshoot */
 
-
     /* -- Metrics -- */
     ecs_world_info_t info;
 
-
     /* -- World flags -- */
     ecs_flags32_t flags;
-
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
@@ -1507,7 +1495,7 @@ void* _ecs_poly_assert(
 #define ecs_poly(object, T) ((T*)ecs_poly_assert(object, T))
 #else
 #define ecs_poly_assert(object, type)
-#define ecs_poly(object, T) object
+#define ecs_poly(object, T) ((T*)object)
 #endif
 
 bool _ecs_poly_is(
@@ -13431,21 +13419,6 @@ void flecs_monitor_unregister(
 }
 
 static
-void monitors_fini(
-    ecs_world_t *world)
-{
-    ecs_map_t *monitors = &world->monitors.monitors;
-
-    ecs_map_iter_t it = ecs_map_iter(monitors);
-    ecs_monitor_t *m;
-    while ((m = ecs_map_next(&it, ecs_monitor_t, NULL))) {
-        ecs_vector_free(m->queries);
-    }
-
-    ecs_map_fini(monitors);
-}
-
-static
 void init_store(
     ecs_world_t *world) 
 {
@@ -13730,15 +13703,16 @@ ecs_world_t *ecs_mini(void) {
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     world->triggers = flecs_sparse_new(ecs_trigger_t);
 =======
 >>>>>>> 8ce026ce (Store triggers in Poly component)
     
+=======
+>>>>>>> 8440e193 (Update C++ API with Poly component)
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
-
-    world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     flecs_name_index_init(&world->aliases);
     flecs_name_index_init(&world->symbols);
 
@@ -13749,12 +13723,9 @@ ecs_world_t *ecs_mini(void) {
     }
 
     ecs_set_stage_count(world, 1);
-
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
-
     init_store(world);
-    ecs_trace("table store initialized");
 
     flecs_bootstrap(world);
 
@@ -14234,6 +14205,10 @@ int ecs_fini(
     flecs_defer_purge(world, &world->stages[0]);
     ecs_log_pop_1();
 
+    /* All queries are cleaned up, so monitors should've been cleaned up too */
+    ecs_assert(!ecs_map_is_initialized(&world->monitors.monitors), 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
@@ -14252,7 +14227,6 @@ int ecs_fini(
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
-    ecs_vector_free(world->fini_tasks);
     ecs_set_stage_count(world, 0);
     ecs_os_enable_high_timer_resolution(false);
     ecs_log_pop_1();
@@ -15373,6 +15347,7 @@ void flecs_observable_fini(
         ecs_event_record_t *et = 
             ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
         ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
+        (void)et;
 
         /* All triggers should've unregistered by now */
         ecs_assert(!ecs_map_is_initialized(&et->event_ids), 
@@ -19458,13 +19433,13 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
 
 /* -- Poly component -- */
 
-ECS_COPY(EcsPoly, dst, src, {
+static ECS_COPY(EcsPoly, dst, src, {
     (void)dst;
     (void)src;
     ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
 })
 
-ECS_MOVE(EcsPoly, dst, src, {
+static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -19475,7 +19450,7 @@ ECS_MOVE(EcsPoly, dst, src, {
     src->poly = NULL;
 })
 
-ECS_DTOR(EcsPoly, ptr, {
+static ECS_DTOR(EcsPoly, ptr, {
     if (ptr->poly) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);

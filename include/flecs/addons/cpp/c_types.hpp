@@ -48,9 +48,11 @@ enum var_kind_t {
 /* Builtin components */
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
-using Query = EcsQuery;
-using Trigger = EcsTrigger;
-using Observer = EcsObserver;
+using Poly = EcsPoly;
+
+static const flecs::entity_t Query = EcsQuery;
+static const flecs::entity_t Trigger = EcsTrigger;
+static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);

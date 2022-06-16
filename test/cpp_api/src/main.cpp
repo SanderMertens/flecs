@@ -361,7 +361,6 @@ void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
 void System_custom_pipeline_w_kind(void);
-void System_system_w_self(void);
 void System_instanced_query_w_singleton_each(void);
 void System_instanced_query_w_base_each(void);
 void System_un_instanced_query_w_singleton_each(void);
@@ -641,7 +640,6 @@ void Trigger_on_remove(void);
 void Trigger_on_add_tag_action(void);
 void Trigger_on_add_tag_iter(void);
 void Trigger_on_add_tag_each(void);
-void Trigger_trigger_w_self(void);
 void Trigger_on_add_id(void);
 void Trigger_on_add_id_arg(void);
 void Trigger_on_add_expr(void);
@@ -655,7 +653,6 @@ void Observer_2_terms_on_add(void);
 void Observer_2_terms_on_remove(void);
 void Observer_2_terms_on_set(void);
 void Observer_2_terms_un_set(void);
-void Observer_observer_w_self(void);
 void Observer_10_terms(void);
 void Observer_20_terms(void);
 void Observer_2_entities_iter(void);
@@ -2324,10 +2321,6 @@ bake_test_case System_testcases[] = {
         System_custom_pipeline_w_kind
     },
     {
-        "system_w_self",
-        System_system_w_self
-    },
-    {
         "instanced_query_w_singleton_each",
         System_instanced_query_w_singleton_each
     },
@@ -3404,10 +3397,6 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_tag_each
     },
     {
-        "trigger_w_self",
-        Trigger_trigger_w_self
-    },
-    {
         "on_add_id",
         Trigger_on_add_id
     },
@@ -3453,10 +3442,6 @@ bake_test_case Observer_testcases[] = {
     {
         "2_terms_un_set",
         Observer_2_terms_un_set
-    },
-    {
-        "observer_w_self",
-        Observer_observer_w_self
     },
     {
         "10_terms",
@@ -4559,7 +4544,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        53,
+        52,
         System_testcases
     },
     {
@@ -4615,14 +4600,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        13,
+        12,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        15,
+        14,
         Observer_testcases
     },
     {

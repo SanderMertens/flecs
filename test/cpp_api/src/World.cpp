@@ -87,14 +87,15 @@ void World_builtin_components() {
 
     test_assert(ecs.component<flecs::Component>() == ecs_id(EcsComponent));
     test_assert(ecs.component<flecs::Identifier>() == ecs_id(EcsIdentifier));
-    test_assert(ecs.component<flecs::Trigger>() == ecs_id(EcsTrigger));
-    test_assert(ecs.component<flecs::Observer>() == ecs_id(EcsObserver));
-    test_assert(ecs.component<flecs::Query>() == ecs_id(EcsQuery));
+    test_assert(ecs.component<flecs::Poly>() == ecs_id(EcsPoly));
     test_assert(ecs.component<flecs::RateFilter>() == ecs_id(EcsRateFilter));
     test_assert(ecs.component<flecs::TickSource>() == ecs_id(EcsTickSource));
     test_assert(flecs::Name == EcsName);
     test_assert(flecs::Symbol == EcsSymbol);
     test_assert(flecs::System == ecs_id(EcsSystem));
+    test_assert(flecs::Trigger == EcsTrigger);
+    test_assert(flecs::Observer == EcsObserver);
+    test_assert(flecs::Query == EcsQuery);
 }
 
 void World_multi_world_component() {
