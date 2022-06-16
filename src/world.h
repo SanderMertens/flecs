@@ -36,8 +36,11 @@ bool flecs_type_info_init_id(
         &(ecs_type_hooks_t)__VA_ARGS__)
 
 void flecs_type_info_fini(
-    ecs_world_t *world,
     ecs_type_info_t *ti);
+
+void flecs_type_info_free(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);

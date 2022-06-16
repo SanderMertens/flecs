@@ -615,7 +615,8 @@
                 "delete_tree_w_query",
                 "fini_cleanup_order",
                 "on_delete_parent_w_in_use_id_w_remove",
-                "on_delete_parent_w_in_use_id_w_delete"
+                "on_delete_parent_w_in_use_id_w_delete",
+                "create_after_delete_with"
             ]
         }, {
             "id": "Set",
@@ -1827,7 +1828,10 @@
                 "use_after_clear_empty_w_component",
                 "use_after_clear_empty_w_component_w_lifecycle",
                 "use_after_clear_unused",
-                "get_mut_in_at_fini"
+                "get_mut_in_at_fini",
+                "get_type_info",
+                "get_type_info_after_delete_with",
+                "get_type_info_after_reuse"
             ]
         }, {
             "id": "WorldInfo",

@@ -369,15 +369,21 @@ void register_symmetric(ecs_iter_t *it) {
 }
 
 static
-void on_set_component(ecs_iter_t *it) {
+void on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_term(it, EcsComponent, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_type_info_init_id(world, e, c[i].size, c[i].alignment, NULL)){
-            assert_relation_unused(world, e, ecs_id(EcsComponent));
+        if (it->event == EcsOnSet) {
+            if (flecs_type_info_init_id(
+                world, e, c[i].size, c[i].alignment, NULL))
+            {
+                assert_relation_unused(world, e, ecs_id(EcsComponent));
+            }
+        } else if (it->event == EcsOnRemove) {
+            flecs_type_info_free(world, e);
         }
     }
 }
@@ -636,7 +642,9 @@ void flecs_bootstrap(
 
     /* Bootstrap builtin components */
     flecs_type_info_init(world, EcsComponent, { 
-        .ctor = ecs_default_ctor 
+        .ctor = ecs_default_ctor,
+        .on_set = on_component,
+        .on_remove = on_component
     });
 
     flecs_type_info_init(world, EcsIdentifier, {
@@ -687,13 +695,6 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
-
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsComponent), .subj.set.mask = EcsSelf },
-        .events = {EcsOnSet},
-        .callback = on_set_component,
-        .yield_existing = true
-    });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsTag, .subj.set.mask = EcsSelf },

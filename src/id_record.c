@@ -317,12 +317,6 @@ void flecs_id_record_free(
         world->info.wildcard_id_count --;
     }
 
-    /* Unregister type info if this is the record for the type */
-    ecs_type_info_t *ti = (ecs_type_info_t*)idr->type_info;
-    if (ti && idr->id == ti->component) {
-        flecs_type_info_fini(world, ti);
-    }
-
     /* Unregister the id record from the world */
     ecs_map_remove(&world->id_index, flecs_id_record_id(id));
 

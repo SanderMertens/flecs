@@ -2476,3 +2476,29 @@ void OnDelete_on_delete_parent_w_in_use_id_w_delete() {
 
     ecs_fini(world);
 }
+
+void OnDelete_create_after_delete_with() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(world, e, Position));
+    
+    ecs_delete_with(world, ecs_id(Position));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, ecs_id(Position)));
+
+    ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+
+    e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

@@ -1624,8 +1624,11 @@ bool flecs_type_info_init_id(
         &(ecs_type_hooks_t)__VA_ARGS__)
 
 void flecs_type_info_fini(
-    ecs_world_t *world,
     ecs_type_info_t *ti);
+
+void flecs_type_info_free(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);
@@ -8519,6 +8522,8 @@ const ecs_type_info_t* ecs_get_type_info(
 
     if (idr) {
         return idr->type_info;
+    } else if (!(id & ECS_ROLE_MASK)) {
+        return flecs_sparse_get(world->type_info, ecs_type_info_t, id);
     }
 error:
     return NULL;
@@ -36443,11 +36448,18 @@ void fini_actions(
     ecs_vector_free(world->fini_actions);
 }
 
-/* Cleanup component lifecycle callbacks & systems */
+/* Cleanup remaining type info elements */
 static
-void fini_component_lifecycle(
+void fini_type_info(
     ecs_world_t *world)
 {
+    int32_t i, count = flecs_sparse_count(world->type_info);
+    ecs_sparse_t *type_info = world->type_info;
+    for (i = 0; i < count; i ++) {
+        ecs_type_info_t *ti = flecs_sparse_get_dense(type_info, 
+            ecs_type_info_t, i);
+        flecs_type_info_fini(ti);
+    }
     flecs_sparse_free(world->type_info);
 }
 
@@ -36536,7 +36548,7 @@ int ecs_fini(
 
     flecs_fini_id_records(world);
 
-    fini_component_lifecycle(world);
+    fini_type_info(world);
 
     flecs_observable_fini(&world->observable);
 
@@ -36778,7 +36790,6 @@ bool flecs_type_info_init_id(
 }
 
 void flecs_type_info_fini(
-    ecs_world_t *world,
     ecs_type_info_t *ti)
 {
     if (ti->hooks.ctx_free) {
@@ -36787,7 +36798,24 @@ void flecs_type_info_fini(
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
     }
-    flecs_sparse_remove(world->type_info, ti->component);
+}
+
+void flecs_type_info_free(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    if (world->flags & EcsWorldFini) {
+        /* If world is in the final teardown stages, cleanup policies are no
+         * longer applied and it can't be guaranteed that a component is not
+         * deleted before entities that use it. The remaining type info elements
+         * will be deleted after the store is finalized. */
+        return;
+    }
+    ecs_type_info_t *ti = flecs_sparse_remove_get(
+        world->type_info, ecs_type_info_t, component);
+    if (ti) {
+        flecs_type_info_fini(ti);
+    }
 }
 
 static
@@ -47906,15 +47934,21 @@ void register_symmetric(ecs_iter_t *it) {
 }
 
 static
-void on_set_component(ecs_iter_t *it) {
+void on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_term(it, EcsComponent, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_type_info_init_id(world, e, c[i].size, c[i].alignment, NULL)){
-            assert_relation_unused(world, e, ecs_id(EcsComponent));
+        if (it->event == EcsOnSet) {
+            if (flecs_type_info_init_id(
+                world, e, c[i].size, c[i].alignment, NULL))
+            {
+                assert_relation_unused(world, e, ecs_id(EcsComponent));
+            }
+        } else if (it->event == EcsOnRemove) {
+            flecs_type_info_free(world, e);
         }
     }
 }
@@ -48173,7 +48207,9 @@ void flecs_bootstrap(
 
     /* Bootstrap builtin components */
     flecs_type_info_init(world, EcsComponent, { 
-        .ctor = ecs_default_ctor 
+        .ctor = ecs_default_ctor,
+        .on_set = on_component,
+        .on_remove = on_component
     });
 
     flecs_type_info_init(world, EcsIdentifier, {
@@ -48224,13 +48260,6 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
-
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsComponent), .subj.set.mask = EcsSelf },
-        .events = {EcsOnSet},
-        .callback = on_set_component,
-        .yield_existing = true
-    });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsTag, .subj.set.mask = EcsSelf },
@@ -49363,12 +49392,6 @@ void flecs_id_record_free(
         }
     } else {
         world->info.wildcard_id_count --;
-    }
-
-    /* Unregister type info if this is the record for the type */
-    ecs_type_info_t *ti = (ecs_type_info_t*)idr->type_info;
-    if (ti && idr->id == ti->component) {
-        flecs_type_info_fini(world, ti);
     }
 
     /* Unregister the id record from the world */

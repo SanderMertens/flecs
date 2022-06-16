@@ -1413,3 +1413,53 @@ void World_get_mut_in_at_fini() {
 
     test_int(at_fini_test_invoked, 1);
 }
+
+void World_get_type_info() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_int(ti->size, ECS_SIZEOF(Position));
+    test_int(ti->alignment, ECS_ALIGNOF(Position));
+    test_uint(ti->component, ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void World_get_type_info_after_delete_with() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_int(ti->size, ECS_SIZEOF(Position));
+    test_int(ti->alignment, ECS_ALIGNOF(Position));
+    test_uint(ti->component, ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void World_get_type_info_after_reuse() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_int(ti->size, ECS_SIZEOF(Position));
+    test_int(ti->alignment, ECS_ALIGNOF(Position));
+    test_uint(ti->component, ecs_id(Position));
+
+    ecs_fini(world);
+}

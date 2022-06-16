@@ -577,6 +577,7 @@ void OnDelete_delete_tree_w_query(void);
 void OnDelete_fini_cleanup_order(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
+void OnDelete_create_after_delete_with(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1747,6 +1748,9 @@ void World_use_after_clear_empty_w_component(void);
 void World_use_after_clear_empty_w_component_w_lifecycle(void);
 void World_use_after_clear_unused(void);
 void World_get_mut_in_at_fini(void);
+void World_get_type_info(void);
+void World_get_type_info_after_delete_with(void);
+void World_get_type_info_after_reuse(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -4160,6 +4164,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_parent_w_in_use_id_w_delete",
         OnDelete_on_delete_parent_w_in_use_id_w_delete
+    },
+    {
+        "create_after_delete_with",
+        OnDelete_create_after_delete_with
     }
 };
 
@@ -8715,6 +8723,18 @@ bake_test_case World_testcases[] = {
     {
         "get_mut_in_at_fini",
         World_get_mut_in_at_fini
+    },
+    {
+        "get_type_info",
+        World_get_type_info
+    },
+    {
+        "get_type_info_after_delete_with",
+        World_get_type_info_after_delete_with
+    },
+    {
+        "get_type_info_after_reuse",
+        World_get_type_info_after_reuse
     }
 };
 
@@ -9762,7 +9782,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        89,
+        90,
         OnDelete_testcases
     },
     {
@@ -9909,7 +9929,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        47,
+        50,
         World_testcases
     },
     {
