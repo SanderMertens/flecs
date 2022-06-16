@@ -94,12 +94,6 @@ public:
         return *this;
     }
 
-    /** Associate system with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;

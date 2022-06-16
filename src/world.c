@@ -374,21 +374,6 @@ void flecs_monitor_unregister(
 }
 
 static
-void monitors_fini(
-    ecs_world_t *world)
-{
-    ecs_map_t *monitors = &world->monitors.monitors;
-
-    ecs_map_iter_t it = ecs_map_iter(monitors);
-    ecs_monitor_t *m;
-    while ((m = ecs_map_next(&it, ecs_monitor_t, NULL))) {
-        ecs_vector_free(m->queries);
-    }
-
-    ecs_map_fini(monitors);
-}
-
-static
 void init_store(
     ecs_world_t *world) 
 {
@@ -672,11 +657,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
-    
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
-
-    world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     flecs_name_index_init(&world->aliases);
     flecs_name_index_init(&world->symbols);
 
@@ -687,12 +669,9 @@ ecs_world_t *ecs_mini(void) {
     }
 
     ecs_set_stage_count(world, 1);
-
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
-
     init_store(world);
-    ecs_trace("table store initialized");
 
     flecs_bootstrap(world);
 
@@ -1172,6 +1151,10 @@ int ecs_fini(
     flecs_defer_purge(world, &world->stages[0]);
     ecs_log_pop_1();
 
+    /* All queries are cleaned up, so monitors should've been cleaned up too */
+    ecs_assert(!ecs_map_is_initialized(&world->monitors.monitors), 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
@@ -1180,7 +1163,6 @@ int ecs_fini(
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
-    ecs_vector_free(world->fini_tasks);
     ecs_set_stage_count(world, 0);
     ecs_os_enable_high_timer_resolution(false);
     ecs_log_pop_1();

@@ -104,13 +104,13 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
 
 /* -- Poly component -- */
 
-ECS_COPY(EcsPoly, dst, src, {
+static ECS_COPY(EcsPoly, dst, src, {
     (void)dst;
     (void)src;
     ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
 })
 
-ECS_MOVE(EcsPoly, dst, src, {
+static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -121,7 +121,7 @@ ECS_MOVE(EcsPoly, dst, src, {
     src->poly = NULL;
 })
 
-ECS_DTOR(EcsPoly, ptr, {
+static ECS_DTOR(EcsPoly, ptr, {
     if (ptr->poly) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);

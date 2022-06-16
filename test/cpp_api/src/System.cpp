@@ -1186,26 +1186,6 @@ void System_custom_pipeline_w_kind() {
     test_int(count, 3);
 }
 
-void System_system_w_self() {
-    flecs::world world;
-
-    auto self = world.entity();
-
-    bool invoked = false;
-    auto sys = world.system<Position>()
-        .self(self)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.self() == self);
-            invoked = true;
-        });
-
-    world.entity().set<Position>({10, 20});
-
-    sys.run();
-
-    test_bool(invoked, true);
-}
-
 void System_instanced_query_w_singleton_each() {
     flecs::world ecs;
 

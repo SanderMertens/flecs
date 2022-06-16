@@ -12845,9 +12845,11 @@ enum var_kind_t {
 /* Builtin components */
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
-using Query = EcsQuery;
-using Trigger = EcsTrigger;
-using Observer = EcsObserver;
+using Poly = EcsPoly;
+
+static const flecs::entity_t Query = EcsQuery;
+static const flecs::entity_t Trigger = EcsTrigger;
+static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);
@@ -22024,12 +22026,6 @@ struct trigger_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** Associate trigger with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
@@ -22156,12 +22152,6 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     /** Invoke observer for anything that matches its filter on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
-        return *this;
-    }
-
-    /** Associate observer with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
         return *this;
     }
 
@@ -22420,12 +22410,6 @@ public:
      */
     Base& rate(int32_t rate) {
         m_desc->rate = rate;
-        return *this;
-    }
-
-    /** Associate system with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
         return *this;
     }
 
@@ -23495,9 +23479,7 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
 inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Identifier>("flecs::core::Identifier");
-    component<Trigger>("flecs::core::Trigger");
-    component<Observer>("flecs::core::Observer");
-    component<Query>("flecs::core::Query");
+    component<Poly>("flecs::core::Poly");
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);

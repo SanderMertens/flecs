@@ -39,12 +39,6 @@ struct trigger_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** Associate trigger with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;

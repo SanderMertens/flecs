@@ -509,35 +509,27 @@ struct ecs_world_t {
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 
-
     /* --  Data storage -- */
     ecs_store_t store;
-
 
     /* --  Pending table event buffers -- */
     ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
-    
 
     /* Used to track when cache needs to be updated */
     ecs_monitor_set_t monitors;    /* map<id, ecs_monitor_t> */
 
-
     /* -- Systems -- */
     ecs_entity_t pipeline;             /* Current pipeline */
-    ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
-
 
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
     const char *name_prefix;     /* Remove prefix from C names in modules */
 
-
     /* -- Staging -- */
     ecs_stage_t *stages;         /* Stages */
     int32_t stage_count;         /* Number of stages */
-
 
     /* -- Multithreading -- */
     ecs_os_cond_t worker_cond;   /* Signal that worker threads can start */
@@ -546,20 +538,16 @@ struct ecs_world_t {
     int32_t workers_running;     /* Number of threads running */
     int32_t workers_waiting;     /* Number of workers waiting on sync */
 
-
     /* -- Time management -- */
     ecs_time_t world_start_time; /* Timestamp of simulation start */
     ecs_time_t frame_start_time; /* Timestamp of frame start */
     ecs_ftime_t fps_sleep;       /* Sleep time to prevent fps overshoot */
 
-
     /* -- Metrics -- */
     ecs_world_info_t info;
 
-
     /* -- World flags -- */
     ecs_flags32_t flags;
-
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */

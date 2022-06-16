@@ -91,26 +91,6 @@ void Trigger_on_add_tag_each() {
     test_int(invoked, 1);
 }
 
-void Trigger_trigger_w_self() {
-    flecs::world world;
-
-    auto self = world.entity();
-
-    bool invoked = false;
-
-    world.trigger<Position>()
-        .event(flecs::OnAdd)
-        .self(self)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.self() == self);
-            invoked = true;
-        });
-
-    world.entity().set<Position>({10, 20});
-
-    test_bool(invoked, true);
-}
-
 void Trigger_on_add_id() {
    flecs::world world;
 

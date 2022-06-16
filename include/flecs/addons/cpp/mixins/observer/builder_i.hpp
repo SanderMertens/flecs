@@ -41,12 +41,6 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         return *this;
     }
 
-    /** Associate observer with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
