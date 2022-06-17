@@ -3748,7 +3748,11 @@ char* ecs_table_str(
     const ecs_world_t *world,
     const ecs_table_t *table)
 {
-    return ecs_type_str(world, &table->type);
+    if (table) {
+        return ecs_type_str(world, &table->type);
+    } else {
+        return NULL;
+    }
 }
 
 static

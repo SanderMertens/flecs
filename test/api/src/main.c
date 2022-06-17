@@ -1599,6 +1599,8 @@ void Monitor_monitor_w_superset(void);
 void Monitor_monitor_w_self_superset(void);
 void Monitor_monitor_w_wildcard(void);
 void Monitor_monitor_at_fini(void);
+void Monitor_monitor_other_table(void);
+void Monitor_monitor_component(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -8146,6 +8148,14 @@ bake_test_case Monitor_testcases[] = {
     {
         "monitor_at_fini",
         Monitor_monitor_at_fini
+    },
+    {
+        "monitor_other_table",
+        Monitor_monitor_other_table
+    },
+    {
+        "monitor_component",
+        Monitor_monitor_component
     }
 };
 
@@ -9920,7 +9930,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        15,
+        17,
         Monitor_testcases
     },
     {

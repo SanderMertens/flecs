@@ -2873,7 +2873,7 @@ void Observer_read_in_on_remove_after_add_other_w_not() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e);
-    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event, EcsOnRemove);
 
     ecs_fini(world);
 }

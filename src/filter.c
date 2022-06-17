@@ -1559,7 +1559,11 @@ bool flecs_term_match_table(
     }
 
     if (!result) {
-        return false;
+        if (iter_flags & EcsFilterPopulate) {
+            column = 0;
+        } else {
+            return false;
+        }
     }
 
     if (subj_entity != EcsThis) {

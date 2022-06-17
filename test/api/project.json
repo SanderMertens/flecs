@@ -1675,7 +1675,9 @@
                 "monitor_w_superset",
                 "monitor_w_self_superset",
                 "monitor_w_wildcard",
-                "monitor_at_fini"
+                "monitor_at_fini",
+                "monitor_other_table",
+                "monitor_component"
             ]
         }, {
             "id": "Prefab",

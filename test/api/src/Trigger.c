@@ -1543,7 +1543,7 @@ void Trigger_on_add_not_tag() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event, EcsOnAdd);
     test_int(ctx.event_id, TagA);
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1579,7 +1579,7 @@ void Trigger_on_remove_not_tag() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, TagA);
     test_int(ctx.term_count, 1);
     test_null(ctx.param);

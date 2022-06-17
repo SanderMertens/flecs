@@ -5,8 +5,6 @@ bool observer_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->real_world;
 
-    ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-
     if (o->last_event_id == world->event_id) {
         /* Already handled this event */
         return false;
@@ -30,28 +28,12 @@ bool observer_run(ecs_iter_t *it) {
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int32_t pivot_term = it->term_index;
-    int32_t ignore_term = -1;
     ecs_term_t *term = &o->filter.terms[pivot_term];
 
-    static int obs_count = 0;
-    obs_count ++;
-
-    /* Populate the column for the term that triggered. This will allow the
-     * matching algorithm to pick the right column in case the term is a
-     * wildcard matching multiple columns. */
-    user_it.columns[0] = 0;
-
-    /* Normalize id */
     int32_t column = it->columns[0];
     if (term->oper == EcsNot) {
-        column = 0;
-        if (it->event == EcsOnAdd) {
-            ignore_term = pivot_term;
-            prev_table = it->table;
-        } else if (it->event == EcsOnRemove) {
-            table = it->other_table;
-            prev_table = it->table;
-        }
+        table = it->other_table;
+        prev_table = it->table;
     }
 
     if (!table) {
@@ -65,10 +47,11 @@ bool observer_run(ecs_iter_t *it) {
         column = -column;
     }
 
+    user_it.columns[0] = 0;
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, ignore_term, 
+        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
         user_it.flags))
     {
         /* Monitor observers only trigger when the filter matches for the first
@@ -79,21 +62,20 @@ bool observer_run(ecs_iter_t *it) {
             {
                 goto done;
             }
-
-            if (term->oper == EcsNot) {
-                /* Flip event if this is a Not, so OnAdd and OnRemove can be
-                 * reliably used to check if we're entering or leaving the
-                 * monitor */
-                if (it->event == EcsOnAdd) {
-                    user_it.event = EcsOnRemove;
-                } else if (it->event == EcsOnRemove) {
-                    user_it.event = EcsOnAdd;
-                }
-            }
         }
 
-        flecs_iter_populate_data(world, &user_it, 
-            table, it->offset, it->count, user_it.ptrs, user_it.sizes);
+        /* While filter matching needs to be reversed for a Not term, the
+         * component data must be fetched from the table we got notified for.
+         * Repeat the matching process for the non-matching table so we get the
+         * correct column ids and subjects, which we need for populate_data */
+        if (term->oper == EcsNot) {
+            flecs_filter_match_table(world, &o->filter, prev_table, user_it.ids, 
+                user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+                user_it.flags | EcsFilterPopulate);
+        }
+
+        flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
+            it->count, user_it.ptrs, user_it.sizes);
 
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
@@ -103,6 +85,7 @@ bool observer_run(ecs_iter_t *it) {
         user_it.term_count = o->filter.term_count_actual;
         flecs_iter_validate(&user_it);
 
+        ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
         o->callback(&user_it);
 
         ecs_iter_fini(&user_it);

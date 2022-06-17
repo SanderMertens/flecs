@@ -8789,7 +8789,11 @@ char* ecs_table_str(
     const ecs_world_t *world,
     const ecs_table_t *table)
 {
-    return ecs_type_str(world, &table->type);
+    if (table) {
+        return ecs_type_str(world, &table->type);
+    } else {
+        return NULL;
+    }
 }
 
 static
@@ -38915,7 +38919,11 @@ bool flecs_term_match_table(
     }
 
     if (!result) {
-        return false;
+        if (iter_flags & EcsFilterPopulate) {
+            column = 0;
+        } else {
+            return false;
+        }
     }
 
     if (subj_entity != EcsThis) {
@@ -40185,8 +40193,6 @@ bool observer_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->real_world;
 
-    ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-
     if (o->last_event_id == world->event_id) {
         /* Already handled this event */
         return false;
@@ -40210,28 +40216,12 @@ bool observer_run(ecs_iter_t *it) {
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int32_t pivot_term = it->term_index;
-    int32_t ignore_term = -1;
     ecs_term_t *term = &o->filter.terms[pivot_term];
 
-    static int obs_count = 0;
-    obs_count ++;
-
-    /* Populate the column for the term that triggered. This will allow the
-     * matching algorithm to pick the right column in case the term is a
-     * wildcard matching multiple columns. */
-    user_it.columns[0] = 0;
-
-    /* Normalize id */
     int32_t column = it->columns[0];
     if (term->oper == EcsNot) {
-        column = 0;
-        if (it->event == EcsOnAdd) {
-            ignore_term = pivot_term;
-            prev_table = it->table;
-        } else if (it->event == EcsOnRemove) {
-            table = it->other_table;
-            prev_table = it->table;
-        }
+        table = it->other_table;
+        prev_table = it->table;
     }
 
     if (!table) {
@@ -40245,10 +40235,11 @@ bool observer_run(ecs_iter_t *it) {
         column = -column;
     }
 
+    user_it.columns[0] = 0;
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, ignore_term, 
+        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
         user_it.flags))
     {
         /* Monitor observers only trigger when the filter matches for the first
@@ -40259,21 +40250,20 @@ bool observer_run(ecs_iter_t *it) {
             {
                 goto done;
             }
-
-            if (term->oper == EcsNot) {
-                /* Flip event if this is a Not, so OnAdd and OnRemove can be
-                 * reliably used to check if we're entering or leaving the
-                 * monitor */
-                if (it->event == EcsOnAdd) {
-                    user_it.event = EcsOnRemove;
-                } else if (it->event == EcsOnRemove) {
-                    user_it.event = EcsOnAdd;
-                }
-            }
         }
 
-        flecs_iter_populate_data(world, &user_it, 
-            table, it->offset, it->count, user_it.ptrs, user_it.sizes);
+        /* While filter matching needs to be reversed for a Not term, the
+         * component data must be fetched from the table we got notified for.
+         * Repeat the matching process for the non-matching table so we get the
+         * correct column ids and subjects, which we need for populate_data */
+        if (term->oper == EcsNot) {
+            flecs_filter_match_table(world, &o->filter, prev_table, user_it.ids, 
+                user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+                user_it.flags | EcsFilterPopulate);
+        }
+
+        flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
+            it->count, user_it.ptrs, user_it.sizes);
 
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
@@ -40283,6 +40273,7 @@ bool observer_run(ecs_iter_t *it) {
         user_it.term_count = o->filter.term_count_actual;
         flecs_iter_validate(&user_it);
 
+        ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
         o->callback(&user_it);
 
         ecs_iter_fini(&user_it);
@@ -46777,6 +46768,25 @@ bool ignore_trigger(
 }
 
 static
+void invoke_trigger(
+    ecs_trigger_t *t,
+    ecs_iter_t *it)
+{
+    ECS_BIT_COND(it->flags, EcsIterIsFilter, t->term.inout == EcsInOutFilter);
+    it->system = t->entity;
+    it->self = t->self;
+    it->ctx = t->ctx;
+    it->binding_ctx = t->binding_ctx;
+    it->term_index = t->term.index;
+    it->terms = &t->term;
+
+    ecs_entity_t event = it->event;
+    it->event = flecs_trigger_get_actual_event(t, event);
+    t->callback(it);
+    it->event = event;
+}
+
+static
 void notify_self_triggers(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -46790,17 +46800,7 @@ void notify_self_triggers(
         if (ignore_trigger(world, t, it->table)) {
             continue;
         }
-
-        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-            t->term.inout == EcsInOutFilter);
-
-        it->system = t->entity;
-        it->self = t->self;
-        it->ctx = t->ctx;
-        it->binding_ctx = t->binding_ctx;
-        it->term_index = t->term.index;
-        it->terms = &t->term;
-        t->callback(it);
+        invoke_trigger(t, it);
     }
 }
 
@@ -46835,19 +46835,10 @@ void notify_entity_triggers(
                 continue;
             }
 
-            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-                t->term.inout == EcsInOutFilter);
-            it->system = t->entity;
-            it->self = t->self;
-            it->ctx = t->ctx;
-            it->binding_ctx = t->binding_ctx;
-            it->term_index = t->term.index;
-            it->terms = &t->term;
             it->offset = i;
             it->count = 1;
             it->subjects[0] = entities[i];
-
-            t->callback(it);
+            invoke_trigger(t, it);
         }
     }
 
@@ -46923,17 +46914,8 @@ void notify_set_base_triggers(
             }
         }
 
-        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-            t->term.inout == EcsInOutFilter);
         it->event_id = t->term.id;
-        it->system = t->entity;
-        it->self = t->self;
-        it->ctx = t->ctx;
-        it->binding_ctx = t->binding_ctx;
-        it->term_index = t->term.index;
-        it->terms = &t->term;
-        
-        t->callback(it);
+        invoke_trigger(t, it);
     }
 }
 
@@ -46991,28 +46973,19 @@ void notify_set_triggers(
                 continue;
             }
 
-            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-                t->term.inout == EcsInOutFilter);
-            it->system = t->entity;
-            it->self = t->self;
-            it->ctx = t->ctx;
-            it->binding_ctx = t->binding_ctx;
-            it->term_index = t->term.index;
-            it->terms = &t->term;
-
             /* Triggers for supersets can be instanced */
             bool instanced = t->instanced;
             bool is_filter = ECS_BIT_IS_SET(it->flags, EcsIterIsFilter);
             if (it->count == 1 || instanced || is_filter || !it->sizes[0]) {
                 ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
-                t->callback(it);
+                invoke_trigger(t, it);
                 ECS_BIT_CLEAR(it->flags, EcsIterIsInstanced);
             } else {
                 ecs_entity_t *entities = it->entities;
                 it->count = 1;
                 for (i = 0; i < count; i ++) {
                     it->entities = &entities[i];
-                    t->callback(it);
+                    invoke_trigger(t, it);
                 }
                 it->entities = entities;
             }

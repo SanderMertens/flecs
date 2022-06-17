@@ -401,6 +401,25 @@ bool ignore_trigger(
 }
 
 static
+void invoke_trigger(
+    ecs_trigger_t *t,
+    ecs_iter_t *it)
+{
+    ECS_BIT_COND(it->flags, EcsIterIsFilter, t->term.inout == EcsInOutFilter);
+    it->system = t->entity;
+    it->self = t->self;
+    it->ctx = t->ctx;
+    it->binding_ctx = t->binding_ctx;
+    it->term_index = t->term.index;
+    it->terms = &t->term;
+
+    ecs_entity_t event = it->event;
+    it->event = flecs_trigger_get_actual_event(t, event);
+    t->callback(it);
+    it->event = event;
+}
+
+static
 void notify_self_triggers(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -414,17 +433,7 @@ void notify_self_triggers(
         if (ignore_trigger(world, t, it->table)) {
             continue;
         }
-
-        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-            t->term.inout == EcsInOutFilter);
-
-        it->system = t->entity;
-        it->self = t->self;
-        it->ctx = t->ctx;
-        it->binding_ctx = t->binding_ctx;
-        it->term_index = t->term.index;
-        it->terms = &t->term;
-        t->callback(it);
+        invoke_trigger(t, it);
     }
 }
 
@@ -459,19 +468,10 @@ void notify_entity_triggers(
                 continue;
             }
 
-            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-                t->term.inout == EcsInOutFilter);
-            it->system = t->entity;
-            it->self = t->self;
-            it->ctx = t->ctx;
-            it->binding_ctx = t->binding_ctx;
-            it->term_index = t->term.index;
-            it->terms = &t->term;
             it->offset = i;
             it->count = 1;
             it->subjects[0] = entities[i];
-
-            t->callback(it);
+            invoke_trigger(t, it);
         }
     }
 
@@ -547,17 +547,8 @@ void notify_set_base_triggers(
             }
         }
 
-        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-            t->term.inout == EcsInOutFilter);
         it->event_id = t->term.id;
-        it->system = t->entity;
-        it->self = t->self;
-        it->ctx = t->ctx;
-        it->binding_ctx = t->binding_ctx;
-        it->term_index = t->term.index;
-        it->terms = &t->term;
-        
-        t->callback(it);
+        invoke_trigger(t, it);
     }
 }
 
@@ -615,28 +606,19 @@ void notify_set_triggers(
                 continue;
             }
 
-            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-                t->term.inout == EcsInOutFilter);
-            it->system = t->entity;
-            it->self = t->self;
-            it->ctx = t->ctx;
-            it->binding_ctx = t->binding_ctx;
-            it->term_index = t->term.index;
-            it->terms = &t->term;
-
             /* Triggers for supersets can be instanced */
             bool instanced = t->instanced;
             bool is_filter = ECS_BIT_IS_SET(it->flags, EcsIterIsFilter);
             if (it->count == 1 || instanced || is_filter || !it->sizes[0]) {
                 ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
-                t->callback(it);
+                invoke_trigger(t, it);
                 ECS_BIT_CLEAR(it->flags, EcsIterIsInstanced);
             } else {
                 ecs_entity_t *entities = it->entities;
                 it->count = 1;
                 for (i = 0; i < count; i ++) {
                     it->entities = &entities[i];
-                    t->callback(it);
+                    invoke_trigger(t, it);
                 }
                 it->entities = entities;
             }

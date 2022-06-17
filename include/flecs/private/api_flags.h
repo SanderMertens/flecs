@@ -101,6 +101,7 @@ extern "C" {
 #define EcsFilterMatchAnything         (1u << 6u)  /* False if filter has no/only Not terms */
 #define EcsFilterIsFilter              (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
+#define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +119,7 @@ extern "C" {
 #define EcsTableHasDtors               (1u << 9u)
 #define EcsTableHasCopy                (1u << 10u)
 #define EcsTableHasMove                (1u << 11u)
-#define EcsTableHasUnion              (1u << 12u)
+#define EcsTableHasUnion               (1u << 12u)
 #define EcsTableHasDisabled            (1u << 13u)
 #define EcsTableHasOverrides           (1u << 14u)
 
