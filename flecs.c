@@ -5233,12 +5233,12 @@ void ids_merge(
     }
     
     int32_t new_count = ids->type.count + add->count;
-    if (new_count >= ids->size) {
+    if (new_count > ids->size) {
         ids->size = flecs_next_pow_of_2(new_count);
         ecs_id_t *arr = ecs_os_malloc_n(ecs_id_t, ids->size);
         ecs_os_memcpy_n(arr, ids->type.array, ecs_id_t, ids->type.count);
 
-        if (ids->type.count >= ECS_ID_CACHE_SIZE) {
+        if (ids->type.count > ECS_ID_CACHE_SIZE) {
             ecs_os_free(ids->type.array);
         }
         
