@@ -36,6 +36,10 @@ if(FLECS_SHARED_LIBS)
         target_default_compile_warnings_c(flecs)
     endif()
 
+    if(WIN32)
+        target_link_libraries(flecs wsock32 ws2_32)
+    endif()
+
     target_include_directories(flecs PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
@@ -51,6 +55,10 @@ if(FLECS_STATIC_LIBS)
     target_default_compile_options_c(flecs_static)
     if(FLECS_DEVELOPER_WARNINGS)
         target_default_compile_warnings_c(flecs_static)
+    endif()
+
+    if(WIN32)
+        target_link_libraries(flecs_static wsock32 ws2_32)
     endif()
 
     if(FLECS_PIC)
