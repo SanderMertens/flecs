@@ -2484,7 +2484,6 @@ error:
     return NULL;
 }
 
-FLECS_API
 void ecs_table_swap_rows(
     ecs_world_t* world,
     ecs_table_t* table,

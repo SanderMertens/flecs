@@ -1085,16 +1085,6 @@ void World_redefine_component() {
     ecs_fini(world);
 }
 
-FLECS_API
-int32_t ecs_delete_empty_tables(
-    ecs_world_t *world,
-    ecs_id_t id,
-    uint16_t clear_generation,
-    uint16_t delete_generation,
-    int32_t min_id_count,
-    double time_budget_seconds);
-
-
 void World_delete_empty_tables_after_mini() {
     ecs_world_t *world = ecs_mini();
 

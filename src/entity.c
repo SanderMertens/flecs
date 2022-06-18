@@ -3606,7 +3606,6 @@ error:
     return false;
 }
 
-FLECS_API
 void ecs_defer_suspend(
     ecs_world_t *world)
 {
@@ -3619,12 +3618,6 @@ error:
     return;
 }
 
-/** Resume deferring.
- * See ecs_defer_suspend.
- * 
- * @param world The world.
- */
-FLECS_API
 void ecs_defer_resume(
     ecs_world_t *world)
 {
