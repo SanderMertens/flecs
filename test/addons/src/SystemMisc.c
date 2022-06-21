@@ -391,287 +391,6 @@ void SystemMisc_table_columns_access() {
     ecs_fini(world);
 }
 
-static bool system_status_action_invoked = false;
-static ecs_system_status_t enable_status = EcsSystemStatusNone;
-static ecs_system_status_t active_status = EcsSystemStatusNone;
-
-static
-void status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_status_t status,
-    void *ctx)
-{
-    system_status_action_invoked = true;
-
-    if (status == EcsSystemEnabled || status == EcsSystemDisabled) {
-        enable_status = status;
-    } else if (status == EcsSystemActivated || status == EcsSystemDeactivated) {
-        active_status = status;
-    }
-}
-
-static
-void reset_status() {
-    system_status_action_invoked = false;
-    enable_status = EcsSystemStatusNone;
-    active_status = EcsSystemStatusNone;
-}
-
-void SystemMisc_status_enable_after_new() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. There are no entities, so the system
-     * should not be active */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Enable enabled system. Should not trigger status. */
-    reset_status();
-    ecs_enable(world, dummy, true);
-    test_assert(system_status_action_invoked == false);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemStatusNone); 
-
-    /* After cleaning up the world, the Disabled status should have been
-     * triggered. There were no entities, so the Deactivated status shouldn't */
-    reset_status();
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);   
-}
-
-void SystemMisc_status_enable_after_disable() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. There are no entities, so the system
-     * should not be active */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Disable system, should trigger status */
-    reset_status();
-    ecs_enable(world, dummy, false);
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Enable enabled system. Should trigger status. */
-    reset_status();
-    ecs_enable(world, dummy, true);
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* After cleaning up the world, the Disabled status should have been
-     * triggered. There were no entities, so the Deactivated status shouldn't */
-    reset_status();
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);  
-}
-
-void SystemMisc_status_disable_after_new() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. There are no entities, so the system
-     * should not be active */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Disable system, should trigger status action */
-    reset_status();
-    ecs_enable(world, dummy, false);
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Since the system is already disabled, no status should be triggered */
-    reset_status();
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == false);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemStatusNone);  
-}
-
-void SystemMisc_status_disable_after_disable() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t dummy = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. There are no entities, so the system
-     * should not be active */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Disable system, should trigger status action */
-    reset_status();
-    ecs_enable(world, dummy, false);
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Disable system again, should not trigger status action */
-    reset_status();
-    ecs_enable(world, dummy, false);
-    test_assert(system_status_action_invoked == false);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemStatusNone);    
-
-    /* Since the system is already disabled, no status should be triggered */
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == false);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemStatusNone);  
-}
-
-void SystemMisc_status_activate_after_new() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. There are no entities, so the system
-     * should not be active */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemStatusNone);
-
-    /* Add entity with Position. Should activate system. */
-    reset_status();
-
-    ecs_new(world, Position);
-    ecs_run_aperiodic(world, 0);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemActivated);
-
-    /* After cleaning up the world, the Disabled and Deactivated status should 
-     * have been triggered. */
-    reset_status();
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemDeactivated);
-}
-
-void SystemMisc_status_deactivate_after_delete() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {
-            .name = "Dummy",
-            .add = {ecs_dependson(EcsOnUpdate)}
-        },
-        .query.filter.terms = {{ecs_id(Position)}},
-        .callback = Dummy,
-        .status_callback = status_action
-    });
-
-    ecs_entity_t e = ecs_new(world, Position);
-
-    ecs_run_aperiodic(world, 0);
-
-    /* Setting the status action should have triggered the enabled status since
-     * the system is already enabled. The system should be active since it has
-     * been matched with an entity. */
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemEnabled);
-    test_assert(active_status == EcsSystemActivated);
-
-    /* Delete the entity. Should trigger the Deactivated status */
-    reset_status();
-    ecs_delete(world, e);
-    ecs_run_aperiodic(world, 0);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemStatusNone);
-    test_assert(active_status == EcsSystemDeactivated);
-
-    /* After cleaning up the world, the Disabled status should have been
-     * triggered. */
-    reset_status();
-    ecs_fini(world);
-
-    test_assert(system_status_action_invoked == true);
-    test_assert(enable_status == EcsSystemDisabled);
-    test_assert(active_status == EcsSystemStatusNone);
-}
-
 void SystemMisc_dont_enable_after_rematch() {
     ecs_world_t *world = ecs_init();
 
@@ -807,7 +526,7 @@ void SystemMisc_system_initial_state() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SysA, 0, Position);
 
-    test_assert( ecs_has_id(world, SysA, EcsInactive));
+    test_assert( ecs_has_id(world, SysA, EcsEmpty));
     test_assert( !ecs_has_id(world, SysA, EcsDisabled));
 
     ecs_fini(world);
@@ -891,25 +610,25 @@ void SystemMisc_system_readeactivate() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
     /* No entities, system should be deactivated */
-    test_assert( ecs_has_id(world, Dummy, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy, EcsEmpty));
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_run_aperiodic(world, 0);
 
     /* System should be active, one entity is matched */
-    test_assert( !ecs_has_id(world, Dummy, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy, EcsEmpty));
 
     ecs_delete(world, e);
     ecs_run_aperiodic(world, 0);
 
     /* System is not automatically deactivated */
-    test_assert( !ecs_has_id(world, Dummy, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy, EcsEmpty));
 
     /* Manually deactivate system that aren't matched with entities */
-    ecs_deactivate_systems(world);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyQueries);
 
     /* System should be deactivated */
-    test_assert( ecs_has_id(world, Dummy, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy, EcsEmpty));
 
     ecs_fini(world);
 }
@@ -930,30 +649,30 @@ void SystemMisc_system_readeactivate_w_2_systems() {
     ECS_SYSTEM(world, Dummy2, EcsOnUpdate, Mass);
 
     /* No entities, system should be deactivated */
-    test_assert( ecs_has_id(world, Dummy1, EcsInactive));
-    test_assert( ecs_has_id(world, Dummy2, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy1, EcsEmpty));
+    test_assert( ecs_has_id(world, Dummy2, EcsEmpty));
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_new(world, Mass);
     ecs_run_aperiodic(world, 0);
 
     /* Systems should be active, one entity is matched */
-    test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy1, EcsEmpty));
+    test_assert( !ecs_has_id(world, Dummy2, EcsEmpty));
 
     ecs_delete(world, e1);
     ecs_run_aperiodic(world, 0);
 
     /* System is not automatically deactivated */
-    test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy1, EcsEmpty));
+    test_assert( !ecs_has_id(world, Dummy2, EcsEmpty));
 
     /* Manually deactivate system that aren't matched with entities */
-    ecs_deactivate_systems(world);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyQueries);
 
     /* System should be deactivated */
-    test_assert( ecs_has_id(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy1, EcsEmpty));
+    test_assert( !ecs_has_id(world, Dummy2, EcsEmpty));
 
     ecs_fini(world);
 }
@@ -1502,16 +1221,16 @@ void SystemMisc_deactivate_after_disable() {
     ecs_entity_t e = ecs_new_w_id(world, Tag);
     ecs_run_aperiodic(world, 0);
     
-    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+    test_assert(!ecs_has_id(world, Dummy, EcsEmpty));
 
     ecs_enable(world, Dummy, false);
-    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+    test_assert(!ecs_has_id(world, Dummy, EcsEmpty));
     test_assert(ecs_has_id(world, Dummy, EcsDisabled));
 
     ecs_delete(world, e);
     ecs_run_aperiodic(world, 0);
 
-    test_assert(!ecs_has_id(world, Dummy, EcsInactive));
+    test_assert(!ecs_has_id(world, Dummy, EcsEmpty));
     test_assert(ecs_has_id(world, Dummy, EcsDisabled));
 
     ecs_fini(world);

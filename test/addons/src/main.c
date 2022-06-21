@@ -388,12 +388,6 @@ void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
 void SystemMisc_system_w_or_disabled_and_prefab(void);
 void SystemMisc_table_columns_access(void);
-void SystemMisc_status_enable_after_new(void);
-void SystemMisc_status_enable_after_disable(void);
-void SystemMisc_status_disable_after_new(void);
-void SystemMisc_status_disable_after_disable(void);
-void SystemMisc_status_activate_after_new(void);
-void SystemMisc_status_deactivate_after_delete(void);
 void SystemMisc_dont_enable_after_rematch(void);
 void SystemMisc_ensure_single_merge(void);
 void SystemMisc_table_count(void);
@@ -708,7 +702,6 @@ void SystemCascade_custom_relation_adopt_after_match(void);
 // Testsuite 'SystemManual'
 void SystemManual_setup(void);
 void SystemManual_1_type_1_component(void);
-void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
 void SystemManual_dont_run_w_unmatching_entity_query(void);
 
@@ -2410,30 +2403,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_table_columns_access
     },
     {
-        "status_enable_after_new",
-        SystemMisc_status_enable_after_new
-    },
-    {
-        "status_enable_after_disable",
-        SystemMisc_status_enable_after_disable
-    },
-    {
-        "status_disable_after_new",
-        SystemMisc_status_disable_after_new
-    },
-    {
-        "status_disable_after_disable",
-        SystemMisc_status_disable_after_disable
-    },
-    {
-        "status_activate_after_new",
-        SystemMisc_status_activate_after_new
-    },
-    {
-        "status_deactivate_after_delete",
-        SystemMisc_status_deactivate_after_delete
-    },
-    {
         "dont_enable_after_rematch",
         SystemMisc_dont_enable_after_rematch
     },
@@ -3656,10 +3625,6 @@ bake_test_case SystemManual_testcases[] = {
         SystemManual_1_type_1_component
     },
     {
-        "activate_status",
-        SystemManual_activate_status
-    },
-    {
         "no_automerge",
         SystemManual_no_automerge
     },
@@ -4428,7 +4393,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        69,
+        63,
         SystemMisc_testcases
     },
     {
@@ -4470,7 +4435,7 @@ static bake_test_suite suites[] = {
         "SystemManual",
         SystemManual_setup,
         NULL,
-        4,
+        3,
         SystemManual_testcases
     },
     {

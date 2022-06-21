@@ -288,8 +288,9 @@ extern "C" {
 //// Aperiodic action flags (used by ecs_run_aperiodic)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsAperiodicEmptyTableEvents   (1u << 1u)  /* Process pending empty table events */
+#define EcsAperiodicEmptyTables        (1u << 1u)  /* Process pending empty table events */
 #define EcsAperiodicComponentMonitors  (1u << 2u)  /* Process component monitors */
+#define EcsAperiodicEmptyQueries       (1u << 4u)  /* Process empty queries */
 
 #ifdef __cplusplus
 }
@@ -4121,8 +4122,8 @@ FLECS_API extern const ecs_entity_t EcsPanic;
  * component does not change the behavior of core ECS operations. */
 FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
-/* System module tags */
-FLECS_API extern const ecs_entity_t EcsInactive;
+/* Tag used to indicate query is empty */
+FLECS_API extern const ecs_entity_t EcsEmpty;
 
 /* Pipeline module tags */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPipeline);
@@ -9278,21 +9279,7 @@ FLECS_API
 void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    ecs_ftime_t delta_time);    
-    
-/** Deactivate systems that are not matched with tables.
- * By default Flecs deactivates systems that are not matched with any tables.
- * However, once a system has been matched with a table it remains activated, to
- * prevent systems from continuously becoming active and inactive.
- *
- * To re-deactivate systems, an application can invoke this function, which will
- * deactivate all systems that are not matched with any tables.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_deactivate_systems(
-    ecs_world_t *world);
+    ecs_ftime_t delta_time);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9367,45 +9354,11 @@ typedef struct EcsTickSource {
 //// Systems API
 ////////////////////////////////////////////////////////////////////////////////
 
-/** System status change callback */
-typedef enum ecs_system_status_t {
-    EcsSystemStatusNone = 0,
-    EcsSystemEnabled,
-    EcsSystemDisabled,
-    EcsSystemActivated,
-    EcsSystemDeactivated
-} ecs_system_status_t;
-
-/** System status action.
- * The status action is invoked whenever a system is enabled or disabled. Note
- * that a system may be enabled but may not actually match any entities. In this
- * case the system is enabled but not _active_.
- *
- * In addition to communicating the enabled / disabled status, the action also
- * communicates changes in the activation status of the system. A system becomes
- * active when it has one or more matching entities, and becomes inactive when
- * it no longer matches any entities.
- * 
- * A system switches between enabled and disabled when an application invokes the
- * ecs_enable operation with a state different from the state of the system, for
- * example the system is disabled, and ecs_enable is invoked with enabled: true.
- *
- * @param world The world.
- * @param system The system for which the action has changed.
- * @param status The status that triggered the callback.
- * @param ctx Context passed to ecs_system_desc_t as status_ctx.
- */
-typedef void (*ecs_system_status_action_t)(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_status_t status,
-    void *ctx);
-
 /* Use with ecs_system_init */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* System entity creation parameters */
+    /* Entity creation parameters */
     ecs_entity_desc_t entity;
 
     /* System query parameters */
@@ -9429,9 +9382,6 @@ typedef struct ecs_system_desc_t {
      * means that this callback can be invoked multiple times per system per
      * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
-
-    /* System status callback, invoked when system status changes */
-    ecs_system_status_action_t status_callback;
 
     /* Associate with entity. */
     ecs_entity_t self;    
@@ -12871,7 +12821,7 @@ static const flecs::entity_t Private = EcsPrivate;
 static const flecs::entity_t Module = EcsModule;
 static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t Inactive = EcsInactive;
+static const flecs::entity_t Empty = EcsEmpty;
 static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
@@ -16300,11 +16250,6 @@ ecs_ftime_t get_target_fps() const;
  * @see ecs_reset_clock
  */
 void reset_clock() const;
-
-/** Deactivate systems.
- * @see ecs_deactivate_systems.
- */
-void deactivate_systems() const;
 
 /** Set number of threads.
  * @see ecs_set_threads
@@ -22762,10 +22707,6 @@ inline void world::set_target_fps(ecs_ftime_t target_fps) const {
 
 inline void world::reset_clock() const {
     ecs_reset_clock(m_world);
-}
-
-inline void world::deactivate_systems() const {
-    ecs_deactivate_systems(m_world);
 }
 
 inline void world::set_threads(int32_t threads) const {

@@ -2455,7 +2455,7 @@ void flecs_on_delete(
     int32_t count = ecs_vector_count(world->store.marked_ids);
 
     /* Make sure we're evaluating a consistent list of non-empty tables */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     /* Collect all ids that need to be deleted */
     flecs_on_delete_mark(world, id, action);
@@ -2469,7 +2469,7 @@ void flecs_on_delete(
         flecs_on_delete_clear_tables(world);
 
         /* All marked tables are empty, ensure they're in the right list */
-        ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+        ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);

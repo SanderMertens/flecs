@@ -7638,7 +7638,7 @@ void flecs_on_delete(
     int32_t count = ecs_vector_count(world->store.marked_ids);
 
     /* Make sure we're evaluating a consistent list of non-empty tables */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     /* Collect all ids that need to be deleted */
     flecs_on_delete_mark(world, id, action);
@@ -7652,7 +7652,7 @@ void flecs_on_delete(
         flecs_on_delete_clear_tables(world);
 
         /* All marked tables are empty, ensure they're in the right list */
-        ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+        ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
@@ -14340,7 +14340,6 @@ typedef struct ecs_system_t {
 
     ecs_query_t *query;             /* System query */
     ecs_entity_t query_entity;      /* Entity associated with query */
-    ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     
     /* Schedule parameters */
@@ -15089,7 +15088,7 @@ bool flecs_pipeline_build(
 
             bool needs_merge = false;
             bool is_active = !ecs_has_id(
-                world, it.entities[i], EcsInactive);
+                world, it.entities[i], EcsEmpty);
             needs_merge = check_terms(&q->filter, is_active, &ws);
 
             if (is_active) {
@@ -15422,41 +15421,6 @@ void ecs_reset_clock(
     world->info.world_time_total_raw = 0;
 }
 
-void ecs_deactivate_systems(
-    ecs_world_t *world)
-{
-    ecs_assert(!(world->flags & EcsWorldReadonly), 
-        ECS_INVALID_WHILE_READONLY, NULL);
-
-    ecs_entity_t pipeline = world->pipeline;
-    const EcsPipeline *pq = ecs_get( world, pipeline, EcsPipeline);
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
-     * with any tables */
-    ecs_iter_t it = ecs_query_iter(world, pq->query);
-
-    /* Make sure that we defer adding the inactive tags until after iterating
-     * the query */
-    flecs_defer_none(world, &world->stages[0]);
-
-    while( ecs_query_next(&it)) {
-        EcsPoly *poly = flecs_pipeline_term_system(&it);
-
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            ecs_query_t *query = ecs_poly(poly[i].poly, ecs_system_t)->query;
-            if (query) {
-                if (!ecs_query_table_count(query)) {
-                    ecs_add_id(world, it.entities[i], EcsInactive);
-                }
-            }
-        }
-    }
-
-    flecs_defer_flush(world, &world->stages[0]);
-}
-
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
@@ -15509,7 +15473,7 @@ ecs_entity_t ecs_pipeline_init(
     ecs_set(world, result, EcsPipeline, {
         .query = query,
         .match_count = -1,
-        .idr_inactive = flecs_id_record_ensure(world, EcsInactive)
+        .idr_inactive = flecs_id_record_ensure(world, EcsEmpty)
     });
 
     return result;
@@ -27082,7 +27046,7 @@ bool ecs_system_stats_get(
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
     ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
-    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsInactive));
+    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsEmpty));
     ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
@@ -28819,92 +28783,6 @@ ecs_mixins_t ecs_system_t_mixins = {
     }
 };
 
-static
-void invoke_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const ecs_system_t *system_data,
-    ecs_system_status_t status)
-{
-    ecs_system_status_action_t action = system_data->status_action;
-    if (action) {
-        action(world, system, status, system_data->status_ctx);
-    }
-}
-
-/* Invoked when system becomes active or inactive */
-void ecs_system_activate(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool activate,
-    const ecs_system_t *system_data)
-{
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-
-    if (activate) {
-        /* If activating system, ensure that it doesn't have the Inactive tag.
-         * Systems are implicitly activated so they are kept out of the main
-         * loop as long as they aren't used. They are not implicitly deactivated
-         * to prevent overhead in case of oscillating app behavior. 
-         * After activation, systems that aren't matched with anything can be
-         * deactivated again by explicitly calling ecs_deactivate_systems.
-         */
-        ecs_remove_id(world, system, EcsInactive);
-    }
-
-    if (!system_data) {
-        system_data = ecs_poly_get(world, system, ecs_system_t);
-    }
-    if (!system_data || !system_data->query) {
-        return;
-    }
-
-    if (!activate) {
-        if (ecs_has_id(world, system, EcsDisabled)) {
-            if (!ecs_query_table_count(system_data->query)) {
-                /* If deactivating a disabled system that isn't matched with
-                 * any active tables, there is nothing to deactivate. */
-                return;
-            }
-        }            
-    }
-
-    /* Invoke system status action */
-    invoke_status_action(world, system, system_data, 
-        activate ? EcsSystemActivated : EcsSystemDeactivated);
-
-    ecs_dbg_2("#[green]system#[reset] %s %s", 
-        ecs_get_name(world, system), 
-        activate ? "activated" : "deactivated");
-}
-
-/* Actually enable or disable system */
-static
-void ecs_enable_system(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_t *system_data,
-    bool enabled)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-
-    ecs_query_t *query = system_data->query;
-    if (!query) {
-        return;
-    }
-
-    if (ecs_query_table_count(query)) {
-        /* Only (de)activate system if it has non-empty tables. */
-        ecs_system_activate(world, system, enabled, system_data);
-    }
-    
-    /* Invoke action for enable/disable status */
-    invoke_status_action(
-        world, system, system_data,
-        enabled ? EcsSystemEnabled : EcsSystemDisabled);
-}
-
 /* -- Public API -- */
 
 ecs_entity_t ecs_run_intern(
@@ -29097,14 +28975,6 @@ void* ecs_get_system_binding_ctx(
 /* System deinitialization */
 static
 void flecs_system_fini(ecs_system_t *sys) {
-    ecs_world_t *world = sys->world;
-    ecs_entity_t entity = sys->entity;
-
-    /* Invoke Disabled action for enabled systems */
-    if (!ecs_has_id(world, entity, EcsDisabled)) {
-        invoke_status_action(world, entity, sys, EcsSystemDisabled);
-    }
-
     if (sys->ctx_free) {
         sys->ctx_free(sys->ctx);
     }
@@ -29118,30 +28988,6 @@ void flecs_system_fini(ecs_system_t *sys) {
     }
 
     ecs_poly_free(sys, ecs_system_t);
-}
-
-static
-void EnableMonitor(
-    ecs_iter_t *it)
-{
-    if (ecs_is_fini(it->world)) {
-        return;
-    }
-
-    EcsPoly *poly = ecs_term(it, EcsPoly, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (poly[i].poly == NULL) {
-            continue; /* This is a new system */
-        }
-
-        ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
-        if (it->event == EcsOnAdd) {
-            ecs_enable_system(it->world, it->entities[i], sys, true);
-        } else if (it->event == EcsOnRemove) {
-            ecs_enable_system(it->world, it->entities[i], sys, false);
-        }
-    }
 }
 
 ecs_entity_t ecs_system_init(
@@ -29183,7 +29029,6 @@ ecs_entity_t ecs_system_init(
 
         system->run = desc->run;
         system->action = desc->callback;
-        system->status_action = desc->status_callback;
 
         system->self = desc->self;
         system->ctx = desc->ctx;
@@ -29198,31 +29043,6 @@ ecs_entity_t ecs_system_init(
 
         system->multi_threaded = desc->multi_threaded;
         system->no_staging = desc->no_staging;
-
-        /* If tables have been matched with this system it is active, and we
-         * should activate the in terms, if any. This will ensure that any
-         * OnDemand systems get enabled. */
-        if (ecs_query_table_count(query)) {
-            ecs_system_activate(world, entity, true, system);
-        } else if (query->filter.term_count) {
-            /* If system isn't matched with any tables, mark it as inactive. This
-             * causes it to be ignored by the main loop. When the system matches
-             * with a table it will be activated. */
-            ecs_add_id(world, entity, EcsInactive);
-        }
-
-        if (!ecs_has_id(world, entity, EcsDisabled)) {
-            /* If system is already enabled, generate enable status. The API 
-            * should guarantee that it exactly matches enable-disable 
-            * notifications and activate-deactivate notifications. */
-            invoke_status_action(world, entity, system, EcsSystemEnabled);
-
-            /* If column system has active (non-empty) tables, also generate the
-            * activate status. */
-            if (ecs_query_table_count(system->query)) {
-                invoke_status_action(world, entity, system, EcsSystemActivated);
-            }
-        }
 
         if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
 #ifdef FLECS_TIMER
@@ -29290,19 +29110,8 @@ void FlecsSystemImport(
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    flecs_bootstrap_tag(world, EcsInactive);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
-
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .entity.name = "EnableMonitor",
-        .filter.terms = {
-            { .id = ecs_poly_id(EcsSystem) },
-            { .id = EcsDisabled, .oper = EcsNot },
-        },
-        .events = {EcsMonitor},
-        .callback = EnableMonitor
-    });
 }
 
 #endif
@@ -35582,7 +35391,7 @@ const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsInactive =              ECS_HI_COMPONENT_ID + 63;
+const ecs_entity_t EcsEmpty =                 ECS_HI_COMPONENT_ID + 63;
 const ecs_entity_t ecs_id(EcsPipeline) =      ECS_HI_COMPONENT_ID + 64;
 const ecs_entity_t EcsPreFrame =              ECS_HI_COMPONENT_ID + 65;
 const ecs_entity_t EcsOnLoad =                ECS_HI_COMPONENT_ID + 66;
@@ -35913,7 +35722,7 @@ static
 void fini_roots(ecs_world_t *world) {
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_table_cache_iter_t it;
     bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
@@ -37060,7 +36869,7 @@ void flecs_notify_queries(
         return;
     }
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
     
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
@@ -37089,6 +36898,45 @@ void flecs_delete_table(
 {
     ecs_poly_assert(world, ecs_world_t); 
     flecs_table_release(world, table);
+}
+
+static
+void flecs_process_empty_queries(
+    ecs_world_t *world)
+{
+    ecs_poly_assert(world, ecs_world_t); 
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_pair(ecs_id(EcsPoly), EcsQuery));
+    if (!idr) {
+        return;
+    }
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
+    /* Make sure that we defer adding the inactive tags until after iterating
+     * the query */
+    flecs_defer_none(world, &world->stages[0]);
+
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    if (flecs_table_cache_iter(&idr->cache, &it)) {
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            int32_t i, count = ecs_table_count(table);
+
+            for (i = 0; i < count; i ++) {
+                ecs_query_t *query = queries[i].poly;
+                ecs_entity_t *entities = table->data.entities.array;
+                if (!ecs_query_table_count(query)) {
+                    ecs_add_id(world, entities[i], EcsEmpty);
+                }
+            }
+        }
+    }
+
+    flecs_defer_flush(world, &world->stages[0]);
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */
@@ -37211,8 +37059,11 @@ void ecs_run_aperiodic(
 {
     ecs_poly_assert(world, ecs_world_t);
     
-    if (!flags || (flags & EcsAperiodicEmptyTableEvents)) {
+    if (!flags || (flags & EcsAperiodicEmptyTables)) {
         flecs_process_pending_tables(world);
+    }
+    if ((flags & EcsAperiodicEmptyQueries)) {
+        flecs_process_empty_queries(world);
     }
     if (!flags || (flags & EcsAperiodicComponentMonitors)) {
         flecs_eval_component_monitors(world);
@@ -41429,9 +41280,6 @@ const char* ecs_os_strerror(int err) {
 }
 
 
-#ifdef FLECS_SYSTEM
-#endif
-
 static
 void flecs_query_compute_group_id(
     ecs_query_t *query,
@@ -41675,12 +41523,6 @@ void flecs_query_remove_table_node(
     node->prev = NULL;
     node->next = NULL;
 
-#ifdef FLECS_SYSTEM
-    if (query->list.first == NULL && query->system) {
-        ecs_system_activate(query->world, query->system, false, NULL);
-    }
-#endif
-
     query->match_count ++;
 }
 
@@ -41695,11 +41537,9 @@ void flecs_query_insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-#ifdef FLECS_SYSTEM
     if (!query->list.first && query->system) {
-        ecs_system_activate(query->world, query->system, true, NULL);
+        ecs_remove_id(query->world, query->system, EcsEmpty);
     }
-#endif
 
     flecs_query_compute_group_id(query, node->match);
 
@@ -43199,7 +43039,7 @@ ecs_query_t* ecs_query_init(
      * in the right empty/non-empty list. This ensures the query won't miss
      * empty/non-empty events for tables that are currently out of sync, but
      * change back to being in sync before processing pending events. */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_query_t *result = ecs_poly_new(ecs_query_t);
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
@@ -43302,6 +43142,10 @@ ecs_query_t* ecs_query_init(
     EcsPoly *poly = ecs_poly_bind(world, e, ecs_query_t);
     poly->poly = result;
     result->entity = e;
+
+    if (!ecs_query_table_count(result) && result->filter.term_count) {
+        ecs_add_id(world, e, EcsEmpty);
+    }
 
     ecs_log_pop_1();
 
@@ -44045,21 +43889,21 @@ char* ecs_query_str(
 int32_t ecs_query_table_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     return query->cache.tables.count;
 }
 
 int32_t ecs_query_empty_table_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     return query->cache.empty_tables.count;
 }
 
 int32_t ecs_query_entity_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     
     int32_t result = 0;
     ecs_table_cache_hdr_t *cur, *last = query->cache.tables.last;
@@ -48332,6 +48176,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPrivate);
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsDisabled);
+    flecs_bootstrap_tag(world, EcsEmpty);
 
     /* Initialize builtin modules */
     ecs_set_name(world, EcsFlecs, "flecs");

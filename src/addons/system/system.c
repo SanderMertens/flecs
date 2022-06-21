@@ -14,92 +14,6 @@ ecs_mixins_t ecs_system_t_mixins = {
     }
 };
 
-static
-void invoke_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const ecs_system_t *system_data,
-    ecs_system_status_t status)
-{
-    ecs_system_status_action_t action = system_data->status_action;
-    if (action) {
-        action(world, system, status, system_data->status_ctx);
-    }
-}
-
-/* Invoked when system becomes active or inactive */
-void ecs_system_activate(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool activate,
-    const ecs_system_t *system_data)
-{
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-
-    if (activate) {
-        /* If activating system, ensure that it doesn't have the Inactive tag.
-         * Systems are implicitly activated so they are kept out of the main
-         * loop as long as they aren't used. They are not implicitly deactivated
-         * to prevent overhead in case of oscillating app behavior. 
-         * After activation, systems that aren't matched with anything can be
-         * deactivated again by explicitly calling ecs_deactivate_systems.
-         */
-        ecs_remove_id(world, system, EcsInactive);
-    }
-
-    if (!system_data) {
-        system_data = ecs_poly_get(world, system, ecs_system_t);
-    }
-    if (!system_data || !system_data->query) {
-        return;
-    }
-
-    if (!activate) {
-        if (ecs_has_id(world, system, EcsDisabled)) {
-            if (!ecs_query_table_count(system_data->query)) {
-                /* If deactivating a disabled system that isn't matched with
-                 * any active tables, there is nothing to deactivate. */
-                return;
-            }
-        }            
-    }
-
-    /* Invoke system status action */
-    invoke_status_action(world, system, system_data, 
-        activate ? EcsSystemActivated : EcsSystemDeactivated);
-
-    ecs_dbg_2("#[green]system#[reset] %s %s", 
-        ecs_get_name(world, system), 
-        activate ? "activated" : "deactivated");
-}
-
-/* Actually enable or disable system */
-static
-void ecs_enable_system(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_t *system_data,
-    bool enabled)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-
-    ecs_query_t *query = system_data->query;
-    if (!query) {
-        return;
-    }
-
-    if (ecs_query_table_count(query)) {
-        /* Only (de)activate system if it has non-empty tables. */
-        ecs_system_activate(world, system, enabled, system_data);
-    }
-    
-    /* Invoke action for enable/disable status */
-    invoke_status_action(
-        world, system, system_data,
-        enabled ? EcsSystemEnabled : EcsSystemDisabled);
-}
-
 /* -- Public API -- */
 
 ecs_entity_t ecs_run_intern(
@@ -292,14 +206,6 @@ void* ecs_get_system_binding_ctx(
 /* System deinitialization */
 static
 void flecs_system_fini(ecs_system_t *sys) {
-    ecs_world_t *world = sys->world;
-    ecs_entity_t entity = sys->entity;
-
-    /* Invoke Disabled action for enabled systems */
-    if (!ecs_has_id(world, entity, EcsDisabled)) {
-        invoke_status_action(world, entity, sys, EcsSystemDisabled);
-    }
-
     if (sys->ctx_free) {
         sys->ctx_free(sys->ctx);
     }
@@ -313,30 +219,6 @@ void flecs_system_fini(ecs_system_t *sys) {
     }
 
     ecs_poly_free(sys, ecs_system_t);
-}
-
-static
-void EnableMonitor(
-    ecs_iter_t *it)
-{
-    if (ecs_is_fini(it->world)) {
-        return;
-    }
-
-    EcsPoly *poly = ecs_term(it, EcsPoly, 1);
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        if (poly[i].poly == NULL) {
-            continue; /* This is a new system */
-        }
-
-        ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
-        if (it->event == EcsOnAdd) {
-            ecs_enable_system(it->world, it->entities[i], sys, true);
-        } else if (it->event == EcsOnRemove) {
-            ecs_enable_system(it->world, it->entities[i], sys, false);
-        }
-    }
 }
 
 ecs_entity_t ecs_system_init(
@@ -378,7 +260,6 @@ ecs_entity_t ecs_system_init(
 
         system->run = desc->run;
         system->action = desc->callback;
-        system->status_action = desc->status_callback;
 
         system->self = desc->self;
         system->ctx = desc->ctx;
@@ -393,31 +274,6 @@ ecs_entity_t ecs_system_init(
 
         system->multi_threaded = desc->multi_threaded;
         system->no_staging = desc->no_staging;
-
-        /* If tables have been matched with this system it is active, and we
-         * should activate the in terms, if any. This will ensure that any
-         * OnDemand systems get enabled. */
-        if (ecs_query_table_count(query)) {
-            ecs_system_activate(world, entity, true, system);
-        } else if (query->filter.term_count) {
-            /* If system isn't matched with any tables, mark it as inactive. This
-             * causes it to be ignored by the main loop. When the system matches
-             * with a table it will be activated. */
-            ecs_add_id(world, entity, EcsInactive);
-        }
-
-        if (!ecs_has_id(world, entity, EcsDisabled)) {
-            /* If system is already enabled, generate enable status. The API 
-            * should guarantee that it exactly matches enable-disable 
-            * notifications and activate-deactivate notifications. */
-            invoke_status_action(world, entity, system, EcsSystemEnabled);
-
-            /* If column system has active (non-empty) tables, also generate the
-            * activate status. */
-            if (ecs_query_table_count(system->query)) {
-                invoke_status_action(world, entity, system, EcsSystemActivated);
-            }
-        }
 
         if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
 #ifdef FLECS_TIMER
@@ -485,19 +341,8 @@ void FlecsSystemImport(
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    flecs_bootstrap_tag(world, EcsInactive);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
-
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .entity.name = "EnableMonitor",
-        .filter.terms = {
-            { .id = ecs_poly_id(EcsSystem) },
-            { .id = EcsDisabled, .oper = EcsNot },
-        },
-        .events = {EcsMonitor},
-        .callback = EnableMonitor
-    });
 }
 
 #endif

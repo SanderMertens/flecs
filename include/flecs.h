@@ -1244,8 +1244,8 @@ FLECS_API extern const ecs_entity_t EcsPanic;
  * component does not change the behavior of core ECS operations. */
 FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
-/* System module tags */
-FLECS_API extern const ecs_entity_t EcsInactive;
+/* Tag used to indicate query is empty */
+FLECS_API extern const ecs_entity_t EcsEmpty;
 
 /* Pipeline module tags */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPipeline);

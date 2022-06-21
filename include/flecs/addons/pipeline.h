@@ -150,21 +150,7 @@ FLECS_API
 void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
-    ecs_ftime_t delta_time);    
-    
-/** Deactivate systems that are not matched with tables.
- * By default Flecs deactivates systems that are not matched with any tables.
- * However, once a system has been matched with a table it remains activated, to
- * prevent systems from continuously becoming active and inactive.
- *
- * To re-deactivate systems, an application can invoke this function, which will
- * deactivate all systems that are not matched with any tables.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_deactivate_systems(
-    ecs_world_t *world);
+    ecs_ftime_t delta_time);
 
 
 ////////////////////////////////////////////////////////////////////////////////

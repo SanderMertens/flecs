@@ -1,9 +1,5 @@
 #include "private_api.h"
 
-#ifdef FLECS_SYSTEM
-#include "addons/system/system.h"
-#endif
-
 static
 void flecs_query_compute_group_id(
     ecs_query_t *query,
@@ -247,12 +243,6 @@ void flecs_query_remove_table_node(
     node->prev = NULL;
     node->next = NULL;
 
-#ifdef FLECS_SYSTEM
-    if (query->list.first == NULL && query->system) {
-        ecs_system_activate(query->world, query->system, false, NULL);
-    }
-#endif
-
     query->match_count ++;
 }
 
@@ -267,11 +257,9 @@ void flecs_query_insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-#ifdef FLECS_SYSTEM
     if (!query->list.first && query->system) {
-        ecs_system_activate(query->world, query->system, true, NULL);
+        ecs_remove_id(query->world, query->system, EcsEmpty);
     }
-#endif
 
     flecs_query_compute_group_id(query, node->match);
 
@@ -1771,7 +1759,7 @@ ecs_query_t* ecs_query_init(
      * in the right empty/non-empty list. This ensures the query won't miss
      * empty/non-empty events for tables that are currently out of sync, but
      * change back to being in sync before processing pending events. */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_query_t *result = ecs_poly_new(ecs_query_t);
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
@@ -1874,6 +1862,10 @@ ecs_query_t* ecs_query_init(
     EcsPoly *poly = ecs_poly_bind(world, e, ecs_query_t);
     poly->poly = result;
     result->entity = e;
+
+    if (!ecs_query_table_count(result) && result->filter.term_count) {
+        ecs_add_id(world, e, EcsEmpty);
+    }
 
     ecs_log_pop_1();
 
@@ -2617,21 +2609,21 @@ char* ecs_query_str(
 int32_t ecs_query_table_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     return query->cache.tables.count;
 }
 
 int32_t ecs_query_empty_table_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     return query->cache.empty_tables.count;
 }
 
 int32_t ecs_query_entity_count(
     const ecs_query_t *query)
 {
-    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(query->world, EcsAperiodicEmptyTables);
     
     int32_t result = 0;
     ecs_table_cache_hdr_t *cur, *last = query->cache.tables.last;

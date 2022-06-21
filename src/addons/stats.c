@@ -433,7 +433,7 @@ bool ecs_system_stats_get(
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
     ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
-    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsInactive));
+    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsEmpty));
     ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);

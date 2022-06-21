@@ -69,11 +69,6 @@ ecs_ftime_t get_target_fps() const;
  */
 void reset_clock() const;
 
-/** Deactivate systems.
- * @see ecs_deactivate_systems.
- */
-void deactivate_systems() const;
-
 /** Set number of threads.
  * @see ecs_set_threads
  */

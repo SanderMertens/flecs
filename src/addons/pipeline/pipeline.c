@@ -262,7 +262,7 @@ bool flecs_pipeline_build(
 
             bool needs_merge = false;
             bool is_active = !ecs_has_id(
-                world, it.entities[i], EcsInactive);
+                world, it.entities[i], EcsEmpty);
             needs_merge = check_terms(&q->filter, is_active, &ws);
 
             if (is_active) {
@@ -595,41 +595,6 @@ void ecs_reset_clock(
     world->info.world_time_total_raw = 0;
 }
 
-void ecs_deactivate_systems(
-    ecs_world_t *world)
-{
-    ecs_assert(!(world->flags & EcsWorldReadonly), 
-        ECS_INVALID_WHILE_READONLY, NULL);
-
-    ecs_entity_t pipeline = world->pipeline;
-    const EcsPipeline *pq = ecs_get( world, pipeline, EcsPipeline);
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
-     * with any tables */
-    ecs_iter_t it = ecs_query_iter(world, pq->query);
-
-    /* Make sure that we defer adding the inactive tags until after iterating
-     * the query */
-    flecs_defer_none(world, &world->stages[0]);
-
-    while( ecs_query_next(&it)) {
-        EcsPoly *poly = flecs_pipeline_term_system(&it);
-
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            ecs_query_t *query = ecs_poly(poly[i].poly, ecs_system_t)->query;
-            if (query) {
-                if (!ecs_query_table_count(query)) {
-                    ecs_add_id(world, it.entities[i], EcsInactive);
-                }
-            }
-        }
-    }
-
-    flecs_defer_flush(world, &world->stages[0]);
-}
-
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
@@ -682,7 +647,7 @@ ecs_entity_t ecs_pipeline_init(
     ecs_set(world, result, EcsPipeline, {
         .query = query,
         .match_count = -1,
-        .idr_inactive = flecs_id_record_ensure(world, EcsInactive)
+        .idr_inactive = flecs_id_record_ensure(world, EcsEmpty)
     });
 
     return result;

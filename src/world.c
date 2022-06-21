@@ -100,7 +100,7 @@ const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsInactive =              ECS_HI_COMPONENT_ID + 63;
+const ecs_entity_t EcsEmpty =                 ECS_HI_COMPONENT_ID + 63;
 const ecs_entity_t ecs_id(EcsPipeline) =      ECS_HI_COMPONENT_ID + 64;
 const ecs_entity_t EcsPreFrame =              ECS_HI_COMPONENT_ID + 65;
 const ecs_entity_t EcsOnLoad =                ECS_HI_COMPONENT_ID + 66;
@@ -431,7 +431,7 @@ static
 void fini_roots(ecs_world_t *world) {
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_table_cache_iter_t it;
     bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
@@ -1578,7 +1578,7 @@ void flecs_notify_queries(
         return;
     }
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
     
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
@@ -1607,6 +1607,45 @@ void flecs_delete_table(
 {
     ecs_poly_assert(world, ecs_world_t); 
     flecs_table_release(world, table);
+}
+
+static
+void flecs_process_empty_queries(
+    ecs_world_t *world)
+{
+    ecs_poly_assert(world, ecs_world_t); 
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_pair(ecs_id(EcsPoly), EcsQuery));
+    if (!idr) {
+        return;
+    }
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
+    /* Make sure that we defer adding the inactive tags until after iterating
+     * the query */
+    flecs_defer_none(world, &world->stages[0]);
+
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    if (flecs_table_cache_iter(&idr->cache, &it)) {
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            int32_t i, count = ecs_table_count(table);
+
+            for (i = 0; i < count; i ++) {
+                ecs_query_t *query = queries[i].poly;
+                ecs_entity_t *entities = table->data.entities.array;
+                if (!ecs_query_table_count(query)) {
+                    ecs_add_id(world, entities[i], EcsEmpty);
+                }
+            }
+        }
+    }
+
+    flecs_defer_flush(world, &world->stages[0]);
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */
@@ -1729,8 +1768,11 @@ void ecs_run_aperiodic(
 {
     ecs_poly_assert(world, ecs_world_t);
     
-    if (!flags || (flags & EcsAperiodicEmptyTableEvents)) {
+    if (!flags || (flags & EcsAperiodicEmptyTables)) {
         flecs_process_pending_tables(world);
+    }
+    if ((flags & EcsAperiodicEmptyQueries)) {
+        flecs_process_empty_queries(world);
     }
     if (!flags || (flags & EcsAperiodicComponentMonitors)) {
         flecs_eval_component_monitors(world);

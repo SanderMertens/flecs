@@ -78,10 +78,6 @@ inline void world::reset_clock() const {
     ecs_reset_clock(m_world);
 }
 
-inline void world::deactivate_systems() const {
-    ecs_deactivate_systems(m_world);
-}
-
 inline void world::set_threads(int32_t threads) const {
     ecs_set_threads(m_world, threads);
 }

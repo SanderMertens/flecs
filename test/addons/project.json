@@ -401,12 +401,6 @@
                 "system_w_or_disabled",
                 "system_w_or_disabled_and_prefab",
                 "table_columns_access",
-                "status_enable_after_new",
-                "status_enable_after_disable",
-                "status_disable_after_new",
-                "status_disable_after_disable",
-                "status_activate_after_new",
-                "status_deactivate_after_delete",
                 "dont_enable_after_rematch",
                 "ensure_single_merge",
                 "table_count",
@@ -733,7 +727,6 @@
             "setup": true,
             "testcases": [
                 "1_type_1_component",
-                "activate_status",
                 "no_automerge",
                 "dont_run_w_unmatching_entity_query"
             ]

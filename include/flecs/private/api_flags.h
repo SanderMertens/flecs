@@ -152,8 +152,9 @@ extern "C" {
 //// Aperiodic action flags (used by ecs_run_aperiodic)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsAperiodicEmptyTableEvents   (1u << 1u)  /* Process pending empty table events */
+#define EcsAperiodicEmptyTables        (1u << 1u)  /* Process pending empty table events */
 #define EcsAperiodicComponentMonitors  (1u << 2u)  /* Process component monitors */
+#define EcsAperiodicEmptyQueries       (1u << 4u)  /* Process empty queries */
 
 #ifdef __cplusplus
 }

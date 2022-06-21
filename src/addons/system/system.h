@@ -18,7 +18,6 @@ typedef struct ecs_system_t {
 
     ecs_query_t *query;             /* System query */
     ecs_entity_t query_entity;      /* Entity associated with query */
-    ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     
     /* Schedule parameters */

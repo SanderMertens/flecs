@@ -35,45 +35,11 @@ typedef struct EcsTickSource {
 //// Systems API
 ////////////////////////////////////////////////////////////////////////////////
 
-/** System status change callback */
-typedef enum ecs_system_status_t {
-    EcsSystemStatusNone = 0,
-    EcsSystemEnabled,
-    EcsSystemDisabled,
-    EcsSystemActivated,
-    EcsSystemDeactivated
-} ecs_system_status_t;
-
-/** System status action.
- * The status action is invoked whenever a system is enabled or disabled. Note
- * that a system may be enabled but may not actually match any entities. In this
- * case the system is enabled but not _active_.
- *
- * In addition to communicating the enabled / disabled status, the action also
- * communicates changes in the activation status of the system. A system becomes
- * active when it has one or more matching entities, and becomes inactive when
- * it no longer matches any entities.
- * 
- * A system switches between enabled and disabled when an application invokes the
- * ecs_enable operation with a state different from the state of the system, for
- * example the system is disabled, and ecs_enable is invoked with enabled: true.
- *
- * @param world The world.
- * @param system The system for which the action has changed.
- * @param status The status that triggered the callback.
- * @param ctx Context passed to ecs_system_desc_t as status_ctx.
- */
-typedef void (*ecs_system_status_action_t)(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_status_t status,
-    void *ctx);
-
 /* Use with ecs_system_init */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* System entity creation parameters */
+    /* Entity creation parameters */
     ecs_entity_desc_t entity;
 
     /* System query parameters */
@@ -97,9 +63,6 @@ typedef struct ecs_system_desc_t {
      * means that this callback can be invoked multiple times per system per
      * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
-
-    /* System status callback, invoked when system status changes */
-    ecs_system_status_action_t status_callback;
 
     /* Associate with entity. */
     ecs_entity_t self;    

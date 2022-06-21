@@ -713,6 +713,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPrivate);
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsDisabled);
+    flecs_bootstrap_tag(world, EcsEmpty);
 
     /* Initialize builtin modules */
     ecs_set_name(world, EcsFlecs, "flecs");

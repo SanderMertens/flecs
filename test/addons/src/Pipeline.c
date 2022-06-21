@@ -196,7 +196,7 @@ void Pipeline_system_order_same_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has_id(world, SysB, EcsInactive));
+    test_assert( ecs_has_id(world, SysB, EcsEmpty));
     ecs_add(world, E, Velocity);
 
     ecs_progress(world, 1);
@@ -209,7 +209,7 @@ void Pipeline_system_order_same_phase_after_activate() {
     test_int(sys_b_invoked, 1);
     test_int(sys_c_invoked, 1);
 
-    test_assert( !ecs_has_id(world, SysB, EcsInactive));
+    test_assert( !ecs_has_id(world, SysB, EcsEmpty));
 
     ecs_progress(world, 1);
     test_int(stats->pipeline_build_count_total, 1);
@@ -231,12 +231,12 @@ void Pipeline_system_order_different_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has_id(world, SysB, EcsInactive));
+    test_assert( ecs_has_id(world, SysB, EcsEmpty));
     ecs_add(world, E, Velocity);
 
     ecs_progress(world, 1);
 
-    test_assert( !ecs_has_id(world, SysB, EcsInactive));
+    test_assert( !ecs_has_id(world, SysB, EcsEmpty));
 
     test_int(stats->systems_ran_frame, 3);
     test_int(stats->merge_count_total, 1);
