@@ -162,11 +162,26 @@ EcsPoly* _ecs_poly_bind(
 {
     /* Add tag to the entity for easy querying. This will make it possible to
      * query for `Query` instead of `(Poly, Query) */
-    ecs_add_id(world, entity, tag);
+    if (!ecs_has_id(world, entity, tag)) {
+        ecs_add_id(world, entity, tag);
+    }
+
+    /* Never defer creation of a poly object */
+    bool deferred = false;
+    if (ecs_is_deferred(world)) {
+        deferred = true;
+        ecs_defer_suspend(world);
+    }
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * call tell the difference between a create or an update */
-    return ecs_get_mut_pair(world, entity, EcsPoly, tag, NULL);
+    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag, NULL);
+
+    if (deferred) {
+        ecs_defer_resume(world);
+    }
+
+    return result;
 }
 
 const EcsPoly* _ecs_poly_bind_get(

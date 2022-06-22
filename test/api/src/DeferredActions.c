@@ -2029,3 +2029,154 @@ void DeferredActions_defer_suspend_resume() {
 
     ecs_fini(world);
 }
+
+static
+void System(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+}
+
+static int system_2_invoked = 0;
+
+static
+void System2(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+    system_2_invoked ++;
+}
+
+void DeferredActions_create_trigger_while_deferred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+    Probe ctx = {0};
+    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = TagA,
+        .events = {EcsOnAdd},
+        .callback = System,
+        .ctx = &ctx
+    });
+    ecs_defer_end(world);
+    test_assert(trigger != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_create_observer_while_deferred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+    Probe ctx = {0};
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ .id = TagA }},
+        .events = {EcsOnAdd},
+        .callback = System,
+        .ctx = &ctx
+    });
+    ecs_defer_end(world);
+    test_assert(trigger != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_create_query_while_deferred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ .id = TagA }}
+    });
+    ecs_defer_end(world);
+    test_assert(query != 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_iter_t it = ecs_query_iter(world, query);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_update_trigger_while_deferred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = TagA,
+        .events = {EcsOnAdd},
+        .callback = System,
+        .ctx = &ctx
+    });
+    test_assert(trigger != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(system_2_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .entity.entity = trigger,
+        .callback = System2
+    });
+    ecs_defer_end(world);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 2);
+    test_int(system_2_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_update_observer_while_deferred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+    Probe ctx = {0};
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ .id = TagA }},
+        .events = {EcsOnAdd},
+        .callback = System,
+        .ctx = &ctx
+    });
+    ecs_defer_end(world);
+    test_assert(trigger != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 1);
+
+    test_int(system_2_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .entity.entity = trigger,
+        .callback = System2
+    });
+    ecs_defer_end(world);
+
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 2);
+    test_int(system_2_invoked, 1);
+
+    ecs_fini(world);
+}
