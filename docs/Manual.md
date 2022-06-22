@@ -949,13 +949,12 @@ void AddPosition(ecs_iter_t *it) {
 ## Modules
 Modules allow an application to split up systems and components into separate decoupled units. The purpose of modules is to make it easier to organize systems and components for large projects. Additionally, modules also make it easier to split off functionality into separate compilation units.
 
-A module consists out of a few parts:
+A module consists out of a couple parts:
 
-- A module type (struct) that stores handles to the contents in the modules
-- A macro to declare module contents as local variables in the scope where it is imported
+- The declaration of the components, tags, and systems of the module contents
 - An import function that loads the module contents for a world
 
-The module type and macro are typically located in the a separate module header file, and look like this for a module named "Vehicles":
+The declaration of the module contents module is typically located in a separate module header file, and look like this for a module named "Vehicles":
 
 ```c
 typedef struct Car {
@@ -970,51 +969,35 @@ typedef struct MotorCycle {
     float speed;
 } MotorCycle;
 
-typedef struct Vehicles {
-    /* Components are declared with ECS_DECLARE_COMPONENT */
-    ECS_DECLARE_COMPONENT(Car);
-    ECS_DECLARE_COMPONENT(Bus);
-    ECS_DECLARE_COMPONENT(MotorCycle);
+/* Components are declared with ECS_COMPONENT_DECLARE */
+extern ECS_COMPONENT_DECLARE(Car);
+extern ECS_COMPONENT_DECLARE(Bus);
+extern ECS_COMPONENT_DECLARE(MotorCycle);
 
-    /* Tags are declared with ECS_DECLARE_ENTITY */
-    ECS_DECLARE_ENTITY(Moving);
+/* Tags are declared with ECS_DECLARE */
+extern ECS_DECLARE(Moving);
 
-    /* Systems are also declared with ECS_DECLARE_ENTITY */
-    ECS_DECLARE_ENTITY(Move);
-};
+/* Systems are declared with ECS_SYSTEM_DECLARE */
+extern ECS_SYSTEM_DECLARE(Move);
 
 /* Forward declaration to the import function */
+/* The function name has to follow the convention: <ModuleName>Import */
 void VehiclesImport(ecs_world_t *world);
-
-/* The ImportHandles macro mimics the module struct */
-#define VehiclesImportHandles(handles)\
-    ECS_IMPORT_COMPONENT(handles, Car);\
-    ECS_IMPORT_COMPONENT(handles, Bus);\
-    ECS_IMPORT_COMPONENT(handles, MotorCycle);\
-    ECS_IMPORT_ENTITY(handles, Moving);\
-    ECS_IMPORT_ENTITY(handles, Move);
 ```
 
-The import function for this module would look like this:
+The import function for this module is typically located in a module source file, and would look like this:
 
 ```c
 void VehiclesImport(ecs_world_t *world) {
     /* Define the module */
     ECS_MODULE(world, Vehicles);
 
-    /* Declare components, tags and systems as usual */
-    ECS_COMPONENT(world, Car);
-    ECS_COMPONENT(world, Bus);
-    ECS_COMPONENT(world, MotorCycle);
-    ECS_TAG(world, Moving);
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Car, Moving);
-
-    /* Export them so that they are assigned to the module struct */
-    ECS_EXPORT_COMPONENT(world, Car);
-    ECS_EXPORT_COMPONENT(world, Bus);
-    ECS_EXPORT_COMPONENT(world, Motorcycle);
-    ECS_EXPORT_ENTITY(world, Moving);
-    ECS_EXPORT_ENTITY(world, Move);
+    /* Declare components, tags, systems, and assign them to the module with their respective _DEFINE macros */
+    ECS_COMPONENT_DEFINE(world, Car);
+    ECS_COMPONENT_DEFINE(world, Bus);
+    ECS_COMPONENT_DEFINE(world, MotorCycle);
+    ECS_TAG_DEFINE(world, Moving);
+    ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Car, Moving);
 }
 ```
 
