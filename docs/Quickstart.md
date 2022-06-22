@@ -793,18 +793,23 @@ e.set<Position>({20, 30}); // Triggers the observer
 A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relation. The following examples show how to define a module in C and C++:
 
 ```c
-// A bit of boiler plate for C modules
-typedef struct MyModule {
-    int dummy;
-} MyModule;
+// Module header (e.g. MyModule.h)
+typedef struct {
+    float x;
+    float y;
+} Position;
 
-#define MyModuleImportHandles(handles)
+extern ECS_COMPONENT_DECLARE(Position);
+
+// The import function name has to follow the convention: <ModuleName>Import
+void MyModuleImport(ecs_world_t *world);
+
+// Module source (e.g. MyModule.c)
+ECS_COMPONENT_DECLARE(Position);
 
 void MyModuleImport(ecs_world_t *world) {
     ECS_MODULE(world, MyModule);
-
-    // Define components, systems, triggers, ... as usual. They will be
-    // automatically created inside the scope of the module.
+    ECS_COMPONENT_DEFINE(world, Position);
 }
 
 // Import code
@@ -823,4 +828,3 @@ struct my_module {
 // Import code
 world.import<my_module>();
 ```
-
