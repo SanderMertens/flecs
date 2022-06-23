@@ -321,7 +321,8 @@
                 "name_annotation",
                 "link_annotation",
                 "color_annotation",
-                "multiple_annotations"
+                "multiple_annotations",
+                "annotation_w_trailing_space"
             ]
         }, {
             "id": "Doc",

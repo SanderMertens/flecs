@@ -315,6 +315,7 @@ void Plecs_name_annotation(void);
 void Plecs_link_annotation(void);
 void Plecs_color_annotation(void);
 void Plecs_multiple_annotations(void);
+void Plecs_annotation_w_trailing_space(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2128,6 +2129,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "multiple_annotations",
         Plecs_multiple_annotations
+    },
+    {
+        "annotation_w_trailing_space",
+        Plecs_annotation_w_trailing_space
     }
 };
 
@@ -4372,7 +4377,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        132,
+        133,
         Plecs_testcases
     },
     {

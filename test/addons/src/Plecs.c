@@ -3682,3 +3682,20 @@ void Plecs_multiple_annotations() {
 
     ecs_fini(world);
 }
+
+void Plecs_annotation_w_trailing_space() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@brief   A description  "
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_str(ecs_doc_get_brief(world, foo), "A description");
+
+    ecs_fini(world);
+}

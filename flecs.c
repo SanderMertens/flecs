@@ -17313,6 +17313,19 @@ const char* plecs_set_mask_to_name(
 }
 
 static
+char* plecs_trim_annot(
+    char *annot)
+{
+    annot = (char*)ecs_parse_whitespace(annot);
+    int32_t len = ecs_os_strlen(annot) - 1;
+    while (isspace(annot[len]) && (len > 0)) {
+        annot[len] = '\0';
+        len --;
+    }
+    return annot;
+}
+
+static
 void plecs_apply_annotations(
     ecs_world_t *world,
     ecs_entity_t subj,
@@ -17326,13 +17339,17 @@ void plecs_apply_annotations(
     for (i = 0; i < count; i ++) {
         char *annot = state->annot[i];
         if (!ecs_os_strncmp(annot, "@brief ", 7)) {
-            ecs_doc_set_brief(world, subj, annot + 7);
+            annot = plecs_trim_annot(annot + 7);
+            ecs_doc_set_brief(world, subj, annot);
         } else if (!ecs_os_strncmp(annot, "@link ", 6)) {
-            ecs_doc_set_link(world, subj, annot + 6);
+            annot = plecs_trim_annot(annot + 6);
+            ecs_doc_set_link(world, subj, annot);
         } else if (!ecs_os_strncmp(annot, "@name ", 6)) {
-            ecs_doc_set_name(world, subj, annot + 6);
+            annot = plecs_trim_annot(annot + 6);
+            ecs_doc_set_name(world, subj, annot);
         } else if (!ecs_os_strncmp(annot, "@color ", 7)) {
-            ecs_doc_set_color(world, subj, annot + 7);
+            annot = plecs_trim_annot(annot + 7);
+            ecs_doc_set_color(world, subj, annot);
         }
     }
 #else
