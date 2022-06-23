@@ -32,11 +32,9 @@ typedef struct ecs_system_t {
     ecs_entity_t self;              /* Entity associated with system */
 
     void *ctx;                      /* Userdata for system */
-    void *status_ctx;               /* User data for status action */ 
     void *binding_ctx;              /* Optional language binding context */
 
     ecs_ctx_free_t ctx_free;
-    ecs_ctx_free_t status_ctx_free;
     ecs_ctx_free_t binding_ctx_free;
 
     /* Mixins */

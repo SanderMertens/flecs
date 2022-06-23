@@ -9377,9 +9377,6 @@ typedef struct ecs_system_desc_t {
     /* Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
-    /* Context to be passed to system status callback */
-    void *status_ctx;
-
     /* Binding context, for when system is implemented in other language */
     void *binding_ctx;
 
@@ -9387,8 +9384,7 @@ typedef struct ecs_system_desc_t {
      * When set, functions are called unconditionally, even when the ctx
      * pointers are NULL. */
     ecs_ctx_free_t ctx_free;
-    ecs_ctx_free_t status_ctx_free;
-    ecs_ctx_free_t binding_ctx_free;   
+    ecs_ctx_free_t binding_ctx_free;
 
     /* Interval in seconds at which the system should run */
     ecs_ftime_t interval;

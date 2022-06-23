@@ -210,10 +210,6 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->ctx_free(sys->ctx);
     }
 
-    if (sys->status_ctx_free) {
-        sys->status_ctx_free(sys->status_ctx);
-    }
-
     if (sys->binding_ctx_free) {
         sys->binding_ctx_free(sys->binding_ctx);
     }
@@ -263,11 +259,9 @@ ecs_entity_t ecs_system_init(
 
         system->self = desc->self;
         system->ctx = desc->ctx;
-        system->status_ctx = desc->status_ctx;
         system->binding_ctx = desc->binding_ctx;
 
         system->ctx_free = desc->ctx_free;
-        system->status_ctx_free = desc->status_ctx_free;
         system->binding_ctx_free = desc->binding_ctx_free;
 
         system->tick_source = desc->tick_source;
