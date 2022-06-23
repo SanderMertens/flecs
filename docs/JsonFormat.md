@@ -215,6 +215,11 @@ Same as [entities](#entities), but with [Label](#label)'s instead of paths.
 
 Type: Array([Label](#label)), optional
 
+#### **"entity_ids"**
+Same as [entities](#entities), but with numerical ids instead of paths.
+
+Type: Array(Number), optional
+
 #### **"subjects"**
 Array with paths of subjects for each term. A subject indicates the actual entity on which a component is stored. If this is the matched entity (default) the array will contain a `0` element.
 
@@ -229,6 +234,11 @@ Type: Array([Path](#path)), optional
 Same as [variables](#variables), but with [Label](#label)'s instead of paths.
 
 Type: Array([Label](#label)), optional
+
+#### **"variable_ids"**
+Same as [variables](#variables), but with numerical ids instead of paths.
+
+Type: Array(Number), optional
 
 #### **"ids"**
 Array with component ids. This list is more specific than the ids array provided by the top-level iterator object. The arrays can be different in the case of terms with an `Or` operator, or terms with wildcard ids.

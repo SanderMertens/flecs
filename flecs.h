@@ -2946,24 +2946,12 @@ extern "C" {
 /** This allows passing 0 as type to functions that accept ids */
 #define FLECS__E0 0
 
-////////////////////////////////////////////////////////////////////////////////
-//// Functions used in declarative (macro) API
-////////////////////////////////////////////////////////////////////////////////
-
 FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Signature API
-////////////////////////////////////////////////////////////////////////////////
-
 bool ecs_identifier_is_0(
     const char *id);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Ctor that initializes component to 0
-////////////////////////////////////////////////////////////////////////////////
 
 /* Constructor that zeromem's a component value */
 FLECS_API
@@ -2972,17 +2960,17 @@ void ecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *ctx);
 
-/* Increase refcount of table (prevents deletion) */
-FLECS_API
-void flecs_table_claim(
-    ecs_world_t *world, 
-    ecs_table_t *table);
+/* Create allocated string from format */
+FLECS_DBG_API
+char* ecs_vasprintf(
+    const char *fmt,
+    va_list args);
 
-/* Decreases refcount of table (may delete) */
-FLECS_API
-bool flecs_table_release(
-    ecs_world_t *world, 
-    ecs_table_t *table);
+/* Create allocated string from format */
+FLECS_DBG_API
+char* ecs_asprintf(
+    const char *fmt,
+    ...);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -10434,22 +10422,38 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;    /* Include term (query) component ids */
-    bool serialize_ids;         /* Include actual (matched) component ids */
-    bool serialize_subjects;    /* Include subjects */
-    bool serialize_variables;   /* Include variables */
-    bool serialize_is_set;      /* Include is_set (for optional terms) */
-    bool serialize_values;      /* Include component values */
-    bool serialize_entities;    /* Include entities (for This terms) */
+    bool serialize_term_ids;      /* Include term (query) component ids */
+    bool serialize_ids;           /* Include actual (matched) component ids */
+    bool serialize_subjects;      /* Include subjects */
+    bool serialize_variables;     /* Include variables */
+    bool serialize_is_set;        /* Include is_set (for optional terms) */
+    bool serialize_values;        /* Include component values */
+    bool serialize_entities;      /* Include entities (for This terms) */
     bool serialize_entity_labels; /* Include doc name for entities */
+    bool serialize_entity_ids;    /* Include numerical ids for entities */
     bool serialize_variable_labels; /* Include doc name for variables */
-    bool serialize_colors;      /* Include doc color for entities */
-    bool measure_eval_duration; /* Include evaluation duration */
-    bool serialize_type_info;   /* Include type information */
+    bool serialize_variable_ids;  /* Include numerical ids for variables */
+    bool serialize_colors;        /* Include doc color for entities */
+    bool measure_eval_duration;   /* Include evaluation duration */
+    bool serialize_type_info;     /* Include type information */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
-    true, true, true, true, true, true, true, false, false, false, false, false }
+    .serialize_term_ids =        true,  \
+    .serialize_ids =             true,  \
+    .serialize_subjects =        true,  \
+    .serialize_variables =       true,  \
+    .serialize_is_set =          true,  \
+    .serialize_values =          true,  \
+    .serialize_entities =        true,  \
+    .serialize_entity_labels =   false, \
+    .serialize_entity_ids =      false, \
+    .serialize_variable_labels = false, \
+    .serialize_variable_ids =    false, \
+    .serialize_colors =          false, \
+    .measure_eval_duration =     false, \
+    .serialize_type_info =       false  \
+}
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them

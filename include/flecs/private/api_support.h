@@ -37,24 +37,12 @@ extern "C" {
 /** This allows passing 0 as type to functions that accept ids */
 #define FLECS__E0 0
 
-////////////////////////////////////////////////////////////////////////////////
-//// Functions used in declarative (macro) API
-////////////////////////////////////////////////////////////////////////////////
-
 FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Signature API
-////////////////////////////////////////////////////////////////////////////////
-
 bool ecs_identifier_is_0(
     const char *id);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Ctor that initializes component to 0
-////////////////////////////////////////////////////////////////////////////////
 
 /* Constructor that zeromem's a component value */
 FLECS_API
@@ -63,17 +51,17 @@ void ecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *ctx);
 
-/* Increase refcount of table (prevents deletion) */
-FLECS_API
-void flecs_table_claim(
-    ecs_world_t *world, 
-    ecs_table_t *table);
+/* Create allocated string from format */
+FLECS_DBG_API
+char* ecs_vasprintf(
+    const char *fmt,
+    va_list args);
 
-/* Decreases refcount of table (may delete) */
-FLECS_API
-bool flecs_table_release(
-    ecs_world_t *world, 
-    ecs_table_t *table);
+/* Create allocated string from format */
+FLECS_DBG_API
+char* ecs_asprintf(
+    const char *fmt,
+    ...);
 
 /** Calculate offset from address */
 #ifdef __cplusplus

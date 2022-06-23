@@ -154,7 +154,9 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
     flecs_rest_bool_param(req, "entities", &desc->serialize_entities);
     flecs_rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
+    flecs_rest_bool_param(req, "entity_ids", &desc->serialize_entity_ids);
     flecs_rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
+    flecs_rest_bool_param(req, "variable_ids", &desc->serialize_variable_ids);
     flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);

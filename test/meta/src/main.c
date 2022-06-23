@@ -525,6 +525,10 @@ void SerializeToJson_serialize_iterator_w_inout_out_component(void);
 void SerializeToJson_serialize_iterator_w_inout_out_reflected_component(void);
 void SerializeToJson_serialize_iterator_component_from_var(void);
 void SerializeToJson_serialize_iterator_color(void);
+void SerializeToJson_serialize_iterator_ids(void);
+void SerializeToJson_serialize_iterator_ids_2_entities(void);
+void SerializeToJson_serialize_iterator_variable_ids(void);
+void SerializeToJson_serialize_iterator_variable_ids_2_entities(void);
 void SerializeToJson_serialize_paged_iterator(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_component(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_tag(void);
@@ -2574,6 +2578,22 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_iterator_color
     },
     {
+        "serialize_iterator_ids",
+        SerializeToJson_serialize_iterator_ids
+    },
+    {
+        "serialize_iterator_ids_2_entities",
+        SerializeToJson_serialize_iterator_ids_2_entities
+    },
+    {
+        "serialize_iterator_variable_ids",
+        SerializeToJson_serialize_iterator_variable_ids
+    },
+    {
+        "serialize_iterator_variable_ids_2_entities",
+        SerializeToJson_serialize_iterator_variable_ids_2_entities
+    },
+    {
         "serialize_paged_iterator",
         SerializeToJson_serialize_paged_iterator
     },
@@ -2849,7 +2869,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        104,
+        108,
         SerializeToJson_testcases
     },
     {

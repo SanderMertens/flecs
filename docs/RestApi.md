@@ -206,8 +206,18 @@ Include doc name for entities.
 
 **Default**: false
 
+#### **entity_ids**
+Include numerical ids for entities.
+
+**Default**: false
+
 #### **variable_labels**
 Include doc name for variables.
+
+**Default**: false
+
+#### **variable_ids**
+Include numerical ids for variables.
 
 **Default**: false
 

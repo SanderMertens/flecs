@@ -1127,6 +1127,35 @@ void serialize_iter_result_variable_labels(
 }
 
 static
+void serialize_iter_result_variable_ids(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    char **variable_names = it->variable_names;
+    ecs_var_t *variables = it->variables;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 0; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (skip_variable(var_name)) continue;
+
+        if (!actual_count) {
+            flecs_json_member(buf, "var_ids");
+            flecs_json_array_push(buf);
+            actual_count ++;
+        }
+
+        ecs_strbuf_list_next(buf);
+        flecs_json_number(buf, (double)variables[i].entity);
+    }
+
+    if (actual_count) {
+        flecs_json_array_pop(buf);
+    }
+}
+
+static
 void serialize_iter_result_entities(
     const ecs_world_t *world,
     const ecs_iter_t *it,
@@ -1169,6 +1198,29 @@ void serialize_iter_result_entity_labels(
     for (int i = 0; i < count; i ++) {
         flecs_json_next(buf);
         flecs_json_label(buf, world, entities[i]);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_entity_ids(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    flecs_json_member(buf, "entity_ids");
+    flecs_json_array_push(buf);
+
+    ecs_entity_t *entities = it->entities;
+
+    for (int i = 0; i < count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_number(buf, (double)entities[i]);
     }
 
     flecs_json_array_pop(buf);
@@ -1304,6 +1356,11 @@ void serialize_iter_result(
         serialize_iter_result_variable_labels(world, it, buf);
     }
 
+    /* Write ids for variables */
+    if (desc && desc->serialize_variable_ids) {
+        serialize_iter_result_variable_ids(it, buf);
+    }
+
     /* Include information on which terms are set, to support optional terms */
     if (!desc || desc->serialize_is_set) {
         serialize_iter_result_is_set(it, buf);
@@ -1317,6 +1374,11 @@ void serialize_iter_result(
     /* Write labels for entities */
     if (desc && desc->serialize_entity_labels) {
         serialize_iter_result_entity_labels(world, it, buf);
+    }
+
+    /* Write ids for entities */
+    if (desc && desc->serialize_entity_ids) {
+        serialize_iter_result_entity_ids(it, buf);
     }
 
     /* Write colors for entities */

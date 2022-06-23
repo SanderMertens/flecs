@@ -196,22 +196,38 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;    /* Include term (query) component ids */
-    bool serialize_ids;         /* Include actual (matched) component ids */
-    bool serialize_subjects;    /* Include subjects */
-    bool serialize_variables;   /* Include variables */
-    bool serialize_is_set;      /* Include is_set (for optional terms) */
-    bool serialize_values;      /* Include component values */
-    bool serialize_entities;    /* Include entities (for This terms) */
+    bool serialize_term_ids;      /* Include term (query) component ids */
+    bool serialize_ids;           /* Include actual (matched) component ids */
+    bool serialize_subjects;      /* Include subjects */
+    bool serialize_variables;     /* Include variables */
+    bool serialize_is_set;        /* Include is_set (for optional terms) */
+    bool serialize_values;        /* Include component values */
+    bool serialize_entities;      /* Include entities (for This terms) */
     bool serialize_entity_labels; /* Include doc name for entities */
+    bool serialize_entity_ids;    /* Include numerical ids for entities */
     bool serialize_variable_labels; /* Include doc name for variables */
-    bool serialize_colors;      /* Include doc color for entities */
-    bool measure_eval_duration; /* Include evaluation duration */
-    bool serialize_type_info;   /* Include type information */
+    bool serialize_variable_ids;  /* Include numerical ids for variables */
+    bool serialize_colors;        /* Include doc color for entities */
+    bool measure_eval_duration;   /* Include evaluation duration */
+    bool serialize_type_info;     /* Include type information */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
-    true, true, true, true, true, true, true, false, false, false, false, false }
+    .serialize_term_ids =        true,  \
+    .serialize_ids =             true,  \
+    .serialize_subjects =        true,  \
+    .serialize_variables =       true,  \
+    .serialize_is_set =          true,  \
+    .serialize_values =          true,  \
+    .serialize_entities =        true,  \
+    .serialize_entity_labels =   false, \
+    .serialize_entity_ids =      false, \
+    .serialize_variable_labels = false, \
+    .serialize_variable_ids =    false, \
+    .serialize_colors =          false, \
+    .measure_eval_duration =     false, \
+    .serialize_type_info =       false  \
+}
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them

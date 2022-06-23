@@ -3619,6 +3619,140 @@ void SerializeToJson_serialize_iterator_component_from_var() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_ids() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_entity_ids = true;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_subjects = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[\"Tag\"], \"results\":[{\"entities\":[\"e\"], \"entity_ids\":[%u]}]}",
+        (uint32_t)e);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_ids_2_entities() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_entity_ids = true;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_subjects = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[\"Tag\"], \"results\":[{\"entities\":[\"e1\", \"e2\"], \"entity_ids\":[%u, %u]}]}",
+        (uint32_t)e1, (uint32_t)e2);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_variable_ids() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_variable_ids = true;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_subjects = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[\"Tag\"], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e\"], \"var_ids\":[%u]}]}",
+        (uint32_t)e);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_variable_ids_2_entities() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_variable_ids = true;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_subjects = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[\"Tag\"], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e1\"], \"var_ids\":[%u]}, {\"vars\":[\"e2\"], \"var_ids\":[%u]}]}",
+        (uint32_t)e1, (uint32_t)e2);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 

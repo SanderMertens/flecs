@@ -190,4 +190,14 @@ int32_t flecs_table_column_to_union_index(
     const ecs_table_t *table,
     int32_t column);
 
+/* Increase refcount of table (prevents deletion) */
+void flecs_table_claim(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
+/* Decreases refcount of table (may delete) */
+bool flecs_table_release(
+    ecs_world_t *world, 
+    ecs_table_t *table);
+
 #endif
