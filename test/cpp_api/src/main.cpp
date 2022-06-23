@@ -293,6 +293,7 @@ void Enum_enum_w_incorrect_size(void);
 void Enum_add_union_enum(void);
 void Enum_add_2_union_enums(void);
 void Enum_add_2_union_enums_reverse(void);
+void Enum_constant_from_entity(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -2062,6 +2063,10 @@ bake_test_case Enum_testcases[] = {
     {
         "add_2_union_enums_reverse",
         Enum_add_2_union_enums_reverse
+    },
+    {
+        "constant_from_entity",
+        Enum_constant_from_entity
     }
 };
 
@@ -4523,7 +4528,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        27,
+        28,
         Enum_testcases
     },
     {

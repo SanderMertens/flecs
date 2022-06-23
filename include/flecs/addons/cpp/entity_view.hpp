@@ -222,7 +222,7 @@ struct entity_view : public id {
      * @tparam R the relation type.
      * @param constant the enum constant.
      */
-    template<typename R, typename O, if_t< is_enum<O>::value> = 0>
+    template<typename R, typename O, if_t<is_enum<O>::value> = 0>
     const R* get(O constant) const {
         const auto& et = enum_type<O>(this->m_world);
         flecs::entity_t object = et.entity(constant);
@@ -577,6 +577,8 @@ struct entity_view : public id {
 #   ifdef FLECS_DOC
 #   include "mixins/doc/entity_view.inl"
 #   endif
+
+#   include "mixins/enum/entity_view.inl"
 
 private:
     flecs::entity set_stage(world_t *stage);

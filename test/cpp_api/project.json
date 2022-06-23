@@ -302,7 +302,8 @@
                 "enum_w_incorrect_size",
                 "add_union_enum",
                 "add_2_union_enums",
-                "add_2_union_enums_reverse"
+                "add_2_union_enums_reverse",
+                "constant_from_entity"
             ]
         }, {
             "id": "Switch",

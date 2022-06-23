@@ -831,6 +831,7 @@ struct world {
 #   include "mixins/trigger/mixin.inl"
 #   include "mixins/observer/mixin.inl"
 #   include "mixins/query/mixin.inl"
+#   include "mixins/enum/mixin.inl"
 
 #   ifdef FLECS_MODULE
 #   include "mixins/module/mixin.inl"

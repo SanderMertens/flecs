@@ -111,6 +111,7 @@ struct each_invoker;
 #include "mixins/query/impl.hpp"
 #include "mixins/trigger/impl.hpp"
 #include "mixins/observer/impl.hpp"
+#include "mixins/enum/impl.hpp"
 #ifdef FLECS_MODULE
 #include "mixins/module/impl.hpp"
 #endif

@@ -693,3 +693,20 @@ void Enum_add_2_union_enums_reverse() {
     test_assert(e.get_object<StandardEnum>() == red);
     test_assert(e.get_object<AnotherEnum>() == running);
 }
+
+void Enum_constant_from_entity() {
+    flecs::world ecs;
+
+    flecs::entity e_red = ecs.to_entity(StandardEnum::Red);
+    test_assert(e_red != 0);
+
+    flecs::entity e_green = ecs.to_entity(StandardEnum::Green);
+    test_assert(e_green != 0);
+
+    flecs::entity e_blue = ecs.to_entity(StandardEnum::Blue);
+    test_assert(e_blue != 0);
+
+    test_assert(e_red.to_constant<StandardEnum>() == StandardEnum::Red);
+    test_assert(e_green.to_constant<StandardEnum>() == StandardEnum::Green);
+    test_assert(e_blue.to_constant<StandardEnum>() == StandardEnum::Blue);
+}
