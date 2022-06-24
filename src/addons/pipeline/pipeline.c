@@ -523,9 +523,6 @@ void ecs_run_pipeline(
             ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
 
             ecs_assert(sys->entity == e, ECS_INTERNAL_ERROR, NULL);
-            if (!stage_index) {
-                ecs_dbg_3("pipeline: run system %s", ecs_get_name(world, e));
-            }
 
             sys->last_frame = world->info.frame_count_total + 1;
 
@@ -544,10 +541,6 @@ void ecs_run_pipeline(
 
             if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
-
-                if (!stage_index) {
-                    ecs_dbg_3("merge");
-                }
 
                 /* If the set of matched systems changed as a result of the
                  * merge, we have to reset the iterator and move it to our
@@ -569,12 +562,11 @@ bool ecs_progress(
     ecs_ftime_t user_delta_time)
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
-
-    ecs_dbg_3("#[normal]begin progress(dt = %.2f)", (double)delta_time);
-
+    
+    ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
+    ecs_log_push_3();
     ecs_run_pipeline(world, 0, delta_time);
-
-    ecs_dbg_3("#[normal]end progress");
+    ecs_log_pop_3();
 
     ecs_frame_end(world);
 

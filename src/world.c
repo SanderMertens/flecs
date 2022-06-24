@@ -1625,7 +1625,7 @@ void flecs_process_empty_queries(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    flecs_defer_none(world, &world->stages[0]);
+    flecs_defer_begin(world, &world->stages[0]);
 
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
@@ -1645,7 +1645,7 @@ void flecs_process_empty_queries(
         }
     }
 
-    flecs_defer_flush(world, &world->stages[0]);
+    flecs_defer_end(world, &world->stages[0]);
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */
@@ -1740,6 +1740,7 @@ void flecs_table_set_empty(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_table_count(table)) {
         table->generation = 0;

@@ -58,6 +58,8 @@ void merge_stages(
         ecs_os_get_time(&t_start);
     }
 
+    ecs_dbg_3("#[magenta]merge");
+
     if (is_stage) {
         /* Check for consistency if force_merge is enabled. In practice this
          * function will never get called with force_merge disabled for just
@@ -73,7 +75,7 @@ void merge_stages(
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             ecs_poly_assert(s, ecs_stage_t);
             if (force_merge || s->auto_merge) {
-                flecs_defer_flush(world, s);
+                flecs_defer_end(world, s);
             }
         }
     }
@@ -106,7 +108,7 @@ void do_manual_merge(
     merge_stages(world, true);
 }
 
-bool flecs_defer_none(
+bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -115,24 +117,39 @@ bool flecs_defer_none(
     return (++ stage->defer) == 1;
 }
 
+static
+bool flecs_defer_op(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    (void)world;
+
+    /* If deferring is suspended, do operation as usual */
+    if (stage->defer_suspend) return false;
+
+    if (stage->defer) {
+        /* If deferring is enabled, defer operation */
+        return true;
+    }
+
+    /* Deferring is disabled, defer while operation is executed */
+    stage->defer ++;
+    return false;
+}
+
 bool flecs_defer_modified(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
         op->id = id;
         op->is._1.entity = entity;
         return true;
-    } else {
-        stage->defer ++;
     }
-    
     return false;
 }
 
@@ -143,19 +160,14 @@ bool flecs_defer_clone(
     ecs_entity_t src,
     bool clone_value)
 {   
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
         op->id = src;
         op->is._1.entity = entity;
         op->is._1.clone_value = clone_value;
         return true;
-    } else {
-        stage->defer ++;
     }
-    
     return false;   
 }
 
@@ -164,16 +176,12 @@ bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
         op->is._1.entity = entity;
         world->info.delete_count ++;
         return true;
-    } else {
-        stage->defer ++;
     }
     return false;
 }
@@ -183,16 +191,12 @@ bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
         op->is._1.entity = entity;
         world->info.clear_count ++;
         return true;
-    } else {
-        stage->defer ++;
     }
     return false;
 }
@@ -203,17 +207,13 @@ bool flecs_defer_on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpOnDeleteAction;
         op->id = id;
         op->is._1.entity = action;
         world->info.clear_count ++;
         return true;
-    } else {
-        stage->defer ++;
     }
     return false;
 }
@@ -225,16 +225,12 @@ bool flecs_defer_enable(
     ecs_id_t id,
     bool enable)
 {
-    (void)world;
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = enable ? EcsOpEnable : EcsOpDisable;
         op->is._1.entity = entity;
         op->id = id;
         return true;
-    } else {
-        stage->defer ++;
     }
     return false;
 }
@@ -246,8 +242,7 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out)
 {
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
         world->info.bulk_new_count ++;
 
@@ -267,10 +262,7 @@ bool flecs_defer_bulk_new(
         op->is._n.count = count;
 
         return true;
-    } else {
-        stage->defer ++;
     }
-
     return false;
 }
 
@@ -312,8 +304,7 @@ bool flecs_defer_set(
     void **value_out,
     bool *is_added)
 {
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
+    if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
         if (!size) {
             ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
@@ -361,10 +352,7 @@ bool flecs_defer_set(
         }
 
         return true;
-    } else {
-        stage->defer ++;
     }
-
 error:
     return false;
 }
@@ -525,6 +513,9 @@ bool ecs_readonly_begin(
 
     flecs_process_pending_tables(world);
 
+    ecs_dbg_3("#[bold]readonly");
+    ecs_log_push_3();
+
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
         ecs_stage_t *stage = &world->stages[i];
@@ -550,7 +541,7 @@ void ecs_readonly_end(
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
 
-    ecs_dbg_3("staging: end");
+    ecs_log_pop_3();
 
     do_auto_merge(world);
 error:

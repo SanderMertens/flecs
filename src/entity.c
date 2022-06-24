@@ -959,7 +959,7 @@ const ecs_entity_t* new_w_data(
             });
     }
 
-    flecs_defer_none(world, &world->stages[0]);
+    flecs_defer_begin(world, &world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, diff, 
         component_data == NULL);
@@ -1005,7 +1005,7 @@ const ecs_entity_t* new_w_data(
         flecs_notify_on_set(world, table, row, count, &diff->on_set, false);
     }
 
-    flecs_defer_flush(world, &world->stages[0]);
+    flecs_defer_end(world, &world->stages[0]);
 
     if (row_out) {
         *row_out = row;
@@ -1062,7 +1062,7 @@ void add_id(
 
     flecs_commit(world, entity, r, dst_table, &diff, true, true);
 
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 }
 
 static
@@ -1090,7 +1090,7 @@ void remove_id(
     flecs_commit(world, entity, r, dst_table, &diff, true, true);
 
 done:
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 }
 
 static
@@ -1472,7 +1472,7 @@ ecs_entity_t ecs_new_w_id(
 
         flecs_entities_set(world, entity, &(ecs_record_t){ 0 });
     }
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 
     return entity;
 error:
@@ -2069,7 +2069,7 @@ const ecs_entity_t* ecs_bulk_new_w_id(
 
     ecs_table_diff_t td = diff_to_table_diff(&diff);
     ids = new_w_data(world, table, NULL, NULL, count, NULL, false, NULL, &td);
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 
     return ids;
 error:
@@ -2104,7 +2104,7 @@ void ecs_clear(
         r->table = NULL;
     }    
 
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 error:
     return;
 }
@@ -2504,7 +2504,7 @@ void ecs_delete_with(
     }
 
     flecs_on_delete(world, id, EcsDelete);
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 }
 
 void ecs_remove_all(
@@ -2517,7 +2517,7 @@ void ecs_remove_all(
     }
 
     flecs_on_delete(world, id, EcsRemove);
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 }
 
 void ecs_delete(
@@ -2568,7 +2568,7 @@ void ecs_delete(
         flecs_entities_remove(world, entity);
     }
 
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 error:
     return;
 }
@@ -2639,7 +2639,7 @@ ecs_entity_t ecs_clone(
     }
 
 done:
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
     return dst;
 error:
     return 0;
@@ -2715,7 +2715,7 @@ void* ecs_get_mut_id(
     result = get_mutable(world, entity, id, r, is_added);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 
     return result;
 error:
@@ -2811,7 +2811,7 @@ void* ecs_emplace_id(
     void *ptr = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 
     return ptr;
 error:
@@ -2845,7 +2845,7 @@ void ecs_modified_id(
     flecs_notify_on_set(world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
 
     flecs_table_mark_dirty(world, table, id);
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 error:
     return;
 }
@@ -2914,7 +2914,7 @@ ecs_entity_t set_ptr_w_id(
             world, r->table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
     }
 
-    flecs_defer_flush(world, stage);
+    flecs_defer_end(world, stage);
 
     return entity;
 error:
@@ -3591,7 +3591,7 @@ bool ecs_defer_begin(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    return flecs_defer_none(world, stage);
+    return flecs_defer_begin(world, stage);
 error:
     return false;
 }
@@ -3601,7 +3601,7 @@ bool ecs_defer_end(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    return flecs_defer_flush(world, stage);
+    return flecs_defer_end(world, stage);
 error:
     return false;
 }
@@ -3866,7 +3866,7 @@ bool remove_invalid(
 }
 
 /* Leave safe section. Run all deferred commands. */
-bool flecs_defer_flush(
+bool flecs_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {

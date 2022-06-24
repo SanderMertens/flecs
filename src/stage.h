@@ -21,7 +21,7 @@ void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);  
 
-bool flecs_defer_none(
+bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -97,7 +97,7 @@ bool flecs_defer_set(
     void **value_out,
     bool *is_added);
 
-bool flecs_defer_flush(
+bool flecs_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage);
 

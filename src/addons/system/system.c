@@ -21,7 +21,7 @@ ecs_entity_t ecs_run_intern(
     ecs_stage_t *stage,
     ecs_entity_t system,
     ecs_system_t *system_data,
-    int32_t stage_current,
+    int32_t stage_index,
     int32_t stage_count,    
     ecs_ftime_t delta_time,
     int32_t offset,
@@ -57,6 +57,12 @@ ecs_entity_t ecs_run_intern(
         }
     }
 
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(world, system);
+        ecs_dbg_3("#[green]run#[reset](%d): %s", stage_index, path);
+        ecs_os_free(path);
+    }
+
     ecs_time_t time_start;
     bool measure_time = ECS_BIT_IS_SET(world->flags, EcsWorldMeasureSystemTime);
     if (measure_time) {
@@ -80,7 +86,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (stage_count > 1 && system_data->multi_threaded) {
-        wit = ecs_worker_iter(it, stage_current, stage_count);
+        wit = ecs_worker_iter(it, stage_index, stage_count);
         it = &wit;
     }
 
@@ -144,7 +150,7 @@ ecs_entity_t ecs_run_w_filter(
 ecs_entity_t ecs_run_worker(
     ecs_world_t *world,
     ecs_entity_t system,
-    int32_t stage_current,
+    int32_t stage_index,
     int32_t stage_count,
     ecs_ftime_t delta_time,
     void *param)
@@ -154,7 +160,7 @@ ecs_entity_t ecs_run_worker(
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     return ecs_run_intern(
-        world, stage, system, system_data, stage_current, stage_count, 
+        world, stage, system, system_data, stage_index, stage_count, 
         delta_time, 0, 0, param);
 }
 
