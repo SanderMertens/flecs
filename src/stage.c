@@ -8,41 +8,6 @@ ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
 }
 
 static
-bool defer_add_remove(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_defer_op_kind_t op_kind,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    if (stage->defer_suspend) return false;
-    if (stage->defer) {
-        if (!id) {
-            return true;
-        }
-
-        ecs_defer_op_t *op = new_defer_op(stage);
-        op->kind = op_kind;
-        op->id = id;
-        op->is._1.entity = entity;
-
-        if (op_kind == EcsOpNew) {
-            world->info.new_count ++;
-        } else if (op_kind == EcsOpAdd) {
-            world->info.add_count ++;
-        } else if (op_kind == EcsOpRemove) {
-            world->info.remove_count ++;
-        }
-
-        return true;
-    } else {
-        stage->defer ++;
-    }
-    
-    return false;
-}
-
-static
 void merge_stages(
     ecs_world_t *world,
     bool force_merge)
@@ -65,6 +30,8 @@ void merge_stages(
          * function will never get called with force_merge disabled for just
          * a single stage. */
         if (force_merge || stage->auto_merge) {
+            ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
+                "mismatching defer_begin/defer_end detected");
             ecs_defer_end((ecs_world_t*)stage);
         }
     } else {
@@ -134,6 +101,37 @@ bool flecs_defer_op(
 
     /* Deferring is disabled, defer while operation is executed */
     stage->defer ++;
+    return false;
+}
+
+static
+bool flecs_defer_add_remove(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_defer_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    if (flecs_defer_op(world, stage)) {
+        if (!id) {
+            return true;
+        }
+
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = op_kind;
+        op->id = id;
+        op->is._1.entity = entity;
+
+        if (op_kind == EcsOpNew) {
+            world->info.new_count ++;
+        } else if (op_kind == EcsOpAdd) {
+            world->info.add_count ++;
+        } else if (op_kind == EcsOpRemove) {
+            world->info.remove_count ++;
+        }
+
+        return true;
+    }
     return false;
 }
 
@@ -272,7 +270,7 @@ bool flecs_defer_new(
     ecs_entity_t entity,
     ecs_id_t id)
 {   
-    return defer_add_remove(world, stage, EcsOpNew, entity, id);
+    return flecs_defer_add_remove(world, stage, EcsOpNew, entity, id);
 }
 
 bool flecs_defer_add(
@@ -281,7 +279,7 @@ bool flecs_defer_add(
     ecs_entity_t entity,
     ecs_id_t id)
 {   
-    return defer_add_remove(world, stage, EcsOpAdd, entity, id);
+    return flecs_defer_add_remove(world, stage, EcsOpAdd, entity, id);
 }
 
 bool flecs_defer_remove(
@@ -290,7 +288,7 @@ bool flecs_defer_remove(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return defer_add_remove(world, stage, EcsOpRemove, entity, id);
+    return flecs_defer_add_remove(world, stage, EcsOpRemove, entity, id);
 }
 
 bool flecs_defer_set(
@@ -520,6 +518,8 @@ bool ecs_readonly_begin(
     for (i = 0; i < count; i ++) {
         ecs_stage_t *stage = &world->stages[i];
         stage->lookup_path = world->stages[0].lookup_path;
+        ecs_assert(stage->defer == 0, ECS_INVALID_OPERATION, 
+            "deferred mode cannot be enabled when entering readonly mode");
         ecs_defer_begin((ecs_world_t*)stage);
     }
 

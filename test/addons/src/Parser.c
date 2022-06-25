@@ -4376,6 +4376,8 @@ void Parser_oneof_self_pred_w_relative_obj() {
     test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
  
     ecs_fini(world);
 }
@@ -4401,6 +4403,8 @@ void Parser_oneof_other_pred_w_relative_obj() {
     test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
  
     ecs_fini(world);
 }

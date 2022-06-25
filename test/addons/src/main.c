@@ -827,6 +827,7 @@ void MultiThread_schedule_w_tasks(void);
 void MultiThread_reactive_system(void);
 void MultiThread_fini_after_set_threads(void);
 void MultiThread_2_threads_single_threaded_system(void);
+void MultiThread_no_staging_w_multithread(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -4072,6 +4073,10 @@ bake_test_case MultiThread_testcases[] = {
     {
         "2_threads_single_threaded_system",
         MultiThread_2_threads_single_threaded_system
+    },
+    {
+        "no_staging_w_multithread",
+        MultiThread_no_staging_w_multithread
     }
 };
 
@@ -4496,7 +4501,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        40,
+        41,
         MultiThread_testcases
     },
     {
