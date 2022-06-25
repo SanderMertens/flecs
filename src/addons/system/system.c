@@ -59,7 +59,7 @@ ecs_entity_t ecs_run_intern(
 
     if (ecs_should_log_3()) {
         char *path = ecs_get_fullpath(world, system);
-        ecs_dbg_3("#[green]run#[reset](%d): %s", stage_index, path);
+        ecs_dbg_3("worker %d: %s", stage_index, path);
         ecs_os_free(path);
     }
 

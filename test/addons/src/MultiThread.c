@@ -1086,3 +1086,33 @@ void MultiThread_2_threads_single_threaded_system() {
 
     ecs_fini(world);
 }
+
+static int create_query_invoked = 0;
+
+static
+void CreateQuery(ecs_iter_t *it) {
+    ecs_query_new(it->world, "0");
+    create_query_invoked ++;
+}
+
+void MultiThread_no_staging_w_multithread() {
+    for (int i = 0; i < 10; i ++) {
+        ecs_world_t *world = ecs_init();
+
+        ecs_set_threads(world, 32);
+
+        ecs_system_init(world, &(ecs_system_desc_t) {
+            .callback = CreateQuery,
+            .no_staging = true,
+            .entity.add = {ecs_dependson(EcsOnUpdate)}
+        });
+
+        create_query_invoked = 0;
+        ecs_progress(world, 0);
+        test_int(create_query_invoked, 1);
+
+        ecs_fini(world);
+    }
+
+    test_assert(true);
+}

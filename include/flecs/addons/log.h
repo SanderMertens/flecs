@@ -326,6 +326,10 @@ void _ecs_parser_errorv(
     assert(condition) /* satisfy compiler/static analyzers */
 #endif // FLECS_NDEBUG
 
+#define ecs_assert_var(var, error_code, ...)\
+    ecs_assert(var, error_code, __VA_ARGS__);\
+    (void)var
+
 /** Debug assert 
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
 #ifndef FLECS_NDEBUG

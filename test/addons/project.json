@@ -867,7 +867,8 @@
                 "schedule_w_tasks",
                 "reactive_system",
                 "fini_after_set_threads",
-                "2_threads_single_threaded_system"
+                "2_threads_single_threaded_system",
+                "no_staging_w_multithread"
             ]
         }, {
             "id": "MultiThreadStaging",

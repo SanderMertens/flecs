@@ -1796,7 +1796,8 @@ ecs_query_t* ecs_query_init(
 
     if (ecs_should_log_1()) {
         char *filter_expr = ecs_filter_str(world, &result->filter);
-        ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
+        ecs_dbg_1("#[green]query#[normal] [%s] created", 
+            filter_expr ? filter_expr : "");
         ecs_os_free(filter_expr);
     }
 

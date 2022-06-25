@@ -21,6 +21,13 @@ typedef struct {
     ecs_entity_t last_system;   /* Last system ran by pipeline */
 
     ecs_id_record_t *idr_inactive; /* Cached record for quick inactive test */
+
+    ecs_iter_t *iters;          /* Iterator for worker(s) */
+    int32_t iter_count;
+
+    /* Members for continuing pipeline iteration after pipeline rebuild */
+    ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
+    int32_t cur_i;              /* Index in current result */
 } EcsPipeline;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,12 +57,9 @@ bool ecs_pipeline_update(
     ecs_entity_t pipeline,
     bool start_of_frame); 
 
-int32_t ecs_pipeline_reset_iter(
+void ecs_pipeline_reset_iter(
     ecs_world_t *world,
-    const EcsPipeline *q,
-    ecs_iter_t *iter_out,
-    ecs_pipeline_op_t **op_out,
-    ecs_pipeline_op_t **last_op_out);
+    EcsPipeline *q);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
@@ -64,13 +68,9 @@ int32_t ecs_pipeline_reset_iter(
 void ecs_worker_begin(
     ecs_world_t *world);
 
-int32_t ecs_worker_sync(
+bool ecs_worker_sync(
     ecs_world_t *world,
-    const EcsPipeline *p,
-    ecs_iter_t *it,
-    int32_t i,
-    ecs_pipeline_op_t **op_out,
-    ecs_pipeline_op_t **last_op_out);
+    EcsPipeline *p);
 
 void ecs_worker_end(
     ecs_world_t *world);
