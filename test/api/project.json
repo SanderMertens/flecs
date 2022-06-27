@@ -1060,7 +1060,13 @@
                 "set_this_to_childof_superset_match",
                 "set_this_to_superset_w_self_filter_no_match",
                 "set_this_to_isa_cascade",
-                "set_this_to_childof_cascade"
+                "set_this_to_childof_cascade",
+                "oneof",
+                "oneof_expr",
+                "oneof_w_mismatching_obj",
+                "oneof_w_mismatching_obj_expr",
+                "oneof_wildcard",
+                "oneof_any"
             ]
         }, {
             "id": "FilterStr",

@@ -139,15 +139,6 @@ int finalize_term_var(
             if (oneof && identifier != &term->pred) {
                 if (!e) {
                     e = ecs_lookup_child(world, oneof, identifier->name);
-                } else if (e) {
-                    if (!ecs_has_pair(world, e, EcsChildOf, oneof)) {
-                        char *rel_str = ecs_get_fullpath(world, pred);
-                        term_error(world, term, name, 
-                            "invalid object '%s' for relation %s",
-                            identifier->name, rel_str);
-                        ecs_os_free(rel_str);
-                        return -1;
-                    }
                 }
             }
 
@@ -562,6 +553,22 @@ int verify_term_consistency(
                     "term id does not match pred/obj (%s)", id_str);
                 ecs_os_free(id_str);
                 return -1;
+            }
+        }
+
+        if (pred != EcsWildcard) {
+            ecs_entity_t oneof = flecs_get_oneof(world, pred);
+            if (oneof && !ecs_id_is_wildcard(obj)) {
+                if (!ecs_has_pair(world, obj, EcsChildOf, oneof)) {
+                    char *rel_str = ecs_get_fullpath(world, pred);
+                    char *obj_str = ecs_get_fullpath(world, obj);
+                    term_error(world, term, name, 
+                        "invalid object '%s' for relation %s",
+                        obj_str, rel_str);
+                    ecs_os_free(rel_str);
+                    ecs_os_free(obj_str);
+                    return -1;
+                }
             }
         }
     } else if (term->pred.entity != (id & ECS_COMPONENT_MASK)) {

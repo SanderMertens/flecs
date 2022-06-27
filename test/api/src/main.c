@@ -1006,6 +1006,12 @@ void Filter_set_this_to_childof_superset_match(void);
 void Filter_set_this_to_superset_w_self_filter_no_match(void);
 void Filter_set_this_to_isa_cascade(void);
 void Filter_set_this_to_childof_cascade(void);
+void Filter_oneof(void);
+void Filter_oneof_expr(void);
+void Filter_oneof_w_mismatching_obj(void);
+void Filter_oneof_w_mismatching_obj_expr(void);
+void Filter_oneof_wildcard(void);
+void Filter_oneof_any(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -5838,6 +5844,30 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_to_childof_cascade",
         Filter_set_this_to_childof_cascade
+    },
+    {
+        "oneof",
+        Filter_oneof
+    },
+    {
+        "oneof_expr",
+        Filter_oneof_expr
+    },
+    {
+        "oneof_w_mismatching_obj",
+        Filter_oneof_w_mismatching_obj
+    },
+    {
+        "oneof_w_mismatching_obj_expr",
+        Filter_oneof_w_mismatching_obj_expr
+    },
+    {
+        "oneof_wildcard",
+        Filter_oneof_wildcard
+    },
+    {
+        "oneof_any",
+        Filter_oneof_any
     }
 };
 
@@ -9868,7 +9898,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        191,
+        197,
         Filter_testcases
     },
     {

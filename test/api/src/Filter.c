@@ -8188,3 +8188,195 @@ void Filter_set_this_to_childof_cascade() {
 
     ecs_fini(world);
 }
+
+void Filter_oneof() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{
+            .id = ecs_pair(Rel, ObjB)
+        }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjB), ecs_term_id(&it, 1));
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_oneof_expr() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, ObjB)"
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjB), ecs_term_id(&it, 1));
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_oneof_w_mismatching_obj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ECS_TAG(world, ObjC)
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_log_set_level(-4);
+
+    ecs_filter_t f;
+    test_assert(0 != ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{
+            .id = ecs_pair(Rel, ObjC)
+        }}
+    }));
+
+    ecs_fini(world);
+}
+
+void Filter_oneof_w_mismatching_obj_expr() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ECS_TAG(world, ObjC)
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_log_set_level(-4);
+
+    ecs_filter_t f;
+    test_assert(0 != ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, ObjC)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Filter_oneof_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{
+            .id = ecs_pair(Rel, EcsWildcard)
+        }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjA), ecs_term_id(&it, 1));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjB), ecs_term_id(&it, 1));
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_oneof_any() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{
+            .id = ecs_pair(Rel, EcsAny)
+        }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjA), ecs_term_id(&it, 1));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjB), ecs_term_id(&it, 1));
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
