@@ -18811,7 +18811,7 @@ ecs_rule_var_t* term_id_to_var(
     ecs_rule_t *rule,
     ecs_term_id_t *id)
 {
-    if (id->var == EcsVarIsVariable) {;
+    if (id->var == EcsVarIsVariable) {
         return find_variable(rule, EcsRuleVarKindUnknown, term_id_var_name(id));
     }
     return NULL;
@@ -19757,12 +19757,16 @@ int scan_variables(
         *pred = term_pred(rule, term),
         *obj = term_obj(rule, term);
 
-        if (!pred && term_id_is_variable(&term->pred)) {
+        if (!pred && term_id_is_variable(&term->pred) && 
+            term->pred.entity != EcsAny)
+        {
             rule_error(rule, "missing predicate variable '%s'", 
                 term_id_var_name(&term->pred));
             goto error;
         }
-        if (!obj && term_id_is_variable(&term->obj)) {
+        if (!obj && term_id_is_variable(&term->obj) && 
+            term->obj.entity != EcsAny)
+        {
             rule_error(rule, "missing object variable '%s'", 
                 term_id_var_name(&term->obj));
             goto error;
@@ -20299,7 +20303,7 @@ void insert_select_or_with(
     }
 
     /* Only insert implicit IsA if filter isn't already an IsA */
-    if (!filter.transitive || filter.pred.ent != EcsIsA) {
+    if ((!filter.transitive || filter.pred.ent != EcsIsA) && term->oper != EcsNot) {
         if (!var) {
             ecs_rule_pair_t isa_pair = {
                 .pred.ent = EcsIsA,
@@ -21015,6 +21019,23 @@ ecs_rule_t* ecs_rule_init(
     if (i == term_count) {
         rule_error(result, "rule cannot only have terms with Not operator");
         goto error;
+    }
+
+    /* Translate terms with a Not operator and Wildcard to Any, as we don't need
+     * implicit variables for those */
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (term->oper == EcsNot) {
+            if (term->pred.entity == EcsWildcard) {
+                term->pred.entity = EcsAny;
+            }
+            if (term->subj.entity == EcsWildcard) {
+                term->subj.entity = EcsAny;
+            }
+            if (term->obj.entity == EcsWildcard) {
+                term->obj.entity = EcsAny;
+            }
+        }
     }
 
     /* Find all variables & resolve dependencies */

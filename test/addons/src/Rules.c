@@ -4063,6 +4063,124 @@ void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var() {
     ecs_fini(world);
 }
 
+void Rules_not_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel)
+    ECS_TAG(world, Obj);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { Tag },
+            { ecs_pair(Rel, EcsWildcard), .oper = EcsNot }
+        }
+    });
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, Obj);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_term_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_not_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag, Final);
+    ECS_ENTITY(world, Rel, Final);
+    ECS_ENTITY(world, Obj, Final);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { Tag },
+            { ecs_pair(Rel, EcsAny), .oper = EcsNot }
+        }
+    });
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, Obj);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsAny), ecs_term_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_not_wildcard_w_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel)
+    ECS_TAG(world, Obj);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag, !(Rel, *)");
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, Obj);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_term_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_not_any_w_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel)
+    ECS_TAG(world, Obj);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag, !(Rel, _)");
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, Obj);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsAny), ecs_term_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 void Rules_rules_w_desc_id() {
     ecs_world_t *world = ecs_init();
 

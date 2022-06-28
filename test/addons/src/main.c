@@ -538,6 +538,10 @@ void Rules_invalid_rule_w_only_not_term(void);
 void Rules_invalid_rule_w_not_term_unknown_var(void);
 void Rules_invalid_rule_w_not_term_unknown_pair_var(void);
 void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var(void);
+void Rules_not_wildcard(void);
+void Rules_not_any(void);
+void Rules_not_wildcard_w_expr(void);
+void Rules_not_any_w_expr(void);
 void Rules_rules_w_desc_id(void);
 void Rules_rules_w_desc_pair(void);
 void Rules_rules_w_desc_pair_empty_rel_obj(void);
@@ -3000,6 +3004,22 @@ bake_test_case Rules_testcases[] = {
         Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var
     },
     {
+        "not_wildcard",
+        Rules_not_wildcard
+    },
+    {
+        "not_any",
+        Rules_not_any
+    },
+    {
+        "not_wildcard_w_expr",
+        Rules_not_wildcard_w_expr
+    },
+    {
+        "not_any_w_expr",
+        Rules_not_any_w_expr
+    },
+    {
         "rules_w_desc_id",
         Rules_rules_w_desc_id
     },
@@ -4410,7 +4430,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        162,
+        166,
         Rules_testcases
     },
     {
