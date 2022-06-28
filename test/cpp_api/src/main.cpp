@@ -674,6 +674,10 @@ void Filter_term_each_pair_id(void);
 void Filter_term_each_pair_relation_wildcard(void);
 void Filter_term_each_pair_object_wildcard(void);
 void Filter_default_ctor_no_assign(void);
+void Filter_term_get_id(void);
+void Filter_term_get_subj(void);
+void Filter_term_get_pred(void);
+void Filter_term_get_obj(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -3522,6 +3526,22 @@ bake_test_case Filter_testcases[] = {
     {
         "default_ctor_no_assign",
         Filter_default_ctor_no_assign
+    },
+    {
+        "term_get_id",
+        Filter_term_get_id
+    },
+    {
+        "term_get_subj",
+        Filter_term_get_subj
+    },
+    {
+        "term_get_pred",
+        Filter_term_get_pred
+    },
+    {
+        "term_get_obj",
+        Filter_term_get_obj
     }
 };
 
@@ -4619,7 +4639,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        8,
+        12,
         Filter_testcases
     },
     {

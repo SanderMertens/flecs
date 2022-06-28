@@ -169,3 +169,98 @@ void Filter_default_ctor_no_assign() {
     // Make sure code compiles & works
     test_assert(true);
 }
+
+void Filter_term_get_id() {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>()
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.term_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.id() == ecs.id<Position>());
+    t = q.term(1);
+    test_assert(t.id() == ecs.id<Velocity>());
+    t = q.term(2);
+    test_assert(t.id() == ecs.pair(Foo, Bar));
+}
+
+void Filter_term_get_subj() {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().subj(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.term_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_subj() == flecs::This);
+    t = q.term(1);
+    test_assert(t.get_subj() == Src);
+    t = q.term(2);
+    test_assert(t.get_subj() == flecs::This);
+}
+
+void Filter_term_get_pred() {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().subj(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.term_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_pred() == ecs.id<Position>());
+    t = q.term(1);
+    test_assert(t.get_pred() == ecs.id<Velocity>());
+    t = q.term(2);
+    test_assert(t.get_pred() == Foo);
+}
+
+void Filter_term_get_obj() {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().subj(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.term_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_obj() == 0);
+    t = q.term(1);
+    test_assert(t.get_obj() == 0);
+    t = q.term(2);
+    test_assert(t.get_obj() == Bar);
+}

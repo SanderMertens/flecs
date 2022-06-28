@@ -709,7 +709,11 @@
                 "term_each_pair_id",
                 "term_each_pair_relation_wildcard",
                 "term_each_pair_object_wildcard",
-                "default_ctor_no_assign"
+                "default_ctor_no_assign",
+                "term_get_id",
+                "term_get_subj",
+                "term_get_pred",
+                "term_get_obj"
             ]
         }, {
             "id": "ComponentLifecycle",

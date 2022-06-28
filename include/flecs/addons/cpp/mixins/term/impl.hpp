@@ -111,11 +111,15 @@ struct term final : term_builder_i<term> {
         return static_cast<flecs::oper_kind_t>(value.oper);
     }
 
-    flecs::entity get_subject() {
+    flecs::entity get_subj() {
         return flecs::entity(world(), value.subj.entity);
     }
 
-    flecs::entity get_object() {
+    flecs::entity get_pred() {
+        return flecs::entity(world(), value.pred.entity);
+    }
+
+    flecs::entity get_obj() {
         return flecs::entity(world(), value.obj.entity);
     }
 
