@@ -199,6 +199,9 @@ void Entity_add_if_false_R_O(void);
 void Entity_add_if_true_R_o(void);
 void Entity_add_if_false_R_o(void);
 void Entity_add_if_true_r_o(void);
+void Entity_add_if_exclusive_r_o(void);
+void Entity_add_if_exclusive_R_o(void);
+void Entity_add_if_exclusive_R_O(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -294,6 +297,8 @@ void Enum_add_union_enum(void);
 void Enum_add_2_union_enums(void);
 void Enum_add_2_union_enums_reverse(void);
 void Enum_constant_from_entity(void);
+void Enum_add_if(void);
+void Enum_add_if_other(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1701,6 +1706,18 @@ bake_test_case Entity_testcases[] = {
     {
         "add_if_true_r_o",
         Entity_add_if_true_r_o
+    },
+    {
+        "add_if_exclusive_r_o",
+        Entity_add_if_exclusive_r_o
+    },
+    {
+        "add_if_exclusive_R_o",
+        Entity_add_if_exclusive_R_o
+    },
+    {
+        "add_if_exclusive_R_O",
+        Entity_add_if_exclusive_R_O
     }
 };
 
@@ -2071,6 +2088,14 @@ bake_test_case Enum_testcases[] = {
     {
         "constant_from_entity",
         Enum_constant_from_entity
+    },
+    {
+        "add_if",
+        Enum_add_if
+    },
+    {
+        "add_if_other",
+        Enum_add_if_other
     }
 };
 
@@ -4534,7 +4559,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        190,
+        193,
         Entity_testcases
     },
     {
@@ -4548,7 +4573,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        28,
+        30,
         Enum_testcases
     },
     {

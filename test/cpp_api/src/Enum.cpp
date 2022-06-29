@@ -710,3 +710,32 @@ void Enum_constant_from_entity() {
     test_assert(e_green.to_constant<StandardEnum>() == StandardEnum::Green);
     test_assert(e_blue.to_constant<StandardEnum>() == StandardEnum::Blue);
 }
+
+void Enum_add_if() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    e.add_if(true, StandardEnum::Red);
+    test_assert(e.has(StandardEnum::Red));
+    test_assert(e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+
+    e.add_if(false, StandardEnum::Red);
+    test_assert(!e.has(StandardEnum::Red));
+    test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+}
+
+void Enum_add_if_other() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    e.add(StandardEnum::Red);
+    test_assert(e.has(StandardEnum::Red));
+    test_assert(e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+
+    e.add_if(false, StandardEnum::Blue);
+    test_assert(!e.has(StandardEnum::Blue));
+    test_assert(!e.has(StandardEnum::Red));
+    test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+}

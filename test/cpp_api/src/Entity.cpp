@@ -3450,3 +3450,69 @@ void Entity_add_if_false_r_o() {
     e.add_if(false, r, o);
     test_assert( !e.has(r, o));
 }
+
+void Entity_add_if_exclusive_r_o() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto r = ecs.entity().add(flecs::Exclusive);
+    auto o_1 = ecs.entity();
+    auto o_2 = ecs.entity();
+
+    e.add(r, o_1);
+    test_assert(e.has(r, o_1));
+
+    e.add_if(true, r, o_2);
+    test_assert(!e.has(r, o_1));
+    test_assert(e.has(r, o_2));
+
+    e.add_if(false, r, o_1);
+    test_assert(!e.has(r, o_1));
+    test_assert(!e.has(r, o_2));
+}
+
+void Entity_add_if_exclusive_R_o() {
+    flecs::world ecs;
+
+    struct R { };
+
+    ecs.component<R>().add(flecs::Exclusive);
+
+    auto e = ecs.entity();
+    auto o_1 = ecs.entity();
+    auto o_2 = ecs.entity();
+
+    e.add<R>(o_1);
+    test_assert(e.has<R>(o_1));
+
+    e.add_if<R>(true, o_2);
+    test_assert(!e.has<R>(o_1));
+    test_assert(e.has<R>(o_2));
+
+    e.add_if<R>(false, o_1);
+    test_assert(!e.has<R>(o_1));
+    test_assert(!e.has<R>(o_2));
+}
+
+void Entity_add_if_exclusive_R_O() {
+    flecs::world ecs;
+
+    struct R { };
+    struct O_1 { };
+    struct O_2 { };
+
+    ecs.component<R>().add(flecs::Exclusive);
+
+    auto e = ecs.entity();
+
+    e.add<R, O_1>();
+    test_assert((e.has<R, O_1>()));
+
+    e.add_if<R, O_2>(true);
+    test_assert((!e.has<R, O_1>()));
+    test_assert((e.has<R, O_2>()));
+
+    e.add_if<R, O_1>(false);
+    test_assert((!e.has<R, O_1>()));
+    test_assert((!e.has<R, O_2>()));
+}

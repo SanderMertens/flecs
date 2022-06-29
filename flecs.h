@@ -17681,8 +17681,21 @@ struct entity_builder : entity_view {
         flecs_static_assert(is_flecs_constructible<R>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
         const auto& et = enum_type<O>(this->m_world);
-        flecs::entity_t object = et.entity(constant);
-        return this->add<R>(object);
+        return this->add<R>(et.entity(constant));
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @param cond The condition to evaluate.
+     * @param component The component to add.
+     */
+    Self& add_if(bool cond, flecs::id_t component) {
+        if (cond) {
+            return this->add(component);
+        } else {
+            return this->remove(component);
+        }
     }
 
     /** Conditional add.
@@ -17704,29 +17717,18 @@ struct entity_builder : entity_view {
      * This operation adds if condition is true, removes if condition is false.
      * 
      * @param cond The condition to evaluate.
-     * @param component The component to add.
+     * @param relation The relation.
+     * @param object The relation object.
      */
-    Self& add_if(bool cond, flecs::id_t component) {
+    Self& add_if(bool cond, flecs::entity_t relation, flecs::entity_t object) {
         if (cond) {
-            return this->add(component);
+            return this->add(relation, object);
         } else {
-            return this->remove(component);
-        }
-    }
-
-    /** Conditional add.
-     * This operation adds if condition is true, removes if condition is false.
-     * 
-     * @tparam R The relation type
-     * @tparam O The object type.
-     * @param cond The condition to evaluate.
-     */
-    template <typename R, typename O>
-    Self& add_if(bool cond) {
-        if (cond) {
-            return this->add<R, O>();
-        } else {
-            return this->remove<R, O>();
+            if (ecs_has_id(this->m_world, relation, flecs::Exclusive)) {
+                return this->remove(relation, flecs::Wildcard);
+            } else {
+                return this->remove(relation, object);
+            }
         }
     }
 
@@ -17739,26 +17741,31 @@ struct entity_builder : entity_view {
      */
     template <typename R>
     Self& add_if(bool cond, flecs::entity_t object) {
-        if (cond) {
-            return this->add<R>(object);
-        } else {
-            return this->remove<R>(object);
-        }
+        return this->add_if(cond, _::cpp_type<R>::id(this->m_world), object);
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @tparam R The relation type
+     * @tparam O The object type.
+     * @param cond The condition to evaluate.
+     */
+    template <typename R, typename O>
+    Self& add_if(bool cond) {
+        return this->add_if<R>(cond, _::cpp_type<O>::id(this->m_world));
     }
 
     /** Conditional add.
      * This operation adds if condition is true, removes if condition is false.
      * 
      * @param cond The condition to evaluate.
-     * @param relation The relation.
-     * @param object The relation object.
+     * @param constant The enumeration constant.
      */
-    Self& add_if(bool cond, flecs::entity_t relation, flecs::entity_t object) {
-        if (cond) {
-            return this->add(relation, object);
-        } else {
-            return this->remove(relation, object);
-        }
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& add_if(bool cond, E constant) {
+        const auto& et = enum_type<E>(this->m_world);
+        return this->add_if<E>(cond, et.entity(constant));
     }
 
     /** Shortcut for add(IsA, obj).

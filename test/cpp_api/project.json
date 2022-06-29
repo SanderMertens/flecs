@@ -204,7 +204,10 @@
                 "add_if_false_R_O",
                 "add_if_true_R_o",
                 "add_if_false_R_o",
-                "add_if_true_r_o"
+                "add_if_true_r_o",
+                "add_if_exclusive_r_o",
+                "add_if_exclusive_R_o",
+                "add_if_exclusive_R_O"
             ]
         }, {
             "id": "Pairs",
@@ -303,7 +306,9 @@
                 "add_union_enum",
                 "add_2_union_enums",
                 "add_2_union_enums_reverse",
-                "constant_from_entity"
+                "constant_from_entity",
+                "add_if",
+                "add_if_other"
             ]
         }, {
             "id": "Switch",
