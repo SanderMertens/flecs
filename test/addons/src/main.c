@@ -598,6 +598,7 @@ void Rules_rule_w_inout_filter(void);
 void Rules_variable_order(void);
 void Rules_table_subj_as_obj_in_not(void);
 void Rules_invalid_variable_only(void);
+void Rules_page_iter(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -3242,6 +3243,10 @@ bake_test_case Rules_testcases[] = {
     {
         "invalid_variable_only",
         Rules_invalid_variable_only
+    },
+    {
+        "page_iter",
+        Rules_page_iter
     }
 };
 
@@ -4430,7 +4435,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        166,
+        167,
         Rules_testcases
     },
     {

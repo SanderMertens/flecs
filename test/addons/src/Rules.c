@@ -27,7 +27,7 @@
 void Rules_empty_rule() {
     ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ 0 });
 
@@ -39,7 +39,7 @@ void Rules_empty_rule() {
 void Rules_invalid_rule() {
     ecs_log_set_level(-4);
     
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Foo"
@@ -51,7 +51,7 @@ void Rules_invalid_rule() {
 }
 
 void Rules_comp_recycled_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t dummy = ecs_new_id(world);
     test_assert(dummy != 0);
@@ -89,7 +89,7 @@ void Rules_comp_recycled_id() {
 }
 
 void Rules_comp_recycled_final_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t dummy = ecs_new_id(world);
     test_assert(dummy != 0);
@@ -126,7 +126,7 @@ void Rules_comp_recycled_final_id() {
 }
 
 void Rules_pair_recycled_final_pred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Obj, 0);
 
@@ -164,7 +164,7 @@ void Rules_pair_recycled_final_pred() {
 }
 
 void Rules_pair_recycled_pred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Obj, 0);
 
@@ -202,7 +202,7 @@ void Rules_pair_recycled_pred() {
 }
 
 void Rules_pair_recycled_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Pred, 0);
 
@@ -240,7 +240,7 @@ void Rules_pair_recycled_obj() {
 }
 
 void Rules_pair_recycled_pred_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t dummy = ecs_new_id(world);
     test_assert(dummy != 0);
@@ -282,7 +282,7 @@ void Rules_pair_recycled_pred_obj() {
 }
 
 void Rules_pair_recycled_matched_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Pred, 0);
 
@@ -324,7 +324,7 @@ void Rules_pair_recycled_matched_obj() {
 }
 
 void Rules_pair_recycled_matched_obj_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Pred, 0);
     ECS_ENTITY(world, Pred_2, 0);
@@ -371,7 +371,7 @@ void Rules_pair_recycled_matched_obj_2_terms() {
 }
 
 void Rules_pair_recycled_matched_pred_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Obj, 0);
     ECS_ENTITY(world, Obj_2, 0);
@@ -418,7 +418,7 @@ void Rules_pair_recycled_matched_pred_2_terms() {
 }
 
 void Rules_recycled_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Final);
     ECS_TAG(world, Tag);
@@ -460,7 +460,7 @@ void Rules_recycled_var() {
 
 
 void Rules_superset_from_recycled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Transitive, Final);
     ECS_TAG(world, Tag);
@@ -493,7 +493,7 @@ void Rules_superset_from_recycled() {
 }
 
 void Rules_superset_from_recycled_w_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Transitive, Final);
     ECS_TAG(world, Tag);
@@ -534,7 +534,7 @@ void Rules_superset_from_recycled_w_var() {
 }
 
 void Rules_superset_from_recycled_2_lvls_w_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Transitive, Final);
     ECS_TAG(world, Tag);
@@ -603,7 +603,7 @@ void Rules_superset_from_recycled_2_lvls_w_var() {
 }
 
 void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Transitive, Final);
     ECS_TAG(world, Tag);
@@ -691,7 +691,7 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
 }
 
 void Rules_reflexive_pair_recycled_subj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Transitive, Reflexive, Final);
     ECS_ENTITY(world, Tag, Final);
@@ -729,7 +729,7 @@ void Rules_reflexive_pair_recycled_subj() {
 
 static
 void test_1_comp(const char *expr) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -764,7 +764,7 @@ void test_1_comp(const char *expr) {
 
 static
 void test_2_comp(const char *expr) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -912,7 +912,7 @@ const char *rules =
 ;
 
 void Rules_1_fact_true() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -933,7 +933,7 @@ void Rules_1_fact_true() {
 }
 
 void Rules_1_fact_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -952,7 +952,7 @@ void Rules_1_fact_false() {
 }
 
 void Rules_2_facts_true() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -973,7 +973,7 @@ void Rules_2_facts_true() {
 }
 
 void Rules_2_facts_1_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -992,7 +992,7 @@ void Rules_2_facts_1_false() {
 }
 
 void Rules_2_facts_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1011,7 +1011,7 @@ void Rules_2_facts_false() {
 }
 
 void Rules_1_fact_pair_true() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1032,7 +1032,7 @@ void Rules_1_fact_pair_true() {
 }
 
 void Rules_1_fact_pair_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1051,7 +1051,7 @@ void Rules_1_fact_pair_false() {
 }
 
 void Rules_2_fact_pairs_true() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1072,7 +1072,7 @@ void Rules_2_fact_pairs_true() {
 }
 
 void Rules_2_fact_pairs_1_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1091,7 +1091,7 @@ void Rules_2_fact_pairs_1_false() {
 }
 
 void Rules_2_fact_pairs_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1110,7 +1110,7 @@ void Rules_2_fact_pairs_false() {
 }
 
 void Rules_wildcard_pred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MatchWith, Final); /* Tag so we don't match everything */
     ECS_TAG(world, TagA);
@@ -1160,7 +1160,7 @@ void Rules_wildcard_pred() {
 }
 
 void Rules_wildcard_subj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
 
@@ -1195,7 +1195,7 @@ void Rules_wildcard_subj() {
 }
 
 void Rules_wildcard_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
@@ -1234,7 +1234,7 @@ void Rules_wildcard_obj() {
 }
 
 void Rules_wildcard_pred_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -1276,7 +1276,7 @@ void Rules_wildcard_pred_pair() {
 }
 
 void Rules_any_pred() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
     ECS_TAG(world, TagA);
@@ -1310,7 +1310,7 @@ void Rules_any_pred() {
 }
 
 void Rules_any_subj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
 
@@ -1338,7 +1338,7 @@ void Rules_any_subj() {
 }
 
 void Rules_any_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
@@ -1370,7 +1370,7 @@ void Rules_any_obj() {
 }
 
 void Rules_2_wildcard_as_subject() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -1417,7 +1417,7 @@ void Rules_2_wildcard_as_subject() {
 }
 
 void Rules_find_1_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1440,7 +1440,7 @@ void Rules_find_1_pair() {
 }
 
 void Rules_find_2_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1463,7 +1463,7 @@ void Rules_find_2_pairs() {
 }
 
 void Rules_find_w_pred_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1507,7 +1507,7 @@ void Rules_find_w_pred_var() {
 }
 
 void Rules_find_w_pred_var_explicit_subject() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1539,7 +1539,7 @@ void Rules_find_w_pred_var_explicit_subject() {
 }
 
 void Rules_find_1_pair_w_object_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1574,7 +1574,7 @@ void Rules_find_1_pair_w_object_var() {
 }
 
 void Rules_find_2_pairs_w_object_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1616,7 +1616,7 @@ void Rules_find_2_pairs_w_object_var() {
 }
 
 void Rules_find_1_pair_w_pred_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1649,7 +1649,7 @@ void Rules_find_1_pair_w_pred_var() {
 }
 
 void Rules_find_2_pairs_w_pred_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1687,7 +1687,7 @@ void Rules_find_2_pairs_w_pred_var() {
 }
 
 void Rules_find_cyclic_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1721,7 +1721,7 @@ void Rules_find_cyclic_pairs() {
 }
 
 void Rules_join_by_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1769,7 +1769,7 @@ void Rules_join_by_object() {
 }
 
 void Rules_join_by_predicate() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1883,7 +1883,7 @@ void Rules_join_by_predicate() {
 }
 
 void Rules_join_by_predicate_from_subject() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1927,7 +1927,7 @@ void Rules_join_by_predicate_from_subject() {
 }
 
 void Rules_find_transitive() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -1977,7 +1977,7 @@ void Rules_find_transitive() {
 }
 
 void Rules_find_transitive_2_branches() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2088,7 +2088,7 @@ void Rules_find_transitive_2_branches() {
 }
 
 void Rules_transitive_subsets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2129,7 +2129,7 @@ void Rules_transitive_subsets() {
 }
 
 void Rules_transitive_subsets_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2161,7 +2161,7 @@ void Rules_transitive_subsets_2_terms() {
 }
 
 void Rules_transitive_w_table_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2208,7 +2208,7 @@ void Rules_transitive_w_table_object() {
 }
 
 void Rules_transitive_supersets() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2258,7 +2258,7 @@ void Rules_transitive_supersets() {
 }
 
 void Rules_transitive_superset_w_subj_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2331,7 +2331,7 @@ void Rules_transitive_superset_w_subj_var() {
 }
 
 void Rules_transitive_superset_w_subj_var_2_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2396,7 +2396,7 @@ void Rules_transitive_superset_w_subj_var_2_term() {
 }
 
 void Rules_transitive_supersets_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2421,7 +2421,7 @@ void Rules_transitive_supersets_2_terms() {
 }
 
 void Rules_transitive_constraint_on_superset_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2455,7 +2455,7 @@ void Rules_transitive_constraint_on_superset_var() {
 }
 
 void Rules_transitive_instances() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2549,7 +2549,7 @@ void Rules_transitive_instances() {
 }
 
 void Rules_transitive_instances_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2597,7 +2597,7 @@ void Rules_transitive_instances_2_terms() {
 }
 
 void Rules_transitive_implicit_isa_instances() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2633,7 +2633,7 @@ void Rules_transitive_implicit_isa_instances() {
 }
 
 void Rules_transitive_implicit_isa_instances_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2658,7 +2658,7 @@ void Rules_transitive_implicit_isa_instances_2_terms() {
 }
 
 void Rules_same_pred_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -2692,7 +2692,7 @@ void Rules_same_pred_obj() {
 }
 
 void Rules_same_pred_obj_explicit_subject() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -2719,7 +2719,7 @@ void Rules_same_pred_obj_explicit_subject() {
 }
 
 void Rules_transitive_fact_true_depth_1() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2746,7 +2746,7 @@ void Rules_transitive_fact_true_depth_1() {
 }
 
 void Rules_transitive_fact_false() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2765,7 +2765,7 @@ void Rules_transitive_fact_false() {
 }
 
 void Rules_transitive_fact_true_depth_2() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2792,7 +2792,7 @@ void Rules_transitive_fact_true_depth_2() {
 }
 
 void Rules_transitive_fact_true_depth_3() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2819,7 +2819,7 @@ void Rules_transitive_fact_true_depth_3() {
 }
 
 void Rules_transitive_fact_true_depth_4() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2846,7 +2846,7 @@ void Rules_transitive_fact_true_depth_4() {
 }
 
 void Rules_transitive_fact_true_depth_5() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2873,7 +2873,7 @@ void Rules_transitive_fact_true_depth_5() {
 }
 
 void Rules_transitive_fact_true_2_relationships() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -2908,7 +2908,7 @@ void Rules_transitive_fact_true_2_relationships() {
 }
 
 void Rules_transitive_all() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     /* Use smaller rule set so testcase doens't blow up */
     const char *small_ruleset = 
@@ -3086,7 +3086,7 @@ void Rules_transitive_all() {
 }
 
 void Rules_transitive_fact_same_subj_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -3109,7 +3109,7 @@ void Rules_transitive_fact_same_subj_obj() {
 }
 
 void Rules_transitive_fact_subset_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
@@ -3175,7 +3175,7 @@ void Rules_transitive_fact_subset_superset() {
 }
 
 void Rules_transitive_nonfinal_fact() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
@@ -3208,7 +3208,7 @@ void Rules_transitive_nonfinal_fact() {
 }
 
 void Rules_transitive_nonfinal_fact_w_implicit_pred_subset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
@@ -3242,7 +3242,7 @@ void Rules_transitive_nonfinal_fact_w_implicit_pred_subset() {
 }
 
 void Rules_implicit_is_a_tag_fact() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Painting(PaintingTmpl)\n"
@@ -3270,7 +3270,7 @@ void Rules_implicit_is_a_tag_fact() {
 }
 
 void Rules_implicit_is_a_tag_fact_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Painting(PaintingTmpl)\n"
@@ -3299,7 +3299,7 @@ void Rules_implicit_is_a_tag_fact_2_lvls() {
 }
 
 void Rules_implicit_is_a_tag_fact_3_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Painting(PaintingTmpl)\n"
@@ -3329,7 +3329,7 @@ void Rules_implicit_is_a_tag_fact_3_lvls() {
 }
 
 void Rules_implicit_is_a_tag_fact_2_lvls_both_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Painting(PaintingTmpl)\n"
@@ -3359,7 +3359,7 @@ void Rules_implicit_is_a_tag_fact_2_lvls_both_matching() {
 }
 
 void Rules_implicit_is_a_tag_fact_2_lvls_entity_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Painting(PaintingTmpl)\n"
@@ -3387,7 +3387,7 @@ void Rules_implicit_is_a_tag_fact_2_lvls_entity_matching() {
 }
 
 void Rules_implicit_is_a_pair_fact() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl, Painter)\n"
@@ -3414,7 +3414,7 @@ void Rules_implicit_is_a_pair_fact() {
 }
 
 void Rules_implicit_is_a_pair_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl, Painter)\n"
@@ -3442,7 +3442,7 @@ void Rules_implicit_is_a_pair_2_lvls() {
 }
 
 void Rules_implicit_is_a_pair_3_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl, Painter)\n"
@@ -3471,7 +3471,7 @@ void Rules_implicit_is_a_pair_3_lvls() {
 }
 
 void Rules_implicit_is_a_pair_2_lvls_both_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl, Painter)\n"
@@ -3500,7 +3500,7 @@ void Rules_implicit_is_a_pair_2_lvls_both_matching() {
 }
 
 void Rules_implicit_is_a_pair_2_lvls_entity_matching() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl, Painter)\n"
@@ -3529,7 +3529,7 @@ void Rules_implicit_is_a_pair_2_lvls_entity_matching() {
 }
 
 void Rules_implicit_is_a_pred_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Canvas(PaintingTmpl)\n"
@@ -3567,7 +3567,7 @@ void Rules_implicit_is_a_pred_var() {
 }
 
 void Rules_implicit_is_a_pair_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "CreatedBy(PaintingTmpl,Painter)\n"
@@ -3627,7 +3627,7 @@ void Rules_implicit_is_a_pair_var() {
 }
 
 void Rules_implicit_is_a_transitive_pair_fact() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
@@ -3661,7 +3661,7 @@ void Rules_implicit_is_a_transitive_pair_fact() {
 }
 
 void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_subset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
@@ -3698,7 +3698,7 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_subset() {
 void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj() {
     test_quarantine("Aug 31 2021");
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
@@ -3732,7 +3732,7 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj() {
 }
 
 void Rules_2_constrained_vars_by_subject_literal() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Eats(Cat, Fish)\n"
@@ -3762,7 +3762,7 @@ void Rules_2_constrained_vars_by_subject_literal() {
 }
 
 void Rules_2_constrained_vars_by_subject_literal_2_var_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     const char *small_rules = 
         "Food(Fish)\n"
@@ -3794,7 +3794,7 @@ void Rules_2_constrained_vars_by_subject_literal_2_var_terms() {
 }
 
 void Rules_term_w_nothing_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
 
@@ -3818,7 +3818,7 @@ void Rules_term_w_nothing_set() {
 }
 
 void Rules_term_w_nothing_set_w_this_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
     ECS_TAG(world, Tag);
@@ -3847,7 +3847,7 @@ void Rules_term_w_nothing_set_w_this_term() {
 }
 
 void Rules_comp_w_not_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ECS_ENTITY(world, TagB, 0);
@@ -3936,7 +3936,7 @@ void Rules_not_term_w_subj_var() {
 }
 
 void Rules_not_term_w_subj_var_match_n_per_type() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ECS_ENTITY(world, TagB, 0);
@@ -3999,7 +3999,7 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
 void Rules_invalid_rule_w_only_not_term() {
     ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
 
@@ -4015,7 +4015,7 @@ void Rules_invalid_rule_w_only_not_term() {
 void Rules_invalid_rule_w_not_term_unknown_var() {
     ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ECS_ENTITY(world, TagB, 0);
@@ -4032,7 +4032,7 @@ void Rules_invalid_rule_w_not_term_unknown_var() {
 void Rules_invalid_rule_w_not_term_unknown_pair_var() {
     ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ECS_ENTITY(world, TagB, 0);
@@ -4049,7 +4049,7 @@ void Rules_invalid_rule_w_not_term_unknown_pair_var() {
 void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var() {
     ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ECS_ENTITY(world, TagB, 0);
@@ -4064,7 +4064,7 @@ void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var() {
 }
 
 void Rules_not_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel)
@@ -4096,7 +4096,7 @@ void Rules_not_wildcard() {
 }
 
 void Rules_not_any() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
     ECS_ENTITY(world, Rel, Final);
@@ -4129,7 +4129,7 @@ void Rules_not_any() {
 }
 
 void Rules_not_wildcard_w_expr() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel)
@@ -4155,7 +4155,7 @@ void Rules_not_wildcard_w_expr() {
 }
 
 void Rules_not_any_w_expr() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel)
@@ -4182,7 +4182,7 @@ void Rules_not_any_w_expr() {
 }
 
 void Rules_rules_w_desc_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -4210,7 +4210,7 @@ void Rules_rules_w_desc_id() {
 }
 
 void Rules_rules_w_desc_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -4239,7 +4239,7 @@ void Rules_rules_w_desc_pair() {
 }
 
 void Rules_rules_w_desc_pair_empty_rel_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Rel = ecs_new_id(world);
     ecs_entity_t Obj = ecs_new_id(world);
@@ -4268,7 +4268,7 @@ void Rules_rules_w_desc_pair_empty_rel_obj() {
 }
 
 void Rules_rules_w_desc_pair_pred_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -4297,7 +4297,7 @@ void Rules_rules_w_desc_pair_pred_obj() {
 }
 
 void Rules_rules_w_desc_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -4326,7 +4326,7 @@ void Rules_rules_w_desc_wildcard() {
 }
 
 void Rules_childof_0() {    
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -4364,7 +4364,7 @@ void Rules_childof_0() {
 }
 
 void Rules_childof_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -4412,7 +4412,7 @@ void Rules_childof_this() {
 }
 
 void Rules_childof_this_as_identifier() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -4460,7 +4460,7 @@ void Rules_childof_this_as_identifier() {
 }
 
 void Rules_optional_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, Final);
     ECS_ENTITY(world, TagB, Final);
@@ -4520,7 +4520,7 @@ void Rules_optional_term() {
 }
 
 void Rules_optional_term_w_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, Final);
     ECS_ENTITY(world, TagB, Final);
@@ -4566,7 +4566,7 @@ void Rules_optional_term_w_component() {
 }
 
 void Rules_optional_term_on_entity() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, Final);
     ECS_ENTITY(world, TagB, Final);
@@ -4597,7 +4597,7 @@ void Rules_optional_term_on_entity() {
 }
 
 void Rules_optional_term_on_variable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Likes, Final);
     ECS_ENTITY(world, TagA, Final);
@@ -4681,7 +4681,7 @@ void Rules_optional_term_on_variable() {
 }
 
 void Rules_optional_term_on_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -4723,7 +4723,7 @@ void Rules_optional_term_on_wildcard() {
 }
 
 void Rules_optional_term_on_relation_this_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -4764,7 +4764,7 @@ void Rules_optional_term_on_relation_this_obj() {
 }
 
 void Rules_optional_w_subj_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Likes, 0);
 
@@ -4825,7 +4825,7 @@ void Rules_optional_w_subj_var() {
 }
 
 void Rules_optional_w_obj_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_ENTITY(world, Tag, Final);
@@ -4886,7 +4886,7 @@ void Rules_optional_w_obj_var() {
 }
 
 void Rules_terms_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -4921,7 +4921,7 @@ void Rules_terms_set() {
 }
 
 void Rules_value_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -4967,7 +4967,7 @@ void Rules_value_set() {
 }
 
 void Rules_term_w_this_this_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, e, e);
@@ -5006,7 +5006,7 @@ void Rules_term_w_this_this_this() {
 }
 
 void Rules_term_w_x_x_x() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, e, e);
@@ -5169,7 +5169,7 @@ void Rules_3_terms_2_filter() {
 }
 
 void Rules_term_obj_w_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
@@ -5196,7 +5196,7 @@ void Rules_term_obj_w_this() {
 }
 
 void Rules_term_subj_w_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, 0);
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
@@ -5278,7 +5278,7 @@ void Rules_rule_iter_frame_offset() {
 }
 
 void Rules_rule_iter_set_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
@@ -5328,7 +5328,7 @@ void Rules_rule_iter_set_var() {
 }
 
 void Rules_rule_iter_set_2_vars() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelX);
     ECS_TAG(world, RelY);
@@ -5407,7 +5407,7 @@ void Rules_rule_iter_set_2_vars() {
 }
 
 void Rules_rule_iter_set_pred_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -5456,7 +5456,7 @@ void Rules_rule_iter_set_pred_var() {
 }
 
 void Rules_rule_iter_set_var_for_2_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelX);
     ECS_TAG(world, RelY);
@@ -5517,7 +5517,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
 }
 
 void Rules_rule_iter_set_cyclic_variable() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Likes);
 
@@ -5578,7 +5578,7 @@ void Rules_rule_iter_set_cyclic_variable() {
 }
 
 void Rules_rule_iter_set_cyclic_variable_w_this() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Likes);
 
@@ -5649,7 +5649,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
 }
 
 void Rules_term_w_same_subj_obj_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Final);
 
@@ -5695,7 +5695,7 @@ void Rules_term_w_same_subj_obj_var() {
 }
 
 void Rules_optional_any_object() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -5746,7 +5746,7 @@ void Rules_optional_any_object() {
 }
 
 void Rules_optional_any_subject() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, Final);
 
@@ -5797,7 +5797,7 @@ void Rules_optional_any_subject() {
 }
 
 void Rules_test_subj_w_wildcard_w_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -5831,7 +5831,7 @@ void Rules_test_subj_w_wildcard_w_pairs() {
 }
 
 void Rules_test_subj_w_wildcard_wildcard_w_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -5870,7 +5870,7 @@ void Rules_test_subj_w_wildcard_wildcard_w_pairs() {
 }
 
 void Rules_test_this_w_wildcard_w_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -5913,7 +5913,7 @@ void Rules_test_this_w_wildcard_w_pairs() {
 }
 
 void Rules_test_this_w_wildcard_wildcard_w_pairs() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -5950,7 +5950,7 @@ void Rules_test_this_w_wildcard_wildcard_w_pairs() {
 }
 
 void Rules_test_subj_w_wildcard_w_pairs_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -5992,7 +5992,7 @@ void Rules_test_subj_w_wildcard_w_pairs_var() {
 }
 
 void Rules_test_subj_w_wildcard_wildcard_w_pairs_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -6042,7 +6042,7 @@ void Rules_test_subj_w_wildcard_wildcard_w_pairs_var() {
 }
 
 void Rules_test_this_w_wildcard_w_pairs_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -6091,7 +6091,7 @@ void Rules_test_this_w_wildcard_w_pairs_var() {
 }
 
 void Rules_test_this_w_wildcard_wildcard_w_pairs_var() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -6137,7 +6137,7 @@ void Rules_test_this_w_wildcard_wildcard_w_pairs_var() {
 }
 
 void Rules_test_this_w_wildcard_no_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -6160,7 +6160,7 @@ void Rules_test_this_w_wildcard_no_match() {
 }
 
 void Rules_test_this_w_pair_wildcard_no_match() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, MyTag); // So we don't match everything
     ECS_TAG(world, TagA);
@@ -6182,7 +6182,7 @@ void Rules_test_this_w_pair_wildcard_no_match() {
 }
 
 void Rules_test_subj_w_wildcard_w_isa() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -6230,7 +6230,7 @@ void Rules_test_subj_w_wildcard_w_isa() {
 }
 
 void Rules_test_subj_w_wildcard_w_isa_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
     
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -6295,7 +6295,7 @@ void Rules_test_subj_w_wildcard_w_isa_2_lvls() {
 }
 
 void Rules_test_subj_w_pair_wildcard_w_isa() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, TagA);
@@ -6354,7 +6354,7 @@ void Rules_test_subj_w_pair_wildcard_w_isa() {
 }
 
 void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
     
     ECS_TAG(world, Rel);
     ECS_TAG(world, TagA);
@@ -6435,7 +6435,7 @@ void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls() {
 }
 
 void Rules_test_this_w_wildcard_w_isa() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MyTag, Final);
     ECS_TAG(world, TagA);
@@ -6499,7 +6499,7 @@ void Rules_test_this_w_wildcard_w_isa() {
 }
 
 void Rules_test_this_w_wildcard_w_isa_2_lvls() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MyTag, Final);
     ECS_TAG(world, TagA);
@@ -6565,7 +6565,7 @@ void Rules_test_this_w_wildcard_w_isa_2_lvls() {
 }
 
 void Rules_test_this_w_wildcard_w_2_isa() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, MyTag, Final);
     ECS_TAG(world, TagA);
@@ -6631,7 +6631,7 @@ void Rules_test_this_w_wildcard_w_2_isa() {
 }
 
 void Rules_rule_w_inout_filter() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -6656,7 +6656,7 @@ void Rules_rule_w_inout_filter() {
 }
 
 void Rules_variable_order() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelX);
     ECS_TAG(world, RelY);
@@ -6720,6 +6720,43 @@ void Rules_invalid_variable_only() {
 
     ecs_rule_t *r = ecs_rule_new(world, "$");
     test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void Rules_page_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagX);
+    ECS_TAG(world, TagY);
+    ECS_TAG(world, TagZ);
+
+    /* ecs_entity_t e1 = */ ecs_new(world, TagX);
+    ecs_entity_t e2 = ecs_new(world, TagX);
+    ecs_entity_t e3 = ecs_new(world, TagX);
+    ecs_entity_t e4 = ecs_new(world, TagX);
+    ecs_entity_t e5 = ecs_new(world, TagX);
+    
+    ecs_add(world, e3, TagY);
+    ecs_add(world, e4, TagY);
+    ecs_add(world, e5, TagZ);
+
+    ecs_rule_t *r = ecs_rule_new(world, "TagX");
+    test_assert(r != NULL);
+
+    ecs_iter_t rit = ecs_rule_iter(world, r);
+    ecs_iter_t it = ecs_page_iter(&rit, 1, 2);
+
+    test_bool(true, ecs_page_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+
+    test_bool(true, ecs_page_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_bool(false, ecs_page_next(&it));
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }

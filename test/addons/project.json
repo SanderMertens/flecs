@@ -612,7 +612,8 @@
                 "rule_w_inout_filter",
                 "variable_order",
                 "table_subj_as_obj_in_not",
-                "invalid_variable_only"
+                "invalid_variable_only",
+                "page_iter"
             ]
         }, {
             "id": "TransitiveRules",

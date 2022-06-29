@@ -929,7 +929,7 @@ bool ecs_page_next_instanced(
 
     do {
         if (!ecs_iter_next(chain_it)) {
-            goto done;
+            goto depleted;
         }
 
         ecs_page_iter_t *iter = &it->priv.iter.page;
@@ -950,7 +950,7 @@ bool ecs_page_next_instanced(
             if (it->count) {
                 goto yield;
             } else {
-                goto done;
+                goto depleted;
             }
         }
 
@@ -991,6 +991,9 @@ yield:
 
     return true;
 done:
+    /* Cleanup iterator resources if it wasn't yet depleted */
+    ecs_iter_fini(chain_it);
+depleted:
 error:
     return false;
 }
