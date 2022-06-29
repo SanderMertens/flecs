@@ -204,20 +204,6 @@ ecs_poly_t* _ecs_poly_get(
     return NULL;
 }
 
-ecs_entity_t ecs_poly_entity_init(
-    ecs_world_t *world,
-    const ecs_entity_desc_t *desc)
-{
-    ecs_entity_t existing = desc->entity;
-    ecs_entity_t result = ecs_entity_init(world, desc);
-    if (!existing && (ecs_get_name(world, result) == NULL)) {
-        /* If not associated with an existing entity and is anonymous, add it to
-         * the flecs.hidden scope so it won't clutter up the root. */
-        ecs_add_pair(world, result, EcsChildOf, EcsFlecsHidden);
-    }
-    return result;
-}
-
 #define assert_object(cond, file, line, type_name)\
     _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
     assert(cond)

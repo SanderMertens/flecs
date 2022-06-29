@@ -812,7 +812,7 @@ ecs_entity_t ecs_trigger_init(
         observable = ecs_get_observable(world);
     }
 
-    ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_trigger_t);
     if (!poly->poly) {        
         const char *name = ecs_get_name(world, entity);

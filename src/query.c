@@ -257,8 +257,8 @@ void flecs_query_insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-    if (!query->list.first && query->system) {
-        ecs_remove_id(query->world, query->system, EcsEmpty);
+    if (!query->list.first && query->entity) {
+        ecs_remove_id(query->world, query->entity, EcsEmpty);
     }
 
     flecs_query_compute_group_id(query, node->match);
@@ -1708,12 +1708,6 @@ void flecs_query_fini(
 {
     ecs_world_t *world = query->world;
 
-    if (!(world->flags & EcsWorldFini)) {
-        if (query->observer) {
-            ecs_delete(world, query->observer);
-        }
-    }
-
     if (query->group_by_ctx_free) {
         if (query->group_by_ctx) {
             query->group_by_ctx_free(query->group_by_ctx);
@@ -1755,14 +1749,10 @@ ecs_query_t* ecs_query_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
-    /* Ensure that while initially populating the query with tables, they are
-     * in the right empty/non-empty list. This ensures the query won't miss
-     * empty/non-empty events for tables that are currently out of sync, but
-     * change back to being in sync before processing pending events. */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
     ecs_query_t *result = ecs_poly_new(ecs_query_t);
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
+    ecs_entity_t entity = desc->entity;
+
     observer_desc.filter.match_empty_tables = true;
 
     if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
@@ -1770,6 +1760,7 @@ ecs_query_t* ecs_query_init(
     }
 
     if (result->filter.term_count) {
+        observer_desc.entity.entity = entity;
         observer_desc.run = flecs_query_on_event;
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
@@ -1782,8 +1773,8 @@ ecs_query_t* ecs_query_init(
         observer_desc.filter.terms_buffer_count = result->filter.term_count;
         observer_desc.filter.expr = NULL; /* Already parsed */
 
-        result->observer = ecs_observer_init(world, &observer_desc);
-        if (!result->observer) {
+        entity = ecs_observer_init(world, &observer_desc);
+        if (!entity) {
             goto error;
         }
     }
@@ -1791,7 +1782,6 @@ ecs_query_t* ecs_query_init(
     result->world = world;
     result->iterable.init = flecs_query_iter_init;
     result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
-    result->system = desc->system;
     result->prev_match_count = -1;
 
     if (ecs_should_log_1()) {
@@ -1826,19 +1816,33 @@ ecs_query_t* ecs_query_init(
         result->flags |= EcsQueryIsSubquery;
     }
 
-    /* If a system is specified, ensure that if there are any subjects in the
-     * filter that refer to the system, the component is added */
-    if (desc->system)  {
+    /* If the query refers to itself, add the components that were queried for
+     * to the query itself. */
+    if (entity)  {
         int32_t t, term_count = result->filter.term_count;
         ecs_term_t *terms = result->filter.terms;
 
         for (t = 0; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];
-            if (term->subj.entity == desc->system) {
-                ecs_add_id(world, desc->system, term->id);
+            if (term->subj.entity == entity) {
+                ecs_add_id(world, entity, term->id);
             }
         }        
     }
+
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+
+    EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_t);
+    poly->poly = result;
+    result->entity = entity;
+
+    /* Ensure that while initially populating the query with tables, they are
+     * in the right empty/non-empty list. This ensures the query won't miss
+     * empty/non-empty events for tables that are currently out of sync, but
+     * change back to being in sync before processing pending events. */
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_table_cache_init(&result->cache);
 
@@ -1855,17 +1859,8 @@ ecs_query_t* ecs_query_init(
             desc->sort_table);
     }
 
-    ecs_entity_t e = desc->system;
-    if (!e) {
-        e = ecs_new_w_pair(world, EcsChildOf, EcsFlecsHidden);
-    }
-
-    EcsPoly *poly = ecs_poly_bind(world, e, ecs_query_t);
-    poly->poly = result;
-    result->entity = e;
-
     if (!ecs_query_table_count(result) && result->filter.term_count) {
-        ecs_add_id(world, e, EcsEmpty);
+        ecs_add_id(world, entity, EcsEmpty);
     }
 
     ecs_log_pop_1();
@@ -1874,9 +1869,6 @@ ecs_query_t* ecs_query_init(
 error:
     if (result) {
         ecs_filter_fini(&result->filter);
-        if (result->observer) {
-            ecs_delete(world, result->observer);
-        }
         ecs_os_free(result);
     }
     return NULL;

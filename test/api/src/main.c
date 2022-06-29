@@ -97,6 +97,7 @@ void Entity_defer_component_init_w_symbol(void);
 void Entity_defer_entity_init_w_symbol(void);
 void Entity_staged_set_name_n_stages(void);
 void Entity_staged_set_symbol_n_stages(void);
+void Entity_entity_init_w_add_childof_no_name(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2359,6 +2360,10 @@ bake_test_case Entity_testcases[] = {
     {
         "staged_set_symbol_n_stages",
         Entity_staged_set_symbol_n_stages
+    },
+    {
+        "entity_init_w_add_childof_no_name",
+        Entity_entity_init_w_add_childof_no_name
     }
 };
 
@@ -9745,7 +9750,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        75,
+        76,
         Entity_testcases
     },
     {

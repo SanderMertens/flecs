@@ -1618,3 +1618,17 @@ void Entity_staged_set_symbol_n_stages() {
 
     ecs_fini(world);
 }
+
+void Entity_entity_init_w_add_childof_no_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = { ecs_childof(parent) }
+    });
+
+    test_assert( ecs_has_pair(world, e, EcsChildOf, parent));
+
+    ecs_fini(world);
+}

@@ -363,6 +363,7 @@ void register_symmetric(ecs_iter_t *it) {
         /* Create trigger that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+            .entity.add = { ecs_childof(EcsFlecsInternals) },
             .term.id = ecs_pair(r, EcsWildcard),
             .callback = on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
@@ -692,6 +693,7 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .entity.add = { ecs_childof(EcsFlecsInternals) },
         .term = {.id = EcsTag, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_tag,
@@ -724,9 +726,9 @@ void flecs_bootstrap(
     ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
 
-    ecs_add_pair(world, EcsFlecsHidden, EcsChildOf, EcsFlecs);
-    ecs_set_name(world, EcsFlecsHidden, "hidden");
-    ecs_add_id(world, EcsFlecsHidden, EcsModule);
+    ecs_add_pair(world, EcsFlecsInternals, EcsChildOf, EcsFlecsCore);
+    ecs_set_name(world, EcsFlecsInternals, "internals");
+    ecs_add_id(world, EcsFlecsInternals, EcsModule);
 
     /* Initialize builtin entities */
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
@@ -792,6 +794,9 @@ void flecs_bootstrap(
     /* The (IsA, *) id record is used often in searches, so cache it */
     world->idr_isa_wildcard = flecs_id_record_ensure(world, 
         ecs_pair(EcsIsA, EcsWildcard));
+
+    /* Create triggers in internals scope */
+    ecs_set_scope(world, EcsFlecsInternals);
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term = { 
@@ -864,6 +869,9 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = ensure_module_tag
     });
+
+    /* Set scope back to flecs core */
+    ecs_set_scope(world, EcsFlecsCore);
 
     /* Acyclic components */
     ecs_add_id(world, EcsIsA, EcsAcyclic);

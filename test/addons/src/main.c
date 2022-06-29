@@ -699,7 +699,6 @@ void SystemCascade_cascade_depth_2(void);
 void SystemCascade_cascade_depth_2_new_syntax(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
-void SystemCascade_query_w_only_cascade(void);
 void SystemCascade_custom_relation_cascade_depth_1(void);
 void SystemCascade_custom_relation_cascade_depth_2(void);
 void SystemCascade_custom_relation_add_after_match(void);
@@ -3629,10 +3628,6 @@ bake_test_case SystemCascade_testcases[] = {
         SystemCascade_adopt_after_match
     },
     {
-        "query_w_only_cascade",
-        SystemCascade_query_w_only_cascade
-    },
-    {
         "custom_relation_cascade_depth_1",
         SystemCascade_custom_relation_cascade_depth_1
     },
@@ -4463,7 +4458,7 @@ static bake_test_suite suites[] = {
         "SystemCascade",
         NULL,
         NULL,
-        10,
+        9,
         SystemCascade_testcases
     },
     {

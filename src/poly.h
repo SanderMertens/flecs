@@ -73,11 +73,6 @@ ecs_poly_t* _ecs_poly_get(
 #define ecs_poly_get(world, entity, T) \
     ((T*)_ecs_poly_get(world, entity, T##_tag))
 
-/* Create entity for poly */
-ecs_entity_t ecs_poly_entity_init(
-    ecs_world_t *world,
-    const ecs_entity_desc_t *desc);
-
 /* Utilities for testing/asserting an object type */
 #ifndef FLECS_NDEBUG
 void* _ecs_poly_assert(

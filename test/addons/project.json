@@ -722,7 +722,6 @@
                 "cascade_depth_2_new_syntax",
                 "add_after_match",
                 "adopt_after_match",
-                "query_w_only_cascade",
                 "custom_relation_cascade_depth_1",
                 "custom_relation_cascade_depth_2",
                 "custom_relation_add_after_match",

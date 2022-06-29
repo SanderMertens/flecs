@@ -415,37 +415,6 @@ void SystemCascade_adopt_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_query_w_only_cascade() {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_query_t *q = ecs_query_new(world, "?Name(parent|cascade)");
-    test_assert(q != NULL);
-
-    int32_t count = 0;
-
-    /* Should match everything (since everything is a root without further 
-     * qualifications). Since no other entities have been created, all entities
-     * must be builtin ones. */
-    ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        for (int i = 0; i < it.count; i ++) {
-            ecs_entity_t e = it.entities[i];
-            test_assert(
-                e == EcsFlecs ||
-                ecs_has_pair(world, e, EcsChildOf, EcsFlecs) ||
-                ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore) ||
-                ecs_has_pair(world, e, EcsChildOf, EcsFlecsHidden)
-            );
-
-            count ++;
-        }
-    }
-
-    test_assert(count != 0);
-
-    ecs_fini(world);
-}
-
 void SystemCascade_custom_relation_cascade_depth_1() {
     ecs_world_t *world = ecs_init();
 

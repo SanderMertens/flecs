@@ -789,9 +789,8 @@ typedef struct ecs_query_desc_t {
      * Subqueries can be nested. */
     ecs_query_t *parent;
 
-    /* INTERNAL PROPERTY - system to be associated with query. Do not set, as 
-     * this will change in future versions. */
-    ecs_entity_t system;
+    /* Entity associated with query (optional) */
+    ecs_entity_t entity;
 } ecs_query_desc_t;
 
 
@@ -1045,10 +1044,6 @@ FLECS_API extern const ecs_entity_t EcsFlecs;
 
 /* Core module scope */
 FLECS_API extern const ecs_entity_t EcsFlecsCore;
-
-/* Hidden module scope. This is used as the default location for (anonymous)
- * entities associated with triggers & observers to keeps other scopes clean. */
-FLECS_API extern const ecs_entity_t EcsFlecsHidden;
 
 /* Entity associated with world (used for "attaching" components to world) */
 FLECS_API extern const ecs_entity_t EcsWorld;

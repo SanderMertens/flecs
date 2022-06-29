@@ -103,7 +103,8 @@
                 "defer_component_init_w_symbol",
                 "defer_entity_init_w_symbol",
                 "staged_set_name_n_stages",
-                "staged_set_symbol_n_stages"
+                "staged_set_symbol_n_stages",
+                "entity_init_w_add_childof_no_name"
             ]
         }, {
             "id": "Search",

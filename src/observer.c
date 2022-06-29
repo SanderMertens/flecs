@@ -187,7 +187,7 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc->callback != NULL || desc->run != NULL, 
         ECS_INVALID_OPERATION, NULL);
 
-    ecs_entity_t entity = ecs_poly_entity_init(world, &desc->entity);
+    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
@@ -267,6 +267,9 @@ ecs_entity_t ecs_observer_init(
             }
         }
 
+        /* Create triggers as children of observer */
+        ecs_entity_t old_scope = ecs_set_scope(world, entity);
+
         for (i = 0; i < filter->term_count; i ++) {
             tdesc.term = filter->terms[i];
             ecs_oper_kind_t oper = tdesc.term.oper;
@@ -340,6 +343,8 @@ ecs_entity_t ecs_observer_init(
                 break;
             }
         }
+
+        ecs_set_scope(world, old_scope);
 
         if (desc->entity.name) {
             ecs_trace("#[green]observer#[reset] %s created", 

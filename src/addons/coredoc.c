@@ -37,7 +37,6 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsFlecs, "https://github.com/SanderMertens/flecs");
 
     ecs_doc_set_brief(world, EcsFlecsCore, "Flecs module with builtin components");
-    ecs_doc_set_brief(world, EcsFlecsHidden, "Flecs module with internal/anonymous entities");
 
     ecs_doc_set_brief(world, EcsWorld, "Entity associated with world");
 

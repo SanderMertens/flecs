@@ -79,6 +79,9 @@ extern ecs_mixins_t ecs_observer_t_mixins;
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
 
+/* Scope for flecs internals, like triggers & observers used for features */
+extern const ecs_entity_t EcsFlecsInternals;
+
 /** Type used for internal string hashmap */
 typedef struct ecs_hashed_string_t {
     char *value;
@@ -307,9 +310,6 @@ struct ecs_query_t {
     /* Query filter */
     ecs_filter_t filter;
 
-    /* Query observer */
-    ecs_entity_t observer;
-
     /* Tables matched with query */
     ecs_table_cache_t cache;
 
@@ -318,9 +318,6 @@ struct ecs_query_t {
 
     /* Contains head/tail to nodes of query groups (if group_by is used) */
     ecs_map_t groups;
-
-    /* Handle to system (optional) */
-    ecs_entity_t system;
 
     /* Used for sorting */
     ecs_entity_t order_by_component;
