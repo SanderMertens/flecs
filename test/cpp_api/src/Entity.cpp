@@ -3516,3 +3516,18 @@ void Entity_add_if_exclusive_R_O() {
     test_assert((!e.has<R, O_1>()));
     test_assert((!e.has<R, O_2>()));
 }
+
+void Entity_add_if_pair_w_0_object() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto r = ecs.entity();
+    auto o_1 = ecs.entity();
+
+    e.add(r, o_1);
+    test_assert(e.has(r, o_1));
+
+    e.add_if(0, r, 0);
+    test_assert(!e.has(r, o_1));
+    test_assert(!e.has(r, flecs::Wildcard));
+}

@@ -207,7 +207,8 @@
                 "add_if_true_r_o",
                 "add_if_exclusive_r_o",
                 "add_if_exclusive_R_o",
-                "add_if_exclusive_R_O"
+                "add_if_exclusive_R_O",
+                "add_if_pair_w_0_object"
             ]
         }, {
             "id": "Pairs",

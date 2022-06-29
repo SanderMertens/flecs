@@ -202,6 +202,7 @@ void Entity_add_if_true_r_o(void);
 void Entity_add_if_exclusive_r_o(void);
 void Entity_add_if_exclusive_R_o(void);
 void Entity_add_if_exclusive_R_O(void);
+void Entity_add_if_pair_w_0_object(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1718,6 +1719,10 @@ bake_test_case Entity_testcases[] = {
     {
         "add_if_exclusive_R_O",
         Entity_add_if_exclusive_R_O
+    },
+    {
+        "add_if_pair_w_0_object",
+        Entity_add_if_pair_w_0_object
     }
 };
 
@@ -4559,7 +4564,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        193,
+        194,
         Entity_testcases
     },
     {

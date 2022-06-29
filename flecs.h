@@ -17719,11 +17719,14 @@ struct entity_builder : entity_view {
         if (cond) {
             return this->add(relation, object);
         } else {
-            if (ecs_has_id(this->m_world, relation, flecs::Exclusive)) {
-                return this->remove(relation, flecs::Wildcard);
-            } else {
-                return this->remove(relation, object);
+            /* If object is 0 or if relationship is exclusive, use wildcard for
+             * object which will remove all instances of the relationship.
+             * Replacing 0 with Wildcard will make it possible to use the object
+             * as the condition. */
+            if (!object || ecs_has_id(this->m_world, relation, flecs::Exclusive)) {
+                object = flecs::Wildcard;
             }
+            return this->remove(relation, object);
         }
     }
 
