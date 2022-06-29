@@ -1193,6 +1193,9 @@ void Query_query_w_pair_id_and_subj(void);
 void Query_table_count(void);
 void Query_empty_table_count(void);
 void Query_entity_count(void);
+void Query_rematch_after_delete_inherited_tag(void);
+void Query_rematch_after_delete_rel_of_inherited_pair(void);
+void Query_rematch_after_delete_obj_of_inherited_pair(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -6582,6 +6585,18 @@ bake_test_case Query_testcases[] = {
     {
         "entity_count",
         Query_entity_count
+    },
+    {
+        "rematch_after_delete_inherited_tag",
+        Query_rematch_after_delete_inherited_tag
+    },
+    {
+        "rematch_after_delete_rel_of_inherited_pair",
+        Query_rematch_after_delete_rel_of_inherited_pair
+    },
+    {
+        "rematch_after_delete_obj_of_inherited_pair",
+        Query_rematch_after_delete_obj_of_inherited_pair
     }
 };
 
@@ -9912,7 +9927,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        170,
+        173,
         Query_testcases
     },
     {

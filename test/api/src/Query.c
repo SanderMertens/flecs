@@ -6828,3 +6828,107 @@ void Query_entity_count() {
 
     ecs_fini(world);
 }
+
+void Query_rematch_after_delete_inherited_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_id(world, tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = tag }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+    test_uint(tag, ecs_term_id(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(tag, ecs_term_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_delete(world, tag);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_rematch_after_delete_rel_of_inherited_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_pair(world, rel, obj);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_pair(rel, obj) }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+    test_uint(ecs_pair(rel, obj), ecs_term_id(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(rel, obj), ecs_term_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_delete(world, rel);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_rematch_after_delete_obj_of_inherited_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_pair(world, rel, obj);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_pair(rel, obj) }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+    test_uint(ecs_pair(rel, obj), ecs_term_id(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(rel, obj), ecs_term_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_delete(world, obj);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

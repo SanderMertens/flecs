@@ -1251,7 +1251,10 @@
                 "query_w_pair_id_and_subj",
                 "table_count",
                 "empty_table_count",
-                "entity_count"
+                "entity_count",
+                "rematch_after_delete_inherited_tag",
+                "rematch_after_delete_rel_of_inherited_pair",
+                "rematch_after_delete_obj_of_inherited_pair"
             ]
         }, {
             "id": "Iter",
