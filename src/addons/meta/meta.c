@@ -1064,6 +1064,8 @@ void FlecsMetaImport(
     });
 
     /* Register triggers to finalize type information from component data */
+    ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
+        world, EcsFlecsInternals);
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsPrimitive),
         .term.subj.set.mask = EcsSelf,
@@ -1149,6 +1151,7 @@ void FlecsMetaImport(
         .events = { EcsMonitor },
         .callback = unit_quantity_monitor
     });
+    ecs_set_scope(world, old_scope);
 
     /* Initialize primitive types */
     #define ECS_PRIMITIVE(world, type, primitive_kind)\
