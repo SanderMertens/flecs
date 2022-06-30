@@ -78,6 +78,10 @@ struct cursor {
         return ecs_meta_member(&m_cursor, name);
     }
 
+    int elem(int32_t elem) {
+        return ecs_meta_elem(&m_cursor, elem);
+    }
+
     bool is_collection() {
         return ecs_meta_is_collection(&m_cursor);
     }

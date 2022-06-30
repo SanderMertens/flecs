@@ -2075,7 +2075,6 @@ void Cursor_array_move_out_of_range() {
         }
     });
 
-
     T value = {0};
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
