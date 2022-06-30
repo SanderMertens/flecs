@@ -298,6 +298,9 @@ void Cursor_struct_w_array_type_i32_i32(void);
 void Cursor_struct_w_array_type_struct(void);
 void Cursor_struct_w_2_array_type_i32_i32(void);
 void Cursor_struct_w_2_array_type_struct(void);
+void Cursor_array_move_primitive(void);
+void Cursor_array_move_struct(void);
+void Cursor_array_move_out_of_range(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -1688,6 +1691,18 @@ bake_test_case Cursor_testcases[] = {
     {
         "struct_w_2_array_type_struct",
         Cursor_struct_w_2_array_type_struct
+    },
+    {
+        "array_move_primitive",
+        Cursor_array_move_primitive
+    },
+    {
+        "array_move_struct",
+        Cursor_array_move_struct
+    },
+    {
+        "array_move_out_of_range",
+        Cursor_array_move_out_of_range
     }
 };
 
@@ -2841,7 +2856,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        61,
+        64,
         Cursor_testcases
     },
     {

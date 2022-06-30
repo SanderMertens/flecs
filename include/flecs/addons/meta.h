@@ -371,11 +371,11 @@ FLECS_API
 int ecs_meta_next(
     ecs_meta_cursor_t *cursor);
 
-/** Move cursor to a field */
+/** Move cursor to a element */
 FLECS_API
-int ecs_meta_move(
+int ecs_meta_elem(
     ecs_meta_cursor_t *cursor,
-    int32_t pos);
+    int32_t elem);
 
 /** Move cursor to member */
 FLECS_API

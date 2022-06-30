@@ -25138,6 +25138,27 @@ int ecs_meta_next(
     return 0;
 }
 
+int ecs_meta_elem(
+    ecs_meta_cursor_t *cursor,
+    int32_t elem)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    if (!scope->is_collection) {
+        ecs_err("ecs_meta_elem can be used for collections only");
+        return -1;
+    }
+
+    scope->elem_cur = elem;
+    scope->op_cur = 0;
+
+    if (scope->elem_cur >= get_elem_count(scope) || (scope->elem_cur < 0)) {
+        ecs_err("out of collection bounds (%d)", scope->elem_cur);
+        return -1;
+    }
+    
+    return 0;
+}
+
 int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name)

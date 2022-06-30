@@ -1930,3 +1930,170 @@ void Cursor_struct_w_2_array_type_struct() {
 
     ecs_fini(world);
 }
+
+void Cursor_array_move_primitive() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t a[3];
+    } T;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"a", ecs_id(ecs_i32_t), 3}
+        }
+    });
+
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_push(&cur));
+
+    test_int(0, ecs_meta_elem(&cur, 2));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+
+    test_int(value.a[0], 0);
+    test_int(value.a[1], 0);
+    test_int(value.a[2], 10);
+
+    test_int(0, ecs_meta_elem(&cur, 0));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+
+    test_int(value.a[0], 20);
+    test_int(value.a[1], 0);
+    test_int(value.a[2], 10);
+
+    test_int(0, ecs_meta_elem(&cur, 1));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+
+    test_int(value.a[0], 20);
+    test_int(value.a[1], 30);
+    test_int(value.a[2], 10);
+    
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    ecs_fini(world);
+}
+
+void Cursor_array_move_struct() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N;
+
+    typedef struct {
+        N a[3];
+    } T;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "N",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"a", n, 3}
+        }
+    });
+
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_push(&cur));
+
+            test_int(0, ecs_meta_elem(&cur, 2));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 10));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(value.a[0].x, 0);
+            test_int(value.a[0].y, 0);
+            test_int(value.a[1].x, 0);
+            test_int(value.a[1].y, 0);
+            test_int(value.a[2].x, 10);
+            test_int(value.a[2].y, 20);
+
+            test_int(0, ecs_meta_elem(&cur, 0));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 30));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(value.a[0].x, 30);
+            test_int(value.a[0].y, 40);
+            test_int(value.a[1].x, 0);
+            test_int(value.a[1].y, 0);
+            test_int(value.a[2].x, 10);
+            test_int(value.a[2].y, 20);
+
+            test_int(0, ecs_meta_elem(&cur, 1));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 50));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 60));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(value.a[0].x, 30);
+            test_int(value.a[0].y, 40);
+            test_int(value.a[1].x, 50);
+            test_int(value.a[1].y, 60);
+            test_int(value.a[2].x, 10);
+            test_int(value.a[2].y, 20);
+        
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    ecs_fini(world);
+}
+
+void Cursor_array_move_out_of_range() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t a[3];
+    } T;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"a", ecs_id(ecs_i32_t), 3}
+        }
+    });
+
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_push(&cur));
+    
+    test_assert(0 == ecs_meta_elem(&cur, 0)); /* Sanity check */
+    test_assert(0 == ecs_meta_elem(&cur, 2)); /* Sanity check */
+
+    ecs_log_set_level(-4);
+
+    test_assert(0 != ecs_meta_elem(&cur, -1));
+    test_assert(0 != ecs_meta_elem(&cur, 3));
+    
+    ecs_log_set_level(-1);
+    
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    ecs_fini(world);
+}
