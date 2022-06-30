@@ -56,6 +56,14 @@ EcsPoly* _ecs_poly_bind(
 #define ecs_poly_bind(world, entity, T) \
     _ecs_poly_bind(world, entity, T##_tag)
 
+void _ecs_poly_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag);
+
+#define ecs_poly_modified(world, entity, T) \
+    _ecs_poly_modified(world, entity, T##_tag)
+
 /* Get poly component for an entity */
 const EcsPoly* _ecs_poly_bind_get(
     const ecs_world_t *world,

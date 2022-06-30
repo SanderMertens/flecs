@@ -1975,15 +1975,19 @@ void Stresstests_create_2m_entities_bulk_1_comp(void);
 void Stresstests_add_1k_tags(void);
 void Stresstests_create_1m_set_two_components(void);
 
-// Testsuite 'MixinIterable'
-void MixinIterable_iter_query(void);
-void MixinIterable_iter_query_w_filter(void);
-void MixinIterable_iter_world(void);
-void MixinIterable_iter_world_w_filter(void);
-void MixinIterable_iter_rule(void);
-void MixinIterable_iter_rule_w_filter(void);
-void MixinIterable_iter_filter(void);
-void MixinIterable_iter_filter_w_filter(void);
+// Testsuite 'Poly'
+void Poly_iter_query(void);
+void Poly_iter_query_w_filter(void);
+void Poly_iter_world(void);
+void Poly_iter_world_w_filter(void);
+void Poly_iter_rule(void);
+void Poly_iter_rule_w_filter(void);
+void Poly_iter_filter(void);
+void Poly_iter_filter_w_filter(void);
+void Poly_on_set_poly_trigger(void);
+void Poly_on_set_poly_observer(void);
+void Poly_on_set_poly_query(void);
+void Poly_on_set_poly_system(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -9609,38 +9613,54 @@ bake_test_case Stresstests_testcases[] = {
     }
 };
 
-bake_test_case MixinIterable_testcases[] = {
+bake_test_case Poly_testcases[] = {
     {
         "iter_query",
-        MixinIterable_iter_query
+        Poly_iter_query
     },
     {
         "iter_query_w_filter",
-        MixinIterable_iter_query_w_filter
+        Poly_iter_query_w_filter
     },
     {
         "iter_world",
-        MixinIterable_iter_world
+        Poly_iter_world
     },
     {
         "iter_world_w_filter",
-        MixinIterable_iter_world_w_filter
+        Poly_iter_world_w_filter
     },
     {
         "iter_rule",
-        MixinIterable_iter_rule
+        Poly_iter_rule
     },
     {
         "iter_rule_w_filter",
-        MixinIterable_iter_rule_w_filter
+        Poly_iter_rule_w_filter
     },
     {
         "iter_filter",
-        MixinIterable_iter_filter
+        Poly_iter_filter
     },
     {
         "iter_filter_w_filter",
-        MixinIterable_iter_filter_w_filter
+        Poly_iter_filter_w_filter
+    },
+    {
+        "on_set_poly_trigger",
+        Poly_on_set_poly_trigger
+    },
+    {
+        "on_set_poly_observer",
+        Poly_on_set_poly_observer
+    },
+    {
+        "on_set_poly_query",
+        Poly_on_set_poly_query
+    },
+    {
+        "on_set_poly_system",
+        Poly_on_set_poly_system
     }
 };
 
@@ -10048,11 +10068,11 @@ static bake_test_suite suites[] = {
         Stresstests_testcases
     },
     {
-        "MixinIterable",
+        "Poly",
         NULL,
         NULL,
-        8,
-        MixinIterable_testcases
+        12,
+        Poly_testcases
     },
     {
         "Internals",

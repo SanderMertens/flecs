@@ -369,6 +369,8 @@ ecs_entity_t ecs_observer_init(
         }
     }
 
+    ecs_poly_modified(world, entity, ecs_observer_t);
+
     return entity; 
 error:
     if (entity) {

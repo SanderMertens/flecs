@@ -96,8 +96,8 @@ void test_w_chain(
     test_assert(!ecs_iter_next(it));
 }
 
-void MixinIterable_iter_query() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_query() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -110,8 +110,8 @@ void MixinIterable_iter_query() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_query_w_filter() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_query_w_filter() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -124,8 +124,8 @@ void MixinIterable_iter_query_w_filter() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_world() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_world() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -168,8 +168,8 @@ void MixinIterable_iter_world() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_world_w_filter() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_world_w_filter() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -179,8 +179,8 @@ void MixinIterable_iter_world_w_filter() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_rule() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_rule() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -195,8 +195,8 @@ void MixinIterable_iter_rule() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_rule_w_filter() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_rule_w_filter() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -211,8 +211,8 @@ void MixinIterable_iter_rule_w_filter() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_filter() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_filter() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -229,8 +229,8 @@ void MixinIterable_iter_filter() {
     ecs_fini(world);
 }
 
-void MixinIterable_iter_filter_w_filter() {
-    ecs_world_t *world = ecs_init();
+void Poly_iter_filter_w_filter() {
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
@@ -243,6 +243,130 @@ void MixinIterable_iter_filter_w_filter() {
     test_w_chain(world, &f);
 
     ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+static
+void FooTrigger(ecs_iter_t *it) {}
+
+static
+void PolyTrigger(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    EcsPoly *poly = ecs_term(it, EcsPoly, 1);
+
+    test_int(1, it->count);
+    test_assert(poly->poly != NULL);
+}
+
+void Poly_on_set_poly_trigger() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsTrigger) },
+        .events = { EcsOnSet },
+        .callback = PolyTrigger,
+        .ctx = &ctx
+    });
+
+    test_int(1, ctx.invoked); /* Triggered on self */
+    test_int(1, ctx.count);
+    test_uint(t, ctx.e[0]);
+    ecs_os_zeromem(&ctx);
+
+    t = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { tag },
+        .events = { EcsOnAdd },
+        .callback = FooTrigger
+    });
+
+    test_int(1, ctx.invoked);
+    test_int(1, ctx.count);
+    test_uint(t, ctx.e[0]);
+
+    ecs_fini(world);
+}
+
+void Poly_on_set_poly_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
+        .events = { EcsOnSet },
+        .callback = PolyTrigger,
+        .ctx = &ctx
+    });
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ tag }},
+        .events = { EcsOnAdd },
+        .callback = FooTrigger
+    });
+
+    test_int(1, ctx.invoked);
+    test_int(1, ctx.count);
+    test_uint(t, ctx.e[0]);
+
+    ecs_fini(world);
+}
+
+void Poly_on_set_poly_query() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
+        .events = { EcsOnSet },
+        .callback = PolyTrigger,
+        .ctx = &ctx
+    });
+
+    test_int(0, ctx.invoked);
+
+    ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ tag }},
+    });
+
+    test_int(1, ctx.invoked);
+    test_int(1, ctx.count);
+
+    ecs_fini(world);
+}
+
+void Poly_on_set_poly_system() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
+        .events = { EcsOnSet },
+        .callback = PolyTrigger,
+        .ctx = &ctx
+    });
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ tag }},
+        .callback = FooTrigger
+    });
+
+    test_int(1, ctx.invoked);
+    test_int(1, ctx.count);
+    test_uint(s, ctx.e[0]);
 
     ecs_fini(world);
 }

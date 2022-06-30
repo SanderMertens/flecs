@@ -2067,7 +2067,7 @@
                 "create_1m_set_two_components"
             ]
         }, {
-            "id": "MixinIterable",
+            "id": "Poly",
             "testcases": [
                 "iter_query",
                 "iter_query_w_filter",
@@ -2076,7 +2076,11 @@
                 "iter_rule",
                 "iter_rule_w_filter",
                 "iter_filter",
-                "iter_filter_w_filter"
+                "iter_filter_w_filter",
+                "on_set_poly_trigger",
+                "on_set_poly_observer",
+                "on_set_poly_query",
+                "on_set_poly_system"
             ]
         }, {
             "id": "Internals",

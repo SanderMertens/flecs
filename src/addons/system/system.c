@@ -323,6 +323,8 @@ ecs_entity_t ecs_system_init(
         }
     }
 
+    ecs_poly_modified(world, entity, ecs_system_t);
+
     return entity;
 error:
     return 0;

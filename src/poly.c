@@ -184,6 +184,14 @@ EcsPoly* _ecs_poly_bind(
     return result;
 }
 
+void _ecs_poly_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag)
+{
+    ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
+}
+
 const EcsPoly* _ecs_poly_bind_get(
     const ecs_world_t *world,
     ecs_entity_t entity,

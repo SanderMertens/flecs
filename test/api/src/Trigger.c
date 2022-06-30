@@ -1187,6 +1187,9 @@ void Trigger_on_set_pair_wildcard() {
         .ctx = &ctx
     });
 
+    test_int(ctx.invoked, 1); /* Triggers for self */
+    ecs_os_zeromem(&ctx);
+
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = {ecs_pair(ecs_id(Position), Obj)}
     });

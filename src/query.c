@@ -1863,6 +1863,8 @@ ecs_query_t* ecs_query_init(
         ecs_add_id(world, entity, EcsEmpty);
     }
 
+    ecs_poly_modified(world, entity, ecs_query_t);
+
     ecs_log_pop_1();
 
     return result;

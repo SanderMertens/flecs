@@ -1473,6 +1473,14 @@ EcsPoly* _ecs_poly_bind(
 #define ecs_poly_bind(world, entity, T) \
     _ecs_poly_bind(world, entity, T##_tag)
 
+void _ecs_poly_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag);
+
+#define ecs_poly_modified(world, entity, T) \
+    _ecs_poly_modified(world, entity, T##_tag)
+
 /* Get poly component for an entity */
 const EcsPoly* _ecs_poly_bind_get(
     const ecs_world_t *world,
@@ -4933,6 +4941,14 @@ EcsPoly* _ecs_poly_bind(
     }
 
     return result;
+}
+
+void _ecs_poly_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag)
+{
+    ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
 }
 
 const EcsPoly* _ecs_poly_bind_get(
@@ -29198,6 +29214,8 @@ ecs_entity_t ecs_system_init(
         }
     }
 
+    ecs_poly_modified(world, entity, ecs_system_t);
+
     return entity;
 error:
     return 0;
@@ -40683,6 +40701,8 @@ ecs_entity_t ecs_observer_init(
         }
     }
 
+    ecs_poly_modified(world, entity, ecs_observer_t);
+
     return entity; 
 error:
     if (entity) {
@@ -43326,6 +43346,8 @@ ecs_query_t* ecs_query_init(
     if (!ecs_query_table_count(result) && result->filter.term_count) {
         ecs_add_id(world, entity, EcsEmpty);
     }
+
+    ecs_poly_modified(world, entity, ecs_query_t);
 
     ecs_log_pop_1();
 
@@ -47394,6 +47416,8 @@ ecs_entity_t ecs_trigger_init(
             ecs_poly(poly->poly, ecs_trigger_t)->binding_ctx = desc->binding_ctx;
         }
     }
+
+    ecs_poly_modified(world, entity, ecs_trigger_t);
 
     return entity;
 error:

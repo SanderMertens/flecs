@@ -909,6 +909,8 @@ ecs_entity_t ecs_trigger_init(
         }
     }
 
+    ecs_poly_modified(world, entity, ecs_trigger_t);
+
     return entity;
 error:
     ecs_delete(world, entity);
