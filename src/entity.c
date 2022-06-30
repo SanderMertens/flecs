@@ -2024,8 +2024,7 @@ ecs_entity_t ecs_component_init(
 
     if (desc->type.size && 
         !ecs_id_in_use(world, result) && 
-        !ecs_id_in_use(world, ecs_pair(result, EcsWildcard)) &&
-        !ecs_id_in_use(world, ecs_pair(EcsWildcard, result)))
+        !ecs_id_in_use(world, ecs_pair(result, EcsWildcard)))
     {
         ecs_set_hooks_id(world, result, &desc->type.hooks);
     }

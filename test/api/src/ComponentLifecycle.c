@@ -2455,3 +2455,36 @@ void ComponentLifecycle_on_add_after_ctor_w_add_to() {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_with_before_hooks() {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t pos_id = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new_w_pair(world, EcsWith, pos_id);
+
+    ecs_entity_t ecs_id(Position) = 
+        ecs_component_init(world, &(ecs_component_desc_t) {
+            .entity.entity = pos_id,
+            .type = {
+                .size = ECS_SIZEOF(Position),
+                .alignment = ECS_ALIGNOF(Position),
+                .hooks = {
+                    .ctor = ecs_ctor(Position)
+                }
+            }
+        });
+
+    test_assert(ecs_id(Position) == pos_id);
+
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, tag));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_int(ctor_position, 1);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor == ecs_ctor(Position));
+
+    ecs_fini(world);
+}

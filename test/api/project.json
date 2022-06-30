@@ -792,7 +792,8 @@
                 "on_remove_w_existing_component",
                 "component_init_set_hooks",
                 "on_add_after_ctor_w_add",
-                "on_add_after_ctor_w_add_to"
+                "on_add_after_ctor_w_add_to",
+                "with_before_hooks"
             ]
         }, {
             "id": "Sorting",
