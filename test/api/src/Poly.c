@@ -326,7 +326,7 @@ void Poly_on_set_poly_query() {
 
     Probe ctx = {0};
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsQuery) },
         .events = { EcsOnSet },
         .callback = PolyTrigger,
         .ctx = &ctx
@@ -351,7 +351,7 @@ void Poly_on_set_poly_system() {
 
     Probe ctx = {0};
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
+        .term = { ecs_pair(ecs_id(EcsPoly), EcsSystem) },
         .events = { EcsOnSet },
         .callback = PolyTrigger,
         .ctx = &ctx
