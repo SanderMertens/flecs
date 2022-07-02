@@ -198,7 +198,7 @@ struct ecs_table_t {
     int16_t bs_offset;
 
     int32_t refcount;                /* Increased when used as storage table */
-    int16_t lock;                    /* Prevents modifications */
+    int32_t lock;                    /* Prevents modifications */
     uint16_t record_count;           /* Table record count including wildcards */
 };
 

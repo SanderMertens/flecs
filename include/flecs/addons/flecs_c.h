@@ -308,15 +308,45 @@
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
 
-#define ecs_get_pair(world, subject, relation, object)\
-    (ECS_CAST(relation*, ecs_get_id(world, subject,\
-        ecs_pair(ecs_id(relation), object))))
+#define ecs_get_pair(world, subject, R, object)\
+    (ECS_CAST(const R*, ecs_get_id(world, subject,\
+        ecs_pair(ecs_id(R), object))))
 
-#define ecs_get_pair_second(world, subject, relation, object)\
-    (ECS_CAST(object*, ecs_get_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)))))
+#define ecs_get_pair_second(world, subject, relation, O)\
+    (ECS_CAST(const O*, ecs_get_id(world, subject,\
+        ecs_pair(relation, ecs_id(O)))))
 
 #define ecs_get_pair_object ecs_get_pair_second
+
+/* -- Get from record -- */
+
+#define ecs_record_get(world, record, T)\
+    (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
+
+#define ecs_record_get_pair(world, record, R, object)\
+    (ECS_CAST(const T*, ecs_record_get_id(world, record, \
+        ecs_pair(ecs_id(R), object))))
+
+#define ecs_record_get_pair_second(world, record, relation, O)\
+    (ECS_CAST(const O*, ecs_record_get_id(world, record,\
+        ecs_pair(relation, ecs_id(O)))))
+
+#define ecs_record_get_pair_object ecs_record_get_pair_second
+
+/* -- Get mut from record -- */
+
+#define ecs_record_get_mut(world, record, T)\
+    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, ecs_id(T))))
+
+#define ecs_record_get_mut_pair(world, record, R, object)\
+    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, \
+        ecs_pair(ecs_id(R), object))))
+
+#define ecs_record_get_mut_pair_second(world, record, relation, O)\
+    (ECS_CAST(O*, ecs_record_get_mut_id(world, record,\
+        ecs_pair(relation, ecs_id(O)))))
+
+#define ecs_record_get_mut_pair_object ecs_record_get_mut_pair_second
 
 /* -- Ref -- */
 

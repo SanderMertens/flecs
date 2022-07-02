@@ -72,7 +72,7 @@ const char* ecs_doc_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDocDescription *ptr = ecs_get_pair(
+    const EcsDocDescription *ptr = ecs_get_pair(
         world, entity, EcsDocDescription, EcsName);
     if (ptr) {
         return ptr->value;
@@ -85,7 +85,7 @@ const char* ecs_doc_get_brief(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDocDescription *ptr = ecs_get_pair(
+    const EcsDocDescription *ptr = ecs_get_pair(
         world, entity, EcsDocDescription, EcsDocBrief);
     if (ptr) {
         return ptr->value;
@@ -98,7 +98,7 @@ const char* ecs_doc_get_detail(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDocDescription *ptr = ecs_get_pair(
+    const EcsDocDescription *ptr = ecs_get_pair(
         world, entity, EcsDocDescription, EcsDocDetail);
     if (ptr) {
         return ptr->value;
@@ -111,7 +111,7 @@ const char* ecs_doc_get_link(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDocDescription *ptr = ecs_get_pair(
+    const EcsDocDescription *ptr = ecs_get_pair(
         world, entity, EcsDocDescription, EcsDocLink);
     if (ptr) {
         return ptr->value;
@@ -124,7 +124,7 @@ const char* ecs_doc_get_color(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDocDescription *ptr = ecs_get_pair(
+    const EcsDocDescription *ptr = ecs_get_pair(
         world, entity, EcsDocDescription, EcsDocColor);
     if (ptr) {
         return ptr->value;

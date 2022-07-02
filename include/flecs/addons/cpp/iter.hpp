@@ -329,7 +329,7 @@ public:
 
     flecs::column<A> term(int32_t index) const {
         ecs_assert(!ecs_term_is_readonly(m_iter, index), 
-            ECS_COLUMN_ACCESS_VIOLATION, NULL);
+            ECS_ACCESS_VIOLATION, NULL);
         return get_term<A>(index);
     }
 

@@ -653,6 +653,18 @@
                 "emplace_w_move"
             ]
         }, {
+            "id": "ReadWrite",
+            "testcases": [
+                "read",
+                "nested_read",
+                "write",
+                "nested_write",
+                "add_while_read",
+                "add_while_write",
+                "read_from_stage",
+                "write_from_stage"
+            ]
+        }, {
             "id": "Lookup",
             "setup": true,
             "testcases": [

@@ -462,7 +462,7 @@ int ecs_log_last_error(void);
 #define ECS_MISSING_SYMBOL (29)
 #define ECS_ALREADY_IN_USE (30)
 
-#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_ACCESS_VIOLATION (40)
 #define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
 #define ECS_COLUMN_IS_NOT_SHARED (42)
 #define ECS_COLUMN_IS_SHARED (43)
