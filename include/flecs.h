@@ -2037,7 +2037,7 @@ void ecs_write_end(
  * up to the application to ensure that this does not happen, for example by
  * using a read-write mutex.
  * 
- * This operation does *not* provide the same guarantees as a read-write lock,
+ * This operation does *not* provide the same guarantees as a read-write mutex,
  * as it is possible to call ecs_read_begin after calling ecs_write_begin. It is
  * up to application has to ensure that this does not happen.
  * 
@@ -2080,7 +2080,8 @@ const void* ecs_record_get_id(
     const ecs_record_t *record,
     ecs_id_t id);
 
-/** Same as ecs_record_get, but returns a mutable pointer.
+/** Same as ecs_record_get_id, but returns a mutable pointer.
+ * For safe access to the component, obtain the record with ecs_write_begin.
  * 
  * @param world The world.
  * @param record Record to the entity.

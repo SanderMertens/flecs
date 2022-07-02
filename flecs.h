@@ -4903,7 +4903,7 @@ void ecs_write_end(
  * up to the application to ensure that this does not happen, for example by
  * using a read-write mutex.
  * 
- * This operation does *not* provide the same guarantees as a read-write lock,
+ * This operation does *not* provide the same guarantees as a read-write mutex,
  * as it is possible to call ecs_read_begin after calling ecs_write_begin. It is
  * up to application has to ensure that this does not happen.
  * 
@@ -4946,7 +4946,8 @@ const void* ecs_record_get_id(
     const ecs_record_t *record,
     ecs_id_t id);
 
-/** Same as ecs_record_get, but returns a mutable pointer.
+/** Same as ecs_record_get_id, but returns a mutable pointer.
+ * For safe access to the component, obtain the record with ecs_write_begin.
  * 
  * @param world The world.
  * @param record Record to the entity.
@@ -17369,6 +17370,26 @@ struct entity_view : public id {
      *
      * This operation is faster than individually calling get for each component
      * as it only obtains entity metadata once.
+     * 
+     * While the callback is invoked the table in which the components are
+     * stored is locked, which prevents mutations that could cause invalidation
+     * of the component references. Note that this is not an actual lock: 
+     * invalid access causes a runtime panic and so it is still up to the 
+     * application to ensure access is protected.
+     * 
+     * The component arguments must be references and can be either const or
+     * non-const. When all arguments are const, the function will read-lock the
+     * table (see ecs_read_begin). If one or more arguments are non-const the
+     * function will write-lock the table (see ecs_write_begin).
+     * 
+     * Example:
+     *   e.get([](Position& p, Velocity& v) { // write lock
+     *     p.x += v.x;
+     *   });
+     * 
+     *   e.get([](const Position& p) {        // read lock
+     *     std::cout << p.x << std::endl;
+     *   });
      *
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.

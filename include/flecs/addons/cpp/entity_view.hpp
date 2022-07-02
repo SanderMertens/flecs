@@ -258,6 +258,26 @@ struct entity_view : public id {
      *
      * This operation is faster than individually calling get for each component
      * as it only obtains entity metadata once.
+     * 
+     * While the callback is invoked the table in which the components are
+     * stored is locked, which prevents mutations that could cause invalidation
+     * of the component references. Note that this is not an actual lock: 
+     * invalid access causes a runtime panic and so it is still up to the 
+     * application to ensure access is protected.
+     * 
+     * The component arguments must be references and can be either const or
+     * non-const. When all arguments are const, the function will read-lock the
+     * table (see ecs_read_begin). If one or more arguments are non-const the
+     * function will write-lock the table (see ecs_write_begin).
+     * 
+     * Example:
+     *   e.get([](Position& p, Velocity& v) { // write lock
+     *     p.x += v.x;
+     *   });
+     * 
+     *   e.get([](const Position& p) {        // read lock
+     *     std::cout << p.x << std::endl;
+     *   });
      *
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.
