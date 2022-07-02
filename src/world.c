@@ -1166,7 +1166,6 @@ int ecs_fini(
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
-    ecs_os_enable_high_timer_resolution(false);
     ecs_log_pop_1();
 
     /* End of the world */
@@ -1237,7 +1236,6 @@ void ecs_set_target_fps(
 
     ecs_measure_frame_time(world, true);
     world->info.target_fps = fps;
-    ecs_os_enable_high_timer_resolution(fps >= 60.0f);
 error:
     return;
 }

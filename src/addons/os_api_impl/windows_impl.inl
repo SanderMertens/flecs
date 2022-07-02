@@ -207,6 +207,13 @@ uint64_t win_time_now(void) {
     return now;
 }
 
+static
+void win_fini(void) {
+    if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
+        win_enable_high_timer_resolution(false);
+    }
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -227,9 +234,13 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = win_cond_wait;
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
-    api.enable_high_timer_resolution_ = win_enable_high_timer_resolution;
+    api.fini_ = win_fini;
 
     win_time_setup();
+
+    if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
+        win_enable_high_timer_resolution(true);
+    }
 
     ecs_os_set_api(&api);
 }
