@@ -1098,8 +1098,7 @@ void *get_mutable(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t id,
-    ecs_record_t *r,
-    bool *is_added)
+    ecs_record_t *r)
 {
     void *dst = NULL;
 
@@ -1125,16 +1124,9 @@ void *get_mutable(
         ecs_assert(r->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
 
-        if (is_added) {
-            *is_added = true;
-        }
-
         return dst;
     }
-    
-    if (is_added) {
-        *is_added = false;
-    }
+
 error:
     return dst;
 }
@@ -1998,10 +1990,9 @@ ecs_entity_t ecs_component_init(
         goto error;
     }
 
-    bool added = false;
-    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
-
-    if (added) {
+    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
+    if (!ptr->size) {
+        ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);
         ptr->size = desc->type.size;
         ptr->alignment = desc->type.alignment;
         if (!ptr->size) {
@@ -2725,8 +2716,7 @@ error:
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id,
-    bool *is_added)
+    ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
@@ -2736,13 +2726,13 @@ void* ecs_get_mut_id(
     void *result;
 
     if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result, is_added))
+        world, stage, EcsOpMut, entity, id, 0, NULL, &result))
     {
         return result;
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    result = get_mutable(world, entity, id, r, is_added);
+    result = get_mutable(world, entity, id, r);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
     flecs_defer_end(world, stage);
@@ -2922,9 +2912,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result, NULL))
-    {
+    if (flecs_defer_set(world, stage, EcsOpMut, entity, id, 0, NULL, &result)) {
         return result;
     }
 
@@ -2994,13 +2982,13 @@ ecs_entity_t set_ptr_w_id(
     }
 
     if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_utosize(size), ptr, NULL, NULL))
+        flecs_utosize(size), ptr, NULL))
     {
         return entity;
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    void *dst = get_mutable(world, entity, id, r, NULL);
+    void *dst = get_mutable(world, entity, id, r);
     ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
@@ -3320,7 +3308,7 @@ ecs_entity_t set_identifier(
         entity = ecs_new_id(world);
     }
 
-    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag, 0);
+    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_strset(&ptr->value, name);
     ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);

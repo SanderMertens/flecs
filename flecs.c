@@ -1630,8 +1630,7 @@ bool flecs_defer_set(
     ecs_entity_t component,
     ecs_size_t size,
     const void *value,
-    void **value_out,
-    bool *is_added);
+    void **value_out);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -4934,7 +4933,7 @@ EcsPoly* _ecs_poly_bind(
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * call tell the difference between a create or an update */
-    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag, NULL);
+    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag);
 
     if (deferred) {
         ecs_defer_resume(world);
@@ -6290,8 +6289,7 @@ void *get_mutable(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t id,
-    ecs_record_t *r,
-    bool *is_added)
+    ecs_record_t *r)
 {
     void *dst = NULL;
 
@@ -6317,16 +6315,9 @@ void *get_mutable(
         ecs_assert(r->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
 
-        if (is_added) {
-            *is_added = true;
-        }
-
         return dst;
     }
-    
-    if (is_added) {
-        *is_added = false;
-    }
+
 error:
     return dst;
 }
@@ -7190,10 +7181,9 @@ ecs_entity_t ecs_component_init(
         goto error;
     }
 
-    bool added = false;
-    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
-
-    if (added) {
+    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
+    if (!ptr->size) {
+        ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);
         ptr->size = desc->type.size;
         ptr->alignment = desc->type.alignment;
         if (!ptr->size) {
@@ -7917,8 +7907,7 @@ error:
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id,
-    bool *is_added)
+    ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
@@ -7928,13 +7917,13 @@ void* ecs_get_mut_id(
     void *result;
 
     if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result, is_added))
+        world, stage, EcsOpMut, entity, id, 0, NULL, &result))
     {
         return result;
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    result = get_mutable(world, entity, id, r, is_added);
+    result = get_mutable(world, entity, id, r);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
     flecs_defer_end(world, stage);
@@ -8114,9 +8103,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result, NULL))
-    {
+    if (flecs_defer_set(world, stage, EcsOpMut, entity, id, 0, NULL, &result)) {
         return result;
     }
 
@@ -8186,13 +8173,13 @@ ecs_entity_t set_ptr_w_id(
     }
 
     if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_utosize(size), ptr, NULL, NULL))
+        flecs_utosize(size), ptr, NULL))
     {
         return entity;
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    void *dst = get_mutable(world, entity, id, r, NULL);
+    void *dst = get_mutable(world, entity, id, r);
     ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
@@ -8512,7 +8499,7 @@ ecs_entity_t set_identifier(
         entity = ecs_new_id(world);
     }
 
-    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag, 0);
+    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_strset(&ptr->value, name);
     ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);
@@ -9633,8 +9620,7 @@ bool flecs_defer_set(
     ecs_id_t id,
     ecs_size_t size,
     const void *value,
-    void **value_out,
-    bool *is_added)
+    void **value_out)
 {
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
@@ -9654,9 +9640,6 @@ bool flecs_defer_set(
 
         if (!value) {
             value = ecs_get_id(world, entity, id);
-            if (is_added) {
-                *is_added = value == NULL;
-            }
         }
 
         const ecs_type_info_t *ti = NULL;
@@ -14874,7 +14857,7 @@ void ecs_workers_progress(
         ecs_time_measure(&start);
     }
 
-    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline, 0);
+    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (stage_count != pq->iter_count) {
@@ -14920,7 +14903,7 @@ void ecs_workers_progress(
 
             if (ecs_pipeline_update(world, pipeline, false)) {
                 ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
-                pq = ecs_get_mut(world, pipeline, EcsPipeline, 0);
+                pq = ecs_get_mut(world, pipeline, EcsPipeline);
                 /* Refetch, in case pipeline itself has moved */
                 op = pq->cur_op - 1;
                 op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
@@ -15437,9 +15420,7 @@ bool ecs_pipeline_update(
         ecs_run_aperiodic(world, 0);
     }
 
-    bool added = false;
-    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline, &added);
-    ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
+    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -16211,7 +16192,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = true;
     ptr->time = 0;
@@ -16223,7 +16204,7 @@ void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = false;
 error:
@@ -17746,8 +17727,7 @@ const char* plecs_parse_assign_expr(
         return NULL;
     }
 
-    void *value_ptr = ecs_get_mut_id(
-        world, assign_to, assign_id, NULL);
+    void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
         &(ecs_parse_expr_desc_t) {
@@ -23366,7 +23346,7 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    EcsUnit *value = ecs_get_mut(world, t, EcsUnit, 0);
+    EcsUnit *value = ecs_get_mut(world, t, EcsUnit);
     value->base = desc->base;
     value->over = desc->over;
     value->translation = desc->translation;
@@ -23707,7 +23687,7 @@ void ecs_meta_type_serialized_init(
         ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsMetaTypeSerialized *ptr = ecs_get_mut(
-            world, e, EcsMetaTypeSerialized, NULL);
+            world, e, EcsMetaTypeSerialized);
         if (ptr->ops) {
             ecs_meta_dtor_serialized(ptr);
         }
@@ -23949,9 +23929,8 @@ int init_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
-    bool is_added = false;
-    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType, &is_added);
-    if (is_added) {
+    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType);
+    if (meta_type->kind == 0) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
         /* Ensure that component has a default constructor, to prevent crashing
@@ -23969,7 +23948,7 @@ int init_type(
     }
 
     if (!meta_type->existing) {
-        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
+        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent);
         comp->size = size;
         comp->alignment = alignment;
         ecs_modified(world, type, EcsComponent);
@@ -24085,7 +24064,7 @@ int add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
+    EcsStruct *s = ecs_get_mut(world, type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if member is already added to struct */
@@ -24191,7 +24170,7 @@ int add_member_to_struct(
 
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, type, EcsMember)) {
-        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember, NULL);
+        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
@@ -24210,7 +24189,7 @@ int add_constant_to_enum(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum, NULL);
+    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
@@ -24270,7 +24249,7 @@ int add_constant_to_enum(
     c->constant = e;
 
     ecs_i32_t *cptr = ecs_get_mut_pair_object(
-        world, e, EcsConstant, ecs_i32_t, NULL);
+        world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
@@ -24284,7 +24263,7 @@ int add_constant_to_bitmask(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask, NULL);
+    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
@@ -24337,7 +24316,7 @@ int add_constant_to_bitmask(
     c->constant = e;
 
     ecs_u32_t *cptr = ecs_get_mut_pair_object(
-        world, e, EcsConstant, ecs_u32_t, NULL);
+        world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 

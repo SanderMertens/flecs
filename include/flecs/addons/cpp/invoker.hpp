@@ -467,7 +467,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         size_t i = 0;
         DummyArray dummy ({
             (ptrs[i ++] = ecs_get_mut_id(world, e, 
-                _::cpp_type<Args>().id(world), NULL), 0)...
+                _::cpp_type<Args>().id(world)), 0)...
         });
 
         return true;

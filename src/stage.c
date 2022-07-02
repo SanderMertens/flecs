@@ -299,8 +299,7 @@ bool flecs_defer_set(
     ecs_id_t id,
     ecs_size_t size,
     const void *value,
-    void **value_out,
-    bool *is_added)
+    void **value_out)
 {
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
@@ -320,9 +319,6 @@ bool flecs_defer_set(
 
         if (!value) {
             value = ecs_get_id(world, entity, id);
-            if (is_added) {
-                *is_added = value == NULL;
-            }
         }
 
         const ecs_type_info_t *ti = NULL;

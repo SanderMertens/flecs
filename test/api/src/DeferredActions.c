@@ -427,7 +427,7 @@ void DeferredActions_defer_get_mut_no_modify() {
 
     ecs_defer_begin(world);
 
-    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    Velocity *v = ecs_get_mut(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -457,7 +457,7 @@ void DeferredActions_defer_get_mut_w_modify() {
 
     ecs_defer_begin(world);
 
-    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    Velocity *v = ecs_get_mut(world, e, Velocity);
     v->x = 1;
     v->y = 2;
     test_assert(!on_set_invoked);
@@ -630,7 +630,7 @@ void DeferredActions_defer_get_mut_after_delete() {
     ecs_defer_begin(world);
 
     ecs_delete(world, e);
-    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    Velocity *v = ecs_get_mut(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -669,7 +669,7 @@ void DeferredActions_defer_get_mut_after_delete_2nd_to_last() {
     ecs_defer_begin(world);
 
     ecs_delete(world, e);
-    Velocity *v = ecs_get_mut(world, e, Velocity, NULL);
+    Velocity *v = ecs_get_mut(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -1481,7 +1481,7 @@ void DeferredActions_defer_get_mut_pair() {
 
     ecs_defer_begin(world);
 
-    Position *p = ecs_get_mut_pair(world, e, Position, Pair, NULL);
+    Position *p = ecs_get_mut_pair(world, e, Position, Pair);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
@@ -1895,7 +1895,7 @@ static void update_counter(ecs_iter_t *it) {
         ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
         test_assert(parent != 0);
 
-        Counter *ptr = ecs_get_mut(world, parent, Counter, 0);
+        Counter *ptr = ecs_get_mut(world, parent, Counter);
         test_assert(ptr != NULL);
 
         if (it->event == EcsOnAdd) {

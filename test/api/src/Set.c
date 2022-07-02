@@ -329,10 +329,8 @@ void Set_get_mut_new() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    bool is_added = false;
-    Position *p = ecs_get_mut(world, e, Position, &is_added);
+    Position *p = ecs_get_mut(world, e, Position);
     test_assert(p != NULL);
-    test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
     
@@ -349,10 +347,8 @@ void Set_get_mut_existing() {
     test_assert( ecs_has(world, e, Position));
     const Position *p_prev = ecs_get(world, e, Position);
 
-    bool is_added = false;
-    Position *p = ecs_get_mut(world, e, Position, &is_added);
+    Position *p = ecs_get_mut(world, e, Position);
     test_assert(p != NULL);
-    test_bool(is_added, false);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == p_prev);
     
@@ -371,8 +367,7 @@ void Set_get_mut_tag_new() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 void Set_get_mut_tag_existing() {
@@ -388,8 +383,7 @@ void Set_get_mut_tag_existing() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 void Set_get_mut_tag_new_w_comp() {
@@ -405,8 +399,7 @@ void Set_get_mut_tag_new_w_comp() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 void Set_get_mut_tag_existing_w_comp() {
@@ -424,8 +417,7 @@ void Set_get_mut_tag_existing_w_comp() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 void Set_get_mut_tag_new_w_pair() {
@@ -442,8 +434,7 @@ void Set_get_mut_tag_new_w_pair() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 void Set_get_mut_tag_existing_w_pair() {
@@ -462,8 +453,7 @@ void Set_get_mut_tag_existing_w_pair() {
 
     test_expect_abort();
 
-    bool is_added = false;
-    ecs_get_mut_id(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag);
 }
 
 static bool is_invoked = false;
@@ -481,10 +471,8 @@ void Set_modified_w_on_set() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    bool is_added = false;
-    Position *p = ecs_get_mut(world, e, Position, &is_added);
+    Position *p = ecs_get_mut(world, e, Position);
     test_assert(p != NULL);
-    test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
 
@@ -543,10 +531,8 @@ void Set_get_mut_w_add_in_on_add() {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    bool added = false;
-    Position *p = ecs_get_mut(world, e, Position, &added);
+    Position *p = ecs_get_mut(world, e, Position);
     test_assert(p != NULL);
-    test_bool(added, true);
     p->x = 10;
     p->y = 20;
 
@@ -571,8 +557,7 @@ void Set_get_mut_w_remove_in_on_add() {
 
     /* get_mut is guaranteed to always return a valid pointer, so removing the
      * component from the OnAdd trigger is not allowed */
-    bool added = false;
-    ecs_get_mut(world, e, Position, &added);
+    ecs_get_mut(world, e, Position);
 }
 
 static
@@ -604,7 +589,7 @@ void Set_get_mut_w_realloc_in_on_add() {
     });
 
     ecs_entity_t e = ecs_new(world, Velocity);
-    const Position *ptr = ecs_get_mut(world, e, Position, 0);
+    const Position *ptr = ecs_get_mut(world, e, Position);
     test_assert(ptr == ecs_get(world, e, Position));
 
     for (int i = 0; i < 1000; i ++) {

@@ -4855,15 +4855,13 @@ void* ecs_ref_get_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The entity id of the component to obtain.
- * @param is_added Out parameter that returns true if the component was added.
  * @return The component pointer.
  */
 FLECS_API
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id,
-    bool *is_added); 
+    ecs_id_t id); 
 
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity
@@ -8003,16 +8001,16 @@ void* ecs_record_get_column(
 
 /* -- Get mut & Modified -- */
 
-#define ecs_get_mut(world, entity, T, is_added)\
-    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T), is_added)))
+#define ecs_get_mut(world, entity, T)\
+    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
 
-#define ecs_get_mut_pair(world, subject, relation, object, is_added)\
+#define ecs_get_mut_pair(world, subject, relation, object)\
     (ECS_CAST(relation*, ecs_get_mut_id(world, subject,\
-        ecs_pair(ecs_id(relation), object), is_added)))
+        ecs_pair(ecs_id(relation), object))))
 
-#define ecs_get_mut_pair_second(world, subject, relation, object, is_added)\
+#define ecs_get_mut_pair_second(world, subject, relation, object)\
     (ECS_CAST(object*, ecs_get_mut_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)), is_added)))
+        ecs_pair(relation, ecs_id(object)))))
 
 #define ecs_get_mut_pair_object ecs_get_mut_pair_second
 
@@ -8038,7 +8036,7 @@ void* ecs_record_get_column(
     ecs_set(world, ecs_id(comp), comp, __VA_ARGS__)
 
 #define ecs_singleton_get_mut(world, comp)\
-    ecs_get_mut(world, ecs_id(comp), comp, NULL)
+    ecs_get_mut(world, ecs_id(comp), comp)
 
 #define ecs_singleton_modified(world, comp)\
     ecs_modified(world, ecs_id(comp), comp)

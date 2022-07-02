@@ -9,7 +9,7 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
@@ -20,7 +20,7 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = value;
 
     ecs_modified_id(world, entity, id);
@@ -31,11 +31,7 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool is_new = false;
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-
-    /* If type is not constructible get_mut should assert on new values */
-    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
 
     dst = FLECS_MOV(value);
 
@@ -47,11 +43,7 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, id_t entity, const T& value, id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool is_new = false;
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-
-    /* If type is not constructible get_mut should assert on new values */
-    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = value;
 
     ecs_modified_id(world, entity, id);

@@ -1985,15 +1985,13 @@ void* ecs_ref_get_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The entity id of the component to obtain.
- * @param is_added Out parameter that returns true if the component was added.
  * @return The component pointer.
  */
 FLECS_API
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id,
-    bool *is_added); 
+    ecs_id_t id); 
 
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity

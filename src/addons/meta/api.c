@@ -211,7 +211,7 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    EcsUnit *value = ecs_get_mut(world, t, EcsUnit, 0);
+    EcsUnit *value = ecs_get_mut(world, t, EcsUnit);
     value->base = desc->base;
     value->over = desc->over;
     value->translation = desc->translation;

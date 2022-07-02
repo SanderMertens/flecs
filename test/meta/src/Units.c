@@ -107,7 +107,7 @@ void Units_cursor_get_unit() {
     });
 
     ecs_entity_t e = ecs_new_id(world);
-    void *ptr = ecs_get_mut_id(world, e, s, 0);
+    void *ptr = ecs_get_mut_id(world, e, s);
     test_assert(ptr != NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, s, ptr);
@@ -140,7 +140,7 @@ void Units_cursor_get_unit_type() {
     });
 
     ecs_entity_t e = ecs_new_id(world);
-    void *ptr = ecs_get_mut_id(world, e, s, 0);
+    void *ptr = ecs_get_mut_id(world, e, s);
     test_assert(ptr != NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, s, ptr);
