@@ -2437,9 +2437,8 @@ void MutableTest(ecs_iter_t *it) {
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        bool is_added;
-        Velocity *v_mut = ecs_get_mut(
-            world, it->entities[i], Velocity, &is_added);
+        bool is_added = !ecs_has(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
         test_assert(v_mut != v);
@@ -2541,9 +2540,8 @@ void MutableTest_w_Add(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_add(world, it->entities[i], MyTag);
 
-        bool is_added;
-        Velocity *v_mut = ecs_get_mut(
-            world, it->entities[i], Velocity, &is_added);
+        bool is_added = !ecs_has(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
 
         // Even though component is added to stage, is_added should only be true
         // if the component is added for the first time, which requires the app

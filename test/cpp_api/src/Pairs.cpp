@@ -255,10 +255,8 @@ void Pairs_get_mut_pair() {
 
     auto e = ecs.entity();
 
-    bool added = false;
-    Pair *t = e.get_mut<Pair, Position>(&added);
+    Pair *t = e.get_mut<Pair, Position>();
     test_assert(t != NULL);
-    test_bool(added, true);
     t->value = 10;
 
     const Pair *t_2 = e.get<Pair, Position>();
@@ -272,10 +270,8 @@ void Pairs_get_mut_pair_existing() {
     auto e = ecs.entity()
         .set<Pair, Position>({20});
 
-    bool added = false;
-    Pair *t = e.get_mut<Pair, Position>(&added);
+    Pair *t = e.get_mut<Pair, Position>();
     test_assert(t != NULL);
-    test_bool(added, false);
     test_int(t->value, 20);
     t->value = 10;
 
@@ -291,10 +287,8 @@ void Pairs_get_mut_pair_tag() {
 
     auto e = ecs.entity();
 
-    bool added = false;
-    Position *p = e.get_mut_w_object<Position>(Pair, &added);
+    Position *p = e.get_mut_w_object<Position>(Pair);
     test_assert(p != NULL);
-    test_bool(added, true);
     p->x = 10;
     p->y = 20;
 
@@ -312,10 +306,8 @@ void Pairs_get_mut_pair_tag_existing() {
     auto e = ecs.entity()
         .set_w_object<Position>(Pair, {10, 20});
 
-    bool added = false;
-    Position *p = e.get_mut_w_object<Position>(Pair, &added);
+    Position *p = e.get_mut_w_object<Position>(Pair);
     test_assert(p != NULL);
-    test_bool(added, false);
     test_int(p->x, 10);
     test_int(p->y, 20);
 

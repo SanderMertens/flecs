@@ -286,7 +286,7 @@ void ecs_meta_type_serialized_init(
         ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsMetaTypeSerialized *ptr = ecs_get_mut(
-            world, e, EcsMetaTypeSerialized, NULL);
+            world, e, EcsMetaTypeSerialized);
         if (ptr->ops) {
             ecs_meta_dtor_serialized(ptr);
         }

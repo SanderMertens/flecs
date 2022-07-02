@@ -472,9 +472,7 @@ bool ecs_pipeline_update(
         ecs_run_aperiodic(world, 0);
     }
 
-    bool added = false;
-    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline, &added);
-    ecs_assert(added == false, ECS_INTERNAL_ERROR, NULL);
+    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 

@@ -230,9 +230,8 @@ int init_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
-    bool is_added = false;
-    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType, &is_added);
-    if (is_added) {
+    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType);
+    if (meta_type->kind == 0) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
         /* Ensure that component has a default constructor, to prevent crashing
@@ -250,7 +249,7 @@ int init_type(
     }
 
     if (!meta_type->existing) {
-        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
+        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent);
         comp->size = size;
         comp->alignment = alignment;
         ecs_modified(world, type, EcsComponent);
@@ -366,7 +365,7 @@ int add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
+    EcsStruct *s = ecs_get_mut(world, type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if member is already added to struct */
@@ -472,7 +471,7 @@ int add_member_to_struct(
 
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, type, EcsMember)) {
-        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember, NULL);
+        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
@@ -491,7 +490,7 @@ int add_constant_to_enum(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum, NULL);
+    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
@@ -551,7 +550,7 @@ int add_constant_to_enum(
     c->constant = e;
 
     ecs_i32_t *cptr = ecs_get_mut_pair_object(
-        world, e, EcsConstant, ecs_i32_t, NULL);
+        world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
@@ -565,7 +564,7 @@ int add_constant_to_bitmask(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask, NULL);
+    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
@@ -618,7 +617,7 @@ int add_constant_to_bitmask(
     c->constant = e;
 
     ecs_u32_t *cptr = ecs_get_mut_pair_object(
-        world, e, EcsConstant, ecs_u32_t, NULL);
+        world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 

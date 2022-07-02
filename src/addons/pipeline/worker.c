@@ -279,7 +279,7 @@ void ecs_workers_progress(
         ecs_time_measure(&start);
     }
 
-    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline, 0);
+    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (stage_count != pq->iter_count) {
@@ -325,7 +325,7 @@ void ecs_workers_progress(
 
             if (ecs_pipeline_update(world, pipeline, false)) {
                 ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
-                pq = ecs_get_mut(world, pipeline, EcsPipeline, 0);
+                pq = ecs_get_mut(world, pipeline, EcsPipeline);
                 /* Refetch, in case pipeline itself has moved */
                 op = pq->cur_op - 1;
                 op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);

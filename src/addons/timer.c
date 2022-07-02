@@ -179,7 +179,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = true;
     ptr->time = 0;
@@ -191,7 +191,7 @@ void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = false;
 error:

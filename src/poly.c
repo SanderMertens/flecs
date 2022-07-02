@@ -175,7 +175,7 @@ EcsPoly* _ecs_poly_bind(
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * call tell the difference between a create or an update */
-    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag, NULL);
+    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag);
 
     if (deferred) {
         ecs_defer_resume(world);
