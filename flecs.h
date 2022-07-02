@@ -4861,6 +4861,104 @@ void* ecs_get_mut_id(
     ecs_id_t id,
     bool *is_added); 
 
+/** Begin exclusive write access to entity.
+ * This operation provides safe exclusive access to the components of an entity
+ * without the overhead of deferring operations.
+ * 
+ * When this operation is called simultaneously for the same entity more than
+ * once it will throw an assert. Note that for this to happen, asserts must be
+ * enabled. It is up to the application to ensure that access is exclusive, for
+ * example by using a read-write mutex.
+ * 
+ * Exclusive access is enforced at the table level, so only one entity can be
+ * exclusively accessed per table. The exclusive access check is thread safe.
+ * 
+ * This operation must be followed up with ecs_write_end.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @return A record to the entity.
+ */
+FLECS_API
+ecs_record_t* ecs_write_begin(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** End exclusive write access to entity.
+ * This operation ends exclusive access, and must be called after 
+ * ecs_write_begin.
+ * 
+ * @param record Record to the entity.
+ */
+FLECS_API
+void ecs_write_end(
+    ecs_record_t *record);
+
+/** Begin read access to entity.
+ * This operation provides safe read access to the components of an entity.
+ * Multiple simultaneous reads are allowed per entity.
+ * 
+ * This operation ensures that code attempting to mutate the entity's table will
+ * throw an assert. Note that for this to happen, asserts must be enabled. It is
+ * up to the application to ensure that this does not happen, for example by
+ * using a read-write mutex.
+ * 
+ * This operation does *not* provide the same guarantees as a read-write lock,
+ * as it is possible to call ecs_read_begin after calling ecs_write_begin. It is
+ * up to application has to ensure that this does not happen.
+ * 
+ * This operation must be followed up with ecs_read_end.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return A record to the entity.
+ */
+FLECS_API
+const ecs_record_t* ecs_read_begin(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** End read access to entity.
+ * This operation ends read access, and must be called after ecs_read_begin.
+ *
+ * @param record Record to the entity.
+ */
+FLECS_API
+void ecs_read_end(
+    const ecs_record_t *record);
+
+/** Get component from entity record.
+ * This operation returns a pointer to a component for the entity 
+ * associated with the provided record. For safe access to the component, obtain
+ * the record with ecs_read_begin or ecs_write_begin.
+ * 
+ * Obtaining a component from a record is faster than obtaining it from the
+ * entity handle, as it reduces the number of lookups required.
+ * 
+ * @param world The world.
+ * @param record Record to the entity.
+ * @param id The (component) id.
+ * @return Pointer to component, or NULL if entity does not have the component.
+ */
+FLECS_API
+const void* ecs_record_get_id(
+    ecs_world_t *world,
+    const ecs_record_t *record,
+    ecs_id_t id);
+
+/** Same as ecs_record_get, but returns a mutable pointer.
+ * 
+ * @param world The world.
+ * @param record Record to the entity.
+ * @param id The (component) id.
+ * @return Pointer to component, or NULL if entity does not have the component.
+ */
+FLECS_API
+void* ecs_record_get_mut_id(
+    ecs_world_t *world,
+    ecs_record_t *record,
+    ecs_id_t id);
+
 /** Emplace a component.
  * Emplace is similar to get_mut except that the component constructor is not
  * invoked for the returned pointer, allowing the component to be "constructed"
@@ -7850,15 +7948,45 @@ void* ecs_record_get_column(
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
 
-#define ecs_get_pair(world, subject, relation, object)\
-    (ECS_CAST(relation*, ecs_get_id(world, subject,\
-        ecs_pair(ecs_id(relation), object))))
+#define ecs_get_pair(world, subject, R, object)\
+    (ECS_CAST(const R*, ecs_get_id(world, subject,\
+        ecs_pair(ecs_id(R), object))))
 
-#define ecs_get_pair_second(world, subject, relation, object)\
-    (ECS_CAST(object*, ecs_get_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)))))
+#define ecs_get_pair_second(world, subject, relation, O)\
+    (ECS_CAST(const O*, ecs_get_id(world, subject,\
+        ecs_pair(relation, ecs_id(O)))))
 
 #define ecs_get_pair_object ecs_get_pair_second
+
+/* -- Get from record -- */
+
+#define ecs_record_get(world, record, T)\
+    (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
+
+#define ecs_record_get_pair(world, record, R, object)\
+    (ECS_CAST(const T*, ecs_record_get_id(world, record, \
+        ecs_pair(ecs_id(R), object))))
+
+#define ecs_record_get_pair_second(world, record, relation, O)\
+    (ECS_CAST(const O*, ecs_record_get_id(world, record,\
+        ecs_pair(relation, ecs_id(O)))))
+
+#define ecs_record_get_pair_object ecs_record_get_pair_second
+
+/* -- Get mut from record -- */
+
+#define ecs_record_get_mut(world, record, T)\
+    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, ecs_id(T))))
+
+#define ecs_record_get_mut_pair(world, record, R, object)\
+    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, \
+        ecs_pair(ecs_id(R), object))))
+
+#define ecs_record_get_mut_pair_second(world, record, relation, O)\
+    (ECS_CAST(O*, ecs_record_get_mut_id(world, record,\
+        ecs_pair(relation, ecs_id(O)))))
+
+#define ecs_record_get_mut_pair_object ecs_record_get_mut_pair_second
 
 /* -- Ref -- */
 
@@ -8642,7 +8770,7 @@ int ecs_log_last_error(void);
 #define ECS_MISSING_SYMBOL (29)
 #define ECS_ALREADY_IN_USE (30)
 
-#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_ACCESS_VIOLATION (40)
 #define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
 #define ECS_COLUMN_IS_NOT_SHARED (42)
 #define ECS_COLUMN_IS_SHARED (43)
@@ -16761,7 +16889,7 @@ public:
 
     flecs::column<A> term(int32_t index) const {
         ecs_assert(!ecs_term_is_readonly(m_iter, index), 
-            ECS_COLUMN_ACCESS_VIOLATION, NULL);
+            ECS_ACCESS_VIOLATION, NULL);
         return get_term<A>(index);
     }
 

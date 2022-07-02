@@ -611,6 +611,16 @@ void Set_emplace(void);
 void Set_emplace_existing(void);
 void Set_emplace_w_move(void);
 
+// Testsuite 'ReadWrite'
+void ReadWrite_read(void);
+void ReadWrite_nested_read(void);
+void ReadWrite_write(void);
+void ReadWrite_nested_write(void);
+void ReadWrite_add_while_read(void);
+void ReadWrite_add_while_write(void);
+void ReadWrite_read_from_stage(void);
+void ReadWrite_write_from_stage(void);
+
 // Testsuite 'Lookup'
 void Lookup_setup(void);
 void Lookup_lookup(void);
@@ -4312,6 +4322,41 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_w_move",
         Set_emplace_w_move
+    }
+};
+
+bake_test_case ReadWrite_testcases[] = {
+    {
+        "read",
+        ReadWrite_read
+    },
+    {
+        "nested_read",
+        ReadWrite_nested_read
+    },
+    {
+        "write",
+        ReadWrite_write
+    },
+    {
+        "nested_write",
+        ReadWrite_nested_write
+    },
+    {
+        "add_while_read",
+        ReadWrite_add_while_read
+    },
+    {
+        "add_while_write",
+        ReadWrite_add_while_write
+    },
+    {
+        "read_from_stage",
+        ReadWrite_read_from_stage
+    },
+    {
+        "write_from_stage",
+        ReadWrite_write_from_stage
     }
 };
 
@@ -9898,6 +9943,13 @@ static bake_test_suite suites[] = {
         Set_testcases
     },
     {
+        "ReadWrite",
+        NULL,
+        NULL,
+        8,
+        ReadWrite_testcases
+    },
+    {
         "Lookup",
         Lookup_setup,
         NULL,
@@ -10096,5 +10148,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 47);
+    return bake_test_run("api", argc, argv, suites, 48);
 }

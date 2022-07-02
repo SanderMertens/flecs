@@ -2752,6 +2752,99 @@ error:
     return NULL;
 }
 
+static
+ecs_record_t* flecs_access_begin(
+    ecs_world_t *stage,
+    ecs_entity_t entity,
+    bool write)
+{
+    ecs_check(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    if (!r) {
+        return NULL;
+    }
+
+    ecs_table_t *table;
+    if (!(table = r->table)) {
+        return NULL;
+    }
+
+    int32_t count = ecs_os_ainc(&table->lock);
+    (void)count;
+    if (write) {
+        ecs_check(count == 1, ECS_ACCESS_VIOLATION, NULL);
+    }
+
+    return r;
+error:
+    return NULL;
+}
+
+static
+void flecs_access_end(
+    const ecs_record_t *r,
+    bool write)
+{
+    ecs_check(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
+    ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(r->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    int32_t count = ecs_os_adec(&r->table->lock);
+    (void)count;
+    if (write) {
+        ecs_check(count == 0, ECS_ACCESS_VIOLATION, NULL);
+    }
+    ecs_check(count >= 0, ECS_ACCESS_VIOLATION, NULL);
+
+error:
+    return;
+}
+
+ecs_record_t* ecs_write_begin(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return flecs_access_begin(world, entity, true);
+}
+
+void ecs_write_end(
+    ecs_record_t *r)
+{
+    flecs_access_end(r, true);
+}
+
+const ecs_record_t* ecs_read_begin(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return flecs_access_begin(world, entity, false);
+}
+
+void ecs_read_end(
+    const ecs_record_t *r)
+{
+    flecs_access_end(r, false);
+}
+
+const void* ecs_record_get_id(
+    ecs_world_t *stage,
+    const ecs_record_t *r,
+    ecs_id_t id)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+    return get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+}
+
+void* ecs_record_get_mut_id(
+    ecs_world_t *stage,
+    ecs_record_t *r,
+    ecs_id_t id)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+    return get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+}
+
 ecs_ref_t ecs_ref_init_id(
     const ecs_world_t *world,
     ecs_entity_t entity,

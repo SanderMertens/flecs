@@ -78,7 +78,7 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_OPERATION_FAILED) != NULL);
     test_assert(ecs_strerror(ECS_MISSING_OS_API) != NULL);
     test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
-    test_assert(ecs_strerror(ECS_COLUMN_ACCESS_VIOLATION) != NULL);
+    test_assert(ecs_strerror(ECS_ACCESS_VIOLATION) != NULL);
 }
 
 void Error_log_dbg() {
