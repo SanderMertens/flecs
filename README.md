@@ -31,7 +31,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 
 **Flecs v3 is the latest, most stable and feature rich version of Flecs, and recommended for new projects.**
 
-Last v3 release: [Flecs v3.0.1-alpha](https://github.com/SanderMertens/flecs/releases/tag/v3.0.1-alpha).
+Last v3 release: [Flecs v3.0.2-beta](https://github.com/SanderMertens/flecs/releases/tag/v3.0.2-beta).
 
 Last v2 release: [Flecs v2.4.8](https://github.com/SanderMertens/flecs/releases/tag/v2.4.8).
 
