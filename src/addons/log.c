@@ -148,7 +148,8 @@ void _ecs_logv(
     /* Apply color. Even if we don't want color, we still need to call the
      * colorize function to get rid of the color tags (e.g. #[green]) */
     char *msg_nocolor = ecs_vasprintf(fmt, args);
-    ecs_colorize_buf(msg_nocolor, ecs_os_api.log_with_color_, &msg_buf);
+    ecs_colorize_buf(msg_nocolor, 
+        ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
     ecs_os_free(msg_nocolor);
     
     char *msg = ecs_strbuf_get(&msg_buf);
@@ -467,8 +468,8 @@ int ecs_log_set_level(
 bool ecs_log_enable_colors(
     bool enabled)
 {
-    bool prev = ecs_os_api.log_with_color_;
-    ecs_os_api.log_with_color_ = enabled;
+    bool prev = ecs_os_api.flags_ & EcsOsApiLogWithColors;
+    ECS_BIT_COND(ecs_os_api.flags_, EcsOsApiLogWithColors, enabled);
     return prev;
 }
 

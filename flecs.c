@@ -14113,7 +14113,8 @@ void _ecs_logv(
     /* Apply color. Even if we don't want color, we still need to call the
      * colorize function to get rid of the color tags (e.g. #[green]) */
     char *msg_nocolor = ecs_vasprintf(fmt, args);
-    ecs_colorize_buf(msg_nocolor, ecs_os_api.log_with_color_, &msg_buf);
+    ecs_colorize_buf(msg_nocolor, 
+        ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
     ecs_os_free(msg_nocolor);
     
     char *msg = ecs_strbuf_get(&msg_buf);
@@ -14432,8 +14433,8 @@ int ecs_log_set_level(
 bool ecs_log_enable_colors(
     bool enabled)
 {
-    bool prev = ecs_os_api.log_with_color_;
-    ecs_os_api.log_with_color_ = enabled;
+    bool prev = ecs_os_api.flags_ & EcsOsApiLogWithColors;
+    ECS_BIT_COND(ecs_os_api.flags_, EcsOsApiLogWithColors, enabled);
     return prev;
 }
 
@@ -16979,6 +16980,13 @@ uint64_t win_time_now(void) {
     return now;
 }
 
+static
+void win_fini(void) {
+    if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
+        win_enable_high_timer_resolution(false);
+    }
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -16999,9 +17007,13 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = win_cond_wait;
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
-    api.enable_high_timer_resolution_ = win_enable_high_timer_resolution;
+    api.fini_ = win_fini;
 
     win_time_setup();
+
+    if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
+        win_enable_high_timer_resolution(true);
+    }
 
     ecs_os_set_api(&api);
 }
@@ -17203,11 +17215,6 @@ void posix_sleep(
     }
 }
 
-static
-void posix_enable_high_timer_resolution(bool enable) {
-    (void)enable;
-}
-
 /* prevent 64-bit overflow when computing relative timestamp
     see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
 */
@@ -17262,7 +17269,6 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = posix_cond_wait;
     api.sleep_ = posix_sleep;
     api.now_ = posix_time_now;
-    api.enable_high_timer_resolution_ = posix_enable_high_timer_resolution;
 
     posix_time_setup();
 
@@ -36757,7 +36763,6 @@ int ecs_fini(
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
-    ecs_os_enable_high_timer_resolution(false);
     ecs_log_pop_1();
 
     /* End of the world */
@@ -36828,7 +36833,6 @@ void ecs_set_target_fps(
 
     ecs_measure_frame_time(world, true);
     world->info.target_fps = fps;
-    ecs_os_enable_high_timer_resolution(fps >= 60.0f);
 error:
     return;
 }
@@ -41147,13 +41151,14 @@ static int ecs_os_api_init_count = 0;
 
 #ifndef __EMSCRIPTEN__
 ecs_os_api_t ecs_os_api = {
-    .log_with_color_ = true,
-    .log_level_ = -1 /* disable tracing by default, but enable >= warnings */
+    .flags_ = EcsOsApiHighResolutionTimer | EcsOsApiLogWithColors,
+    .log_level_ = -1 /* Disable tracing by default, but log warnings/errors */
 };
 #else
 /* Disable colors by default for emscripten */
 ecs_os_api_t ecs_os_api = {
-    .log_level_ = -1
+    .flags_ = EcsOsApiHighResolutionTimer,
+    .log_level_ = -1 /* Disable tracing by default, but log warnings/errors */
 };
 #endif
 
@@ -41239,25 +41244,27 @@ void log_msg(
         stream = stderr;
     }
 
+    bool use_colors = ecs_os_api.flags_ & EcsOsApiLogWithColors;
+
     if (level >= 0) {
         if (level == 0) {
-            if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+            if (use_colors) fputs(ECS_MAGENTA, stream);
         } else {
-            if (ecs_os_api.log_with_color_) fputs(ECS_GREY, stream);
+            if (use_colors) fputs(ECS_GREY, stream);
         }
         fputs("info", stream);
     } else if (level == -2) {
-        if (ecs_os_api.log_with_color_) fputs(ECS_YELLOW, stream);
+        if (use_colors) fputs(ECS_YELLOW, stream);
         fputs("warning", stream);
     } else if (level == -3) {
-        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        if (use_colors) fputs(ECS_RED, stream);
         fputs("error", stream);
     } else if (level == -4) {
-        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        if (use_colors) fputs(ECS_RED, stream);
         fputs("fatal", stream);
     }
 
-    if (ecs_os_api.log_with_color_) fputs(ECS_NORMAL, stream);
+    if (use_colors) fputs(ECS_NORMAL, stream);
     fputs(": ", stream);
 
     if (level >= 0) {
@@ -41553,8 +41560,7 @@ bool ecs_os_has_time(void) {
     return 
         (ecs_os_api.get_time_ != NULL) &&
         (ecs_os_api.sleep_ != NULL) &&
-        (ecs_os_api.now_ != NULL) &&
-        (ecs_os_api.enable_high_timer_resolution_ != NULL);
+        (ecs_os_api.now_ != NULL);
 }
 
 bool ecs_os_has_logging(void) {
@@ -41572,15 +41578,6 @@ bool ecs_os_has_modules(void) {
     return 
         (ecs_os_api.module_to_dl_ != NULL) &&
         (ecs_os_api.module_to_etc_ != NULL);
-}
-
-void ecs_os_enable_high_timer_resolution(bool enable) {
-    if (ecs_os_api.enable_high_timer_resolution_) {
-        ecs_os_api.enable_high_timer_resolution_(enable);
-    } else {
-        ecs_assert(enable == false, ECS_MISSING_OS_API, 
-            "enable_high_timer_resolution");
-    }
 }
 
 #if defined(ECS_TARGET_WINDOWS)

@@ -160,6 +160,14 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// OS API flags
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsOsApiHighResolutionTimer   (1u << 0)
+#define EcsOsApiLogWithColors         (1u << 1)
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Entity flags (set in upper bits of ecs_record_t::row)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1834,7 +1842,6 @@ typedef struct ecs_os_api_t {
     ecs_os_api_sleep_t sleep_;
     ecs_os_api_now_t now_;
     ecs_os_api_get_time_t get_time_;
-    ecs_os_api_enable_high_timer_resolution_t enable_high_timer_resolution_;
 
     /* Logging */
     ecs_os_api_log_t log_; /* Logging function. The level should be interpreted as: */
@@ -1869,8 +1876,8 @@ typedef struct ecs_os_api_t {
     /* Last error code */
     int32_t log_last_error_;
 
-    /* Enable tracing with color */
-    bool log_with_color_;
+    /* OS API flags */
+    ecs_flags32_t flags_;
 } ecs_os_api_t;
 
 FLECS_API
@@ -2010,9 +2017,6 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
 #define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
-
-FLECS_API
-void ecs_os_enable_high_timer_resolution(bool enable);
 
 /* Logging */
 FLECS_API

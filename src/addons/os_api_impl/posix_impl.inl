@@ -194,11 +194,6 @@ void posix_sleep(
     }
 }
 
-static
-void posix_enable_high_timer_resolution(bool enable) {
-    (void)enable;
-}
-
 /* prevent 64-bit overflow when computing relative timestamp
     see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
 */
@@ -253,7 +248,6 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = posix_cond_wait;
     api.sleep_ = posix_sleep;
     api.now_ = posix_time_now;
-    api.enable_high_timer_resolution_ = posix_enable_high_timer_resolution;
 
     posix_time_setup();
 
