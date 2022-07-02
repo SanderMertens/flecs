@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, bob, Position, {20, 30});
 
     // Create another named entity
-    ecs_entity_t alice = ecs_set_name(ecs, 0, "Bob");
+    ecs_entity_t alice = ecs_set_name(ecs, 0, "Alice");
     ecs_set(ecs, alice, Position, {10, 20});
     ecs_add(ecs, alice, Walking);
 
@@ -52,4 +52,10 @@ int main(int argc, char *argv[]) {
     }
 
     return ecs_fini(ecs);
+
+    // Output
+    //  {10.000000, 20.000000}
+    //  [Position, Walking, (Identifier,Name)]
+    //  Alice: {10.000000, 20.000000}
+    //  Bob: {20.000000, 30.000000}
 }

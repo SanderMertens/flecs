@@ -44,4 +44,10 @@ int main(int, char *[]) {
     ecs.each([](flecs::entity e, Position& p) {
         std::cout << e.name() << ": {" << p.x << ", " << p.y << "}" << "\n";
     });
+
+    // Output
+    //  {10, 20}
+    //  [Position, Walking, (Identifier,Name)]
+    //  Alice: {10, 20}
+    //  Bob: {20, 30}
 }
