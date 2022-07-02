@@ -2464,7 +2464,7 @@ error:
 }
 
 void* ecs_record_get_column(
-    ecs_record_t *r,
+    const ecs_record_t *r,
     int32_t column,
     size_t c_size)
 {

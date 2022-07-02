@@ -1488,6 +1488,121 @@ void Entity_get_2_components_w_callback() {
     test_bool(e_3.get([](const Position& p, const Velocity& v) {}), false);
 }
 
+void Entity_get_mut_1_component_w_callback() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e_2 = ecs.entity()
+        .set<Position>({11, 22});
+
+    auto e_3 = ecs.entity()
+        .set<Velocity>({1, 2});
+
+    test_bool(e_1.get([](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        p.x ++;
+        p.y += 2;
+    }), true);
+
+    test_bool(e_2.get([](Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+        p.x ++;
+        p.y += 2;
+    }), true);
+
+    const Position* 
+    p = e_1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e_2.get<Position>();
+    test_int(p->x, 12);
+    test_int(p->y, 24);
+
+    test_bool(e_3.get([](const Position& p) {}), false);
+}
+
+void Entity_get_mut_2_components_w_callback() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e_2 = ecs.entity()
+        .set<Position>({11, 22});
+
+    auto e_3 = ecs.entity()
+        .set<Velocity>({1, 2});
+
+    test_bool(e_1.get([](Position& p, Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+
+        p.x ++;
+        p.y += 2;
+        v.x += 3;
+        v.y += 4;
+    }), true);
+
+    test_bool(e_2.get([](const Position& p, const Velocity& v) {}), false);
+
+    test_bool(e_3.get([](const Position& p, const Velocity& v) {}), false);
+
+    const Position* p = e_1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity* v = e_1.get<Velocity>();
+    test_int(v->x, 4);
+    test_int(v->y, 6);
+}
+
+void Entity_get_component_w_callback_nested() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    test_bool(e.get([&](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_bool(e.get([](const Velocity& v) {
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        }), true);
+    }), true);
+}
+
+void Entity_get_mut_component_w_callback_nested() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    test_bool(e.get([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_expect_abort();
+        test_bool(e.get([](Velocity& v) {
+        }), false);
+    }), true);
+}
+
 void Entity_set_1_component_w_callback() {
     flecs::world ecs;
 

@@ -7632,7 +7632,7 @@ ecs_record_t* ecs_record_find(
 /** Get component pointer from column/record. */
 FLECS_API
 void* ecs_record_get_column(
-    ecs_record_t *r,
+    const ecs_record_t *r,
     int32_t column,
     size_t c_size);
 
@@ -19173,13 +19173,24 @@ struct entity_with_invoker_impl;
 template<typename ... Args>
 struct entity_with_invoker_impl<arg_list<Args ...>> {
     using ColumnArray = flecs::array<int32_t, sizeof...(Args)>;
-    using ConstPtrArray = flecs::array<const void*, sizeof...(Args)>;
-    using PtrArray = flecs::array<void*, sizeof...(Args)>;
+    using ArrayType = flecs::array<void*, sizeof...(Args)>;
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    template <typename ArrayType>
-    static bool get_ptrs(world_t *world, ecs_record_t *r, ecs_table_t *table,
+    static bool const_args() {
+        static flecs::array<bool, sizeof...(Args)> is_const_args ({
+            flecs::is_const<flecs::remove_reference_t<Args>>::value...
+        });
+
+        for (auto is_const : is_const_args) {
+            if (!is_const) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -19211,7 +19222,6 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         return true;
     }
 
-    template <typename ArrayType>
     static bool get_mut_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
         /* Get pointers w/get_mut */
         size_t i = 0;
@@ -19224,8 +19234,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     }    
 
     template <typename Func>
-    static bool invoke_get(world_t *world, entity_t id, const Func& func) {
-        ecs_record_t *r = ecs_record_find(world, id);
+    static bool invoke_read(world_t *world, entity_t e, const Func& func) {
+        const ecs_record_t *r = ecs_read_begin(world, e);
         if (!r) {
             return false;
         }
@@ -19235,18 +19245,47 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
             return false;
         }
 
-        ConstPtrArray ptrs;
-        if (!get_ptrs(world, r, table, ptrs)) {
+        ArrayType ptrs;
+        bool has_components;
+        if ((has_components = get_ptrs(world, r, table, ptrs))) {
+            invoke_callback(func, 0, ptrs);
+        }
+
+        ecs_read_end(r);
+
+        return has_components;
+    }
+
+    template <typename Func>
+    static bool invoke_write(world_t *world, entity_t e, const Func& func) {
+        ecs_record_t *r = ecs_write_begin(world, e);
+        if (!r) {
             return false;
         }
 
-        ECS_TABLE_LOCK(world, table);
+        ecs_table_t *table = r->table;
+        if (!table) {
+            return false;
+        }
 
-        invoke_callback(func, 0, ptrs);
+        ArrayType ptrs;
+        bool has_components;
+        if ((has_components = get_ptrs(world, r, table, ptrs))) {
+            invoke_callback(func, 0, ptrs);
+        }
 
-        ECS_TABLE_UNLOCK(world, table);
+        ecs_write_end(r);
 
-        return true;
+        return has_components;
+    }
+
+    template <typename Func>
+    static bool invoke_get(world_t *world, entity_t e, const Func& func) {
+        if (const_args()) {
+            return invoke_read(world, e, func);
+        } else {
+            return invoke_write(world, e, func);
+        }
     }
 
     // Utility for storing id in array in pack expansion
@@ -19266,7 +19305,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     static bool invoke_get_mut(world_t *world, entity_t id, const Func& func) {
         flecs::world w(world);
 
-        PtrArray ptrs;
+        ArrayType ptrs;
         ecs_table_t *table = NULL;
 
         // When not deferred take the fast path.
@@ -19329,7 +19368,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     }    
 
 private:
-    template <typename Func, typename ArrayType, typename ... TArgs, 
+    template <typename Func, typename ... TArgs, 
         if_t<sizeof...(TArgs) == sizeof...(Args)> = 0>
     static void invoke_callback(
         const Func& f, size_t, ArrayType&, TArgs&& ... comps) 
@@ -19337,7 +19376,7 @@ private:
         f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
     }
 
-    template <typename Func, typename ArrayType, typename ... TArgs, 
+    template <typename Func, typename ... TArgs, 
         if_t<sizeof...(TArgs) != sizeof...(Args)> = 0>
     static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, 
         TArgs&& ... comps) 
