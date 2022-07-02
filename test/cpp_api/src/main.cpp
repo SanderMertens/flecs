@@ -99,6 +99,10 @@ void Entity_get_2_components_w_callback(void);
 void Entity_set_1_component_w_callback(void);
 void Entity_set_2_components_w_callback(void);
 void Entity_set_3_components_w_callback(void);
+void Entity_get_mut_1_component_w_callback(void);
+void Entity_get_mut_2_components_w_callback(void);
+void Entity_get_component_w_callback_nested(void);
+void Entity_get_mut_component_w_callback_nested(void);
 void Entity_defer_set_1_component(void);
 void Entity_defer_set_2_components(void);
 void Entity_defer_set_3_components(void);
@@ -1307,6 +1311,22 @@ bake_test_case Entity_testcases[] = {
     {
         "set_3_components_w_callback",
         Entity_set_3_components_w_callback
+    },
+    {
+        "get_mut_1_component_w_callback",
+        Entity_get_mut_1_component_w_callback
+    },
+    {
+        "get_mut_2_components_w_callback",
+        Entity_get_mut_2_components_w_callback
+    },
+    {
+        "get_component_w_callback_nested",
+        Entity_get_component_w_callback_nested
+    },
+    {
+        "get_mut_component_w_callback_nested",
+        Entity_get_mut_component_w_callback_nested
     },
     {
         "defer_set_1_component",
@@ -4564,7 +4584,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        194,
+        198,
         Entity_testcases
     },
     {
