@@ -596,6 +596,7 @@ void Set_get_mut_w_realloc_in_on_add() {
         test_assert( ecs_has(world, entities[i], Velocity));
         const Velocity *vptr = ecs_get(world, entities[i], Velocity);
         test_assert(vptr != NULL);
+        // printf("e = {%f, %f}\n", vptr->x, vptr->y);
         test_int(vptr->x, i);
         test_int(vptr->y, i * 2);
         test_assert(ecs_get_table(world, e) == 

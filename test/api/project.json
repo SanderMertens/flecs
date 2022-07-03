@@ -1983,7 +1983,8 @@
                 "create_observer_while_deferred",
                 "create_query_while_deferred",
                 "update_trigger_while_deferred",
-                "update_observer_while_deferred"
+                "update_observer_while_deferred",
+                "defer_set_large_component"
             ]
         }, {
             "id": "SingleThreadStaging",

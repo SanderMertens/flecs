@@ -1895,6 +1895,7 @@ void DeferredActions_create_observer_while_deferred(void);
 void DeferredActions_create_query_while_deferred(void);
 void DeferredActions_update_trigger_while_deferred(void);
 void DeferredActions_update_observer_while_deferred(void);
+void DeferredActions_defer_set_large_component(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -9318,6 +9319,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "update_observer_while_deferred",
         DeferredActions_update_observer_while_deferred
+    },
+    {
+        "defer_set_large_component",
+        DeferredActions_defer_set_large_component
     }
 };
 
@@ -10107,7 +10112,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        71,
+        72,
         DeferredActions_testcases
     },
     {

@@ -193,7 +193,6 @@ ecs_entity_t ecs_observer_init(
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        poly->poly = observer;
         observer->world = world;
         observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
         observer->entity = entity;
@@ -210,6 +209,8 @@ ecs_entity_t ecs_observer_init(
             flecs_observer_fini(observer);
             return 0;
         }
+
+        poly->poly = observer;
 
         /* Creating an observer with no terms has no effect */
         ecs_assert(observer->filter.term_count != 0, 

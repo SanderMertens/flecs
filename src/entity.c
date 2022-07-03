@@ -3860,7 +3860,7 @@ char* ecs_table_str(
 }
 
 static
-void flush_bulk_new(
+void flecs_flush_bulk_new(
     ecs_world_t *world,
     ecs_defer_op_t *op)
 {
@@ -3877,7 +3877,7 @@ void flush_bulk_new(
 }
 
 static
-void free_value(
+void flecs_dtor_value(
     ecs_world_t *world,
     ecs_id_t id,
     void *value,
@@ -3897,15 +3897,15 @@ void free_value(
 }
 
 static
-void discard_op(
+void flecs_discard_op(
     ecs_world_t *world,
     ecs_defer_op_t *op)
 {
     if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
         if (value) {
-            free_value(world, op->id, op->is._1.value, 1);
-            ecs_os_free(value);
+            flecs_dtor_value(world, op->id, value, 1);
+            flecs_stack_free(value, op->is._1.size);
         }
     } else {
         ecs_os_free(op->is._n.entities);
@@ -3913,7 +3913,7 @@ void discard_op(
 }
 
 static 
-bool is_entity_valid(
+bool flecs_is_entity_valid(
     ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -3924,7 +3924,7 @@ bool is_entity_valid(
 }
 
 static
-bool remove_invalid(
+bool flecs_remove_invalid(
     ecs_world_t *world,
     ecs_id_t *id_out)
 {
@@ -3932,14 +3932,14 @@ bool remove_invalid(
 
     if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
-        if (!rel || !is_entity_valid(world, rel)) {
+        if (!rel || !flecs_is_entity_valid(world, rel)) {
             /* After relation is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
             ecs_entity_t obj = ecs_pair_second(world, id);
-            if (!obj || !is_entity_valid(world, obj)) {
+            if (!obj || !flecs_is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
@@ -3965,7 +3965,7 @@ bool remove_invalid(
         }
     } else {
         id &= ECS_COMPONENT_MASK;
-        if (!is_entity_valid(world, id)) {
+        if (!flecs_is_entity_valid(world, id)) {
             /* After relation is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
@@ -3999,7 +3999,10 @@ bool flecs_defer_end(
         if (defer_queue) {
             ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
             int32_t i, count = ecs_vector_count(defer_queue);
-            
+
+            ecs_stack_t stack = stage->defer_stack;
+            flecs_stack_init(&stage->defer_stack);
+
             for (i = 0; i < count; i ++) {
                 ecs_defer_op_t *op = &ops[i];
                 ecs_entity_t e = op->is._1.entity;
@@ -4014,7 +4017,7 @@ bool flecs_defer_end(
                     ecs_assert(op->kind != EcsOpNew && op->kind != EcsOpClone, 
                         ECS_INTERNAL_ERROR, NULL);
                     world->info.discard_count ++;
-                    discard_op(world, op);
+                    flecs_discard_op(world, op);
                     continue;
                 }
 
@@ -4022,7 +4025,7 @@ bool flecs_defer_end(
                 case EcsOpNew:
                 case EcsOpAdd:
                     ecs_assert(op->id != 0, ECS_INTERNAL_ERROR, NULL);
-                    if (remove_invalid(world, &op->id)) {
+                    if (flecs_remove_invalid(world, &op->id)) {
                         if (op->id) {
                             world->info.add_count ++;
                             add_id(world, e, op->id);
@@ -4069,13 +4072,13 @@ bool flecs_defer_end(
                     ecs_enable_component_w_id(world, e, op->id, false);
                     break;
                 case EcsOpBulkNew:
-                    flush_bulk_new(world, op);
+                    flecs_flush_bulk_new(world, op);
                     continue;
                 }
 
                 if (op->is._1.value) {
-                    ecs_os_free(op->is._1.value);
-                }                  
+                    flecs_stack_free(op->is._1.value, op->is._1.size);
+                }
             }
 
             if (stage->defer_queue) {
@@ -4085,6 +4088,11 @@ bool flecs_defer_end(
             /* Restore defer queue */
             ecs_vector_clear(defer_queue);
             stage->defer_queue = defer_queue;
+
+            /* Restore stack */
+            flecs_stack_fini(&stage->defer_stack);
+            stage->defer_stack = stack;
+            flecs_stack_reset(&stage->defer_stack);
         }
 
         return true;
@@ -4110,7 +4118,7 @@ bool flecs_defer_purge(
             ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
             int32_t i, count = ecs_vector_count(defer_queue);
             for (i = 0; i < count; i ++) {
-                discard_op(world, &ops[i]);
+                flecs_discard_op(world, &ops[i]);
             }
 
             if (stage->defer_queue) {
@@ -4120,6 +4128,7 @@ bool flecs_defer_purge(
             /* Restore defer queue */
             ecs_vector_clear(defer_queue);
             stage->defer_queue = defer_queue;
+            flecs_stack_reset(&stage->defer_stack);
         }
 
         return true;

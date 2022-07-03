@@ -303,40 +303,37 @@ bool flecs_defer_set(
 {
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
-        if (!size) {
-            ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
-            ecs_check(idr != NULL && idr->type_info != NULL, 
-                ECS_INVALID_PARAMETER, NULL);
-            size = idr->type_info->size;
-        }
 
+        ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+        ecs_check(idr != NULL && idr->type_info != NULL, 
+            ECS_INVALID_PARAMETER, NULL);
+        
+        const ecs_type_info_t *ti = idr->type_info;
+        ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+        size = ti->size;
+
+        ecs_stack_t *stack = &stage->defer_stack;
         ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
         op->id = id;
         op->is._1.entity = entity;
         op->is._1.size = size;
-        op->is._1.value = ecs_os_malloc(size);
+        op->is._1.value = flecs_stack_alloc(stack, size, ti->alignment);
 
         if (!value) {
             value = ecs_get_id(world, entity, id);
         }
 
-        const ecs_type_info_t *ti = NULL;
-        ecs_entity_t real_id = ecs_get_typeid(world, id);
-        if (real_id) {
-            ti = flecs_type_info_get(world, real_id);
-        }
-
         if (value) {
             ecs_copy_t copy;
-            if (ti && (copy = ti->hooks.copy_ctor)) {
+            if ((copy = ti->hooks.copy_ctor)) {
                 copy(op->is._1.value, value, 1, ti);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
         } else {
             ecs_xtor_t ctor;
-            if (ti && (ctor = ti->hooks.ctor)) {
+            if ((ctor = ti->hooks.ctor)) {
                 ctor(op->is._1.value, 1, ti);
             }
         }
@@ -375,6 +372,8 @@ void flecs_stage_init(
     stage->thread_ctx = world;
     stage->auto_merge = true;
     stage->asynchronous = false;
+    
+    flecs_stack_init(&stage->defer_stack);
 }
 
 void flecs_stage_deinit(
@@ -392,6 +391,7 @@ void flecs_stage_deinit(
     ecs_poly_fini(stage, ecs_stage_t);
 
     ecs_vector_free(stage->defer_queue);
+    flecs_stack_fini(&stage->defer_stack);
 }
 
 void ecs_set_stage_count(
