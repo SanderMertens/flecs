@@ -57,6 +57,7 @@ void flecs_stack_reset(
     ecs_stack_t *stack)
 {
     stack->cur = &stack->first;
+    stack->first.sp = 0;
 }
 
 void flecs_stack_init(

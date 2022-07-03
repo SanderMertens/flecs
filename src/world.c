@@ -257,6 +257,11 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
+        if (stage->defer_queue) {
+            ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_vector_free(stage->defer_queue);
+        }
         stage->defer_queue = state->defer_queue;
         flecs_stack_fini(&stage->defer_stack);
         stage->defer_stack = state->defer_stack;

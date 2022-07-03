@@ -1896,6 +1896,8 @@ void DeferredActions_create_query_while_deferred(void);
 void DeferredActions_update_trigger_while_deferred(void);
 void DeferredActions_update_observer_while_deferred(void);
 void DeferredActions_defer_set_large_component(void);
+void DeferredActions_defer_while_suspend_readonly(void);
+void DeferredActions_defer_while_suspend_readonly_w_existing_commands(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -9323,6 +9325,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_set_large_component",
         DeferredActions_defer_set_large_component
+    },
+    {
+        "defer_while_suspend_readonly",
+        DeferredActions_defer_while_suspend_readonly
+    },
+    {
+        "defer_while_suspend_readonly_w_existing_commands",
+        DeferredActions_defer_while_suspend_readonly_w_existing_commands
     }
 };
 
@@ -10112,7 +10122,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        72,
+        74,
         DeferredActions_testcases
     },
     {

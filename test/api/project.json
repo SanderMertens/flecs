@@ -1984,7 +1984,9 @@
                 "create_query_while_deferred",
                 "update_trigger_while_deferred",
                 "update_observer_while_deferred",
-                "defer_set_large_component"
+                "defer_set_large_component",
+                "defer_while_suspend_readonly",
+                "defer_while_suspend_readonly_w_existing_commands"
             ]
         }, {
             "id": "SingleThreadStaging",

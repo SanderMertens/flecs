@@ -2209,3 +2209,115 @@ void DeferredActions_defer_set_large_component() {
 
     ecs_fini(world);
 }
+
+static ECS_COMPONENT_DECLARE(Position);
+
+static void CreatePosition(ecs_iter_t *it) {
+    ecs_entity_t e = ecs_new_id(it->world);
+    ecs_set(it->world, e, Position, {999, 1000});
+}
+
+void DeferredActions_defer_while_suspend_readonly() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    /* Create trigger on EcsComponent which will defer a command while readonly
+     * mode is suspended */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsComponent),
+        .events = { EcsOnAdd },
+        .callback = CreatePosition
+    });
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_readonly_begin(world);
+
+    /* Component creation suspends readonly mode so that they can be used right
+     * after they have been registered */
+    ECS_COMPONENT(s, Velocity);
+
+    ecs_entity_t e = 
+    ecs_set(s, 0, Position, {10, 20});
+    ecs_set(s, e, Velocity, {1, 2});
+    test_assert(!ecs_has(s, e, Position));
+    test_assert(!ecs_has(s, e, Velocity));
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    test_int(2, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_while_suspend_readonly_w_existing_commands() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    /* Create trigger on EcsComponent which will defer a command while readonly
+     * mode is suspended */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsComponent),
+        .events = { EcsOnAdd },
+        .callback = CreatePosition
+    });
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_readonly_begin(world);
+
+    ecs_entity_t e1 = ecs_set(s, 0, Position, {10, 20});
+    test_assert(!ecs_has(s, e1, Position));
+
+    /* Component creation suspends readonly mode so that they can be used right
+     * after they have been registered */
+    ECS_COMPONENT(s, Velocity);
+
+    ecs_entity_t e2 = 
+    ecs_set(s, 0, Position, {20, 30});
+    ecs_set(s, e2, Velocity, {1, 2});
+    test_assert(!ecs_has(s, e2, Position));
+    test_assert(!ecs_has(s, e2, Velocity));
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    const Velocity *v = ecs_get(world, e2, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    test_int(3, ecs_count(world, Position));
+
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
