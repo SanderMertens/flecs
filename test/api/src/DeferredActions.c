@@ -2180,3 +2180,32 @@ void DeferredActions_update_observer_while_deferred() {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    int16_t arr[8096];
+} LargeComponent;
+
+void DeferredActions_defer_set_large_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, LargeComponent);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    LargeComponent *ptr = ecs_get_mut(world, e, LargeComponent);
+    test_assert(ptr != NULL);
+    for (int i = 0; i < 8096; i ++) {
+        ptr->arr[i] = i;
+    }
+    test_assert(!ecs_has(world, e, LargeComponent));
+    ecs_defer_end(world);
+
+    ptr = ecs_get_mut(world, e, LargeComponent);
+    test_assert(ptr != NULL);
+    for (int i = 0; i < 8096; i ++) {
+        test_int(ptr->arr[i], i);
+    }
+
+    ecs_fini(world);
+}

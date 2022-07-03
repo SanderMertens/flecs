@@ -15292,7 +15292,7 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
@@ -15303,7 +15303,7 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, const T& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = value;
 
     ecs_modified_id(world, entity, id);
@@ -15314,11 +15314,7 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool is_new = false;
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-
-    /* If type is not constructible get_mut should assert on new values */
-    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
 
     dst = FLECS_MOV(value);
 
@@ -15330,11 +15326,7 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, id_t entity, const T& value, id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool is_new = false;
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, &is_new));
-
-    /* If type is not constructible get_mut should assert on new values */
-    ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
+    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
     dst = value;
 
     ecs_modified_id(world, entity, id);
@@ -18598,15 +18590,13 @@ struct entity : entity_builder<entity>
      * will be copied to the entity before this function returns.
      *
      * @tparam T The component to get.
-     * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
     template <typename T>
-    T* get_mut(bool *is_added = nullptr) const {
+    T* get_mut() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<T*>(
-            ecs_get_mut_id(m_world, m_id, comp_id, is_added));
+        return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
     }
 
     /** Get mutable component value (untyped).
@@ -18616,11 +18606,10 @@ struct entity : entity_builder<entity>
      * will be copied to the entity before this function returns.
      *
      * @param comp The component to get.
-     * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
-    void* get_mut(entity_t comp, bool *is_added = nullptr) const {
-        return ecs_get_mut_id(m_world, m_id, comp, is_added);
+    void* get_mut(entity_t comp) const {
+        return ecs_get_mut_id(m_world, m_id, comp);
     }
 
     /** Get mutable pointer for a pair.
@@ -18630,9 +18619,8 @@ struct entity : entity_builder<entity>
      * @tparam Object the object type.
      */
     template <typename Relation, typename Object>
-    Relation* get_mut(bool *is_added = nullptr) const {
-        return this->get_mut<Relation>(
-            _::cpp_type<Object>::id(m_world), is_added);
+    Relation* get_mut() const {
+        return this->get_mut<Relation>(_::cpp_type<Object>::id(m_world));
     }
 
     /** Get mutable pointer for a pair.
@@ -18642,12 +18630,11 @@ struct entity : entity_builder<entity>
      * @param object the object.
      */
     template <typename Relation>
-    Relation* get_mut(entity_t object, bool *is_added = nullptr) const {
+    Relation* get_mut(entity_t object) const {
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Relation*>(
-            ecs_get_mut_id(m_world, m_id, 
-                ecs_pair(comp_id, object), is_added));
+            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, object)));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -18657,9 +18644,8 @@ struct entity : entity_builder<entity>
      * @param relation the relation.
      * @param object the object.
      */
-    void* get_mut(entity_t relation, entity_t object, bool *is_added = nullptr) const {
-        return ecs_get_mut_id(m_world, m_id, 
-                ecs_pair(relation, object), is_added);
+    void* get_mut(entity_t relation, entity_t object) const {
+        return ecs_get_mut_id(m_world, m_id, ecs_pair(relation, object));
     }
 
     /** Get mutable pointer for the object from a pair.
@@ -18669,12 +18655,11 @@ struct entity : entity_builder<entity>
      * @param relation the relation.
      */
     template <typename Object>
-    Object* get_mut_w_object(entity_t relation, bool *is_added = nullptr) const {
+    Object* get_mut_w_object(entity_t relation) const {
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Object*>(
-            ecs_get_mut_id(m_world, m_id, 
-                ecs_pair(relation, comp_id), is_added));
+            ecs_get_mut_id(m_world, m_id, ecs_pair(relation, comp_id)));
     }           
 
     /** Signal that component was modified.
@@ -19250,7 +19235,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         size_t i = 0;
         DummyArray dummy ({
             (ptrs[i ++] = ecs_get_mut_id(world, e, 
-                _::cpp_type<Args>().id(world), NULL), 0)...
+                _::cpp_type<Args>().id(world)), 0)...
         });
 
         return true;

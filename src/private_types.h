@@ -389,7 +389,7 @@ typedef enum ecs_defer_op_kind_t {
 
 typedef struct ecs_defer_op_1_t {
     ecs_entity_t entity;        /* Entity id */
-    void *value;                /* Value (used for set / get_mut) */
+    void *value;                /* Component value (used by set / get_mut) */
     ecs_size_t size;            /* Size of value */
     bool clone_value;           /* Clone entity with value (used for clone) */ 
 } ecs_defer_op_1_t;
@@ -408,6 +408,20 @@ typedef struct ecs_defer_op_t {
     } is;
 } ecs_defer_op_t;
 
+/** Stack allocator for quick allocation of small temporary values */
+#define ECS_STACK_PAGE_SIZE (4096)
+
+typedef struct ecs_stack_page_t {
+    void *data;
+    struct ecs_stack_page_t *next;
+    ecs_size_t sp;
+} ecs_stack_page_t;
+
+typedef struct ecs_stack_t {
+    ecs_stack_page_t first;
+    ecs_stack_page_t *cur;
+} ecs_stack_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -418,9 +432,10 @@ struct ecs_stage_t {
 
     int32_t id;                  /* Unique id that identifies the stage */
 
-    /* Are operations deferred? */
+    /* Deferred command queue */
     int32_t defer;
     ecs_vector_t *defer_queue;
+    ecs_stack_t defer_stack; /* Temp memory used by deferred commands */
     bool defer_suspend;
 
     ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
