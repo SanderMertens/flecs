@@ -229,6 +229,8 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
     state->defer_queue = stage->defer_queue;
+    state->defer_stack = stage->defer_stack;
+    flecs_stack_init(&stage->defer_stack);
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
@@ -256,6 +258,8 @@ void flecs_resume_readonly(
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
         stage->defer_queue = state->defer_queue;
+        flecs_stack_fini(&stage->defer_stack);
+        stage->defer_stack = state->defer_stack;
         stage->scope = state->scope;
         stage->with = state->with;
     }

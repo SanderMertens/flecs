@@ -106,6 +106,7 @@ typedef struct {
     ecs_entity_t scope;
     ecs_entity_t with;
     ecs_vector_t *defer_queue;
+    ecs_stack_t defer_stack;
     ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
 
