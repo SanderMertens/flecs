@@ -70,7 +70,6 @@ flecs_src = files(
     'src/table_cache.c',
     'src/table_graph.c',
     'src/table.c',
-    'src/trigger.c',
     'src/search.c',
     'src/world.c',
 )

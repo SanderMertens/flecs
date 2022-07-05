@@ -82,6 +82,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
         user_it.ctx = o->ctx;
+        user_it.binding_ctx = o->binding_ctx;
         user_it.term_count = o->filter.term_count_actual;
         flecs_iter_validate(&user_it);
 
@@ -1057,6 +1058,8 @@ int flecs_multi_observer_init(
     child_desc.filter.expr = NULL;
     child_desc.filter.terms_buffer = NULL;
     child_desc.filter.terms_buffer_count = 1;
+    child_desc.binding_ctx = NULL;
+    child_desc.binding_ctx_free = NULL;
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.filter.terms);
     ecs_os_memcpy_n(child_desc.events, observer->events, 
@@ -1323,8 +1326,12 @@ void flecs_observer_fini(
 
         ecs_os_free(observer->last_event_id);
     } else {
-        flecs_unregister_observer(
-            observer->world, observer->observable, observer);
+        if (observer->filter.term_count) {
+            flecs_unregister_observer(
+                observer->world, observer->observable, observer);
+        } else {
+            /* Observer creation failed while creating filter */
+        }
     }
 
     /* Cleanup filters */

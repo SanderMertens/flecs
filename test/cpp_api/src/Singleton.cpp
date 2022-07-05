@@ -40,7 +40,7 @@ void Singleton_modified_singleton() {
 
     int invoked = 0;
 
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnSet)
         .iter([&](flecs::iter it, Position *p) {
             invoked ++;
@@ -60,7 +60,7 @@ void Singleton_add_singleton() {
 
     int invoked = 0;
 
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnAdd)
         .iter([&](flecs::iter it, Position *p) {
             invoked ++;
@@ -77,7 +77,7 @@ void Singleton_remove_singleton() {
 
     int invoked = 0;
 
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnRemove)
         .iter([&](flecs::iter it, Position *p) {
             invoked ++;

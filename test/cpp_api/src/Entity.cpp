@@ -435,7 +435,7 @@ void Entity_get_mut_generic() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
@@ -505,7 +505,7 @@ void Entity_get_mut_generic_w_id() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
@@ -535,7 +535,7 @@ void Entity_get_mut_generic_w_id_t() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    world.trigger<Position>()
+    world.observer<Position>()
         .event(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
@@ -1759,7 +1759,7 @@ void Entity_set_2_w_on_set() {
     int32_t position_set = 0;
     int32_t velocity_set = 0;
 
-    ecs.trigger<Position>()
+    ecs.observer<Position>()
         .event(flecs::OnSet)
         .each([&](flecs::entity e, Position& p) {
             position_set ++;
@@ -1767,7 +1767,7 @@ void Entity_set_2_w_on_set() {
             test_int(p.y, 20);
         });
 
-    ecs.trigger<Velocity>()
+    ecs.observer<Velocity>()
         .event(flecs::OnSet)
         .each([&](flecs::entity e, Velocity& v) {
             velocity_set ++;
@@ -1799,7 +1799,7 @@ void Entity_defer_set_2_w_on_set() {
     int32_t position_set = 0;
     int32_t velocity_set = 0;
 
-    ecs.trigger<Position>()
+    ecs.observer<Position>()
         .event(flecs::OnSet)
         .each([&](flecs::entity e, Position& p) {
             position_set ++;
@@ -1807,7 +1807,7 @@ void Entity_defer_set_2_w_on_set() {
             test_int(p.y, 20);
         });
 
-    ecs.trigger<Velocity>()
+    ecs.observer<Velocity>()
         .event(flecs::OnSet)
         .each([&](flecs::entity e, Velocity& v) {
             velocity_set ++;

@@ -49,7 +49,6 @@ struct each_invoker;
 #include "mixins/filter/decl.hpp"
 #include "mixins/event/decl.hpp"
 #include "mixins/query/decl.hpp"
-#include "mixins/trigger/decl.hpp"
 #include "mixins/observer/decl.hpp"
 #ifdef FLECS_SYSTEM
 #include "mixins/system/decl.hpp"
@@ -109,7 +108,6 @@ struct each_invoker;
 #include "mixins/filter/impl.hpp"
 #include "mixins/event/impl.hpp"
 #include "mixins/query/impl.hpp"
-#include "mixins/trigger/impl.hpp"
 #include "mixins/observer/impl.hpp"
 #include "mixins/enum/impl.hpp"
 #ifdef FLECS_MODULE

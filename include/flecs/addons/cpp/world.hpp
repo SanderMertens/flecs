@@ -820,7 +820,6 @@ struct world {
 #   include "mixins/event/mixin.inl"
 #   include "mixins/term/mixin.inl"
 #   include "mixins/filter/mixin.inl"
-#   include "mixins/trigger/mixin.inl"
 #   include "mixins/observer/mixin.inl"
 #   include "mixins/query/mixin.inl"
 #   include "mixins/enum/mixin.inl"
