@@ -360,7 +360,7 @@ void register_symmetric(ecs_iter_t *it) {
         ecs_entity_t r = it->entities[i];
         assert_relation_unused(world, r, EcsSymmetric);
 
-        /* Create trigger that adds the reverse relationship when R(X, Y) is
+        /* Create observer that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_observer_init(world, &(ecs_observer_desc_t){
             .entity.add = { ecs_childof(EcsFlecsInternals) },
@@ -861,7 +861,7 @@ void flecs_bootstrap(
         .callback = register_union
     });
 
-    /* Define trigger to make sure that adding a module to a child entity also
+    /* Define observer to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = {.id = EcsModule, .subj.set.mask = EcsSelf },

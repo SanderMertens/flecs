@@ -256,15 +256,14 @@ struct ecs_iter_t {
     ecs_entity_t system;          /* The system (if applicable) */
     ecs_entity_t event;           /* The event (if applicable) */
     ecs_id_t event_id;            /* The (component) id for the event */
-    ecs_entity_t self;            /* Self entity (if set for system) */
 
     /* Query information */
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_count;           /* Number of terms in query */
-    int32_t term_index;           /* Index of term that triggered an event.
+    int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field
-                                   * of a trigger/observer term. */
+                                   * of an observer term. */
     int32_t variable_count;       /* Number of variables for query */
     char **variable_names;        /* Names of variables (if any) */
 
@@ -292,7 +291,7 @@ struct ecs_iter_t {
 
     /* Chained iterators */
     ecs_iter_next_action_t next;  /* Function to progress iterator */
-    ecs_iter_action_t callback;   /* Callback of system, trigger, observer */
+    ecs_iter_action_t callback;   /* Callback of system or observer */
     ecs_iter_fini_action_t fini;  /* Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 };

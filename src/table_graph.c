@@ -566,7 +566,7 @@ void diff_insert_isa(
     ecs_table_t *table_wo_base = base_table;
 
     /* If the table does not have a component from the base, it should
-     * trigger an OnSet */
+     * emit an OnSet event */
     ecs_id_t *ids = base_type.array;
     int32_t j, i, count = base_type.count;
     for (i = 0; i < count; i ++) {

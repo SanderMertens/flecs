@@ -327,7 +327,6 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, table_create_count);
     ECS_COUNTER_APPEND(reply, stats, table_delete_count);
     ECS_GAUGE_APPEND(reply, stats, query_count);
-    ECS_GAUGE_APPEND(reply, stats, trigger_count);
     ECS_GAUGE_APPEND(reply, stats, observer_count);
     ECS_GAUGE_APPEND(reply, stats, system_count);
     ECS_COUNTER_APPEND(reply, stats, new_count);

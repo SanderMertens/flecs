@@ -434,7 +434,6 @@
                 "set_get_context",
                 "set_get_binding_context",
                 "deactivate_after_disable",
-                "system_w_self",
                 "delete_system",
                 "delete_pipeline_system",
                 "delete_system_w_ctx",

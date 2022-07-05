@@ -202,11 +202,6 @@ public:
         return ecs_table_has_module(m_iter->table);
     }
 
-    /** Access self.
-     * 'self' is an entity that can be associated with a trigger, observer or
-     * system when they are created. */
-    flecs::entity self() const;
-
     /** Access ctx. 
      * ctx contains the context pointer assigned to a system.
      */

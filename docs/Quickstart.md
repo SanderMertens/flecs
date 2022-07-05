@@ -739,30 +739,12 @@ auto pipeline = world.pipeline()
 world.set_pipeline(pipeline);
 ```
 
-## Trigger
-A trigger is a callback for an event for a single term. Triggers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system, but for a single term and an additional event.
-
-```c
-ecs_observer_init(world, &(ecs_observer_desc_t) {
-    .term = { ecs_id(Position) },
-    .event = EcsOnSet,
-    .callback = OnSetPosition
-});
-
-// Callback code is same as system
-
-// Trigger the trigger
-ecs_set(world, e, Position, {10, 20});
-```
-```cpp
-world.trigger<Position>("OnSetPosition").event(flecs::OnSet).each( ... );
-
-// Trigger the trigger
-e.set<Position>({10, 20});
-```
-
 ## Observer
-An observer is like a trigger, but for multiple terms. Like triggers, observers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system. An observer is only triggered when all terms match the entity.
+Observers are callbacks that are invoked when one or more events matches the query of an observer. Events can be either user defined or builtin. Examples of builtin events are `OnAdd`, `OnRemove` and `OnSet`.
+
+When an observer has a query with more than one component, the observer will not be invoked until the entity for which the event is emitted satisfies the entire query.
+
+An exmple of an observer with two components:
 
 ```c
 ecs_observer_init(world, &(ecs_observer_desc_t) {
@@ -773,20 +755,18 @@ ecs_observer_init(world, &(ecs_observer_desc_t) {
 
 // Callback code is same as system
 
-// Trigger the callback
-ecs_entity_t e = ecs_new_id(world);    // Doesn't trigger the observer
-ecs_set(world, e, Position, {10, 20}); // Doesn't trigger the observer
-ecs_set(world, e, Velocity, {1, 2});   // Triggers the observer
-ecs_set(world, e, Position, {20, 40}); // Triggers the observer
+ecs_entity_t e = ecs_new_id(world);    // Doesn't invoke the observer
+ecs_set(world, e, Position, {10, 20}); // Doesn't invoke the observer
+ecs_set(world, e, Velocity, {1, 2});   // Invokes the observer
+ecs_set(world, e, Position, {20, 40}); // Invokes the observer
 ```
 ```cpp
 world.observer<Position, Velocity>("OnSetPosition").event(flecs::OnSet).each( ... );
 
-// Trigger the trigger
-auto e = ecs.entity();     // Doesn't trigger the observer
-e.set<Position>({10, 20}); // Doesn't trigger the observer
-e.set<Velocity>({1, 2});   // Triggers the observer
-e.set<Position>({20, 30}); // Triggers the observer
+auto e = ecs.entity();     // Doesn't invoke the observer
+e.set<Position>({10, 20}); // Doesn't invoke the observer
+e.set<Velocity>({1, 2});   // Invokes the observer
+e.set<Position>({20, 30}); // Invokes the observer
 ```
 
 ## Module

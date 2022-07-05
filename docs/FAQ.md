@@ -55,8 +55,8 @@ Flecs stores entities with the same set of components in the same arrays in an "
 
 Because Flecs systems provide direct access to C arrays, a system is invoked multiple times, once for each set of arrays.
 
-### Why is the value of a component not set in an OnAdd trigger?
-The OnAdd trigger is invoked before the component value is assigned. If you need to respond to a component value, use an `OnSet` system. For more information on when triggers, monitors and OnSet systems are invoked, see this diagram: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component-add-flow
+### Why is the value of a component not set in an OnAdd observer?
+The OnAdd observer is invoked before the component value is assigned. If you need to respond to a component value, use an `OnSet` system. For more information on when observers, monitors and OnSet systems are invoked, see this diagram: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component-add-flow
 
 ### Why does Flecs abort when I try to use threads?
 Flecs has an operating system abstraction API with threading functions that are not set by default. Check (or use) the OS API examples to see how to set the OS API.

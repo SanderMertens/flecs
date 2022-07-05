@@ -711,7 +711,6 @@ void ecs_world_stats_log(
     flecs_gauge_print("not alive entity count", t, &s->entity_not_alive_count);
     ecs_trace("");
     flecs_gauge_print("query count", t, &s->query_count);
-    flecs_gauge_print("trigger count", t, &s->trigger_count);
     flecs_gauge_print("observer count", t, &s->observer_count);
     flecs_gauge_print("system count", t, &s->system_count);
     ecs_trace("");

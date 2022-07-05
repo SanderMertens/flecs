@@ -16,7 +16,7 @@ struct event_builder_base {
         m_desc.event = event;
     }
 
-    /** Add component to trigger on */
+    /** Add component to emit for */
     template <typename T>
     Base& id() {
         m_ids.array = m_ids_array;
@@ -26,7 +26,7 @@ struct event_builder_base {
     }
     
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @tparam R the relation type.
      * @tparam O the object type.
      */
@@ -38,7 +38,7 @@ struct event_builder_base {
     }
 
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @tparam R the relation type.
      * @param object The object id.
      */
@@ -48,7 +48,7 @@ struct event_builder_base {
     }
 
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @param relation The relation type.
      * @param object The object id.
      */
@@ -56,7 +56,7 @@ struct event_builder_base {
         return id(ecs_pair(relation, object));
     }
 
-    /** Add (component) id to trigger on */
+    /** Add (component) id to emit for */
     Base& id(flecs::id_t id) {
         m_ids.array = m_ids_array;
         m_ids.array[m_ids.count] = id;
@@ -64,11 +64,11 @@ struct event_builder_base {
         return *this;
     }
 
-    /** Set entity for which to trigger */
+    /** Set entity for which to emit event */
     Base& entity(flecs::entity_t e) {
         ecs_record_t *r = ecs_record_find(m_world, e);
         
-        /* can't trigger for empty entity */
+        /* Can't emit for empty entity */
         ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
         ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
@@ -78,7 +78,7 @@ struct event_builder_base {
         return *this;
     }
 
-    /* Set table for which to trigger */
+    /* Set table for which to emit event */
     Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
         m_desc.table = t;
         m_desc.offset = offset;

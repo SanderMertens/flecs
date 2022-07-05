@@ -682,7 +682,7 @@ This is important to consider especially when writing `OnRemove` triggers or hoo
 Take an example with a parent and a child that both have the `Node` tag:
 
 ```cpp
-world.trigger<Node>()
+world.observer<Node>()
   .event(flecs::OnRemove)
   .each([](flecs::entity e) { });
 
@@ -690,7 +690,7 @@ flecs::entity p = world.entity().add<Node>();
 flecs::entity c = world.entity().add<Node>().child_of(p);
 ```
 
-In this example, when calling `p.destruct()` the trigger is first invoked for the child, and then for the parent, which is to be expected as the child is deleted before the parent. Cleanup policies do not however guarantee that this is always the case.
+In this example, when calling `p.destruct()` the observer is first invoked for the child, and then for the parent, which is to be expected as the child is deleted before the parent. Cleanup policies do not however guarantee that this is always the case.
 
 An application could also call `world.component<Node>().destruct()` which would delete the `Node` component and all of its instances. In this scenario the cleanup policies for the `ChildOf` relationship are not considered, and therefore the ordering is undefined. Another typical scenario in which ordering is undefined is when an application has cyclical relationships with a `Delete` cleanup action.
 
@@ -710,11 +710,11 @@ To understand why some ways to organize entities work better than others, having
 1. **Find all root entities**
 World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship.
 
-2. **Filter out modules, components, triggers, observers and systems** 
+2. **Filter out modules, components, observers and systems** 
 This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
 
 3. **Filter out entities that have no children**
-If entities have no children they cannot trigger complex cleanup logic. This also decreases the likelyhood of initiating cleanup actions that could impact other entities.
+If entities have no children they cannot cause complex cleanup logic. This also decreases the likelyhood of initiating cleanup actions that could impact other entities.
 
 4. **Delete root entities**
 The root entities that were not filtered out will be deleted.

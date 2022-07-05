@@ -1236,35 +1236,6 @@ void SystemMisc_deactivate_after_disable() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_w_self() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t self = ecs_new_id(world);
-
-    Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{.id = Tag}},
-        .callback = Dummy,
-        .self = self
-    });
-    test_assert(system != 0);
-
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_add_id(world, e, Tag);
-
-    ecs_run(world, system, 0, NULL);
-
-    test_int(ctx.count, 1);
-    test_assert(ctx.system == system);
-    test_assert(ctx.self == self);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_delete_system() {
     ecs_world_t *world = ecs_init();
 

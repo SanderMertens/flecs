@@ -4008,71 +4008,75 @@ void Trigger_remove_wildcard_2_ids() {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
+    Probe *ctx_array = ecs_os_calloc_n(Probe, 3);
+
     ecs_entity_t e = ecs_new_w_pair(world, Rel, ObjA);
     ecs_add_pair(world, e, Rel, ObjB);
     test_assert( ecs_has_pair(world, e, Rel, ObjA));
     test_assert( ecs_has_pair(world, e, Rel, ObjB));
     test_assert( ecs_has_pair(world, e, Rel, EcsWildcard));
 
-    Probe ctx_a = {0};
+    Probe *ctx_a = &ctx_array[0];
     ecs_entity_t t_a = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = ecs_pair(Rel, EcsWildcard), 
         .events = {EcsOnRemove},
         .callback = Trigger,
-        .ctx = &ctx_a
+        .ctx = ctx_a
     });
     test_assert(t_a != 0);
 
-    Probe ctx_b = {0};
+    Probe *ctx_b = &ctx_array[1];
     ecs_entity_t t_b = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = ecs_pair(Rel, ObjA),
         .events = {EcsOnRemove},
         .callback = Trigger,
-        .ctx = &ctx_b
+        .ctx = ctx_b
     });
     test_assert(t_b != 0);
 
-    Probe ctx_c = {0};
+    Probe *ctx_c = &ctx_array[2];
     ecs_entity_t t_c = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = ecs_pair(Rel, ObjB),
         .events = {EcsOnRemove},
         .callback = Trigger,
-        .ctx = &ctx_c
+        .ctx = ctx_c
     });
     test_assert(t_c != 0);
 
-    test_int(ctx_a.invoked, 0);
-    test_int(ctx_b.invoked, 0);
-    test_int(ctx_c.invoked, 0);
+    test_int(ctx_a->invoked, 0);
+    test_int(ctx_b->invoked, 0);
+    test_int(ctx_c->invoked, 0);
 
     ecs_remove_pair(world, e, Rel, EcsWildcard);
     test_assert( !ecs_has_pair(world, e, Rel, ObjA));
     test_assert( !ecs_has_pair(world, e, Rel, ObjB));
     test_assert( !ecs_has_pair(world, e, Rel, EcsWildcard));
 
-    test_int(ctx_a.invoked, 2);
-    test_int(ctx_a.count, 2);
-    test_int(ctx_a.system, t_a);
-    test_int(ctx_a.event, EcsOnRemove);
-    test_int(ctx_a.event_id, ecs_pair(Rel, ObjB));
-    test_int(ctx_a.term_count, 1);
-    test_int(ctx_a.e[0], e);
+    test_int(ctx_a->invoked, 2);
+    test_int(ctx_a->count, 2);
+    test_int(ctx_a->system, t_a);
+    test_int(ctx_a->event, EcsOnRemove);
+    test_int(ctx_a->event_id, ecs_pair(Rel, ObjB));
+    test_int(ctx_a->term_count, 1);
+    test_int(ctx_a->e[0], e);
 
-    test_int(ctx_b.invoked, 1);
-    test_int(ctx_b.count, 1);
-    test_int(ctx_b.system, t_b);
-    test_int(ctx_b.event, EcsOnRemove);
-    test_int(ctx_b.event_id, ecs_pair(Rel, ObjA));
-    test_int(ctx_b.term_count, 1);
-    test_int(ctx_b.e[0], e);
+    test_int(ctx_b->invoked, 1);
+    test_int(ctx_b->count, 1);
+    test_int(ctx_b->system, t_b);
+    test_int(ctx_b->event, EcsOnRemove);
+    test_int(ctx_b->event_id, ecs_pair(Rel, ObjA));
+    test_int(ctx_b->term_count, 1);
+    test_int(ctx_b->e[0], e);
 
-    test_int(ctx_c.invoked, 1);
-    test_int(ctx_c.count, 1);
-    test_int(ctx_c.system, t_c);
-    test_int(ctx_c.event, EcsOnRemove);
-    test_int(ctx_c.event_id, ecs_pair(Rel, ObjB));
-    test_int(ctx_c.term_count, 1);
-    test_int(ctx_c.e[0], e);
+    test_int(ctx_c->invoked, 1);
+    test_int(ctx_c->count, 1);
+    test_int(ctx_c->system, t_c);
+    test_int(ctx_c->event, EcsOnRemove);
+    test_int(ctx_c->event_id, ecs_pair(Rel, ObjB));
+    test_int(ctx_c->term_count, 1);
+    test_int(ctx_c->e[0], e);
+
+    ecs_os_free(ctx_array);
 
     ecs_fini(world);
 }

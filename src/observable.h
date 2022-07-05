@@ -12,13 +12,13 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable);
 
-void flecs_triggers_notify(
+void flecs_observers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
     const ecs_type_t *ids,
     ecs_entity_t event);
 
-void flecs_set_triggers_notify(
+void flecs_set_observers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
     const ecs_type_t *ids,
@@ -29,9 +29,6 @@ bool flecs_check_observers_for_event(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
-
-void flecs_trigger_fini(
-    ecs_trigger_t *trigger);
 
 void flecs_observer_fini(
     ecs_observer_t *observer);

@@ -91,7 +91,6 @@ ecs_entity_t ecs_run_intern(
     }
 
     qit.system = system;
-    qit.self = system_data->self;
     qit.delta_time = delta_time;
     qit.delta_system_time = time_elapsed;
     qit.frame_offset = offset;

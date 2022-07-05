@@ -58,7 +58,7 @@
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-/* Use for declaring trigger, observer and system identifiers */
+/* Use for declaring observer and system identifiers */
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /* Observers */

@@ -1892,10 +1892,8 @@ void DeferredActions_deferred_modified_after_remove(void);
 void DeferredActions_merge_cleanup_ops_before_delete(void);
 void DeferredActions_merge_nested_cleanup_ops_before_delete(void);
 void DeferredActions_defer_suspend_resume(void);
-void DeferredActions_create_trigger_while_deferred(void);
 void DeferredActions_create_observer_while_deferred(void);
 void DeferredActions_create_query_while_deferred(void);
-void DeferredActions_update_trigger_while_deferred(void);
 void DeferredActions_update_observer_while_deferred(void);
 void DeferredActions_defer_set_large_component(void);
 void DeferredActions_defer_while_suspend_readonly(void);
@@ -9312,20 +9310,12 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_defer_suspend_resume
     },
     {
-        "create_trigger_while_deferred",
-        DeferredActions_create_trigger_while_deferred
-    },
-    {
         "create_observer_while_deferred",
         DeferredActions_create_observer_while_deferred
     },
     {
         "create_query_while_deferred",
         DeferredActions_create_query_while_deferred
-    },
-    {
-        "update_trigger_while_deferred",
-        DeferredActions_update_trigger_while_deferred
     },
     {
         "update_observer_while_deferred",
@@ -10127,7 +10117,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        74,
+        72,
         DeferredActions_testcases
     },
     {
