@@ -856,7 +856,7 @@ void Move(ecs_iter_t *it) {
 Triggers are callbacks that are executed when a component is added or removed from an entity. Triggers are similar to systems, but unlike systems they can only match a single component. This is an example of a trigger that is executed when the Position component is added:
 
 ```c
-ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
+ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
 ```
 
 The implementation of the trigger looks similar to a system:

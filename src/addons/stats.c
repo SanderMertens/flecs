@@ -279,7 +279,6 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->component_count, t, ecs_sparse_count(world->type_info));
 
     ECS_GAUGE_RECORD(&s->query_count, t, ecs_count_id(world, EcsQuery));
-    ECS_GAUGE_RECORD(&s->trigger_count, t, ecs_count_id(world, EcsTrigger));
     ECS_GAUGE_RECORD(&s->observer_count, t, ecs_count_id(world, EcsObserver));
     ECS_GAUGE_RECORD(&s->system_count, t, ecs_count_id(world, EcsSystem));
 

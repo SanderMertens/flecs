@@ -559,7 +559,7 @@ void Pairs_on_add_pair() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, PairTrigger, EcsOnAdd, (Rel, *));
+    ECS_OBSERVER(world, PairTrigger, EcsOnAdd, (Rel, *));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -605,7 +605,7 @@ void Pairs_on_add_pair_tag() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Rel);
 
-    ECS_TRIGGER(world, PairTrigger, EcsOnAdd, (Rel, Position));
+    ECS_OBSERVER(world, PairTrigger, EcsOnAdd, (Rel, Position));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -636,7 +636,7 @@ void Pairs_on_remove_pair() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, PairTrigger, EcsOnRemove, (Rel, *));
+    ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, *));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -684,7 +684,7 @@ void Pairs_on_remove_pair_tag() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Rel);
 
-    ECS_TRIGGER(world, PairTrigger, EcsOnRemove, (Rel, Position));
+    ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, Position));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -717,7 +717,7 @@ void Pairs_on_remove_pair_on_delete() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rel);
 
-    ECS_TRIGGER(world, PairTrigger, EcsOnRemove, (Rel, *));
+    ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, *));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -769,8 +769,8 @@ void Pairs_on_remove_pair_tag_on_delete() {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Rel);
 
-    ECS_TRIGGER(world, PairTriggerPosition, EcsOnRemove, (Rel, Position));
-    ECS_TRIGGER(world, PairTriggerVelocity, EcsOnRemove, (Rel, Velocity));
+    ECS_OBSERVER(world, PairTriggerPosition, EcsOnRemove, (Rel, Position));
+    ECS_OBSERVER(world, PairTriggerVelocity, EcsOnRemove, (Rel, Velocity));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

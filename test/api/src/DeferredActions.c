@@ -421,7 +421,7 @@ void DeferredActions_defer_get_mut_no_modify() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, OnSetTestInvoked, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -451,7 +451,7 @@ void DeferredActions_defer_get_mut_w_modify() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, OnSetTestInvoked, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -483,7 +483,7 @@ void DeferredActions_defer_modify() {
 
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, OnSetTestInvoked, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Velocity);
 
@@ -1852,8 +1852,8 @@ void DeferredActions_deferred_modified_after_remove() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(Position),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = OnSetTestInvoked
     });
@@ -1923,14 +1923,14 @@ void DeferredActions_merge_cleanup_ops_before_delete() {
     ECS_COMPONENT_DEFINE(world, Counter);
     ECS_TAG(world, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = Tag,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = Tag,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = update_counter
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(Counter),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_id(Counter),
         .events = {EcsOnRemove},
         .callback = remove_counter
     });
@@ -1961,14 +1961,14 @@ void DeferredActions_merge_nested_cleanup_ops_before_delete() {
     ECS_COMPONENT_DEFINE(world, Counter);
     ECS_TAG(world, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = Tag,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = Tag,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = update_counter
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(Counter),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_id(Counter),
         .events = {EcsOnRemove},
         .callback = remove_counter
     });
@@ -2050,8 +2050,8 @@ void DeferredActions_create_trigger_while_deferred() {
 
     ecs_defer_begin(world);
     Probe ctx = {0};
-    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = TagA,
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
@@ -2118,8 +2118,8 @@ void DeferredActions_update_trigger_while_deferred() {
     ECS_TAG(world, TagA);
 
     Probe ctx = {0};
-    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = TagA,
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
@@ -2132,7 +2132,7 @@ void DeferredActions_update_trigger_while_deferred() {
     test_int(system_2_invoked, 0);
 
     ecs_defer_begin(world);
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
         .entity.entity = trigger,
         .callback = System2
     });
@@ -2224,8 +2224,8 @@ void DeferredActions_defer_while_suspend_readonly() {
 
     /* Create trigger on EcsComponent which will defer a command while readonly
      * mode is suspended */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsComponent),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_id(EcsComponent),
         .events = { EcsOnAdd },
         .callback = CreatePosition
     });
@@ -2271,8 +2271,8 @@ void DeferredActions_defer_while_suspend_readonly_w_existing_commands() {
 
     /* Create trigger on EcsComponent which will defer a command while readonly
      * mode is suspended */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsComponent),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_id(EcsComponent),
         .events = { EcsOnAdd },
         .callback = CreatePosition
     });

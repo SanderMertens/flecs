@@ -1109,6 +1109,8 @@ int ecs_filter_init(
         f.terms = NULL;
     }
 
+    f.flags |= desc->flags;
+
     /* Ensure all fields are consistent and properly filled out */
     if (ecs_filter_finalize(world, &f)) {
         goto error;

@@ -45,7 +45,6 @@
 #define ecs_rule_t_tag      invalid
 #define ecs_table_t_tag     invalid
 #define ecs_filter_t_tag    invalid
-#define ecs_trigger_t_tag   EcsTrigger
 #define ecs_observer_t_tag  EcsObserver
 
 /* Mixin kinds */
@@ -79,7 +78,7 @@ extern ecs_mixins_t ecs_observer_t_mixins;
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
 
-/* Scope for flecs internals, like triggers & observers used for features */
+/* Scope for flecs internals, like observers used for builtin features */
 extern const ecs_entity_t EcsFlecsInternals;
 
 /** Type used for internal string hashmap */
@@ -350,22 +349,22 @@ struct ecs_query_t {
     ecs_entity_t entity;
 };
 
-/** All triggers for a specific (component) id */
+/** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
-    ecs_map_t triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t observers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
-    ecs_map_t set_triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t set_observers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for Self with non-This subject */
-    ecs_map_t entity_triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t entity_observers; /* map<trigger_id, trigger_t> */
 
-    /* Number of active triggers for (component) id */
-    int32_t trigger_count;
+    /* Number of active observers for (component) id */
+    int32_t observer_count;
 } ecs_event_id_record_t;
 
-/** All triggers for a specific event */
+/** All observers for a specific event */
 typedef struct ecs_event_record_t {
     ecs_map_t event_ids;     /* map<id, ecs_event_id_record_t> */
 } ecs_event_record_t;

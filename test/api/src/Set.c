@@ -466,7 +466,7 @@ void Set_modified_w_on_set() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, OnSetPosition, EcsOnSet, Position);
+    ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -489,7 +489,7 @@ void Set_modified_no_component() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, OnSetPosition, EcsOnSet, Position);
+    ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -527,7 +527,7 @@ void Set_get_mut_w_add_in_on_add() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT_DEFINE(world, Velocity);
 
-    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Position);
+    ECS_OBSERVER(world, OnAdd, EcsOnAdd, Position);
 
     ecs_entity_t e = ecs_new_id(world);
 
@@ -549,7 +549,7 @@ void Set_get_mut_w_remove_in_on_add() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
-    ECS_TRIGGER(world, OnAddRemove, EcsOnAdd, Position);
+    ECS_OBSERVER(world, OnAddRemove, EcsOnAdd, Position);
 
     ecs_entity_t e = ecs_new_id(world);
 
@@ -581,10 +581,10 @@ void Set_get_mut_w_realloc_in_on_add() {
         entities[i] = ecs_new(world, Position);
     }
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
         .callback = OnAddRealloc,
         .events = {EcsOnAdd},
-        .term.id = ecs_id(Position),
+        .filter.terms[0].id = ecs_id(Position),
         .ctx = entities
     });
 

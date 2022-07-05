@@ -37,15 +37,6 @@ ecs_mixins_t ecs_query_t_mixins = {
     }
 };
 
-ecs_mixins_t ecs_trigger_t_mixins = {
-    .type_name = "ecs_trigger_t",
-    .elems = {
-        [EcsMixinWorld] = offsetof(ecs_trigger_t, world),
-        [EcsMixinEntity] = offsetof(ecs_trigger_t, entity),
-        [EcsMixinDtor] = offsetof(ecs_trigger_t, dtor)
-    }
-};
-
 ecs_mixins_t ecs_observer_t_mixins = {
     .type_name = "ecs_observer_t",
     .elems = {

@@ -1394,7 +1394,7 @@ void Prefab_ignore_on_add() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnAdd, Position);
+    ECS_OBSERVER(world, PrefabReactiveTest, EcsOnAdd, Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1408,7 +1408,7 @@ void Prefab_ignore_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnRemove, Position);
+    ECS_OBSERVER(world, PrefabReactiveTest, EcsOnRemove, Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1426,7 +1426,7 @@ void Prefab_ignore_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnSet, Position);
+    ECS_OBSERVER(world, PrefabReactiveTest, EcsOnSet, Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1444,7 +1444,7 @@ void Prefab_on_set_on_instance() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnSet, Position(self|super));
+    ECS_OBSERVER(world, PrefabReactiveTest, EcsOnSet, Position(self|super));
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1900,7 +1900,7 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
     ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, Prefab());
-    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     test_int(on_set_velocity_invoked, 0);
 
@@ -2186,7 +2186,7 @@ void Prefab_clone_after_inherit_in_on_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, CloneInOnAdd, EcsOnAdd, Position);
+    ECS_OBSERVER(world, CloneInOnAdd, EcsOnAdd, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -2258,8 +2258,8 @@ void Prefab_create_multiple_nested_w_on_set() {
         ECS_PREFAB(world, Child, (ChildOf, Prefab), Velocity, ecs_entity_t);
             ecs_set(world, Child, Velocity, {3, 4});
 
-    ECS_TRIGGER(world, OnAddEntity, EcsOnSet, ecs_entity_t);
-    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnAddEntity, EcsOnSet, ecs_entity_t);
+    ECS_OBSERVER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     test_int(on_set_velocity_invoked, 0);
 
@@ -2334,8 +2334,8 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
         ECS_PREFAB(world, Child, (ChildOf, Prefab), (IsA, ChildPrefab), ecs_entity_t);
 
     ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, Prefab());
-    ECS_TRIGGER(world, OnAddEntity, EcsOnSet, ecs_entity_t);
-    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity(self|super));
+    ECS_OBSERVER(world, OnAddEntity, EcsOnSet, ecs_entity_t);
+    ECS_OBSERVER(world, OnSetVelocity, EcsOnSet, Velocity(self|super));
 
     ecs_progress(world, 1);
 
@@ -2398,7 +2398,7 @@ void Prefab_single_on_set_on_child_w_override() {
 
         ECS_PREFAB(world, Child, (ChildOf, Prefab), (IsA, ChildPrefab), Velocity);
 
-    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_OBSERVER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     test_int(on_set_velocity_invoked, 0);
 

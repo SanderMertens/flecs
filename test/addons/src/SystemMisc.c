@@ -274,11 +274,11 @@ void SystemMisc_redefine_row_system() {
 
     ecs_entity_t s;
     {
-        ECS_TRIGGER(world, Dummy, EcsOnAdd, Position);
+        ECS_OBSERVER(world, Dummy, EcsOnAdd, Position);
         s = Dummy;
     }
 
-    ECS_TRIGGER(world, Dummy, EcsOnAdd, Position);
+    ECS_OBSERVER(world, Dummy, EcsOnAdd, Position);
 
     test_assert(s == Dummy);
 

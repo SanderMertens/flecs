@@ -762,7 +762,7 @@ void Snapshot_snapshot_w_new_in_onset() {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
-    ECS_TRIGGER(world, SetP, EcsOnSet, Position);
+    ECS_OBSERVER(world, SetP, EcsOnSet, Position);
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
 

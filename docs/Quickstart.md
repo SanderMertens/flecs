@@ -743,7 +743,7 @@ world.set_pipeline(pipeline);
 A trigger is a callback for an event for a single term. Triggers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system, but for a single term and an additional event.
 
 ```c
-ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+ecs_observer_init(world, &(ecs_observer_desc_t) {
     .term = { ecs_id(Position) },
     .event = EcsOnSet,
     .callback = OnSetPosition

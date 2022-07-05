@@ -1065,79 +1065,68 @@ void FlecsMetaImport(
     /* Register triggers to finalize type information from component data */
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsPrimitive),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsPrimitive), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = set_primitive
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsMember),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsMember), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = set_member
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsEnum),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsEnum), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = add_enum
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsBitmask),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsBitmask), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = add_bitmask
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = EcsConstant,
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = EcsConstant, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = add_constant
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_pair(EcsConstant, EcsWildcard),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = add_constant
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsArray),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsArray), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = set_array
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsVector),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsVector), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = set_vector
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsUnit),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsUnit), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = set_unit
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsMetaType),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsMetaType), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_id(EcsMetaType),
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsMetaType), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
     });

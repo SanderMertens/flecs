@@ -1411,9 +1411,9 @@ void OnDelete_empty_table_w_on_remove() {
     ecs_add_id(world, e1, e2);
     ecs_add_id(world, e1, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = e2,
         .events = {EcsOnRemove},
-        .term.id = e2,
         .callback = dummy_on_remove
     });
 
@@ -1472,16 +1472,16 @@ void OnDelete_delete_table_in_on_remove_during_fini() {
     /* Make sure entities are in different tables */
     ecs_add_id(world, e1, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
         .events = {EcsOnRemove},
-        .term.id = e1,
+        .filter.terms[0].id = e1,
         .callback = delete_self_on_remove,
         .ctx = &e2
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
         .events = {EcsOnRemove},
-        .term.id = e2,
+        .filter.terms[0].id = e2,
         .callback = delete_self_on_remove,
         .ctx = &e1
     });    
@@ -1511,9 +1511,9 @@ void OnDelete_delete_other_in_on_remove_during_fini() {
     /* Make sure entities are in different tables */
     ecs_add_id(world, e1, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
         .events = {EcsOnRemove},
-        .term.id = ecs_id(Entity),
+        .filter.terms[0].id = ecs_id(Entity),
         .callback = delete_on_remove
     });
 
@@ -2270,8 +2270,8 @@ void OnDelete_delete_self_in_on_remove() {
 
     ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_pair(Rel, EcsWildcard),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = { EcsOnRemove },
         .callback = DeleteTarget
     });
@@ -2310,8 +2310,8 @@ void OnDelete_delete_nested_in_on_remove() {
     ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
     ECS_TAG(world, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = ecs_pair(Rel, EcsWildcard),
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = { EcsOnRemove },
         .callback = DeleteOther,
         .ctx = &Tag
@@ -2354,8 +2354,8 @@ void OnDelete_add_deleted_in_on_remove() {
     ecs_entity_t t = ecs_new_id(world);
     ecs_new_w_id(world, t);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = t,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = t,
         .events = { EcsOnRemove },
         .callback = AddRemoved
     });
@@ -2420,8 +2420,8 @@ void OnDelete_fini_cleanup_order() {
     ecs_add(world, e3, Tag);
     ecs_add(world, e2, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = Tag,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = TestAlive
     });
