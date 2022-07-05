@@ -61,26 +61,6 @@
 /* Use for declaring trigger, observer and system identifiers */
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
 
-/* Triggers */
-#define ECS_TRIGGER_DEFINE(world, id, kind, component) \
-    {\
-        ecs_trigger_desc_t desc = {0}; \
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id;\
-        desc.callback = id;\
-        desc.expr = #component;\
-        desc.events[0] = kind;\
-        ecs_id(id) = ecs_trigger_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
-    }
-
-#define ECS_TRIGGER(world, id, kind, component) \
-    ecs_entity_t ecs_id(id) = 0; \
-    ECS_TRIGGER_DEFINE(world, id, kind, component);\
-    ecs_entity_t id = ecs_id(id);\
-    (void)ecs_id(id);\
-    (void)id;
-
 /* Observers */
 #define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
     {\

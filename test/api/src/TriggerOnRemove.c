@@ -47,7 +47,7 @@ void TriggerOnRemove_remove() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
+    ECS_OBSERVER(world, Deinit, EcsOnRemove, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -75,7 +75,7 @@ void TriggerOnRemove_remove_no_match() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
+    ECS_OBSERVER(world, Deinit, EcsOnRemove, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -96,7 +96,7 @@ void TriggerOnRemove_delete() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
+    ECS_OBSERVER(world, Deinit, EcsOnRemove, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -124,7 +124,7 @@ void TriggerOnRemove_delete_no_match() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position);
+    ECS_OBSERVER(world, Deinit, EcsOnRemove, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -157,7 +157,7 @@ void TriggerOnRemove_remove_watched() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
+    ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert(e != 0);
@@ -179,7 +179,7 @@ void TriggerOnRemove_delete_watched() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
+    ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert(e != 0);
@@ -209,7 +209,7 @@ void TriggerOnRemove_on_remove_in_on_update() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_SYSTEM(world, Remove_from_current, EcsOnUpdate, Position);
-    ECS_TRIGGER(world, Dummy, EcsOnRemove, Velocity);
+    ECS_OBSERVER(world, Dummy, EcsOnRemove, Velocity);
 
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
@@ -254,7 +254,7 @@ void TriggerOnRemove_valid_entity_after_delete() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, DummyComp);
-    ECS_TRIGGER(world, RemoveDummyComp, EcsOnRemove, DummyComp);
+    ECS_OBSERVER(world, RemoveDummyComp, EcsOnRemove, DummyComp);
 
     ecs_entity_t e = ecs_new(world, DummyComp);
     test_assert(e != 0);
@@ -273,8 +273,8 @@ void TriggerOnRemove_remove_after_delete_trigger() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term.id = ecs_id(Position),
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0].id = ecs_id(Position),
         .events = {EcsOnRemove},
         .callback = Dummy
     });
@@ -308,8 +308,8 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t trigger = ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term.id = EcsWildcard,
+    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0].id = EcsWildcard,
         .events = {EcsOnRemove},
         .callback = Dummy
     });
@@ -373,8 +373,8 @@ void TriggerOnRemove_has_removed_tag_trigger_1_tag() {
         .tag = Tag
     };
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term.id = Tag,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = OnRemoveHasTag,
         .ctx = &ctx
@@ -405,8 +405,8 @@ void TriggerOnRemove_has_removed_tag_trigger_2_tags() {
         .tag = TagA
     };
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term.id = TagA,
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = OnRemoveHasTag,
         .ctx = &ctx

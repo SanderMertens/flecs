@@ -2481,39 +2481,6 @@ struct ecs_filter_t {
     ecs_iterable_t iterable;   /* Iterable mixin */
 };
 
-/** A trigger reacts to events matching a single term */
-struct ecs_trigger_t {
-    ecs_header_t hdr;
-
-    ecs_term_t term;            /* Term describing the trigger condition id */
-
-    /* Trigger events */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
-    int32_t event_count;
-
-    ecs_iter_action_t callback; /* Callback */
-
-    void *ctx;                  /* Callback context */
-    void *binding_ctx;          /* Binding context (for language bindings) */
-
-    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
-
-    ecs_observable_t *observable;  /* Observable for trigger */
-
-    bool match_prefab;          /* Should trigger ignore prefabs */
-    bool match_disabled;        /* Should trigger ignore disabled entities */
-    bool instanced;             /* See ecs_filter_desc_t */
-
-    int32_t *last_event_id;     /* Optional pointer to observer last_event_id */
-    ecs_id_t register_id;       /* Id with with trigger is registered */
-
-    /* Mixins */
-    ecs_world_t *world;
-    ecs_entity_t entity;
-    ecs_poly_dtor_t dtor;
-};
-
 /* An observer reacts to events matching a filter */
 struct ecs_observer_t {
     ecs_header_t hdr;
@@ -2538,11 +2505,16 @@ struct ecs_observer_t {
 
     ecs_observable_t *observable;  /* Observable for observer */
 
-    int32_t last_event_id;      /* Last handled event id */
+    int32_t *last_event_id;     /* Last handled event id */
+
+    ecs_id_t register_id;       /* Id observer is registered with (single term observers only) */
+    int32_t term_index;         /* Index of the term in parent observer (single term observers only) */
 
     bool is_monitor;            /* If true, the observer only triggers when the
                                  * filter did not match with the entity before
                                  * the event happened. */
+
+    bool is_multi;              /* If true, the observer triggers on more than one term */
 
     /* Mixins */
     ecs_world_t *world;
@@ -3584,6 +3556,9 @@ typedef struct ecs_filter_desc_t {
     /* Match empty tables. By default empty tables are not returned. */ 
     bool match_empty_tables;
 
+    /* Additional flags to set on filter */
+    ecs_flags32_t flags;
+
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;
 
@@ -3642,61 +3617,6 @@ typedef struct ecs_query_desc_t {
     ecs_entity_t entity;
 } ecs_query_desc_t;
 
-
-/** Used with ecs_trigger_init. */
-typedef struct ecs_trigger_desc_t {
-    int32_t _canary;
-
-    /* Entity to associate with trigger */
-    ecs_entity_desc_t entity;
-
-    /* Term specifying the id to subscribe for */
-    ecs_term_t term;
-
-    /* Filter expression. May only contain a single term. If this field is set,
-     * the term field is ignored. */
-    const char *expr;
-
-    /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
-
-    /* Should trigger match prefabs & disabled entities */
-    bool match_prefab;
-    bool match_disabled;
-
-    /* See ecs_filter_desc_t::instanced */
-    bool instanced;
-
-    /* When trigger is created, generate events from existing data. For example,
-     * EcsOnAdd Position would trigger for all existing instances of Position.
-     * This is only supported for events that are iterable (see EcsIterable) */
-    bool yield_existing;
-
-    /* Callback to invoke on an event */
-    ecs_iter_action_t callback;
-
-    /* User context to pass to callback */
-    void *ctx;
-
-    /* Context to be used for language bindings */
-    void *binding_ctx;
-    
-    /* Callback to free ctx */
-    ecs_ctx_free_t ctx_free;
-
-    /* Callback to free binding_ctx */     
-    ecs_ctx_free_t binding_ctx_free;
-
-    /* Observable with which to register the trigger */
-    ecs_poly_t *observable;
-
-    /* This field is usually only set if a trigger is part of an observer, and
-     * points to the observer's last_event_id. This enables skipping triggers if
-     * a previous trigger for the same observer already notified it. */
-    int32_t *last_event_id;
-} ecs_trigger_desc_t;
-
-
 /** Used with ecs_observer_init. */
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
@@ -3710,7 +3630,9 @@ typedef struct ecs_observer_desc_t {
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* See ecs_trigger_desc_t */
+    /* When trigger is created, generate events from existing data. For example,
+     * EcsOnAdd Position would trigger for all existing instances of Position.
+     * This is only supported for events that are iterable (see EcsIterable) */
     bool yield_existing;
 
     /* Callback to invoke on an event, invoked when the observer matches. */
@@ -3737,7 +3659,14 @@ typedef struct ecs_observer_desc_t {
     ecs_ctx_free_t binding_ctx_free;
 
     /* Observable with which to register the trigger */
-    ecs_poly_t *observable;  
+    ecs_poly_t *observable;
+
+    /* Optional shared last event id for multiple observers. Ensures only one
+     * of the observers with the shared id gets triggered for an event */
+    int32_t *last_event_id;
+
+    /* Used for internal purposes */
+    int32_t term_index;
 } ecs_observer_desc_t;
 
 /** @} */
@@ -3895,7 +3824,6 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
 FLECS_API extern const ecs_entity_t EcsQuery;
-FLECS_API extern const ecs_entity_t EcsTrigger;
 FLECS_API extern const ecs_entity_t EcsObserver;
 
 /* System module component ids */
@@ -6403,52 +6331,6 @@ int32_t ecs_query_entity_count(
  * @defgroup trigger Triggers
  */
 
-/** Create trigger.
- * Triggers notify the application when certain events happen such as adding or
- * removing components.
- * 
- * An application can change the trigger callback or context pointer by calling
- * ecs_trigger_init for an existing trigger entity, by setting the
- * ecs_trigger_desc_t::entity.entity field in combination with callback and/or
- * ctx.
- *
- * See the documentation for ecs_trigger_desc_t for more details.
- *
- * @param world The world.
- * @param desc The trigger creation parameters.
- */
-FLECS_API
-ecs_entity_t ecs_trigger_init(
-    ecs_world_t *world,
-    const ecs_trigger_desc_t *desc);
-
-/** Get trigger context.
- * This operation returns the context pointer set for the trigger. If
- * the provided entity is not a trigger, the function will return NULL.
- *
- * @param world The world.
- * @param trigger The trigger from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_get_trigger_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t trigger);
-
-/** Same as ecs_get_trigger_ctx, but for binding ctx. 
- * The binding context is a context typically used to attach any language 
- * binding specific data that is needed when invoking a callback that is 
- * implemented in another language.
- * 
- * @param world The world.
- * @param trigger The trigger from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_get_trigger_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t trigger);
-
 typedef struct ecs_event_desc_t {
     /* The event id. Only triggers for the specified event will be notified */
     ecs_entity_t event;
@@ -7703,26 +7585,6 @@ void* ecs_record_get_column(
 
 /* Use for declaring trigger, observer and system identifiers */
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
-
-/* Triggers */
-#define ECS_TRIGGER_DEFINE(world, id, kind, component) \
-    {\
-        ecs_trigger_desc_t desc = {0}; \
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id;\
-        desc.callback = id;\
-        desc.expr = #component;\
-        desc.events[0] = kind;\
-        ecs_id(id) = ecs_trigger_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
-    }
-
-#define ECS_TRIGGER(world, id, kind, component) \
-    ecs_entity_t ecs_id(id) = 0; \
-    ECS_TRIGGER_DEFINE(world, id, kind, component);\
-    ecs_entity_t id = ecs_id(id);\
-    (void)ecs_id(id);\
-    (void)id;
 
 /* Observers */
 #define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
@@ -12930,7 +12792,6 @@ using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 
 static const flecs::entity_t Query = EcsQuery;
-static const flecs::entity_t Trigger = EcsTrigger;
 static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */
@@ -22164,7 +22025,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     using Class = trigger_builder_i<Base, Components...>;
     using BaseClass = term_builder_i<Base>;
 
-    trigger_builder_i(ecs_trigger_desc_t *desc) 
+    trigger_builder_i(ecs_observer_desc_t *desc) 
         : BaseClass(&desc->term)
         , m_desc(desc)
         , m_event_count(0) { }
@@ -22206,7 +22067,7 @@ private:
         return *static_cast<Base*>(this);
     }
 
-    ecs_trigger_desc_t *m_desc;
+    ecs_observer_desc_t *m_desc;
     int32_t m_event_count;
 };
 
@@ -22218,7 +22079,7 @@ namespace _ {
     template <typename ... Components>
     using trigger_builder_base = node_builder<
         trigger, 
-        ecs_trigger_desc_t, 
+        ecs_observer_desc_t, 
         trigger_builder<Components...>, 
         trigger_builder_i, 
         Components ...>;
@@ -22245,21 +22106,21 @@ struct trigger final : entity
 
     explicit trigger() : entity() { }
 
-    trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
-        : entity(world, ecs_trigger_init(world, desc)) 
+    trigger(flecs::world_t *world, ecs_observer_desc_t *desc) 
+        : entity(world, ecs_observer_init(world, desc)) 
     { 
         ecs_term_fini(&desc->term);
     }
     
     void ctx(void *ctx) {
-        ecs_trigger_desc_t desc = {};
+        ecs_observer_desc_t desc = {};
         desc.entity.entity = m_id;
         desc.ctx = ctx;
-        ecs_trigger_init(m_world, &desc);
+        ecs_observer_init(m_world, &desc);
     }
 
     void* ctx() const {
-        return ecs_get_trigger_ctx(m_world, m_id);
+        return ecs_get_observer_ctx(m_world, m_id);
     }
 };
 

@@ -1305,7 +1305,7 @@ void Hierarchies_delete_tree_w_onremove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position);
+    ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
     test_assert(parent != 0);

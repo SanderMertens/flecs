@@ -197,16 +197,16 @@ ecs_id_record_t* flecs_id_record_new(
     }
 
     /* Flags for events */
-    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
+    if (flecs_check_observers_for_event(world, id, EcsOnAdd)) {
         idr->flags |= EcsIdHasOnAdd;
     }
-    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
+    if (flecs_check_observers_for_event(world, id, EcsOnRemove)) {
         idr->flags |= EcsIdHasOnRemove;
     }
-    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
+    if (flecs_check_observers_for_event(world, id, EcsOnSet)) {
         idr->flags |= EcsIdHasOnSet;
     }
-    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
+    if (flecs_check_observers_for_event(world, id, EcsUnSet)) {
         idr->flags |= EcsIdHasUnSet;
     }
 

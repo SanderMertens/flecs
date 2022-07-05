@@ -1514,6 +1514,8 @@ void Observer_mixed_un_set_w_tag(void);
 void Observer_match_base_w_id_at_offset(void);
 void Observer_custom_run_action(void);
 void Observer_custom_run_action_w_iter_next(void);
+void Observer_custom_run_action_2_terms(void);
+void Observer_custom_run_action_w_iter_next_2_terms(void);
 void Observer_read_in_on_remove_after_add_other_w_not(void);
 
 // Testsuite 'ObserverOnSet'
@@ -1998,7 +2000,6 @@ void Poly_iter_rule(void);
 void Poly_iter_rule_w_filter(void);
 void Poly_iter_filter(void);
 void Poly_iter_filter_w_filter(void);
-void Poly_on_set_poly_trigger(void);
 void Poly_on_set_poly_observer(void);
 void Poly_on_set_poly_query(void);
 void Poly_on_set_poly_system(void);
@@ -7865,6 +7866,14 @@ bake_test_case Observer_testcases[] = {
         Observer_custom_run_action_w_iter_next
     },
     {
+        "custom_run_action_2_terms",
+        Observer_custom_run_action_2_terms
+    },
+    {
+        "custom_run_action_w_iter_next_2_terms",
+        Observer_custom_run_action_w_iter_next_2_terms
+    },
+    {
         "read_in_on_remove_after_add_other_w_not",
         Observer_read_in_on_remove_after_add_other_w_not
     }
@@ -9712,10 +9721,6 @@ bake_test_case Poly_testcases[] = {
         Poly_iter_filter_w_filter
     },
     {
-        "on_set_poly_trigger",
-        Poly_on_set_poly_trigger
-    },
-    {
         "on_set_poly_observer",
         Poly_on_set_poly_observer
     },
@@ -10052,7 +10057,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        64,
+        66,
         Observer_testcases
     },
     {
@@ -10143,7 +10148,7 @@ static bake_test_suite suites[] = {
         "Poly",
         NULL,
         NULL,
-        12,
+        11,
         Poly_testcases
     },
     {

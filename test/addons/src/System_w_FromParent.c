@@ -1019,9 +1019,9 @@ void System_w_FromParent_add_component_in_progress_after_match() {
         .query.filter.instanced = true
     });
 
-    ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
+    ECS_OBSERVER(world, AddMass, EcsOnAdd, Tag);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = {.entity = AddMass}, .ctx = &ecs_id(Mass)
     });
 

@@ -51,7 +51,6 @@ using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 
 static const flecs::entity_t Query = EcsQuery;
-static const flecs::entity_t Trigger = EcsTrigger;
 static const flecs::entity_t Observer = EcsObserver;
 
 /* Builtin opaque components */

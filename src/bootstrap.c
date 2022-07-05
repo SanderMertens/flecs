@@ -362,9 +362,9 @@ void register_symmetric(ecs_iter_t *it) {
 
         /* Create trigger that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
-        ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        ecs_observer_init(world, &(ecs_observer_desc_t){
             .entity.add = { ecs_childof(EcsFlecsInternals) },
-            .term.id = ecs_pair(r, EcsWildcard),
+            .filter.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
         });
@@ -692,9 +692,9 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity.add = { ecs_childof(EcsFlecsInternals) },
-        .term = {.id = EcsTag, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsTag, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_tag,
         .yield_existing = true
@@ -708,7 +708,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsAlias);
 
     flecs_bootstrap_tag(world, EcsQuery);
-    flecs_bootstrap_tag(world, EcsTrigger);
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
@@ -798,8 +797,8 @@ void flecs_bootstrap(
     /* Create triggers in internals scope */
     ecs_set_scope(world, EcsFlecsInternals);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term = { 
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { 
             .id = ecs_pair(EcsChildOf, EcsWildcard),
             .subj.set.mask = EcsSelf
         },
@@ -808,64 +807,64 @@ void flecs_bootstrap(
         .callback = on_parent_change
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsFinal, .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsFinal, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_final
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete_object
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_acyclic
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsExclusive, .subj.set.mask = EcsSelf  },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsExclusive, .subj.set.mask = EcsSelf  },
         .events = {EcsOnAdd},
         .callback = register_exclusive
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsSymmetric, .subj.set.mask = EcsSelf  },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsSymmetric, .subj.set.mask = EcsSelf  },
         .events = {EcsOnAdd},
         .callback = register_symmetric
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsDontInherit, .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsDontInherit, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_dont_inherit
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(EcsWith, EcsWildcard), .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = ecs_pair(EcsWith, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_with
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsUnion, .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsUnion, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_union
     });
 
     /* Define trigger to make sure that adding a module to a child entity also
      * adds it to the parent. */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsModule, .subj.set.mask = EcsSelf },
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = {.id = EcsModule, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = ensure_module_tag
     });

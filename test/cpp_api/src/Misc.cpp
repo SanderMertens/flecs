@@ -159,7 +159,7 @@ void Misc_c_macros() {
 
     ECS_SYSTEM(world, Sys, EcsOnUpdate, Position, Velocity);
     ECS_OBSERVER(world, Obs, EcsOnAdd, Position, Velocity);
-    ECS_TRIGGER(world, Trig, EcsOnAdd, Position);
+    ECS_OBSERVER(world, Trig, EcsOnAdd, Position);
 
     test_assert(ecs_id(Position) != 0);
     test_assert(ecs_id(Velocity) != 0);

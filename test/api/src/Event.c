@@ -15,8 +15,8 @@ void Event_table_1_id_w_trigger() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = id,
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -51,8 +51,8 @@ void Event_table_2_ids_w_trigger() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s_a = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = id_a,
+    ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = id_a,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx,
@@ -74,8 +74,8 @@ void Event_table_2_ids_w_trigger() {
 
     ecs_delete(world, s_a);
 
-    ecs_entity_t s_b = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = id_b,
+    ecs_entity_t s_b = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = id_b,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -227,17 +227,17 @@ void Event_emit_table_event() {
 
     ecs_entity_t evt = ecs_new_id(world);
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = TagA,
-        .term.subj.set.mask = EcsSelf,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = TagA,
+        .filter.terms[0].subj.set.mask = EcsSelf,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_a
     });
 
-    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = TagA,
-        .term.subj.set.mask = EcsSuperSet,
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = TagA,
+        .filter.terms[0].subj.set.mask = EcsSuperSet,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_b
@@ -278,8 +278,8 @@ void Event_emit_staged_from_world() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = id,
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -313,8 +313,8 @@ void Event_emit_staged_from_stage() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term.id = id,
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx

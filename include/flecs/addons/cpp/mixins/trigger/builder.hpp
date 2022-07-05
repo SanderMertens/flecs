@@ -8,7 +8,7 @@ namespace _ {
     template <typename ... Components>
     using trigger_builder_base = node_builder<
         trigger, 
-        ecs_trigger_desc_t, 
+        ecs_observer_desc_t, 
         trigger_builder<Components...>, 
         trigger_builder_i, 
         Components ...>;

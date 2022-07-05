@@ -1890,7 +1890,7 @@ void SingleThreadStaging_add_to_current_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position);
+    ECS_OBSERVER(world, Add_to_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
@@ -1916,7 +1916,7 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_OBSERVER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
@@ -1942,7 +1942,7 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_OBSERVER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
@@ -2079,7 +2079,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, Set_velocity_on_new, EcsOnSet, Position);
+    ECS_OBSERVER(world, Set_velocity_on_new, EcsOnSet, Position);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
     IterData add_ctx = {.component = ecs_id(Velocity)};
@@ -2146,7 +2146,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, Create_container, EcsOnSet, Position);
+    ECS_OBSERVER(world, Create_container, EcsOnSet, Position);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */
@@ -2199,7 +2199,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, Create_container_reverse, EcsOnSet, Position);
+    ECS_OBSERVER(world, Create_container_reverse, EcsOnSet, Position);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */
@@ -2635,7 +2635,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, Velocity());
-    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity);
+    ECS_OBSERVER(world, OnAdd, EcsOnAdd, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 

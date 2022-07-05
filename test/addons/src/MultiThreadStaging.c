@@ -269,7 +269,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_OBSERVER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, Velocity());
 
     ecs_system_init(world, &(ecs_system_desc_t) {

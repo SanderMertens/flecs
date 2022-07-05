@@ -11,21 +11,21 @@ struct trigger final : entity
 
     explicit trigger() : entity() { }
 
-    trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
-        : entity(world, ecs_trigger_init(world, desc)) 
+    trigger(flecs::world_t *world, ecs_observer_desc_t *desc) 
+        : entity(world, ecs_observer_init(world, desc)) 
     { 
         ecs_term_fini(&desc->term);
     }
     
     void ctx(void *ctx) {
-        ecs_trigger_desc_t desc = {};
+        ecs_observer_desc_t desc = {};
         desc.entity.entity = m_id;
         desc.ctx = ctx;
-        ecs_trigger_init(m_world, &desc);
+        ecs_observer_init(m_world, &desc);
     }
 
     void* ctx() const {
-        return ecs_get_trigger_ctx(m_world, m_id);
+        return ecs_get_observer_ctx(m_world, m_id);
     }
 };
 

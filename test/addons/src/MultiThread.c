@@ -1015,7 +1015,7 @@ void MultiThread_reactive_system() {
 
     ECS_COMPONENT_DEFINE(world, Position);        
     ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
-    ECS_TRIGGER(world, ReactiveDummySystem, EcsOnSet, Position);
+    ECS_OBSERVER(world, ReactiveDummySystem, EcsOnSet, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t) {
         .entity.entity = PeriodicDummySystem,

@@ -1656,10 +1656,12 @@ void flecs_query_on_event(
      * already handled is not done for us. */
     ecs_world_t *world = it->world;
     ecs_observer_t *o = it->ctx;
-    if (o->last_event_id == world->event_id) {
-        return;
+    if (o->last_event_id) {
+        if (o->last_event_id[0] == world->event_id) {
+            return;
+        }
+        o->last_event_id[0] = world->event_id;
     }
-    o->last_event_id = world->event_id;
 
     ecs_query_t *query = o->ctx;
     ecs_table_t *table = it->table;
