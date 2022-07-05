@@ -676,22 +676,6 @@
                 "write_annotation"
             ]  
         }, {
-            "id": "Trigger",
-            "testcases": [
-                "on_add",
-                "on_remove",
-                "on_add_tag_action",
-                "on_add_tag_iter",
-                "on_add_tag_each",
-                "on_add_id",
-                "on_add_id_arg",
-                "on_add_expr",
-                "create_w_no_template_args",
-                "yield_existing",
-                "default_ctor",
-                "entity_ctor"
-            ]
-        }, {
             "id": "Observer",
             "testcases": [
                 "2_terms_on_add",
@@ -707,7 +691,13 @@
                 "yield_existing",
                 "yield_existing_2_terms",
                 "default_ctor",
-                "entity_ctor"
+                "entity_ctor",
+                "on_add",
+                "on_remove",
+                "on_add_tag_action",
+                "on_add_tag_iter",
+                "on_add_tag_each",
+                "on_add_expr"
             ]
         }, {
             "id": "Filter",

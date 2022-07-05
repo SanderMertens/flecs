@@ -13995,17 +13995,6 @@ struct query_builder;
 
 namespace flecs {
 
-struct trigger;
-
-template<typename ... Components>
-struct trigger_builder;
-
-}
-
-#pragma once
-
-namespace flecs {
-
 struct observer;
 
 template<typename ... Components>
@@ -16090,24 +16079,6 @@ void each(Func&& func) const;
  */
 template <typename Func>
 void each(flecs::id_t term_id, Func&& func) const;
-
-
-/** Upcast entity to a trigger.
- * The provided entity must be a trigger.
- * 
- * @param e The entity.
- * @return A trigger object.
- */
-flecs::trigger trigger(flecs::entity e) const;
-
-/** Create a new trigger.
- * 
- * @tparam Components The components to match on.
- * @tparam Args Arguments passed to the constructor of flecs::trigger_builder.
- * @return Trigger builder.
- */
-template <typename... Components, typename... Args>
-flecs::trigger_builder<Components...> trigger(Args &&... args) const;
 
 
 /** Upcast entity to an observer.
@@ -22012,133 +21983,6 @@ private:
 
 } // namespace _
 } // namespace flecs
-
-#pragma once
-
-
-namespace flecs 
-{
-
-// Trigger builder interface
-template<typename Base, typename ... Components>
-struct trigger_builder_i : term_builder_i<Base> {
-    using Class = trigger_builder_i<Base, Components...>;
-    using BaseClass = term_builder_i<Base>;
-
-    trigger_builder_i(ecs_observer_desc_t *desc) 
-        : BaseClass(&desc->term)
-        , m_desc(desc)
-        , m_event_count(0) { }
-
-    /** Specify the event(s) for when the trigger should run.
-     * @param evt The event.
-     */
-    Base& event(entity_t evt) {
-        m_desc->events[m_event_count ++] = evt;
-        return *this;
-    }
-
-    /** Specify the event(s) for when the trigger should run.
-     * @tparam E The event.
-     */
-    template <typename E>
-    Base& event() {
-        m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
-        return *this;
-    }
-
-    /** Invoke observer for anything that matches its filter on creation */
-    Base& yield_existing(bool value = true) {
-        m_desc->yield_existing = value;
-        return *this;
-    }
-
-    /** Set system context */
-    Base& ctx(void *ptr) {
-        m_desc->ctx = ptr;
-        return *this;
-    }
-
-protected:
-    virtual flecs::world_t* world_v() = 0;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_observer_desc_t *m_desc;
-    int32_t m_event_count;
-};
-
-}
-
-
-namespace flecs {
-namespace _ {
-    template <typename ... Components>
-    using trigger_builder_base = node_builder<
-        trigger, 
-        ecs_observer_desc_t, 
-        trigger_builder<Components...>, 
-        trigger_builder_i, 
-        Components ...>;
-}
-
-template <typename ... Components>
-struct trigger_builder final : _::trigger_builder_base<Components...> {
-    trigger_builder(flecs::world_t* world, const char *name = nullptr)
-        : _::trigger_builder_base<Components...>(world, name)
-    {
-        _::sig<Components...>(world).populate(this);
-    }
-};
-
-}
-
-
-namespace flecs 
-{
-
-struct trigger final : entity
-{
-    using entity::entity;
-
-    explicit trigger() : entity() { }
-
-    trigger(flecs::world_t *world, ecs_observer_desc_t *desc) 
-        : entity(world, ecs_observer_init(world, desc)) 
-    { 
-        ecs_term_fini(&desc->term);
-    }
-    
-    void ctx(void *ctx) {
-        ecs_observer_desc_t desc = {};
-        desc.entity.entity = m_id;
-        desc.ctx = ctx;
-        ecs_observer_init(m_world, &desc);
-    }
-
-    void* ctx() const {
-        return ecs_get_observer_ctx(m_world, m_id);
-    }
-};
-
-// Mixin implementation
-inline trigger world::trigger(flecs::entity e) const {
-    return flecs::trigger(m_world, e);
-}
-
-template <typename... Comps, typename... Args>
-inline trigger_builder<Comps...> world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(m_world, FLECS_FWD(args)...);
-}
-
-} // namespace flecs
-
-#pragma once
-
-#pragma once
 
 #pragma once
 

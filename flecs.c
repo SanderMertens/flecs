@@ -14275,6 +14275,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
         user_it.ctx = o->ctx;
+        user_it.binding_ctx = o->binding_ctx;
         user_it.term_count = o->filter.term_count_actual;
         flecs_iter_validate(&user_it);
 
@@ -15250,6 +15251,8 @@ int flecs_multi_observer_init(
     child_desc.filter.expr = NULL;
     child_desc.filter.terms_buffer = NULL;
     child_desc.filter.terms_buffer_count = 1;
+    child_desc.binding_ctx = NULL;
+    child_desc.binding_ctx_free = NULL;
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.filter.terms);
     ecs_os_memcpy_n(child_desc.events, observer->events, 
@@ -15426,15 +15429,20 @@ ecs_entity_t ecs_observer_init(
         /* Observer must have at least one event */
         ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        /* If the filter has a single term but it is a *From operator, we need
-         * to create a multi observer */
-        bool n_oper = false;
-        if (filter->term_count == 1) {
-            n_oper = (filter->terms[0].oper == EcsAndFrom) ||
-               (filter->terms[0].oper == EcsOrFrom);
+        bool multi = false;
+
+        if (filter->term_count == 1 && !desc->last_event_id) {
+            ecs_term_t *term = &filter->terms[0];
+            /* If the filter has a single term but it is a *From operator, we
+             * need to create a multi observer */
+            multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
+            
+            /* An observer with only optional terms is a special case that is
+             * only handled by multi observers */
+            multi |= term->oper == EcsOptional;
         }
 
-        if (filter->term_count == 1 && !observer->is_monitor && !n_oper) {
+        if (filter->term_count == 1 && !observer->is_monitor && !multi) {
             if (flecs_uni_observer_init(world, observer, desc)) {
                 goto error;
             }
@@ -15511,8 +15519,12 @@ void flecs_observer_fini(
 
         ecs_os_free(observer->last_event_id);
     } else {
-        flecs_unregister_observer(
-            observer->world, observer->observable, observer);
+        if (observer->filter.term_count) {
+            flecs_unregister_observer(
+                observer->world, observer->observable, observer);
+        } else {
+            /* Observer creation failed while creating filter */
+        }
     }
 
     /* Cleanup filters */

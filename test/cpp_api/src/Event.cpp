@@ -14,9 +14,9 @@ void Event_evt_1_id_entity() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id)
+        .term(id)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -40,17 +40,17 @@ void Event_evt_2_ids_entity() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id_a)
+        .term(id_a)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
         });
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id_b)
+        .term(id_b)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -76,9 +76,9 @@ void Event_evt_1_id_table() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id)
+        .term(id)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -103,17 +103,17 @@ void Event_evt_2_ids_table() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id_a)
+        .term(id_a)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
         });
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id_b)
+        .term(id_b)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -136,9 +136,9 @@ void Event_evt_type() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event<Evt>()
-        .id(id)
+        .term(id)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -159,9 +159,9 @@ void Event_evt_1_component() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event<Evt>()
-        .id<IdA>()
+        .term<IdA>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -182,17 +182,17 @@ void Event_evt_2_components() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event<Evt>()
-        .id<IdA>()
+        .term<IdA>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
         });
 
-    ecs.trigger()
+    ecs.observer()
         .event<Evt>()
-        .id<IdB>()
+        .term<IdB>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -220,9 +220,9 @@ void Event_evt_void_ctx() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(id)
+        .term(id)
         .iter([&](flecs::iter& it) {
             test_assert(it.entity(0) == e1);
             test_int(it.param<EvtData>()->value, 10);
@@ -248,9 +248,9 @@ void Event_evt_typed_ctx() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event<EvtData>()
-        .id(id)
+        .term(id)
         .iter([&](flecs::iter& it) {
             test_assert(it.entity(0) == e1);
             test_int(it.param<EvtData>()->value, 10);
@@ -274,9 +274,9 @@ void Event_evt_implicit_typed_ctx() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event<EvtData>()
-        .id(id)
+        .term(id)
         .iter([&](flecs::iter& it) {
             test_assert(it.entity(0) == e1);
             test_int(it.param<EvtData>()->value, 10);
@@ -302,9 +302,9 @@ void Event_evt_1_id_pair_rel_id_obj_id_entity() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id(rel, obj)
+        .term(rel, obj)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -327,9 +327,9 @@ void Event_evt_1_id_pair_rel_obj_id_entity() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id<IdA>(obj)
+        .term<IdA>(obj)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -351,9 +351,9 @@ void Event_evt_1_id_pair_rel_obj_entity() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id<IdA, IdB>()
+        .term<IdA, IdB>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -375,9 +375,9 @@ void Event_emit_staged_from_world() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id<Tag>()
+        .term<Tag>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;
@@ -403,9 +403,9 @@ void Event_emit_staged_from_stage() {
 
     int32_t count = 0;
 
-    ecs.trigger()
+    ecs.observer()
         .event(evt)
-        .id<Tag>()
+        .term<Tag>()
         .each([&](flecs::entity e) {
             test_assert(e == e1);
             count ++;

@@ -67,7 +67,7 @@ void SimpleModuleImport(
     
     ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
     ECS_SYSTEM_DEFINE(world, SimpleFooSystem, EcsOnUpdate, Position);
-    ECS_TRIGGER_DEFINE(world, SimpleFooTrigger, EcsOnAdd, Position);
+    ECS_OBSERVER_DEFINE(world, SimpleFooTrigger, EcsOnAdd, Position);
 
     ECS_TAG_DEFINE(world, SimpleFooTag);
     ECS_ENTITY_DEFINE(world, SimpleFooEntity, 0);

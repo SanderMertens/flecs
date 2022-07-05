@@ -422,3 +422,116 @@ void Observer_entity_ctor() {
     flecs::observer eo = world.observer(oe);
     test_assert(eo == o);
 }
+
+void Observer_on_add() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, Position& p) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<Position>();
+
+    test_int(invoked, 1);
+}
+
+void Observer_on_remove() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([&](flecs::entity e, Position& p) {
+            invoked ++;
+        });
+
+    auto e = world.entity()
+        .add<Position>();
+
+    test_int(invoked, 0);
+    
+    e.remove<Position>();
+
+    test_int(invoked, 1);
+}
+
+struct MyTag { };
+
+void Observer_on_add_tag_action() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.observer<MyTag>()
+        .event(flecs::OnAdd)
+        .iter([&](flecs::iter it, MyTag*) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    test_int(invoked, 1);
+}
+
+void Observer_on_add_tag_iter() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.observer<MyTag>()
+        .event(flecs::OnAdd)
+        .iter([&](flecs::iter it, MyTag*) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    test_int(invoked, 1);
+}
+
+void Observer_on_add_tag_each() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.observer<MyTag>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, MyTag) {
+            invoked ++;
+        });
+
+    world.entity()
+        .add<MyTag>();
+
+    test_int(invoked, 1);
+}
+
+void Observer_on_add_expr() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Tag>();
+
+    world.observer<>().expr("Tag")
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+        });
+
+    auto e = world.entity().add<Tag>();
+
+    test_int(invoked, 1);
+    
+    e.remove<Tag>();
+
+    test_int(invoked, 1);
+}
