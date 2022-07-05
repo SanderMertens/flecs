@@ -64,7 +64,6 @@ typedef struct ecs_world_stats_t {
 
     /* Queries & events */
     ecs_metric_t query_count;                /* Number of queries */
-    ecs_metric_t trigger_count;              /* Number of triggers */
     ecs_metric_t observer_count;             /* Number of observers */
     ecs_metric_t system_count;               /* Number of systems */
 

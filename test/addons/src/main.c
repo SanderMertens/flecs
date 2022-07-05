@@ -421,7 +421,6 @@ void SystemMisc_get_query(void);
 void SystemMisc_set_get_context(void);
 void SystemMisc_set_get_binding_context(void);
 void SystemMisc_deactivate_after_disable(void);
-void SystemMisc_system_w_self(void);
 void SystemMisc_delete_system(void);
 void SystemMisc_delete_pipeline_system(void);
 void SystemMisc_delete_system_w_ctx(void);
@@ -2541,10 +2540,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_deactivate_after_disable
     },
     {
-        "system_w_self",
-        SystemMisc_system_w_self
-    },
-    {
         "delete_system",
         SystemMisc_delete_system
     },
@@ -4423,7 +4418,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        63,
+        62,
         SystemMisc_testcases
     },
     {

@@ -190,9 +190,6 @@ typedef struct ecs_filter_t ecs_filter_t;
 /** A rule implements a non-trivial filter */
 typedef struct ecs_rule_t ecs_rule_t;
 
-/** A trigger reacts to events matching a single filter term */
-typedef struct ecs_trigger_t ecs_trigger_t;
-
 /** An observer reacts to events matching multiple filter terms */
 typedef struct ecs_observer_t ecs_observer_t;
 
@@ -231,8 +228,8 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
 
-/* Maximum number of events to set in static array of trigger descriptor */
-#define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
+/* Maximum number of events to set in static array of observer descriptor */
+#define ECS_OBSERVER_DESC_EVENT_COUNT_MAX (8)
 
 /* Maximum number of query variables per query */
 #define ECS_VARIABLE_COUNT_MAX (64)
@@ -507,11 +504,8 @@ struct ecs_observer_t {
     
     ecs_filter_t filter;
 
-    /* Triggers created by observer */
-    ecs_vector_t *triggers;
-
     /* Observer events */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;   
     
     ecs_iter_action_t callback; /* See ecs_observer_desc_t::callback */
@@ -779,10 +773,10 @@ typedef struct ecs_observer_desc_t {
     ecs_filter_desc_t filter;
 
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
 
-    /* When trigger is created, generate events from existing data. For example,
-     * EcsOnAdd Position would trigger for all existing instances of Position.
+    /* When observer is created, generate events from existing data. For example,
+     * EcsOnAdd Position would match all existing instances of Position.
      * This is only supported for events that are iterable (see EcsIterable) */
     bool yield_existing;
 
@@ -809,7 +803,7 @@ typedef struct ecs_observer_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 
-    /* Observable with which to register the trigger */
+    /* Observable with which to register the observer */
     ecs_poly_t *observable;
 
     /* Optional shared last event id for multiple observers. Ensures only one
@@ -1119,7 +1113,7 @@ FLECS_API extern const ecs_entity_t EcsOnSet;
 /* Event. Triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
-/* Event. Exactly-once trigger for when an entity matches/unmatches a filter */
+/* Event. Exactly-once observer for when an entity matches/unmatches a filter */
 FLECS_API extern const ecs_entity_t EcsMonitor;
 
 /* Event. Triggers when an entity is deleted.
@@ -1134,7 +1128,7 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
 /* Event. Triggers when a table is deleted. */
 // FLECS_API extern const ecs_entity_t EcsOnDeleteTable;
 
-/* Event. Triggers when a table becomes empty (doesn't trigger on creation). */
+/* Event. Triggers when a table becomes empty (doesn't emit on creation). */
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
@@ -3458,7 +3452,7 @@ int32_t ecs_query_entity_count(
 
 
 /**
- * @defgroup trigger Triggers
+ * @defgroup observer Observers
  */
 
 typedef struct ecs_event_desc_t {
@@ -4551,7 +4545,7 @@ ecs_table_t* ecs_table_remove_id(
     ecs_id_t id);
 
 /** Lock or unlock table.
- * When a table is locked, modifications to it will trigger an assert. When the 
+ * When a table is locked, modifications to it will throw an assert. When the 
  * table is locked recursively, it will take an equal amount of unlock
  * operations to actually unlock the table.
  *
@@ -4609,7 +4603,7 @@ void ecs_table_swap_rows(
 
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified
- * table. This may trigger the following actions:
+ * table. This may cause the following actions:
  * - Ctor for each component in the target table
  * - Move for each overlapping component
  * - Dtor for each component in the source table.

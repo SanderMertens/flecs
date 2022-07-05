@@ -2170,9 +2170,6 @@ typedef struct ecs_filter_t ecs_filter_t;
 /** A rule implements a non-trivial filter */
 typedef struct ecs_rule_t ecs_rule_t;
 
-/** A trigger reacts to events matching a single filter term */
-typedef struct ecs_trigger_t ecs_trigger_t;
-
 /** An observer reacts to events matching multiple filter terms */
 typedef struct ecs_observer_t ecs_observer_t;
 
@@ -2211,8 +2208,8 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
 
-/* Maximum number of events to set in static array of trigger descriptor */
-#define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
+/* Maximum number of events to set in static array of observer descriptor */
+#define ECS_OBSERVER_DESC_EVENT_COUNT_MAX (8)
 
 /* Maximum number of query variables per query */
 #define ECS_VARIABLE_COUNT_MAX (64)
@@ -2487,11 +2484,8 @@ struct ecs_observer_t {
     
     ecs_filter_t filter;
 
-    /* Triggers created by observer */
-    ecs_vector_t *triggers;
-
     /* Observer events */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;   
     
     ecs_iter_action_t callback; /* See ecs_observer_desc_t::callback */
@@ -2836,15 +2830,14 @@ struct ecs_iter_t {
     ecs_entity_t system;          /* The system (if applicable) */
     ecs_entity_t event;           /* The event (if applicable) */
     ecs_id_t event_id;            /* The (component) id for the event */
-    ecs_entity_t self;            /* Self entity (if set for system) */
 
     /* Query information */
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_count;           /* Number of terms in query */
-    int32_t term_index;           /* Index of term that triggered an event.
+    int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field
-                                   * of a trigger/observer term. */
+                                   * of an observer term. */
     int32_t variable_count;       /* Number of variables for query */
     char **variable_names;        /* Names of variables (if any) */
 
@@ -2872,7 +2865,7 @@ struct ecs_iter_t {
 
     /* Chained iterators */
     ecs_iter_next_action_t next;  /* Function to progress iterator */
-    ecs_iter_action_t callback;   /* Callback of system, trigger, observer */
+    ecs_iter_action_t callback;   /* Callback of system or observer */
     ecs_iter_fini_action_t fini;  /* Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 };
@@ -3628,10 +3621,10 @@ typedef struct ecs_observer_desc_t {
     ecs_filter_desc_t filter;
 
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
-    ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
 
-    /* When trigger is created, generate events from existing data. For example,
-     * EcsOnAdd Position would trigger for all existing instances of Position.
+    /* When observer is created, generate events from existing data. For example,
+     * EcsOnAdd Position would match all existing instances of Position.
      * This is only supported for events that are iterable (see EcsIterable) */
     bool yield_existing;
 
@@ -3658,7 +3651,7 @@ typedef struct ecs_observer_desc_t {
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 
-    /* Observable with which to register the trigger */
+    /* Observable with which to register the observer */
     ecs_poly_t *observable;
 
     /* Optional shared last event id for multiple observers. Ensures only one
@@ -3989,7 +3982,7 @@ FLECS_API extern const ecs_entity_t EcsOnSet;
 /* Event. Triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
-/* Event. Exactly-once trigger for when an entity matches/unmatches a filter */
+/* Event. Exactly-once observer for when an entity matches/unmatches a filter */
 FLECS_API extern const ecs_entity_t EcsMonitor;
 
 /* Event. Triggers when an entity is deleted.
@@ -4004,7 +3997,7 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
 /* Event. Triggers when a table is deleted. */
 // FLECS_API extern const ecs_entity_t EcsOnDeleteTable;
 
-/* Event. Triggers when a table becomes empty (doesn't trigger on creation). */
+/* Event. Triggers when a table becomes empty (doesn't emit on creation). */
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
@@ -6328,7 +6321,7 @@ int32_t ecs_query_entity_count(
 
 
 /**
- * @defgroup trigger Triggers
+ * @defgroup observer Observers
  */
 
 typedef struct ecs_event_desc_t {
@@ -7421,7 +7414,7 @@ ecs_table_t* ecs_table_remove_id(
     ecs_id_t id);
 
 /** Lock or unlock table.
- * When a table is locked, modifications to it will trigger an assert. When the 
+ * When a table is locked, modifications to it will throw an assert. When the 
  * table is locked recursively, it will take an equal amount of unlock
  * operations to actually unlock the table.
  *
@@ -7479,7 +7472,7 @@ void ecs_table_swap_rows(
 
 /** Commit (move) entity to a table.
  * This operation moves an entity from its current table to the specified
- * table. This may trigger the following actions:
+ * table. This may cause the following actions:
  * - Ctor for each component in the target table
  * - Move for each overlapping component
  * - Dtor for each component in the source table.
@@ -7583,7 +7576,7 @@ void* ecs_record_get_column(
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-/* Use for declaring trigger, observer and system identifiers */
+/* Use for declaring observer and system identifiers */
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /* Observers */
@@ -9632,7 +9625,6 @@ typedef struct ecs_world_stats_t {
 
     /* Queries & events */
     ecs_metric_t query_count;                /* Number of queries */
-    ecs_metric_t trigger_count;              /* Number of triggers */
     ecs_metric_t observer_count;             /* Number of observers */
     ecs_metric_t system_count;               /* Number of systems */
 
@@ -12817,7 +12809,7 @@ static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
 
-/* Trigger tags */
+/* Event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
 static const flecs::entity_t OnRemove = EcsOnRemove;
 static const flecs::entity_t OnSet = EcsOnSet;
@@ -13858,7 +13850,7 @@ struct event_builder_base {
         m_desc.event = event;
     }
 
-    /** Add component to trigger on */
+    /** Add component to emit for */
     template <typename T>
     Base& id() {
         m_ids.array = m_ids_array;
@@ -13868,7 +13860,7 @@ struct event_builder_base {
     }
     
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @tparam R the relation type.
      * @tparam O the object type.
      */
@@ -13880,7 +13872,7 @@ struct event_builder_base {
     }
 
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @tparam R the relation type.
      * @param object The object id.
      */
@@ -13890,7 +13882,7 @@ struct event_builder_base {
     }
 
     /** 
-     * Add pair to trigger on
+     * Add pair to emit for
      * @param relation The relation type.
      * @param object The object id.
      */
@@ -13898,7 +13890,7 @@ struct event_builder_base {
         return id(ecs_pair(relation, object));
     }
 
-    /** Add (component) id to trigger on */
+    /** Add (component) id to emit for */
     Base& id(flecs::id_t id) {
         m_ids.array = m_ids_array;
         m_ids.array[m_ids.count] = id;
@@ -13906,11 +13898,11 @@ struct event_builder_base {
         return *this;
     }
 
-    /** Set entity for which to trigger */
+    /** Set entity for which to emit event */
     Base& entity(flecs::entity_t e) {
         ecs_record_t *r = ecs_record_find(m_world, e);
         
-        /* can't trigger for empty entity */
+        /* Can't emit for empty entity */
         ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
         ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
@@ -13920,7 +13912,7 @@ struct event_builder_base {
         return *this;
     }
 
-    /* Set table for which to trigger */
+    /* Set table for which to emit event */
     Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
         m_desc.table = t;
         m_desc.offset = offset;
@@ -16588,11 +16580,6 @@ public:
     bool has_module() const {
         return ecs_table_has_module(m_iter->table);
     }
-
-    /** Access self.
-     * 'self' is an entity that can be associated with a trigger, observer or
-     * system when they are created. */
-    flecs::entity self() const;
 
     /** Access ctx. 
      * ctx contains the context pointer assigned to a system.
@@ -23281,10 +23268,6 @@ inline flecs::entity iter::event() const {
 
 inline flecs::id iter::event_id() const {
     return flecs::id(m_iter->world, m_iter->event_id);
-}
-
- inline flecs::entity iter::self() const {
-    return flecs::entity(m_iter->world, m_iter->self);
 }
 
 inline flecs::world iter::world() const {

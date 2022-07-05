@@ -11,7 +11,6 @@ void probe_system_w_ctx(
 
     ctx->param = it->param;
     ctx->system = it->system;
-    ctx->self = it->self;
     ctx->event = it->event;
     ctx->event_id = it->event_id;
     ctx->offset = 0;

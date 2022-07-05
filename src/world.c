@@ -1674,7 +1674,7 @@ void flecs_process_pending_tables(
     ecs_world_t *world = (ecs_world_t*)world_r;
     
     /* If pending buffer is NULL there already is a stackframe that's iterating
-     * the table list. This can happen when a trigger for a table event results
+     * the table list. This can happen when an observer for a table event results
      * in a mutation that causes another table to change state. A typical 
      * example of this is a system that becomes active/inactive as the result of
      * a query (and as a result, its matched tables) becoming empty/non empty */

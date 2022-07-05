@@ -23,60 +23,6 @@ Flecs is used with other frameworks and game engines, and as such not all of its
 ### 6. Have fun!
 There are few things as satisfying as building games. If nothing else, Flecs has been built to enable creative visions both big and small. I'm having a lot of fun building Flecs, I hope you will have fun using it, and that your users will have fun playing your games :)
 
-## Concepts
-This section describes the high level concepts of Flecs.
-
-### World
-The world is the container in which a simulation lives. It stores all of the simulation data, metadata and systems required to run the simulation. An application can have one or more worlds.
-
-### Entity
-An entity is a unique, 64-bit identifier that represents a single thing or object in your game. Entities have no behavior, and strictly speaking do not even have a lifecycle. Rather, you should see an entity as a numeric "primary key" that is associated with data in the store. In Flecs, the entity type (`ecs_entity_t`) is just that, a 64-bit integer.
-
-### Component
-A component is a datatype that is registered with the world. They can be added to, and removed from an entity. An entity can contain at most a single instance of a component, and can have an infinite number of components (in theory). Flecs internally stores component metadata on an entity, which is why component handles are of type `ecs_entity_t`.
-
-### Tag
-A tag is similar to a component, but is not associated with a data type. Just like components, tags are stored as an entity, which is why tag handles are of type `ecs_entity_t`.
-
-### Query
-A query allows for high performance iteration of entities that match a certain signature. The signature at a minimum contains information about which components an entity needs to have in order to be matched. Signatures can however be much more complex, and can exclude components, optionally match with components, match with components from specific sources and more.
-
-### System
-A system is a function that iterates over entities that, just like queries, match a signature. Systems can either be standalone or part of a _pipeline_, in which case they are executed periodically as part of running the main loop. Flecs internally stores system metadata on an entity, which is why system handles are of type `ecs_entity_t`.
-
-### Phase
-A phase identifies a moment in a frame when a system should be executed. A system can only be associated with a single phase. A phase is implemented as a tag, which is why phase handles are of type `ecs_entity_t`. A system can be made part of a phase by adding the phase to the system entity.
-
-### Pipeline
-A pipeline contains all the phases that should be executed by the world when a frame is computed. Flecs has a builtin pipeline which contains builtin phase tags, but applications can define their own custom pipelines. Flecs stores pipelin metadata on an entity, which is why pipeline handles are of type `ecs_entity_t`.
-
-### Monitor
-A monitor is a special kind of system that is executed when an entity goes from not matching the signature to matching the signature. Monitors can be used to monitor whether an entity has a specific set of entities.
-
-### Set systems
-Set systems are a special kind of system that are executed when one or more components are set or unset. Set systems are a reliable way of getting notified when the value of a component changes.
-
-### Trigger
-A trigger is a function that is executed when a component is added or removed. Triggers are simpler than systems, and can only be registered for a single component. Flecs stores triggers internally as an entity which is why trigger handles are of type `ecs_entity_t`.
-
-### Type
-A type is a collection (vector) of entity identifiers (`ecs_entity_t`) that can describe anything from a set of components, systems and tags, to plain entities. Every entity is associated with exactly one type that describes which components, tags, or other it has.
-
-### Type role
-A type role is a flag that indicates which role an entity fulfills in a type. By default this flag is `0`, indicating that the entity should be interpreted as component or tag.
-
-### Scope
-A scope is a virtual container that contains all of the child entities for a specific parent entity. Scopes are not recursive. Scopes are identified by their parent, which is why scope handles are of type `ecs_entity_t`.
-
-### Namespace
-Namespace is a different word for scope, and the terms may be used interchangeably. Typically the term namespace is used in relationship to components, systems and modules, whereas the term scope is used in relation to regular entities.
-
-### Module
-A module groups components, systems and more into reusable units that can be imported by an application. Contents of a module are by default stored in the scope (or namespace) of the module. Modules can import other modules. A module is only loaded once, regardless of how many times an application imports it.
-
-### Stage
-A stage is a temporary storage where structural changes to entities (new, add, remove, delete) are stored while an application is iterating. Flecs systems access raw C arrays, and this ensures that these arrays are not modified as the application is iterating over them. Data in a stage is merged at least once per frame, or more when necessary.
-
 ## Diagrams
 
 ### High level architecture
@@ -203,7 +149,7 @@ ecs_set(world, e, Position, {10, 20});
 ecs_set(world, e, Position, {10, 20});
 ```
 
-The effect of invoking this operation once is the same as invoking the operation multiple times, but both invocations can trigger an OnSet system which can introduce side effects.
+The effect of invoking this operation once is the same as invoking the operation multiple times, but both invocations can invoke an OnSet observer which can introduce side effects.
 
 All declarative macro's (`ECS_COMPONEN`, `ECS_SYSTEM`, ...) are idempotent:
 
@@ -852,14 +798,18 @@ void Move(ecs_iter_t *it) {
 }
 ```
 
-## Triggers
-Triggers are callbacks that are executed when a component is added or removed from an entity. Triggers are similar to systems, but unlike systems they can only match a single component. This is an example of a trigger that is executed when the Position component is added:
+## Observers
+Observers are callbacks that are invoked when one or more events matches the query of an observer. Events can be either user defined or builtin. Examples of builtin events are `OnAdd`, `OnRemove` and `OnSet`.
+
+When an observer has a query with more than one component, the observer will not match until the entity for which the event is emitted satisfies the entire query.
+
+An exmple of an observer with a single component:
 
 ```c
 ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
 ```
 
-The implementation of the trigger looks similar to a system:
+The implementation of the observer looks similar to a system:
 
 ```c
 void AddPosition(ecs_iter_t *it) {

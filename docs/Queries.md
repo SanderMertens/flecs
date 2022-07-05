@@ -318,7 +318,7 @@ ecs_set(world, e, Position, {10, 20}); // Does not reorder
 ecs_iter_t it = ecs_query_iter(world, q); // Reordering happens here
 ```
 
-The following operations mark data dirty can can trigger a reordering:
+The following operations mark data dirty can can cause a reordering:
 - Creating a new entity with the ordered component
 - Deleting an entity with the ordered component
 - Adding the ordered component to an entity

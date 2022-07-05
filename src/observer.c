@@ -55,7 +55,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
         user_it.flags))
     {
-        /* Monitor observers only trigger when the filter matches for the first
+        /* Monitor observers only invoke when the filter matches for the first
          * time with an entity */
         if (o->is_monitor) {
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
@@ -243,7 +243,7 @@ void flecs_register_observer_for_id(
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
         if (!ecs_map_is_initialized(observers)) {
-            ecs_map_init(observers, ecs_trigger_t*, 1);
+            ecs_map_init(observers, ecs_observer_t*, 1);
         }
 
         ecs_map_ensure(observers, ecs_observer_t*, 
@@ -318,7 +318,7 @@ void flecs_unregister_observer_for_id(
         flecs_inc_observer_count(world, event, evt, term_id, -1);
 
         if (id != term_id) {
-            /* Id is different from term_id in case of a set trigger. If they're
+            /* Id is different from term_id in case of a set observer. If they're
              * the same, flecs_inc_observer_count could already have done cleanup */
             if (!ecs_map_is_initialized(&idt->observers) && 
                 !ecs_map_is_initialized(&idt->set_observers) && 
@@ -561,11 +561,11 @@ static
 void flecs_notify_self_observers(
     ecs_world_t *world,
     ecs_iter_t *it,
-    const ecs_map_t *triggers)
+    const ecs_map_t *observers)
 {
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(observers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_map_iter_t mit = ecs_map_iter(triggers);
+    ecs_map_iter_t mit = ecs_map_iter(observers);
     ecs_observer_t *observer;
     while ((observer = ecs_map_next_ptr(&mit, ecs_observer_t*, NULL))) {
         if (flecs_ignore_observer(world, observer, it->table)) {
@@ -623,9 +623,9 @@ static
 void flecs_notify_set_base_observers(
     ecs_world_t *world,
     ecs_iter_t *it,
-    const ecs_map_t *triggers)
+    const ecs_map_t *observers)
 {
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(observers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t event_id = it->event_id;
     ecs_entity_t rel = ECS_PAIR_FIRST(event_id);
@@ -641,7 +641,7 @@ void flecs_notify_set_base_observers(
         return;
     }
 
-    ecs_map_iter_t mit = ecs_map_iter(triggers);
+    ecs_map_iter_t mit = ecs_map_iter(observers);
     ecs_observer_t *observer;
     while ((observer = ecs_map_next_ptr(&mit, ecs_observer_t*, NULL))) {
         if (flecs_ignore_observer(world, observer, it->table)) {
@@ -694,16 +694,16 @@ static
 void flecs_notify_set_observers(
     ecs_world_t *world,
     ecs_iter_t *it,
-    const ecs_map_t *triggers)
+    const ecs_map_t *observers)
 {
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(observers != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
         return;
     }
 
-    ecs_map_iter_t mit = ecs_map_iter(triggers);
+    ecs_map_iter_t mit = ecs_map_iter(observers);
     ecs_observer_t *observer;
     while ((observer = ecs_map_next_ptr(&mit, ecs_observer_t*, NULL))) {
         if (!ecs_id_match(it->event_id, observer->filter.terms[0].id)) {
@@ -720,7 +720,7 @@ void flecs_notify_set_observers(
         ecs_term_t *term = &filter->terms[0];
         ecs_entity_t term_subj = term->subj.entity;
 
-        /* If trigger is for a specific entity, make sure it is in the table
+        /* If observer is for a specific entity, make sure it is in the table
          * being triggered for */
         if (term_subj != EcsThis) {
             for (i = 0; i < count; i ++) {
@@ -733,7 +733,7 @@ void flecs_notify_set_observers(
                 continue;
             }
 
-            /* If the entity matches, trigger for no other entities */
+            /* If the entity matches, observer for no other entities */
             it->entities[0] = 0;
             it->count = 1;
         }
@@ -859,7 +859,7 @@ void flecs_multi_observer_yield_existing(
         return;
     }
 
-    /* If yield existing is enabled, trigger for each thing that matches
+    /* If yield existing is enabled, invoke for each thing that matches
      * the event, if the event is iterable. */
     int i, count = observer->event_count;
     for (i = 0; i < count; i ++) {
@@ -907,7 +907,7 @@ bool flecs_check_observers_for_event(
     }
 }
 
-void flecs_triggers_notify(
+void flecs_observers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
     const ecs_type_t *ids,
@@ -964,7 +964,7 @@ void flecs_triggers_notify(
     }
 }
 
-void flecs_set_triggers_notify(
+void flecs_set_observers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
     const ecs_type_t *ids,
@@ -1082,7 +1082,7 @@ int flecs_multi_observer_init(
         child_desc.filter.flags |= EcsFilterMatchDisabled;
     }
 
-    /* Create triggers as children of observer */
+    /* Create observers as children of observer */
     ecs_entity_t old_scope = ecs_set_scope(world, observer->entity);
 
     for (i = 0; i < term_count; i ++) {
@@ -1093,14 +1093,14 @@ int flecs_multi_observer_init(
         ecs_oper_kind_t oper = term->oper;
         ecs_id_t id = term->id;
 
-        /* AndFrom & OrFrom terms insert multiple triggers */
+        /* AndFrom & OrFrom terms insert multiple observers */
         if (oper == EcsAndFrom || oper == EcsOrFrom) {
             const ecs_type_t *type = ecs_get_type(world, id);
             int32_t ti, ti_count = type->count;
             ecs_id_t *ti_ids = type->array;
 
-            /* Correct operator will be applied when a trigger occurs, and
-             * the observer is evaluated on the trigger source */
+            /* Correct operator will be applied when an event occurs, and
+             * the observer is evaluated on the observer source */
             term->oper = EcsAnd;
             for (ti = 0; ti < ti_count; ti ++) {
                 ecs_id_t ti_id = ti_ids[ti];
@@ -1113,9 +1113,7 @@ int flecs_multi_observer_init(
                 term->pred.entity = ti_ids[ti];
                 term->id = ti_ids[ti];
 
-                ecs_entity_t t = ecs_vector_add(&observer->triggers, 
-                    ecs_entity_t)[0] = ecs_observer_init(world, &child_desc);
-                if (!t) {
+                if (ecs_observer_init(world, &child_desc) == 0) {
                     goto error;
                 }
             }
@@ -1130,10 +1128,7 @@ int flecs_multi_observer_init(
             term->subj.var = EcsVarIsVariable;
             term->obj.entity = 0;
         }
-
-        ecs_entity_t t = ecs_vector_add(&observer->triggers, ecs_entity_t)
-            [0] = ecs_observer_init(world, &child_desc);
-        if (!t) {
+        if (ecs_observer_init(world, &child_desc) == 0) {
             goto error;
         }
 
@@ -1212,7 +1207,7 @@ ecs_entity_t ecs_observer_init(
          * since they require pre/post checking of the filter to test if the
          * entity is entering/leaving the monitor. */
         int i;
-        for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
+        for (i = 0; i < ECS_OBSERVER_DESC_EVENT_COUNT_MAX; i ++) {
             ecs_entity_t event = desc->events[i];
             if (!event) {
                 break;
@@ -1314,16 +1309,7 @@ void flecs_observer_fini(
     ecs_observer_t *observer)
 {
     if (observer->is_multi) {
-        /* Cleanup triggers */
-        int i, count = ecs_vector_count(observer->triggers);
-        ecs_entity_t *triggers = ecs_vector_first(observer->triggers, ecs_entity_t);
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t t = triggers[i];
-            if (!t) continue;
-            ecs_delete(observer->world, triggers[i]);
-        }
-        ecs_vector_free(observer->triggers);
-
+        /* Child observers get deleted up by entity cleanup logic */
         ecs_os_free(observer->last_event_id);
     } else {
         if (observer->filter.term_count) {

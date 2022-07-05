@@ -2043,29 +2043,6 @@ void System2(ecs_iter_t *it) {
     system_2_invoked ++;
 }
 
-void DeferredActions_create_trigger_while_deferred() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, TagA);
-
-    ecs_defer_begin(world);
-    Probe ctx = {0};
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .filter.terms[0].id = TagA,
-        .events = {EcsOnAdd},
-        .callback = System,
-        .ctx = &ctx
-    });
-    ecs_defer_end(world);
-    test_assert(trigger != 0);
-    test_int(ctx.invoked, 0);
-
-    ecs_new(world, TagA);
-    test_int(ctx.invoked, 1);
-
-    ecs_fini(world);
-}
-
 void DeferredActions_create_observer_while_deferred() {
     ecs_world_t *world = ecs_mini();
 
@@ -2073,14 +2050,14 @@ void DeferredActions_create_observer_while_deferred() {
 
     ecs_defer_begin(world);
     Probe ctx = {0};
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t) {
         .filter.terms = {{ .id = TagA }},
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
     });
     ecs_defer_end(world);
-    test_assert(trigger != 0);
+    test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
     ecs_new(world, TagA);
@@ -2112,39 +2089,6 @@ void DeferredActions_create_query_while_deferred() {
     ecs_fini(world);
 }
 
-void DeferredActions_update_trigger_while_deferred() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, TagA);
-
-    Probe ctx = {0};
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .filter.terms[0].id = TagA,
-        .events = {EcsOnAdd},
-        .callback = System,
-        .ctx = &ctx
-    });
-    test_assert(trigger != 0);
-    test_int(ctx.invoked, 0);
-
-    ecs_new(world, TagA);
-    test_int(ctx.invoked, 1);
-    test_int(system_2_invoked, 0);
-
-    ecs_defer_begin(world);
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .entity.entity = trigger,
-        .callback = System2
-    });
-    ecs_defer_end(world);
-
-    ecs_new(world, TagA);
-    test_int(ctx.invoked, 2);
-    test_int(system_2_invoked, 1);
-
-    ecs_fini(world);
-}
-
 void DeferredActions_update_observer_while_deferred() {
     ecs_world_t *world = ecs_mini();
 
@@ -2152,14 +2096,14 @@ void DeferredActions_update_observer_while_deferred() {
 
     ecs_defer_begin(world);
     Probe ctx = {0};
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t) {
         .filter.terms = {{ .id = TagA }},
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
     });
     ecs_defer_end(world);
-    test_assert(trigger != 0);
+    test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
     ecs_new(world, TagA);
@@ -2169,7 +2113,7 @@ void DeferredActions_update_observer_while_deferred() {
 
     ecs_defer_begin(world);
     ecs_observer_init(world, &(ecs_observer_desc_t) {
-        .entity.entity = trigger,
+        .entity.entity = observer,
         .callback = System2
     });
     ecs_defer_end(world);
@@ -2222,7 +2166,7 @@ void DeferredActions_defer_while_suspend_readonly() {
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    /* Create trigger on EcsComponent which will defer a command while readonly
+    /* Create observer on EcsComponent which will defer a command while readonly
      * mode is suspended */
     ecs_observer_init(world, &(ecs_observer_desc_t) {
         .filter.terms[0].id = ecs_id(EcsComponent),
@@ -2269,7 +2213,7 @@ void DeferredActions_defer_while_suspend_readonly_w_existing_commands() {
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    /* Create trigger on EcsComponent which will defer a command while readonly
+    /* Create observer on EcsComponent which will defer a command while readonly
      * mode is suspended */
     ecs_observer_init(world, &(ecs_observer_desc_t) {
         .filter.terms[0].id = ecs_id(EcsComponent),

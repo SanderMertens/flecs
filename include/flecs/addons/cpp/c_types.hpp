@@ -76,7 +76,7 @@ static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
 
-/* Trigger tags */
+/* Event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
 static const flecs::entity_t OnRemove = EcsOnRemove;
 static const flecs::entity_t OnSet = EcsOnSet;

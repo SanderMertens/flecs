@@ -62,11 +62,11 @@ void notify_subset(
             it->offset = 0;
             it->count = entity_count;
 
-            /* Treat as new event as this could trigger observers again for
+            /* Treat as new event as this could invoke observers again for
             * different tables. */
             world->event_id ++;
 
-            flecs_set_triggers_notify(it, observable, ids, event,
+            flecs_set_observers_notify(it, observable, ids, event,
                 ecs_pair(rel, EcsWildcard));
 
             ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
@@ -127,9 +127,9 @@ void flecs_emit(
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!desc->relation) {
-        flecs_triggers_notify(&it, observable, ids, event);
+        flecs_observers_notify(&it, observable, ids, event);
     } else {
-        flecs_set_triggers_notify(&it, observable, ids, event, 
+        flecs_set_observers_notify(&it, observable, ids, event, 
             ecs_pair(relation, EcsWildcard));
     }
 

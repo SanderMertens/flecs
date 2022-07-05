@@ -103,7 +103,7 @@ typedef struct ecs_table_event_t {
     /* Component info event */
     ecs_entity_t component;
 
-    /* Trigger match */
+    /* Event match */
     ecs_entity_t event;
 
     /* If the nubmer of fields gets out of hand, this can be turned into a union
