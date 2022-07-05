@@ -472,6 +472,10 @@ void Query_query_iter_w_func_no_ptr(void);
 void Query_query_each_w_iter(void);
 void Query_change_tracking(void);
 void Query_not_w_write(void);
+void Query_get_first(void);
+void Query_get_count_direct(void);
+void Query_get_is_true_direct(void);
+void Query_get_first_direct(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -621,6 +625,10 @@ void RuleBuilder_set_2_vars(void);
 void RuleBuilder_set_var_by_name(void);
 void RuleBuilder_set_2_vars_by_name(void);
 void RuleBuilder_expr_w_var(void);
+void RuleBuilder_get_first(void);
+void RuleBuilder_get_count_direct(void);
+void RuleBuilder_get_is_true_direct(void);
+void RuleBuilder_get_first_direct(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -680,6 +688,10 @@ void Filter_term_get_id(void);
 void Filter_term_get_subj(void);
 void Filter_term_get_pred(void);
 void Filter_term_get_obj(void);
+void Filter_get_first(void);
+void Filter_get_count_direct(void);
+void Filter_get_is_true_direct(void);
+void Filter_get_first_direct(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -2755,6 +2767,22 @@ bake_test_case Query_testcases[] = {
     {
         "not_w_write",
         Query_not_w_write
+    },
+    {
+        "get_first",
+        Query_get_first
+    },
+    {
+        "get_count_direct",
+        Query_get_count_direct
+    },
+    {
+        "get_is_true_direct",
+        Query_get_is_true_direct
+    },
+    {
+        "get_first_direct",
+        Query_get_first_direct
     }
 };
 
@@ -3336,6 +3364,22 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "expr_w_var",
         RuleBuilder_expr_w_var
+    },
+    {
+        "get_first",
+        RuleBuilder_get_first
+    },
+    {
+        "get_count_direct",
+        RuleBuilder_get_count_direct
+    },
+    {
+        "get_is_true_direct",
+        RuleBuilder_get_is_true_direct
+    },
+    {
+        "get_first_direct",
+        RuleBuilder_get_first_direct
     }
 };
 
@@ -3557,6 +3601,22 @@ bake_test_case Filter_testcases[] = {
     {
         "term_get_obj",
         Filter_term_get_obj
+    },
+    {
+        "get_first",
+        Filter_get_first
+    },
+    {
+        "get_count_direct",
+        Filter_get_count_direct
+    },
+    {
+        "get_is_true_direct",
+        Filter_get_is_true_direct
+    },
+    {
+        "get_first_direct",
+        Filter_get_first_direct
     }
 };
 
@@ -4605,7 +4665,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        63,
+        67,
         Query_testcases
     },
     {
@@ -4626,7 +4686,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        14,
+        18,
         RuleBuilder_testcases
     },
     {
@@ -4647,7 +4707,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        12,
+        16,
         Filter_testcases
     },
     {

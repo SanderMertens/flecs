@@ -15374,8 +15374,7 @@ ecs_entity_t ecs_observer_init(
         }
 
         /* Observer must have at least one term */
-        ecs_check(observer->filter.term_count != 0, 
-            ECS_INVALID_PARAMETER, NULL);
+        ecs_check(observer->filter.term_count > 0, ECS_INVALID_PARAMETER, NULL);
 
         poly->poly = observer;
 

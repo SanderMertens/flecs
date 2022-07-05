@@ -264,3 +264,66 @@ void Filter_term_get_obj() {
     t = q.term(2);
     test_assert(t.get_obj() == Bar);
 }
+
+void Filter_get_first() {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.filter<A>();
+
+    auto first = q.iter().first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
+void Filter_get_count_direct() {
+    flecs::world ecs;
+
+    struct A {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.filter<A>();
+
+    test_int(3, q.count());
+}
+
+void Filter_get_is_true_direct() {
+    flecs::world ecs;
+
+    struct A {};
+    struct B {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q_1 = ecs.filter<A>();
+    auto q_2 = ecs.filter<B>();
+
+    test_bool(true, q_1.is_true());
+    test_bool(false, q_2.is_true());
+}
+
+void Filter_get_first_direct() {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.filter<A>();
+
+    auto first = q.first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}

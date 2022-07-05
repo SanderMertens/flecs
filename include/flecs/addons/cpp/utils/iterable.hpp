@@ -67,6 +67,21 @@ struct iterable {
      */
     worker_iterable<Components...> worker(int32_t index, int32_t count);
 
+    /** Return number of entities matched by iteratble. */
+    int32_t count() const {
+        return this->iter().count();
+    }
+
+    /** Return number of entities matched by iteratble. */
+    bool is_true() const {
+        return this->iter().is_true();
+    }
+
+    /** Return number of entities matched by iteratble. */
+    flecs::entity first() const {
+        return this->iter().first();
+    }
+
     virtual ~iterable() { }
 protected:
     friend iter_iterable<Components...>;
@@ -120,6 +135,16 @@ struct iter_iterable final : iterable<Components...> {
     bool is_true() {
         bool result = m_next_each(&m_it);
         if (result) {
+            ecs_iter_fini(&m_it);
+        }
+        return result;
+    }
+
+    // Return first matching entity.
+    flecs::entity first() {
+        flecs::entity result;
+        if (m_next_each(&m_it) && m_it.count) {
+            result = flecs::entity(m_it.world, m_it.entities[0]);
             ecs_iter_fini(&m_it);
         }
         return result;

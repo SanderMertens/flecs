@@ -1909,3 +1909,66 @@ void Query_not_w_write() {
 
     test_int(1, count);
 }
+
+void Query_get_first() {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    auto first = q.iter().first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
+void Query_get_first_direct() {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    auto first = q.first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
+void Query_get_count_direct() {
+    flecs::world ecs;
+
+    struct A {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    test_int(3, q.count());
+}
+
+void Query_get_is_true_direct() {
+    flecs::world ecs;
+
+    struct A {};
+    struct B {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q_1 = ecs.query<A>();
+    auto q_2 = ecs.query<B>();
+
+    test_bool(true, q_1.is_true());
+    test_bool(false, q_2.is_true());
+}
