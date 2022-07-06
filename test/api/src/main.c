@@ -579,6 +579,9 @@ void OnDelete_fini_cleanup_order(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
 void OnDelete_create_after_delete_with(void);
+void OnDelete_delete_with_inherited_tag(void);
+void OnDelete_delete_with_inherited_tag_w_query(void);
+void OnDelete_delete_with_inherited_tag_w_observer(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4205,6 +4208,18 @@ bake_test_case OnDelete_testcases[] = {
     {
         "create_after_delete_with",
         OnDelete_create_after_delete_with
+    },
+    {
+        "delete_with_inherited_tag",
+        OnDelete_delete_with_inherited_tag
+    },
+    {
+        "delete_with_inherited_tag_w_query",
+        OnDelete_delete_with_inherited_tag_w_query
+    },
+    {
+        "delete_with_inherited_tag_w_observer",
+        OnDelete_delete_with_inherited_tag_w_observer
     }
 };
 
@@ -9942,7 +9957,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        90,
+        93,
         OnDelete_testcases
     },
     {

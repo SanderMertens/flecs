@@ -617,7 +617,10 @@
                 "fini_cleanup_order",
                 "on_delete_parent_w_in_use_id_w_remove",
                 "on_delete_parent_w_in_use_id_w_delete",
-                "create_after_delete_with"
+                "create_after_delete_with",
+                "delete_with_inherited_tag",
+                "delete_with_inherited_tag_w_query",
+                "delete_with_inherited_tag_w_observer"
             ]
         }, {
             "id": "Set",

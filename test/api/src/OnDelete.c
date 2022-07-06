@@ -2503,3 +2503,99 @@ void OnDelete_create_after_delete_with() {
 
     ecs_fini(world);
 }
+
+void OnDelete_delete_with_inherited_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert(ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+
+    ecs_delete_with(world, Tag);
+
+    test_assert(!ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+    test_assert(ecs_is_alive(world, Tag));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_inherited_tag_w_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ Tag }}
+    });
+    test_assert(query != NULL);
+
+    test_assert(ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+
+    ecs_iter_t it = ecs_query_iter(world, query);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_delete_with(world, Tag);
+
+    test_assert(!ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+    test_assert(ecs_is_alive(world, Tag));
+
+    it = ecs_query_iter(world, query);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+static void Observer(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+}
+
+void OnDelete_delete_with_inherited_tag_w_observer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    Probe ctx;
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ Tag }},
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_assert(ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+
+    ecs_delete_with(world, Tag);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_uint(ctx.e[0], inst);
+    test_uint(ctx.e[1], base);
+
+    test_assert(!ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, inst));
+    test_assert(ecs_is_alive(world, Tag));
+
+    ecs_fini(world);
+}

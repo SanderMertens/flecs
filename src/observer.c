@@ -630,7 +630,11 @@ void flecs_notify_set_base_observers(
     ecs_entity_t event_id = it->event_id;
     ecs_entity_t rel = ECS_PAIR_FIRST(event_id);
     ecs_entity_t obj = ecs_pair_second(world, event_id);
-    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!obj) {
+        /* Don't notify for deleted (or in progress of being deleted) object */
+        return;
+    }
+
     ecs_record_t *obj_record = flecs_entities_get(world, obj);
     if (!obj_record) {
         return;
