@@ -29,8 +29,6 @@ typedef struct ecs_system_t {
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
     int32_t last_frame;             /* Last frame for which the system was considered */
 
-    ecs_entity_t self;              /* Entity associated with system */
-
     void *ctx;                      /* Userdata for system */
     void *binding_ctx;              /* Optional language binding context */
 

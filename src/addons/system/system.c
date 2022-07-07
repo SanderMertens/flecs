@@ -262,7 +262,6 @@ ecs_entity_t ecs_system_init(
         system->run = desc->run;
         system->action = desc->callback;
 
-        system->self = desc->self;
         system->ctx = desc->ctx;
         system->binding_ctx = desc->binding_ctx;
 
