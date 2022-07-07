@@ -28,7 +28,7 @@ FLECS_API extern const ecs_entity_t EcsDocLink;
 FLECS_API extern const ecs_entity_t EcsDocColor;
 
 typedef struct EcsDocDescription {
-    const char *value;
+    char *value;
 } EcsDocDescription;
 
 /** Add human-readable name to entity.

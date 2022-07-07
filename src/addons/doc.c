@@ -24,7 +24,7 @@ void ecs_doc_set_name(
     const char *name)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsName, {
-        .value = name
+        .value = (char*)name
     });
 }
 
@@ -34,7 +34,7 @@ void ecs_doc_set_brief(
     const char *description)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocBrief, {
-        .value = description
+        .value = (char*)description
     });
 }
 
@@ -44,7 +44,7 @@ void ecs_doc_set_detail(
     const char *description)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocDetail, {
-        .value = description
+        .value = (char*)description
     });
 }
 
@@ -54,7 +54,7 @@ void ecs_doc_set_link(
     const char *link)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocLink, {
-        .value = link
+        .value = (char*)link
     });
 }
 
@@ -64,7 +64,7 @@ void ecs_doc_set_color(
     const char *color)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocColor, {
-        .value = color
+        .value = (char*)color
     });
 }
 
