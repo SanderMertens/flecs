@@ -425,8 +425,11 @@ void instantiate(
         return;
     }
 
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+    
+    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_childof(base));
     ecs_table_cache_iter_t it;
-    if (flecs_table_iter(world, ecs_pair(EcsChildOf, base), &it) != NULL) {
+    if (idr && flecs_table_cache_iter((ecs_table_cache_t*)idr, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             instantiate_children(

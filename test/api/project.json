@@ -1271,7 +1271,8 @@
                 "entity_count",
                 "rematch_after_delete_inherited_tag",
                 "rematch_after_delete_rel_of_inherited_pair",
-                "rematch_after_delete_obj_of_inherited_pair"
+                "rematch_after_delete_obj_of_inherited_pair",
+                "rematch_empty_table_w_superset"
             ]
         }, {
             "id": "Iter",

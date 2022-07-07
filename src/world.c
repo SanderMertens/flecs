@@ -815,12 +815,7 @@ void flecs_notify_tables(
         ecs_table_cache_iter_t it;
         const ecs_table_record_t *tr;
 
-        flecs_table_cache_iter(&idr->cache, &it);
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->hdr.table, event);
-        }
-
-        flecs_table_cache_empty_iter(&idr->cache, &it);
+        flecs_table_cache_all_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             flecs_table_notify(world, tr->hdr.table, event);
         }
@@ -1798,6 +1793,9 @@ int32_t ecs_delete_empty_tables(
 {
     ecs_poly_assert(world, ecs_world_t);
 
+    /* Make sure empty tables are in the empty table lists */
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
     ecs_time_t start = {0}, cur = {0};
     int32_t delete_count = 0, clear_count = 0;
     bool time_budget = false;
@@ -1811,8 +1809,9 @@ int32_t ecs_delete_empty_tables(
         id = EcsAny; /* Iterate all empty tables */
     }
 
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     ecs_table_cache_iter_t it;
-    if (flecs_empty_table_iter(world, id, &it)) {
+    if (idr && flecs_table_cache_empty_iter((ecs_table_cache_t*)idr, &it)) {
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             if (time_budget) {

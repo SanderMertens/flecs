@@ -538,39 +538,3 @@ void flecs_fini_id_records(
     flecs_sparse_free(world->pending_tables);
     flecs_sparse_free(world->pending_buffer);
 }
-
-ecs_id_record_t* flecs_table_iter(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_cache_iter_t *out)
-{
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return NULL;
-    }
-
-    flecs_process_pending_tables(world);
-    ecs_assert( flecs_sparse_count(world->pending_tables) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-
-    flecs_table_cache_iter(&idr->cache, out);
-    return idr;
-}
-
-ecs_id_record_t* flecs_empty_table_iter(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_cache_iter_t *out)
-{
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return NULL;
-    }
-
-    flecs_process_pending_tables(world);
-    ecs_assert( flecs_sparse_count(world->pending_tables) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-
-    flecs_table_cache_empty_iter(&idr->cache, out);
-    return idr;
-}

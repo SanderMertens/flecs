@@ -1725,14 +1725,8 @@ void term_iter_init_w_idr(
 {
     if (idr) {
         if (empty_tables) {
-            if ((empty_tables = flecs_table_cache_empty_iter(
-                &idr->cache, &iter->it))) 
-            {
-                iter->empty_tables = true;
-            }
-        }
-
-        if (!empty_tables) {
+            flecs_table_cache_all_iter(&idr->cache, &iter->it);
+        } else {
             flecs_table_cache_iter(&idr->cache, &iter->it);
         }
     } else {
@@ -1740,6 +1734,7 @@ void term_iter_init_w_idr(
     }
 
     iter->index = 0;
+    iter->empty_tables = empty_tables;
 }
 
 static
@@ -1864,16 +1859,7 @@ const ecs_table_record_t *flecs_term_iter_next_table(
         return NULL;
     }
 
-    const ecs_table_record_t *tr;
-    if (!(tr = flecs_table_cache_next(&iter->it, ecs_table_record_t))) {
-        if (iter->empty_tables) {
-            iter->empty_tables = false;
-            flecs_table_cache_iter(&idr->cache, &iter->it);
-            tr = flecs_table_cache_next(&iter->it, ecs_table_record_t);
-        }
-    }
-
-    return tr;
+    return flecs_table_cache_next(&iter->it, ecs_table_record_t);
 }
 
 static
@@ -1935,7 +1921,13 @@ bool flecs_term_iter_next(
             if (!(tr = flecs_term_iter_next_table(iter))) {
                 if (iter->cur != iter->set_index && iter->set_index != NULL) {
                     iter->cur = iter->set_index;
-                    flecs_table_cache_iter(&iter->set_index->cache, &iter->it);
+                    if (iter->empty_tables) {
+                        flecs_table_cache_all_iter(
+                            &iter->set_index->cache, &iter->it);
+                    } else {
+                        flecs_table_cache_iter(
+                            &iter->set_index->cache, &iter->it);
+                    }
                     iter->index = 0;
                     tr = flecs_term_iter_next_table(iter);
                 }
@@ -1960,6 +1952,7 @@ bool flecs_term_iter_next(
             if (is_any_pair(term->id)) {
                 iter->match_count = 1;
             }
+
             iter->cur_match = 0;
             iter->last_column = tr->column;
             iter->column = tr->column + 1;

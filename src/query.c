@@ -1359,12 +1359,7 @@ void flecs_query_add_subquery(
     ecs_table_cache_t *cache = &parent->cache;
     ecs_table_cache_iter_t it;
     ecs_query_table_t *qt;
-    flecs_table_cache_iter(cache, &it);
-    while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-        flecs_query_match_table(world, subquery, qt->hdr.table);
-    }
-    
-    flecs_table_cache_empty_iter(cache, &it);
+    flecs_table_cache_all_iter(cache, &it);
     while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
         flecs_query_match_table(world, subquery, qt->hdr.table);
     }
@@ -1429,7 +1424,7 @@ void flecs_query_table_free(
 }
 
 static
-void flecs_query_unflecs_query_match_table(
+void flecs_query_unmatch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
@@ -1442,7 +1437,7 @@ void flecs_query_unflecs_query_match_table(
 
 /* Rematch system with tables after a change happened to a watched entity */
 static
-void flecs_query_reflecs_query_match_tables(
+void flecs_query_rematch_tables(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_t *parent_query)
@@ -1466,6 +1461,8 @@ void flecs_query_reflecs_query_match_tables(
     int32_t rematch_count = ++ query->rematch_count;
 
     while (ecs_iter_next(&it)) {
+        ecs_trace(" - iter returned table [%s]",
+            ecs_table_str(world, it.table));
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
                 flecs_query_table_match_free(query, qt, qm->next_match);
@@ -1509,21 +1506,13 @@ void flecs_query_reflecs_query_match_tables(
 
     /* Iterate all tables in cache, remove ones that weren't just matched */
     ecs_table_cache_iter_t cache_it;
-    if (flecs_table_cache_iter(&query->cache, &cache_it)) {
+    if (flecs_table_cache_all_iter(&query->cache, &cache_it)) {
         while ((qt = flecs_table_cache_next(&cache_it, ecs_query_table_t))) {
             if (qt->rematch_count != rematch_count) {
-                flecs_query_unflecs_query_match_table(query, qt->hdr.table);
+                flecs_query_unmatch_table(query, qt->hdr.table);
             }
         }
     }
-
-    if (flecs_table_cache_empty_iter(&query->cache, &cache_it)) {
-        while ((qt = flecs_table_cache_next(&cache_it, ecs_query_table_t))) {
-            if (qt->rematch_count != rematch_count) {
-                flecs_query_unflecs_query_match_table(query, qt->hdr.table);
-            }
-        }
-    }    
 }
 
 static
@@ -1568,11 +1557,11 @@ void flecs_query_notify(
         break;
     case EcsQueryTableUnmatch:
         /* Deletion of table */
-        flecs_query_unflecs_query_match_table(query, event->table);
+        flecs_query_unmatch_table(query, event->table);
         break;
     case EcsQueryTableRematch:
         /* Rematch tables of query */
-        flecs_query_reflecs_query_match_tables(world, query, event->parent_query);
+        flecs_query_rematch_tables(world, query, event->parent_query);
         break;        
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
@@ -1650,7 +1639,7 @@ void flecs_query_iter_init(
 
 static
 void flecs_query_on_event(
-    ecs_iter_t *it) 
+    ecs_iter_t *it)
 {
     /* Because this is the observer::run callback, checking if this is event is
      * already handled is not done for us. */
@@ -1689,13 +1678,7 @@ void flecs_query_table_cache_free(
     ecs_table_cache_iter_t it;
     ecs_query_table_t *qt;
 
-    if (flecs_table_cache_iter(&query->cache, &it)) {
-        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
-            flecs_query_table_free(query, qt);
-        }
-    }
-
-    if (flecs_table_cache_empty_iter(&query->cache, &it)) {
+    if (flecs_table_cache_all_iter(&query->cache, &it)) {
         while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
             flecs_query_table_free(query, qt);
         }

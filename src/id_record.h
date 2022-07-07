@@ -107,18 +107,6 @@ const ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table);
 
-/* Return table iterator for id */
-ecs_id_record_t* flecs_table_iter(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_cache_iter_t *out);
-
-/* Return empty table iterator for id */
-ecs_id_record_t* flecs_empty_table_iter(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_cache_iter_t *out);
-
 /* Cleanup all id records in world */
 void flecs_fini_id_records(
     ecs_world_t *world);

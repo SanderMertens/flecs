@@ -6932,3 +6932,39 @@ void Query_rematch_after_delete_obj_of_inherited_pair() {
 
     ecs_fini(world);
 }
+
+void Query_rematch_empty_table_w_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ Foo }, { Bar, .oper = EcsNot }}
+    });
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, base, Foo);
+    test_assert( ecs_is_alive(world, base));
+
+    ecs_delete_with(world, Foo);
+    test_assert( !ecs_is_alive(world, base));
+
+    base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, base, Foo);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add(world, inst, Bar);
+
+    ecs_run_aperiodic(world, 0); // force table (IsA, base) to empty list
+
+    ecs_remove(world, inst, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

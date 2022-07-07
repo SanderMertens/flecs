@@ -105,6 +105,7 @@ typedef struct ecs_worker_iter_t {
 /* Convenience struct to iterate table array for id */
 typedef struct ecs_table_cache_iter_t {
     struct ecs_table_cache_hdr_t *cur, *next;
+    struct ecs_table_cache_hdr_t *next_list;
 } ecs_table_cache_iter_t;
 
 /** Term-iterator specific data */

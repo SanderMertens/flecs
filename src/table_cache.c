@@ -229,6 +229,7 @@ bool flecs_table_cache_iter(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
     out->next = cache->tables.first;
+    out->next_list = NULL;
     out->cur = NULL;
     return out->next != NULL;
 }
@@ -240,8 +241,21 @@ bool flecs_table_cache_empty_iter(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
     out->next = cache->empty_tables.first;
+    out->next_list = NULL;
     out->cur = NULL;
     return out->next != NULL;
+}
+
+bool flecs_table_cache_all_iter(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out)
+{
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
+    out->next = cache->empty_tables.first;
+    out->next_list = cache->tables.first;
+    out->cur = NULL;
+    return out->next != NULL || out->next_list != NULL;
 }
 
 ecs_table_cache_hdr_t* _flecs_table_cache_next(
@@ -249,7 +263,11 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
 {
     ecs_table_cache_hdr_t *next = it->next;
     if (!next) {
-        return false;
+        next = it->next_list;
+        it->next_list = NULL;
+        if (!next) {
+            return false;
+        }
     }
 
     it->cur = next;

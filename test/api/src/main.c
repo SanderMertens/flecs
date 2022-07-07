@@ -1211,6 +1211,7 @@ void Query_entity_count(void);
 void Query_rematch_after_delete_inherited_tag(void);
 void Query_rematch_after_delete_rel_of_inherited_pair(void);
 void Query_rematch_after_delete_obj_of_inherited_pair(void);
+void Query_rematch_empty_table_w_superset(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -6673,6 +6674,10 @@ bake_test_case Query_testcases[] = {
     {
         "rematch_after_delete_obj_of_inherited_pair",
         Query_rematch_after_delete_obj_of_inherited_pair
+    },
+    {
+        "rematch_empty_table_w_superset",
+        Query_rematch_empty_table_w_superset
     }
 };
 
@@ -10034,7 +10039,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        173,
+        174,
         Query_testcases
     },
     {
