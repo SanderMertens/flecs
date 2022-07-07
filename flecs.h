@@ -9357,9 +9357,6 @@ typedef struct ecs_system_desc_t {
      * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
 
-    /* Associate with entity. */
-    ecs_entity_t self;    
-
     /* Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
