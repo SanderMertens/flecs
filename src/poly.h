@@ -21,7 +21,7 @@
 
 #include <stddef.h>
 
-/* Initialize object header & mixins for specified type */
+/* Initialize poly */
 void* _ecs_poly_init(
     ecs_poly_t *object,
     int32_t kind,

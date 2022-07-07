@@ -2,6 +2,8 @@
 #include "private_api.h"
 #include <ctype.h>
 
+ecs_filter_t ECS_FILTER_INIT = { .hdr = { .magic = ecs_filter_t_magic }};
+
 static
 void term_error(
     const ecs_world_t *world,
@@ -79,18 +81,11 @@ int finalize_term_set(
 
 static
 void finalize_term_id_resources(
-    ecs_term_t *term,
     ecs_term_id_t *id)
 {
     if (id->entity) {
-        if (term->move) {
-            ecs_os_free(id->name);
-        }
+        ecs_os_free(id->name);
         id->name = NULL;
-    } else if (id->name) {
-        if (!term->move) {
-            id->name = ecs_os_strdup(id->name);
-        }
     }
 }
 
@@ -98,13 +93,9 @@ static
 void finalize_term_resources(
     ecs_term_t *term)
 {
-    finalize_term_id_resources(term, &term->pred);
-    finalize_term_id_resources(term, &term->subj);
-    finalize_term_id_resources(term, &term->obj);
-    if (term->name) {
-        term->name = ecs_os_strdup(term->name);
-    }
-    term->move = false;
+    finalize_term_id_resources(&term->pred);
+    finalize_term_id_resources(&term->subj);
+    finalize_term_id_resources(&term->obj);
 }
 
 static
@@ -992,173 +983,147 @@ void flecs_filter_iter_init(
     }
 }
 
-int ecs_filter_init(
+ecs_filter_t* ecs_filter_init(
     const ecs_world_t *stage,
-    ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc)    
 {
-    ecs_filter_t f;
-    ecs_poly_init(&f, ecs_filter_t);
-
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-
     const ecs_world_t *world = ecs_get_world(stage);
 
-    int i, term_count = 0;
-    ecs_term_t *terms = desc->terms_buffer;
-    const char *name = desc->name;
-    const char *expr = desc->expr;
+    ecs_filter_t *f = desc->storage;
+    int32_t i, term_count = desc->terms_buffer_count, storage_count = 0, expr_count = 0;
+    const ecs_term_t *terms = desc->terms_buffer;
+    ecs_term_t *storage_terms = NULL, *expr_terms = NULL;
 
-    /* Temporarily set the fields to the values provided in desc, until the
-     * filter has been validated. */
-    f.name = (char*)name;
-    ECS_BIT_COND(f.flags, EcsFilterIsFilter, desc->filter);
-    ECS_BIT_COND(f.flags, EcsFilterIsInstanced, desc->instanced);
-    ECS_BIT_COND(f.flags, EcsFilterMatchEmptyTables, desc->match_empty_tables);
-    ECS_BIT_SET(f.flags, EcsFilterMatchAnything);
-
-    if (terms) {
-        term_count = desc->terms_buffer_count;
+    if (f) {
+        ecs_check(f->hdr.magic == ecs_filter_t_magic, 
+            ECS_INVALID_PARAMETER, NULL);
+        storage_count = f->term_count;
+        storage_terms = f->terms;
+        ecs_poly_init(f, ecs_filter_t);
     } else {
-        terms = (ecs_term_t*)desc->terms;
+        f = ecs_poly_new(ecs_filter_t);
+        f->owned = true;
+    }
+    if (!storage_terms) {
+        f->terms_owned = true;
+    }
+
+    ECS_BIT_COND(f->flags, EcsFilterIsInstanced, desc->instanced);
+    ECS_BIT_SET(f->flags, EcsFilterMatchAnything);
+    f->flags |= desc->flags;
+
+    /* If terms_buffer was not set, count number of initialized terms in
+     * static desc::terms array */
+    if (!terms) {
+        ecs_check(term_count == 0, ECS_INVALID_PARAMETER, NULL);
+        terms = desc->terms;
         for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
-
             term_count ++;
         }
+    } else {
+        ecs_check(term_count != 0, ECS_INVALID_PARAMETER, NULL);
     }
 
-    /* Temporarily set array from desc to filter, until the filter has been
-     * validated. */
-    f.terms = terms;
-    f.term_count = term_count;
-
+    /* If expr is set, parse query expression */
+    const char *name = desc->name, *expr = desc->expr;
     if (expr) {
 #ifdef FLECS_PARSER
-        int32_t buffer_count = 0;
-
-        /* If terms have already been set, copy buffer to allocated one */
-        if (terms && term_count) {
-            terms = ecs_os_memdup(terms, term_count * ECS_SIZEOF(ecs_term_t));
-            buffer_count = term_count;
-        } else {
-            terms = NULL;
-        }
-
-        /* Parse expression into array of terms */
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
+        int32_t expr_size = 0;
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
-            
-            if (term_count == buffer_count) {
-                buffer_count = buffer_count ? buffer_count * 2 : 8;
-                terms = ecs_os_realloc(terms, 
-                    buffer_count * ECS_SIZEOF(ecs_term_t));
+
+            if (expr_count == expr_size) {
+                expr_size = expr_size ? expr_size * 2 : 8;
+                expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
             }
 
-            /* Check for identifiers that have a name that starts with _. If the
-             * variable kind is left to Default, the kind should be set to 
-             * variable and the _ prefix should be removed. */
-            finalize_term_vars(world, &term, name);
-
-            terms[term_count] = term;
-            term_count ++;
+            expr_terms[expr_count ++] = term;
 
             if (ptr[0] == '\n') {
                 break;
             }
         }
 
-        f.terms = terms;
-        f.term_count = term_count;
-
         if (!ptr) {
+            /* Set terms in filter object to make sur they get cleaned up */
+            f->terms = expr_terms;
+            f->term_count = expr_count;
+            f->terms_owned = true;
             goto error;
         }
 #else
+        (void)expr;
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
     }
 
-    /* Copy term resources. */
-    if (term_count) {
-        ecs_term_t *dst_terms = terms;
-        if (!expr) {
-            if (term_count <= ECS_TERM_CACHE_SIZE) {
-                dst_terms = f.term_cache;
-                f.term_cache_used = true;
-            } else {
-                dst_terms = ecs_os_malloc_n(ecs_term_t, term_count);
-            }
+    /* If storage is provided, make sure it's large enough */
+    ecs_check(!storage_terms || storage_count >= (term_count + expr_count),
+        ECS_INVALID_PARAMETER, NULL);
+
+    if (term_count || expr_count) {
+        /* If no storage is provided, create it */
+        if (!storage_terms) {
+            f->terms = ecs_os_calloc_n(ecs_term_t, term_count + expr_count);
+            f->term_count = term_count + expr_count;
+            ecs_assert(f->terms_owned == true, ECS_INTERNAL_ERROR, NULL);
+        } else {
+            f->terms = storage_terms;
+            f->term_count = storage_count;
         }
 
-        if (terms != dst_terms) {
-            ecs_os_memcpy_n(dst_terms, terms, ecs_term_t, term_count);
+        /* Copy terms to filter storage */
+        for (i = 0; i < term_count; i ++) {
+            f->terms[i] = ecs_term_copy(&terms[i]);
         }
 
-        f.terms = dst_terms;
-    } else {
-        f.terms = NULL;
+        /* Move expr terms to filter storage */
+        for (i = 0; i < expr_count; i ++) {
+            f->terms[i + term_count] = ecs_term_move(&expr_terms[i]);
+        }
+        ecs_os_free(expr_terms);
     }
 
-    f.flags |= desc->flags;
-
     /* Ensure all fields are consistent and properly filled out */
-    if (ecs_filter_finalize(world, &f)) {
+    if (ecs_filter_finalize(world, f)) {
         goto error;
     }
 
-    *filter_out = f;
-    if (f.term_cache_used) {
-        filter_out->terms = filter_out->term_cache;
-    }
+    f->name = ecs_os_strdup(name);
+    f->variable_names[0] = (char*)".";
+    f->iterable.init = flecs_filter_iter_init;
 
-    filter_out->name = ecs_os_strdup(desc->name);
-    filter_out->variable_names[0] = (char*)".";
-
-    ecs_assert(!filter_out->term_cache_used || 
-        filter_out->terms == filter_out->term_cache,
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(filter_out->term_count == f.term_count,
-        ECS_INTERNAL_ERROR, NULL);
-
-    filter_out->iterable.init = flecs_filter_iter_init;
-
-    return 0;
+    return f;
 error:
-    if (f.name == desc->name) {
-        f.name = NULL;
-    }
-
-    ecs_filter_fini(&f);
-
-    return -1;
+    ecs_filter_fini(f);
+    return NULL;
 }
 
 void ecs_filter_copy(
     ecs_filter_t *dst,
     const ecs_filter_t *src)   
 {
+    if (src == dst) {
+        return;
+    }
+
     if (src) {
         *dst = *src;
 
-        int32_t term_count = src->term_count;
+        int32_t i, term_count = src->term_count;
+        dst->terms = ecs_os_malloc_n(ecs_term_t, term_count);
+        dst->terms_owned = true;
 
-        if (src->term_cache_used) {
-            dst->terms = dst->term_cache;
-        } else {
-            dst->terms = ecs_os_memdup_n(src->terms, ecs_term_t, term_count);
-        }
-
-        int i;
         for (i = 0; i < term_count; i ++) {
             dst->terms[i] = ecs_term_copy(&src->terms[i]);
         }
@@ -1171,17 +1136,20 @@ void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src)   
 {
+    if (src == dst) {
+        return;
+    }
+
     if (src) {
         *dst = *src;
-
-        if (src->term_cache_used) {
-            dst->terms = dst->term_cache;
+        if (src->terms_owned) {
+            dst->terms = src->terms;
+            dst->terms_owned = true;
+        } else {
+            ecs_filter_copy(dst, src);
         }
-
-        if (dst != src) {
-            src->terms = NULL;
-            src->term_count = 0;
-        }
+        src->terms = NULL;
+        src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -1196,7 +1164,7 @@ void ecs_filter_fini(
             ecs_term_fini(&filter->terms[i]);
         }
 
-        if (!filter->term_cache_used) {
+        if (filter->terms_owned) {
             ecs_os_free(filter->terms);
         }
     }
@@ -1205,6 +1173,10 @@ void ecs_filter_fini(
 
     filter->terms = NULL;
     filter->name = NULL;
+
+    if (filter->owned) {
+        ecs_os_free(filter);
+    }
 }
 
 static
@@ -1325,11 +1297,10 @@ char* ecs_filter_str(
     const ecs_world_t *world,
     const ecs_filter_t *filter)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
-    ecs_check(!filter->term_cache_used || filter->terms == filter->term_cache,
-        ECS_INVALID_PARAMETER, NULL);
-
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
     int32_t or_count = 0;
@@ -1617,9 +1588,6 @@ bool flecs_filter_match_table(
     int32_t skip_term,
     ecs_flags32_t iter_flags)
 {
-    ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
-        ECS_INTERNAL_ERROR, NULL);
-
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
 
@@ -2095,33 +2063,13 @@ error:
 }
 
 static
-const ecs_filter_t* flecs_init_filter_iter(
-    const ecs_world_t *world,
+void flecs_init_filter_iter(
     ecs_iter_t *it,
     const ecs_filter_t *filter)
 {
-    ecs_filter_iter_t *iter = &it->priv.iter.filter;
-
-    if (filter) {
-        iter->filter = *filter;
-
-        if (filter->term_cache_used) {
-            iter->filter.terms = iter->filter.term_cache;
-        }
-
-        ecs_assert(!filter->term_cache_used || 
-            filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
-    } else {
-        ecs_filter_init(world, &iter->filter, &(ecs_filter_desc_t) {
-            .terms = {{ .id = EcsAny }}
-        });
-
-        filter = &iter->filter;
-    }
-
+    ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
+    it->priv.iter.filter.filter = filter;
     it->term_count = filter->term_count_actual;
-
-    return filter;
 }
 
 int32_t ecs_filter_pivot_term(
@@ -2179,7 +2127,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     ecs_flags32_t flags)
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_world_t *world = ecs_get_world(stage);
     
     flecs_process_pending_tables(world);
@@ -2195,7 +2143,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
     iter->pivot_term = -1;
 
-    filter = flecs_init_filter_iter(world, &it, filter);
+    flecs_init_filter_iter(&it, filter);
     ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
         ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
 
@@ -2230,13 +2178,6 @@ ecs_iter_t flecs_filter_iter_w_flags(
         } else {
             iter->kind = EcsIterEvalNone;
         }
-    }
-
-    if (filter->terms == filter->term_cache) {
-        /* Because we're returning the iterator by value, the address of the
-         * term cache changes. The ecs_filter_next function will set the correct
-         * address when it detects that terms is set to NULL */
-        iter->filter.terms = NULL;
     }
 
     ECS_BIT_COND(it.flags, EcsIterIsFilter, 
@@ -2279,14 +2220,9 @@ ecs_iter_t ecs_filter_chain_iter(
 
     flecs_iter_init(&it, flecs_iter_cache_all);
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
-    flecs_init_filter_iter(it.world, &it, filter);
+    flecs_init_filter_iter(&it, filter);
 
     iter->kind = EcsIterEvalChain;
-
-    if (filter->terms == filter->term_cache) {
-        /* See ecs_filter_iter */
-        iter->filter.terms = NULL;
-    }
 
     return it;
 }
@@ -2314,14 +2250,10 @@ bool ecs_filter_next_instanced(
     ecs_check(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
 
     ecs_filter_iter_t *iter = &it->priv.iter.filter;
-    ecs_filter_t *filter = &iter->filter;
+    const ecs_filter_t *filter = iter->filter;
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = NULL;
     bool match;
-
-    if (!filter->terms) {
-        filter->terms = filter->term_cache;
-    }
 
     flecs_iter_validate(it);
 

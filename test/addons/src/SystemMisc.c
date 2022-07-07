@@ -748,8 +748,9 @@ void SystemMisc_one_named_column_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){ .terms = {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f, .terms = {
         { ecs_id(Position), .name = "pos" },
         { ecs_id(Velocity) }
     }}));
@@ -785,8 +786,9 @@ void SystemMisc_two_named_columns_of_two() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){ .terms = {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f, .terms = {
         { ecs_id(Position), .name = "pos" },
         { ecs_id(Velocity), .name = "vel" }
     }}));    
@@ -1242,7 +1244,7 @@ void SystemMisc_delete_system() {
     ECS_TAG(world, Tag);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .entity.name = "Foo",
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy
@@ -1272,13 +1274,13 @@ void SystemMisc_delete_pipeline_system() {
     Probe ctx = {0};
 
     // Create system before
-    test_assert(ecs_system_init(world, &(ecs_system_desc_t) {
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity.add = {ecs_dependson(EcsOnUpdate)},
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
 
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .entity.add = {ecs_dependson(EcsOnUpdate)},
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy
@@ -1286,7 +1288,7 @@ void SystemMisc_delete_pipeline_system() {
     test_assert(system != 0);
 
     // Create system after
-    test_assert(ecs_system_init(world, &(ecs_system_desc_t) {
+    test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity.add = {ecs_dependson(EcsOnUpdate)},
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy
@@ -1330,7 +1332,7 @@ void SystemMisc_delete_system_w_ctx() {
     ECS_TAG(world, Tag);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy,
         .ctx = &ctx_value,
@@ -1394,7 +1396,7 @@ void SystemMisc_run_custom_run_action() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1428,7 +1430,7 @@ void SystemMisc_run_w_offset_limit_custom_run_action() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1460,7 +1462,7 @@ void SystemMisc_pipeline_custom_run_action() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1495,7 +1497,7 @@ void SystemMisc_change_custom_run_action() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1510,7 +1512,7 @@ void SystemMisc_change_custom_run_action() {
     test_int(run_invoked, 1);
     test_int(run_2_invoked, 0);
 
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity.entity = system,
         .run = Run2
     });
@@ -1530,7 +1532,7 @@ void SystemMisc_custom_run_action_call_next() {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = TagA }},
         .run = Run_call_callback,
         .callback = Dummy,

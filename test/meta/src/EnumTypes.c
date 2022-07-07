@@ -63,7 +63,7 @@ void meta_test_constant(
 void EnumTypes_enum_1_constant() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}
         }
@@ -80,7 +80,7 @@ void EnumTypes_enum_1_constant() {
 void EnumTypes_enum_2_constants() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}
         }
@@ -98,7 +98,7 @@ void EnumTypes_enum_2_constants() {
 void EnumTypes_enum_3_constants() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -117,7 +117,7 @@ void EnumTypes_enum_3_constants() {
 void EnumTypes_enum_3_constants_manual_values() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red", 3}, {"Blue", 2}, {"Green", 1}
         }
@@ -142,7 +142,7 @@ void EnumTypes_struct_w_enum() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -150,7 +150,7 @@ void EnumTypes_struct_w_enum() {
 
     test_assert(e != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"before", ecs_id(ecs_bool_t)},
@@ -173,7 +173,7 @@ void EnumTypes_struct_w_enum() {
 void EnumTypes_zero_initialized() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -199,7 +199,7 @@ void EnumTypes_enum_relation() {
         Red, Blue, Green
     };
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }

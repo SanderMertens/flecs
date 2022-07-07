@@ -35,7 +35,7 @@ extern "C" {
 #endif
 
 #define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) { \
+    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){ \
         .entity.name = #id, \
         .query.filter.expr = #__VA_ARGS__\
     });\

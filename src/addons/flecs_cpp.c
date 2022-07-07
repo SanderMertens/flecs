@@ -232,7 +232,7 @@ void ecs_cpp_component_validate(
      * with a different world. This ensures that the component is registered
      * with the same id for the current world. 
      * If the component was registered already, nothing will change. */
-    ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t) {
+    ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t){
         .entity.entity = id,
         .type.size = flecs_uto(int32_t, size),
         .type.alignment = flecs_uto(int32_t, alignment)
@@ -399,7 +399,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     }
 
     ecs_entity_t prev = ecs_set_scope(world, parent);
-    id = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){
         .entity = id,
         .name = name
     });

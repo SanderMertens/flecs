@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     // Create a pipeline that matches systems with Physics. Note that this
     // pipeline does not require the use of phases (see custom_phases) or of the
     // DependsOn relationship. 
-    ecs_entity_t pipeline = ecs_pipeline_init(ecs, &(ecs_pipeline_desc_t) {
+    ecs_entity_t pipeline = ecs_pipeline_init(ecs, &(ecs_pipeline_desc_t){
         .query.filter.terms = {
             { .id = EcsSystem }, // Mandatory, must always match systems
             { .id = Physics }

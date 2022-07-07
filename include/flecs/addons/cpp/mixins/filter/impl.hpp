@@ -25,8 +25,9 @@ struct filter_base {
     filter_base(world_t *world, ecs_filter_desc_t *desc) 
         : m_world(world)
     {
-        int res = ecs_filter_init(world, &m_filter, desc);
-        if (res != 0) {
+        desc->storage = &m_filter;
+
+        if (ecs_filter_init(world, desc) == NULL) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -116,7 +117,7 @@ struct filter_base {
 
 protected:
     world_t *m_world;
-    filter_t m_filter;
+    filter_t m_filter = ECS_FILTER_INIT;
     const filter_t *m_filter_ptr;
 };
 

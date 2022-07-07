@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     // the first sync point from the schedule.
     //
     // To create the same system with ecs_system_init, do:
-    //  ecs_system_init(ecs, &(ecs_system_desc_t) {
+    //  ecs_system_init(ecs, &(ecs_system_desc_t){
     //      .query.filter.terms = {
     //          { 
     //              .id = ecs_id(Position), 

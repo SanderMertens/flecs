@@ -379,7 +379,7 @@ void PrimitiveTypes_builtin_entity() {
 \
     ecs_world_t *world = ecs_init();\
 \
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {\
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){\
         .entity.name = "T",\
         .members = {\
             {"before", ecs_id(ecs_bool_t)},\
@@ -469,7 +469,7 @@ void PrimitiveTypes_struct_w_entity() {
 void PrimitiveTypes_primitive_init() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_entity_t t = ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.name = "T",
         .kind = EcsU16
     });

@@ -28,16 +28,6 @@
 /* Magic number for a flecs object */
 #define ECS_OBJECT_MAGIC (0x6563736f)
 
-/* Magic number to identify the type of the object */
-#define ecs_world_t_magic     (0x65637377)
-#define ecs_stage_t_magic     (0x65637373)
-#define ecs_query_t_magic     (0x65637371)
-#define ecs_rule_t_magic      (0x65637375)
-#define ecs_table_t_magic     (0x65637374)
-#define ecs_filter_t_magic    (0x65637366)
-#define ecs_trigger_t_magic   (0x65637372)
-#define ecs_observer_t_magic  (0x65637362)
-
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid
 #define ecs_stage_t_tag     invalid

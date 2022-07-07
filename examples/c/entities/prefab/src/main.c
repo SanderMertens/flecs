@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     printf("Impulse speed: %f\n", ptr->value);
 
     // Prefab components can be iterated like regular components:
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t) {
+    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
         .filter.terms = {
             // To select components from a prefab, use SuperSet
             { .id = ecs_id(ImpulseSpeed), .subj.set.mask = EcsSuperSet }, 

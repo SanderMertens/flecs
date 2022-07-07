@@ -686,7 +686,7 @@ void Hierarchies_scope_component_no_macro() {
     ecs_entity_t old_scope = ecs_set_scope(world, Scope);
     test_assert(old_scope == 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
         .use_low_id = true
     });
 
@@ -1563,7 +1563,7 @@ void Hierarchies_long_name_depth_0() {
     const char *parent_name = "a_parent_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(parent_name) >= 64);
 
-    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = parent_name
     });
 
@@ -1585,7 +1585,7 @@ void Hierarchies_long_name_depth_1() {
     const char *parent_name = 
         "a_parent_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(parent_name) >= 64);
-    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = parent_name
     });
     test_str(ecs_get_name(world, parent), parent_name);
@@ -1593,7 +1593,7 @@ void Hierarchies_long_name_depth_1() {
     const char *child_name = 
         "a_child_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(child_name) >= 64);
-    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = child_name,
         .add = { ecs_pair(EcsChildOf, parent) }
     });    
@@ -1619,7 +1619,7 @@ void Hierarchies_long_name_depth_2() {
     const char *parent_name = 
         "a_parent_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(parent_name) >= 64);
-    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = parent_name
     });
     test_str(ecs_get_name(world, parent), parent_name);
@@ -1627,7 +1627,7 @@ void Hierarchies_long_name_depth_2() {
     const char *child_name = 
         "a_child_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(child_name) >= 64);
-    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = child_name,
         .add = { ecs_pair(EcsChildOf, parent) }
     });    
@@ -1636,7 +1636,7 @@ void Hierarchies_long_name_depth_2() {
     const char *grand_child_name = 
         "a_grand_child_entity_with_an_identifier_longer_than_sixty_four_characters";
     test_assert(strlen(grand_child_name) >= 64);
-    ecs_entity_t grand_child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t grand_child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = grand_child_name,
         .add = { ecs_pair(EcsChildOf, child) }
     });    

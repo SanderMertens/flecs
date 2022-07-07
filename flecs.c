@@ -308,16 +308,6 @@ extern "C" {
 /* Magic number for a flecs object */
 #define ECS_OBJECT_MAGIC (0x6563736f)
 
-/* Magic number to identify the type of the object */
-#define ecs_world_t_magic     (0x65637377)
-#define ecs_stage_t_magic     (0x65637373)
-#define ecs_query_t_magic     (0x65637371)
-#define ecs_rule_t_magic      (0x65637375)
-#define ecs_table_t_magic     (0x65637374)
-#define ecs_filter_t_magic    (0x65637366)
-#define ecs_trigger_t_magic   (0x65637372)
-#define ecs_observer_t_magic  (0x65637362)
-
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid
 #define ecs_stage_t_tag     invalid
@@ -1441,7 +1431,7 @@ bool flecs_table_release(
 
 #include <stddef.h>
 
-/* Initialize object header & mixins for specified type */
+/* Initialize poly */
 void* _ecs_poly_init(
     ecs_poly_t *object,
     int32_t kind,
@@ -5481,7 +5471,7 @@ void flecs_notify(
     ecs_type_t *ids,
     ecs_entity_t relation)
 {
-    flecs_emit(world, world, &(ecs_event_desc_t) {
+    flecs_emit(world, world, &(ecs_event_desc_t){
         .event = event,
         .ids = ids,
         .table = table,
@@ -8542,7 +8532,7 @@ ecs_entity_t ecs_set_name(
     const char *name)
 {
     if (!entity) {
-        return ecs_entity_init(world, &(ecs_entity_desc_t) {
+        return ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = name
         });
     }
@@ -15805,7 +15795,7 @@ void FlecsPipelineImport(
         .dtor = ecs_dtor(EcsPipeline)
     });
 
-    world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) {
+    world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
         .entity = { .name = "BuiltinPipeline" },
         .query = {
             .filter.terms = {
@@ -16000,7 +15990,7 @@ void flecs_stats_monitor_import(
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
     // Called each frame, collects 60 measurements per second
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
@@ -16010,7 +16000,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each second, reduces into 60 measurements per minute
-    ecs_entity_t mw1m = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t mw1m = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
@@ -16024,7 +16014,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each minute, reduces into 60 measurements per hour
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
@@ -16039,7 +16029,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each minute, reduces into 60 measurements per day
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
@@ -16055,7 +16045,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each hour, reduces into 60 measurements per week
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),
@@ -16379,7 +16369,7 @@ void FlecsTimerImport(
     flecs_bootstrap_component(world, EcsRateFilter);
 
     /* Add EcsTickSource to timers and rate filters */
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "AddTickSource", .add = { ecs_dependson(EcsPreFrame) } },
         .query.filter.terms = {
             { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
@@ -16390,7 +16380,7 @@ void FlecsTimerImport(
     });
 
     /* Timer handling */
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "ProgressTimers", .add = { ecs_dependson(EcsPreFrame) } },
         .query.filter.terms = {
             { .id = ecs_id(EcsTimer) },
@@ -16400,7 +16390,7 @@ void FlecsTimerImport(
     });
 
     /* Rate filter handling */
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "ProgressRateFilters", .add = { ecs_dependson(EcsPreFrame) } },
         .query.filter.terms = {
             { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
@@ -16410,7 +16400,7 @@ void FlecsTimerImport(
     });
 
     /* TickSource without a timer or rate filter just increases each frame */
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "ProgressTickSource", .add = { ecs_dependson(EcsPreFrame) } },
         .query.filter.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
@@ -16656,7 +16646,7 @@ void ecs_cpp_component_validate(
      * with a different world. This ensures that the component is registered
      * with the same id for the current world. 
      * If the component was registered already, nothing will change. */
-    ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t) {
+    ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t){
         .entity.entity = id,
         .type.size = flecs_uto(int32_t, size),
         .type.alignment = flecs_uto(int32_t, alignment)
@@ -16823,7 +16813,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     }
 
     ecs_entity_t prev = ecs_set_scope(world, parent);
-    id = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    id = ecs_entity_init(world, &(ecs_entity_desc_t){
         .entity = id,
         .name = name
     });
@@ -17846,7 +17836,7 @@ const char* plecs_parse_assign_expr(
     void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
-        &(ecs_parse_expr_desc_t) {
+        &(ecs_parse_expr_desc_t){
             .name = name,
             .expr = expr,
             .lookup_action = plecs_lookup_action,
@@ -21207,13 +21197,15 @@ int32_t find_term_var_id(
 
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
-    const ecs_filter_desc_t *desc)
+    const ecs_filter_desc_t *const_desc)
 {
     ecs_rule_t *result = ecs_poly_new(ecs_rule_t);
 
-    /* Parse the signature expression. This initializes the columns array which
-     * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, desc)) {
+    /* Initialize the query */
+    ecs_filter_desc_t desc = *const_desc;
+    desc.storage = &result->filter; /* Use storage of rule */
+    result->filter = ECS_FILTER_INIT;
+    if (ecs_filter_init(world, &desc) == NULL) {
         goto error;
     }
 
@@ -23287,7 +23279,7 @@ ecs_entity_t ecs_enum_init(
             break;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = m_desc->name
         });
 
@@ -23330,7 +23322,7 @@ ecs_entity_t ecs_bitmask_init(
             break;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = m_desc->name
         });
 
@@ -23411,7 +23403,7 @@ ecs_entity_t ecs_struct_init(
             return 0;
         }
 
-        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = m_desc->name
         });
 
@@ -24946,7 +24938,7 @@ void FlecsMetaImport(
         .callback = ecs_meta_type_init_default_ctor
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
             { .id = ecs_id(EcsUnit) },
             { .id = EcsQuantity }
@@ -24958,7 +24950,7 @@ void FlecsMetaImport(
 
     /* Initialize primitive types */
     #define ECS_PRIMITIVE(world, type, primitive_kind)\
-        ecs_entity_init(world, &(ecs_entity_desc_t) {\
+        ecs_entity_init(world, &(ecs_entity_desc_t){\
             .entity = ecs_id(ecs_##type##_t),\
             .name = #type,\
             .symbol = #type });\
@@ -25004,7 +24996,7 @@ void FlecsMetaImport(
     ecs_add_id(world, EcsQuantity, EcsTag);
 
     /* Initialize reflection data for meta components */
-    ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
         .entity.name = "TypeKind",
         .constants = {
             {.name = "PrimitiveType"},
@@ -25016,14 +25008,14 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsMetaType),
         .members = {
             {.name = (char*)"kind", .type = type_kind}
         }
     });
 
-    ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
         .entity.name = "PrimitiveKind",
         .constants = {
             {.name = "Bool", 1}, 
@@ -25046,14 +25038,14 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsPrimitive),
         .members = {
             {.name = (char*)"kind", .type = primitive_kind}
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsMember),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
@@ -25063,7 +25055,7 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsArray),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
@@ -25071,14 +25063,14 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsVector),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
         }
     });
 
-    ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "unit_translation",
         .members = {
             {.name = (char*)"factor", .type = ecs_id(ecs_i32_t)},
@@ -25086,7 +25078,7 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
@@ -25097,7 +25089,7 @@ void FlecsMetaImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsUnitPrefix),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
@@ -27811,7 +27803,7 @@ void FlecsUnitsImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    EcsUnitPrefixes = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    EcsUnitPrefixes = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "prefixes",
         .add = { EcsModule }
     });
@@ -27820,143 +27812,143 @@ void FlecsUnitsImport(
 
     ecs_entity_t prev_scope = ecs_set_scope(world, EcsUnitPrefixes);
 
-    EcsYocto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYocto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yocto",
         .symbol = "y",
         .translation = { .factor = 10, .power = -24 }
     });
-    EcsZepto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZepto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zepto",
         .symbol = "z",
         .translation = { .factor = 10, .power = -21 }
     });
-    EcsAtto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsAtto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Atto",
         .symbol = "a",
         .translation = { .factor = 10, .power = -18 }
     });
-    EcsFemto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsFemto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Femto",
         .symbol = "a",
         .translation = { .factor = 10, .power = -15 }
     });
-    EcsPico = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPico = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Pico",
         .symbol = "p",
         .translation = { .factor = 10, .power = -12 }
     });
-    EcsNano = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsNano = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Nano",
         .symbol = "n",
         .translation = { .factor = 10, .power = -9 }
     });
-    EcsMicro = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMicro = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Micro",
         .symbol = "μ",
         .translation = { .factor = 10, .power = -6 }
     });
-    EcsMilli = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMilli = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Milli",
         .symbol = "m",
         .translation = { .factor = 10, .power = -3 }
     });
-    EcsCenti = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsCenti = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Centi",
         .symbol = "c",
         .translation = { .factor = 10, .power = -2 }
     });
-    EcsDeci = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsDeci = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Deci",
         .symbol = "d",
         .translation = { .factor = 10, .power = -1 }
     });
-    EcsDeca = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsDeca = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Deca",
         .symbol = "da",
         .translation = { .factor = 10, .power = 1 }
     });
-    EcsHecto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsHecto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Hecto",
         .symbol = "h",
         .translation = { .factor = 10, .power = 2 }
     });
-    EcsKilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsKilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Kilo",
         .symbol = "k",
         .translation = { .factor = 10, .power = 3 }
     });
-    EcsMega = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMega = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Mega",
         .symbol = "M",
         .translation = { .factor = 10, .power = 6 }
     });
-    EcsGiga = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsGiga = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Giga",
         .symbol = "G",
         .translation = { .factor = 10, .power = 9 }
     });
-    EcsTera = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsTera = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Tera",
         .symbol = "T",
         .translation = { .factor = 10, .power = 12 }
     });
-    EcsPeta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPeta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Peta",
         .symbol = "P",
         .translation = { .factor = 10, .power = 15 }
     });
-    EcsExa = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsExa = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Exa",
         .symbol = "E",
         .translation = { .factor = 10, .power = 18 }
     });
-    EcsZetta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZetta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zetta",
         .symbol = "Z",
         .translation = { .factor = 10, .power = 21 }
     });
-    EcsYotta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYotta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yotta",
         .symbol = "Y",
         .translation = { .factor = 10, .power = 24 }
     });
 
-    EcsKibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsKibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Kibi",
         .symbol = "Ki",
         .translation = { .factor = 1024, .power = 1 }
     });
-    EcsMebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Mebi",
         .symbol = "Mi",
         .translation = { .factor = 1024, .power = 2 }
     });
-    EcsGibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsGibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Gibi",
         .symbol = "Gi",
         .translation = { .factor = 1024, .power = 3 }
     });
-    EcsTebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsTebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Tebi",
         .symbol = "Ti",
         .translation = { .factor = 1024, .power = 4 }
     });
-    EcsPebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Pebi",
         .symbol = "Pi",
         .translation = { .factor = 1024, .power = 5 }
     });
-    EcsExbi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsExbi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Exbi",
         .symbol = "Ei",
         .translation = { .factor = 1024, .power = 6 }
     });
-    EcsZebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zebi",
         .symbol = "Zi",
         .translation = { .factor = 1024, .power = 7 }
     });
-    EcsYobi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYobi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yobi",
         .symbol = "Yi",
         .translation = { .factor = 1024, .power = 8 }
@@ -27966,88 +27958,88 @@ void FlecsUnitsImport(
 
     /* Duration units */
 
-    EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Duration" });
     prev_scope = ecs_set_scope(world, EcsDuration);
 
-        EcsSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Seconds",
             .quantity = EcsDuration,
             .symbol = "s" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsSeconds,
             .kind = EcsF32
         });
-            EcsPicoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsPicoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "PicoSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsPico });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsPicoSeconds,
                 .kind = EcsF32
             });
 
 
-            EcsNanoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsNanoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "NanoSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsNano });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsNanoSeconds,
                 .kind = EcsF32
             });
 
-            EcsMicroSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsMicroSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "MicroSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsMicro });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMicroSeconds,
                 .kind = EcsF32
             });
 
-            EcsMilliSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsMilliSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "MilliSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsMilli });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMilliSeconds,
                 .kind = EcsF32
             });
 
-        EcsMinutes = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsMinutes = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Minutes",
             .quantity = EcsDuration,
             .base = EcsSeconds,
             .symbol = "min",
             .translation = { .factor = 60, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMinutes,
             .kind = EcsU32
         });
 
-        EcsHours = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsHours = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Hours",
             .quantity = EcsDuration,
             .base = EcsMinutes,
             .symbol = "h",
             .translation = { .factor = 60, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsHours,
             .kind = EcsU32
         });
 
-        EcsDays = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsDays = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Days",
             .quantity = EcsDuration,
             .base = EcsHours,
             .symbol = "d",
             .translation = { .factor = 24, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDays,
             .kind = EcsU32
         });
@@ -28055,14 +28047,14 @@ void FlecsUnitsImport(
 
     /* Time units */
 
-    EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Time" });
     prev_scope = ecs_set_scope(world, EcsTime);
 
-        EcsDate = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsDate = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Date",
             .quantity = EcsTime });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDate,
             .kind = EcsU32
         });
@@ -28070,23 +28062,23 @@ void FlecsUnitsImport(
 
     /* Mass units */
 
-    EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Mass" });
     prev_scope = ecs_set_scope(world, EcsMass);
-        EcsGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsGrams = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Grams",
             .quantity = EcsMass,
             .symbol = "g" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsGrams,
             .kind = EcsF32
         });
-        EcsKiloGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloGrams = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloGrams",
             .quantity = EcsMass,
             .prefix = EcsKilo,
             .base = EcsGrams });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloGrams,
             .kind = EcsF32
         });
@@ -28094,14 +28086,14 @@ void FlecsUnitsImport(
 
     /* Electric current units */
 
-    EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "ElectricCurrent" });
     prev_scope = ecs_set_scope(world, EcsElectricCurrent);
-        EcsAmpere = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsAmpere = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Ampere",
             .quantity = EcsElectricCurrent,
             .symbol = "A" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsAmpere,
             .kind = EcsF32
         });
@@ -28109,14 +28101,14 @@ void FlecsUnitsImport(
 
     /* Amount of substance units */
 
-    EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Amount" });
     prev_scope = ecs_set_scope(world, EcsAmount);
-        EcsMole = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMole = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Mole",
             .quantity = EcsAmount,
             .symbol = "mol" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMole,
             .kind = EcsF32
         });
@@ -28124,14 +28116,14 @@ void FlecsUnitsImport(
 
     /* Luminous intensity units */
 
-    EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "LuminousIntensity" });
     prev_scope = ecs_set_scope(world, EcsLuminousIntensity);
-        EcsCandela = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsCandela = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Candela",
             .quantity = EcsLuminousIntensity,
             .symbol = "cd" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsCandela,
             .kind = EcsF32
         });
@@ -28139,14 +28131,14 @@ void FlecsUnitsImport(
 
     /* Force units */
 
-    EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Force" });
     prev_scope = ecs_set_scope(world, EcsForce);
-        EcsNewton = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsNewton = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Newton",
             .quantity = EcsForce,
             .symbol = "N" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsNewton,
             .kind = EcsF32
         });
@@ -28154,84 +28146,84 @@ void FlecsUnitsImport(
 
     /* Length units */
 
-    EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Length" });
     prev_scope = ecs_set_scope(world, EcsLength);
-        EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Meters",
             .quantity = EcsLength,
             .symbol = "m" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMeters,
             .kind = EcsF32
         });
 
-            EcsPicoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsPicoMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "PicoMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsPico });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsPicoMeters,
                 .kind = EcsF32
             });
 
-            EcsNanoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsNanoMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "NanoMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsNano });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsNanoMeters,
                 .kind = EcsF32
             });
 
-            EcsMicroMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMicroMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MicroMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsMicro });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMicroMeters,
                 .kind = EcsF32
             });
 
-            EcsMilliMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMilliMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MilliMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsMilli });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMilliMeters,
                 .kind = EcsF32
             });
 
-            EcsCentiMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsCentiMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "CentiMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsCenti });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsCentiMeters,
                 .kind = EcsF32
             });
 
-            EcsKiloMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloMeters,
                 .kind = EcsF32
             });
             
-        EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Miles",
             .quantity = EcsLength,
             .symbol = "mi"
         });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMiles,
             .kind = EcsF32
         });
@@ -28239,22 +28231,22 @@ void FlecsUnitsImport(
 
     /* Pressure units */
 
-    EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Pressure" });
     prev_scope = ecs_set_scope(world, EcsPressure);
-        EcsPascal = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsPascal = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Pascal",
             .quantity = EcsPressure,
             .symbol = "Pa" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsPascal,
             .kind = EcsF32
         });
-        EcsBar = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBar = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bar",
             .quantity = EcsPressure,
             .symbol = "bar" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBar,
             .kind = EcsF32
         });
@@ -28262,42 +28254,42 @@ void FlecsUnitsImport(
 
     /* Speed units */
 
-    EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Speed" });
     prev_scope = ecs_set_scope(world, EcsSpeed);
-        EcsMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "MetersPerSecond",
             .quantity = EcsSpeed,
             .base = EcsMeters,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMetersPerSecond,
             .kind = EcsF32
         });
-        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloMetersPerSecond",
             .quantity = EcsSpeed,
             .base = EcsKiloMeters,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloMetersPerSecond,
             .kind = EcsF32
         });
-        EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloMetersPerHour",
             .quantity = EcsSpeed,
             .base = EcsKiloMeters,
             .over = EcsHours });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloMetersPerHour,
             .kind = EcsF32
         });
-        EcsMilesPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMilesPerHour = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "MilesPerHour",
             .quantity = EcsSpeed,
             .base = EcsMiles,
             .over = EcsHours });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMilesPerHour,
             .kind = EcsF32
         });
@@ -28305,44 +28297,44 @@ void FlecsUnitsImport(
     
     /* Acceleration */
 
-    EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "Acceleration",
         .base = EcsMetersPerSecond,
         .over = EcsSeconds });
-    ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_quantity_init(world, &(ecs_entity_desc_t){
         .entity = EcsAcceleration
     });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsAcceleration,
         .kind = EcsF32
     });
 
     /* Temperature units */
 
-    EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Temperature" });
     prev_scope = ecs_set_scope(world, EcsTemperature);
-        EcsKelvin = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKelvin = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Kelvin",
             .quantity = EcsTemperature,
             .symbol = "K" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKelvin,
             .kind = EcsF32
         });
-        EcsCelsius = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsCelsius = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Celsius",
             .quantity = EcsTemperature,
             .symbol = "°C" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsCelsius,
             .kind = EcsF32
         });
-        EcsFahrenheit = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsFahrenheit = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Fahrenheit",
             .quantity = EcsTemperature,
             .symbol = "F" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsFahrenheit,
             .kind = EcsF32
         });
@@ -28350,116 +28342,116 @@ void FlecsUnitsImport(
 
     /* Data units */
 
-    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Data" });
     prev_scope = ecs_set_scope(world, EcsData);
 
-        EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bits",
             .quantity = EcsData,
             .symbol = "bit" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBits,
             .kind = EcsU64
         });
 
-            EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBits,
                 .kind = EcsU64
             });
 
-            EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsMega });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBits,
                 .kind = EcsU64
             });
 
-            EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsGiga });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBits,
                 .kind = EcsU64
             });
 
-        EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bytes",
             .quantity = EcsData,
             .symbol = "B",
             .base = EcsBits,
             .translation = { .factor = 8, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBytes,
             .kind = EcsU64
         });
 
-            EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBytes,
                 .kind = EcsU64
             });
 
-            EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsMega });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBytes,
                 .kind = EcsU64
             });
 
-            EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsGiga });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBytes,
                 .kind = EcsU64
             });
 
-            EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KibiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsKibi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKibiBytes,
                 .kind = EcsU64
             });
 
-            EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MebiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsMebi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMebiBytes,
                 .kind = EcsU64
             });
 
-            EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GibiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsGibi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGibiBytes,
                 .kind = EcsU64
             });
@@ -28468,92 +28460,92 @@ void FlecsUnitsImport(
 
     /* DataRate units */
 
-    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "DataRate" });
     prev_scope = ecs_set_scope(world, EcsDataRate);
 
-        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "BitsPerSecond",
             .quantity = EcsDataRate,
             .base = EcsBits,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBitsPerSecond,
             .kind = EcsU64
         });
 
-            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsKiloBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBitsPerSecond,
                 .kind = EcsU64
             });
 
-            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsMegaBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBitsPerSecond,
                 .kind = EcsU64
             });
 
-            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsGigaBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBitsPerSecond,
                 .kind = EcsU64
             });
 
-        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "BytesPerSecond",
             .quantity = EcsDataRate,
             .base = EcsBytes,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBytesPerSecond,
             .kind = EcsU64
         });
 
-            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsKiloBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBytesPerSecond,
                 .kind = EcsU64
             });
 
-            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsMegaBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBytesPerSecond,
                 .kind = EcsU64
             });
 
-            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsGigaBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBytesPerSecond,
                 .kind = EcsU64
             });
@@ -28562,36 +28554,36 @@ void FlecsUnitsImport(
 
     /* Percentage */
 
-    EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Percentage" });
-    ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.entity = EcsPercentage,
         .symbol = "%"
     });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsPercentage,
         .kind = EcsF32
     });
 
     /* Angles */
 
-    EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Angle" });
     prev_scope = ecs_set_scope(world, EcsAngle);
-        EcsRadians = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsRadians = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Radians",
             .quantity = EcsAngle,
             .symbol = "rad" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsRadians,
             .kind = EcsF32
         });
 
-        EcsDegrees = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsDegrees = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Degrees",
             .quantity = EcsAngle,
             .symbol = "°" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDegrees,
             .kind = EcsF32
         });
@@ -28599,18 +28591,18 @@ void FlecsUnitsImport(
 
     /* DeciBel */
 
-    EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "Bel",
         .symbol = "B" });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsBel,
         .kind = EcsF32
     });
-    EcsDeciBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsDeciBel = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "DeciBel",
         .prefix = EcsDeci,
         .base = EcsBel });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsDeciBel,
         .kind = EcsF32
     });
@@ -31797,7 +31789,7 @@ bool flecs_rest_reply_query(
     ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = q
     });
     if (!r) {
@@ -32332,7 +32324,7 @@ void FlecsCoreDocImport(
 
     /* Initialize reflection data for core components */
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsComponent),
         .members = {
             {.name = (char*)"size", .type = ecs_id(ecs_i32_t)},
@@ -32340,7 +32332,7 @@ void FlecsCoreDocImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsDocDescription),
         .members = {
             {.name = "value", .type = ecs_id(ecs_string_t)}
@@ -35441,7 +35433,7 @@ int meta_parse_struct(
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
     while ((ptr = meta_parse_member(ptr, &token, &ctx)) && ptr[0]) {
-        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = token.name
         });
 
@@ -35497,7 +35489,7 @@ int meta_parse_constants(
             goto error;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = token.name
         });
 
@@ -37391,7 +37383,7 @@ void flecs_process_pending_tables(
                  * became empty again. By the time we run this code, no changes
                  * in the administration would actually be made. */
                 int32_t table_count = ecs_table_count(table);
-                flecs_emit(world, world, &(ecs_event_desc_t) {
+                flecs_emit(world, world, &(ecs_event_desc_t){
                     .event = table_count
                         ? EcsOnTableFill 
                         : EcsOnTableEmpty
@@ -37702,6 +37694,8 @@ void ecs_emit(
 
 #include <ctype.h>
 
+ecs_filter_t ECS_FILTER_INIT = { .hdr = { .magic = ecs_filter_t_magic }};
+
 static
 void term_error(
     const ecs_world_t *world,
@@ -37779,18 +37773,11 @@ int finalize_term_set(
 
 static
 void finalize_term_id_resources(
-    ecs_term_t *term,
     ecs_term_id_t *id)
 {
     if (id->entity) {
-        if (term->move) {
-            ecs_os_free(id->name);
-        }
+        ecs_os_free(id->name);
         id->name = NULL;
-    } else if (id->name) {
-        if (!term->move) {
-            id->name = ecs_os_strdup(id->name);
-        }
     }
 }
 
@@ -37798,13 +37785,9 @@ static
 void finalize_term_resources(
     ecs_term_t *term)
 {
-    finalize_term_id_resources(term, &term->pred);
-    finalize_term_id_resources(term, &term->subj);
-    finalize_term_id_resources(term, &term->obj);
-    if (term->name) {
-        term->name = ecs_os_strdup(term->name);
-    }
-    term->move = false;
+    finalize_term_id_resources(&term->pred);
+    finalize_term_id_resources(&term->subj);
+    finalize_term_id_resources(&term->obj);
 }
 
 static
@@ -38692,173 +38675,147 @@ void flecs_filter_iter_init(
     }
 }
 
-int ecs_filter_init(
+ecs_filter_t* ecs_filter_init(
     const ecs_world_t *stage,
-    ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc)    
 {
-    ecs_filter_t f;
-    ecs_poly_init(&f, ecs_filter_t);
-
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-
     const ecs_world_t *world = ecs_get_world(stage);
 
-    int i, term_count = 0;
-    ecs_term_t *terms = desc->terms_buffer;
-    const char *name = desc->name;
-    const char *expr = desc->expr;
+    ecs_filter_t *f = desc->storage;
+    int32_t i, term_count = desc->terms_buffer_count, storage_count = 0, expr_count = 0;
+    const ecs_term_t *terms = desc->terms_buffer;
+    ecs_term_t *storage_terms = NULL, *expr_terms = NULL;
 
-    /* Temporarily set the fields to the values provided in desc, until the
-     * filter has been validated. */
-    f.name = (char*)name;
-    ECS_BIT_COND(f.flags, EcsFilterIsFilter, desc->filter);
-    ECS_BIT_COND(f.flags, EcsFilterIsInstanced, desc->instanced);
-    ECS_BIT_COND(f.flags, EcsFilterMatchEmptyTables, desc->match_empty_tables);
-    ECS_BIT_SET(f.flags, EcsFilterMatchAnything);
-
-    if (terms) {
-        term_count = desc->terms_buffer_count;
+    if (f) {
+        ecs_check(f->hdr.magic == ecs_filter_t_magic, 
+            ECS_INVALID_PARAMETER, NULL);
+        storage_count = f->term_count;
+        storage_terms = f->terms;
+        ecs_poly_init(f, ecs_filter_t);
     } else {
-        terms = (ecs_term_t*)desc->terms;
+        f = ecs_poly_new(ecs_filter_t);
+        f->owned = true;
+    }
+    if (!storage_terms) {
+        f->terms_owned = true;
+    }
+
+    ECS_BIT_COND(f->flags, EcsFilterIsInstanced, desc->instanced);
+    ECS_BIT_SET(f->flags, EcsFilterMatchAnything);
+    f->flags |= desc->flags;
+
+    /* If terms_buffer was not set, count number of initialized terms in
+     * static desc::terms array */
+    if (!terms) {
+        ecs_check(term_count == 0, ECS_INVALID_PARAMETER, NULL);
+        terms = desc->terms;
         for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
-
             term_count ++;
         }
+    } else {
+        ecs_check(term_count != 0, ECS_INVALID_PARAMETER, NULL);
     }
 
-    /* Temporarily set array from desc to filter, until the filter has been
-     * validated. */
-    f.terms = terms;
-    f.term_count = term_count;
-
+    /* If expr is set, parse query expression */
+    const char *name = desc->name, *expr = desc->expr;
     if (expr) {
 #ifdef FLECS_PARSER
-        int32_t buffer_count = 0;
-
-        /* If terms have already been set, copy buffer to allocated one */
-        if (terms && term_count) {
-            terms = ecs_os_memdup(terms, term_count * ECS_SIZEOF(ecs_term_t));
-            buffer_count = term_count;
-        } else {
-            terms = NULL;
-        }
-
-        /* Parse expression into array of terms */
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
+        int32_t expr_size = 0;
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
-            
-            if (term_count == buffer_count) {
-                buffer_count = buffer_count ? buffer_count * 2 : 8;
-                terms = ecs_os_realloc(terms, 
-                    buffer_count * ECS_SIZEOF(ecs_term_t));
+
+            if (expr_count == expr_size) {
+                expr_size = expr_size ? expr_size * 2 : 8;
+                expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
             }
 
-            /* Check for identifiers that have a name that starts with _. If the
-             * variable kind is left to Default, the kind should be set to 
-             * variable and the _ prefix should be removed. */
-            finalize_term_vars(world, &term, name);
-
-            terms[term_count] = term;
-            term_count ++;
+            expr_terms[expr_count ++] = term;
 
             if (ptr[0] == '\n') {
                 break;
             }
         }
 
-        f.terms = terms;
-        f.term_count = term_count;
-
         if (!ptr) {
+            /* Set terms in filter object to make sur they get cleaned up */
+            f->terms = expr_terms;
+            f->term_count = expr_count;
+            f->terms_owned = true;
             goto error;
         }
 #else
+        (void)expr;
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
     }
 
-    /* Copy term resources. */
-    if (term_count) {
-        ecs_term_t *dst_terms = terms;
-        if (!expr) {
-            if (term_count <= ECS_TERM_CACHE_SIZE) {
-                dst_terms = f.term_cache;
-                f.term_cache_used = true;
-            } else {
-                dst_terms = ecs_os_malloc_n(ecs_term_t, term_count);
-            }
+    /* If storage is provided, make sure it's large enough */
+    ecs_check(!storage_terms || storage_count >= (term_count + expr_count),
+        ECS_INVALID_PARAMETER, NULL);
+
+    if (term_count || expr_count) {
+        /* If no storage is provided, create it */
+        if (!storage_terms) {
+            f->terms = ecs_os_calloc_n(ecs_term_t, term_count + expr_count);
+            f->term_count = term_count + expr_count;
+            ecs_assert(f->terms_owned == true, ECS_INTERNAL_ERROR, NULL);
+        } else {
+            f->terms = storage_terms;
+            f->term_count = storage_count;
         }
 
-        if (terms != dst_terms) {
-            ecs_os_memcpy_n(dst_terms, terms, ecs_term_t, term_count);
+        /* Copy terms to filter storage */
+        for (i = 0; i < term_count; i ++) {
+            f->terms[i] = ecs_term_copy(&terms[i]);
         }
 
-        f.terms = dst_terms;
-    } else {
-        f.terms = NULL;
+        /* Move expr terms to filter storage */
+        for (i = 0; i < expr_count; i ++) {
+            f->terms[i + term_count] = ecs_term_move(&expr_terms[i]);
+        }
+        ecs_os_free(expr_terms);
     }
 
-    f.flags |= desc->flags;
-
     /* Ensure all fields are consistent and properly filled out */
-    if (ecs_filter_finalize(world, &f)) {
+    if (ecs_filter_finalize(world, f)) {
         goto error;
     }
 
-    *filter_out = f;
-    if (f.term_cache_used) {
-        filter_out->terms = filter_out->term_cache;
-    }
+    f->name = ecs_os_strdup(name);
+    f->variable_names[0] = (char*)".";
+    f->iterable.init = flecs_filter_iter_init;
 
-    filter_out->name = ecs_os_strdup(desc->name);
-    filter_out->variable_names[0] = (char*)".";
-
-    ecs_assert(!filter_out->term_cache_used || 
-        filter_out->terms == filter_out->term_cache,
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(filter_out->term_count == f.term_count,
-        ECS_INTERNAL_ERROR, NULL);
-
-    filter_out->iterable.init = flecs_filter_iter_init;
-
-    return 0;
+    return f;
 error:
-    if (f.name == desc->name) {
-        f.name = NULL;
-    }
-
-    ecs_filter_fini(&f);
-
-    return -1;
+    ecs_filter_fini(f);
+    return NULL;
 }
 
 void ecs_filter_copy(
     ecs_filter_t *dst,
     const ecs_filter_t *src)   
 {
+    if (src == dst) {
+        return;
+    }
+
     if (src) {
         *dst = *src;
 
-        int32_t term_count = src->term_count;
+        int32_t i, term_count = src->term_count;
+        dst->terms = ecs_os_malloc_n(ecs_term_t, term_count);
+        dst->terms_owned = true;
 
-        if (src->term_cache_used) {
-            dst->terms = dst->term_cache;
-        } else {
-            dst->terms = ecs_os_memdup_n(src->terms, ecs_term_t, term_count);
-        }
-
-        int i;
         for (i = 0; i < term_count; i ++) {
             dst->terms[i] = ecs_term_copy(&src->terms[i]);
         }
@@ -38871,17 +38828,20 @@ void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src)   
 {
+    if (src == dst) {
+        return;
+    }
+
     if (src) {
         *dst = *src;
-
-        if (src->term_cache_used) {
-            dst->terms = dst->term_cache;
+        if (src->terms_owned) {
+            dst->terms = src->terms;
+            dst->terms_owned = true;
+        } else {
+            ecs_filter_copy(dst, src);
         }
-
-        if (dst != src) {
-            src->terms = NULL;
-            src->term_count = 0;
-        }
+        src->terms = NULL;
+        src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -38896,7 +38856,7 @@ void ecs_filter_fini(
             ecs_term_fini(&filter->terms[i]);
         }
 
-        if (!filter->term_cache_used) {
+        if (filter->terms_owned) {
             ecs_os_free(filter->terms);
         }
     }
@@ -38905,6 +38865,10 @@ void ecs_filter_fini(
 
     filter->terms = NULL;
     filter->name = NULL;
+
+    if (filter->owned) {
+        ecs_os_free(filter);
+    }
 }
 
 static
@@ -39025,11 +38989,10 @@ char* ecs_filter_str(
     const ecs_world_t *world,
     const ecs_filter_t *filter)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
-    ecs_check(!filter->term_cache_used || filter->terms == filter->term_cache,
-        ECS_INVALID_PARAMETER, NULL);
-
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
     int32_t or_count = 0;
@@ -39317,9 +39280,6 @@ bool flecs_filter_match_table(
     int32_t skip_term,
     ecs_flags32_t iter_flags)
 {
-    ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
-        ECS_INTERNAL_ERROR, NULL);
-
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
 
@@ -39795,33 +39755,13 @@ error:
 }
 
 static
-const ecs_filter_t* flecs_init_filter_iter(
-    const ecs_world_t *world,
+void flecs_init_filter_iter(
     ecs_iter_t *it,
     const ecs_filter_t *filter)
 {
-    ecs_filter_iter_t *iter = &it->priv.iter.filter;
-
-    if (filter) {
-        iter->filter = *filter;
-
-        if (filter->term_cache_used) {
-            iter->filter.terms = iter->filter.term_cache;
-        }
-
-        ecs_assert(!filter->term_cache_used || 
-            filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
-    } else {
-        ecs_filter_init(world, &iter->filter, &(ecs_filter_desc_t) {
-            .terms = {{ .id = EcsAny }}
-        });
-
-        filter = &iter->filter;
-    }
-
+    ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
+    it->priv.iter.filter.filter = filter;
     it->term_count = filter->term_count_actual;
-
-    return filter;
 }
 
 int32_t ecs_filter_pivot_term(
@@ -39879,7 +39819,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     ecs_flags32_t flags)
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_world_t *world = ecs_get_world(stage);
     
     flecs_process_pending_tables(world);
@@ -39895,7 +39835,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
     iter->pivot_term = -1;
 
-    filter = flecs_init_filter_iter(world, &it, filter);
+    flecs_init_filter_iter(&it, filter);
     ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
         ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
 
@@ -39930,13 +39870,6 @@ ecs_iter_t flecs_filter_iter_w_flags(
         } else {
             iter->kind = EcsIterEvalNone;
         }
-    }
-
-    if (filter->terms == filter->term_cache) {
-        /* Because we're returning the iterator by value, the address of the
-         * term cache changes. The ecs_filter_next function will set the correct
-         * address when it detects that terms is set to NULL */
-        iter->filter.terms = NULL;
     }
 
     ECS_BIT_COND(it.flags, EcsIterIsFilter, 
@@ -39979,14 +39912,9 @@ ecs_iter_t ecs_filter_chain_iter(
 
     flecs_iter_init(&it, flecs_iter_cache_all);
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
-    flecs_init_filter_iter(it.world, &it, filter);
+    flecs_init_filter_iter(&it, filter);
 
     iter->kind = EcsIterEvalChain;
-
-    if (filter->terms == filter->term_cache) {
-        /* See ecs_filter_iter */
-        iter->filter.terms = NULL;
-    }
 
     return it;
 }
@@ -40014,14 +39942,10 @@ bool ecs_filter_next_instanced(
     ecs_check(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
 
     ecs_filter_iter_t *iter = &it->priv.iter.filter;
-    ecs_filter_t *filter = &iter->filter;
+    const ecs_filter_t *filter = iter->filter;
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = NULL;
     bool match;
-
-    if (!filter->terms) {
-        filter->terms = filter->term_cache;
-    }
 
     flecs_iter_validate(it);
 
@@ -40867,7 +40791,13 @@ void flecs_unregister_observer(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *observer)
-{    
+{
+    ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!observer->filter.terms) {
+        ecs_assert(observer->filter.term_count == 0, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
 
@@ -41591,7 +41521,7 @@ int flecs_multi_observer_init(
     child_desc.ctx = observer;
     child_desc.filter.expr = NULL;
     child_desc.filter.terms_buffer = NULL;
-    child_desc.filter.terms_buffer_count = 1;
+    child_desc.filter.terms_buffer_count = 0;
     child_desc.binding_ctx = NULL;
     child_desc.binding_ctx_free = NULL;
     ecs_os_zeromem(&child_desc.entity);
@@ -41709,10 +41639,11 @@ ecs_entity_t ecs_observer_init(
          * filter will have the name of the observer. */
         ecs_filter_desc_t filter_desc = desc->filter;
         filter_desc.name = desc->entity.name;
+        ecs_filter_t *filter = filter_desc.storage = &observer->filter;
+        *filter = ECS_FILTER_INIT;
 
         /* Parse filter */
-        ecs_filter_t *filter = &observer->filter;
-        if (ecs_filter_init(world, filter, &filter_desc)) {
+        if (ecs_filter_init(world, &filter_desc) == NULL) {
             flecs_observer_fini(observer);
             return 0;
         }
@@ -44334,9 +44265,11 @@ ecs_query_t* ecs_query_init(
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     ecs_entity_t entity = desc->entity;
 
-    observer_desc.filter.match_empty_tables = true;
+    observer_desc.filter.flags = EcsFilterMatchEmptyTables;
+    observer_desc.filter.storage = &result->filter;
+    result->filter = ECS_FILTER_INIT;
 
-    if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
+    if (ecs_filter_init(world, &observer_desc.filter) == NULL) {
         goto error;
     }
 
@@ -44346,7 +44279,7 @@ ecs_query_t* ecs_query_init(
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
-        observer_desc.filter.filter = true;
+        observer_desc.filter.flags |= EcsFilterIsFilter;
 
         /* ecs_filter_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the filter. */

@@ -479,6 +479,9 @@ struct ecs_term_t {
                                  * into the destination term. */
 };
 
+/** Use this variable to initialize user-allocated filter object */
+FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
+
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
@@ -486,9 +489,9 @@ struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
     int32_t term_count_actual; /* Processed count, which folds OR terms */
-
-    ecs_term_t term_cache[ECS_TERM_CACHE_SIZE]; /* Cache for small filters */
-    bool term_cache_used;
+    
+    bool owned;                /* Is filter object owned by filter */
+    bool terms_owned;          /* Is terms array owned by filter */
 
     ecs_flags32_t flags;       /* Filter flags */
     
@@ -686,10 +689,8 @@ typedef struct ecs_filter_desc_t {
     ecs_term_t *terms_buffer;
     int32_t terms_buffer_count;
 
-    /* When true, don't populate data fields of iterator. This is useful for
-     * filters that are only interested in finding the set of matching tables or
-     * entities, and not in the component data. */
-    bool filter;
+    /* External storage to prevent allocation of the filter object */
+    ecs_filter_t *storage;
 
     /* When true, terms returned by an iterator may either contain 1 or N 
      * elements, where terms with N elements are owned, and terms with 1 element 
@@ -698,10 +699,7 @@ typedef struct ecs_filter_desc_t {
      * owned and shared terms. */ 
     bool instanced;
 
-    /* Match empty tables. By default empty tables are not returned. */ 
-    bool match_empty_tables;
-
-    /* Additional flags to set on filter */
+    /* Flags for advanced usage */
     ecs_flags32_t flags;
 
     /* Filter expression. Should not be set at the same time as terms array */
@@ -3054,10 +3052,6 @@ ecs_flags32_t ecs_id_get_flags(
  * A filter is a lightweight object that can be used to query for entities in
  * a world. Filters, as opposed to queries, do not cache results. They are 
  * therefore slower to iterate, but are faster to create.
- *
- * This operation will allocate an array to hold filter terms if the number of
- * terms in the filter exceed ECS_TERM_DESC_CACHE_SIZE. If the number of terms
- * is below that constant, the "terms" pointer is set to an inline array.
  * 
  * When a filter is copied by value, make sure to use "ecs_filter_move" to 
  * ensure that the terms pointer still points to the inline array:
@@ -3068,24 +3062,18 @@ ecs_flags32_t ecs_id_get_flags(
  * set to the same filter, to ensure the pointer is valid:
  * 
  *   ecs_filter_move(&f, &f)
- * 
- * When a filter contains entity or variable names memory is allocated to store
- * those. To cleanup memory associated with a filter, call ecs_filter_fini.
  *
  * It is possible to create a filter without allocating any memory, by setting
- * the "terms" and "term_count" members directly. When doing so an application
- * should not call ecs_filter_init but ecs_filter_finalize. This will ensure
- * that all fields are consistent and properly filled out.
+ * the .storage member in ecs_filter_desc_t. See the documentation for the 
+ * member for more details.
  *
  * @param world The world.
  * @param desc Properties for the filter to create.
- * @param filter_out The filter.
- * @return Zero if successful, non-zero if failed.
+ * @return The filter if successful, NULL if not successful.
  */
 FLECS_API
-int ecs_filter_init(
+ecs_filter_t * ecs_filter_init(
     const ecs_world_t *world,
-    ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc);
 
 /** Deinitialize filter.
@@ -3679,7 +3667,7 @@ bool ecs_iter_is_true(
  * Example:
  * 
  * // Rule that matches (Eats, *)
- * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+ * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
  *     { .pred.entity = Eats, .obj.name = "_Food" }
  *   }

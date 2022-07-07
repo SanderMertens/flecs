@@ -5,8 +5,9 @@ void FilterStr_one_term() {
 
     ECS_TAG(world, TagA);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {{ TagA }}
     }));
 
@@ -25,8 +26,9 @@ void FilterStr_one_term_w_inout() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA, .inout = EcsIn }
         }
@@ -47,8 +49,9 @@ void FilterStr_two_terms() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA },
             { TagB }
@@ -70,8 +73,9 @@ void FilterStr_two_terms_w_inout() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA },
             { TagB, .inout = EcsIn }
@@ -94,8 +98,9 @@ void FilterStr_three_terms_w_or() {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr },
@@ -119,8 +124,9 @@ void FilterStr_three_terms_w_or_inout() {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr, .inout = EcsIn },
@@ -145,8 +151,9 @@ void FilterStr_four_terms_three_w_or_inout() {
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
 
-    ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr, .inout = EcsIn },

@@ -477,6 +477,21 @@ typedef int32_t ecs_size_t;
 
 #define ECS_CONCAT(a, b) a ## b
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Magic numbers for sanity checking
+////////////////////////////////////////////////////////////////////////////////
+
+/* Magic number to identify the type of the object */
+#define ecs_world_t_magic     (0x65637377)
+#define ecs_stage_t_magic     (0x65637373)
+#define ecs_query_t_magic     (0x65637371)
+#define ecs_rule_t_magic      (0x65637375)
+#define ecs_table_t_magic     (0x65637374)
+#define ecs_filter_t_magic    (0x65637366)
+#define ecs_trigger_t_magic   (0x65637372)
+#define ecs_observer_t_magic  (0x65637362)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity id macro's
 ////////////////////////////////////////////////////////////////////////////////
@@ -2459,6 +2474,9 @@ struct ecs_term_t {
                                  * into the destination term. */
 };
 
+/** Use this variable to initialize user-allocated filter object */
+FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
+
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
@@ -2466,9 +2484,9 @@ struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
     int32_t term_count_actual; /* Processed count, which folds OR terms */
-
-    ecs_term_t term_cache[ECS_TERM_CACHE_SIZE]; /* Cache for small filters */
-    bool term_cache_used;
+    
+    bool owned;                /* Is filter object owned by filter */
+    bool terms_owned;          /* Is terms array owned by filter */
 
     ecs_flags32_t flags;       /* Filter flags */
     
@@ -2716,7 +2734,7 @@ typedef enum ecs_iter_kind_t {
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
-    ecs_filter_t filter;
+    const ecs_filter_t *filter;
     ecs_iter_kind_t kind; 
     ecs_term_iter_t term_iter;
     int32_t matches_left;
@@ -3535,10 +3553,8 @@ typedef struct ecs_filter_desc_t {
     ecs_term_t *terms_buffer;
     int32_t terms_buffer_count;
 
-    /* When true, don't populate data fields of iterator. This is useful for
-     * filters that are only interested in finding the set of matching tables or
-     * entities, and not in the component data. */
-    bool filter;
+    /* External storage to prevent allocation of the filter object */
+    ecs_filter_t *storage;
 
     /* When true, terms returned by an iterator may either contain 1 or N 
      * elements, where terms with N elements are owned, and terms with 1 element 
@@ -3547,10 +3563,7 @@ typedef struct ecs_filter_desc_t {
      * owned and shared terms. */ 
     bool instanced;
 
-    /* Match empty tables. By default empty tables are not returned. */ 
-    bool match_empty_tables;
-
-    /* Additional flags to set on filter */
+    /* Flags for advanced usage */
     ecs_flags32_t flags;
 
     /* Filter expression. Should not be set at the same time as terms array */
@@ -5924,10 +5937,6 @@ ecs_flags32_t ecs_id_get_flags(
  * A filter is a lightweight object that can be used to query for entities in
  * a world. Filters, as opposed to queries, do not cache results. They are 
  * therefore slower to iterate, but are faster to create.
- *
- * This operation will allocate an array to hold filter terms if the number of
- * terms in the filter exceed ECS_TERM_DESC_CACHE_SIZE. If the number of terms
- * is below that constant, the "terms" pointer is set to an inline array.
  * 
  * When a filter is copied by value, make sure to use "ecs_filter_move" to 
  * ensure that the terms pointer still points to the inline array:
@@ -5938,24 +5947,18 @@ ecs_flags32_t ecs_id_get_flags(
  * set to the same filter, to ensure the pointer is valid:
  * 
  *   ecs_filter_move(&f, &f)
- * 
- * When a filter contains entity or variable names memory is allocated to store
- * those. To cleanup memory associated with a filter, call ecs_filter_fini.
  *
  * It is possible to create a filter without allocating any memory, by setting
- * the "terms" and "term_count" members directly. When doing so an application
- * should not call ecs_filter_init but ecs_filter_finalize. This will ensure
- * that all fields are consistent and properly filled out.
+ * the .storage member in ecs_filter_desc_t. See the documentation for the 
+ * member for more details.
  *
  * @param world The world.
  * @param desc Properties for the filter to create.
- * @param filter_out The filter.
- * @return Zero if successful, non-zero if failed.
+ * @return The filter if successful, NULL if not successful.
  */
 FLECS_API
-int ecs_filter_init(
+ecs_filter_t * ecs_filter_init(
     const ecs_world_t *world,
-    ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc);
 
 /** Deinitialize filter.
@@ -6549,7 +6552,7 @@ bool ecs_iter_is_true(
  * Example:
  * 
  * // Rule that matches (Eats, *)
- * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+ * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
  *     { .pred.entity = Eats, .obj.name = "_Food" }
  *   }
@@ -7739,12 +7742,12 @@ void* ecs_record_get_column(
     ecs_bulk_new_w_id(world, ecs_id(component), count)
 
 #define ecs_new_entity(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+    ecs_entity_init(world, &(ecs_entity_desc_t){\
         .name = n,\
     })
 
 #define ecs_new_prefab(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+    ecs_entity_init(world, &(ecs_entity_desc_t){\
         .name = n,\
         .add = {EcsPrefab}\
     })
@@ -9138,7 +9141,7 @@ extern "C" {
 #endif
 
 #define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) { \
+    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){ \
         .entity.name = #id, \
         .query.filter.expr = #__VA_ARGS__\
     });\
@@ -10364,7 +10367,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
-#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {true, false,\
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
     false, false, false, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
@@ -10416,7 +10419,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_type_info;     /* Include type information */
 } ecs_iter_to_json_desc_t;
 
-#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
+#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_term_ids =        true,  \
     .serialize_ids =             true,  \
     .serialize_subjects =        true,  \
@@ -10703,7 +10706,7 @@ void FlecsUnitsImport(
  * used as a regular component:
  * 
  * // Create Position type
- * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t) {
+ * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t){
  *  .entity.name = "Position",
  *  .members = {
  *       {"x", ecs_id(ecs_f32_t)},
@@ -17071,17 +17074,24 @@ struct entity_view : public id {
     void children(Func&& func) const {
         flecs::world world(m_world);
 
-        ecs_filter_t f;
+        ecs_term_t terms[2];
+        ecs_filter_t f = ECS_FILTER_INIT;
+        f.terms = terms;
+        f.term_count = 2;
+
         ecs_filter_desc_t desc = {};
         desc.terms[0].id = ecs_pair(flecs::ChildOf, m_id);
         desc.terms[1].id = flecs::Prefab;
         desc.terms[1].oper = EcsOptional;
-        ecs_filter_init(m_world, &f, &desc);
+        desc.storage = &f;
+        ecs_filter_init(m_world, &desc);
 
         ecs_iter_t it = ecs_filter_iter(m_world, &f);
         while (ecs_filter_next(&it)) {
             _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
         }
+
+        ecs_filter_fini(&f);
     }
 
     /** Get component value.
@@ -20775,31 +20785,6 @@ struct term_builder_i : term_id_builder_i<Base> {
         m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = o;
         return *this;
-    }    
-
-    /** Set term from expression.
-     * The syntax for expr is the same as that of the query DSL. The expression
-     * must only contain a single term, for example:
-     *   Position // correct
-     *   Position, Velocity // incorrect
-     */
-    Base& expr(const char *expr) {
-#       ifdef FLECS_PARSER
-        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        const char *ptr;
-        if ((ptr = ecs_parse_term(this->world_v(), nullptr, expr, expr, m_term)) == nullptr) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        m_term->move = true;
-
-        // Should not have more than one term
-        ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
-#       else
-        (void)expr;
-        ecs_abort(ECS_UNSUPPORTED, "parser addon required for expr()");
-#       endif
-        return *this;
     }
 
     /** Select predicate of term. 
@@ -21025,14 +21010,6 @@ struct term final : term_builder_i<term> {
             value.move = true; 
             this->id(r, o);
         }
-
-    term(flecs::world_t *world_ptr, const char *expr) 
-        : term_builder_i<term>(&value)
-        , value({})
-        , m_world(world_ptr)
-    {
-        this->expr(expr);
-    }
 
     term(const term& t) : term_builder_i<term>(&value) {
         m_world = t.m_world;
@@ -21304,13 +21281,6 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& term(const char *expr) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v(), expr).move();
-        this->m_term->move = true;
-        return *this;
-    }
-
     Base& term(flecs::term& term) {
         this->term();
         *this->m_term = term.move();
@@ -21382,8 +21352,9 @@ struct filter_base {
     filter_base(world_t *world, ecs_filter_desc_t *desc) 
         : m_world(world)
     {
-        int res = ecs_filter_init(world, &m_filter, desc);
-        if (res != 0) {
+        desc->storage = &m_filter;
+
+        if (ecs_filter_init(world, desc) == NULL) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -21473,7 +21444,7 @@ struct filter_base {
 
 protected:
     world_t *m_world;
-    filter_t m_filter;
+    filter_t m_filter = ECS_FILTER_INIT;
     const filter_t *m_filter_ptr;
 };
 

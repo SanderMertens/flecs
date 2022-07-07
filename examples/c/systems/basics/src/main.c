@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
     // Create a system for Position, Velocity. Systems are like queries (see
     // queries) with a function that can be ran or scheduled (see pipeline).
-    ecs_entity_t move = ecs_system_init(ecs, &(ecs_system_desc_t) {
+    ecs_entity_t move = ecs_system_init(ecs, &(ecs_system_desc_t){
         .query.filter.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsIn }

@@ -204,7 +204,7 @@ ecs_os_free(path);
 An application can assign names to entities. Names can be assigned at entity creation, with the `ecs_entity_init` function:
 
 ```c
-ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
     .name = "MyEntity"
 });
 ```
@@ -1422,7 +1422,7 @@ Applications can create their own pipelines which fully customize which systems 
 ```c
 ECS_TAG(world, Foo);
 
-ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t) {
+ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
     .query.filter.terms = {
         { .id = ecs_id(EcsSystem) }, // mandatory
         { .id = Foo }

@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     ecs_add(ecs, builder_2, Builder);
 
     // Create a rule to find all ranged units
-    ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t){
         .terms = {{ .id = RangedUnit }}
     });
 

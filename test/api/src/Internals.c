@@ -237,7 +237,7 @@ void Internals_no_duplicate_root_table_id() {
         test_assert(ecs_has_id(world, e, i + 1000));
     }
 
-    ecs_entity_t f = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t f = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "Foo"
     });
     

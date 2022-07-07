@@ -445,7 +445,7 @@ void RuleBuilder_expr_w_var() {
     auto e = ecs.entity().add(rel, obj);
 
     auto r = ecs.rule_builder()
-        .term("(Rel, $X)")
+        .expr("(Rel, $X)")
         .build();
 
     int x_var = r.find_var("X");
@@ -477,6 +477,8 @@ void RuleBuilder_get_first() {
     auto first = q.iter().first();
     test_assert(first != 0);
     test_assert(first == e1);
+
+    q.destruct();
 }
 
 void RuleBuilder_get_count_direct() {
@@ -491,6 +493,8 @@ void RuleBuilder_get_count_direct() {
     auto q = ecs.rule<A>();
 
     test_int(3, q.count());
+
+    q.destruct();
 }
 
 void RuleBuilder_get_is_true_direct() {
@@ -508,6 +512,9 @@ void RuleBuilder_get_is_true_direct() {
 
     test_bool(true, q_1.is_true());
     test_bool(false, q_2.is_true());
+
+    q_1.destruct();
+    q_2.destruct();
 }
 
 void RuleBuilder_get_first_direct() {
@@ -524,4 +531,6 @@ void RuleBuilder_get_first_direct() {
     auto first = q.first();
     test_assert(first != 0);
     test_assert(first == e1);
+
+    q.destruct();
 }

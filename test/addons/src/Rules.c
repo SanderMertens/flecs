@@ -825,7 +825,7 @@ void Rules_1_empty_comp() {
     ecs_entity_t Tag = ecs_new_id(world);
     ecs_entity_t e1 = ecs_new_w_id(world, Tag);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ Tag }}
     });
 
@@ -1120,7 +1120,7 @@ void Rules_wildcard_pred() {
     ecs_add(world, e1, TagA);
     ecs_add(world, e1, TagB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "*, MatchWith"
     });
 
@@ -1167,7 +1167,7 @@ void Rules_wildcard_subj() {
     ecs_entity_t e1 = ecs_new(world, MatchWith);
     ecs_entity_t e2 = ecs_new(world, MatchWith);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "MatchWith(*)"
     });
 
@@ -1204,7 +1204,7 @@ void Rules_wildcard_obj() {
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     ecs_add_pair(world, e1, Rel, ObjB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "(Rel, *)"
     });
 
@@ -1246,7 +1246,7 @@ void Rules_wildcard_pred_pair() {
     ecs_add_pair(world, e1, RelB, ObjA);
     ecs_add_pair(world, e1, RelB, ObjB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "(*, ObjA)"
     });
 
@@ -1286,7 +1286,7 @@ void Rules_any_pred() {
     ecs_add(world, e1, TagA);
     ecs_add(world, e1, TagB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "_, MatchWith"
     });
 
@@ -1317,7 +1317,7 @@ void Rules_any_subj() {
     ecs_new(world, MatchWith);
     ecs_new(world, MatchWith);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "MatchWith(_)"
     });
 
@@ -1347,7 +1347,7 @@ void Rules_any_obj() {
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     ecs_add_pair(world, e1, Rel, ObjB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "(Rel, _)"
     });
 
@@ -1381,7 +1381,7 @@ void Rules_2_wildcard_as_subject() {
     ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, e2);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ChildOf(*, This)"
     });
 
@@ -4070,7 +4070,7 @@ void Rules_not_wildcard() {
     ECS_TAG(world, Rel)
     ECS_TAG(world, Obj);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
             { Tag },
             { ecs_pair(Rel, EcsWildcard), .oper = EcsNot }
@@ -4102,7 +4102,7 @@ void Rules_not_any() {
     ECS_ENTITY(world, Rel, Final);
     ECS_ENTITY(world, Obj, Final);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
             { Tag },
             { ecs_pair(Rel, EcsAny), .oper = EcsNot }
@@ -4186,7 +4186,7 @@ void Rules_rules_w_desc_id() {
 
     ECS_TAG(world, Tag);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ Tag }}
     });
 
@@ -4215,7 +4215,7 @@ void Rules_rules_w_desc_pair() {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ ecs_pair(Rel, Obj) }}
     });
 
@@ -4244,7 +4244,7 @@ void Rules_rules_w_desc_pair_empty_rel_obj() {
     ecs_entity_t Rel = ecs_new_id(world);
     ecs_entity_t Obj = ecs_new_id(world);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ ecs_pair(Rel, Obj) }}
     });
 
@@ -4273,7 +4273,7 @@ void Rules_rules_w_desc_pair_pred_obj() {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ .pred.entity = Rel, .obj.entity = Obj }}
     });
 
@@ -4302,7 +4302,7 @@ void Rules_rules_w_desc_wildcard() {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ ecs_pair(Rel, EcsWildcard) }}
     });
 
@@ -4333,7 +4333,7 @@ void Rules_childof_0() {
     ecs_entity_t e1 = ecs_new(world, Tag);
     ecs_new_w_pair(world, EcsChildOf, e1);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ ecs_pair(EcsChildOf, 0) }}
     });
 
@@ -4374,7 +4374,7 @@ void Rules_childof_this() {
     ecs_entity_t child1 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t child2 = ecs_new_w_pair(world, EcsChildOf, e1);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ChildOf($X, .)"
     });
 
@@ -4422,7 +4422,7 @@ void Rules_childof_this_as_identifier() {
     ecs_entity_t child1 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t child2 = ecs_new_w_pair(world, EcsChildOf, e1);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ChildOf($X, This)"
     });
 
@@ -4473,7 +4473,7 @@ void Rules_optional_term() {
     ecs_add(world, e2, TagB);
     ecs_add(world, e3, TagC);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "TagA, ?TagB, ?TagC"
     });
 
@@ -4531,7 +4531,7 @@ void Rules_optional_term_w_component() {
     
     ecs_add(world, e2, Position);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "TagA, ?Position"
     });
 
@@ -4573,7 +4573,7 @@ void Rules_optional_term_on_entity() {
 
     ECS_ENTITY(world, E, TagA);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "TagA(E), ?TagB(E)"
     });
 
@@ -4616,7 +4616,7 @@ void Rules_optional_term_on_variable() {
     ecs_add_pair(world, e, Likes, obj_2);
     ecs_add_pair(world, e, Likes, obj_3);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "(Likes, $X), TagA($X), ?TagB($X), ?TagC($X)"
     });
 
@@ -4691,7 +4691,7 @@ void Rules_optional_term_on_wildcard() {
 
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ?(ChildOf, *)"
     });
 
@@ -4732,7 +4732,7 @@ void Rules_optional_term_on_relation_this_obj() {
 
     ecs_new_w_pair(world, EcsChildOf, e1);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ?ChildOf(*, This)"
     });
 
@@ -4775,7 +4775,7 @@ void Rules_optional_w_subj_var() {
     LINE "Likes(John, Jane)";
     test_int(ecs_plecs_from_str(world, NULL, expr), 0);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Likes($X, $Y), ?Likes($Z, $X)"
     });
 
@@ -4840,7 +4840,7 @@ void Rules_optional_w_obj_var() {
 
     ecs_add(world, e3, Foo);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Tag, ?(Likes, $X)"
     });
 
@@ -4891,7 +4891,7 @@ void Rules_terms_set() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "TagA, TagB"
     });
 
@@ -4926,7 +4926,7 @@ void Rules_value_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Position, Velocity"
     });
 
@@ -4981,7 +4981,7 @@ void Rules_term_w_this_this_this() {
     ecs_entity_t e4 = ecs_new_id(world);
     ecs_add_pair(world, e4, e, e);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "This(This, This)"
     });
 
@@ -5020,7 +5020,7 @@ void Rules_term_w_x_x_x() {
     ecs_entity_t e4 = ecs_new_id(world);
     ecs_add_pair(world, e4, e, e);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "$X($X, $X)"
     });
 
@@ -5052,7 +5052,7 @@ void Rules_filter_term() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
     });
 
@@ -5087,7 +5087,7 @@ void Rules_2_terms_1_filter() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
             { .id = ecs_id(Position), .inout = EcsInOutFilter },
             { .id = ecs_id(Velocity) }
@@ -5129,7 +5129,7 @@ void Rules_3_terms_2_filter() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
             { .id = ecs_id(Position), .inout = EcsInOutFilter },
             { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
@@ -5229,7 +5229,7 @@ void Rules_rule_iter_frame_offset() {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_rule_t *q = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *q = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
             { .id = TagA, }
         },
@@ -5653,7 +5653,7 @@ void Rules_term_w_same_subj_obj_var() {
 
     ECS_ENTITY(world, Rel, Final);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "Rel($X, $X)"
     });
 

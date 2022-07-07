@@ -160,7 +160,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
-#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {true, false,\
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
     false, false, false, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
@@ -212,7 +212,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_type_info;     /* Include type information */
 } ecs_iter_to_json_desc_t;
 
-#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
+#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_term_ids =        true,  \
     .serialize_ids =             true,  \
     .serialize_subjects =        true,  \

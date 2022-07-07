@@ -1959,7 +1959,7 @@ void ComponentLifecycle_free_component_new_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position
@@ -1978,7 +1978,7 @@ void ComponentLifecycle_dtor_component_new_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position
@@ -2005,7 +2005,7 @@ void ComponentLifecycle_free_component_new_pair_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_pair
@@ -2024,7 +2024,7 @@ void ComponentLifecycle_dtor_component_new_pair_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_pair
@@ -2051,7 +2051,7 @@ void ComponentLifecycle_free_component_new_obj_pair_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_obj_pair
@@ -2070,7 +2070,7 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_obj_pair
@@ -2353,7 +2353,7 @@ static void test_on_remove(ecs_iter_t *it) {
 void ComponentLifecycle_component_init_set_hooks() {
     ecs_world_t* world = ecs_mini();
 
-    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
         .entity.name = "Position",
         .type = {
             .size = ECS_SIZEOF(Position),
@@ -2463,7 +2463,7 @@ void ComponentLifecycle_with_before_hooks() {
     ecs_entity_t tag = ecs_new_w_pair(world, EcsWith, pos_id);
 
     ecs_entity_t ecs_id(Position) = 
-        ecs_component_init(world, &(ecs_component_desc_t) {
+        ecs_component_init(world, &(ecs_component_desc_t){
             .entity.entity = pos_id,
             .type = {
                 .size = ECS_SIZEOF(Position),

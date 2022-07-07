@@ -38,7 +38,7 @@
  * used as a regular component:
  * 
  * // Create Position type
- * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t) {
+ * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t){
  *  .entity.name = "Position",
  *  .members = {
  *       {"x", ecs_id(ecs_f32_t)},

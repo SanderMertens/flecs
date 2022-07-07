@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    ecs_query_t *q_read = ecs_query_init(world, &(ecs_query_desc_t) {
+    ecs_query_t *q_read = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
     });
 
     // Create a query that writes the component based on a Dirty state.
-    ecs_query_t *q_write = ecs_query_init(world, &(ecs_query_desc_t) {
+    ecs_query_t *q_write = ecs_query_init(world, &(ecs_query_desc_t){
         .filter = {
             .terms = {
                 // Only match if Dirty is shared from prefab

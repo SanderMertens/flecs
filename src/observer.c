@@ -337,7 +337,13 @@ void flecs_unregister_observer(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *observer)
-{    
+{
+    ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!observer->filter.terms) {
+        ecs_assert(observer->filter.term_count == 0, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
 
@@ -1061,7 +1067,7 @@ int flecs_multi_observer_init(
     child_desc.ctx = observer;
     child_desc.filter.expr = NULL;
     child_desc.filter.terms_buffer = NULL;
-    child_desc.filter.terms_buffer_count = 1;
+    child_desc.filter.terms_buffer_count = 0;
     child_desc.binding_ctx = NULL;
     child_desc.binding_ctx_free = NULL;
     ecs_os_zeromem(&child_desc.entity);
@@ -1179,10 +1185,11 @@ ecs_entity_t ecs_observer_init(
          * filter will have the name of the observer. */
         ecs_filter_desc_t filter_desc = desc->filter;
         filter_desc.name = desc->entity.name;
+        ecs_filter_t *filter = filter_desc.storage = &observer->filter;
+        *filter = ECS_FILTER_INIT;
 
         /* Parse filter */
-        ecs_filter_t *filter = &observer->filter;
-        if (ecs_filter_init(world, filter, &filter_desc)) {
+        if (ecs_filter_init(world, &filter_desc) == NULL) {
             flecs_observer_fini(observer);
             return 0;
         }

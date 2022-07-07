@@ -496,7 +496,6 @@ void QueryBuilder_add_optional(void);
 void QueryBuilder_ptr_type(void);
 void QueryBuilder_const_type(void);
 void QueryBuilder_string_term(void);
-void QueryBuilder_string_term_w_expr(void);
 void QueryBuilder_singleton_term(void);
 void QueryBuilder_isa_superset_term(void);
 void QueryBuilder_isa_self_superset_term(void);
@@ -607,7 +606,6 @@ void FilterBuilder_const_in_term(void);
 void FilterBuilder_const_optional(void);
 void FilterBuilder_create_w_no_template_args(void);
 void FilterBuilder_2_terms_w_expr(void);
-void FilterBuilder_assert_on_multiple_expr_calls(void);
 void FilterBuilder_assert_on_uninitialized_term(void);
 
 // Testsuite 'RuleBuilder'
@@ -2860,10 +2858,6 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_string_term
     },
     {
-        "string_term_w_expr",
-        QueryBuilder_string_term_w_expr
-    },
-    {
         "singleton_term",
         QueryBuilder_singleton_term
     },
@@ -3297,10 +3291,6 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "2_terms_w_expr",
         FilterBuilder_2_terms_w_expr
-    },
-    {
-        "assert_on_multiple_expr_calls",
-        FilterBuilder_assert_on_multiple_expr_calls
     },
     {
         "assert_on_uninitialized_term",
@@ -4672,14 +4662,14 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        59,
+        58,
         QueryBuilder_testcases
     },
     {
         "FilterBuilder",
         NULL,
         NULL,
-        70,
+        69,
         FilterBuilder_testcases
     },
     {

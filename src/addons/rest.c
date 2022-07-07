@@ -205,7 +205,7 @@ bool flecs_rest_reply_query(
     ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = q
     });
     if (!r) {

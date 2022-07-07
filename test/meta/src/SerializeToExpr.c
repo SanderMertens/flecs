@@ -550,7 +550,7 @@ void SerializeToExpr_enum() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t t = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -600,7 +600,7 @@ void SerializeToExpr_bitmask() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_bitmask_init(world, &(ecs_bitmask_desc_t) {
+    ecs_entity_t t = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
         .constants = {
             {"Lettuce"}, {"Bacon"}, {"Tomato"}, {"Cheese"}, {"BLT", Bacon | Lettuce | Tomato}
         }
@@ -669,7 +669,7 @@ void SerializeToExpr_struct_enum() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -677,7 +677,7 @@ void SerializeToExpr_struct_enum() {
 
     test_assert(e != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", e}
@@ -732,7 +732,7 @@ void SerializeToExpr_struct_bitmask() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t) {
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
         .constants = {
             {"Lettuce"}, {"Bacon"}, {"Tomato"}, {"Cheese"}, {"BLT", Bacon | Lettuce | Tomato}
         }
@@ -740,7 +740,7 @@ void SerializeToExpr_struct_bitmask() {
 
     test_assert(b != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", b}
@@ -806,7 +806,7 @@ void SerializeToExpr_struct_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -830,7 +830,7 @@ void SerializeToExpr_struct_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -854,7 +854,7 @@ void SerializeToExpr_struct_entity() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"e", ecs_id(ecs_entity_t)}
@@ -878,7 +878,7 @@ void SerializeToExpr_entity_entity_after_float() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"v", ecs_id(ecs_i32_t)},
@@ -906,14 +906,14 @@ void SerializeToExpr_struct_nested_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -941,7 +941,7 @@ void SerializeToExpr_struct_nested_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -949,7 +949,7 @@ void SerializeToExpr_struct_nested_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -978,7 +978,7 @@ void SerializeToExpr_struct_2_nested_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -986,7 +986,7 @@ void SerializeToExpr_struct_2_nested_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1010,7 +1010,7 @@ void SerializeToExpr_struct_i32_array_3() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t), 3}
@@ -1037,14 +1037,14 @@ void SerializeToExpr_struct_struct_i32_array_3() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3}
@@ -1072,7 +1072,7 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1080,7 +1080,7 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3}
@@ -1105,13 +1105,13 @@ void SerializeToExpr_struct_w_array_type_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "vec2",
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1}
@@ -1137,13 +1137,13 @@ void SerializeToExpr_struct_w_2_array_type_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "vec2",
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1174,7 +1174,7 @@ void SerializeToExpr_struct_w_array_type_struct() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1184,7 +1184,7 @@ void SerializeToExpr_struct_w_array_type_struct() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "A1",
         .type = n1,
         .count = 2
@@ -1192,7 +1192,7 @@ void SerializeToExpr_struct_w_array_type_struct() {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", a1}
@@ -1225,7 +1225,7 @@ void SerializeToExpr_struct_w_2_array_type_struct() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1235,7 +1235,7 @@ void SerializeToExpr_struct_w_2_array_type_struct() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "A1",
         .type = n1,
         .count = 2
@@ -1243,7 +1243,7 @@ void SerializeToExpr_struct_w_2_array_type_struct() {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", a1},
@@ -1271,7 +1271,7 @@ void SerializeToExpr_struct_partial() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(Position),
         .members = {
             {"y", ecs_id(ecs_i32_t), .offset = offsetof(Position, y)}

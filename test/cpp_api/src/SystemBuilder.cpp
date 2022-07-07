@@ -297,7 +297,7 @@ void SystemBuilder_string_term() {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term("Position")
+        .expr("Position")
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1);

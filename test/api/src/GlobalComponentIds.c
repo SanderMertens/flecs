@@ -119,7 +119,7 @@ void GlobalComponentIds_reuse_300_component_ids() {
     ecs_entity_t *ids = ecs_os_malloc_n(ecs_entity_t, 300);
 
     for (int i = 0; i < 300; i ++) {
-        ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
+        ids[i] = ecs_component_init(world, &(ecs_component_desc_t){
             .type.size = 1,
             .type.alignment = 1
         });
@@ -135,7 +135,7 @@ void GlobalComponentIds_reuse_300_component_ids() {
     world = ecs_mini();
 
     for (int i = 0; i < 300; i ++) {
-        ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
+        ids[i] = ecs_component_init(world, &(ecs_component_desc_t){
             .entity.entity = ids[i],
             .type.size = 1,
             .type.alignment = 1

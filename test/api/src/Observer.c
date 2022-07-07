@@ -2873,7 +2873,7 @@ void Observer_read_in_on_remove_after_add_other_w_not() {
     ECS_TAG(world, O);
 
     Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
             { .id = ecs_pair(ecs_id(Position), O)},
             { .id = Tag, .oper = EcsNot }

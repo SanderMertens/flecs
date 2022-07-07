@@ -44,14 +44,6 @@ struct term final : term_builder_i<term> {
             this->id(r, o);
         }
 
-    term(flecs::world_t *world_ptr, const char *expr) 
-        : term_builder_i<term>(&value)
-        , value({})
-        , m_world(world_ptr)
-    {
-        this->expr(expr);
-    }
-
     term(const term& t) : term_builder_i<term>(&value) {
         m_world = t.m_world;
         value = ecs_term_copy(&t.value);

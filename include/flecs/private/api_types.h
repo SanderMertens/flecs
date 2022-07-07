@@ -142,7 +142,7 @@ typedef enum ecs_iter_kind_t {
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
-    ecs_filter_t filter;
+    const ecs_filter_t *filter;
     ecs_iter_kind_t kind; 
     ecs_term_iter_t term_iter;
     int32_t matches_left;

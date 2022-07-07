@@ -403,7 +403,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
     ecs_set(world, Prefab, Position, {1, 3});
 
     Probe ctx = {0};
-    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = OnSet,

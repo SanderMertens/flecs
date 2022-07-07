@@ -267,7 +267,7 @@ void flecs_notify(
     ecs_type_t *ids,
     ecs_entity_t relation)
 {
-    flecs_emit(world, world, &(ecs_event_desc_t) {
+    flecs_emit(world, world, &(ecs_event_desc_t){
         .event = event,
         .ids = ids,
         .table = table,
@@ -3328,7 +3328,7 @@ ecs_entity_t ecs_set_name(
     const char *name)
 {
     if (!entity) {
-        return ecs_entity_init(world, &(ecs_entity_desc_t) {
+        return ecs_entity_init(world, &(ecs_entity_desc_t){
             .name = name
         });
     }
