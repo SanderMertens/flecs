@@ -174,31 +174,6 @@ struct term_builder_i : term_id_builder_i<Base> {
         m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = o;
         return *this;
-    }    
-
-    /** Set term from expression.
-     * The syntax for expr is the same as that of the query DSL. The expression
-     * must only contain a single term, for example:
-     *   Position // correct
-     *   Position, Velocity // incorrect
-     */
-    Base& expr(const char *expr) {
-#       ifdef FLECS_PARSER
-        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        const char *ptr;
-        if ((ptr = ecs_parse_term(this->world_v(), nullptr, expr, expr, m_term)) == nullptr) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        m_term->move = true;
-
-        // Should not have more than one term
-        ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
-#       else
-        (void)expr;
-        ecs_abort(ECS_UNSUPPORTED, "parser addon required for expr()");
-#       endif
-        return *this;
     }
 
     /** Select predicate of term. 

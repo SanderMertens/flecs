@@ -448,7 +448,7 @@ void Cursor_struct_set_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -476,7 +476,7 @@ void Cursor_struct_set_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -510,7 +510,7 @@ void Cursor_struct_set_i32_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -546,7 +546,7 @@ void Cursor_struct_set_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
@@ -574,7 +574,7 @@ void Cursor_struct_set_bool_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -618,7 +618,7 @@ void Cursor_struct_set_bool_bool_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -657,7 +657,7 @@ void Cursor_struct_set_bool_bool_i32_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -701,7 +701,7 @@ void Cursor_struct_nested_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -710,7 +710,7 @@ void Cursor_struct_nested_i32() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1}
@@ -745,7 +745,7 @@ void Cursor_struct_2_nested_1_i32_2_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -754,7 +754,7 @@ void Cursor_struct_2_nested_1_i32_2_i32() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -796,7 +796,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -806,7 +806,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -857,7 +857,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -867,7 +867,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"p1", ecs_id(ecs_bool_t)},
@@ -922,7 +922,7 @@ void Cursor_struct_set_array_i32_3() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t), 3}
@@ -959,7 +959,7 @@ void Cursor_struct_set_2_array_i32_3() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t), 3},
@@ -1014,7 +1014,7 @@ void Cursor_struct_set_2_array_i32_3_w_padding_members() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"p1", ecs_id(ecs_bool_t)},
@@ -1084,14 +1084,14 @@ void Cursor_struct_set_array_w_struct_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3}
@@ -1138,14 +1138,14 @@ void Cursor_struct_set_2_array_w_struct_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3},
@@ -1212,14 +1212,14 @@ void Cursor_struct_set_array_w_struct_w_array_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t), 3}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3}
@@ -1296,14 +1296,14 @@ void Cursor_struct_set_2_array_w_struct_w_array_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t), 3}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1, 3},
@@ -1427,7 +1427,7 @@ void Cursor_struct_member_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -1456,7 +1456,7 @@ void Cursor_struct_member_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1489,7 +1489,7 @@ void Cursor_struct_member_i32_i32_reverse() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1526,7 +1526,7 @@ void Cursor_struct_member_nested_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1534,7 +1534,7 @@ void Cursor_struct_member_nested_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1573,7 +1573,7 @@ void Cursor_struct_member_2_nested_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1581,7 +1581,7 @@ void Cursor_struct_member_2_nested_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1631,7 +1631,7 @@ void Cursor_struct_member_2_nested_i32_i32_reverse() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1639,7 +1639,7 @@ void Cursor_struct_member_2_nested_i32_i32_reverse() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1685,13 +1685,13 @@ void Cursor_struct_w_array_type_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "vec2",
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1}
@@ -1729,7 +1729,7 @@ void Cursor_struct_w_array_type_struct() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1739,7 +1739,7 @@ void Cursor_struct_w_array_type_struct() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "A1",
         .type = n1,
         .count = 2
@@ -1747,7 +1747,7 @@ void Cursor_struct_w_array_type_struct() {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", a1}
@@ -1795,13 +1795,13 @@ void Cursor_struct_w_2_array_type_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "vec2",
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -1851,7 +1851,7 @@ void Cursor_struct_w_2_array_type_struct() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1861,7 +1861,7 @@ void Cursor_struct_w_2_array_type_struct() {
 
     test_assert(n1 != 0);
 
-    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t){
         .entity.name = "A1",
         .type = n1,
         .count = 2
@@ -1869,7 +1869,7 @@ void Cursor_struct_w_2_array_type_struct() {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", a1},
@@ -1938,7 +1938,7 @@ void Cursor_array_move_primitive() {
         int32_t a[3];
     } T;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"a", ecs_id(ecs_i32_t), 3}
@@ -1991,7 +1991,7 @@ void Cursor_array_move_struct() {
         N a[3];
     } T;
 
-    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1999,7 +1999,7 @@ void Cursor_array_move_struct() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"a", n, 3}
@@ -2068,7 +2068,7 @@ void Cursor_array_move_out_of_range() {
         int32_t a[3];
     } T;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"a", ecs_id(ecs_i32_t), 3}

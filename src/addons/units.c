@@ -130,7 +130,7 @@ void FlecsUnitsImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    EcsUnitPrefixes = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    EcsUnitPrefixes = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "prefixes",
         .add = { EcsModule }
     });
@@ -139,143 +139,143 @@ void FlecsUnitsImport(
 
     ecs_entity_t prev_scope = ecs_set_scope(world, EcsUnitPrefixes);
 
-    EcsYocto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYocto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yocto",
         .symbol = "y",
         .translation = { .factor = 10, .power = -24 }
     });
-    EcsZepto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZepto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zepto",
         .symbol = "z",
         .translation = { .factor = 10, .power = -21 }
     });
-    EcsAtto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsAtto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Atto",
         .symbol = "a",
         .translation = { .factor = 10, .power = -18 }
     });
-    EcsFemto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsFemto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Femto",
         .symbol = "a",
         .translation = { .factor = 10, .power = -15 }
     });
-    EcsPico = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPico = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Pico",
         .symbol = "p",
         .translation = { .factor = 10, .power = -12 }
     });
-    EcsNano = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsNano = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Nano",
         .symbol = "n",
         .translation = { .factor = 10, .power = -9 }
     });
-    EcsMicro = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMicro = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Micro",
         .symbol = "μ",
         .translation = { .factor = 10, .power = -6 }
     });
-    EcsMilli = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMilli = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Milli",
         .symbol = "m",
         .translation = { .factor = 10, .power = -3 }
     });
-    EcsCenti = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsCenti = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Centi",
         .symbol = "c",
         .translation = { .factor = 10, .power = -2 }
     });
-    EcsDeci = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsDeci = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Deci",
         .symbol = "d",
         .translation = { .factor = 10, .power = -1 }
     });
-    EcsDeca = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsDeca = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Deca",
         .symbol = "da",
         .translation = { .factor = 10, .power = 1 }
     });
-    EcsHecto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsHecto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Hecto",
         .symbol = "h",
         .translation = { .factor = 10, .power = 2 }
     });
-    EcsKilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsKilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Kilo",
         .symbol = "k",
         .translation = { .factor = 10, .power = 3 }
     });
-    EcsMega = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMega = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Mega",
         .symbol = "M",
         .translation = { .factor = 10, .power = 6 }
     });
-    EcsGiga = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsGiga = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Giga",
         .symbol = "G",
         .translation = { .factor = 10, .power = 9 }
     });
-    EcsTera = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsTera = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Tera",
         .symbol = "T",
         .translation = { .factor = 10, .power = 12 }
     });
-    EcsPeta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPeta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Peta",
         .symbol = "P",
         .translation = { .factor = 10, .power = 15 }
     });
-    EcsExa = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsExa = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Exa",
         .symbol = "E",
         .translation = { .factor = 10, .power = 18 }
     });
-    EcsZetta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZetta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zetta",
         .symbol = "Z",
         .translation = { .factor = 10, .power = 21 }
     });
-    EcsYotta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYotta = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yotta",
         .symbol = "Y",
         .translation = { .factor = 10, .power = 24 }
     });
 
-    EcsKibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsKibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Kibi",
         .symbol = "Ki",
         .translation = { .factor = 1024, .power = 1 }
     });
-    EcsMebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsMebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Mebi",
         .symbol = "Mi",
         .translation = { .factor = 1024, .power = 2 }
     });
-    EcsGibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsGibi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Gibi",
         .symbol = "Gi",
         .translation = { .factor = 1024, .power = 3 }
     });
-    EcsTebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsTebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Tebi",
         .symbol = "Ti",
         .translation = { .factor = 1024, .power = 4 }
     });
-    EcsPebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsPebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Pebi",
         .symbol = "Pi",
         .translation = { .factor = 1024, .power = 5 }
     });
-    EcsExbi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsExbi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Exbi",
         .symbol = "Ei",
         .translation = { .factor = 1024, .power = 6 }
     });
-    EcsZebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsZebi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Zebi",
         .symbol = "Zi",
         .translation = { .factor = 1024, .power = 7 }
     });
-    EcsYobi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    EcsYobi = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "Yobi",
         .symbol = "Yi",
         .translation = { .factor = 1024, .power = 8 }
@@ -285,88 +285,88 @@ void FlecsUnitsImport(
 
     /* Duration units */
 
-    EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Duration" });
     prev_scope = ecs_set_scope(world, EcsDuration);
 
-        EcsSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Seconds",
             .quantity = EcsDuration,
             .symbol = "s" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsSeconds,
             .kind = EcsF32
         });
-            EcsPicoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsPicoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "PicoSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsPico });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsPicoSeconds,
                 .kind = EcsF32
             });
 
 
-            EcsNanoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsNanoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "NanoSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsNano });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsNanoSeconds,
                 .kind = EcsF32
             });
 
-            EcsMicroSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsMicroSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "MicroSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsMicro });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMicroSeconds,
                 .kind = EcsF32
             });
 
-            EcsMilliSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            EcsMilliSeconds = ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity.name = "MilliSeconds",
                 .quantity = EcsDuration,
                 .base = EcsSeconds,
                 .prefix = EcsMilli });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMilliSeconds,
                 .kind = EcsF32
             });
 
-        EcsMinutes = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsMinutes = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Minutes",
             .quantity = EcsDuration,
             .base = EcsSeconds,
             .symbol = "min",
             .translation = { .factor = 60, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMinutes,
             .kind = EcsU32
         });
 
-        EcsHours = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsHours = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Hours",
             .quantity = EcsDuration,
             .base = EcsMinutes,
             .symbol = "h",
             .translation = { .factor = 60, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsHours,
             .kind = EcsU32
         });
 
-        EcsDays = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        EcsDays = ecs_unit_init(world, &(ecs_unit_desc_t){
             .entity.name = "Days",
             .quantity = EcsDuration,
             .base = EcsHours,
             .symbol = "d",
             .translation = { .factor = 24, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDays,
             .kind = EcsU32
         });
@@ -374,14 +374,14 @@ void FlecsUnitsImport(
 
     /* Time units */
 
-    EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Time" });
     prev_scope = ecs_set_scope(world, EcsTime);
 
-        EcsDate = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsDate = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Date",
             .quantity = EcsTime });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDate,
             .kind = EcsU32
         });
@@ -389,23 +389,23 @@ void FlecsUnitsImport(
 
     /* Mass units */
 
-    EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Mass" });
     prev_scope = ecs_set_scope(world, EcsMass);
-        EcsGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsGrams = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Grams",
             .quantity = EcsMass,
             .symbol = "g" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsGrams,
             .kind = EcsF32
         });
-        EcsKiloGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloGrams = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloGrams",
             .quantity = EcsMass,
             .prefix = EcsKilo,
             .base = EcsGrams });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloGrams,
             .kind = EcsF32
         });
@@ -413,14 +413,14 @@ void FlecsUnitsImport(
 
     /* Electric current units */
 
-    EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "ElectricCurrent" });
     prev_scope = ecs_set_scope(world, EcsElectricCurrent);
-        EcsAmpere = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsAmpere = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Ampere",
             .quantity = EcsElectricCurrent,
             .symbol = "A" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsAmpere,
             .kind = EcsF32
         });
@@ -428,14 +428,14 @@ void FlecsUnitsImport(
 
     /* Amount of substance units */
 
-    EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Amount" });
     prev_scope = ecs_set_scope(world, EcsAmount);
-        EcsMole = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMole = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Mole",
             .quantity = EcsAmount,
             .symbol = "mol" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMole,
             .kind = EcsF32
         });
@@ -443,14 +443,14 @@ void FlecsUnitsImport(
 
     /* Luminous intensity units */
 
-    EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "LuminousIntensity" });
     prev_scope = ecs_set_scope(world, EcsLuminousIntensity);
-        EcsCandela = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsCandela = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Candela",
             .quantity = EcsLuminousIntensity,
             .symbol = "cd" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsCandela,
             .kind = EcsF32
         });
@@ -458,14 +458,14 @@ void FlecsUnitsImport(
 
     /* Force units */
 
-    EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Force" });
     prev_scope = ecs_set_scope(world, EcsForce);
-        EcsNewton = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsNewton = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Newton",
             .quantity = EcsForce,
             .symbol = "N" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsNewton,
             .kind = EcsF32
         });
@@ -473,84 +473,84 @@ void FlecsUnitsImport(
 
     /* Length units */
 
-    EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Length" });
     prev_scope = ecs_set_scope(world, EcsLength);
-        EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Meters",
             .quantity = EcsLength,
             .symbol = "m" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMeters,
             .kind = EcsF32
         });
 
-            EcsPicoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsPicoMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "PicoMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsPico });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsPicoMeters,
                 .kind = EcsF32
             });
 
-            EcsNanoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsNanoMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "NanoMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsNano });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsNanoMeters,
                 .kind = EcsF32
             });
 
-            EcsMicroMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMicroMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MicroMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsMicro });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMicroMeters,
                 .kind = EcsF32
             });
 
-            EcsMilliMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMilliMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MilliMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsMilli });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMilliMeters,
                 .kind = EcsF32
             });
 
-            EcsCentiMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsCentiMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "CentiMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsCenti });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsCentiMeters,
                 .kind = EcsF32
             });
 
-            EcsKiloMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloMeters = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloMeters",
                 .quantity = EcsLength,
                 .base = EcsMeters,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloMeters,
                 .kind = EcsF32
             });
             
-        EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Miles",
             .quantity = EcsLength,
             .symbol = "mi"
         });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMiles,
             .kind = EcsF32
         });
@@ -558,22 +558,22 @@ void FlecsUnitsImport(
 
     /* Pressure units */
 
-    EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Pressure" });
     prev_scope = ecs_set_scope(world, EcsPressure);
-        EcsPascal = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsPascal = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Pascal",
             .quantity = EcsPressure,
             .symbol = "Pa" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsPascal,
             .kind = EcsF32
         });
-        EcsBar = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBar = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bar",
             .quantity = EcsPressure,
             .symbol = "bar" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBar,
             .kind = EcsF32
         });
@@ -581,42 +581,42 @@ void FlecsUnitsImport(
 
     /* Speed units */
 
-    EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Speed" });
     prev_scope = ecs_set_scope(world, EcsSpeed);
-        EcsMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "MetersPerSecond",
             .quantity = EcsSpeed,
             .base = EcsMeters,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMetersPerSecond,
             .kind = EcsF32
         });
-        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloMetersPerSecond",
             .quantity = EcsSpeed,
             .base = EcsKiloMeters,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloMetersPerSecond,
             .kind = EcsF32
         });
-        EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "KiloMetersPerHour",
             .quantity = EcsSpeed,
             .base = EcsKiloMeters,
             .over = EcsHours });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKiloMetersPerHour,
             .kind = EcsF32
         });
-        EcsMilesPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsMilesPerHour = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "MilesPerHour",
             .quantity = EcsSpeed,
             .base = EcsMiles,
             .over = EcsHours });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsMilesPerHour,
             .kind = EcsF32
         });
@@ -624,44 +624,44 @@ void FlecsUnitsImport(
     
     /* Acceleration */
 
-    EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "Acceleration",
         .base = EcsMetersPerSecond,
         .over = EcsSeconds });
-    ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_quantity_init(world, &(ecs_entity_desc_t){
         .entity = EcsAcceleration
     });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsAcceleration,
         .kind = EcsF32
     });
 
     /* Temperature units */
 
-    EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Temperature" });
     prev_scope = ecs_set_scope(world, EcsTemperature);
-        EcsKelvin = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsKelvin = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Kelvin",
             .quantity = EcsTemperature,
             .symbol = "K" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsKelvin,
             .kind = EcsF32
         });
-        EcsCelsius = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsCelsius = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Celsius",
             .quantity = EcsTemperature,
             .symbol = "°C" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsCelsius,
             .kind = EcsF32
         });
-        EcsFahrenheit = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsFahrenheit = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Fahrenheit",
             .quantity = EcsTemperature,
             .symbol = "F" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsFahrenheit,
             .kind = EcsF32
         });
@@ -669,116 +669,116 @@ void FlecsUnitsImport(
 
     /* Data units */
 
-    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Data" });
     prev_scope = ecs_set_scope(world, EcsData);
 
-        EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bits",
             .quantity = EcsData,
             .symbol = "bit" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBits,
             .kind = EcsU64
         });
 
-            EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBits,
                 .kind = EcsU64
             });
 
-            EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsMega });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBits,
                 .kind = EcsU64
             });
 
-            EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBits",
                 .quantity = EcsData,
                 .base = EcsBits,
                 .prefix = EcsGiga });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBits,
                 .kind = EcsU64
             });
 
-        EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Bytes",
             .quantity = EcsData,
             .symbol = "B",
             .base = EcsBits,
             .translation = { .factor = 8, .power = 1 } });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBytes,
             .kind = EcsU64
         });
 
-            EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsKilo });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBytes,
                 .kind = EcsU64
             });
 
-            EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsMega });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBytes,
                 .kind = EcsU64
             });
 
-            EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsGiga });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBytes,
                 .kind = EcsU64
             });
 
-            EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KibiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsKibi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKibiBytes,
                 .kind = EcsU64
             });
 
-            EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MebiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsMebi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMebiBytes,
                 .kind = EcsU64
             });
 
-            EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GibiBytes",
                 .quantity = EcsData,
                 .base = EcsBytes,
                 .prefix = EcsGibi });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGibiBytes,
                 .kind = EcsU64
             });
@@ -787,92 +787,92 @@ void FlecsUnitsImport(
 
     /* DataRate units */
 
-    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "DataRate" });
     prev_scope = ecs_set_scope(world, EcsDataRate);
 
-        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "BitsPerSecond",
             .quantity = EcsDataRate,
             .base = EcsBits,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBitsPerSecond,
             .kind = EcsU64
         });
 
-            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsKiloBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBitsPerSecond,
                 .kind = EcsU64
             });
 
-            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsMegaBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBitsPerSecond,
                 .kind = EcsU64
             });
 
-            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBitsPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsGigaBits,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBitsPerSecond,
                 .kind = EcsU64
             });
 
-        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "BytesPerSecond",
             .quantity = EcsDataRate,
             .base = EcsBytes,
             .over = EcsSeconds });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsBytesPerSecond,
             .kind = EcsU64
         });
 
-            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "KiloBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsKiloBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsKiloBytesPerSecond,
                 .kind = EcsU64
             });
 
-            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "MegaBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsMegaBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsMegaBytesPerSecond,
                 .kind = EcsU64
             });
 
-            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t){ 
                 .entity.name = "GigaBytesPerSecond",
                 .quantity = EcsDataRate,
                 .base = EcsGigaBytes,
                 .over = EcsSeconds
             });
-            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity.entity = EcsGigaBytesPerSecond,
                 .kind = EcsU64
             });
@@ -881,36 +881,36 @@ void FlecsUnitsImport(
 
     /* Percentage */
 
-    EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Percentage" });
-    ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.entity = EcsPercentage,
         .symbol = "%"
     });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsPercentage,
         .kind = EcsF32
     });
 
     /* Angles */
 
-    EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+    EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Angle" });
     prev_scope = ecs_set_scope(world, EcsAngle);
-        EcsRadians = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsRadians = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Radians",
             .quantity = EcsAngle,
             .symbol = "rad" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsRadians,
             .kind = EcsF32
         });
 
-        EcsDegrees = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        EcsDegrees = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity.name = "Degrees",
             .quantity = EcsAngle,
             .symbol = "°" });
-        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity.entity = EcsDegrees,
             .kind = EcsF32
         });
@@ -918,18 +918,18 @@ void FlecsUnitsImport(
 
     /* DeciBel */
 
-    EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "Bel",
         .symbol = "B" });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsBel,
         .kind = EcsF32
     });
-    EcsDeciBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+    EcsDeciBel = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity.name = "DeciBel",
         .prefix = EcsDeci,
         .base = EcsBel });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.entity = EcsDeciBel,
         .kind = EcsF32
     });

@@ -148,17 +148,24 @@ struct entity_view : public id {
     void children(Func&& func) const {
         flecs::world world(m_world);
 
-        ecs_filter_t f;
+        ecs_term_t terms[2];
+        ecs_filter_t f = ECS_FILTER_INIT;
+        f.terms = terms;
+        f.term_count = 2;
+
         ecs_filter_desc_t desc = {};
         desc.terms[0].id = ecs_pair(flecs::ChildOf, m_id);
         desc.terms[1].id = flecs::Prefab;
         desc.terms[1].oper = EcsOptional;
-        ecs_filter_init(m_world, &f, &desc);
+        desc.storage = &f;
+        ecs_filter_init(m_world, &desc);
 
         ecs_iter_t it = ecs_filter_iter(m_world, &f);
         while (ecs_filter_next(&it)) {
             _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
         }
+
+        ecs_filter_fini(&f);
     }
 
     /** Get component value.

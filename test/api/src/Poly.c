@@ -216,15 +216,14 @@ void Poly_iter_filter() {
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
-    
-    ecs_filter_t f;
-    int ret = ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+
+    ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
         .expr = "Position"});
-    test_int(ret, 0);
+    test_assert(f != NULL);
 
-    test_no_chain(world, &f, 0);
+    test_no_chain(world, f, 0);
 
-    ecs_filter_fini(&f);
+    ecs_filter_fini(f);
 
     ecs_fini(world);
 }
@@ -235,14 +234,13 @@ void Poly_iter_filter_w_filter() {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_TAG_DEFINE(world, Tag);
     
-    ecs_filter_t f;
-    int ret = ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+    ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
         .expr = "Position"});
-    test_int(ret, 0);
+    test_assert(f != NULL);
 
-    test_w_chain(world, &f);
+    test_w_chain(world, f);
 
-    ecs_filter_fini(&f);
+    ecs_filter_fini(f);
 
     ecs_fini(world);
 }
@@ -266,7 +264,7 @@ void Poly_on_set_poly_observer() {
     ecs_entity_t tag = ecs_new_id(world);
 
     Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { ecs_pair(ecs_id(EcsPoly), EcsObserver) },
         .events = { EcsOnSet },
         .callback = PolyTrigger,
@@ -277,7 +275,7 @@ void Poly_on_set_poly_observer() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ tag }},
         .events = { EcsOnAdd },
         .callback = FooTrigger
@@ -296,7 +294,7 @@ void Poly_on_set_poly_query() {
     ecs_entity_t tag = ecs_new_id(world);
 
     Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { ecs_pair(ecs_id(EcsPoly), EcsQuery) },
         .events = { EcsOnSet },
         .callback = PolyTrigger,
@@ -305,7 +303,7 @@ void Poly_on_set_poly_query() {
 
     test_int(0, ctx.invoked);
 
-    ecs_query_init(world, &(ecs_query_desc_t) {
+    ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {{ tag }},
     });
 
@@ -321,7 +319,7 @@ void Poly_on_set_poly_system() {
     ecs_entity_t tag = ecs_new_id(world);
 
     Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { ecs_pair(ecs_id(EcsPoly), EcsSystem) },
         .events = { EcsOnSet },
         .callback = PolyTrigger,
@@ -330,7 +328,7 @@ void Poly_on_set_poly_system() {
 
     test_int(0, ctx.invoked);
 
-    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ tag }},
         .callback = FooTrigger
     });

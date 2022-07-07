@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     // Create a query for Position, Velocity. Queries are the fastest way to
     // iterate entities as they cache results.
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t) {
+    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
         .filter.terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
@@ -53,8 +53,7 @@ int main(int argc, char *argv[]) {
 
     // Filters are uncached queries. They are a bit slower to iterate but faster
     // to create & have lower overhead as they don't have to maintain a cache.
-    ecs_filter_t f;
-    ecs_filter_init(ecs, &f, &(ecs_filter_desc_t) {
+    ecs_filter_t *f = ecs_filter_init(ecs, &(ecs_filter_desc_t){
         .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
@@ -62,7 +61,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Filter iteration looks the same as query iteration
-    it = ecs_filter_iter(ecs, &f);
+    it = ecs_filter_iter(ecs, f);
 
     while (ecs_filter_next(&it)) {
         Position *p = ecs_term(&it, Position, 1);
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
     // exceeds their internal buffer, or when terms have names. In this case the
     // filter didn't allocate, so while fini isn't strictly necessary here, it's
     // still good practice to add it.
-    ecs_filter_fini(&f);
+    ecs_filter_fini(f);
 
     return ecs_fini(ecs);
 }

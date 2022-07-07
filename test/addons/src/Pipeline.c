@@ -1013,19 +1013,19 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline() {
 
     int count = 0;
 
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_third,
         .ctx = &count,
         .entity.add = {Tag, ecs_pair(EcsDependsOn, PostFrame)}
     });
 
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_second,
         .ctx = &count,
         .entity.add = {Tag, ecs_pair(EcsDependsOn, OnFrame)}
     });
 
-    ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_first,
         .ctx = &count,
         .entity.add = {Tag, ecs_pair(EcsDependsOn, PreFrame)}

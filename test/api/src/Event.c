@@ -15,14 +15,14 @@ void Event_table_1_id_w_trigger() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
@@ -51,14 +51,14 @@ void Event_table_2_ids_w_trigger() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = id_a,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx,
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
@@ -74,7 +74,7 @@ void Event_table_2_ids_w_trigger() {
 
     ecs_delete(world, s_a);
 
-    ecs_entity_t s_b = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s_b = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = id_b,
         .events = {evt},
         .callback = system_callback,
@@ -83,7 +83,7 @@ void Event_table_2_ids_w_trigger() {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
@@ -110,14 +110,14 @@ void Event_table_1_id_w_observer() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
@@ -146,14 +146,14 @@ void Event_table_2_ids_w_observer() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ id_a }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
@@ -190,14 +190,14 @@ void Event_emit_event_for_empty_table() {
     ecs_table_t *table = ecs_get_table(world, e);
     ecs_delete(world, e);
 
-    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ TagA }},
         .events = {evt},
         .callback = empty_table_callback,
         .ctx = table
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ TagA }},
         .table = table,
@@ -227,7 +227,7 @@ void Event_emit_table_event() {
 
     ecs_entity_t evt = ecs_new_id(world);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = TagA,
         .filter.terms[0].subj.set.mask = EcsSelf,
         .events = {evt},
@@ -235,7 +235,7 @@ void Event_emit_table_event() {
         .ctx = &ctx_a
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = TagA,
         .filter.terms[0].subj.set.mask = EcsSuperSet,
         .events = {evt},
@@ -243,7 +243,7 @@ void Event_emit_table_event() {
         .ctx = &ctx_b
     });
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
         .table = base_table,
@@ -254,7 +254,7 @@ void Event_emit_table_event() {
     test_int(ctx_a.invoked, 1);
     test_int(ctx_b.invoked, 1);
 
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
         .table = base_table,
@@ -278,14 +278,14 @@ void Event_emit_staged_from_world() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
     ecs_readonly_begin(world);
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
@@ -313,7 +313,7 @@ void Event_emit_staged_from_stage() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
@@ -321,7 +321,7 @@ void Event_emit_staged_from_stage() {
     });
     ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_emit(stage, &(ecs_event_desc_t) {
+    ecs_emit(stage, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
@@ -349,14 +349,14 @@ void Event_emit_staged_from_world_observer() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
     ecs_readonly_begin(world);
-    ecs_emit(world, &(ecs_event_desc_t) {
+    ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
@@ -384,7 +384,7 @@ void Event_emit_staged_from_stage_observer() {
 
     Probe ctx = {0};
 
-    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
@@ -394,7 +394,7 @@ void Event_emit_staged_from_stage_observer() {
     ecs_readonly_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_emit(stage, &(ecs_event_desc_t) {
+    ecs_emit(stage, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,

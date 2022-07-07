@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Pears);
 
     // Create a query that matches edible components
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t) {
+    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
         .filter.terms = {{ .id = ecs_pair(ecs_id(Eats), EcsWildcard ) }}
     });
 

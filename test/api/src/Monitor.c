@@ -584,7 +584,7 @@ void Monitor_monitor_at_fini() {
 
     Probe ctx = {0};
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ TagA }},
         .events = {EcsMonitor},
         .callback = Monitor,
@@ -635,7 +635,7 @@ void Monitor_monitor_other_table() {
     ecs_add(world, xy, Y);
 
     check_table_t ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
             { X },
             { Y, .oper = EcsNot }
@@ -692,7 +692,7 @@ void Monitor_monitor_component() {
     ECS_TAG(world, Tag);
 
     check_component_t ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
             { ecs_id(Position) },
             { Tag, .oper = EcsNot }

@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Sandwich);
 
     // Add reflection data to components
-    ecs_bitmask_init(ecs, &(ecs_bitmask_desc_t) {
+    ecs_bitmask_init(ecs, &(ecs_bitmask_desc_t){
         .entity.entity = ecs_id(Toppings), // Make sure to use existing id
         .constants = {
             { .name = "Bacon", .value = Bacon },
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_struct_init(ecs, &(ecs_struct_desc_t) {
+    ecs_struct_init(ecs, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(Sandwich), // Make sure to use existing id
         .members = {
             { .name = "toppings", .type = ecs_id(Toppings) }

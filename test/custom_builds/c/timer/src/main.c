@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .query.filter.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
         .callback = Move,
         .entity.add = { ecs_dependson(EcsOnUpdate) },

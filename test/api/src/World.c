@@ -1077,7 +1077,7 @@ void World_register_alias_twice_different_entity() {
 void World_redefine_component() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
         .entity.name = "flecs.core.Component",
         .entity.symbol = "EcsComponent",
         .type.size = ECS_SIZEOF(EcsComponent),

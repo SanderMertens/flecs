@@ -827,7 +827,7 @@ void TransitiveRules_rule_iter_set_transitive_variable() {
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(SanFrancisco, $X)"
     });
 
@@ -898,7 +898,7 @@ void TransitiveRules_rule_iter_set_transitive_self_variable() {
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(SanFrancisco, $X)"
     });
 
@@ -934,7 +934,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_one() {
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn($X, $Y)"
     });
 
@@ -998,7 +998,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn($X, $Y)"
     });
 
@@ -1062,7 +1062,7 @@ void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both() {
     ECS_ENTITY(world, UnitedStates, (LocatedIn, NorthAmerica));
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn($X, $Y)"
     });
 

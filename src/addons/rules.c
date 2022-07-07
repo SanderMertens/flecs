@@ -2765,13 +2765,15 @@ int32_t find_term_var_id(
 
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
-    const ecs_filter_desc_t *desc)
+    const ecs_filter_desc_t *const_desc)
 {
     ecs_rule_t *result = ecs_poly_new(ecs_rule_t);
 
-    /* Parse the signature expression. This initializes the columns array which
-     * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, desc)) {
+    /* Initialize the query */
+    ecs_filter_desc_t desc = *const_desc;
+    desc.storage = &result->filter; /* Use storage of rule */
+    result->filter = ECS_FILTER_INIT;
+    if (ecs_filter_init(world, &desc) == NULL) {
         goto error;
     }
 

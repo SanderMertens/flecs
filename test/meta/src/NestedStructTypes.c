@@ -11,14 +11,14 @@ void NestedStructTypes_1_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -45,14 +45,14 @@ void NestedStructTypes_1_int32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -80,14 +80,14 @@ void NestedStructTypes_1_bool_w_bool_member() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -117,14 +117,14 @@ void NestedStructTypes_1_bool_w_int32_member() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -154,14 +154,14 @@ void NestedStructTypes_1_int32_w_bool_member() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -191,14 +191,14 @@ void NestedStructTypes_1_int32_w_int32_member() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -228,14 +228,14 @@ void NestedStructTypes_1_bool_2_same() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -265,21 +265,21 @@ void NestedStructTypes_1_bool_2_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -313,21 +313,21 @@ void NestedStructTypes_1_bool_2_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -361,21 +361,21 @@ void NestedStructTypes_1_i32_2_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -410,14 +410,14 @@ void NestedStructTypes_1_bool_2_bool_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -425,7 +425,7 @@ void NestedStructTypes_1_bool_2_bool_bool() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -460,7 +460,7 @@ void NestedStructTypes_1_bool_bool_2_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -468,14 +468,14 @@ void NestedStructTypes_1_bool_bool_2_bool() {
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_bool_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -506,7 +506,7 @@ void NestedStructTypes_1_bool_bool_2_same() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -514,7 +514,7 @@ void NestedStructTypes_1_bool_bool_2_same() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -550,7 +550,7 @@ void NestedStructTypes_1_bool_bool_2_bool_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -558,7 +558,7 @@ void NestedStructTypes_1_bool_bool_2_bool_bool() {
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -566,7 +566,7 @@ void NestedStructTypes_1_bool_bool_2_bool_bool() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -596,14 +596,14 @@ void NestedStructTypes_1_i32_2_same() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -637,21 +637,21 @@ void NestedStructTypes_1_i32_2_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -686,14 +686,14 @@ void NestedStructTypes_1_i32_2_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -701,7 +701,7 @@ void NestedStructTypes_1_i32_2_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -736,7 +736,7 @@ void NestedStructTypes_1_i32_i32_2_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -744,14 +744,14 @@ void NestedStructTypes_1_i32_i32_2_i32() {
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -782,7 +782,7 @@ void NestedStructTypes_1_i32_i32_2_same() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -790,7 +790,7 @@ void NestedStructTypes_1_i32_i32_2_same() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -826,7 +826,7 @@ void NestedStructTypes_1_i32_i32_2_i32_i32() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -834,7 +834,7 @@ void NestedStructTypes_1_i32_i32_2_i32_i32() {
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -842,7 +842,7 @@ void NestedStructTypes_1_i32_i32_2_i32_i32() {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -884,35 +884,35 @@ void NestedStructTypes_2_lvls_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t nn1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t nn1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "NN1",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
         }
     });
 
-    ecs_entity_t nn2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t nn2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "NN2",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
         }
     });
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", nn1},
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", nn2},
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},
@@ -956,7 +956,7 @@ void NestedStructTypes_2_lvls_bool_bool() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t nn1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t nn1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "NN1",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -964,7 +964,7 @@ void NestedStructTypes_2_lvls_bool_bool() {
         }
     });
 
-    ecs_entity_t nn2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t nn2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "NN2",
         .members = {
             {"x", ecs_id(ecs_bool_t)},
@@ -972,21 +972,21 @@ void NestedStructTypes_2_lvls_bool_bool() {
         }
     });
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N1",
         .members = {
             {"x", nn1},
         }
     });
 
-    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "N2",
         .members = {
             {"x", nn2},
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"n_1", n1},

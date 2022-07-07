@@ -520,7 +520,6 @@
                 "ptr_type",
                 "const_type",
                 "string_term",
-                "string_term_w_expr",
                 "singleton_term",
                 "isa_superset_term",
                 "isa_self_superset_term",
@@ -633,7 +632,6 @@
                 "const_optional",
                 "create_w_no_template_args",
                 "2_terms_w_expr",
-                "assert_on_multiple_expr_calls",
                 "assert_on_uninitialized_term"
             ]
         }, {

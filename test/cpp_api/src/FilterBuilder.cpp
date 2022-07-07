@@ -357,7 +357,7 @@ void FilterBuilder_string_term() {
     ecs.component<Position>();
 
     auto q = ecs.filter_builder<>()
-        .term("Position")
+        .expr("Position")
         .build();
 
     auto e1 = ecs.entity().add<Position>();
@@ -1710,8 +1710,7 @@ void FilterBuilder_2_terms_w_expr() {
     auto e1 = ecs.entity().add(a).add(b);
 
     auto f = ecs.filter_builder()
-        .term("A")
-        .term("B")
+        .expr("A, B")
         .build();
     
     test_int(f.term_count(), 2);
@@ -1726,22 +1725,6 @@ void FilterBuilder_2_terms_w_expr() {
     });
 
     test_int(count, 1);
-}
-
-void FilterBuilder_assert_on_multiple_expr_calls() {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    ecs.entity("A");
-    ecs.entity("B");
-
-    test_expect_abort();
-
-    auto f = ecs.filter_builder()
-        .term().expr("A")
-        .term().expr("B")
-        .build();
 }
 
 void FilterBuilder_assert_on_uninitialized_term() {

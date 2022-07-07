@@ -43,7 +43,7 @@ e.is_alive(); // false!
 Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. In C a name can be assigned with the `ecs_entity_init` function. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
 
 ```c
-ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) { .name = "Bob" });
+ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Bob" });
 
 printf("Entity name: %s\n", ecs_get_name(world, e));
 ```
@@ -334,7 +334,7 @@ parent.lookup("child"); // returns child
 Queries (see below) can use hierarchies to order data breadth-first, which can come in handy when you're implementing a transform system:
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {
         { ecs_id(Position) },
         { ecs_id(Position), .subj.set = {
@@ -497,8 +497,8 @@ A filter is a list of terms that are matched against entities. Filters are cheap
 
 ```c
 // Initialize a filter with 2 terms on the stack
-ecs_filter_t f;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+ecs_filter_t f = ECS_FILTER_INIT;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t){
     .terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, parent) }
@@ -553,8 +553,8 @@ Filters can use operators to exclude components, optionally match components or 
 The following example shows a filter that matches all entities with a parent that do not have `Position`:
 
 ```c
-ecs_filter_t f;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+ecs_filter_t f = ECS_FILTER_INIT;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t){
     .terms = {
         { ecs_pair(EcsChildOf, EcsWildcard) }
         { ecs_id(Position), .oper = EcsNot },
@@ -579,7 +579,7 @@ The API for queries looks very similar to filters:
 
 ```c
 // Create a query with 2 terms
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, EcsWildcard) }
@@ -611,7 +611,7 @@ ECS_SYSTEM(world, Move, 0, Position, Velocity);
 ecs_run(world, Move, delta_time, NULL); // Run system
 
 // Option 2, use the ecs_system_init function
-ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t) {
+ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t){
     .query.filter.terms = {
         {ecs_id(Position)},
         {ecs_id(Velocity)},
@@ -747,7 +747,7 @@ When an observer has a query with more than one component, the observer will not
 An exmple of an observer with two components:
 
 ```c
-ecs_observer_init(world, &(ecs_observer_desc_t) {
+ecs_observer_init(world, &(ecs_observer_desc_t){
     .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
     .event = EcsOnSet,
     .callback = OnSetPosition

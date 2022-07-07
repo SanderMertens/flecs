@@ -17,7 +17,7 @@ void FlecsCoreDocImport(
 
     /* Initialize reflection data for core components */
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsComponent),
         .members = {
             {.name = (char*)"size", .type = ecs_id(ecs_i32_t)},
@@ -25,7 +25,7 @@ void FlecsCoreDocImport(
         }
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.entity = ecs_id(EcsDocDescription),
         .members = {
             {.name = "value", .type = ecs_id(ecs_string_t)}

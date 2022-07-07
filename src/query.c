@@ -1736,9 +1736,11 @@ ecs_query_t* ecs_query_init(
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     ecs_entity_t entity = desc->entity;
 
-    observer_desc.filter.match_empty_tables = true;
+    observer_desc.filter.flags = EcsFilterMatchEmptyTables;
+    observer_desc.filter.storage = &result->filter;
+    result->filter = ECS_FILTER_INIT;
 
-    if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
+    if (ecs_filter_init(world, &observer_desc.filter) == NULL) {
         goto error;
     }
 
@@ -1748,7 +1750,7 @@ ecs_query_t* ecs_query_init(
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
-        observer_desc.filter.filter = true;
+        observer_desc.filter.flags |= EcsFilterIsFilter;
 
         /* ecs_filter_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the filter. */

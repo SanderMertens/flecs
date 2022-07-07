@@ -220,12 +220,12 @@
     ecs_bulk_new_w_id(world, ecs_id(component), count)
 
 #define ecs_new_entity(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+    ecs_entity_init(world, &(ecs_entity_desc_t){\
         .name = n,\
     })
 
 #define ecs_new_prefab(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+    ecs_entity_init(world, &(ecs_entity_desc_t){\
         .name = n,\
         .add = {EcsPrefab}\
     })

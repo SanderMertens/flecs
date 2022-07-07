@@ -471,7 +471,7 @@ const char* plecs_parse_assign_expr(
     void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
-        &(ecs_parse_expr_desc_t) {
+        &(ecs_parse_expr_desc_t){
             .name = name,
             .expr = expr,
             .lookup_action = plecs_lookup_action,

@@ -887,7 +887,7 @@ void Switch_sort() {
     ecs_add_pair(world, e3, Movement, Jumping);
     ecs_add_pair(world, e4, Movement, Sitting);
     
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {{ ecs_id(Position) }},
         .order_by_component = ecs_id(Position), 
         .order_by = compare_position
@@ -1661,7 +1661,7 @@ void Switch_delete_case_trigger_after_delete_switch() {
 
     Probe ctx = {0};
 
-    ecs_observer_init(world, &(ecs_observer_desc_t) {
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { .id = ecs_pair(Movement, Walking), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = Trigger,

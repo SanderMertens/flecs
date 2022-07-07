@@ -22,7 +22,7 @@ void meta_test_vector(
 void VectorTypes_vector_bool() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t) {
+    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
         .entity.name = "V",
         .type = ecs_id(ecs_bool_t)
     });
@@ -38,7 +38,7 @@ void VectorTypes_vector_bool() {
 void VectorTypes_vector_i32() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t) {
+    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
         .entity.name = "V",
         .type = ecs_id(ecs_i32_t)
     });
@@ -54,7 +54,7 @@ void VectorTypes_vector_i32() {
 void VectorTypes_vector_struct() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "T",
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -63,7 +63,7 @@ void VectorTypes_vector_struct() {
 
     test_assert(t != 0);
 
-    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t) {
+    ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
         .entity.name = "V",
         .type = t
     });

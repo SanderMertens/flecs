@@ -3,7 +3,7 @@
 void Units_member_w_unit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "percentage",
         .symbol = "%"
     });
@@ -15,7 +15,7 @@ void Units_member_w_unit() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "%");
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }
@@ -45,7 +45,7 @@ void Units_member_w_unit() {
 void Units_member_w_unit_type() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.name = "percentage",
         .kind = EcsF32
     });
@@ -53,7 +53,7 @@ void Units_member_w_unit_type() {
     test_str("percentage", ecs_get_name(world, u));
     test_assert(ecs_has(world, u, EcsMetaType));
 
-    ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = u,
         .symbol = "%"
     });
@@ -64,7 +64,7 @@ void Units_member_w_unit_type() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "%");
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = u }
         }
@@ -94,12 +94,12 @@ void Units_member_w_unit_type() {
 void Units_cursor_get_unit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "percentage",
         .symbol = "%"
     });
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity.name = "s",
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
@@ -123,17 +123,17 @@ void Units_cursor_get_unit() {
 void Units_cursor_get_unit_type() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+    ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t){
         .entity.name = "percentage",
         .kind = EcsF32
     });
 
-    ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = u,
         .symbol = "%"
     });
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = u }
         }
@@ -156,14 +156,14 @@ void Units_cursor_get_unit_type() {
 void Units_unit_w_quantity() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .name = "duration"
     });
     test_assert(q != 0);
     test_str("duration", ecs_get_name(world, q));
     test_assert(ecs_has_id(world, q, EcsQuantity));
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s",
         .quantity = q
@@ -182,14 +182,14 @@ void Units_unit_w_quantity() {
 void Units_unit_w_self_quantity() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .name = "percentage"
     });
     test_assert(q != 0);
     test_str("percentage", ecs_get_name(world, q));
     test_assert(ecs_has_id(world, q, EcsQuantity));
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = q,
         .symbol = "%"
     });
@@ -208,7 +208,7 @@ void Units_unit_w_self_quantity() {
 void Units_unit_w_self_quantity_after_init() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "percentage",
         .symbol = "%"
     });
@@ -220,7 +220,7 @@ void Units_unit_w_self_quantity_after_init() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "%");
 
-    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .entity = u
     });
     test_assert(q != 0);
@@ -235,14 +235,14 @@ void Units_unit_w_self_quantity_after_init() {
 void Units_unit_w_derived() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s"
     });
     test_assert(u_1 != 0);
     test_assert(ecs_has(world, u_1, EcsUnit));
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "minutes",
         .symbol = "m",
         .base = u_1
@@ -265,14 +265,14 @@ void Units_unit_w_derived() {
 void Units_unit_w_prefix() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
     test_assert(u_1 != 0);
     test_assert(ecs_has(world, u_1, EcsUnit));
 
-    ecs_entity_t kilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    ecs_entity_t kilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "kilo",
         .symbol = "k",
         .translation = {
@@ -283,7 +283,7 @@ void Units_unit_w_prefix() {
     test_assert(kilo != 0);
     test_assert(ecs_has(world, kilo, EcsUnitPrefix));
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "kilometers",
         .base = u_1,
         .prefix = kilo
@@ -309,21 +309,21 @@ void Units_unit_w_prefix() {
 void Units_unit_w_over() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s"
     });
     test_assert(u_1 != 0);
     test_assert(ecs_has(world, u_1, EcsUnit));
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
     test_assert(u_2 != 0);
     test_assert(ecs_has(world, u_2, EcsUnit));
 
-    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters_per_second",
         .base = u_2,
         .over = u_1
@@ -356,7 +356,7 @@ void Units_member_w_invalid_unit() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }
@@ -374,7 +374,7 @@ void Units_unit_w_invalid_quantity() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s",
         .quantity = q
@@ -392,7 +392,7 @@ void Units_unit_w_invalid_derived() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m",
         .base = u_1
@@ -408,7 +408,7 @@ void Units_unit_w_invalid_over() {
     ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
     test_assert(u_1 != 0);
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
@@ -416,7 +416,7 @@ void Units_unit_w_invalid_over() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters_per_second",
         .symbol = "mps",
         .base = u_2,
@@ -430,13 +430,13 @@ void Units_unit_w_invalid_over() {
 void Units_unit_w_invalid_symbol_w_over() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s"
     });
     test_assert(u_1 != 0);
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
@@ -444,7 +444,7 @@ void Units_unit_w_invalid_symbol_w_over() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters_per_second",
         .symbol = "mps",
         .base = u_2,
@@ -458,13 +458,13 @@ void Units_unit_w_invalid_symbol_w_over() {
 void Units_unit_w_invalid_symbol_w_prefix() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+    ecs_entity_t u_1 = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity.name = "kilo",
         .symbol = "k"
     });
     test_assert(u_1 != 0);
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
@@ -472,7 +472,7 @@ void Units_unit_w_invalid_symbol_w_prefix() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "kilometers",
         .symbol = "Km",
         .base = u_2,
@@ -486,7 +486,7 @@ void Units_unit_w_invalid_symbol_w_prefix() {
 void Units_unit_w_over_no_derived() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters",
         .symbol = "m"
     });
@@ -494,7 +494,7 @@ void Units_unit_w_over_no_derived() {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "meters_per_second",
         .symbol = "mps",
         .over = u_2
@@ -507,7 +507,7 @@ void Units_unit_w_over_no_derived() {
 void Units_define_twice() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s"
     });
@@ -521,7 +521,7 @@ void Units_define_twice() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "s");
 
-    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t) {
+    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = u,
         .symbol = "s"
     }));
@@ -540,17 +540,17 @@ void Units_define_twice() {
 void Units_define_twice_different_quantity() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .name = "percentage"
     });
     test_assert(q_1 != 0);
 
-    ecs_entity_t q_2 = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q_2 = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .name = "duration"
     });
     test_assert(q_2 != 0);
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s",
         .quantity = q_1
@@ -566,7 +566,7 @@ void Units_define_twice_different_quantity() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "s");
 
-    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t) {
+    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = u,
         .symbol = "s",
         .quantity = q_2
@@ -588,12 +588,12 @@ void Units_define_twice_different_quantity() {
 void Units_define_twice_remove_quantity() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t){
         .name = "percentage"
     });
     test_assert(q_1 != 0);
 
-    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.name = "seconds",
         .symbol = "s",
         .quantity = q_1
@@ -609,7 +609,7 @@ void Units_define_twice_remove_quantity() {
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "s");
 
-    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t) {
+    test_assert(u == ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity.entity = u,
         .symbol = "s"
     }));
@@ -630,7 +630,7 @@ void Units_define_twice_remove_quantity() {
 void Units_set_unit() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { EcsQuantity }
     });
     test_assert(q != 0);
@@ -648,7 +648,7 @@ void Units_set_unit() {
 
     ecs_add_pair(world, u, EcsQuantity, q);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }
@@ -678,7 +678,7 @@ void Units_set_unit() {
 void Units_set_unit_w_derived() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { EcsQuantity }
     });
     test_assert(q != 0);
@@ -705,7 +705,7 @@ void Units_set_unit_w_derived() {
 
     ecs_add_pair(world, u, EcsQuantity, q);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }
@@ -735,7 +735,7 @@ void Units_set_unit_w_derived() {
 void Units_set_unit_w_over() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { EcsQuantity }
     });
     test_assert(q != 0);
@@ -770,7 +770,7 @@ void Units_set_unit_w_over() {
 
     ecs_add_pair(world, u, EcsQuantity, q);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }
@@ -800,7 +800,7 @@ void Units_set_unit_w_over() {
 void Units_set_unit_w_prefix() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { EcsQuantity }
     });
     test_assert(q != 0);
@@ -839,7 +839,7 @@ void Units_set_unit_w_prefix() {
 
     ecs_add_pair(world, u, EcsQuantity, q);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
         }

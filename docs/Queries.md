@@ -114,7 +114,7 @@ The query descriptor is a C API to construct queries that follows the struct ini
 This is an example of the query descriptor API:
 
 ```c
-ecs_filter_t f;
+ecs_filter_t f = ECS_FILTER_INIT;
 ecs_filter_init(world, &f, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
@@ -128,7 +128,7 @@ ecs_filter_init(world, &f, &(ecs_filter_desc_t){
 The descriptor API has support for using the DSL:
 
 ```c
-ecs_filter_t f;
+ecs_filter_t f = ECS_FILTER_INIT;
 ecs_filter_init(world, &f, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
@@ -295,7 +295,7 @@ while (ecs_query_next(&it)) {
 Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled by setting the order_by function:
 
 ```c
-ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {{ ecs_id(Position) }},
     .order_by_component = ecs_id(Position),
     .order_by = compare_position,
@@ -367,7 +367,7 @@ This process is transparent for applications, except that the slicing will resul
 Instead of sorting by a component value, applications can sort by entity id by not specifying order_by_component
 
 ```c
-ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {{ ecs_id(Position) }},
     .order_by = compare_entity,
 });

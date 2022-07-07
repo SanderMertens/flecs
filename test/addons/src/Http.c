@@ -11,7 +11,7 @@ static bool OnRequest(
 void Http_teardown() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27750,
         .callback = OnRequest
     });
@@ -24,7 +24,7 @@ void Http_teardown() {
 void Http_teardown_started() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27751,
         .callback = OnRequest
     });
@@ -39,7 +39,7 @@ void Http_teardown_started() {
 void Http_teardown_stopped() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27752,
         .callback = OnRequest
     });
@@ -55,7 +55,7 @@ void Http_teardown_stopped() {
 void Http_stop_start() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27753,
         .callback = OnRequest
     });
@@ -72,7 +72,7 @@ void Http_stop_start() {
 void Http_stop_start_stresstest() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27754,
         .callback = OnRequest
     });
@@ -92,7 +92,7 @@ void Http_stop_start_stresstest() {
 void Http_stop_start_stresstest_w_0_sleep() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27755,
         .callback = OnRequest
     });
@@ -113,7 +113,7 @@ void Http_stop_start_stresstest_w_0_sleep() {
 void Http_stop_start_stresstest_w_100ns_sleep() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27756,
         .callback = OnRequest
     });
@@ -134,7 +134,7 @@ void Http_stop_start_stresstest_w_100ns_sleep() {
 void Http_stop_start_stresstest_w_100us_sleep() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27757,
         .callback = OnRequest
     });
@@ -155,7 +155,7 @@ void Http_stop_start_stresstest_w_100us_sleep() {
 void Http_stop_start_stresstest_w_10ms_sleep() {
     ecs_set_os_api_impl();
 
-    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t) {
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
         .port = 27758,
         .callback = OnRequest
     });
