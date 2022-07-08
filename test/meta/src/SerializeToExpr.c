@@ -1287,6 +1287,74 @@ void SerializeToExpr_struct_partial() {
     ecs_fini(world);
 }
 
+void SerializeToExpr_array_i32_3() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    int32_t value[] = {10, 20, 30};
+    char *expr = ecs_ptr_to_expr(world, t, value);
+    test_assert(expr != NULL);
+    test_str(expr, "[10, 20, 30]");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_array_struct_i32_i32() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
+        .type = ecs_id(Position),
+        .count = 3
+    });
+
+    Position value[] = {{10, 20}, {30, 40}, {50, 60}};
+    char *expr = ecs_ptr_to_expr(world, t, value);
+    test_assert(expr != NULL);
+    test_str(expr, "[{x: 10, y: 20}, {x: 30, y: 40}, {x: 50, y: 60}]");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_array_array_i32_3() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
+        .type = a,
+        .count = 3
+    });
+
+    typedef int32_t A[2];
+    A value[] = {{10, 20}, {30, 40}, {50, 60}};
+
+    char *expr = ecs_ptr_to_expr(world, t, value);
+    test_assert(expr != NULL);
+    test_str(expr, "[[10, 20], [30, 40], [50, 60]]");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
 void SerializeToExpr_escape_simple_string() {
     ecs_world_t *world = ecs_init();
 

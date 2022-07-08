@@ -16,7 +16,8 @@ int expr_ser_type_ops(
     ecs_meta_type_op_t *ops,
     int32_t op_count,
     const void *base, 
-    ecs_strbuf_t *str);
+    ecs_strbuf_t *str,
+    int32_t in_array);
 
 static
 int expr_ser_type_op(
@@ -237,7 +238,7 @@ int expr_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (expr_ser_type_ops(world, ops, op_count, ptr, str)) {
+        if (expr_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -369,19 +370,20 @@ int expr_ser_type_ops(
     ecs_meta_type_op_t *ops,
     int32_t op_count,
     const void *base,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    int32_t in_array) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
 
-        if (op != ops) {
+        if (in_array <= 0) {
             if (op->name) {
                 ecs_strbuf_list_next(str);
                 ecs_strbuf_append(str, "%s: ", op->name);
             }
 
             int32_t elem_count = op->count;
-            if (elem_count > 1 && op != ops) {
+            if (elem_count > 1) {
                 /* Serialize inline array */
                 if (expr_ser_elements(world, op, op->op_count, base,
                     elem_count, op->size, str))
@@ -393,13 +395,15 @@ int expr_ser_type_ops(
                 continue;
             }
         }
-        
+
         switch(op->kind) {
         case EcsOpPush:
             ecs_strbuf_list_push(str, "{", ", ");
+            in_array --;
             break;
         case EcsOpPop:
             ecs_strbuf_list_pop(str, "}");
+            in_array ++;
             break;
         default:
             if (expr_ser_type_op(world, op, base, str)) {
@@ -424,7 +428,7 @@ int expr_ser_type(
 {
     ecs_meta_type_op_t *ops = ecs_vector_first(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vector_count(v_ops);
-    return expr_ser_type_ops(world, ops, count, base, str);
+    return expr_ser_type_ops(world, ops, count, base, str, 0);
 }
 
 int ecs_ptr_to_expr_buf(

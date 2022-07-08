@@ -376,6 +376,9 @@ void SerializeToExpr_struct_bitmask(void);
 void SerializeToExpr_struct_i32(void);
 void SerializeToExpr_struct_i32_i32(void);
 void SerializeToExpr_struct_entity(void);
+void SerializeToExpr_array_i32_3(void);
+void SerializeToExpr_array_struct_i32_i32(void);
+void SerializeToExpr_array_array_i32_3(void);
 void SerializeToExpr_entity_entity_after_float(void);
 void SerializeToExpr_struct_nested_i32(void);
 void SerializeToExpr_struct_nested_i32_i32(void);
@@ -464,6 +467,9 @@ void SerializeToJson_struct_struct_i32_i32_array_3(void);
 void SerializeToJson_struct_w_array_type_i32_i32(void);
 void SerializeToJson_struct_w_2_array_type_i32_i32(void);
 void SerializeToJson_struct_partial(void);
+void SerializeToJson_array_i32_3(void);
+void SerializeToJson_array_struct_i32_i32(void);
+void SerializeToJson_array_array_i32_3(void);
 void SerializeToJson_serialize_entity_empty(void);
 void SerializeToJson_serialize_entity_w_name(void);
 void SerializeToJson_serialize_entity_w_name_1_tag(void);
@@ -1995,6 +2001,18 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_struct_entity
     },
     {
+        "array_i32_3",
+        SerializeToExpr_array_i32_3
+    },
+    {
+        "array_struct_i32_i32",
+        SerializeToExpr_array_struct_i32_i32
+    },
+    {
+        "array_array_i32_3",
+        SerializeToExpr_array_array_i32_3
+    },
+    {
         "entity_entity_after_float",
         SerializeToExpr_entity_entity_after_float
     },
@@ -2335,6 +2353,18 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_partial",
         SerializeToJson_struct_partial
+    },
+    {
+        "array_i32_3",
+        SerializeToJson_array_i32_3
+    },
+    {
+        "array_struct_i32_i32",
+        SerializeToJson_array_struct_i32_i32
+    },
+    {
+        "array_array_i32_3",
+        SerializeToJson_array_array_i32_3
     },
     {
         "serialize_entity_empty",
@@ -2870,7 +2900,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        45,
+        48,
         SerializeToExpr_testcases
     },
     {
@@ -2884,7 +2914,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        108,
+        111,
         SerializeToJson_testcases
     },
     {
