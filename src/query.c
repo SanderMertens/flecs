@@ -1461,8 +1461,6 @@ void flecs_query_rematch_tables(
     int32_t rematch_count = ++ query->rematch_count;
 
     while (ecs_iter_next(&it)) {
-        ecs_trace(" - iter returned table [%s]",
-            ecs_table_str(world, it.table));
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
                 flecs_query_table_match_free(query, qt, qm->next_match);
