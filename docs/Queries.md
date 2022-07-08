@@ -114,8 +114,7 @@ The query descriptor is a C API to construct queries that follows the struct ini
 This is an example of the query descriptor API:
 
 ```c
-ecs_filter_t f = ECS_FILTER_INIT;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
     {ecs_id(Velocity)},
@@ -128,8 +127,7 @@ ecs_filter_init(world, &f, &(ecs_filter_desc_t){
 The descriptor API has support for using the DSL:
 
 ```c
-ecs_filter_t f = ECS_FILTER_INIT;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
     {ecs_id(Velocity)}

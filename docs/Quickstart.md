@@ -497,8 +497,7 @@ A filter is a list of terms that are matched against entities. Filters are cheap
 
 ```c
 // Initialize a filter with 2 terms on the stack
-ecs_filter_t f = ECS_FILTER_INIT;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
     .terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, parent) }
@@ -508,7 +507,7 @@ ecs_filter_init(world, &f, &(ecs_filter_desc_t){
 // Iterate the filter results. Because entities are grouped by their type there
 // are two loops: an outer loop for the type, and an inner loop for the entities
 // for that type.
-ecs_iter_t it = ecs_filter_iter(world, &f);
+ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
     // Each type has its own set of component arrays
     Position *p = ecs_term(&it, Position, 1);
@@ -519,6 +518,8 @@ while (ecs_filter_next(&it)) {
             p[i].x, p[i].y);
     }
 }
+
+ecs_filter_fini(f);
 ```
 ```cpp
 // For simple queries the each function can be used
@@ -553,8 +554,7 @@ Filters can use operators to exclude components, optionally match components or 
 The following example shows a filter that matches all entities with a parent that do not have `Position`:
 
 ```c
-ecs_filter_t f = ECS_FILTER_INIT;
-ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
     .terms = {
         { ecs_pair(EcsChildOf, EcsWildcard) }
         { ecs_id(Position), .oper = EcsNot },
