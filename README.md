@@ -56,6 +56,13 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
 - [Relations Manual](docs/Relations.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
 
+## How to use and build
+The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in `flecs.h`).
+
+Alternatively you can also build Flecs as a standalone library by using the [bake](https://github.com/SanderMertens/bake) (cmake, meson, bazel are also supported).
+
+If you want to customize your builds, refer to the [Addons](#addons) section.
+
 ## Show me the code!
 C99 example:
 ```c
