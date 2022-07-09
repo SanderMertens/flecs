@@ -6,7 +6,7 @@ Note that these are my own guidelines, and as a result this is an opinionated do
 One other note: this document is very light on feature documentation. The point of the document is to provide suggestions for how to design with Flecs features, not document their ins and outs. All of the features listed in this document are described in the manual and have example code.
 
 ## Entities
-Entities are probably the easiest thing to get used to. They typically map to in-game objects the same way you would create them in other game engines. 
+Entities are probably the easiest thing to get used to. They typically map to in-game objects the same way you would create them in other game engines.
 
 ### Entity Initialization
 When creating entities, you typically want to initialize them with a set of default components, and maybe even default values. Flecs introduced prefabs for this use case. Prefabs let you create entity templates that contain components with default values. Creating entities from prefabs is not just an easy way to initialize entities, it is also faster, and helps with classifying the different kinds of entities you have.
@@ -27,7 +27,7 @@ The reasoning behind this is simple: it is very cheap (at least in Flecs) to que
 
 The second reason is that it improves caching performance. If your system only needs Position, but also has to load all of the other data in Transform, you end up loading a lot of data in your cache that remains unused. This may or may not be a problem, but all else being equal it definitely won't hurt.
 
-The third reason is that you can only split up your components so far. The number of ways in which you can combine compponents is infinitely larger than the number of ways in which you can split them up, and this translates, in a very practical way, into less refactoring. When you have reduced your components to atomic units of data, there simply isn't anything left to refactor.
+The third reason is that you can only split up your components so far. The number of ways in which you can combine components is infinitely larger than the number of ways in which you can split them up, and this translates, in a very practical way, into less refactoring. When you have reduced your components to atomic units of data, there simply isn't anything left to refactor.
 
 The fourth and last reason why you want to keep your components small is code reusability. If your components are atomic units of data, they are automatically less opinionated than a component that combines more stuff. As a result, it is more likely that you find the component to work well across projects. This trickles down into the rest of your ECS code: systems written for atomic components will also be more reusable across projects.
 
@@ -54,7 +54,7 @@ Note that if you use C++, and you use templates to create your queries, putting 
 ### Annotations
 You can further annotate queries with components that are not matched with the query, but that are written using ECS operations (like add, remove, set etc.). Such operations are automatically deferred and merged at the end of the frame. With annotations you can enforce merging at an earlier point, by specifying that a component modification has been queued. When Flecs sees this, it will merge back the modifications before the next read.
 
-Annotating your queries with this information can tel. To annotate that a query writes component `Position` using `ecs_set` looks like this: `[out] :Position`. If you use `get_mut`, you could also read the component, in which case you use `[inout] :Position`. If you use `get`, use `[in] :Position`. In some cases you can't know in advance which components are going to be written. This is for example the case with the `ecs_delete` operation. To annotate a query for this use case, use `[out] :*`. 
+Annotating your queries with this information can tel. To annotate that a query writes component `Position` using `ecs_set` looks like this: `[out] :Position`. If you use `get_mut`, you could also read the component, in which case you use `[inout] :Position`. If you use `get`, use `[in] :Position`. In some cases you can't know in advance which components are going to be written. This is for example the case with the `ecs_delete` operation. To annotate a query for this use case, use `[out] :*`.
 
 ## Systems
 Designing systems is probably the hardest thing to do when you are not coming from an ECS background. Object oriented code allows you to write logic that is local to a single object, whereas systems in ECS are ran for collections of similar objects. This requires a different approach towards design.
@@ -81,21 +81,21 @@ On the other hand, if you are working with an existing framework or engine, you 
 There is no right or wrong approach here. Different projects require different approaches. Fortunately Flecs makes it really easy to do both!
 
 ## Phases and Pipelines
-Phases and pipelines are the primitves that Flecs uses to order systems. A pipeline is a set of ordered phases. Systems can be assigned to those phases. When using phases and pipelines correctly, it allows you to write plug & play systems that are easy to reuse in different projects.
+Phases and pipelines are the primitives that Flecs uses to order systems. A pipeline is a set of ordered phases. Systems can be assigned to those phases. When using phases and pipelines correctly, it allows you to write plug & play systems that are easy to reuse in different projects.
 
 ### Selecting a Phase
-When you create a system, you can assign a phase to it. By default, that phase is OnUpdate. Flecs comes with a whole bunch of phases though, and just looking at the whole list can feel a bit overwhelming:
+When you create a system, you can assign a phase to it. By default, that phase is `OnUpdate`. Flecs comes with a whole bunch of phases though, and just looking at the whole list can feel a bit overwhelming:
 
-- OnLoad
-- PostLoad
-- PreUpdate
-- OnUpdate
-- OnValidate
-- PostUpdate
-- PreStore
-- OnStore
+- `OnLoad`
+- `PostLoad`
+- `PreUpdate`
+- `OnUpdate`
+- `OnValidate`
+- `PostUpdate`
+- `PreStore`
+- `OnStore`
 
-So what do these all mean? Actually they mean nothing at all! They are just tags you can assign to systems, and those tags ensure that all systems in, say, the PreUpdate phase are executed _before_ the systems in the _OnUpdate_ phase. What is also important to realize is that this list of phases is only the default provided by Flecs. Maybe your project needs only half of those, or maybe it needs entirely different ones! Flecs lets you specify your custom phases to match your project needs.
+So what do these all mean? Actually they mean nothing at all! They are just tags you can assign to systems, and those tags ensure that all systems in, say, the `PreUpdate` phase are executed _before_ the systems in the `OnUpdate` phase. What is also important to realize is that this list of phases is only the default provided by Flecs. Maybe your project needs only half of those, or maybe it needs entirely different ones! Flecs lets you specify your custom phases to match your project needs.
 
 There are some conventions around the builtin phases, and following them helps to ensure that your code works well with the Flecs module ecosystem. Here they are:
 
@@ -142,7 +142,7 @@ The order in which you import dependencies in a module is important. If you defi
 What is key to note here is that the granularity of control is at the module level, _never_ at the individual system level. The reason for this is that modules may reimplement their features with different systems. If you have inter-system dependencies, those could break easily every time you update a module. This also makes sure that you can replace one module for another without running into annoying compatibility issues.
 
 ### Modules and Feature Swapping
-A good practice to employ with modules is to split them up into components.* modules and systems.* modules. For example, you may have a module `components.physics` that contains all the components to store data for a physics system. You may then have a module caled `systems.physics`, which imports the components module and "implements" the components. Because applications only have access to `components.physics` (they import it as well) but do not have direct access to the systems inside `systems.physics`, you can simply swap one physics implementation with another without changing application code.
+A good practice to employ with modules is to split them up into components.* modules and systems.* modules. For example, you may have a module `components.physics` that contains all the components to store data for a physics system. You may then have a module called `systems.physics`, which imports the components module and "implements" the components. Because applications only have access to `components.physics` (they import it as well) but do not have direct access to the systems inside `systems.physics`, you can simply swap one physics implementation with another without changing application code.
 
 This is a powerful pattern enabled by ECS that will give your projects a lot of flexibility and freedom in refactoring code.
 
@@ -156,7 +156,7 @@ Hierarchies are one of the most used features of Flecs, and often useful in game
 The Flecs hierarchy implementation works quite well with scene graphs. Flecs has out of the box features that let you iterate hierarchies top to bottom (see the `cascade` modifier), and this comes in handy when you want to do things like hierarchically applying a transform. Storing a scene graph is a totally fine way to use Flecs hierarchies, and there are nice cross-over benefits from, for example, using prefab hierarchies.
 
 ### Keep 'em clean!
-It can sometimes be tempting to use Flecs hierarchies as a fancy container for a list of entities. Don't. Or rather, you _can_, but keep the hierarchy separate from your scene graph hierarchy. Maybe it will work, but tomorrow someone may implement a feature that iterates all entities in the scene graph for some kind of visualization, and you don't want to see thousands of entities in that tree that are just there because it was convenient to use hierarchies. 
+It can sometimes be tempting to use Flecs hierarchies as a fancy container for a list of entities. Don't. Or rather, you _can_, but keep the hierarchy separate from your scene graph hierarchy. Maybe it will work, but tomorrow someone may implement a feature that iterates all entities in the scene graph for some kind of visualization, and you don't want to see thousands of entities in that tree that are just there because it was convenient to use hierarchies.
 
 To make sure your application can support multiple hierarchies, make sure that you use an explicit root object. This can be your scene, game world, level or whatever you fancy. This way you can always use that scene root entity to get all entities in your scene graph, and not run into unexpected clutter!
 

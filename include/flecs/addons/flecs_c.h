@@ -1,13 +1,13 @@
 /**
  * @file flecs_c.h
- * @brief Extends the core API with convenience functions/macro's for C applications.
+ * @brief Extends the core API with convenience functions/macros for C applications.
  */
 
 #ifndef FLECS_C_
 #define FLECS_C_
 
 /**
- * @defgroup create_macros Macro's that help with creation of ECS objects.
+ * @defgroup create_macros Macros that help with creation of ECS objects.
  * @{
  */
 
@@ -196,7 +196,7 @@
 /** @} */
 
 /**
- * @defgroup function_macros Convenience macro's that wrap ECS operations
+ * @defgroup function_macros Convenience macros that wrap ECS operations
  * @{
  */
 
@@ -475,7 +475,7 @@
 /** @} */
 
 /**
- * @defgroup utilities Utility macro's for commonly used operations
+ * @defgroup utilities Utility macros for commonly used operations
  * @{
  */
 
@@ -486,7 +486,7 @@
 /** @} */
 
 /**
- * @defgroup temporary_macros Temp macro's for easing the transition to v3
+ * @defgroup temporary_macros Temp macros for easing the transition to v3
  * @{
  */
 

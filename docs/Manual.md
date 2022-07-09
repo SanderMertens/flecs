@@ -96,8 +96,8 @@ void Move(ecs_iter_t *it) {
     // Functions use snake_case
     Position *p = ecs_term(it, Position, 1);
     Velocity *v = ecs_term(it, Velocity, 2);
-    
-    for (int i = 0; i < it->count; i ++) {
+
+    for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -105,23 +105,23 @@ void Move(ecs_iter_t *it) {
 
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init();
-    
-    // Declarative function-style macro's use SCREAMING_SNAKE_CASE
+
+    // Declarative function-style macros use SCREAMING_SNAKE_CASE
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    
+
     // Module names are PascalCase
     ECS_IMPORT(world, MyModule);
 
     // Enumeration constants ('EcsOnUpdate') use PascalCase
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    // Function wrapper macro's use snake_case
+    // Function wrapper macros use snake_case
     ecs_entity_t e = ecs_new(world, 0);
 
     // Builtin entities use PascalCase
     ecs_add(world, EcsWorld, Position);
-    
+
     return ecs_fini(world);
 }
 ```
@@ -151,7 +151,7 @@ ecs_set(world, e, Position, {10, 20});
 
 The effect of invoking this operation once is the same as invoking the operation multiple times, but both invocations can invoke an OnSet observer which can introduce side effects.
 
-All declarative macro's (`ECS_COMPONEN`, `ECS_SYSTEM`, ...) are idempotent:
+All declarative macros (`ECS_COMPONENT`, `ECS_SYSTEM`, ...) are idempotent:
 
 ```c
 {
@@ -162,7 +162,7 @@ All declarative macro's (`ECS_COMPONEN`, `ECS_SYSTEM`, ...) are idempotent:
 }
 ```
 
-The second time the `ECS_COMPONENT` macro is evaluated, the first instance will be found and returned. Note that because these macro's may declare variables, they cannot be defined twice in the same C scope.
+The second time the `ECS_COMPONENT` macro is evaluated, the first instance will be found and returned. Note that because these macros may declare variables, they cannot be defined twice in the same C scope.
 
 ### Error handling
 As a result of the idempotent design of many operations, the API has a very small error surface. There are essentially two conditions under which an operation is unable to fulfill its postcondition:
@@ -170,9 +170,9 @@ As a result of the idempotent design of many operations, the API has a very smal
 - The application provides invalid inputs to an operation
 - The operating system is unable to fulfill a request, like a failure to allocate memory
 
-When either of those conditions occur, the library will throw an assertion in debug mode (the source is not compiled with `NDEBUG`). Except for errors caused by the OS, errors are almost always caused by the invocation of a single operation, which makes applications easy to debug. 
+When either of those conditions occur, the library will throw an assertion in debug mode (the source is not compiled with `NDEBUG`). Except for errors caused by the OS, errors are almost always caused by the invocation of a single operation, which makes applications easy to debug.
 
-This approach has several advantages. Application code does not need to check for errors. If an error occurs, the assertion will cause application execution to halt. As a result of this, application code is cleaner and more robust, as it is impossible to forget to handle an error condition. 
+This approach has several advantages. Application code does not need to check for errors. If an error occurs, the assertion will cause application execution to halt. As a result of this, application code is cleaner and more robust, as it is impossible to forget to handle an error condition.
 
 ### Memory ownership
 Most of the API is handle based, as many API constructs are implemented using entities. There are a few instances where an application will interface with memory managed by the framework, or when an application needs to provide memory it manages to the API. In these scenarios there are four rules:
@@ -275,8 +275,8 @@ Path lookups may be relative:
 ecs_entity_t e = ecs_lookup_path(world, parent, "Child.GrandChild");
 ```
 
-### Macro's
-The C99 API heavily relies on function-style macro's, probably more than you would see in other libraries. The number one reason for this is that an ECS framework needs to work with user-defined types, and C does not provide out of the box support for generics. A few strategies have been employed in the API to improve its overall ergonomics, type safety and readability. Let's start with a simple example:
+### Macros
+The C99 API heavily relies on function-style macros, probably more than you would see in other libraries. The number one reason for this is that an ECS framework needs to work with user-defined types, and C does not provide out of the box support for generics. A few strategies have been employed in the API to improve its overall ergonomics, type safety and readability. Let's start with a simple example:
 
 ```c
 typedef struct Position {
@@ -295,7 +295,7 @@ Let's first remove the `ECS_COMPONENT` macro and replace it with equivalent code
 
 ```c
 ecs_entity_t ecs_id(Position) = ecs_component_init(world, &(ecs_component_desc_t){
-    .entity.name = "Position", 
+    .entity.name = "Position",
     .size = sizeof(Position),
     .alignment = ECS_ALIGNOF(Position)
 });
@@ -330,16 +330,16 @@ Translates into:
 
 ```c
 ecs_set_id
-    (world, e, ecs_id(Position), sizeof(Position), 
+    (world, e, ecs_id(Position), sizeof(Position),
     &(Position){10, 20});
 ```
 
 In addition to casting the value to the right type and passing in the component, this macro also captures the size of the type, which saves Flecs from having to do a component data lookup.
 
-Understanding how the macro's work will go a long way in being able to write effective code in Flecs, and will lead to less surprises when debugging the code.
+Understanding how the macros work will go a long way in being able to write effective code in Flecs, and will lead to less surprises when debugging the code.
 
 ## Entities
-Entities are uniquely identifiable objects in a game or simulation. In a real time strategy game, there may be entities for the different units, buildings, UI elements and particle effects, but also for exmaple the camera, world and player. An entity does not contain any state, and is not of a particular type. In a traditional OOP-based game, you may expect a tank in the game is of class "Tank". In ECS, an entity is simply a unique identifier, and any data and behavior associated with that entity is implemented with components and systems.
+Entities are uniquely identifiable objects in a game or simulation. In a real time strategy game, there may be entities for the different units, buildings, UI elements and particle effects, but also for example the camera, world and player. An entity does not contain any state, and is not of a particular type. In a traditional OOP-based game, you may expect a tank in the game is of class "Tank". In ECS, an entity is simply a unique identifier, and any data and behavior associated with that entity is implemented with components and systems.
 
 In Flecs, an entity is represented by a 64 bit integer, which is also how it is exposed on the API:
 
@@ -353,14 +353,14 @@ Zero indicates an invalid entity. Applications can create new entities with the 
 ecs_entity_t e = ecs_new(world, 0);
 ```
 
-This operation guarantees to return an unused entity identifier. The first entity returned is not 1, as Flecs creates a number of builtin entities during the intialization of the world. The identifier of the first returned entity is stored in the `EcsFirstUserEntityId` constant.
+This operation guarantees to return an unused entity identifier. The first entity returned is not 1, as Flecs creates a number of builtin entities during the initialization of the world. The identifier of the first returned entity is stored in the `EcsFirstUserEntityId` constant.
 
 ### Id recycling
-Entity identifiers are reused when deleted. The `ecs_new` operation will first attempt to recycle a deleted identifier before producing a new one. If no identifier can be recycled, it will return the last issued identifier + 1. 
+Entity identifiers are reused when deleted. The `ecs_new` operation will first attempt to recycle a deleted identifier before producing a new one. If no identifier can be recycled, it will return the last issued identifier + 1.
 
 Entity identifiers can only be recycled if they have been deleted with `ecs_delete`. When `ecs_delete` is invoked, the generation count of the entity is increased. The generation is encoded in the entity identifier, which means that any existing entity identifiers with the old generation encoded in it will be considered not alive. Calling a delete multiple times on an entity that is not alive has no effect.
 
-When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. New ids generated from a thread will not be recycled ids, since this would require taking a lock on the administration. While this does not represent a memory leak, it could cause ids to rise over time. If this happens and is an issue, an application should precreate the ids.
+When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. New ids generated from a thread will not be recycled ids, since this would require taking a lock on the administration. While this does not represent a memory leak, it could cause ids to rise over time. If this happens and is an issue, an application should pre-create the ids.
 
 ### Generations
 When an entity is deleted, the generation count for that entity id is increased. The entity generation count enables an application to test whether an entity is still alive or whether it has been deleted, even after the id has been recycled. Consider:
@@ -418,7 +418,7 @@ If the last issued id was higher than 5000, the operation will not cause the las
 ecs_set_entity_range(world, 5000, 10000);
 ```
 
-If invoking `ecs_new` would result in an id higher than `10000`, the application would assert. If `0` is provided for the maximum id, no uppper bound will be enforced.
+If invoking `ecs_new` would result in an id higher than `10000`, the application would assert. If `0` is provided for the maximum id, no upper bound will be enforced.
 
 It is possible for an application to enforce that entity operations (`ecs_add`, `ecs_remove`, `ecs_delete`) are only allowed for the configured range with the `ecs_enable_range_check` operation:
 
@@ -426,7 +426,7 @@ It is possible for an application to enforce that entity operations (`ecs_add`, 
 ecs_enable_range_check(world, true);
 ```
 
-This can be useful for enforcing that an application is not modifying entities that are owned by another datasource.
+This can be useful for enforcing that an application is not modifying entities that are owned by another data source.
 
 
 ## Types
@@ -537,7 +537,7 @@ The `ecs_get` operation returns a const pointer which should not be modified by 
 
 ```c
 Position *p = ecs_get_mut(world, e, Position);
-p->x ++;
+p->x++;
 ecs_modified(world, p, Position);
 ```
 
@@ -545,7 +545,7 @@ ecs_modified(world, p, Position);
 In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro. If an application wants to use the component in another scope, the handle will have to be either declared globally or passed to that scope explicitly.
 
 #### Global component handles
-To globally declare a component, an application can use the `ECS_COMPONENT_DECLARE` and `ECS_COMPONENT_DEFINE` macro's:
+To globally declare a component, an application can use the `ECS_COMPONENT_DECLARE` and `ECS_COMPONENT_DEFINE` macros:
 
 ```c
 // Declare component variable in the global scope
@@ -604,7 +604,7 @@ int main() {
 }
 ```
 
-The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macro's arround functions functions that accept a component id. The following code is equivalent to the previous example:
+The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macros around functions functions that accept a component id. The following code is equivalent to the previous example:
 
 ```c
 typedef struct Position {
@@ -688,7 +688,7 @@ int main() {
     ecs_add(world, e, Enemy);
 
     // Remove the Enemy tag
-    ecs_remove(world, e, Enemy);    
+    ecs_remove(world, e, Enemy);
 }
 ```
 
@@ -731,7 +731,7 @@ int main() {
 }
 ```
 
-Anyone who paid careful attention to this example will notice that the `ecs_add_id` operation accepts two regular entities. 
+Anyone who paid careful attention to this example will notice that the `ecs_add_id` operation accepts two regular entities.
 
 ## Queries
 See the [query manual](Queries.md).
@@ -757,7 +757,7 @@ The implementation of a system is a regular query iteration:
 Position *p = ecs_term(it, Position, 1);
 Velocity *v = ecs_term(it, Velocity, 2);
 
-for (int i = 0; i < it->count, i ++) {
+for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x;
     p[i].y += v[i].y;
 }
@@ -770,7 +770,7 @@ A system provides a `delta_time` which contains the time passed since the last f
 Position *p = ecs_term(it, Position, 1);
 Velocity *v = ecs_term(it, Velocity, 2);
 
-for (int i = 0; i < it->count, i ++) {
+for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x * it->delta_time;
     p[i].y += v[i].y * it->delta_time;
 }
@@ -782,7 +782,7 @@ This is the value passed into `ecs_progress`:
 ecs_progress(world, delta_time);
 ```
 
-If 0 was provided for `delta_time`, flecs will automatically measure the time passed between the last frame and the current. 
+If 0 was provided for `delta_time`, flecs will automatically measure the time passed between the last frame and the current.
 
 A system may also use the `delta_system_time` member, which is the time elapsed since the last time the system was invoked. This can be useful when a system is not invoked each frame, for example when using a timer.
 
@@ -792,7 +792,7 @@ A system may be invoked multiple times per frame. The reason this happens is bec
 The total number of tables a system will iterate over is stored in the `table_count` member of the iterator. Additionally, the `table_offset` member contains the current table being iterated over, so that a system can keep track of where it is in the iteration:
 
 ```c
-void Move(ecs_iter_t *it) { 
+void Move(ecs_iter_t *it) {
     printf("Iterating table %d / %d\n", it->table_offset, it->table_count);
     // ...
 }
@@ -803,7 +803,7 @@ Observers are callbacks that are invoked when one or more events matches the que
 
 When an observer has a query with more than one component, the observer will not match until the entity for which the event is emitted satisfies the entire query.
 
-An exmple of an observer with a single component:
+An example of an observer with a single component:
 
 ```c
 ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
@@ -815,7 +815,7 @@ The implementation of the observer looks similar to a system:
 void AddPosition(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
-    for (int i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it->count; i++) {
         p[i].x = 10;
         p[i].y = 20;
         printf("Position added\n");
@@ -890,7 +890,7 @@ ECS_IMPORT(world, Vehicles);
 ecs_entity_t e = ecs_new(world, Car);
 ```
 
-Module contents are namespaced, which means that the identifiers of the contenst of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
+Module contents are namespaced, which means that the identifiers of the content of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
 
 ```c
 ecs_entity_t car_entity = ecs_lookup_fullpath(world, "vehicles.Car");
@@ -966,7 +966,7 @@ Applications can iterate hierarchies breadth first with the `ecs_scope_iter` API
 ecs_iter_t it = ecs_scope_iter(world, parent);
 
 while(ecs_scope_next(&it)) {
-    for (int i = 0; i < it.count; i ++) {
+    for (int i = 0; i < it.count; i++) {
         ecs_entity_t child = it.entities[i];
         char *path = ecs_get_fullpath(world, child);
         printf(" - %s\n", path);
@@ -1163,7 +1163,7 @@ ecs_get(world, base, Position) != ecs_get(world, e, Position); // 1
 
 // Prints {10, 20}
 const Position *p = ecs_get(world, e, Position);
-printf("{%f, %f}\n", p->x, p->y); 
+printf("{%f, %f}\n", p->x, p->y);
 ```
 
 When an entity shared a component from a base entity, we say that the component is "shared". If the component is not shared, it is "owned". After an entity overrides a component, it will own the component.
@@ -1206,7 +1206,7 @@ ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 // Mark as OVERRIDE. This ensures that when base is derived from, Position is overridden
 ecs_add_id(world, world, Base, ECS_OVERRIDE | ecs_id(Position));
 
-// Create entity from BaseType. This adds the IsA relationship in addition 
+// Create entity from BaseType. This adds the IsA relationship in addition
 // to overriding Position, effectively initializing the Position component for the entity.
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 ```
@@ -1229,7 +1229,7 @@ ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
 
-// Derive from parent, two childs are added to the entity
+// Derive from parent, two children are added to the entity
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
 ```
 
@@ -1241,7 +1241,7 @@ ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_set_name(world, child, "Child"); // Give child a name, so we can look it up
 ecs_set(world, child, Position, {10, 20});
 
-// Derive from parent, two childs are added to the derived entity
+// Derive from parent, two children are added to the derived entity
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
 ecs_entity_t e_child = ecs_lookup_path(world, e, "Child");
 const Position *p = ecs_get(world, e_child, Position);
@@ -1251,7 +1251,7 @@ printf("{%f, %f}\n", p->x, p->y); // Prints {10, 20}
 ecs_get(world, child, Position) != ecs_get(world, e_child, Position); // 1
 ```
 
-Since the children of the derived entitiy have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as `IsA` relationships are also copied over to the child of the derived entity:
+Since the children of the derived entity have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as `IsA` relationships are also copied over to the child of the derived entity:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
@@ -1265,7 +1265,7 @@ ecs_set_name(world, child, "Child");
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_add_pair(world, child, EcsIsA, child_base);
 
-// Inherit from parent, two childs are added to the entity
+// Inherit from parent, two children are added to the entity
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
 ecs_entity_t e_child = ecs_lookup_path(world, e, "Child");
 
@@ -1323,7 +1323,7 @@ ecs_defer_begin(world);
 ecs_defer_end(world);
 ```
 
-The effects of these operations will not be visible until the `ecs_defer_end` operation. 
+The effects of these operations will not be visible until the `ecs_defer_end` operation.
 
 There are a few things to keep in mind when deferring:
 - creating a new entity will always return a new id which increases the last used id counter of the world
@@ -1334,7 +1334,7 @@ There are a few things to keep in mind when deferring:
 ## Staging
 When an application is processing the world (using `ecs_progress`) the world enters a state in which all operations are automatically deferred. This ensures that systems can call regular operations while iterating entities without modifying the underlying storage. The queued operations are merged by default at the end of the frame. When using multiple threads, each thread has its own queue. Queues of different threads are processed sequentially.
 
-By default this means that an application will not see the effects of an operation until the end of a frame. When this is undesirable, an application can add `[in]` and `[out]` anotations to a system signature to force a merging the queues mid-frame. When using multiple threads this will represent a synchronization point. Take this (somewhat contrived) example with two systems, without annotations:
+By default this means that an application will not see the effects of an operation until the end of a frame. When this is undesirable, an application can add `[in]` and `[out]` annotations to a system signature to force a merging the queues mid-frame. When using multiple threads this will represent a synchronization point. Take this (somewhat contrived) example with two systems, without annotations:
 
 ```c
 // Sets velocity using ecs_set
@@ -1350,7 +1350,7 @@ With the following implementation for `SetVelocity`:
 void SetVelocity(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
-    for (int i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it->count; i++) {
         ecs_set(world, it->entities[i], Velocity, {1, 2});
     }
 }
@@ -1377,14 +1377,14 @@ This is interpreted as the system may write any component, and forces a sync poi
 ## Pipelines
 A pipeline defines the different phases that are executed for each frame. By default an application uses the builtin pipeline which has the following phases:
 
-- EcsOnLoad
-- EcsPostLoad
-- EcsPreUpdate
-- EcsOnUpdate
-- EcsOnValidate
-- EcsPostUpdate
-- EcsPreStore
-- EcsOnStore
+- `EcsOnLoad`
+- `EcsPostLoad`
+- `EcsPreUpdate`
+- `EcsOnUpdate`
+- `EcsOnValidate`
+- `EcsPostUpdate`
+- `EcsPreStore`
+- `EcsOnStore`
 
 These phases can be provided as an argument to the `ECS_SYSTEM` macro:
 
@@ -1411,13 +1411,13 @@ ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
 ECS_SYSTEM(world, Collide, Collisions, Position, Velocity);
 ```
 
-Pipelines are implemented using queries that return matching systems. The builtin pipeline has a query that returns systems with a DependsOn relationship on a phase, topology-sorted by the depth in the DependsOn graph:
+Pipelines are implemented using queries that return matching systems. The builtin pipeline has a query that returns systems with a DependsOn relationship on a phase, topology-sorted by the depth in the `DependsOn` graph:
 
 ```c
 flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn))
 ```
 
-Applications can create their own pipelines which fully customize which systems are matched, and in which order they are executed. Custom pipelines can use phases and DependsOn, or they may use a completely different approach. This example shows how to create a pipeline that matches all systems with the `Foo` tag:
+Applications can create their own pipelines which fully customize which systems are matched, and in which order they are executed. Custom pipelines can use phases and `DependsOn`, or they may use a completely different approach. This example shows how to create a pipeline that matches all systems with the `Foo` tag:
 
 ```c
 ECS_TAG(world, Foo);
@@ -1459,7 +1459,7 @@ Custom pipelines can specify their own `order_by` and `group_by` functions. If n
 ## Threading
 Applications can multithread systems by configuring the number of threads for a world. The approach to multithreading is simple, but does not require locks and works well in applications that have "pure" ECS systems, that is systems that only modify the components subscribed for in their signature.
 
-When a world has multiple threads, each thread will run all systems. Each system will ensure that it only processes a subset of the entities that is allocated to the thread. It does this by dividing up each table into slices of equal size, and assigning those slices to the threads. Since entities do not move around inbetween synchronization points, this approach ensures that each entity will always be allocated to the same thread. When systems only access components that are queried for, race conditions cannot occur without relying on locking.
+When a world has multiple threads, each thread will run all systems. Each system will ensure that it only processes a subset of the entities that is allocated to the thread. It does this by dividing up each table into slices of equal size, and assigning those slices to the threads. Since entities do not move around in-between synchronization points, this approach ensures that each entity will always be allocated to the same thread. When systems only access components that are queried for, race conditions cannot occur without relying on locking.
 
 Threads are created when the `ecs_set_threads` function is invoked. An application may change the number of threads by repeatedly invoking this function, as long as the world is not progressing. Threads are not recreated for each frame to reduce the overhead of multithreading. Instead threads will be signalled by the main thread when a frame starts, and the main thread will wait on the threads before ending the frame.
 

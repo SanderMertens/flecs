@@ -431,7 +431,7 @@ const char* ecs_meta_get_member(
     return op->name;
 }
 
-/* Utility macro's to let the compiler do the conversion work for us */
+/* Utility macros to let the compiler do the conversion work for us */
 #define set_T(T, ptr, value)\
     ((T*)ptr)[0] = ((T)value)
 

@@ -88,8 +88,7 @@ This section describes the endpoints of the REST API.
 ```
 /entity/<path>
 ```
-The entity endpoint requests data from an entity. The path is the entity
-path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](JsonFormat.md#entity) type.
+The entity endpoint requests data from an entity. The path is the entity path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](JsonFormat.md#entity) type.
 
 The following parameters can be provided to the endpoint:
 
@@ -173,17 +172,17 @@ Add top-level "ids" array with components as specified by query.
 Add result-specific "ids" array with components as matched. Can be different from top-level "ids" array for queries with wildcards.
 
 **Default**: true
-  
+
 #### **subjects**
 Add result-specific "subjects" array with component source. A 0 element indicates the component is matched on the current (This) entity.
 
 **Default**: true
-    
+
 #### **variables**
 Add result-specific "variables" array with values for variables, if any.
 
 **Default**: true
- 
+
 #### **is_set**
 Add result-specific "is_set" array with boolean elements indicating whether component was matched (used for optional terms).
 
@@ -225,7 +224,7 @@ Include numerical ids for variables.
 Include measurement on how long it took to serialize result.
 
 **Default**: false
-    
+
 #### **type_info**
 Add top-level "type_info" array with reflection data on the type in
 the query. If a query element has a component that has no reflection
@@ -246,8 +245,8 @@ data, a 0 element is added to the array.
 ```
 The stats endpoint returns statistics for a specified category or period. This endpoint requires the monitor module to be imported (see above). The supported categories are:
 
-- world
-- pipeline
+- `world`
+- `pipeline`
 
 The supported periods are:
 

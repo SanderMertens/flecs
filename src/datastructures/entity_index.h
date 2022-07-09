@@ -3,7 +3,7 @@
  * @brief Entity index data structure.
  *
  * The entity index stores the table, row for an entity id. It is implemented as
- * a sparse set. This file contains convenience macro's for working with the
+ * a sparse set. This file contains convenience macros for working with the
  * entity index.
  */
 

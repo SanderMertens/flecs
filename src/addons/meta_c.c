@@ -128,7 +128,7 @@ const char* parse_c_identifier(
     }
 
     while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && ch != '>' && ch != '}') {
-        /* Type definitions can contain macro's or templates */
+        /* Type definitions can contain macros or templates */
         if (ch == '(' || ch == '<') {
             if (!params) {
                 ecs_meta_error(ctx, ptr, "unexpected %c", *ptr);
