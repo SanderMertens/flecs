@@ -17,7 +17,7 @@ A label field returns the doc name of the entity as returned by `ecs_doc_get_nam
 
 Serializing labels requires the [doc](https://flecs.docsforge.com/master/api-doc/) addon.
 
-**Example**: 
+**Example**:
 ```json
 "The Earth"
 ```
@@ -31,7 +31,7 @@ An id field returns a component id or pair. It is formatted as an array of at le
 
 Each element is formatted as a [Path](#path).
 
-**Example**: 
+**Example**:
 ```json
 ["transform.Position"]
 ["Likes", "Apples"]
@@ -41,7 +41,7 @@ Each element is formatted as a [Path](#path).
 ### **Id label**
 Same as [Id](#id) but with [Label](#label)'s instead of paths.
 
-**Example**: 
+**Example**:
 ```json
 ["Entity position"]
 ["Located in", "San Francisco"]
@@ -52,7 +52,7 @@ A JSON object or scalar representing the value of a component. Component values 
 
 When a component has no value (e.g. a tag) or is not described by the reflection framework, `0` will be used as placeholder.
 
-**Example**: 
+**Example**:
 ```json
 {"x": 10, "y": 20}
 ```
@@ -60,7 +60,7 @@ When a component has no value (e.g. a tag) or is not described by the reflection
 ### **Type info**
 A JSON object that represents the structure of a component type.
 
-**Example**: 
+**Example**:
 ```json
 {
     "type_info": [{
@@ -131,9 +131,9 @@ Type: Array([Type info](#type-info)), optional
 Default serializer options:
 ```json
 {
-    "path":"Sun.Earth", 
+    "path":"Sun.Earth",
     "ids":[
-        ["Position"], 
+        ["Position"],
         ["flecs.core.ChildOf", "Sun"],
         ["flecs.core.Identifier", "flecs.core.Name"]
     ]
@@ -143,15 +143,15 @@ Default serializer options:
 This example shows an entity with a base (an `IsA` relationship) with default serializer options:
 ```json
 {
-    "path":"Sun.Earth", 
+    "path":"Sun.Earth",
     "is_a": [{
-        "path":"planets.RockyPlanet", 
+        "path":"planets.RockyPlanet",
         "ids": [
             ["planets.HasRocks"]
         ]
     }],
     "ids":[
-        ["Position"], 
+        ["Position"],
         ["flecs.core.ChildOf", "Sun"],
         ["flecs.core.Identifier", "flecs.core.Name"]
     ]
@@ -162,30 +162,30 @@ This example shows an entity with a base with all serializer options enabled:
 ```json
 {
     "path":"Sun.Earth",
-    "label": "The Earth", 
-    "brief": "The planet you call home", 
+    "label": "The Earth",
+    "brief": "The planet you call home",
     "link": "www.earth.com",
     "is_a": [{
         "path":"planets.RockyPlanet",
-        "label":"A rocky planet", 
+        "label":"A rocky planet",
         "ids": [
-            ["Position"], 
+            ["Position"],
             ["planets.HasRocks"]
         ],
         "id_labels": [
-            ["Position"], 
+            ["Position"],
             ["HasRocks"]
         ],
         "values":[0, 0],
         "hidden":[true, false]
     }],
     "ids":[
-        ["Position"], 
+        ["Position"],
         ["flecs.core.ChildOf", "Sun"],
         ["flecs.core.Identifier", "flecs.core.Name"]
     ],
     "ids_labels":[
-        ["Position"], 
+        ["Position"],
         ["ChildOf", "Sun"],
         ["Identifier", "Name"]
     ],
@@ -292,9 +292,9 @@ Type: Array([Type info](#type-info)), optional
   "ids": ["Position", "Jedi"],
   "results": [{
     "is_set": [true, true],
-    "entities": ["Luke", "Joda"],
+    "entities": ["Luke", "Yoda"],
     "values": [
-      [{ "x": 10, "y": 20 }, 
+      [{ "x": 10, "y": 20 },
        { "x": 20, "y": 30 }],
       0
     ]
@@ -353,7 +353,7 @@ Serializes the ["id_labels"](#id_labels) member.
 
 **Default**: `false`
 
-**Example**: 
+**Example**:
 ```json
 {"id_labels": [["A Rocky Planet"], ["Has surface water"]]}
 ```
@@ -363,10 +363,10 @@ Serializes the ["is_a"](#is_a) member.
 
 **Default**: `true`
 
-**Example**: 
+**Example**:
 ```json
 {"is_a": [{
-    "path":"planets.RockyPlanet", 
+    "path":"planets.RockyPlanet",
     "ids": [
         ["planets.HasRocks"]
     ]
@@ -376,7 +376,7 @@ Serializes the ["is_a"](#is_a) member.
 #### **serialize_private**
 Serialize private components. Private components are regular components with the `EcsPrivate` (or `flecs::Private`) tag. When `serialize_private` is false, private components will be hidden from all arrays.
 
-**Example**: 
+**Example**:
 ```json
 {"ids": ["Position", "PrivateComponent"]}
 ```
@@ -386,7 +386,7 @@ Serialize private components. Private components are regular components with the
 #### **serialize_hidden**
 Serializes the ["hidden"](#hidden) member.
 
-**Example**: 
+**Example**:
 ```json
 {"hidden":[true, false]}
 ```
@@ -394,9 +394,9 @@ Serializes the ["hidden"](#hidden) member.
 Full example:
 ```json
 {
-    "path":"Sun.Earth", 
+    "path":"Sun.Earth",
     "is_a": [{
-        "path":"planets.RockyPlanet", 
+        "path":"planets.RockyPlanet",
         "ids": [
             ["Position"],
             ["planets.HasRocks"]
@@ -404,7 +404,7 @@ Full example:
         "hidden":[true, false]
     }],
     "ids":[
-        ["Position"], 
+        ["Position"],
         ["flecs.core.ChildOf", "Sun"],
         ["flecs.core.Identifier", "flecs.core.Name"]
     ]
@@ -417,7 +417,7 @@ Note that `hidden[0]` is `true` in this example, because the `Position` componen
 #### **serialize_values**
 Serializes the ["values"](#values) member.
 
-**Example**: 
+**Example**:
 ```json
 {"values":[{"x":10, "y": 20}, 0]}
 ```
@@ -427,7 +427,7 @@ Serializes the ["values"](#values) member.
 #### **serialize_type_info**
 Serialize the ["type_info"](#type_info) member.
 
-**Example**: 
+**Example**:
 ```json
 {
     "type_info": [{
@@ -458,7 +458,7 @@ Example result for query `Position, Jedi`
 ```
 
 #### **serialize_ids**
-Serialize the result specific ["ids"](#ids-1) member. 
+Serialize the result specific ["ids"](#ids-1) member.
 
 If the iterated query does not contain variable ids (either an `Or` term or a term with a wildcard id) the result specific `ids` member will exactly match the top-level `ids` member.
 

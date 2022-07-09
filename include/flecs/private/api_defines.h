@@ -2,7 +2,7 @@
  * @file api_defines.h
  * @brief Supporting defines for the public API.
  *
- * This file contains constants / macro's that are typically not used by an
+ * This file contains constants / macros that are typically not used by an
  * application but support the public API, and therefore must be exposed. This
  * header should not be included by itself.
  */
@@ -51,7 +51,7 @@
 /* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
 
-/* Contains macro's for importing / exporting symbols */
+/* Contains macros for importing / exporting symbols */
 #include "../bake_config.h"
 
 #ifdef __cplusplus
@@ -159,7 +159,7 @@ typedef int32_t ecs_size_t;
 #define ecs_observer_t_magic  (0x65637362)
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity id macro's
+//// Entity id macros
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_ROW_MASK                  (0x0FFFFFFFu)
@@ -219,7 +219,7 @@ typedef int32_t ecs_size_t;
 #define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Debug macro's
+//// Debug macros
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLECS_NDEBUG
@@ -232,7 +232,7 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Convenience macro's for ctor, dtor, move and copy
+//// Convenience macros for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLECS_LEGACY

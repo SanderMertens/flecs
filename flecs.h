@@ -67,7 +67,7 @@
 /* FLECS_KEEP_ASSERT keeps asserts in release mode. */
 // #define FLECS_KEEP_ASSERT
 
-/* The following macro's let you customize with which addons Flecs is built.
+/* The following macros let you customize with which addons Flecs is built.
  * Without any addons Flecs is just a minimal ECS storage, but addons add 
  * features such as systems, scheduling and reflection. If an addon is disabled,
  * it is excluded from the build, so that it consumes no resources. By default
@@ -94,7 +94,7 @@
 // #define FLECS_CUSTOM_BUILD
 
 #ifndef FLECS_CUSTOM_BUILD
-// #define FLECS_C          /* C API convenience macro's, always enabled */
+// #define FLECS_C          /* C API convenience macros, always enabled */
 #define FLECS_CPP           /* C++ API */
 #define FLECS_MODULE        /* Module support */
 #define FLECS_PARSER        /* String parser for queries */
@@ -126,7 +126,7 @@
  * @file api_defines.h
  * @brief Supporting defines for the public API.
  *
- * This file contains constants / macro's that are typically not used by an
+ * This file contains constants / macros that are typically not used by an
  * application but support the public API, and therefore must be exposed. This
  * header should not be included by itself.
  */
@@ -346,7 +346,7 @@ extern "C" {
 /* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
 
-/* Contains macro's for importing / exporting symbols */
+/* Contains macros for importing / exporting symbols */
 /*
                                    )
                                   (.)
@@ -493,7 +493,7 @@ typedef int32_t ecs_size_t;
 #define ecs_observer_t_magic  (0x65637362)
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity id macro's
+//// Entity id macros
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ECS_ROW_MASK                  (0x0FFFFFFFu)
@@ -553,7 +553,7 @@ typedef int32_t ecs_size_t;
 #define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Debug macro's
+//// Debug macros
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLECS_NDEBUG
@@ -566,7 +566,7 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Convenience macro's for ctor, dtor, move and copy
+//// Convenience macros for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLECS_LEGACY
@@ -675,8 +675,8 @@ typedef int32_t ecs_size_t;
  * retrieving or computing this size, the functions are wrapped in macro calls
  * that compute the header size at compile time.
  *
- * The API provides a number of _t macro's, which accept a size and alignment.
- * These macro's are used when no compile-time type is available.
+ * The API provides a number of _t macros, which accept a size and alignment.
+ * These macros are used when no compile-time type is available.
  *
  * The vector guarantees contiguous access to its elements. When an element is
  * removed from the vector, the last element is copied to the removed element.
@@ -1816,7 +1816,7 @@ char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
 /* Prefix members of struct with 'ecs_' as some system headers may define 
- * macro's for functions like "strdup", "log" or "_free" */
+ * macros for functions like "strdup", "log" or "_free" */
 
 typedef struct ecs_os_api_t {
     /* API init / deinit */
@@ -7522,14 +7522,14 @@ void* ecs_record_get_column(
 
 /**
  * @file flecs_c.h
- * @brief Extends the core API with convenience functions/macro's for C applications.
+ * @brief Extends the core API with convenience functions/macros for C applications.
  */
 
 #ifndef FLECS_C_
 #define FLECS_C_
 
 /**
- * @defgroup create_macros Macro's that help with creation of ECS objects.
+ * @defgroup create_macros Macros that help with creation of ECS objects.
  * @{
  */
 
@@ -7718,7 +7718,7 @@ void* ecs_record_get_column(
 /** @} */
 
 /**
- * @defgroup function_macros Convenience macro's that wrap ECS operations
+ * @defgroup function_macros Convenience macros that wrap ECS operations
  * @{
  */
 
@@ -7997,7 +7997,7 @@ void* ecs_record_get_column(
 /** @} */
 
 /**
- * @defgroup utilities Utility macro's for commonly used operations
+ * @defgroup utilities Utility macros for commonly used operations
  * @{
  */
 
@@ -8008,7 +8008,7 @@ void* ecs_record_get_column(
 /** @} */
 
 /**
- * @defgroup temporary_macros Temp macro's for easing the transition to v3
+ * @defgroup temporary_macros Temp macros for easing the transition to v3
  * @{
  */
 
@@ -8096,7 +8096,7 @@ void* ecs_record_get_column(
 #endif // FLECS_NO_REST
 #endif // ECS_TARGET_EM
 
-/* Blacklist macro's */
+/* Blacklist macros */
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
@@ -8167,7 +8167,7 @@ void* ecs_record_get_column(
 #undef FLECS_REST
 #endif
 
-/* Always included, if disabled log functions are replaced with dummy macro's */
+/* Always included, if disabled log functions are replaced with dummy macros */
 /**
  * @file log.h
  * @brief Logging addon.
@@ -8254,7 +8254,7 @@ const char* ecs_strerror(
 #else // FLECS_LOG
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Dummy macro's for when logging is disabled
+//// Dummy macros for when logging is disabled
 ////////////////////////////////////////////////////////////////////////////////
 
 #define _ecs_deprecated(file, line, msg)\
@@ -8328,10 +8328,10 @@ void _ecs_parser_errorv(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Logging Macro's
+//// Logging macros
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY /* C89 doesn't support variadic macro's */
+#ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
 
 /* Base logging function. Accepts a custom level */
 #define ecs_log(level, ...)\
@@ -8374,7 +8374,7 @@ void _ecs_parser_errorv(
 #endif // !(defined(FLECS_LOG_0) || defined(FLECS_LOG_1) || defined(FLECS_LOG_2) || defined(FLECS_LOG_3))
 
 
-/* Define/undefine macro's based on compiled-in tracing level. This can optimize
+/* Define/undefine macros based on compiled-in tracing level. This can optimize
  * out tracing statements from a build, which improves performance. */
 
 #if defined(FLECS_LOG_3) /* All debug tracing enabled */
@@ -8563,7 +8563,7 @@ void _ecs_parser_errorv(
 
 /** Enable or disable tracing.
  * This will enable builtin tracing. For tracing to work, it will have to be
- * compiled in which requires defining one of the following macro's:
+ * compiled in which requires defining one of the following macros:
  *
  * FLECS_LOG_0 - All tracing is disabled
  * FLECS_LOG_1 - Enable tracing level 1
@@ -11550,7 +11550,7 @@ const char *ecs_parse_expr_token(
 #endif
 /**
  * @file meta_c.h
- * @brief Utility macro's for populating reflection data in C.
+ * @brief Utility macros for populating reflection data in C.
  */
 
 #ifdef FLECS_META_C
@@ -11690,7 +11690,7 @@ int ecs_meta_from_desc(
     FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
 
 
-/* Symbol export utility macro's */
+/* Symbol export utility macros */
 #if defined(ECS_TARGET_WINDOWS)
 #define FLECS_META_C_EXPORT __declspec(dllexport)
 #define FLECS_META_C_IMPORT __declspec(dllimport)

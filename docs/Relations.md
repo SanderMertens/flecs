@@ -78,12 +78,12 @@ auto q = world.query("(Eats, *)");
 auto q = world.query_builder<>()
   .term(Eats, Apples)
   .build();
-  
+
 // Or when using pair types, when both relation & object are compile time types:
-auto q = world.query<flecs::pair<Eats, Apples>>();  
+auto q = world.query<flecs::pair<Eats, Apples>>();
 ```
 
-This example just shows a simple relation query. Relation queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relation queries see the [Query manual](Queries.md).
+This example just shows a simple relation query. Relation queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relation queries see the [query manual](Queries.md).
 
 ## Relation components
 So far we've just seen relations with regular entities. When used in combination with components, relations can be associated with data:
@@ -129,12 +129,12 @@ auto r = delorean.get<RequiresGigaWatts>();
 cout << r->value << " gigawatts!" << endl;
 ```
 
-An advantage of the `flecs::pair` template is that it can be used with function-style get/set operations:
+An advantage of the `flecs::pair` template is that it can be used with function-style `get`/`set` operations:
 
 ```cpp
 // rvalue required as API converts value from 'Requires' to 'RequiresGigawatts'
 e.set([](RequiresGigawatts&& r) {
-  r->value = 1.21; // Overloaded '->' operator to get the pair value 
+  r->value = 1.21; // Overloaded '->' operator to get the pair value
 })
 
 e.get([](const RequiresGigawatts& r) {
@@ -241,9 +241,9 @@ while (ecs_query_next(&it)) {
   ecs_entity_t obj = ecs_pair_second(world, id);
 
   for (int i = 0; i < it.count; it++) {
-    printf("entity %d has relation %s, %s\n", 
+    printf("entity %d has relation %s, %s\n",
       it.entities[i],
-      ecs_get_name(world, rel), 
+      ecs_get_name(world, rel),
       ecs_get_name(world, obj));
   }
 }
@@ -365,10 +365,10 @@ auto GrannySmith = world.entity();
 GrannySmith.add(flecs::IsA, Apple);
 ```
 
-This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relation. See the [section on Transitivity](#transitive-property) for more details.
+This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationship is called "transitivity" and it is a feature that can be applied to any relation. See the [section on Transitivity](#transitive-property) for more details.
 
 #### Component sharing
-An entity with an `IsA` relation to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the supserset contains (its components, tags, relations) must also be found on the subsets. Consider:
+An entity with an `IsA` relation to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the superset contains (its components, tags, relations) must also be found on the subsets. Consider:
 
 ```c
 ecs_entity_t Spaceship = ecs_new_id(world);
@@ -441,7 +441,7 @@ s->value == 200; // true
 
 // Obtain the inherited component from Frigate
 const Defense *d = Frigate.get<Defense>();
-d->value == 75; // true  
+d->value == 75; // true
 ```
 
 This ability to inherit and override components is one of the key enabling features of Flecs prefabs, and is further explained in the [Inheritance section](Manual.md#Inheritance) of the manual.
@@ -507,8 +507,8 @@ In some scenarios a number of entities all need to be created with the same pare
 ecs_entity_t parent = ecs_new_id(world);
 ecs_entity_t prev = ecs_set_scope(world, parent);
 
-// Note that we're not using the ecs_new_id function for the children. This 
-// function only generates a new id, and does not add the scope to the entity. 
+// Note that we're not using the ecs_new_id function for the children. This
+// function only generates a new id, and does not add the scope to the entity.
 ecs_entity_t child_a = ecs_new(world, 0);
 ecs_entity_t child_b = ecs_new(world, 0);
 
@@ -532,7 +532,7 @@ child_a.has(flecs::ChildOf, parent); // true
 child_b.has(flecs::ChildOf, parent); // true
 ```
 
-Scopes in C++ can also be used with the `scope` function on an entity, which accepts a (typcially lambda) function:
+Scopes in C++ can also be used with the `scope` function on an entity, which accepts a (typically lambda) function:
 
 ```cpp
 auto parent = world.entity().scope([&]{
@@ -586,7 +586,7 @@ This succeeds in removing all possible references to `Archer`. Sometimes this be
 
 We also want to specify this per relationship. If an entity has `(Likes, parent)` we may not want to delete that entity, meaning the cleanup we want to perform for `Likes` and `ChildOf` may not be the same.
 
-This is what cleanup policies are for: to specify which action needs to be executed under which condition. They are applied _to_ entities that have a reference to the entity being deleted: if I delete the `Archer` tag I remove the tag _from_ all entities that have it. 
+This is what cleanup policies are for: to specify which action needs to be executed under which condition. They are applied _to_ entities that have a reference to the entity being deleted: if I delete the `Archer` tag I remove the tag _from_ all entities that have it.
 
 To configure a cleanup policy for an entity, a `(Condition, Action)` pair can be added to it. If no policy is specified, the default cleanup action (`Remove`) is performed.
 
@@ -710,11 +710,11 @@ To understand why some ways to organize entities work better than others, having
 1. **Find all root entities**
 World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship.
 
-2. **Filter out modules, components, observers and systems** 
+2. **Filter out modules, components, observers and systems**
 This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
 
 3. **Filter out entities that have no children**
-If entities have no children they cannot cause complex cleanup logic. This also decreases the likelyhood of initiating cleanup actions that could impact other entities.
+If entities have no children they cannot cause complex cleanup logic. This also decreases the likelihood of initiating cleanup actions that could impact other entities.
 
 4. **Delete root entities**
 The root entities that were not filtered out will be deleted.
@@ -756,7 +756,7 @@ struct Position {
 
 auto e = ecs.entity()
   .set<Position>({10, 20})
-  .add<Serializable, Position>(); // Because Serializable is a tag, the pair 
+  .add<Serializable, Position>(); // Because Serializable is a tag, the pair
                                   // has a value of type Position
 
 // Gets value from Position component
@@ -906,7 +906,7 @@ ecs_add_id(world, LocatedIn, Transitive);
 LocatedIn.add(flecs::Transitive);
 ```
 
-When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
+When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the [Transitivity section in the query manual](Queries.md#Transitivity).
 
 ### Reflexive property
 A relation can be marked reflexive which means that a query like `Relation(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:
@@ -928,8 +928,7 @@ IsA(Tree, Tree)
 - Yes, even though Tree does not have (IsA, Tree)
 ```
 
-However, this does not apply to all relations. Consider a dataset with a 
-`LocatedIn` relation:
+However, this does not apply to all relations. Consider a dataset with a `LocatedIn` relation:
 
 ```
 LocatedIn(SanFrancisco, UnitedStates)
@@ -1004,13 +1003,13 @@ flecs::entity e = world.entity().add(Movement, Running);
 e.add(Movement, Walking); // replaces (Movement, Running)
 ```
 
-When compared to reguar relationships, union relationships have some differences and limitations:
+When compared to regular relationships, union relationships have some differences and limitations:
 - Relationship cleanup does not work yet for union relations
 - Removing a union relationship removes any target, even if the specified target is different
 - Filters and rules do not support union relationships
 - Union relationships cannot have data
-- Union relationship query terms can only use the And operator
-- Queries with a (R, *) term will return (R, *) as term id for each entity
+- Union relationship query terms can only use the `And` operator
+- Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
 
 ### Symmetric property
 The `Symmetric` property enforces that when a relation `(R, Y)` is added to entity `X`, the relation `(R, X)` will be added to entity `Y`. The reverse is also true, if relation `(R, Y)` is removed from `X`, relation `(R, X)` will be removed from `Y`.
@@ -1068,7 +1067,7 @@ auto e = world.entity().add(Loves, Pears);
 ```
 
 ### OneOf property
-The `OneOf` property enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to either indicate that the target needs to be a child of the relation (common for enum relationships), or of another entity. 
+The `OneOf` property enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to either indicate that the target needs to be a child of the relation (common for enum relationships), or of another entity.
 
 The following example shows how to constrain the relationship target to a child of the relation:
 

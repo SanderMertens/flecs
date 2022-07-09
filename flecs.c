@@ -32,7 +32,7 @@
  * @brief Entity index data structure.
  *
  * The entity index stores the table, row for an entity id. It is implemented as
- * a sparse set. This file contains convenience macro's for working with the
+ * a sparse set. This file contains convenience macros for working with the
  * entity index.
  */
 
@@ -25532,7 +25532,7 @@ const char* ecs_meta_get_member(
     return op->name;
 }
 
-/* Utility macro's to let the compiler do the conversion work for us */
+/* Utility macros to let the compiler do the conversion work for us */
 #define set_T(T, ptr, value)\
     ((T*)ptr)[0] = ((T)value)
 
@@ -34889,7 +34889,7 @@ const char* parse_c_identifier(
     }
 
     while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && ch != '>' && ch != '}') {
-        /* Type definitions can contain macro's or templates */
+        /* Type definitions can contain macros or templates */
         if (ch == '(' || ch == '<') {
             if (!params) {
                 ecs_meta_error(ctx, ptr, "unexpected %c", *ptr);
@@ -46417,7 +46417,7 @@ ecs_table_t* ecs_table_remove_id(
 
 #include <stddef.h>
 
-/* Utility macro's to enforce consistency when initializing iterator fields */
+/* Utility macros to enforce consistency when initializing iterator fields */
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */

@@ -2,7 +2,7 @@ Queries are the mechanism that allow applications to get the entities that match
 
 **NOTE**: this manual describes queries as they are intended to work. The actual implementation may not have support for certain combinations of features. When an application attempts to use a feature that is not yet supported, an `UNSUPPORTED` error will be thrown.
 
-**NOTE**: features that rely on query variables or automatic substitution of components or objects (like when relying on component inheritance or transitive queries) require the rule query engine, included in the FLECS_RULES addon.
+**NOTE**: features that rely on query variables or automatic substitution of components or objects (like when relying on component inheritance or transitive queries) require the rule query engine, included in the `FLECS_RULES` addon.
 
 ## Query kinds
 Flecs has two different kinds of queriers: cached and uncached. The differences are described here. Note that when "query" is mentioned in the other parts of the manual it always refers to all query kinds, unless explicitly mentioned otherwise.
@@ -191,7 +191,7 @@ q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
 });
 ```
 
-Note how the iter function provides direct access to the component arrays. 
+Note how the iter function provides direct access to the component arrays.
 
 The iter callback can obtain access to components that are not part of the query type:
 
@@ -224,8 +224,8 @@ q.iter([](flecs::iter& it) {
   auto likes = it.id(1);
 
   // Extract the object from the pair
-  std::cout << "Entities like " 
-    << likes.second().name() 
+  std::cout << "Entities like "
+    << likes.second().name()
     << std::endl;
 });
 ```
@@ -263,7 +263,7 @@ while (ecs_query_next(&it)) {
   Position *p = ecs_term(&it, Position, 1);
   Velocity *v = ecs_term(&it, Velocity, 2);
 
-  for (int i = 0; i < it.count; i ++) {
+  for (int i = 0; i < it.count; i++) {
     p[i].x += v[i].x;
     p[i].y += v[i].y;
   }
@@ -330,7 +330,7 @@ Applications iterate a sorted query in the same way they would iterate a regular
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
 
-    for (int i = 0; i < it.count; i ++) {
+    for (int i = 0; i < it.count; i++) {
         printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order
     }
 }
@@ -339,7 +339,7 @@ while (ecs_query_next(&it)) {
 ### Sorting algorithm
 The algorithm used for the sort is a quicksort. Each table that is matched with the query will be sorted using a quicksort. As a result, sorting one query affects the order of entities in another query. However, just sorting tables is not enough, as the list of ordered entities may have to jump between tables. For example:
 
-Entitiy | Components (table) | Value used for sorting
+Entity  | Components (table) | Value used for sorting
 --------|--------------------|-----------------------
 E1      | Position           | 1
 E2      | Position           | 3
@@ -441,7 +441,7 @@ Position, ?Velocity // Position And Optionally Velocity
 
 Optional arguments, while they do not impact query matching, are useful as they provide a quicker way to access the optional component than using `e.get<T>()`. Optional components are faster because of three reasons:
 
-1) Queries iterate archetypes, and if an archetype does not have the optional component, none of the entities in the archetype do. 
+1) Queries iterate archetypes, and if an archetype does not have the optional component, none of the entities in the archetype do.
 
 2) When an archetype does have the optional component, the query can access it as an array, just like a regular component.
 
@@ -466,7 +466,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
 ```
 
 #### Or operator
-The Or operator instructs a query to match _at least_ one term out of a list of terms that are chained together by the operator. Here is a simple example of a query with an `Or` operator:
+The `Or` operator instructs a query to match _at least_ one term out of a list of terms that are chained together by the operator. Here is a simple example of a query with an `Or` operator:
 
 ```c
 Position || Velocity // Position Or Velocity
@@ -502,7 +502,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
 Note that both in the builder and descriptor APIs, each term that participates in an `Or` chain must specify the `Or` operator.
 
 #### AndFrom, OrFrom, NotFrom operators
-The *From operators allow a query to match against an external list of components with the `And`, `Or` or `Not` operator. This list of components is specified as a type entity. For example, if an application has the following type entity:
+The `*From` operators allow a query to match against an external list of components with the `And`, `Or` or `Not` operator. This list of components is specified as a type entity. For example, if an application has the following type entity:
 
 ```cpp
 auto Ingredients = world.type("Ingredients")
@@ -597,7 +597,7 @@ Here `Position` is the predicate, and `Bob` is the subject. If `Bob` has `Positi
 The term "subject" is borrowed from English grammar. In the sentence "Bob has component Position", "Bob" is the subject.
 
 ### This
-"This" is the placeholder for an entity (or archetype) being evaluated by a query. When a query is looking for all matching results, it will iterate the set of entities that represent a potential match, and pass each entity (or archetype) as "This" to each term. By default "This" is used as the subject for each predicate. Thus a simple query like this:
+`This` is the placeholder for an entity (or archetype) being evaluated by a query. When a query is looking for all matching results, it will iterate the set of entities that represent a potential match, and pass each entity (or archetype) as "This" to each term. By default `This` is used as the subject for each predicate. Thus a simple query like this:
 
 ```
 Position, Velocity
@@ -691,7 +691,7 @@ auto qb = world.query_builder<>()
   .term(Likes, Apples);
 
 auto qb = world.query_builder<>()
-  .term<Likes>(Apples); 
+  .term<Likes>(Apples);
 ```
 
 In the query descriptor API relations can be specified as pairs:
@@ -905,7 +905,7 @@ Variables can occur in multiple places. For example, this query returns all the 
 (Likes, $X), ($R, $X)
 ```
 
-A useful application for variables is ensuring that an entity has a component referenced by a relationship. Consider an application that has an `ExpiryTimer` relationship that removes a component after a certain time has expired. This logic only needs to be executed when the entity actually has the component to remove. 
+A useful application for variables is ensuring that an entity has a component referenced by a relationship. Consider an application that has an `ExpiryTimer` relationship that removes a component after a certain time has expired. This logic only needs to be executed when the entity actually has the component to remove.
 
 With variables this can be ensured:
 
@@ -970,7 +970,7 @@ def find_object_w_component(This, Component):
 ```
 
 ### Parent components
-Queries may use the `parent` shortcut to select components from a parent entity which is short for `super(ChildOf)` /This query:
+Queries may use the `parent` shortcut to select components from a parent entity which is short for `super(ChildOf)` /`This` query:
 
 ```
 Position(parent)
@@ -1149,7 +1149,7 @@ To understand how transitivity is implemented, we need to look at how queries in
 (LocatedIn, SanFrancisco)
 ```
 
-To find whether the subject should match this term, it should not just consider `(LocatedIn, SanFrancisco)`, but also `(LocatedIn, Mision)` and `(LocatedIn, SOMA)`. To achieve this, a query will insert an implicit substitution on the object, when the relation is transitive:
+To find whether the subject should match this term, it should not just consider `(LocatedIn, SanFrancisco)`, but also `(LocatedIn, Mission)` and `(LocatedIn, SOMA)`. To achieve this, a query will insert an implicit substitution on the object, when the relation is transitive:
 
 ```
 (LocatedIn, SanFrancisco[self|sub(LocatedIn)])

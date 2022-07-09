@@ -19,7 +19,7 @@
 #endif // FLECS_NO_REST
 #endif // ECS_TARGET_EM
 
-/* Blacklist macro's */
+/* Blacklist macros */
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
@@ -90,7 +90,7 @@
 #undef FLECS_REST
 #endif
 
-/* Always included, if disabled log functions are replaced with dummy macro's */
+/* Always included, if disabled log functions are replaced with dummy macros */
 #include "flecs/addons/log.h"
 
 #ifdef FLECS_MONITOR

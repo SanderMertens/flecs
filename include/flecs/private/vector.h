@@ -11,8 +11,8 @@
  * retrieving or computing this size, the functions are wrapped in macro calls
  * that compute the header size at compile time.
  *
- * The API provides a number of _t macro's, which accept a size and alignment.
- * These macro's are used when no compile-time type is available.
+ * The API provides a number of _t macros, which accept a size and alignment.
+ * These macros are used when no compile-time type is available.
  *
  * The vector guarantees contiguous access to its elements. When an element is
  * removed from the vector, the last element is copied to the removed element.

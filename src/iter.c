@@ -1,7 +1,7 @@
 #include "private_api.h"
 #include <stddef.h>
 
-/* Utility macro's to enforce consistency when initializing iterator fields */
+/* Utility macros to enforce consistency when initializing iterator fields */
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */

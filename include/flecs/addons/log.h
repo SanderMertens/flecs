@@ -84,7 +84,7 @@ const char* ecs_strerror(
 #else // FLECS_LOG
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Dummy macro's for when logging is disabled
+//// Dummy macros for when logging is disabled
 ////////////////////////////////////////////////////////////////////////////////
 
 #define _ecs_deprecated(file, line, msg)\
@@ -158,10 +158,10 @@ void _ecs_parser_errorv(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Logging Macro's
+//// Logging macros
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY /* C89 doesn't support variadic macro's */
+#ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
 
 /* Base logging function. Accepts a custom level */
 #define ecs_log(level, ...)\
@@ -204,7 +204,7 @@ void _ecs_parser_errorv(
 #endif // !(defined(FLECS_LOG_0) || defined(FLECS_LOG_1) || defined(FLECS_LOG_2) || defined(FLECS_LOG_3))
 
 
-/* Define/undefine macro's based on compiled-in tracing level. This can optimize
+/* Define/undefine macros based on compiled-in tracing level. This can optimize
  * out tracing statements from a build, which improves performance. */
 
 #if defined(FLECS_LOG_3) /* All debug tracing enabled */
@@ -393,7 +393,7 @@ void _ecs_parser_errorv(
 
 /** Enable or disable tracing.
  * This will enable builtin tracing. For tracing to work, it will have to be
- * compiled in which requires defining one of the following macro's:
+ * compiled in which requires defining one of the following macros:
  *
  * FLECS_LOG_0 - All tracing is disabled
  * FLECS_LOG_1 - Enable tracing level 1

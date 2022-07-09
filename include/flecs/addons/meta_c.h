@@ -1,6 +1,6 @@
 /**
  * @file meta_c.h
- * @brief Utility macro's for populating reflection data in C.
+ * @brief Utility macros for populating reflection data in C.
  */
 
 #ifdef FLECS_META_C
@@ -140,7 +140,7 @@ int ecs_meta_from_desc(
     FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
 
 
-/* Symbol export utility macro's */
+/* Symbol export utility macros */
 #if defined(ECS_TARGET_WINDOWS)
 #define FLECS_META_C_EXPORT __declspec(dllexport)
 #define FLECS_META_C_IMPORT __declspec(dllimport)

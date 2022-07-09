@@ -8,7 +8,7 @@ typedef struct {
     char *value; // Pointer to external memory
 } String;
 
-// Resource management hooks. The convenience macro's hide details of
+// Resource management hooks. The convenience macros hide details of
 // the callback signature, while allowing hooks to be called on multiple 
 // entities.
 

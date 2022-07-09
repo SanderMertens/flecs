@@ -190,14 +190,14 @@ e.has(Enemy); // false!
 
 Note that both options in the C++ example achieve the same effect. The only difference is that in option 1 the tag is fixed at compile time, whereas in option 2 the tag can be created dynamically at runtime.
 
-When a tag is deleted, the same rules apply as for components (see [Relation cleanup properties](Relations.md#relation_cleanup_properties)).
+When a tag is deleted, the same rules apply as for components (see [relation cleanup properties](Relations.md#relation_cleanup_properties)).
 
 ## Pair
 A pair is a combination of two entity ids. Pairs can be used to store entity relations, where the first id represents the relation kind and the second id represents the relation target (called "object"). This is best explained by an example:
 
 ```c
 // Create Likes relation
-ecs_entity_t Likes = ecs_new_id(world); 
+ecs_entity_t Likes = ecs_new_id(world);
 
 // Create a small graph with two entities that like each other
 ecs_entity_t Bob = ecs_new_id(world);
@@ -280,7 +280,7 @@ ecs_entity_t o = ecs_get_object(world, Alice, Likes, 0); // Returns Bob
 auto o = Alice.get_object<Likes>(); // Returns Bob
 ```
 
-Entity relations enable lots of interesting patterns and possibilities. Make sure to check out the [Relations manual](Relations.md).
+Entity relations enable lots of interesting patterns and possibilities. Make sure to check out the [relations manual](Relations.md).
 
 ## Hierarchies
 Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `flecs::ChildOf`, in C++) relationship. A hierarchy can be created with the regular relationship API, or with the `child_of` shortcut in C++:
@@ -340,7 +340,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         { ecs_id(Position), .subj.set = {
             .mask = EcsCascade,    // Force breadth-first order
             .relation = EcsChildOf // Use ChildOf relation for ordering
-        }} 
+        }}
     }
 });
 
@@ -348,7 +348,7 @@ ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
     Position *p_parent = ecs_term(&it, Position, 2);
-    for (int i = 0; i < it.count; i ++) {
+    for (int i = 0; i < it.count; i++) {
         // Do the thing
     }
 }
@@ -422,7 +422,7 @@ std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 A type can also be iterated by an application:
 ```c
 const ecs_type_t *type = ecs_get_type(world, e);
-for (int i = 0; i < type->count; i ++) {
+for (int i = 0; i < type->count; i++) {
     if (type->array[i] == ecs_id(Position)) {
         // Found Position component!
     }
@@ -479,7 +479,7 @@ while (ecs_term_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
 
     // Iterate the entities & their Position components
-    for (int i = 0; i < it.count; i ++) {
+    for (int i = 0; i < it.count; i++) {
         printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]),
             p[i].x, p[i].y);
     }
@@ -513,7 +513,7 @@ while (ecs_filter_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
 
     // Iterate all entities for the type
-    for (int i = 0; i < it.count; i ++) {
+    for (int i = 0; i < it.count; i++) {
         printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]),
             p[i].x, p[i].y);
     }
@@ -541,13 +541,13 @@ f.each([](flecs::entity e, Position& p) {
 // Option 2: iter() function that iterates each archetype
 f.iter([](flecs::iter& it, Position *p) {
     for (int i : it) {
-        std::cout << e.name() 
+        std::cout << e.name()
             << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
     }
 });
 ```
 
-The time complexity of a filter is roughly O(n), where n is the number of archetypes matched by the term with the smallest number of matching archetypes. Each subsequent term adds a constant-time check per archetype, which makes the average time complexity O(n).
+The time complexity of a filter is roughly `O(n)`, where `n` is the number of archetypes matched by the term with the smallest number of matching archetypes. Each subsequent term adds a constant-time check per archetype, which makes the average time complexity `O(n)`.
 
 Filters can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
 
@@ -626,7 +626,7 @@ void Move(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
     Velocity *v = ecs_term(it, Velocity, 2);
 
-    for (int i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x * it->delta_time;
         p[i].y += v[i].y * it->delta_time;
     }
@@ -744,7 +744,7 @@ Observers are callbacks that are invoked when one or more events matches the que
 
 When an observer has a query with more than one component, the observer will not be invoked until the entity for which the event is emitted satisfies the entire query.
 
-An exmple of an observer with two components:
+An example of an observer with two components:
 
 ```c
 ecs_observer_init(world, &(ecs_observer_desc_t){

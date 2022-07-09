@@ -4,7 +4,7 @@
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    // Use convenience macro's to create simple hierarchy of unit types.
+    // Use convenience macros to create simple hierarchy of unit types.
     // This macro call:
     //   ECS_ENTITY(ecs, CombatUnit, (IsA, Unit))
     //

@@ -13,7 +13,7 @@ As long as the application is implemented in C or C++, it can use Flecs. Flecs h
 No. Flecs provides an efficient way to store your game data and run game logic, but beyond that it does not provide the features you would typically expect in a game engine, such as rendering, input management, physics and so on.
 
 ### Why is Flecs written in C?
-One of the main goals of Flecs is portability. Even though new operating systems support the most recent (and future!) versions of the C and C++ language standards, Flecs is used in a number of legacy systems that do not support modern C/C++. Additionally, the C API is easier to embed in existing frameworks and languages as it provides low-level untyped acces to component arrays, and doesn't require wrapping of template-heavy APIs.
+One of the main goals of Flecs is portability. Even though new operating systems support the most recent (and future!) versions of the C and C++ language standards, Flecs is used in a number of legacy systems that do not support modern C/C++. Additionally, the C API is easier to embed in existing frameworks and languages as it provides low-level untyped access to component arrays, and doesn't require wrapping of template-heavy APIs.
 
 ### Should I use the C or C++ API?
 It depends. The C++ API is slightly easier to work with as it reduces the amount of boilerplate code significantly. On the other hand, the C API is easier to embed in other frameworks and can more easily be ported to different platforms.
@@ -39,36 +39,36 @@ Alternatively you can define `flecs_STATIC` in the build configuration of your p
 You can ask questions on the [Discord channel](https://discord.gg/trycKxA), or by creating an issue in the repository.
 
 ### What is an archetype?
-The term "archetype" in ECS is typically (though not universally) used to describe the approach an ECS framework uses for storing components. Contrary to what the term might suggest, an "archetype" is typically not somtething you would see in the ECS API, but rather the data structure the ECS framework to store components.
+The term "archetype" in ECS is typically (though not universally) used to describe the approach an ECS framework uses for storing components. Contrary to what the term might suggest, an "archetype" is typically not something you would see in the ECS API, but rather the data structure the ECS framework to store components.
 
 An ECS that implements the archetype storage model stores entities with the same components together in the same set of component arrays (or array, depending on whether the framework uses SoA or AoS). The advantage of this approach is that it guarantees that components are always stored in packed arrays, which allows for code to be more easily vectorized by compilers (or in plain language: code runs faster).
 
 The Flecs storage model is based on the archetypes approach.
 
 ### What is a table?
-The documentation uses the terms archetype and table interchangably. They are the same. Internally in the Flecs source code an archetype is referred to as a table.
+The documentation uses the terms archetype and table interchangeably. They are the same. Internally in the Flecs source code an archetype is referred to as a table.
 
 ## Development questions
 
 ### Why is my system called multiple times per frame?
-Flecs stores entities with the same set of components in the same arrays in an "archetype". This means that entities with `Position` are stored in different arrays than entities with `Position, Velocity`. 
+Flecs stores entities with the same set of components in the same arrays in an "archetype". This means that entities with `Position` are stored in different arrays than entities with `Position, Velocity`.
 
 Because Flecs systems provide direct access to C arrays, a system is invoked multiple times, once for each set of arrays.
 
 ### Why is the value of a component not set in an OnAdd observer?
-The OnAdd observer is invoked before the component value is assigned. If you need to respond to a component value, use an `OnSet` system. For more information on when observers, monitors and OnSet systems are invoked, see this diagram: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component-add-flow
+The `OnAdd` observer is invoked before the component value is assigned. If you need to respond to a component value, use an `OnSet` system. For more information on when observers, monitors and `OnSet` systems are invoked, see [this diagram](Manual.md#component-add-flow).
 
 ### Why does Flecs abort when I try to use threads?
 Flecs has an operating system abstraction API with threading functions that are not set by default. Check (or use) the OS API examples to see how to set the OS API.
 
 ### Why am I getting errors like FLECS__TPosition or FLECS_EPosition not found?
-Flecs functions need access to component handles before they can do anything. In C++ this is abstracted away behind templates, but in the C API this is the responsibility of the application. See [this section of the manual](https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#component_handles) on how to pass component handles around in the application.
+Flecs functions need access to component handles before they can do anything. In C++ this is abstracted away behind templates, but in the C API this is the responsibility of the application. See [this section of the manual](Manual.md#component_handles) on how to pass component handles around in the application.
 
 ### How do I pass component handles around in an application?
 See the previous question.
 
 ### When to use each vs. iter when evaluating a query or system?
-Queries and systems offer two ways to iterate them, which is using `each` and `iter`. Each is the simpler version of the two, which iterates each individual entity: 
+Queries and systems offer two ways to iterate them, which is using `each` and `iter`. `each` is the simpler version of the two, which iterates each individual entity:
 
 ```cpp
 world.system<Position, Velocity>()
@@ -78,7 +78,7 @@ world.system<Position, Velocity>()
     });
 ```
 
-Iter is more complex, but is faster to evaluate and allows for more control over how the loop is executed:
+`iter` is more complex, but is faster to evaluate and allows for more control over how the loop is executed:
 
 ```cpp
 world.system<Position, Velocity>()
@@ -128,8 +128,7 @@ q.iter([](flecs::iter& it) {
 So in short, for simple queries, use template parameters. For complex queries, use strings.
 
 ### How do I attach resources to a system?
-If you want to attach data to a system, you can specify a `ctx` parameter in the
-`ecs_system_desc_t` struct parameter passed to the `ecs_system_init` function:
+If you want to attach data to a system, you can specify a `ctx` parameter in the `ecs_system_desc_t` struct parameter passed to the `ecs_system_init` function:
 
 ```c
 ecs_system_init(world, &(ecs_system_init_t){
@@ -139,8 +138,7 @@ ecs_system_init(world, &(ecs_system_init_t){
 });
 ```
 
-Alternatively, if you use the ECS_SYSTEM macro you can use `ecs_system_init`
-with the handle to the existing system to set the context:
+Alternatively, if you use the ECS_SYSTEM macro you can use `ecs_system_init` with the handle to the existing system to set the context:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, Velocity);
@@ -151,8 +149,7 @@ ecs_system_init(world, &(ecs_system_init_t) {
 })
 ```
 
-This variable will now be accessible through the `ctx` member of the system 
-iterator:
+This variable will now be accessible through the `ctx` member of the system iterator:
 
 ```c
 void MySystem(ecs_iter_t *it) {
@@ -174,7 +171,7 @@ sys.ctx(another_ptr);
 ```
 
 ### Why is my system (or query) unable to find a component from a module?
-When you import a module, components are automatically namespaced to prevent nameclashes between modules. In C this namespace is determined by taking the name of the module and convert it from PascalCase to a dot-separated notation, so that `MyModule` becomes `my.module`. If component `Position` is defined in module `MyModule`, a system or query will need to use `my.module.Position` in the query expression.
+When you import a module, components are automatically namespaced to prevent name clashes between modules. In C this namespace is determined by taking the name of the module and convert it from PascalCase to a dot-separated notation, so that `MyModule` becomes `my.module`. If component `Position` is defined in module `MyModule`, a system or query will need to use `my.module.Position` in the query expression.
 
 In C++ the component name is prefixed by the C++ namespace, so that `my::module::Position` in C++ becomes `my.module.Position` in the query expression. Note that this only needs to be specified this way when providing a query expression as a string.
 
@@ -195,7 +192,7 @@ ecs_run(world, MySystem, delta_time, &some_param);
 No, a query for `Position, Velocity` matches with the same entities as `Velocity, Position`.
 
 ### Can I add/remove components in a system?
-Yes, you can use the regular add/remove functions in systems. Note however that these operations will not have an immediate effect, as they are _deferred_ until the end of the frame. See this diagram on staging for more information: https://github.com/SanderMertens/flecs/blob/master/docs/Manual.md#staging-flow
+Yes, you can use the regular add/remove functions in systems. Note however that these operations will not have an immediate effect, as they are _deferred_ until the end of the frame. See [this diagram](Manual.md#staging-flow) on staging for more information.
 
 ### Why are updates to components made by my system lost?
 If you have a system in which you both write to component arrays as well as adding/removing components from your entity, it may happen that you lose your updates. A solution to this problem is to split up your system in two, one that sets the component values, and one that adds/removes the components.
@@ -204,7 +201,7 @@ If you have a system in which you both write to component arrays as well as addi
 They are very similar. A system is a query paired up with a function that is executed automatically by the framework each frame.
 
 ### When should I use queries versus filters?
-Queries are the fastest way to iterate over entities as they are "prematched", which means that a query does not need to search as you're iterating it. Queries also provide the most flexible mechanism for selecting entities, with many query operators and other features. Queries are expensive to create however, as they register themselves with other parts of the framework. 
+Queries are the fastest way to iterate over entities as they are "pre-matched", which means that a query does not need to search as you're iterating it. Queries also provide the most flexible mechanism for selecting entities, with many query operators and other features. Queries are expensive to create however, as they register themselves with other parts of the framework.
 
 Filters on the other hand are slower to iterate over as they perform searching while you're iterating them, but they are very cheap to create as they are simple stack-objects that require no additional setup.
 
