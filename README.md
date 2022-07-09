@@ -6,9 +6,11 @@
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
-Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
+Flecs is a fast and lightweight Entity Component System pattern implementation in C that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). At it's core it uses a [refined approach to building an ECS](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5) and as a consequence it is way more flexible than other implementations. Here are some of the framework's highlights:
 
-- Fast zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
+- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
+- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
+- Fast and [portable](#language-bindings) zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
 - Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
 - Minimal ECS core with optional [addons](#addons)
 - Entire codebase builds in less than 5 seconds
@@ -16,11 +18,9 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
 - Supports entities with hundreds of components and applications with tens of thousands of archetypes
 - Automatic component registration that works out of the box across shared libraries/DLLs
-- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
 - Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
 - Run games on multiple CPU cores with a fast lockless scheduler
 - Compiles warning-free on 8 compilers on all major platforms, with [CI](https://github.com/SanderMertens/flecs/actions) running more than 4000 tests
-- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
 - Integrated [reflection framework](https://flecs.docsforge.com/master/api-meta/) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance)
