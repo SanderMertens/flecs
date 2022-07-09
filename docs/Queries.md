@@ -628,7 +628,7 @@ which is the same as:
 Likes(This, Alice)
 ```
 
-The term "object" is borrowed from English grammar. In the sentence "Bob likes Alice", "Bob" is the subject, and "Alice" is the object.
+The term "object" is borrowed from English grammar and has nothing to do with the OOP meaning of object (as in an instance of a class). In the sentence "Bob likes Alice", "Bob" is the subject, and "Alice" is the object.
 
 ### Component
 When a term refers to a component, it appears as a predicate with a single argument (subject). Components are typically referred to by their language types in APIs. While the query DSL is agnostic to this, the bindings provide dedicated ways for setting a component for a term.
