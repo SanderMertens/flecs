@@ -6,12 +6,12 @@
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
 
-Flecs is a fast and lightweight Entity Component System pattern implementation in C that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). At it's core it uses a [refined approach to building an ECS](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5) and as a consequence it is way more flexible than other implementations. Here are some of the framework's highlights:
+Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
 
-- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
-- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
 - Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
+- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
+- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
 - Minimal ECS core with optional [addons](#addons)
 - Entire codebase builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
@@ -55,12 +55,12 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
 - [Relations Manual](docs/Relations.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
 
-## How to use and build
-The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in `flecs.h`).
+## Usage
+The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in `flecs.h`). In C++ projects, make sure to compile the `flecs.c` file as C code.
 
-Alternatively you can also build Flecs as a standalone library by using the [bake](https://github.com/SanderMertens/bake) (cmake, meson, bazel are also supported).
+Flecs can also be built as a standalone library by using the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake).
 
-If you want to customize your builds, refer to the [Addons](#addons) section.
+See the [Addons](#addons) section for learning more about customizing a build.
 
 ## Show me the code!
 C99 example:
