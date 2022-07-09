@@ -11,7 +11,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Fast zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
 - Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
 - Minimal ECS core with optional [addons](#addons)
-- Entire codebase builds in less than 5 seconds.
+- Entire codebase builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
 - Supports entities with hundreds of components and applications with tens of thousands of archetypes
@@ -27,20 +27,19 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - [Statistics addon](https://flecs.docsforge.com/master/api-stats/) for profiling ECS performance
 - A web-based dashboard ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)) for inspecting entities, running ECS queries and monitoring games:
 
-[<img width="1753" alt="Screen Shot 2022-06-04 at 1 36 44 AM" src="https://user-images.githubusercontent.com/9919222/171991682-5053ce51-fbb3-40ad-823f-b1957cedde18.png">](https://flecs.dev/explorer)
+[![Dashboard image](https://user-images.githubusercontent.com/9919222/171991682-5053ce51-fbb3-40ad-823f-b1957cedde18.png)](https://flecs.dev/explorer)
 
 **Flecs v3 is the latest, most stable and feature rich version of Flecs, and recommended for new projects.**
 
-Last v3 release: [Flecs v3.0.2-beta](https://github.com/SanderMertens/flecs/releases/tag/v3.0.2-beta).
-
-Last v2 release: [Flecs v2.4.8](https://github.com/SanderMertens/flecs/releases/tag/v2.4.8).
+- Latest v3 release: [Flecs v3.0.2-beta](https://github.com/SanderMertens/flecs/releases/tag/v3.0.2-beta).
+- Latest v2 release: [Flecs v2.4.8](https://github.com/SanderMertens/flecs/releases/tag/v2.4.8).
 
 ## What is an Entity Component System?
 ECS is a new way of organizing code and data that lets you build games that are larger, more complex and are easier to extend.
 
 Something is called an ECS when it:
-- Has _entities_, that uniquely identify objects in a game
-- Has _components_, which are datatypes that can be added to entities
+- Has _entities_ that uniquely identify objects in a game
+- Has _components_ which are datatypes that can be added to entities
 - Has _systems_ which are functions that run for all entities matching a component _query_
 
 For example, a game has a `Move` _system_ that has a _query_ with two _components_, `Position, Velocity`. When the system is ran it is dynamically matched with all _entities_ that have at least these two components.
@@ -73,8 +72,8 @@ typedef struct {
 void Move(ecs_iter_t *it) {
   Position *p = ecs_term(it, Position, 1);
   Velocity *v = ecs_term(it, Velocity, 2);
-  
-  for (int i = 0; i < it->count; i ++) {
+
+  for (int i = 0; i < it->count; i++) {
     p[i].x += v[i].x;
     p[i].y += v[i].y;
   }
@@ -120,10 +119,11 @@ int main(int argc, char *argv[]) {
       p = {10, 20};
       v = {1, 2};
     });
-    
+
   while (ecs.progress()) { }
 }
 ```
+
 ## Community content
 Examples and tutorials contributed by the community :heart:
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
@@ -222,7 +222,7 @@ Module      | Description
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
 - [Lua](https://github.com/flecs-hub/flecs-lua)
 - [Zig](https://github.com/prime31/zig-flecs)
-- [C#](https://github.com/bottlenoselabs/flecs-cs)
+- [C#](https://github.com/flecs-hub/flecs-cs)
 
 ## Links
 - [Discord](https://discord.gg/BEzP5Rgrrp)
