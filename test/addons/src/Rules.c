@@ -1382,7 +1382,7 @@ void Rules_2_wildcard_as_subject() {
     ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Tag, ChildOf(*, This)"
+        .expr = "Tag, ChildOf(*, $This)"
     });
 
     test_assert(r != NULL);
@@ -4038,7 +4038,7 @@ void Rules_invalid_rule_w_not_term_unknown_pair_var() {
     ECS_ENTITY(world, TagB, 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "TagA, !TagB(This, $X)"
+        .expr = "TagA, !TagB($This, $X)"
     });
 
     test_assert(r == NULL);
@@ -4423,7 +4423,7 @@ void Rules_childof_this_as_identifier() {
     ecs_entity_t child2 = ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Tag, ChildOf($X, This)"
+        .expr = "Tag, ChildOf($X, $This)"
     });
 
     test_assert(r != NULL);
@@ -4733,7 +4733,7 @@ void Rules_optional_term_on_relation_this_obj() {
     ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Tag, ?ChildOf(*, This)"
+        .expr = "Tag, ?ChildOf(*, $This)"
     });
 
     test_assert(r != NULL);
@@ -4752,7 +4752,7 @@ void Rules_optional_term_on_relation_this_obj() {
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(EcsThis));
+    test_int(ecs_term_id(&it, 2), ecs_childof(EcsWildcard));
     test_bool(true, ecs_term_is_set(&it, 1));
     test_bool(false, ecs_term_is_set(&it, 2));
 
@@ -4982,7 +4982,7 @@ void Rules_term_w_this_this_this() {
     ecs_add_pair(world, e4, e, e);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "This(This, This)"
+        .expr = "$This($This, $This)"
     });
 
     test_assert(r != NULL);
@@ -4990,7 +4990,7 @@ void Rules_term_w_this_this_this() {
     
     test_int(it.term_count, 1);
     test_assert(it.terms != NULL);
-    test_int(it.terms[0].id, ecs_pair(EcsThis, EcsThis));
+    test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
 
     test_assert(ecs_rule_next(&it));
     test_int(it.term_count, 1);
@@ -5177,7 +5177,7 @@ void Rules_term_obj_w_this() {
     ecs_filter_desc_t desc = { 0 };
     desc.terms[0].first.id = TagA;
     desc.terms[0].second.id = EcsThis;
-    desc.terms[0].second.var = EcsVarIsVariable;
+    desc.terms[0].second.flags = EcsIsVariable;
     desc.terms[0].src.id = TagA;
 
     ecs_rule_t *r = ecs_rule_init(world, &desc);
@@ -5205,7 +5205,7 @@ void Rules_term_subj_w_this() {
     desc.terms[0].first.id = TagA;
     desc.terms[0].second.id = TagA;
     desc.terms[0].src.id = EcsThis;
-    desc.terms[0].src.var = EcsVarIsVariable;
+    desc.terms[0].src.flags = EcsIsVariable;
 
     ecs_rule_t *r = ecs_rule_init(world, &desc);
     test_assert(r != NULL);
@@ -5763,7 +5763,7 @@ void Rules_optional_any_subject() {
     ecs_add_pair(world, ObjB, Rel, e2);
     ecs_add_pair(world, ObjC, Rel, e3);
 
-    ecs_rule_t *r = ecs_rule_new(world, "Tag, ?Rel(_, This)");
+    ecs_rule_t *r = ecs_rule_new(world, "Tag, ?Rel(_, $This)");
     test_assert(r != NULL);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -6688,7 +6688,7 @@ void Rules_table_subj_as_obj_in_not() {
   ECS_ENTITY(world, Trait, Final);
   ECS_ENTITY(world, Subj, Final);
 
-  ecs_rule_t *r = ecs_rule_new(world, "Trait, !Trait(Subj, This)");
+  ecs_rule_t *r = ecs_rule_new(world, "Trait, !Trait(Subj, $This)");
   test_assert(r != NULL);
 
   ecs_entity_t e1 = ecs_new(world, Trait);

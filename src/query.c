@@ -759,41 +759,39 @@ void flecs_query_set_table_match(
     }
 
     /* Add references for substituted terms */
-    if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchOnlyThis)) {
-        ecs_vector_t *refs = NULL;
-        for (i = 0; i < term_count; i ++) {
-            ecs_term_t *term = &terms[i];
-            if (!ecs_term_match_this(term)) {
-                /* non-This terms are set during iteration */
-                continue;
-            }
+    ecs_vector_t *refs = NULL;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (!ecs_term_match_this(term)) {
+            /* non-This terms are set during iteration */
+            continue;
+        }
 
-            int32_t actual_index = terms[i].index;
-            ecs_entity_t src = it->subjects[actual_index];
-            ecs_size_t size = 0;
-            if (it->sizes) {
-                size = it->sizes[actual_index];
-            }
-            if (src) {
-                ecs_id_t id = it->ids[actual_index];
-                ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
+        int32_t actual_index = terms[i].index;
+        ecs_entity_t src = it->subjects[actual_index];
+        ecs_size_t size = 0;
+        if (it->sizes) {
+            size = it->sizes[actual_index];
+        }
+        if (src) {
+            ecs_id_t id = it->ids[actual_index];
+            ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
-                if (id) {
-                    refs = flecs_query_add_ref(world, query, refs, term, id, src, size);
+            if (id) {
+                refs = flecs_query_add_ref(world, query, refs, term, id, src, size);
 
-                    /* Use column index to bind term and ref */
-                    if (qm->columns[actual_index] != 0) {
-                        qm->columns[actual_index] = -ecs_vector_count(refs);
-                    }
+                /* Use column index to bind term and ref */
+                if (qm->columns[actual_index] != 0) {
+                    qm->columns[actual_index] = -ecs_vector_count(refs);
                 }
             }
         }
-        if (refs) {
-            int32_t count = ecs_vector_count(refs);
-            ecs_ref_t *ptr = ecs_vector_first(refs, ecs_ref_t);
-            qm->references = ecs_os_memdup_n(ptr, ecs_ref_t, count);
-            ecs_vector_free(refs);
-        }
+    }
+    if (refs) {
+        int32_t count = ecs_vector_count(refs);
+        ecs_ref_t *ptr = ecs_vector_first(refs, ecs_ref_t);
+        qm->references = ecs_os_memdup_n(ptr, ecs_ref_t, count);
+        ecs_vector_free(refs);
     }
 }
 
@@ -977,7 +975,7 @@ void flecs_query_build_sorted_table_range(
             /* Find component in prefab */
             ecs_entity_t base = 0;
             ecs_search_relation(world, table, 0, id, 
-                EcsIsA, 1, 0, &base, 0, 0, 0);
+                EcsIsA, EcsUp, &base, 0, 0);
 
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
@@ -2463,7 +2461,7 @@ bool ecs_query_next_instanced(
             int32_t t, term_count = filter->term_count;
             for (t = 0; t < term_count; t ++) {
                 ecs_term_t *term = &filter->terms[t];
-                if (ecs_term_match_this(term)) {
+                if (!ecs_term_match_this(term)) {
                     continue;
                 }
 

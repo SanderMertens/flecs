@@ -225,7 +225,6 @@ bool flecs_iter_populate_term_data(
 
         row = it->offset;
 
-
         int32_t storage_column = ecs_table_type_to_storage_index(
             table, column - 1);
         if (storage_column == -1) {

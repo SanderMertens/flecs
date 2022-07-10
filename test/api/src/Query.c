@@ -682,6 +682,7 @@ void Query_singleton_w_optional_new_empty_table() {
     ecs_singleton_add(world, Singleton);
 
     ecs_entity_t e = ecs_new(world, TagA);
+    ecs_set_name(world, e, "e");
 
     ecs_query_t *q = ecs_query_new(world, "Singleton($), ?TagA");
     test_assert(q != NULL);

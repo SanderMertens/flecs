@@ -24,6 +24,7 @@
 
 #define TOK_SELF "self"
 #define TOK_UP "up"
+#define TOK_DOWN "down"
 #define TOK_CASCADE "cascade"
 #define TOK_PARENT "parent"
 
@@ -396,6 +397,8 @@ uint8_t parse_set_token(
         return EcsSelf;
     } else if (!ecs_os_strcmp(token, TOK_UP)) {
         return EcsUp;
+    } else if (!ecs_os_strcmp(token, TOK_DOWN)) {
+        return EcsDown;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
         return EcsCascade;
     } else if (!ecs_os_strcmp(token, TOK_PARENT)) {
@@ -555,6 +558,7 @@ const char* parse_arguments(
             } else if (!ecs_os_strcmp(token, TOK_CASCADE) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_UP) || 
+                !ecs_os_strcmp(token, TOK_DOWN) || 
                 !(ecs_os_strcmp(token, TOK_PARENT)))
             {
                 ptr = parse_term_flags(world, name, expr, (ptr - expr), ptr, 
@@ -888,8 +892,6 @@ char* ecs_parse_term(
         return (char*)&ptr[1];
     }
 
-    ecs_flags32_t prev_set = src->flags;
-
     /* Parse next element */
     ptr = parse_term(world, name, ptr, term);
     if (!ptr) {
@@ -967,13 +969,6 @@ char* ecs_parse_term(
 
     /* Verify consistency of OR expression */
     if (prev_or && term->oper == EcsOr) {
-        /* Set expressions must be the same for all OR terms */
-        if (src->flags != prev_set) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "cannot combine different sources in OR expression");
-            goto error;
-        }
-
         term->oper = EcsOr;
     }
 
