@@ -425,7 +425,7 @@ void flecs_init_observer_iter(
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t index = ecs_search_relation(it->real_world, it->table, 0, 
-        it->event_id, EcsIsA, 0, 0, it->subjects, 0, 0, 0);
+        it->event_id, EcsIsA, 0, it->subjects, 0, 0);
     
     if (index == -1) {
         it->columns[0] = 0;
@@ -661,8 +661,8 @@ void flecs_notify_set_base_observers(
         ecs_term_t *term = &observer->filter.terms[0];
         ecs_id_t id = term->id;
         int32_t column = ecs_search_relation(world, obj_table, 0, id, rel, 
-            0, 0, it->subjects, it->ids, 0, 0);
-        
+            0, it->subjects, it->ids, 0);
+
         bool result = column != -1;
         if (term->oper == EcsNot) {
             result = !result;
@@ -671,7 +671,7 @@ void flecs_notify_set_base_observers(
             continue;
         }
 
-        if (!(term->src.flags & EcsSelf) && flecs_table_record_get(
+        if ((term->src.flags & EcsSelf) && flecs_table_record_get(
             world, it->table, id) != NULL) 
         {
             continue;

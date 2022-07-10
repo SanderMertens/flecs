@@ -61,21 +61,6 @@ void Type_type_of_2_tostr_no_id() {
     ecs_fini(world);
 }
 
-void Type_invalid_container_type_expression() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Position);
-
-    test_expect_abort();
-
-    ECS_PREFAB(world, Type, Position(parent), Velocity);
-
-    ecs_fini(world);
-}
-
 void Type_invalid_entity_type_expression() {
     install_test_abort();
 

@@ -1153,7 +1153,7 @@ int32_t crawl_variable(
         if (skip_term(term)) {
             continue;
         }
-        
+
         ecs_rule_var_t 
         *first = term_pred(rule, term),
         *src = term_subj(rule, term),
@@ -1461,7 +1461,10 @@ int scan_variables(
 
                 /* Make sure that variable name in term array matches with the
                  * rule name. */
-                ecs_os_strset(&term->src.name, src->name);
+                if (term->src.id != EcsThis && term->src.id != EcsAny) {
+                    ecs_os_strset(&term->src.name, src->name);
+                    term->src.id = 0;
+                }
             }
 
             if (++ src->occurs > max_occur) {
@@ -1944,11 +1947,7 @@ ecs_rule_var_t* store_reflexive_set(
         pair->second.reg = second->id;
     }
 
-    /* The subset operation returns tables */
     ecs_rule_var_kind_t var_kind = EcsRuleVarKindTable;
-    if (op_kind == EcsRuleSuperSet) {
-        var_kind = EcsRuleVarKindEntity;
-    }
 
     /* Create anonymous variable for storing the set */
     ecs_rule_var_t *av = create_anonymous_variable(rule, var_kind);
@@ -2090,7 +2089,10 @@ void insert_select_or_with(
             tvar = NULL;
             eval_subject_supersets = true;
 
-        } else if (ecs_id_is_wildcard(term->id)) {
+        } else if (ecs_id_is_wildcard(term->id) && 
+            ECS_PAIR_FIRST(term->id) != EcsThis &&
+            ECS_PAIR_SECOND(term->id) != EcsThis)
+        {
             ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
             op = insert_operation(rule, -1, written);
@@ -3403,7 +3405,7 @@ bool eval_superset(
             ecs_id_t id = ecs_pair(rel, result);
             ecs_entity_t src = 0;
             column = ecs_search_relation(world, table, 0, id, rel, 
-                0, 0, &src, 0, 0, 0);
+                0, &src, 0, 0);
             if (column != -1) {
                 if (src != 0) {
                     table = ecs_get_table(world, src);

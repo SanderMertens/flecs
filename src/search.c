@@ -79,18 +79,16 @@ int32_t type_search_relation(
     ecs_id_record_t *idr,
     ecs_id_t rel,
     ecs_id_record_t *idr_r,
-    int32_t min_depth,
-    int32_t max_depth,
+    bool self,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *depth_out,
     ecs_table_record_t **tr_out)
 {
     ecs_type_t type = table->type;
     ecs_id_t *ids = type.array;
     int32_t count = type.count;
 
-    if (min_depth <= 0) {
+    if (self) {
         if (offset) {
             int32_t r = type_offset_search(offset, id, ids, count, id_out);
             if (r != -1) {
@@ -105,7 +103,7 @@ int32_t type_search_relation(
     }
 
     ecs_flags32_t flags = table->flags;
-    if ((flags & EcsTableHasPairs) && max_depth && rel) {
+    if ((flags & EcsTableHasPairs) && rel) {
         bool is_a = rel == ecs_pair(EcsIsA, EcsWildcard);
         if (is_a) {
             if (!(flags & EcsTableHasIsA)) {
@@ -143,14 +141,10 @@ int32_t type_search_relation(
                 ecs_assert(obj_table != table, ECS_CYCLE_DETECTED, NULL);
                 
                 r = type_search_relation(world, obj_table, 0, id, idr, 
-                    rel, idr_r, min_depth - 1, max_depth - 1, subject_out, 
-                    id_out, depth_out, tr_out);
+                    rel, idr_r, true, subject_out, id_out, tr_out);
                 if (r != -1) {
                     if (subject_out && !subject_out[0]) {
                         subject_out[0] = ecs_get_alive(world, obj);
-                    }
-                    if (depth_out) {
-                        depth_out[0] ++;
                     }
                     return r_column;
                 }
@@ -158,13 +152,10 @@ int32_t type_search_relation(
                 if (!is_a) {
                     r = type_search_relation(world, obj_table, 0, id, idr, 
                         ecs_pair(EcsIsA, EcsWildcard), world->idr_isa_wildcard, 
-                            1, INT_MAX, subject_out, id_out, depth_out, tr_out);
+                            true, subject_out, id_out, tr_out);
                     if (r != -1) {
                         if (subject_out && !subject_out[0]) {
                             subject_out[0] = ecs_get_alive(world, obj);
-                        }
-                        if (depth_out) {
-                            depth_out[0] ++;
                         }
                         return r_column;
                     }
@@ -184,11 +175,9 @@ int32_t ecs_search_relation(
     int32_t offset,
     ecs_id_t id,
     ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
+    ecs_flags32_t flags,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *depth_out,
     struct ecs_table_record_t **tr_out)
 {
     if (!table) return -1;
@@ -196,16 +185,21 @@ int32_t ecs_search_relation(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
+    flags = flags ? flags : (EcsSelf|EcsUp);
+
+    if (!(flags & EcsUp)) {
+        if (subject_out) subject_out[0] = 0;
+        return ecs_search_offset(world, table, offset, id, id_out);
+    }
+
     ecs_id_record_t *idr = flecs_query_id_record_get(world, id);
     if (!idr) {
         return -1;
     }
 
-    max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
-
     int32_t result = type_search_relation(world, table, offset, id, idr, 
-        ecs_pair(rel, EcsWildcard), NULL, min_depth, max_depth, subject_out, 
-            id_out, depth_out, tr_out);
+        ecs_pair(rel, EcsWildcard), NULL, flags & EcsSelf, subject_out, 
+            id_out, tr_out);
 
     return result;
 }

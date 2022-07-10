@@ -182,10 +182,13 @@ static
 const char* plecs_set_mask_to_name(
     ecs_flags32_t flags) 
 {
+    flags &= EcsTraverseFlags;
     if (flags == EcsSelf) {
         return "self";
     } else if (flags == EcsUp) {
         return "up";
+    } else if (flags == EcsDown) {
+        return "down";
     } else if (flags == EcsCascade || flags == (EcsUp|EcsCascade)) {
         return "cascade";
     } else if (flags == EcsParent) {
@@ -269,7 +272,7 @@ int plecs_create_term(
         return -1;
     }
 
-    if (state->assign_stmt && ecs_term_match_this(term)) {
+    if (state->assign_stmt && !ecs_term_match_this(term)) {
         ecs_parser_error(name, expr, column, 
             "invalid statement in assign statement");
         return -1;

@@ -512,7 +512,7 @@ bool override_from_base(
              * relationship. Superset triggers will not be invoked because the
              * component is owned. */
             int32_t c = ecs_search_relation(world, other_table, 0, component, 
-                EcsIsA, 1, 0, 0, 0, 0, 0);
+                EcsIsA, EcsUp, 0, 0, 0);
             if (c == -1) {
                 flecs_notify(
                     world, table, other_table, row, count, EcsOnSet, &ids, 0);
@@ -1514,13 +1514,10 @@ ecs_table_t *traverse_from_expr(
                 return NULL;
             }
 
-            if (!ecs_term_is_trivial(&term)) {
+            if (!ecs_id_is_valid(world, term.id)) {
                 ecs_term_fini(&term);
-                if (error) {
-                    *error = true;
-                }
                 ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid non-trivial term in add expression");
+                    "invalid term for add expression");
                 return NULL;
             }
 
@@ -1566,9 +1563,10 @@ void defer_from_expr(
                 return;
             }
 
-            if (!ecs_term_is_trivial(&term)) {
+            if (!ecs_id_is_valid(world, term.id)) {
+                ecs_term_fini(&term);
                 ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid non-trivial term in add expression");
+                    "invalid term for add expression");
                 return;
             }
 
@@ -3156,7 +3154,7 @@ bool ecs_has_id(
 
     ecs_table_record_t *tr = NULL;
     int32_t column = ecs_search_relation(
-        world, table, 0, id, EcsIsA, 0, 0, 0, 0, 0, &tr);
+        world, table, 0, id, EcsIsA, 0, 0, 0, &tr);
     if (column == -1) {
         return false;
     }
@@ -3235,7 +3233,7 @@ ecs_entity_t ecs_get_object_for_id(
 
     if (rel) {
         int32_t column = ecs_search_relation(
-            world, table, 0, id, rel, 0, 0, &subject, 0, 0, 0);
+            world, table, 0, id, rel, 0, &subject, 0, 0);
         if (column == -1) {
             return 0;
         }

@@ -428,7 +428,7 @@ typedef enum ecs_oper_kind_t {
 #define EcsIsVariable                 (1u << 6) /* Term id is a variable */
 #define EcsIsEntity                   (1u << 7) /* Term id is an entity */
 
-#define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf)
+#define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf|EcsCascade|EcsParent)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
@@ -439,10 +439,11 @@ typedef struct ecs_term_id_t {
                                  * member to 0 and set EcsIsEntity in flags. */
 
     char *name;                 /* Name. This can be either the variable name
-                                 * (when the EcsTermVariable flag is set) or an
+                                 * (when the EcsIsVariable flag is set) or an
                                  * entity name. Entity names are used to 
                                  * initialize the id member during term 
-                                 * finalization and will be freed afterwards. */
+                                 * finalization and will be freed when term.move
+                                 * is set to true. */
 
     ecs_entity_t trav;          /* Relationship to traverse when looking for the
                                  * component. The relationship must have
@@ -451,7 +452,7 @@ typedef struct ecs_term_id_t {
     ecs_flags32_t flags;        /* Term flags */
 } ecs_term_id_t;
 
-/** Type that describes a single element in a query */
+/** Type that describes a term (single element in a query) */
 struct ecs_term_t {
     ecs_id_t id;                /* Component id to be matched by term. Can be
                                  * set directly, or will be populated from the
@@ -462,7 +463,7 @@ struct ecs_term_t {
     ecs_term_id_t first;        /* Component or first element of pair */
     ecs_term_id_t second;       /* Second element of pair */
     
-    ecs_inout_kind_t inout;     /* Access to contents matched with term */
+    ecs_inout_kind_t inout;     /* Access to contents matched by term */
     ecs_oper_kind_t oper;       /* Operator of term */
 
     ecs_id_t role;              /* Role of term */
@@ -2824,9 +2825,6 @@ ecs_entity_t* ecs_get_lookup_path(
  * id. The search for the matching set of entities (tables) is performed in 
  * constant time.
  *
- * Currently only trivial terms are supported (see ecs_term_is_trivial). Only
- * the id field of the term needs to be initialized.
- *
  * @param world The world.
  * @param term The term.
  * @return The iterator.
@@ -2884,33 +2882,6 @@ bool ecs_term_id_is_set(
  */
 FLECS_API
 bool ecs_term_is_initialized(
-    const ecs_term_t *term);
-
-/** Test whether a term is a trivial term.
- * A trivial term is a term that only contains a type id. Trivial terms must not
- * have read/write annotations, relation substitutions and subjects other than
- * 'This'. Examples of trivial terms are:
- * - 'Position'
- * - 'Position(This)'
- * - '(Likes, IceCream)'
- * - 'Likes(This, IceCream)'
- * 
- * Examples of non-trivial terms are:
- * - '[in] Position'
- * - 'Position(MyEntity)'
- * - 'Position(self|superset)'
- *
- * Trivial terms are useful in expressions that should just represent a list of
- * components, such as when parsing the list of components to add to an entity.
- *
- * The term passed to this operation must be finalized. Terms returned by the
- * parser are guaranteed to be finalized.
- *
- * @param term The term.
- * @return True if term is trivial, false if it is not.
- */
-FLECS_API
-bool ecs_term_is_trivial(
     const ecs_term_t *term);
 
 FLECS_API
@@ -4421,11 +4392,9 @@ int32_t ecs_search_offset(
  * @param offset Offset from where to start searching.
  * @param id The id to search for.
  * @param rel The relation to traverse (optional).
- * @param min_depth The minimum search depth. Use 1 for only shared components.
- * @param max_depth The maximum search depth. Zero means no maximum.
+ * @param flags Whether to search EcsSelf and/or EcsUp.
  * @param subject_out If provided, it will be set to the matched entity.
  * @param id_out If provided, it will be set to the found id (optional).
- * @param depth_out If provided, it will be set to the traversal depth.
  * @param tr_out Internal datatype.
  * @return The index of the id in the table type.
  */
@@ -4436,11 +4405,9 @@ int32_t ecs_search_relation(
     int32_t offset,
     ecs_id_t id,
     ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
+    ecs_flags32_t flags, /* EcsSelf and/or EcsUp */
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *depth_out,
     struct ecs_table_record_t **tr_out);
 
 /** @} */

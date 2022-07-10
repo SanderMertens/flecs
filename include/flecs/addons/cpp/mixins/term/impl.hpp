@@ -91,10 +91,6 @@ struct term final : term_builder_i<term> {
         return ecs_term_is_initialized(&value);
     }
 
-    bool is_trivial() {
-        return ecs_term_is_trivial(&value);
-    }
-
     flecs::inout_kind_t inout() {
         return static_cast<flecs::inout_kind_t>(value.inout);
     }

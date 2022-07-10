@@ -1234,7 +1234,7 @@ void Pairs_dsl_pair_w_explicit_subj_this() {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.expr = "Rel(This, Obj)"
+        .filter.expr = "Rel(., Obj)"
     });
 
     test_assert(q != NULL);
@@ -1521,7 +1521,9 @@ void Pairs_api_pair_w_explicit_subj_this() {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_pair(Rel, Obj), .src.id = EcsThis}}
+        .filter.terms = {
+            { ecs_pair(Rel, Obj), .src.id = EcsThis }
+        }
     });
 
     test_assert(q != NULL);

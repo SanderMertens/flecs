@@ -710,5 +710,9 @@ int32_t ecs_strbuf_written(
     const ecs_strbuf_t *b)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    return b->size + b->current->pos;
+    if (b->current) {
+        return b->size + b->current->pos;
+    } else {
+        return 0;
+    }
 }

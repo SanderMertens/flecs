@@ -171,11 +171,8 @@ void Search_search_follow_relation_lvl_0() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 1);
-    test_int(depth, 0);
     test_uint(id, TagB);
     test_uint(subj, 0);
 
@@ -197,11 +194,8 @@ void Search_search_follow_relation_lvl_1() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 1);
     test_uint(id, TagB);
     test_uint(subj, e_0);
 
@@ -224,11 +218,8 @@ void Search_search_follow_relation_lvl_2() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 2);
     test_uint(id, TagB);
     test_uint(subj, e_0);
 
@@ -252,11 +243,8 @@ void Search_search_follow_relation_lvl_3() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 3);
     test_uint(id, TagB);
     test_uint(subj, e_0);
 
@@ -277,11 +265,8 @@ void Search_search_first_lvl_0() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 1);
-    test_int(depth, 0);
     test_uint(id, TagB);
     test_uint(subj, 0);
 
@@ -303,11 +288,8 @@ void Search_search_first_lvl_1() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 1);
     test_uint(id, TagB);
     test_uint(subj, e_0);
 
@@ -331,11 +313,8 @@ void Search_search_first_lvl_2() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 1);
     test_uint(id, TagB);
     test_uint(subj, e_1);
 
@@ -361,11 +340,8 @@ void Search_search_first_lvl_3() {
     
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
-    int32_t c = ecs_search_relation(
-        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
     test_int(c, 0);
-    test_int(depth, 1);
     test_uint(id, TagB);
     test_uint(subj, e_2);
 
@@ -389,22 +365,17 @@ void Search_search_relation_at_offset() {
 
     ecs_entity_t subj = 0;
     ecs_id_t id = 0;
-    int32_t depth = 0;
     int32_t column = 0;
 
-    column = ecs_search_relation(
-        world, table, 0, Tag, Rel, 1, 0, &subj, &id, &depth, 0);
+    column = ecs_search_relation(world, table, 0, Tag, Rel, EcsUp, &subj, &id, 0);
     test_int(column, 0);
-    test_int(depth, 1);
     test_uint(subj, b1);
     test_uint(id, Tag);
     
     subj = 0;
-    depth = 0;
     column = ecs_search_relation(
-        world, table, 1, Tag, Rel, 1, 0, &subj, &id, &depth, 0);
+        world, table, 1, Tag, Rel, EcsUp, &subj, &id, 0);
     test_int(column, 1);
-    test_int(depth, 1);
     test_uint(subj, b2);
     test_uint(id, Tag);
 

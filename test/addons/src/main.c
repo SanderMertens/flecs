@@ -18,11 +18,14 @@ void Parser_component_implicit_subject(void);
 void Parser_component_explicit_subject(void);
 void Parser_component_explicit_subject_this(void);
 void Parser_component_explicit_subject_this_by_name(void);
+void Parser_component_explicit_subject_this_by_var_name(void);
 void Parser_component_explicit_subject_wildcard(void);
 void Parser_component_explicit_subject_any(void);
 void Parser_component_explicit_subject_0(void);
 void Parser_this_as_predicate(void);
+void Parser_this_var_as_predicate(void);
 void Parser_this_as_object(void);
+void Parser_this_var_as_object(void);
 void Parser_pair_implicit_subject(void);
 void Parser_pair_implicit_subject_wildcard_pred(void);
 void Parser_pair_implicit_subject_wildcard_obj(void);
@@ -33,6 +36,7 @@ void Parser_pair_implicit_subject_this_obj(void);
 void Parser_pair_explicit_subject(void);
 void Parser_pair_explicit_subject_this(void);
 void Parser_pair_explicit_subject_this_by_name(void);
+void Parser_pair_explicit_subject_this_by_var_name(void);
 void Parser_pair_explicit_subject_wildcard_pred(void);
 void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
@@ -118,12 +122,6 @@ void Parser_pred_implicit_subject_implicit_superset_cascade(void);
 void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade(void);
 void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel(void);
 void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void);
-void Parser_pred_implicit_subject_superset_depth_1_digit(void);
-void Parser_pred_implicit_subject_subset_depth_1_digit(void);
-void Parser_pred_implicit_subject_superset_depth_2_digits(void);
-void Parser_pred_implicit_subject_subset_depth_2_digits(void);
-void Parser_pred_implicit_superset_min_max_depth(void);
-void Parser_pred_implicit_superset_childof_min_max_depth(void);
 void Parser_pred_implicit_subject_superset_childof(void);
 void Parser_pred_implicit_subject_cascade_superset_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof(void);
@@ -952,6 +950,10 @@ bake_test_case Parser_testcases[] = {
         Parser_component_explicit_subject_this_by_name
     },
     {
+        "component_explicit_subject_this_by_var_name",
+        Parser_component_explicit_subject_this_by_var_name
+    },
+    {
         "component_explicit_subject_wildcard",
         Parser_component_explicit_subject_wildcard
     },
@@ -968,8 +970,16 @@ bake_test_case Parser_testcases[] = {
         Parser_this_as_predicate
     },
     {
+        "this_var_as_predicate",
+        Parser_this_var_as_predicate
+    },
+    {
         "this_as_object",
         Parser_this_as_object
+    },
+    {
+        "this_var_as_object",
+        Parser_this_var_as_object
     },
     {
         "pair_implicit_subject",
@@ -1010,6 +1020,10 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_this_by_name",
         Parser_pair_explicit_subject_this_by_name
+    },
+    {
+        "pair_explicit_subject_this_by_var_name",
+        Parser_pair_explicit_subject_this_by_var_name
     },
     {
         "pair_explicit_subject_wildcard_pred",
@@ -1350,30 +1364,6 @@ bake_test_case Parser_testcases[] = {
     {
         "pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel",
         Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel
-    },
-    {
-        "pred_implicit_subject_superset_depth_1_digit",
-        Parser_pred_implicit_subject_superset_depth_1_digit
-    },
-    {
-        "pred_implicit_subject_subset_depth_1_digit",
-        Parser_pred_implicit_subject_subset_depth_1_digit
-    },
-    {
-        "pred_implicit_subject_superset_depth_2_digits",
-        Parser_pred_implicit_subject_superset_depth_2_digits
-    },
-    {
-        "pred_implicit_subject_subset_depth_2_digits",
-        Parser_pred_implicit_subject_subset_depth_2_digits
-    },
-    {
-        "pred_implicit_superset_min_max_depth",
-        Parser_pred_implicit_superset_min_max_depth
-    },
-    {
-        "pred_implicit_superset_childof_min_max_depth",
-        Parser_pred_implicit_superset_childof_min_max_depth
     },
     {
         "pred_implicit_subject_superset_childof",
@@ -4390,7 +4380,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        172,
+        170,
         Parser_testcases
     },
     {

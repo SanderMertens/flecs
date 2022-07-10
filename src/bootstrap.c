@@ -552,20 +552,6 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    /* Before creating the table, ensure component ids are alive */
-    ecs_ensure(world, ecs_id(EcsComponent));
-    ecs_ensure(world, EcsFinal);
-    ecs_ensure(world, ecs_id(EcsIdentifier));
-    ecs_ensure(world, EcsName);
-    ecs_ensure(world, EcsSymbol);
-    ecs_ensure(world, EcsAlias);
-    ecs_ensure(world, EcsChildOf);
-    ecs_ensure(world, EcsFlecsCore);
-    ecs_ensure(world, EcsOnDelete);
-    ecs_ensure(world, EcsPanic);
-    ecs_ensure(world, EcsWildcard);
-    ecs_ensure(world, EcsAny);
-
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
@@ -640,8 +626,20 @@ void flecs_bootstrap(
 
     ecs_set_name_prefix(world, "Ecs");
 
+    /* Ensure builtin ids are alive */
+    ecs_ensure(world, ecs_id(EcsComponent));
+    ecs_ensure(world, EcsFinal);
+    ecs_ensure(world, ecs_id(EcsIdentifier));
+    ecs_ensure(world, EcsName);
+    ecs_ensure(world, EcsSymbol);
+    ecs_ensure(world, EcsAlias);
+    ecs_ensure(world, EcsChildOf);
+    ecs_ensure(world, EcsFlecsCore);
+    ecs_ensure(world, EcsOnDelete);
+    ecs_ensure(world, EcsPanic);
     ecs_ensure(world, EcsWildcard);
     ecs_ensure(world, EcsAny);
+    ecs_ensure(world, EcsTag);
 
     /* Bootstrap builtin components */
     flecs_type_info_init(world, EcsComponent, { 
@@ -691,10 +689,10 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
-
+    
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity.add = { ecs_childof(EcsFlecsInternals) },
-        .filter.terms[0] = {.id = EcsTag, .src.flags = EcsSelf },
+        .filter.terms[0] = { .id = EcsTag, .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_tag,
         .yield_existing = true

@@ -3457,8 +3457,8 @@ void Plecs_set_entity_names() {
 
     ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
     ecs_entity_t self = ecs_lookup_fullpath(world, "self");
-    ecs_entity_t sub = ecs_lookup_fullpath(world, "sub");
-    ecs_entity_t super = ecs_lookup_fullpath(world, "super");
+    ecs_entity_t down = ecs_lookup_fullpath(world, "down");
+    ecs_entity_t up = ecs_lookup_fullpath(world, "up");
     ecs_entity_t parent = ecs_lookup_fullpath(world, "parent");
     ecs_entity_t cascade = ecs_lookup_fullpath(world, "cascade");
 
@@ -3470,8 +3470,8 @@ void Plecs_set_entity_names() {
     test_assert(cascade != 0);
 
     test_assert( ecs_has_id(world, self, foo));
-    test_assert( ecs_has_id(world, sub, foo));
-    test_assert( ecs_has_id(world, super, foo));
+    test_assert( ecs_has_id(world, down, foo));
+    test_assert( ecs_has_id(world, up, foo));
     test_assert( ecs_has_id(world, parent, foo));
     test_assert( ecs_has_id(world, cascade, foo));
 

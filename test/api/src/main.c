@@ -849,22 +849,47 @@ void Filter_filter_1_term_dont_inherit_pair_default_set(void);
 void Filter_filter_1_term_cascade_implicit_isa(void);
 void Filter_filter_1_term_cascade_isa(void);
 void Filter_filter_1_term_cascade_childof(void);
+void Filter_filter_1_term_cascade_down(void);
+void Filter_filter_1_term_optional_only(void);
 void Filter_filter_1_variable_as_pred_only(void);
 void Filter_filter_1_variable_as_pred_w_subj(void);
 void Filter_filter_1_variable_as_pred_w_pair(void);
+void Filter_filter_1_variable_as_subj(void);
+void Filter_filter_1_variable_as_obj(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_w_pair_id_and_subj(void);
+void Filter_filter_1_w_pred_name(void);
+void Filter_filter_1_w_final_pred_name(void);
+void Filter_filter_1_w_subj_name(void);
+void Filter_filter_1_w_obj_name(void);
+void Filter_filter_w_this_implicit_variable(void);
+void Filter_filter_w_this_explicit_entity(void);
+void Filter_filter_w_first_this_implicit_variable(void);
+void Filter_filter_w_first_this_explicit_entity(void);
+void Filter_filter_w_second_this_implicit_variable(void);
+void Filter_filter_w_second_this_explicit_entity(void);
+void Filter_filter_w_this_variable_name(void);
+void Filter_filter_w_src_var(void);
+void Filter_filter_w_first_var(void);
+void Filter_filter_w_second_var(void);
+void Filter_filter_w_0_source(void);
+void Filter_filter_w_0_target(void);
+void Filter_filter_2_terms_w_or(void);
+void Filter_filter_2_terms_w_or_mixed_src_flags(void);
+void Filter_filter_2_terms_w_or_mixed_src_id(void);
+void Filter_filter_2_terms_w_or_mixed_src_name(void);
+void Filter_filter_2_terms_w_or_same_src_w_id_and_name(void);
 void Filter_filter_move(void);
 void Filter_filter_copy(void);
 void Filter_filter_w_resources_copy(void);
-void Filter_filter_w_10_terms(void);
-void Filter_filter_w_10_terms_move(void);
-void Filter_filter_w_10_terms_copy(void);
 void Filter_filter_w_and_flag(void);
 void Filter_filter_w_or_flag(void);
 void Filter_filter_w_not_flag(void);
 void Filter_filter_filter(void);
+void Filter_filter_double_init(void);
+void Filter_filter_double_init_w_expr(void);
+void Filter_filter_double_init_w_expr_optional(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -904,6 +929,7 @@ void Filter_term_iter_any_obj(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
+void Filter_filter_iter_only_optional(void);
 void Filter_filter_iter_only_2_or(void);
 void Filter_filter_iter_only_3_or(void);
 void Filter_filter_iter_2_or(void);
@@ -948,6 +974,9 @@ void Filter_filter_iter_superset_2_rel_instances(void);
 void Filter_filter_iter_superset_2_rel_instances_match_2nd(void);
 void Filter_filter_iter_2_terms_superset_2_rel_instances(void);
 void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd(void);
+void Filter_filter_w_10_terms(void);
+void Filter_filter_w_10_terms_move(void);
+void Filter_filter_w_10_terms_copy(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -959,7 +988,15 @@ void Filter_filter_from_expr_2_terms_err(void);
 void Filter_chain_term_iter_w_term_iter(void);
 void Filter_chain_filter_iter_w_term_iter(void);
 void Filter_chain_w_term_iter_component(void);
-void Filter_filter_w_recycled_object_and_id(void);
+void Filter_filter_w_recycled_first(void);
+void Filter_filter_w_recycled_second(void);
+void Filter_filter_w_recycled_first_and_id(void);
+void Filter_filter_w_recycled_second_and_id(void);
+void Filter_filter_w_recycled_first_by_name_and_id(void);
+void Filter_filter_w_recycled_second_by_name_and_id(void);
+void Filter_filter_w_recycled_first_by_expr(void);
+void Filter_filter_w_recycled_second_by_expr(void);
+void Filter_filter_w_recycled_first_only_by_expr(void);
 void Filter_term_iter_w_filter_term(void);
 void Filter_filter_iter_w_filter_term(void);
 void Filter_filter_iter_w_2_terms_1_filter(void);
@@ -1020,6 +1057,8 @@ void Filter_oneof_w_mismatching_obj(void);
 void Filter_oneof_w_mismatching_obj_expr(void);
 void Filter_oneof_wildcard(void);
 void Filter_oneof_any(void);
+void Filter_flag_match_only_this(void);
+void Filter_flag_match_only_this_w_ref(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -1029,6 +1068,18 @@ void FilterStr_two_terms_w_inout(void);
 void FilterStr_three_terms_w_or(void);
 void FilterStr_three_terms_w_or_inout(void);
 void FilterStr_four_terms_three_w_or_inout(void);
+void FilterStr_one_term_w_pair(void);
+void FilterStr_one_term_w_pair_entity_src(void);
+void FilterStr_one_term_w_self(void);
+void FilterStr_one_term_w_up(void);
+void FilterStr_one_term_w_0(void);
+void FilterStr_one_term_w_singleton(void);
+void FilterStr_one_term_w_final_pair(void);
+void FilterStr_one_term_w_final_dont_inherit_pair(void);
+void FilterStr_one_term_w_src_var(void);
+void FilterStr_one_term_w_first_var(void);
+void FilterStr_one_term_w_second_var(void);
+void FilterStr_one_term_w_first_var_entity_src(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -1794,7 +1845,6 @@ void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
 void Type_invalid_entity_type_expression(void);
-void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
@@ -5231,6 +5281,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_1_term_cascade_childof
     },
     {
+        "filter_1_term_cascade_down",
+        Filter_filter_1_term_cascade_down
+    },
+    {
+        "filter_1_term_optional_only",
+        Filter_filter_1_term_optional_only
+    },
+    {
         "filter_1_variable_as_pred_only",
         Filter_filter_1_variable_as_pred_only
     },
@@ -5241,6 +5299,14 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_1_variable_as_pred_w_pair",
         Filter_filter_1_variable_as_pred_w_pair
+    },
+    {
+        "filter_1_variable_as_subj",
+        Filter_filter_1_variable_as_subj
+    },
+    {
+        "filter_1_variable_as_obj",
+        Filter_filter_1_variable_as_obj
     },
     {
         "filter_w_pair_id",
@@ -5255,6 +5321,90 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_pair_id_and_subj
     },
     {
+        "filter_1_w_pred_name",
+        Filter_filter_1_w_pred_name
+    },
+    {
+        "filter_1_w_final_pred_name",
+        Filter_filter_1_w_final_pred_name
+    },
+    {
+        "filter_1_w_subj_name",
+        Filter_filter_1_w_subj_name
+    },
+    {
+        "filter_1_w_obj_name",
+        Filter_filter_1_w_obj_name
+    },
+    {
+        "filter_w_this_implicit_variable",
+        Filter_filter_w_this_implicit_variable
+    },
+    {
+        "filter_w_this_explicit_entity",
+        Filter_filter_w_this_explicit_entity
+    },
+    {
+        "filter_w_first_this_implicit_variable",
+        Filter_filter_w_first_this_implicit_variable
+    },
+    {
+        "filter_w_first_this_explicit_entity",
+        Filter_filter_w_first_this_explicit_entity
+    },
+    {
+        "filter_w_second_this_implicit_variable",
+        Filter_filter_w_second_this_implicit_variable
+    },
+    {
+        "filter_w_second_this_explicit_entity",
+        Filter_filter_w_second_this_explicit_entity
+    },
+    {
+        "filter_w_this_variable_name",
+        Filter_filter_w_this_variable_name
+    },
+    {
+        "filter_w_src_var",
+        Filter_filter_w_src_var
+    },
+    {
+        "filter_w_first_var",
+        Filter_filter_w_first_var
+    },
+    {
+        "filter_w_second_var",
+        Filter_filter_w_second_var
+    },
+    {
+        "filter_w_0_source",
+        Filter_filter_w_0_source
+    },
+    {
+        "filter_w_0_target",
+        Filter_filter_w_0_target
+    },
+    {
+        "filter_2_terms_w_or",
+        Filter_filter_2_terms_w_or
+    },
+    {
+        "filter_2_terms_w_or_mixed_src_flags",
+        Filter_filter_2_terms_w_or_mixed_src_flags
+    },
+    {
+        "filter_2_terms_w_or_mixed_src_id",
+        Filter_filter_2_terms_w_or_mixed_src_id
+    },
+    {
+        "filter_2_terms_w_or_mixed_src_name",
+        Filter_filter_2_terms_w_or_mixed_src_name
+    },
+    {
+        "filter_2_terms_w_or_same_src_w_id_and_name",
+        Filter_filter_2_terms_w_or_same_src_w_id_and_name
+    },
+    {
         "filter_move",
         Filter_filter_move
     },
@@ -5265,18 +5415,6 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_resources_copy",
         Filter_filter_w_resources_copy
-    },
-    {
-        "filter_w_10_terms",
-        Filter_filter_w_10_terms
-    },
-    {
-        "filter_w_10_terms_move",
-        Filter_filter_w_10_terms_move
-    },
-    {
-        "filter_w_10_terms_copy",
-        Filter_filter_w_10_terms_copy
     },
     {
         "filter_w_and_flag",
@@ -5293,6 +5431,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_filter",
         Filter_filter_filter
+    },
+    {
+        "filter_double_init",
+        Filter_filter_double_init
+    },
+    {
+        "filter_double_init_w_expr",
+        Filter_filter_double_init_w_expr
+    },
+    {
+        "filter_double_init_w_expr_optional",
+        Filter_filter_double_init_w_expr_optional
     },
     {
         "term_w_id",
@@ -5449,6 +5599,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_2_tags_1_not",
         Filter_filter_iter_2_tags_1_not
+    },
+    {
+        "filter_iter_only_optional",
+        Filter_filter_iter_only_optional
     },
     {
         "filter_iter_only_2_or",
@@ -5627,6 +5781,18 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd
     },
     {
+        "filter_w_10_terms",
+        Filter_filter_w_10_terms
+    },
+    {
+        "filter_w_10_terms_move",
+        Filter_filter_w_10_terms_move
+    },
+    {
+        "filter_w_10_terms_copy",
+        Filter_filter_w_10_terms_copy
+    },
+    {
         "match_disabled",
         Filter_match_disabled
     },
@@ -5671,8 +5837,40 @@ bake_test_case Filter_testcases[] = {
         Filter_chain_w_term_iter_component
     },
     {
-        "filter_w_recycled_object_and_id",
-        Filter_filter_w_recycled_object_and_id
+        "filter_w_recycled_first",
+        Filter_filter_w_recycled_first
+    },
+    {
+        "filter_w_recycled_second",
+        Filter_filter_w_recycled_second
+    },
+    {
+        "filter_w_recycled_first_and_id",
+        Filter_filter_w_recycled_first_and_id
+    },
+    {
+        "filter_w_recycled_second_and_id",
+        Filter_filter_w_recycled_second_and_id
+    },
+    {
+        "filter_w_recycled_first_by_name_and_id",
+        Filter_filter_w_recycled_first_by_name_and_id
+    },
+    {
+        "filter_w_recycled_second_by_name_and_id",
+        Filter_filter_w_recycled_second_by_name_and_id
+    },
+    {
+        "filter_w_recycled_first_by_expr",
+        Filter_filter_w_recycled_first_by_expr
+    },
+    {
+        "filter_w_recycled_second_by_expr",
+        Filter_filter_w_recycled_second_by_expr
+    },
+    {
+        "filter_w_recycled_first_only_by_expr",
+        Filter_filter_w_recycled_first_only_by_expr
     },
     {
         "term_iter_w_filter_term",
@@ -5913,6 +6111,14 @@ bake_test_case Filter_testcases[] = {
     {
         "oneof_any",
         Filter_oneof_any
+    },
+    {
+        "flag_match_only_this",
+        Filter_flag_match_only_this
+    },
+    {
+        "flag_match_only_this_w_ref",
+        Filter_flag_match_only_this_w_ref
     }
 };
 
@@ -5944,6 +6150,54 @@ bake_test_case FilterStr_testcases[] = {
     {
         "four_terms_three_w_or_inout",
         FilterStr_four_terms_three_w_or_inout
+    },
+    {
+        "one_term_w_pair",
+        FilterStr_one_term_w_pair
+    },
+    {
+        "one_term_w_pair_entity_src",
+        FilterStr_one_term_w_pair_entity_src
+    },
+    {
+        "one_term_w_self",
+        FilterStr_one_term_w_self
+    },
+    {
+        "one_term_w_up",
+        FilterStr_one_term_w_up
+    },
+    {
+        "one_term_w_0",
+        FilterStr_one_term_w_0
+    },
+    {
+        "one_term_w_singleton",
+        FilterStr_one_term_w_singleton
+    },
+    {
+        "one_term_w_final_pair",
+        FilterStr_one_term_w_final_pair
+    },
+    {
+        "one_term_w_final_dont_inherit_pair",
+        FilterStr_one_term_w_final_dont_inherit_pair
+    },
+    {
+        "one_term_w_src_var",
+        FilterStr_one_term_w_src_var
+    },
+    {
+        "one_term_w_first_var",
+        FilterStr_one_term_w_first_var
+    },
+    {
+        "one_term_w_second_var",
+        FilterStr_one_term_w_second_var
+    },
+    {
+        "one_term_w_first_var_entity_src",
+        FilterStr_one_term_w_first_var_entity_src
     }
 };
 
@@ -8920,10 +9174,6 @@ bake_test_case Type_testcases[] = {
         Type_invalid_entity_type_expression
     },
     {
-        "invalid_container_type_expression",
-        Type_invalid_container_type_expression
-    },
-    {
         "invalid_system_type_expression",
         Type_invalid_system_type_expression
     },
@@ -9990,14 +10240,14 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        190,
+        229,
         Filter_testcases
     },
     {
         "FilterStr",
         NULL,
         NULL,
-        7,
+        19,
         FilterStr_testcases
     },
     {
@@ -10095,7 +10345,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        31,
+        30,
         Type_testcases
     },
     {

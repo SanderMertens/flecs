@@ -460,7 +460,7 @@ void TransitiveRules_trans_this_x_after_tag_this() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Planet(This), LocatedIn(This, $X)"
+        .expr = "Planet($This), LocatedIn($This, $X)"
     });
     test_assert(r != NULL);
 
@@ -496,7 +496,7 @@ void TransitiveRules_trans_this_x_before_tag_this() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(This, $X), Planet(This)"
+        .expr = "LocatedIn($This, $X), Planet($This)"
     });
     test_assert(r != NULL);
 
@@ -533,7 +533,7 @@ void TransitiveRules_trans_this_x_after_tag_this_2_lvls() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Continent(This), LocatedIn(This, $X)"
+        .expr = "Continent($This), LocatedIn($This, $X)"
     });
     test_assert(r != NULL);
 
@@ -581,7 +581,7 @@ void TransitiveRules_trans_this_x_before_tag_this_2_lvls() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(This, $X), Continent(This)"
+        .expr = "LocatedIn($This, $X), Continent($This)"
     });
     test_assert(r != NULL);
 
