@@ -134,14 +134,14 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename T>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<T>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<T>::id(this->world_v());
         return *this;
     }
 
     /** Set (component) id to id. */
     Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = id;
+        m_term->first.entity = id;
         return *this;
     }
 
@@ -153,7 +153,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = r;
+        m_term->first.entity = r;
         m_term->obj.entity = o;
         return *this;
     }
@@ -162,7 +162,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename R, typename O>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = _::cpp_type<O>::id(this->world_v());
         return *this;
     }
@@ -171,7 +171,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename R>
     Base& id(id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = o;
         return *this;
     }
@@ -180,7 +180,7 @@ struct term_builder_i : term_id_builder_i<Base> {
      * Use methods from term_builder to configure properties of predicate. */
     Base& pred() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        this->m_term_id = &m_term->pred;
+        this->m_term_id = &m_term->first;
         return *this;
     }
 
@@ -272,7 +272,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -282,7 +282,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -292,7 +292,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::In);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -302,7 +302,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::InOut);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -317,11 +317,11 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Make term a singleton. */
     Base& singleton() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_term->id || m_term->pred.entity, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_term->id || m_term->first.entity, ECS_INVALID_PARAMETER, NULL);
         
         flecs::id_t pred = m_term->id;
         if (!pred) {
-            pred = m_term->pred.entity;
+            pred = m_term->first.entity;
         }
 
         ecs_assert(pred != 0, ECS_INVALID_PARAMETER, NULL);

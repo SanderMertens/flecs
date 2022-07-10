@@ -2371,7 +2371,7 @@ void OnDelete_delete_tree_w_query() {
     ECS_ENTITY(world, Rel, EcsAcyclic);
     ECS_TAG(world, Foo);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super(Rel))");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up(Rel))");
     test_assert(q != NULL);
 
     ecs_entity_t e1 = ecs_new(world, Tag);

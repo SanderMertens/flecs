@@ -70,15 +70,15 @@ int main(int argc, char *argv[]) {
     // - check if _Platoon has (Player, *), store * in _Player
     ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t){
         .terms = {
-            { .pred.entity = RangedUnit },
+            { .first.id = RangedUnit },
             {
-                .pred.entity = Platoon, 
-                .obj = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
+                .first.id = Platoon, 
+                .second = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
             },
             { 
-                .pred.entity = Player, 
-                .subj = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
-                .obj = { .name = (char*)"Player", .var = EcsVarIsVariable },
+                .first.id = Player, 
+                .src = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
+                .second = { .name = (char*)"Player", .var = EcsVarIsVariable },
             }
         }
     });

@@ -2307,7 +2307,7 @@ void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents() {
     ecs_add_pair(world, e1, EcsIsA, base);
     ecs_add_pair(world, e2, EcsIsA, base);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Mass(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Mass(up)");
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);

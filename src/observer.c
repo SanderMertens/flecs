@@ -265,8 +265,8 @@ void flecs_uni_observer_register(
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
 
-    if (term->subj.set.mask & EcsSelf) {
-        if (term->subj.entity == EcsThis) {
+    if (term->src.flags & EcsSelf) {
+        if (ecs_term_match_this(term)) {
             flecs_register_observer_for_id(world, observable, observer, id,
                 offsetof(ecs_event_id_record_t, observers));
         } else {
@@ -275,8 +275,8 @@ void flecs_uni_observer_register(
         }
     }
 
-    if (observer->filter.terms[0].subj.set.mask & EcsSuperSet) {
-        ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
+    if (observer->filter.terms[0].src.flags & EcsUp) {
+        ecs_id_t pair = ecs_pair(term->src.trav, EcsWildcard);
         flecs_register_observer_for_id(world, observable, observer, pair,
             offsetof(ecs_event_id_record_t, set_observers));
     }
@@ -347,8 +347,8 @@ void flecs_unregister_observer(
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
 
-    if (term->subj.set.mask & EcsSelf) {
-        if (term->subj.entity == EcsThis) {
+    if (term->src.flags & EcsSelf) {
+        if (ecs_term_match_this(term)) {
             flecs_unregister_observer_for_id(world, observable, observer, id,
                 offsetof(ecs_event_id_record_t, observers));
         } else {
@@ -357,8 +357,8 @@ void flecs_unregister_observer(
         }
     }
 
-    if (term->subj.set.mask & EcsSuperSet) {
-        ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
+    if (term->src.flags & EcsUp) {
+        ecs_id_t pair = ecs_pair(term->src.trav, EcsWildcard);
         flecs_unregister_observer_for_id(world, observable, observer, pair,
             offsetof(ecs_event_id_record_t, set_observers));
     }
@@ -608,7 +608,7 @@ void flecs_notify_entity_observers(
 
         int32_t i, entity_count = it->count;
         for (i = 0; i < entity_count; i ++) {
-            if (entities[i] != observer->filter.terms[0].subj.entity) {
+            if (entities[i] != observer->filter.terms[0].src.id) {
                 continue;
             }
 
@@ -671,7 +671,7 @@ void flecs_notify_set_base_observers(
             continue;
         }
 
-        if (!term->subj.set.min_depth && flecs_table_record_get(
+        if (!(term->src.flags & EcsSelf) && flecs_table_record_get(
             world, it->table, id) != NULL) 
         {
             continue;
@@ -724,17 +724,17 @@ void flecs_notify_set_observers(
             continue;
         }
 
-        ecs_entity_t subj = it->entities[0];
+        ecs_entity_t src = it->entities[0];
         int32_t i, count = it->count;
         ecs_filter_t *filter = &observer->filter;
         ecs_term_t *term = &filter->terms[0];
-        ecs_entity_t term_subj = term->subj.entity;
+        ecs_entity_t src_id = term->src.id;
 
         /* If observer is for a specific entity, make sure it is in the table
          * being triggered for */
-        if (term_subj != EcsThis) {
+        if (!(ecs_term_match_this(term))) {
             for (i = 0; i < count; i ++) {
-                if (it->entities[i] == term_subj) {
+                if (it->entities[i] == src_id) {
                     break;
                 }
             }
@@ -774,7 +774,7 @@ void flecs_notify_set_observers(
             }
         }
 
-        it->entities[0] = subj;
+        it->entities[0] = src;
         it->count = count;            
     }
 }
@@ -1079,7 +1079,7 @@ int flecs_multi_observer_init(
     bool optional_only = filter->flags & EcsFilterMatchThis;
     for (i = 0; i < term_count; i ++) {
         if (filter->terms[i].oper != EcsOptional) {
-            if (filter->terms[i].subj.entity == EcsThis) {
+            if (ecs_term_match_this(&filter->terms[i])) {
                 optional_only = false;
             }
         }
@@ -1119,8 +1119,8 @@ int flecs_multi_observer_init(
                     continue;
                 }
 
-                term->pred.name = NULL;
-                term->pred.entity = ti_ids[ti];
+                term->first.name = NULL;
+                term->first.id = ti_ids[ti];
                 term->id = ti_ids[ti];
 
                 if (ecs_observer_init(world, &child_desc) == 0) {
@@ -1133,10 +1133,10 @@ int flecs_multi_observer_init(
         /* If observer only contains optional terms, match everything */
         if (optional_only) {
             term->id = EcsAny;
-            term->pred.entity = EcsAny;
-            term->subj.entity = EcsThis;
-            term->subj.var = EcsVarIsVariable;
-            term->obj.entity = 0;
+            term->first.id = EcsAny;
+            term->src.id = EcsThis;
+            term->src.flags = EcsIsVariable;
+            term->second.id = 0;
         }
         if (ecs_observer_init(world, &child_desc) == 0) {
             goto error;

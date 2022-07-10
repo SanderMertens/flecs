@@ -409,7 +409,7 @@ void FilterBuilder_isa_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subj().set(flecs::SuperSet)
+        .term<Other>().src().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -439,7 +439,7 @@ void FilterBuilder_isa_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subj().set(flecs::Self | flecs::SuperSet)
+        .term<Other>().src().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -480,7 +480,7 @@ void FilterBuilder_childof_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subj().set(flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -510,7 +510,7 @@ void FilterBuilder_childof_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -551,7 +551,7 @@ void FilterBuilder_isa_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subj().set(flecs::SuperSet)
+        .arg(2).src().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -576,7 +576,7 @@ void FilterBuilder_isa_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subj().set(flecs::Self | flecs::SuperSet)
+        .arg(2).src().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -603,7 +603,7 @@ void FilterBuilder_childof_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subj().set(flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -628,7 +628,7 @@ void FilterBuilder_childof_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -1061,7 +1061,7 @@ void FilterBuilder_explicit_subject_w_type() {
     ecs.set<Position>({10, 20});
 
     auto q = ecs.filter_builder<Position>()
-        .term<Position>().subj<Position>()
+        .term<Position>().src<Position>()
         .build();
 
     int32_t count = 0;
@@ -1083,7 +1083,7 @@ void FilterBuilder_explicit_object_w_id() {
     auto Bob = ecs.entity();
 
     auto q = ecs.filter_builder<>()
-        .term(Likes).obj(Alice)
+        .term(Likes).second(Alice)
         .build();
 
     auto e1 = ecs.entity().add(Likes, Alice);
@@ -1106,7 +1106,7 @@ void FilterBuilder_explicit_object_w_type() {
     auto Bob = ecs.entity();
 
     auto q = ecs.filter_builder<>()
-        .term(Likes).obj<Alice>()
+        .term(Likes).second<Alice>()
         .build();
 
     auto e1 = ecs.entity().add(Likes, ecs.id<Alice>());
@@ -1253,7 +1253,7 @@ void FilterBuilder_2_subsequent_args() {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .arg(1).obj(flecs::Wildcard)
+        .arg(1).second(flecs::Wildcard)
         .arg(2).singleton()
         .iter([&](flecs::iter it){
             count += it.count();
@@ -1602,7 +1602,7 @@ void FilterBuilder_term_after_arg() {
         .add<TagB>();
 
     auto f = ecs.filter_builder<TagA, TagB>()
-        .arg(1).subj(flecs::This) // dummy
+        .arg(1).src(flecs::This) // dummy
         .term<TagC>()
         .build();
 
@@ -1623,7 +1623,7 @@ void FilterBuilder_name_arg() {
     auto e = ecs.entity("Foo").set<Position>({10, 20});
 
     auto f = ecs.filter_builder<Position>()
-        .arg(1).subj().name("Foo")
+        .arg(1).src().name("Foo")
         .build();
 
     int32_t count = 0;

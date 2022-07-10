@@ -1073,7 +1073,7 @@ void Observer_2_terms_w_from_entity_on_add() {
     
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr, .subj.entity = x}},
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr, .src.id = x}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -1271,7 +1271,7 @@ void Observer_filter_w_strings() {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{.pred.name = "TagA"}, {.pred.name = "TagB"}},
+        .filter.terms = {{.first.name = "TagA"}, {.first.name = "TagB"}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2444,7 +2444,7 @@ void Observer_observer_superset_wildcard() {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2495,7 +2495,7 @@ void Observer_observer_superset_wildcard_add_isa() {
     
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2537,7 +2537,7 @@ void Observer_observer_superset_wildcard_add_isa_at_offset() {
     
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx

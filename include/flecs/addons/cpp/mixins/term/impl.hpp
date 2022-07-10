@@ -84,7 +84,7 @@ struct term final : term_builder_i<term> {
     }
 
     int finalize() {
-        return ecs_term_finalize(m_world, nullptr, &value);
+        return ecs_term_finalize(m_world, &value);
     }
 
     bool is_set() {
@@ -104,15 +104,15 @@ struct term final : term_builder_i<term> {
     }
 
     flecs::entity get_subj() {
-        return flecs::entity(world(), value.subj.entity);
+        return flecs::entity(world(), value.src.id);
     }
 
     flecs::entity get_pred() {
-        return flecs::entity(world(), value.pred.entity);
+        return flecs::entity(world(), value.first.id);
     }
 
     flecs::entity get_obj() {
-        return flecs::entity(world(), value.obj.entity);
+        return flecs::entity(world(), value.second.id);
     }
 
     ecs_term_t move() { /* explicit move to ecs_term_t */

@@ -907,7 +907,7 @@ void Iter_paged_iter_w_shared_comp() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .subj.entity = foo} },
+        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} },
         .instanced = true
     });
 
@@ -1002,7 +1002,7 @@ void Iter_worker_iter_w_shared_comp() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .subj.entity = foo} },
+        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} },
         .instanced = true
     });
 
@@ -1122,7 +1122,7 @@ void Iter_paged_iter_w_task_query() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ ecs_id(Self), .subj.entity = foo }}
+        .terms = {{ ecs_id(Self), .src.id = foo }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -1156,7 +1156,7 @@ void Iter_worker_iter_w_task_query() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ ecs_id(Self), .subj.entity = foo }}
+        .terms = {{ ecs_id(Self), .src.id = foo }}
     });
 
     ecs_iter_t it_1 = ecs_filter_iter(world, &f);

@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     //          { 
     //              .id = ecs_id(Velocity), 
     //              .inout = EcsOut, 
-    //              .subj.set.mask = EcsNothing 
+    //              .src.flags = EcsNothing 
     //          }
     //      },
     //      .entity = {

@@ -337,7 +337,7 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {
         { ecs_id(Position) },
-        { ecs_id(Position), .subj.set = {
+        { ecs_id(Position), .src.set = {
             .mask = EcsCascade,    // Force breadth-first order
             .relation = EcsChildOf // Use ChildOf relation for ordering
         }}

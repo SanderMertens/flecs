@@ -202,7 +202,7 @@ void Filter_term_get_subj() {
 
     auto q = ecs.query_builder()
         .term<Position>()
-        .term<Velocity>().subj(Src)
+        .term<Velocity>().src(Src)
         .term(Foo, Bar)
         .build();
 
@@ -226,7 +226,7 @@ void Filter_term_get_pred() {
 
     auto q = ecs.query_builder()
         .term<Position>()
-        .term<Velocity>().subj(Src)
+        .term<Velocity>().src(Src)
         .term(Foo, Bar)
         .build();
 
@@ -250,7 +250,7 @@ void Filter_term_get_obj() {
 
     auto q = ecs.query_builder()
         .term<Position>()
-        .term<Velocity>().subj(Src)
+        .term<Velocity>().src(Src)
         .term(Foo, Bar)
         .build();
 

@@ -158,7 +158,7 @@ bool flecs_iter_populate_term_data(
             /* The reference array is used only for components matched on a
              * table (vs. individual entities). Remaining components should be
              * assigned outside of this function */
-            if (it->terms[t].subj.entity == EcsThis) {
+            if (ecs_term_match_this(&it->terms[t])) {
 
                 /* Iterator provides cached references for non-This terms */
                 ecs_ref_t *ref = &it->references[-column - 1];
@@ -434,14 +434,14 @@ bool ecs_term_is_readonly(
     if (term->inout == EcsIn) {
         return true;
     } else {
-        ecs_term_id_t *subj = &term->subj;
+        ecs_term_id_t *src = &term->src;
 
         if (term->inout == EcsInOutDefault) {
-            if (subj->entity != EcsThis) {
+            if (!(ecs_term_match_this(term))) {
                 return true;
             }
 
-            if (!(subj->set.mask & EcsSelf)) {
+            if (!(src->flags & EcsSelf)) {
                 return true;
             }
         }

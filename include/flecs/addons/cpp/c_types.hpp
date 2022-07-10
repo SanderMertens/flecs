@@ -59,7 +59,7 @@ static const flecs::entity_t System = EcsSystem;
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
-static const uint8_t SuperSet = EcsSuperSet;
+static const uint8_t SuperSet = EcsUp;
 static const uint8_t SubSet = EcsSubSet;
 static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;

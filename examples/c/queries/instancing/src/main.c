@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
         .filter = {
             .terms = {
                 // Position must always be owned by the entity
-                { .id = ecs_id(Position), .subj.set.mask = EcsSelf }, 
+                { .id = ecs_id(Position), .src.flags = EcsSelf }, 
                 { .id = ecs_id(Velocity) } // Velocity may be shared (default)
             },
             .instanced = true

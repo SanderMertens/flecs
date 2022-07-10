@@ -83,9 +83,9 @@ bool check_term_component(
 {
     int32_t state = get_write_state(write_state->components, component);
 
-    ecs_term_id_t *subj = &term->subj;
+    ecs_term_id_t *src = &term->src;
 
-    if ((subj->set.mask & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
+    if ((src->flags & EcsSelf) && ecs_term_match_this(term) && term->oper != EcsNot) {
         switch(term->inout) {
         case EcsInOutFilter:
             /* Ignore terms that aren't read/written */
@@ -102,8 +102,7 @@ bool check_term_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
-
-    } else if (!subj->entity || term->oper == EcsNot) {
+    } else if (!src->id || term->oper == EcsNot) {
         bool needs_merge = false;
 
         switch(term->inout) {
@@ -125,7 +124,7 @@ bool check_term_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if ((!(subj->set.mask & EcsSelf) || (subj->entity != EcsThis)) && (subj->set.mask != EcsNothing)) {
+            if ((!(src->flags & EcsSelf) || (!ecs_term_match_this(term))) && (!ecs_term_match_0(term))) {
                 /* Default inout behavior is [inout] for This terms, and [in]
                  * for terms that match other entities */
                 break;
@@ -177,7 +176,7 @@ bool check_terms(
      * was added before the term, it won't cause merging. */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
-        if (term->subj.entity == EcsThis) {
+        if (ecs_term_match_this(term)) {
             needs_merge |= check_term(term, is_active, ws);
         }
     }
@@ -185,7 +184,7 @@ bool check_terms(
     /* Now check staged terms */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
-        if (term->subj.entity != EcsThis) {
+        if (!ecs_term_match_this(term)) {
             needs_merge |= check_term(term, is_active, ws);
         }
     }
@@ -746,9 +745,7 @@ void FlecsPipelineImport(
         .query = {
             .filter.terms = {
                 { .id = EcsSystem },
-                { .id = EcsPhase, .subj.set = { 
-                    .mask = EcsCascade, .relation = EcsDependsOn
-                }}
+                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn }
             },
             .order_by = flecs_entity_compare
         }

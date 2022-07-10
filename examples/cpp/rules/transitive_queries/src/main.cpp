@@ -98,8 +98,8 @@ int main(int, char *[]) {
     //   Person, (LocatedIn, $Location), Country($Location)
     auto r = ecs.rule_builder()
         .term<Person>()
-        .term<LocatedIn>().obj().var("Location")
-        .term<Country>().subj().var("Location")
+        .term<LocatedIn>().second().var("Location")
+        .term<Country>().src().var("Location")
         .build();
     
     // Lookup the index of the variable. This will let us quickly lookup its

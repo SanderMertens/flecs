@@ -386,7 +386,7 @@ void QueryBuilder_isa_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().subj().set(flecs::SuperSet)
+        .term<Other>().src().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -416,7 +416,7 @@ void QueryBuilder_isa_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().subj().set(flecs::Self | flecs::SuperSet)
+        .term<Other>().src().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -457,7 +457,7 @@ void QueryBuilder_childof_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().subj().set(flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -487,7 +487,7 @@ void QueryBuilder_childof_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -528,7 +528,7 @@ void QueryBuilder_isa_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).subj().set(flecs::SuperSet)
+        .arg(2).src().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -553,7 +553,7 @@ void QueryBuilder_isa_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).subj().set(flecs::Self | flecs::SuperSet)
+        .arg(2).src().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -580,7 +580,7 @@ void QueryBuilder_childof_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).subj().set(flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -605,7 +605,7 @@ void QueryBuilder_childof_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -1038,7 +1038,7 @@ void QueryBuilder_explicit_subject_w_type() {
     ecs.set<Position>({10, 20});
 
     auto q = ecs.query_builder<Position>()
-        .term<Position>().subj<Position>()
+        .term<Position>().src<Position>()
         .build();
 
     int32_t count = 0;
@@ -1060,7 +1060,7 @@ void QueryBuilder_explicit_object_w_id() {
     auto Bob = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(Likes).obj(Alice)
+        .term(Likes).second(Alice)
         .build();
 
     auto e1 = ecs.entity().add(Likes, Alice);
@@ -1083,7 +1083,7 @@ void QueryBuilder_explicit_object_w_type() {
     auto Bob = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(Likes).obj<Alice>()
+        .term(Likes).second<Alice>()
         .build();
 
     auto e1 = ecs.entity().add(Likes, ecs.id<Alice>());
@@ -1230,7 +1230,7 @@ void QueryBuilder_2_subsequent_args() {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .arg(1).obj(flecs::Wildcard)
+        .arg(1).second(flecs::Wildcard)
         .arg(2).singleton()
         .iter([&](flecs::iter it){
             count += it.count();

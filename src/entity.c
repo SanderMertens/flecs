@@ -1496,17 +1496,17 @@ ecs_table_t *traverse_from_expr(
                 break;
             }
 
-            if (term.pred.set.mask == EcsDefaultSet) {
-                term.pred.set.mask = EcsSelf;
+            if (!(term.first.flags & (EcsSelf|EcsUp))) {
+                term.first.flags = EcsSelf;
             }
-            if (term.subj.set.mask == EcsDefaultSet) {
-                term.subj.set.mask = EcsSelf;
+            if (!(term.second.flags & (EcsSelf|EcsUp))) {
+                term.second.flags = EcsSelf;
             }
-            if (term.obj.set.mask == EcsDefaultSet) {
-                term.obj.set.mask = EcsSelf;
+            if (!(term.src.flags & (EcsSelf|EcsUp))) {
+                term.src.flags = EcsSelf;
             }
 
-            if (ecs_term_finalize(world, name, &term)) {
+            if (ecs_term_finalize(world, &term)) {
                 ecs_term_fini(&term);
                 if (error) {
                     *error = true;
@@ -1562,7 +1562,7 @@ void defer_from_expr(
                 break;
             }
 
-            if (ecs_term_finalize(world, name, &term)) {
+            if (ecs_term_finalize(world, &term)) {
                 return;
             }
 

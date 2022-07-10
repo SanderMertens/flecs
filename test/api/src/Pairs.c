@@ -1521,7 +1521,7 @@ void Pairs_api_pair_w_explicit_subj_this() {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_pair(Rel, Obj), .subj.entity = EcsThis}}
+        .filter.terms = {{ecs_pair(Rel, Obj), .src.id = EcsThis}}
     });
 
     test_assert(q != NULL);
@@ -1569,7 +1569,7 @@ void Pairs_api_pair_w_explicit_subj() {
     test_assert(Subj != 0);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_pair(Rel, Obj), .subj.entity = Subj}, {Tag}}
+        .filter.terms = {{ecs_pair(Rel, Obj), .src.id = Subj}, {Tag}}
     });
 
     test_assert(q != NULL);

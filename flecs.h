@@ -2395,19 +2395,9 @@ typedef struct ecs_iterable_t {
 /** @} */
 
 /**
- * @defgroup filter_types Types used to describe filters, terms and triggers
+ * @defgroup query_types Types used to describe queries.
  * @{
  */
-
-/** Set flags describe if & how a matched entity should be substituted */
-#define EcsDefaultSet   (0)  /* Default set, SuperSet|Self for This subject */
-#define EcsSelf         (1)  /* Select self (inclusive) */
-#define EcsSuperSet     (2)  /* Select superset until predicate match */
-#define EcsSubSet       (4)  /* Select subset until predicate match */
-#define EcsCascade      (8)  /* Use breadth-first ordering of relations */
-#define EcsAll          (16) /* Walk full super/subset, regardless of match */
-#define EcsParent       (32) /* Shortcut for SuperSet(ChildOf) */
-#define EcsNothing      (64) /* Select from nothing */
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
@@ -2418,14 +2408,7 @@ typedef enum ecs_inout_kind_t {
     EcsOut,           /* Term is only written */
 } ecs_inout_kind_t;
 
-/** Specifies whether term identifier is a variable or entity */
-typedef enum ecs_var_kind_t {
-    EcsVarDefault,      /* Variable if name is all caps, otherwise an entity */
-    EcsVarIsEntity,     /* Term is an entity */
-    EcsVarIsVariable    /* Term is a variable */
-} ecs_var_kind_t;
-
-/** Type describing an operator used in an signature of a system signature */
+/** Specify operator for term */
 typedef enum ecs_oper_kind_t {
     EcsAnd,         /* The term must match */
     EcsOr,          /* One of the terms in an or chain must match */
@@ -2436,47 +2419,59 @@ typedef enum ecs_oper_kind_t {
     EcsNotFrom      /* Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
-/** Substitution with set parameters.
- * These parameters allow for substituting a term id with its super- or subsets
- * for a specified relationship. This enables functionality such as selecting
- * components from a base (IsA) or a parent (ChildOf) in a single term */
-typedef struct ecs_term_set_t {
-    ecs_entity_t relation;      /* Relationship to substitute (default = IsA) */
-    uint8_t mask;               /* Substitute as self, subset, superset */
-    int32_t min_depth;          /* Min depth of subset/superset substitution */
-    int32_t max_depth;          /* Max depth of subset/superset substitution */
-} ecs_term_set_t;
+/** Term flags */
+#define EcsSelf                       (1u << 1) /* Match on self */
+#define EcsUp                         (1u << 2) /* Match by traversing upwards */
+#define EcsDown                       (1u << 3) /* Match by traversing downwards (derived, cannot be set) */
+#define EcsCascade                    (1u << 4) /* Sort results breadth first */
+#define EcsParent                     (1u << 5) /* Short for up(ChildOf) */
+#define EcsIsVariable                 (1u << 6) /* Term id is a variable */
+#define EcsIsEntity                   (1u << 7) /* Term id is an entity */
+
+#define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
-    ecs_entity_t entity;        /* Entity (default = This) */
-    char *name;                 /* Name (default = ".") */
-    ecs_var_kind_t var;         /* Is id a variable (default yes if name is 
-                                 * all caps & entity is 0) */
-    ecs_term_set_t set;         /* Set substitution parameters */
+    ecs_entity_t id;            /* Entity id. If left to 0 and flags does not 
+                                 * specify whether id is an entity or a variable
+                                 * the id will be initialized to EcsThis. 
+                                 * To explicitly set the id to 0, leave the id
+                                 * member to 0 and set EcsIsEntity in flags. */
+
+    char *name;                 /* Name. This can be either the variable name
+                                 * (when the EcsTermVariable flag is set) or an
+                                 * entity name. Entity names are used to 
+                                 * initialize the id member during term 
+                                 * finalization and will be freed afterwards. */
+
+    ecs_entity_t trav;          /* Relationship to traverse when looking for the
+                                 * component. The relationship must have
+                                 * the Acyclic property. Default is IsA. */
+
+    ecs_flags32_t flags;        /* Term flags */
 } ecs_term_id_t;
 
-/** Type that describes a single column in the system signature */
+/** Type that describes a single element in a query */
 struct ecs_term_t {
-    ecs_id_t id;                /* Can be used instead of pred, args and role to
-                                 * set component/pair id. If not set, it will be 
-                                 * computed from predicate, object. If set, the
-                                 * subject cannot be set, or be set to This. */
+    ecs_id_t id;                /* Component id to be matched by term. Can be
+                                 * set directly, or will be populated from the
+                                 * first/second members, which provide more
+                                 * flexibility. */
+
+    ecs_term_id_t src;          /* Source of term */
+    ecs_term_id_t first;        /* Component or first element of pair */
+    ecs_term_id_t second;       /* Second element of pair */
     
     ecs_inout_kind_t inout;     /* Access to contents matched with term */
-    ecs_term_id_t pred;         /* Predicate of term */
-    ecs_term_id_t subj;         /* Subject of term */
-    ecs_term_id_t obj;          /* Object of term */
     ecs_oper_kind_t oper;       /* Operator of term */
+
     ecs_id_t role;              /* Role of term */
     char *name;                 /* Name of term */
 
     int32_t index;              /* Computed term index in filter which takes 
                                  * into account folded OR terms */
 
-    bool move;                  /* When true, this signals to ecs_term_copy that
-                                 * the resources held by this term may be moved
-                                 * into the destination term. */
+    bool move;                  /* Used by internals */
 };
 
 /** Use this variable to initialize user-allocated filter object */
@@ -5808,6 +5803,14 @@ FLECS_API
 bool ecs_term_is_trivial(
     const ecs_term_t *term);
 
+FLECS_API
+bool ecs_term_match_this(
+    const ecs_term_t *term);
+
+FLECS_API
+bool ecs_term_match_0(
+    const ecs_term_t *term);
+
 /** Finalize term.
  * Ensure that all fields of a term are consistent and filled out. This 
  * operation should be invoked before using and after assigning members to, or 
@@ -5823,15 +5826,14 @@ bool ecs_term_is_trivial(
  * descriptive error messages.
  *
  * @param world The world.
- * @param name The name of the entity that uses the term (such as a system).
  * @param term The term to finalize.
  * @return Zero if success, nonzero if an error occurred.
  */
 FLECS_API 
 int ecs_term_finalize(
     const ecs_world_t *world,
-    const char *name,
     ecs_term_t *term);
+
 
 /** Copy resources of a term to another term.
  * This operation copies one term to another term. If the source term contains
@@ -6364,7 +6366,7 @@ typedef struct ecs_event_desc_t {
     ecs_poly_t *observable;
 
     /* Table events apply to tables, not the entities in the table. When
-     * enabled, (super)set triggers are not notified. */
+     * enabled, (up)set triggers are not notified. */
     bool table_event;
 
     /* When set, events will only be propagated by traversing the relation */
@@ -6559,7 +6561,7 @@ bool ecs_iter_is_true(
  * // Rule that matches (Eats, *)
  * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
- *     { .pred.entity = Eats, .obj.name = "_Food" }
+ *     { .first.id = Eats, .second.name = "_Food" }
  *   }
  * });
  * 
@@ -11890,7 +11892,7 @@ extern "C" {
  * 
  * In the query expression syntax, variables are prefixed with a $. When using
  * the descriptor, specify the variable kind:
- *   desc.terms[0].obj = { .name = "X", .var = EcsVarIsVariable }
+ *   desc.terms[0].second = { .name = "X", .var = EcsVarIsVariable }
  * 
  * Different terms with the same variable name are automatically correlated by
  * the query engine.
@@ -12826,7 +12828,7 @@ static const flecs::entity_t System = EcsSystem;
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
-static const uint8_t SuperSet = EcsSuperSet;
+static const uint8_t SuperSet = EcsUp;
 static const uint8_t SubSet = EcsSubSet;
 static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;
@@ -20786,14 +20788,14 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename T>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<T>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<T>::id(this->world_v());
         return *this;
     }
 
     /** Set (component) id to id. */
     Base& id(id_t id) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = id;
+        m_term->first.entity = id;
         return *this;
     }
 
@@ -20805,7 +20807,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = r;
+        m_term->first.entity = r;
         m_term->obj.entity = o;
         return *this;
     }
@@ -20814,7 +20816,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename R, typename O>
     Base& id() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = _::cpp_type<O>::id(this->world_v());
         return *this;
     }
@@ -20823,7 +20825,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     template<typename R>
     Base& id(id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        m_term->pred.entity = _::cpp_type<R>::id(this->world_v());
+        m_term->first.entity = _::cpp_type<R>::id(this->world_v());
         m_term->obj.entity = o;
         return *this;
     }
@@ -20832,7 +20834,7 @@ struct term_builder_i : term_id_builder_i<Base> {
      * Use methods from term_builder to configure properties of predicate. */
     Base& pred() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        this->m_term_id = &m_term->pred;
+        this->m_term_id = &m_term->first;
         return *this;
     }
 
@@ -20924,7 +20926,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -20934,7 +20936,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -20944,7 +20946,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::In);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -20954,7 +20956,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->inout = static_cast<ecs_inout_kind_t>(flecs::InOut);
         if (m_term->oper != EcsNot) {
-            m_term->subj.set.mask = flecs::Nothing;
+            m_term->subj.flags = flecs::Nothing;
         }
         return *this;
     }
@@ -20969,11 +20971,11 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Make term a singleton. */
     Base& singleton() {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_term->id || m_term->pred.entity, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_term->id || m_term->first.entity, ECS_INVALID_PARAMETER, NULL);
         
         flecs::id_t pred = m_term->id;
         if (!pred) {
-            pred = m_term->pred.entity;
+            pred = m_term->first.entity;
         }
 
         ecs_assert(pred != 0, ECS_INVALID_PARAMETER, NULL);
@@ -21092,7 +21094,7 @@ struct term final : term_builder_i<term> {
     }
 
     int finalize() {
-        return ecs_term_finalize(m_world, nullptr, &value);
+        return ecs_term_finalize(m_world, &value);
     }
 
     bool is_set() {
@@ -21112,15 +21114,15 @@ struct term final : term_builder_i<term> {
     }
 
     flecs::entity get_subj() {
-        return flecs::entity(world(), value.subj.entity);
+        return flecs::entity(world(), value.src.id);
     }
 
     flecs::entity get_pred() {
-        return flecs::entity(world(), value.pred.entity);
+        return flecs::entity(world(), value.first.id);
     }
 
     flecs::entity get_obj() {
-        return flecs::entity(world(), value.obj.entity);
+        return flecs::entity(world(), value.second.id);
     }
 
     ecs_term_t move() { /* explicit move to ecs_term_t */
@@ -21675,7 +21677,7 @@ public:
      * Resorting happens when a query iterator is obtained, and only if the table
      * data has changed.
      *
-     * If multiple queries that match the same (sub)set of tables specify different 
+     * If multiple queries that match the same (down)set of tables specify different 
      * sorting functions, resorting is likely to happen every time an iterator is
      * obtained, which can significantly slow down iterations.
      *
