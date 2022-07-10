@@ -180,7 +180,7 @@ void flecs_stats_monitor_import(
         .entity = { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }},
         .callback = MonitorStats
     });
@@ -190,10 +190,10 @@ void flecs_stats_monitor_import(
         .entity = { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }, {
             .id = ecs_pair(kind, EcsPeriod1s),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }},
         .callback = ReduceStats,
         .interval = 1.0
@@ -204,10 +204,10 @@ void flecs_stats_monitor_import(
         .entity = { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }, {
             .id = ecs_pair(kind, EcsPeriod1m),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }},
         .callback = ReduceStats,
         .rate = 60,
@@ -219,10 +219,10 @@ void flecs_stats_monitor_import(
         .entity = { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }, {
             .id = ecs_pair(kind, EcsPeriod1m),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }},
         .callback = AggregateStats,
         .rate = 60,
@@ -235,10 +235,10 @@ void flecs_stats_monitor_import(
         .entity = { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} },
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }, {
             .id = ecs_pair(kind, EcsPeriod1h),
-            .subj.entity = EcsWorld 
+            .src.id = EcsWorld 
         }},
         .callback = AggregateStats,
         .rate = 60,

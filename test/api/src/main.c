@@ -877,13 +877,6 @@ void Filter_term_w_subset(void);
 void Filter_term_w_self_superset(void);
 void Filter_term_w_superset_custom_relation(void);
 void Filter_term_w_self_superset_custom_relation(void);
-void Filter_term_w_self_min_max_depth(void);
-void Filter_term_w_self_invalid_min_depth(void);
-void Filter_term_w_self_invalid_max_depth(void);
-void Filter_term_w_self_invalid_min_max_depth(void);
-void Filter_term_w_superset_min_depth(void);
-void Filter_term_w_superset_max_depth(void);
-void Filter_term_w_superset_min_max_depth(void);
 void Filter_term_iter_component(void);
 void Filter_term_iter_w_pred(void);
 void Filter_term_iter_tag(void);
@@ -5348,34 +5341,6 @@ bake_test_case Filter_testcases[] = {
     {
         "term_w_self_superset_custom_relation",
         Filter_term_w_self_superset_custom_relation
-    },
-    {
-        "term_w_self_min_max_depth",
-        Filter_term_w_self_min_max_depth
-    },
-    {
-        "term_w_self_invalid_min_depth",
-        Filter_term_w_self_invalid_min_depth
-    },
-    {
-        "term_w_self_invalid_max_depth",
-        Filter_term_w_self_invalid_max_depth
-    },
-    {
-        "term_w_self_invalid_min_max_depth",
-        Filter_term_w_self_invalid_min_max_depth
-    },
-    {
-        "term_w_superset_min_depth",
-        Filter_term_w_superset_min_depth
-    },
-    {
-        "term_w_superset_max_depth",
-        Filter_term_w_superset_max_depth
-    },
-    {
-        "term_w_superset_min_max_depth",
-        Filter_term_w_superset_min_max_depth
     },
     {
         "term_iter_component",
@@ -10025,7 +9990,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        197,
+        190,
         Filter_testcases
     },
     {

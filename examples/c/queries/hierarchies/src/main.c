@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
                 .id = ecs_pair(ecs_id(Position), World), 
                 .inout = EcsIn,
                 // Get from the parent, in breadth-first order (cascade)
-                .subj.set.mask = EcsParent | EcsCascade,
+                .src.flags = EcsParent | EcsCascade,
                 // Make parent term optional so we also match the root (sun)
                 .oper = EcsOptional
             }

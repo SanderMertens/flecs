@@ -55,7 +55,7 @@ extern "C" {
  * 
  * In the query expression syntax, variables are prefixed with a $. When using
  * the descriptor, specify the variable kind:
- *   desc.terms[0].obj = { .name = "X", .var = EcsVarIsVariable }
+ *   desc.terms[0].second = { .name = "X", .var = EcsVarIsVariable }
  * 
  * Different terms with the same variable name are automatically correlated by
  * the query engine.

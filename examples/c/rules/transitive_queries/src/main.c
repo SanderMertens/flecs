@@ -101,12 +101,12 @@ int main(int argc, char *argv[]) {
         .terms = {
             { .id = Person },
             { 
-                .pred.entity = LocatedIn, 
-                .obj = { .name = (char*)"Location", .var = EcsVarIsVariable },
+                .first.id = LocatedIn, 
+                .second = { .name = (char*)"Location", .var = EcsVarIsVariable },
             },
             {
-                .pred.entity = Country, 
-                .subj = { .name = (char*)"Location", .var = EcsVarIsVariable },
+                .first.id = Country, 
+                .src = { .name = (char*)"Location", .var = EcsVarIsVariable },
             },
         }
     });

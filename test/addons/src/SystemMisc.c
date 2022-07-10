@@ -257,7 +257,7 @@ void SystemMisc_invalid_mixed_src_modifier() {
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)} },
-        .query.filter.expr = "Position(super) || Velocity",
+        .query.filter.expr = "Position(up) || Velocity",
         .callback = Dummy
     });
 
@@ -397,7 +397,7 @@ void SystemMisc_dont_enable_after_rematch() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|super), Velocity(self|super));
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|up), Velocity(self|up));
 
     /* Create an entity that is watched. Whenever components are added/removed
      * to and/or from watched entities, a rematch is triggered. */
@@ -761,16 +761,16 @@ void SystemMisc_one_named_column_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
-    test_assert(term->subj.entity == EcsThis);
+    test_assert(term->src.flags == (EcsSelf|EcsUp));
+    test_assert(term->src.id == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Position));
     test_str(term->name, "pos");
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
-    test_assert(term->subj.entity == EcsThis);
+    test_assert(term->src.flags == (EcsSelf|EcsUp));
+    test_assert(term->src.id == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Velocity));
     test_str(term->name, NULL);
@@ -799,16 +799,16 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
-    test_assert(term->subj.entity == EcsThis);
+    test_assert(term->src.flags == (EcsSelf|EcsUp));
+    test_assert(term->src.id == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Position));
     test_str(term->name, "pos");
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
-    test_assert(term->subj.entity == EcsThis);
+    test_assert(term->src.flags == (EcsSelf|EcsUp));
+    test_assert(term->src.id == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Velocity));
     test_str(term->name, "vel");
@@ -945,7 +945,7 @@ void SystemMisc_rw_in_implicit_any() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(self|super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(self|up)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -964,7 +964,7 @@ void SystemMisc_rw_in_implicit_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(up)");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -1023,7 +1023,7 @@ void SystemMisc_rw_out_explicit_any() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|up)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1042,7 +1042,7 @@ void SystemMisc_rw_out_explicit_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(up)");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);

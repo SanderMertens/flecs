@@ -694,7 +694,7 @@ void flecs_bootstrap(
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity.add = { ecs_childof(EcsFlecsInternals) },
-        .filter.terms[0] = {.id = EcsTag, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsTag, .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_tag,
         .yield_existing = true
@@ -800,7 +800,7 @@ void flecs_bootstrap(
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { 
             .id = ecs_pair(EcsChildOf, EcsWildcard),
-            .subj.set.mask = EcsSelf
+            .src.flags = EcsSelf
         },
         .events = { EcsOnAdd, EcsOnRemove },
         .yield_existing = true,
@@ -808,55 +808,55 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsFinal, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsFinal, .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_final
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete_object
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsAcyclic, .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_acyclic
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsExclusive, .subj.set.mask = EcsSelf  },
+        .filter.terms[0] = {.id = EcsExclusive, .src.flags = EcsSelf  },
         .events = {EcsOnAdd},
         .callback = register_exclusive
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsSymmetric, .subj.set.mask = EcsSelf  },
+        .filter.terms[0] = {.id = EcsSymmetric, .src.flags = EcsSelf  },
         .events = {EcsOnAdd},
         .callback = register_symmetric
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsDontInherit, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsDontInherit, .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_dont_inherit
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = ecs_pair(EcsWith, EcsWildcard), .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = ecs_pair(EcsWith, EcsWildcard), .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_with
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsUnion, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsUnion, .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_union
     });
@@ -864,7 +864,7 @@ void flecs_bootstrap(
     /* Define observer to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsModule, .subj.set.mask = EcsSelf },
+        .filter.terms[0] = {.id = EcsModule, .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = ensure_module_tag
     });

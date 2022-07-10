@@ -1207,8 +1207,8 @@ void Query_query_from_entity_w_superset() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {
-            { .id = ecs_id(Velocity), .subj.name = "Game" },
-            { .id = ecs_id(Mass), .subj.set.mask = EcsSuperSet }
+            { .id = ecs_id(Velocity), .src.name = "Game" },
+            { .id = ecs_id(Mass), .src.flags = EcsUp }
         }
     });
 
@@ -1699,7 +1699,7 @@ void Query_query_switch_from_nothing() {
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .terms = {
             {Tag},
-            {ecs_pair(Movement, EcsWildcard), .subj.set.mask = EcsNothing}
+            { ecs_pair(Movement, EcsWildcard), .src.flags = EcsIsEntity }
         }
     }});
     test_assert(q != NULL);
@@ -1730,7 +1730,7 @@ void Query_query_case_from_nothing() {
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .terms = {
             {Tag},
-            {ecs_pair(Movement, Walking), .subj.set.mask = EcsNothing}
+            {ecs_pair(Movement, Walking), .src.flags = EcsIsEntity }
         }
     }});
     test_assert(q != NULL);
@@ -1759,7 +1759,7 @@ void Query_query_disabled_from_nothing() {
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .terms = {
             {TagA},
-            {TagB, .subj.set.mask = EcsNothing}
+            {TagB, .src.flags = EcsIsEntity}
         }
     }});
     test_assert(q != NULL);
@@ -2630,7 +2630,7 @@ void Query_query_change_prefab_term() {
     ecs_entity_t base = ecs_new(world, Position);
     ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_query_t *q = ecs_query_new(world, "[in] Position(super)");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(up)");
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q, 0) == true);
     test_assert(ecs_query_changed(q, 0) == true);
@@ -2674,10 +2674,10 @@ void Query_query_change_skip_non_instanced() {
     ecs_add(world, e3, Tag);
     ecs_add(world, e4, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Position(super), [out] Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position(up), [out] Velocity");
     test_assert(q != NULL);
 
-    ecs_query_t *q_r = ecs_query_new(world, "Position(super), [in] Velocity");
+    ecs_query_t *q_r = ecs_query_new(world, "Position(up), [in] Velocity");
     test_assert(q_r != NULL);
 
     test_assert(ecs_query_changed(q_r, 0) == true);
@@ -3321,7 +3321,7 @@ void Query_query_optional_shared() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(up)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -3374,7 +3374,7 @@ void Query_query_optional_shared_nested() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(up)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -3419,7 +3419,7 @@ void Query_query_optional_any() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(self|super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(self|up)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -3464,7 +3464,7 @@ void Query_query_rematch_optional_after_add() {
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(up)");
     test_assert(q != NULL);
 
     /* First iteration, base doesn't have Velocity but query should match with
@@ -3556,7 +3556,7 @@ void Query_get_shared_tag() {
     ecs_entity_t base = ecs_new(world, Tag);
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
 
     int count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -4055,7 +4055,7 @@ void Query_query_optional_shared_tag() {
     ecs_entity_t e3 = ecs_new(world, TagA);
     ecs_add_pair(world, e3, EcsIsA, e2);
 
-    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|super)");
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|up)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -4953,7 +4953,7 @@ void Query_add_singleton_after_query() {
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {
             { TagA },
-            { TagB, .subj.entity = TagB }
+            { TagB, .src.id = TagB }
         }
     });
     test_assert(q != NULL);
@@ -4991,10 +4991,7 @@ void Query_query_w_component_from_parent_from_non_this() {
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {
             { TagA },
-            { TagB, .subj.entity = child, .subj.set = {
-                .relation = EcsChildOf,
-                .mask = EcsSuperSet }
-            }
+            { TagB, .src.id = child, .src.trav = EcsChildOf, .src.flags = EcsUp }
         }
     });
     test_assert(q != NULL);
@@ -5112,7 +5109,7 @@ void Query_isa_superset() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5133,7 +5130,7 @@ void Query_isa_superset_2_lvls() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5161,7 +5158,7 @@ void Query_isa_superset_3_lvls() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5195,7 +5192,7 @@ void Query_isa_superset_2_lvls_owned() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5226,7 +5223,7 @@ void Query_isa_superset_3_lvls_owned() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5264,7 +5261,7 @@ void Query_isa_superset_owned_empty_table_after_match() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5317,7 +5314,7 @@ void Query_isa_self_superset() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(self|super)");
+    ecs_query_t *q = ecs_query_new(world, "Tag(self|up)");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5343,7 +5340,7 @@ void Query_childof_superset() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag(super(ChildOf))");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up(ChildOf))");
     test_assert(q != NULL);
 
     ecs_entity_t base = ecs_new(world, Tag);
@@ -5380,7 +5377,7 @@ void Query_superset_2_relations() {
     ecs_add_pair(world, t, R, e_1);
     ecs_delete(world, t);
 
-    ecs_query_t *q = ecs_query_new(world, "Position(super(R))");
+    ecs_query_t *q = ecs_query_new(world, "Position(up(R))");
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
@@ -6707,7 +6704,7 @@ void Query_query_w_pair_id_and_subj() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {{
-            .id = ecs_pair(Rel, Obj), .subj.entity = Subj
+            .id = ecs_pair(Rel, Obj), .src.id = Subj
         }}
     });
     test_assert(q != NULL);

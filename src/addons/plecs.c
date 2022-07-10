@@ -152,13 +152,13 @@ bool plecs_pred_is_subj(
     ecs_term_t *term,
     plecs_state_t *state)
 {
-    if (term->subj.name != NULL) {
+    if (term->src.name != NULL) {
         return false;
     }
-    if (term->obj.name != NULL) {
+    if (term->second.name != NULL) {
         return false;
     }
-    if (term->subj.set.mask == EcsNothing) {
+    if (ecs_term_match_0(term)) {
         return false;
     }
     if (state->with_stmt) {
@@ -184,13 +184,9 @@ const char* plecs_set_mask_to_name(
 {
     if (flags == EcsSelf) {
         return "self";
-    } else if (flags == EcsAll) {
-        return "all";
-    } else if (flags == EcsSuperSet) {
-        return "super";
-    } else if (flags == EcsSubSet) {
-        return "sub";
-    } else if (flags == EcsCascade || flags == (EcsSuperSet|EcsCascade)) {
+    } else if (flags == EcsUp) {
+        return "up";
+    } else if (flags == EcsCascade || flags == (EcsUp|EcsCascade)) {
         return "cascade";
     } else if (flags == EcsParent) {
         return "parent";
@@ -257,23 +253,23 @@ int plecs_create_term(
     state->last_object = 0;
     state->last_assign_id = 0;
 
-    const char *pred_name = term->pred.name;
-    const char *subj_name = term->subj.name;
-    const char *obj_name = term->obj.name;
+    const char *pred_name = term->first.name;
+    const char *subj_name = term->src.name;
+    const char *obj_name = term->second.name;
 
     if (!subj_name) {
-        subj_name = plecs_set_mask_to_name(term->subj.set.mask);
+        subj_name = plecs_set_mask_to_name(term->src.flags);
     }
     if (!obj_name) {
-        obj_name = plecs_set_mask_to_name(term->obj.set.mask);
+        obj_name = plecs_set_mask_to_name(term->second.flags);
     }
 
-    if (!ecs_term_id_is_set(&term->pred)) {
+    if (!ecs_term_id_is_set(&term->first)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
         return -1;
     }
 
-    if (state->assign_stmt && term->subj.entity != EcsThis) {
+    if (state->assign_stmt && ecs_term_match_this(term)) {
         ecs_parser_error(name, expr, column, 
             "invalid statement in assign statement");
         return -1;
@@ -285,7 +281,7 @@ int plecs_create_term(
     ecs_entity_t subj = plecs_ensure_entity(world, state, subj_name, pred, true);
     ecs_entity_t obj = 0;
 
-    if (ecs_term_id_is_set(&term->obj)) {
+    if (ecs_term_id_is_set(&term->second)) {
         obj = plecs_ensure_entity(world, state, obj_name, pred,
             state->assign_stmt == false);
         if (!obj) {
@@ -745,9 +741,9 @@ const char *plecs_parse_plecs_term(
         const char *tptr = ecs_parse_fluff(ptr + 1, NULL);
         if (tptr[0] == '{') {
             ecs_entity_t pred = plecs_lookup(
-                world, term.pred.name, state, 0, false);
+                world, term.first.name, state, 0, false);
             ecs_entity_t obj = plecs_lookup(
-                world, term.obj.name, state, pred, false);
+                world, term.second.name, state, pred, false);
             ecs_id_t id = 0;
             if (pred && obj) {
                 id = ecs_pair(pred, obj);

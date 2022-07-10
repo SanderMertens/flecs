@@ -3450,8 +3450,8 @@ void Plecs_set_entity_names() {
     HEAD "foo(self)"
     LINE "foo(parent)"
     LINE "foo(cascade)"
-    LINE "foo(sub)"
-    LINE "foo(super)";
+    LINE "foo(down)"
+    LINE "foo(up)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -3464,8 +3464,8 @@ void Plecs_set_entity_names() {
 
     test_assert(foo != 0);
     test_assert(self != 0);
-    test_assert(sub != 0);
-    test_assert(super != 0);
+    test_assert(down != 0);
+    test_assert(up != 0);
     test_assert(parent != 0);
     test_assert(cascade != 0);
 

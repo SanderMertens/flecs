@@ -747,7 +747,7 @@ This example shows how to add a singleton with the query descriptor. Note that t
 // Game(Game)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    { ecs_id(Game), .subj.entity = ecs_id(Game) }
+    { ecs_id(Game), .src.id = ecs_id(Game) }
   }
 });
 ```
@@ -760,7 +760,7 @@ This example shows how to explicitly set identifiers with the builder API:
 ```cpp
 // Position(This), (Likes, Alice)
 auto qb = world.query_builder<>()
-  .term<Position>().subj(flecs::This)
+  .term<Position>().src(flecs::This)
   .term(Likes).object(Alice);
 ```
 
@@ -770,8 +770,8 @@ This example shows how to explicitly set identifiers with the query descriptor:
 // Position(This), (Likes, Alice)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = ecs_id(Position), .subj.entity = EcsThis},
-    {.pred.entity = Likes, .obj.entity = Alice}
+    {.first.id = ecs_id(Position), .src.id = EcsThis},
+    {.first.id = Likes, .second.id = Alice}
   }
 });
 ```
@@ -795,7 +795,7 @@ which is equivalent to
 // Position(This)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = ecs_id(Position), .subj.entity = EcsThis}
+    {.first.id = ecs_id(Position), .src.id = EcsThis}
   }
 });
 ```
@@ -818,9 +818,9 @@ which is equivalent to
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {
-      .pred.entity = Likes,
-      .subj.entity = EcsThis,
-      .obj.entity = Alice
+      .first.id = Likes,
+      .src.id = EcsThis,
+      .second.id = Alice
     }
   }
 });
@@ -924,8 +924,8 @@ This example shows how to use variables in the C++ API:
 ```cpp
 // (Likes, X), (Colleague, X)
 auto qb = world.query_builder<>()
-  .term(Likes).obj().var("X")
-  .term(Colleague).obj().var("X");
+  .term(Likes).second().var("X")
+  .term(Colleague).second().var("X");
 ```
 
 This example shows how to use wildcards in the query descriptor:
@@ -934,8 +934,8 @@ This example shows how to use wildcards in the query descriptor:
 // (Likes, X), (Colleague, X)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = Likes, .obj.name = "X", .var = EcsVarIsVariable }
-    {.pred.entity = Colleague, .obj.name = "X", .var = EcsVarIsVariable }
+    {.first.id = Likes, .second.name = "X", .var = EcsVarIsVariable }
+    {.first.id = Colleague, .second.name = "X", .var = EcsVarIsVariable }
   }
 });
 ```
@@ -952,7 +952,7 @@ We also need to tell the query in which direction to follow the relationship. We
 The following term shows how to write the above example down in the DSL:
 
 ```
-Position(super(ChildOf))
+Position(up(ChildOf))
 ```
 
 Let's unpack what is happening here. First of all the term has a regular `Position` predicate. The subject of this term is `super(ChildOf)`. What this does is, it instructs the term to search upwards (`superset`) for the `ChildOf` relationship.
@@ -979,14 +979,14 @@ Position(parent)
 is equivalent to
 
 ```
-Position(super(ChildOf))
+Position(up(ChildOf))
 ```
 
 #### Self Substitution
 Substitution can do more than just searching supersets. It is for example possible to start the search on `This` itself, and when the component is not found on `This`, keep searching by following the `ChildOf` relation:
 
 ```c
-Position(self|super(ChildOf))
+Position(self|up(ChildOf))
 ```
 
 A substitution that has both `self` and `superset` or `subset` is also referred to as an "inclusive" substitution.
@@ -1008,14 +1008,14 @@ def find_object_w_component(This, Component):
 Queries can specify how deep the query should search. For example, the following term specifies to search the `ChildOf` relation, but no more than 3 levels deep:
 
 ```c
-Position(super(ChildOf, 3))
+Position(up(ChildOf, 3))
 ```
 
 Additionally, it is also possible to specify a minimum search depth:
 
 ```c
 // Start at depth 2, search until at most depth 4
-Position(super(ChildOf, 2, 4))
+Position(up(ChildOf, 2, 4))
 ```
 
 #### Cascade Ordering
@@ -1024,20 +1024,20 @@ Substitution expressions may contain the `cascade` modifier, which ensures that 
 A useful application of `cascade` is transform systems, where parents need to be transformed before their children. The term in the following example finds the `Transform` component from both `This` and its parent, while ordering the results of the query breadth-first:
 
 ```
-Transform, Transform(cascade|super(ChildOf))
+Transform, Transform(cascade|up(ChildOf))
 ```
 
 In an actual transform system we would also want to match the root, which can be achieved by making the second term optional:
 
 ```
-Transform, ?Transform(cascade|super(ChildOf))
+Transform, ?Transform(cascade|up(ChildOf))
 ```
 
 #### Substitute for All
 The default behavior of a substitution term is to stop looking when an object with the required component has been found. The following example shows a term that specifies that the substitution needs to keep looking, so that the entire tree (upwards or downwards) for a subject is returned:
 
 ```
-Transform(all|super(ChildOf))
+Transform(all|up(ChildOf))
 ```
 
 #### Substitution on Identifiers
@@ -1058,11 +1058,11 @@ Additionally, substitution is not limited to the subject:
 This example shows how to use substitution in the C++ API:
 
 ```cpp
-// Position(super(ChildOf))
+// Position(up(ChildOf))
 auto qb = world.query_builder<>()
   .term<Position>().super(ChildOf);
 
-// Position(self|super(ChildOf, 3))
+// Position(self|up(ChildOf, 3))
 auto qb = world.query_builder<>()
   .term<Position>()
     .set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
@@ -1072,21 +1072,21 @@ auto qb = world.query_builder<>()
 This example shows how to use wildcards in the query descriptor:
 
 ```c
-// Position(super(ChildOf))
+// Position(up(ChildOf))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Position), .subj.set = {
-      .mask = EcsSuperSet,
+    {ecs_id(Position), .src.set = {
+      .mask = EcsUp,
       .relation = EcsChildOf
     }}
   }
 });
 
-// Position(self|super(ChildOf, 3))
+// Position(self|up(ChildOf, 3))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Position), .subj.set = {
-      .mask = EcsSelf | EcsSuperSet,
+    {ecs_id(Position), .src.set = {
+      .mask = EcsSelf | EcsUp,
       .relation = EcsChildOf,
       .max_depth = 3
     }}
@@ -1152,7 +1152,7 @@ To understand how transitivity is implemented, we need to look at how queries in
 To find whether the subject should match this term, it should not just consider `(LocatedIn, SanFrancisco)`, but also `(LocatedIn, Mission)` and `(LocatedIn, SOMA)`. To achieve this, a query will insert an implicit substitution on the object, when the relation is transitive:
 
 ```
-(LocatedIn, SanFrancisco[self|sub(LocatedIn)])
+(LocatedIn, SanFrancisco[self|down(LocatedIn)])
 ```
 
 Note that the substitution includes `self`, as we also should match entities that are in `SanFrancisco` itself.
@@ -1206,7 +1206,7 @@ SelfPortrait
 To achieve this, a query implicitly substitutes terms with their `IsA` subsets. When written out in full, this looks like:
 
 ```
-Artwork[self|all|sub(IsA)]
+Artwork[self|all|down(IsA)]
 ```
 
 The default relation for set substitution is `IsA`, so we can rewrite this as a slightly shorter term:

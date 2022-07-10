@@ -34,8 +34,8 @@ int main(int, char *[]) {
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
     auto r = ecs.rule_builder()
-        .term<Likes>().subj().var("X").obj().var("Y")
-        .term<Likes>().subj().var("Y").obj().var("X")
+        .term<Likes>().src().var("X").second().var("Y")
+        .term<Likes>().src().var("Y").second().var("X")
         .build();
 
     // Lookup the index of the variables. This will let us quickly lookup their

@@ -4274,7 +4274,7 @@ void Rules_rules_w_desc_pair_pred_obj() {
     ECS_TAG(world, Obj);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .terms = {{ .pred.entity = Rel, .obj.entity = Obj }}
+        .terms = {{ .first.id = Rel, .second.id = Obj }}
     });
 
     test_assert(r != NULL);
@@ -5175,10 +5175,10 @@ void Rules_term_obj_w_this() {
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
 
     ecs_filter_desc_t desc = { 0 };
-    desc.terms[0].pred.entity = TagA;
-    desc.terms[0].obj.entity = EcsThis;
-    desc.terms[0].obj.var = EcsVarIsVariable;
-    desc.terms[0].subj.entity = TagA;
+    desc.terms[0].first.id = TagA;
+    desc.terms[0].second.id = EcsThis;
+    desc.terms[0].second.var = EcsVarIsVariable;
+    desc.terms[0].src.id = TagA;
 
     ecs_rule_t *r = ecs_rule_init(world, &desc);
     test_assert(r != NULL);
@@ -5202,10 +5202,10 @@ void Rules_term_subj_w_this() {
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
 
     ecs_filter_desc_t desc = {0};
-    desc.terms[0].pred.entity = TagA;
-    desc.terms[0].obj.entity = TagA;
-    desc.terms[0].subj.entity = EcsThis;
-    desc.terms[0].subj.var = EcsVarIsVariable;
+    desc.terms[0].first.id = TagA;
+    desc.terms[0].second.id = TagA;
+    desc.terms[0].src.id = EcsThis;
+    desc.terms[0].src.var = EcsVarIsVariable;
 
     ecs_rule_t *r = ecs_rule_init(world, &desc);
     test_assert(r != NULL);

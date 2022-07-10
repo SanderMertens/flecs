@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
         .filter.terms = {
             // To select components from a prefab, use SuperSet
-            { .id = ecs_id(ImpulseSpeed), .subj.set.mask = EcsSuperSet }, 
+            { .id = ecs_id(ImpulseSpeed), .src.flags = EcsUp }, 
             { .id = ecs_id(Position) }
         }
     });

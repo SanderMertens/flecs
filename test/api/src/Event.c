@@ -229,7 +229,7 @@ void Event_emit_table_event() {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = TagA,
-        .filter.terms[0].subj.set.mask = EcsSelf,
+        .filter.terms[0].src.flags = EcsSelf,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_a
@@ -237,7 +237,7 @@ void Event_emit_table_event() {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = TagA,
-        .filter.terms[0].subj.set.mask = EcsSuperSet,
+        .filter.terms[0].src.flags = EcsUp,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_b

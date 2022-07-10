@@ -37,14 +37,14 @@ int main(int argc, char *argv[]) {
     ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t){
         .terms = {
             { 
-                .pred.entity = Likes, 
-                .subj = { .name = (char*)"X", .var = EcsVarIsVariable },
-                .obj = { .name = (char*)"Y", .var = EcsVarIsVariable }
+                .first.id = Likes, 
+                .src = { .name = (char*)"X", .var = EcsVarIsVariable },
+                .second = { .name = (char*)"Y", .var = EcsVarIsVariable }
             },
             { 
-                .pred.entity = Likes, 
-                .subj = { .name = (char*)"Y", .var = EcsVarIsVariable },
-                .obj = { .name = (char*)"X", .var = EcsVarIsVariable }
+                .first.id = Likes, 
+                .src = { .name = (char*)"Y", .var = EcsVarIsVariable },
+                .second = { .name = (char*)"X", .var = EcsVarIsVariable }
             }
         }
     });

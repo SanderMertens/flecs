@@ -41,9 +41,9 @@ int main(int, char *[]) {
     // local position and the parent position.
     auto q = ecs.query_builder<const Position, const Position, Position>()
         // Make sure to select the correct world/local positions
-        .arg(1).obj<Local>()
-        .arg(2).obj<World>()
-        .arg(3).obj<World>()
+        .arg(1).second<Local>()
+        .arg(2).second<World>()
+        .arg(3).second<World>()
 
         // Extend the 2nd query argument to select it from the parent
         .arg(2)
