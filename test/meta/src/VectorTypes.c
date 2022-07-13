@@ -75,3 +75,18 @@ void VectorTypes_vector_struct() {
 
     ecs_fini(world);
 }
+
+void VectorTypes_vector_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_vector(world, {
+        .entity.name = "V",
+        .type = ecs_id(ecs_bool_t)
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "V");
+    test_assert(ecs_has(world, a, EcsVector));
+
+    ecs_fini(world);
+}

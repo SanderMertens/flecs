@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create sorted query
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
+    ecs_query_t *q = ecs_query(ecs, {
         .filter.terms = {{ .id = ecs_id(Position) }},
         .order_by = (ecs_order_by_action_t)compare_position,
         .order_by_component = ecs_id(Position)

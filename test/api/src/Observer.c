@@ -2894,3 +2894,29 @@ void Observer_read_in_on_remove_after_add_other_w_not() {
 
     ecs_fini(world);
 }
+
+void Observer_observer_w_short_notation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {{
+            .id = Foo
+        }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world, Foo);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}

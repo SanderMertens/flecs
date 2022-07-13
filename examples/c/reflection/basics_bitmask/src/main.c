@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_struct(ecs, {
         .entity.entity = ecs_id(Sandwich), // Make sure to use existing id
         .members = {
             { .name = "toppings", .type = ecs_id(Toppings) }

@@ -1559,3 +1559,29 @@ void SystemMisc_custom_run_action_call_next() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_system_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system(world, {
+        .query.filter.terms = {{ .id = Tag }},
+        .callback = Dummy,
+        .ctx = &ctx,
+        .entity.add = {ecs_dependson(EcsOnUpdate)}
+    });
+    test_assert(system != 0);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 0);
+
+    test_bool(dummy_invoked, true);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}

@@ -104,7 +104,8 @@
                 "defer_entity_init_w_symbol",
                 "staged_set_name_n_stages",
                 "staged_set_symbol_n_stages",
-                "entity_init_w_add_childof_no_name"
+                "entity_init_w_add_childof_no_name",
+                "entity_w_short_notation"
             ]
         }, {
             "id": "Search",
@@ -1115,7 +1116,9 @@
                 "oneof_wildcard",
                 "oneof_any",
                 "flag_match_only_this",
-                "flag_match_only_this_w_ref"
+                "flag_match_only_this_w_ref",
+                "filter_w_alloc",
+                "filter_w_short_notation"
             ]
         }, {
             "id": "FilterStr",
@@ -1316,7 +1319,8 @@
                 "rematch_after_delete_inherited_tag",
                 "rematch_after_delete_rel_of_inherited_pair",
                 "rematch_after_delete_obj_of_inherited_pair",
-                "rematch_empty_table_w_superset"
+                "rematch_empty_table_w_superset",
+                "query_w_short_notation"
             ]
         }, {
             "id": "Iter",
@@ -1633,7 +1637,8 @@
                 "custom_run_action_w_iter_next",
                 "custom_run_action_2_terms",
                 "custom_run_action_w_iter_next_2_terms",
-                "read_in_on_remove_after_add_other_w_not"
+                "read_in_on_remove_after_add_other_w_not",
+                "observer_w_short_notation"
             ]                
         }, {
             "id": "ObserverOnSet",

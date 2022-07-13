@@ -1632,3 +1632,13 @@ void Entity_entity_init_w_add_childof_no_name() {
 
     ecs_fini(world);
 }
+
+void Entity_entity_w_short_notation() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    test_assert(e != 0);
+    test_str("Foo", ecs_get_name(world, e));
+
+    ecs_fini(world);
+}

@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
-    ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t){
+    ecs_rule_t *r = ecs_rule(ecs, {
         .terms = {
             { .first.id = RangedUnit },
             {

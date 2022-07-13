@@ -487,3 +487,25 @@ void PrimitiveTypes_primitive_init() {
 
     ecs_fini(world);
 }
+
+void PrimitiveTypes_primitive_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_primitive(world, {
+        .entity.name = "T",
+        .kind = EcsU16
+    });
+    test_assert(t != 0);
+    
+    test_str(ecs_get_name(world, t),"T");
+
+    const EcsPrimitive *prim_ptr = ecs_get(world, t, EcsPrimitive);
+    test_assert(prim_ptr != NULL);
+    test_int(prim_ptr->kind, EcsU16);
+
+    const EcsMetaType *type_ptr = ecs_get(world, t, EcsMetaType);
+    test_assert(type_ptr != NULL);
+    test_int(type_ptr->kind, EcsPrimitiveType);
+
+    ecs_fini(world);
+}

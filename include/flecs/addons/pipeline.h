@@ -34,6 +34,8 @@
 extern "C" {
 #endif
 
+#ifndef FLECS_LEGACY
+
 #define ECS_PIPELINE_DEFINE(world, id, ...)\
     id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){ \
         .entity.name = #id, \
@@ -46,6 +48,11 @@ extern "C" {
     ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
     (void)ecs_id(id);
+
+#define ecs_pipeline(world, ...)\
+    ecs_pipeline_init(world, &(ecs_pipeline_desc_t) __VA_ARGS__ )
+
+#endif
 
 /* Pipeline descriptor (used with ecs_pipeline_init) */
 typedef struct ecs_pipeline_desc_t {

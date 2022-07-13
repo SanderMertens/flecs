@@ -875,3 +875,40 @@ void Units_builtin_units() {
 
     ecs_fini(world);
 }
+
+void Units_unit_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit(world, {
+        .symbol = "fl"
+    });
+    test_assert(u != 0);
+    test_assert(ecs_has(world, u, EcsUnit));
+
+    ecs_fini(world);
+}
+
+void Units_unit_prefix_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit_prefix(world, {
+        .symbol = "fl"
+    });
+    test_assert(u != 0);
+    test_assert(ecs_has(world, u, EcsUnitPrefix));
+
+    ecs_fini(world);
+}
+
+void Units_quantity_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_quantity(world, {
+        .name = "q"
+    });
+    test_assert(u != 0);
+    test_str("q", ecs_get_name(world, u));
+    test_assert(ecs_has_id(world, u, EcsQuantity));
+
+    ecs_fini(world);
+}

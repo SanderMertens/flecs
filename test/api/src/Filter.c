@@ -9426,3 +9426,57 @@ void Filter_flag_match_only_this_w_ref() {
 
     ecs_fini(world);
 }
+
+void Filter_filter_w_alloc() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+        .terms = {{
+            .id = Foo
+        }}
+    });
+    
+    test_assert(f != NULL);
+
+    ecs_entity_t e = ecs_new(world, Foo);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.ids[0], ecs_term_id(&it, 1));
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_short_notation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{
+            .id = Foo
+        }}
+    });
+
+    test_assert(f != NULL);
+
+    ecs_entity_t e = ecs_new(world, Foo);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.ids[0], ecs_term_id(&it, 1));
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}

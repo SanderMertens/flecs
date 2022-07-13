@@ -84,6 +84,23 @@
 /** @} */
 
 /**
+ * @defgroup init_macros Convenience macro's for using init functions with less code
+ * @{
+ */
+
+#define ecs_entity(world, ...)\
+    ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
+
+#define ecs_filter(world, ...)\
+    ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
+
+#define ecs_query(world, ...)\
+    ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
+
+#define ecs_observer(world, ...)\
+    ecs_observer_init(world, &(ecs_observer_desc_t) __VA_ARGS__ )
+
+/**
  * @defgroup sorting_macros Convenience macros that help with component comparison and sorting
  * @{
  */

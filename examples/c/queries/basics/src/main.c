@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     // Create a query for Position, Velocity. Queries are the fastest way to
     // iterate entities as they cache results.
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
+    ecs_query_t *q = ecs_query(ecs, {
         .filter.terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
     // Filters are uncached queries. They are a bit slower to iterate but faster
     // to create & have lower overhead as they don't have to maintain a cache.
-    ecs_filter_t *f = ecs_filter_init(ecs, &(ecs_filter_desc_t){
+    ecs_filter_t *f = ecs_filter(ecs, {
         .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}

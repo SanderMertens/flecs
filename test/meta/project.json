@@ -65,7 +65,8 @@
                 "struct_w_double",
                 "struct_w_string",
                 "struct_w_entity",
-                "primitive_init"
+                "primitive_init",
+                "primitive_w_short_notation"
             ]
         }, {
             "id": "EnumTypes",
@@ -76,7 +77,8 @@
                 "enum_3_constants_manual_values",
                 "struct_w_enum",
                 "zero_initialized",
-                "enum_relation"
+                "enum_relation",
+                "enum_w_short_notation"
             ]
         }, {
             "id": "BitmaskTypes",
@@ -86,7 +88,8 @@
                 "bitmask_3_constants",
                 "bitmask_4_constants",
                 "bitmask_4_constants_manual_values",
-                "struct_w_bitmask"
+                "struct_w_bitmask",
+                "bitmask_w_short_notation"
             ]
         }, {
             "id": "StructTypes",
@@ -104,7 +107,8 @@
                 "i32_i64_i32",
                 "incomplete_member",
                 "partial_type",
-                "partial_type_custom_offset"
+                "partial_type_custom_offset",
+                "struct_w_short_notation"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -155,14 +159,16 @@
                 "standaline_array_bool_3",
                 "array_of_standaline_array_bool_1",
                 "array_of_standaline_array_bool_2",
-                "array_of_standaline_array_bool_3"
+                "array_of_standaline_array_bool_3",
+                "array_w_short_notation"
             ]
         }, {
             "id": "VectorTypes",
             "testcases": [
                 "vector_bool",
                 "vector_i32",
-                "vector_struct"
+                "vector_struct",
+                "vector_w_short_notation"
             ]
         },  {
             "id": "Units",
@@ -191,7 +197,10 @@
                 "set_unit_w_derived",
                 "set_unit_w_over",
                 "set_unit_w_prefix",
-                "builtin_units"
+                "builtin_units",
+                "unit_w_short_notation",
+                "unit_prefix_w_short_notation",
+                "quantity_w_short_notation"
             ]
         }, {
             "id": "Serialized",

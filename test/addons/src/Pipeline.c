@@ -1648,3 +1648,17 @@ void Pipeline_custom_pipeline_w_system_macro() {
 
     ecs_fini(world);
 }
+
+void Pipeline_pipeline_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t p = ecs_pipeline(world, {
+        .query.filter.expr = "flecs.system.System, Tag"
+    });
+
+    test_assert(p != 0);
+
+    ecs_fini(world);
+}

@@ -235,3 +235,18 @@ void EnumTypes_enum_relation() {
 
     ecs_fini(world);
 }
+
+void EnumTypes_enum_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, EcsEnum));
+
+    ecs_fini(world);
+}

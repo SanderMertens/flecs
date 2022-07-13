@@ -5,14 +5,14 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // Create components for types that aren't known at compile time
-    ecs_entity_t Point = ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_entity_t Point = ecs_struct(ecs, {
         .members = {
             { .name = "x", .type = ecs_id(ecs_f32_t) }, // builtin float type
             { .name = "y", .type = ecs_id(ecs_f32_t) }
         }
     });
 
-    ecs_entity_t Line = ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_entity_t Line = ecs_struct(ecs, {
         .members = {
             { .name = "start", .type = Point },
             { .name = "stop", .type = Point }

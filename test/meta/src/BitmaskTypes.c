@@ -180,3 +180,18 @@ void BitmaskTypes_struct_w_bitmask() {
 
     ecs_fini(world);
 }
+
+void BitmaskTypes_bitmask_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask(world, {
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    test_assert(b != 0);
+    test_assert(ecs_has(world, b, EcsBitmask));
+
+    ecs_fini(world);
+}

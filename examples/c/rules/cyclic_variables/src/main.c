@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
     // Create a rule to find all ranged units
-    ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t){
+    ecs_rule_t *r = ecs_rule(ecs, {
         .terms = {
             { 
                 .first.id = Likes, 

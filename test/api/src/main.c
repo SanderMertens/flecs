@@ -98,6 +98,7 @@ void Entity_defer_entity_init_w_symbol(void);
 void Entity_staged_set_name_n_stages(void);
 void Entity_staged_set_symbol_n_stages(void);
 void Entity_entity_init_w_add_childof_no_name(void);
+void Entity_entity_w_short_notation(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -1059,6 +1060,8 @@ void Filter_oneof_wildcard(void);
 void Filter_oneof_any(void);
 void Filter_flag_match_only_this(void);
 void Filter_flag_match_only_this_w_ref(void);
+void Filter_filter_w_alloc(void);
+void Filter_filter_w_short_notation(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -1256,6 +1259,7 @@ void Query_rematch_after_delete_inherited_tag(void);
 void Query_rematch_after_delete_rel_of_inherited_pair(void);
 void Query_rematch_after_delete_obj_of_inherited_pair(void);
 void Query_rematch_empty_table_w_superset(void);
+void Query_query_w_short_notation(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -1565,6 +1569,7 @@ void Observer_custom_run_action_w_iter_next(void);
 void Observer_custom_run_action_2_terms(void);
 void Observer_custom_run_action_w_iter_next_2_terms(void);
 void Observer_read_in_on_remove_after_add_other_w_not(void);
+void Observer_observer_w_short_notation(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -2428,6 +2433,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_w_add_childof_no_name",
         Entity_entity_init_w_add_childof_no_name
+    },
+    {
+        "entity_w_short_notation",
+        Entity_entity_w_short_notation
     }
 };
 
@@ -6119,6 +6128,14 @@ bake_test_case Filter_testcases[] = {
     {
         "flag_match_only_this_w_ref",
         Filter_flag_match_only_this_w_ref
+    },
+    {
+        "filter_w_alloc",
+        Filter_filter_w_alloc
+    },
+    {
+        "filter_w_short_notation",
+        Filter_filter_w_short_notation
     }
 };
 
@@ -6897,6 +6914,10 @@ bake_test_case Query_testcases[] = {
     {
         "rematch_empty_table_w_superset",
         Query_rematch_empty_table_w_superset
+    },
+    {
+        "query_w_short_notation",
+        Query_query_w_short_notation
     }
 };
 
@@ -8113,6 +8134,10 @@ bake_test_case Observer_testcases[] = {
     {
         "read_in_on_remove_after_add_other_w_not",
         Observer_read_in_on_remove_after_add_other_w_not
+    },
+    {
+        "observer_w_short_notation",
+        Observer_observer_w_short_notation
     }
 };
 
@@ -10065,7 +10090,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        76,
+        77,
         Entity_testcases
     },
     {
@@ -10240,7 +10265,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        229,
+        231,
         Filter_testcases
     },
     {
@@ -10254,7 +10279,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        174,
+        175,
         Query_testcases
     },
     {
@@ -10282,7 +10307,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        66,
+        67,
         Observer_testcases
     },
     {

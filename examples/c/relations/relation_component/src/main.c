@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     ecs_os_free(type_str);
 
     // When querying for a relationship, provide both parts of the pair:
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
+    ecs_query_t *q = ecs_query(ecs, {
         .filter.terms = {
             { .id = ecs_pair(ecs_id(Requires), Gigawatts) }
         }

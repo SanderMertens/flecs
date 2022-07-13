@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_struct(ecs, {
         .entity.entity = ecs_id(TypeWithEnum), // Make sure to use existing id
         .members = {
             { .name = "color", .type = ecs_id(Color) }

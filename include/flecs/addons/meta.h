@@ -649,6 +649,35 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
 
+/* Convenience macro's */
+
+#define ecs_primitive(world, ...)\
+    ecs_primitive_init(world, &(ecs_primitive_desc_t) __VA_ARGS__ )
+
+#define ecs_enum(world, ...)\
+    ecs_enum_init(world, &(ecs_enum_desc_t) __VA_ARGS__ )
+
+#define ecs_bitmask(world, ...)\
+    ecs_bitmask_init(world, &(ecs_bitmask_desc_t) __VA_ARGS__ )
+
+#define ecs_array(world, ...)\
+    ecs_array_init(world, &(ecs_array_desc_t) __VA_ARGS__ )
+
+#define ecs_vector(world, ...)\
+    ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
+
+#define ecs_struct(world, ...)\
+    ecs_struct_init(world, &(ecs_struct_desc_t) __VA_ARGS__ )
+
+#define ecs_unit(world, ...)\
+    ecs_unit_init(world, &(ecs_unit_desc_t) __VA_ARGS__ )
+
+#define ecs_unit_prefix(world, ...)\
+    ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) __VA_ARGS__ )
+
+#define ecs_quantity(world, ...)\
+    ecs_quantity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
+
 /* Module import */
 FLECS_API
 void FlecsMetaImport(

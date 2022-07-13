@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/** Convenience macro for rule creation */
+#define ecs_rule(world, ...)\
+    ecs_rule_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
+
 /** Create a rule.
  * A rule accepts the same descriptor as a filter, but has the additional
  * ability to use query variables.
