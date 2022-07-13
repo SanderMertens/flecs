@@ -145,7 +145,7 @@ void Rules_pair_recycled_final_pred() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., $X)"
+        .expr = "Pred($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -183,7 +183,7 @@ void Rules_pair_recycled_pred() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., $X)"
+        .expr = "Pred($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -221,7 +221,7 @@ void Rules_pair_recycled_obj() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., Obj)"
+        .expr = "Pred($This, Obj)"
     });
 
     test_assert(r != NULL);
@@ -263,7 +263,7 @@ void Rules_pair_recycled_pred_obj() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., Obj)"
+        .expr = "Pred($This, Obj)"
     });
 
     test_assert(r != NULL);
@@ -301,7 +301,7 @@ void Rules_pair_recycled_matched_obj() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., $X)"
+        .expr = "Pred($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -347,7 +347,7 @@ void Rules_pair_recycled_matched_obj_2_terms() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred_2, Obj)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Pred(., $X), Pred_2(., $X)"
+        .expr = "Pred($This, $X), Pred_2($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -394,7 +394,7 @@ void Rules_pair_recycled_matched_pred_2_terms() {
     test_assert(ecs_has_id(world, e, ecs_pair(Pred, Obj_2)));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(., Obj), $X(., Obj_2)"
+        .expr = "$X($This, Obj), $X($This, Obj_2)"
     });
 
     test_assert(r != NULL);
@@ -812,11 +812,11 @@ void Rules_2_comp() {
 }
 
 void Rules_1_comp_explicit_subject() {
-    test_1_comp("Position(.)");
+    test_1_comp("Position($This)");
 }
 
 void Rules_2_comp_explicit_subject() {
-    test_2_comp("Position(.), Velocity(.)");
+    test_2_comp("Position($This), Velocity($This)");
 }
 
 void Rules_1_empty_comp() {
@@ -1422,7 +1422,7 @@ void Rules_find_1_pair() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "HomePlanet(., Tatooine)"
+        .expr = "HomePlanet($This, Tatooine)"
     });
 
     test_assert(r != NULL);
@@ -1445,7 +1445,7 @@ void Rules_find_2_pairs() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "HomePlanet(., Tatooine), Enemy(., Palpatine)"
+        .expr = "HomePlanet($This, Tatooine), Enemy($This, Palpatine)"
     });
 
     test_assert(r != NULL);
@@ -1468,7 +1468,7 @@ void Rules_find_w_pred_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(.), Jedi(.)"
+        .expr = "$X($This), Jedi($This)"
     });
 
     test_assert(r != NULL);
@@ -1544,7 +1544,7 @@ void Rules_find_1_pair_w_object_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "HomePlanet(., $X)"
+        .expr = "HomePlanet($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -1579,7 +1579,7 @@ void Rules_find_2_pairs_w_object_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "HomePlanet(., $X), Enemy(., $Y)"
+        .expr = "HomePlanet($This, $X), Enemy($This, $Y)"
     });
 
     test_assert(r != NULL);
@@ -1621,7 +1621,7 @@ void Rules_find_1_pair_w_pred_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(., Tatooine)"
+        .expr = "$X($This, Tatooine)"
     });
 
     test_assert(r != NULL);
@@ -1654,7 +1654,7 @@ void Rules_find_2_pairs_w_pred_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(., Tatooine), $Y(., Palpatine)"
+        .expr = "$X($This, Tatooine), $Y($This, Palpatine)"
     });
 
     test_assert(r != NULL);
@@ -1692,7 +1692,7 @@ void Rules_find_cyclic_pairs() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Likes(., $X), Likes($X, .)"
+        .expr = "Likes($This, $X), Likes($X, $This)"
     });
 
     test_assert(r != NULL);
@@ -1726,7 +1726,7 @@ void Rules_join_by_object() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Parent(., $X), Parent($Y, $X)"
+        .expr = "Parent($This, $X), Parent($Y, $X)"
     });
 
     test_assert(r != NULL);
@@ -1774,7 +1774,7 @@ void Rules_join_by_predicate() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(., DarthVader), $X($Y, DarthVader)"
+        .expr = "$X($This, DarthVader), $X($Y, DarthVader)"
     });
 
     test_assert(r != NULL);
@@ -1888,7 +1888,7 @@ void Rules_join_by_predicate_from_subject() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Transitive(.), .($X, Character)"
+        .expr = "Transitive($This), $This($X, Character)"
     });
 
     test_assert(r != NULL);
@@ -1932,7 +1932,7 @@ void Rules_find_transitive() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(., Character)"
+        .expr = "IsA($This, Character)"
     });
 
     test_assert(r != NULL);
@@ -1982,7 +1982,7 @@ void Rules_find_transitive_2_branches() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(., Thing)"
+        .expr = "IsA($This, Thing)"
     });
 
     test_assert(r != NULL);
@@ -2093,7 +2093,7 @@ void Rules_transitive_subsets() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(., SpaceShip)"
+        .expr = "IsA($This, SpaceShip)"
     });
 
     test_assert(r != NULL);
@@ -2134,7 +2134,7 @@ void Rules_transitive_subsets_2_terms() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(., Character), IsA(., Machine)"
+        .expr = "IsA($This, Character), IsA($This, Machine)"
     });
 
     test_assert(r != NULL);
@@ -2213,7 +2213,7 @@ void Rules_transitive_supersets() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(SpaceShip, .)"
+        .expr = "IsA(SpaceShip, $This)"
     });
 
     test_assert(r != NULL);
@@ -2263,7 +2263,7 @@ void Rules_transitive_superset_w_subj_var() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = ".(R2D2), IsA(., $X)"
+        .expr = "$This(R2D2), IsA($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -2336,7 +2336,7 @@ void Rules_transitive_superset_w_subj_var_2_term() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(SentientMachine, .), IsA(., $X)"
+        .expr = "IsA(SentientMachine, $This), IsA($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -2401,7 +2401,7 @@ void Rules_transitive_supersets_2_terms() {
     test_assert(ecs_plecs_from_str(world, NULL, rules) == 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "IsA(SpaceShip, .), IsA(Container, .)"
+        .expr = "IsA(SpaceShip, $This), IsA(Container, $This)"
     });
 
     test_assert(r != NULL);
@@ -2673,7 +2673,7 @@ void Rules_same_pred_obj() {
     ecs_add_id(world, e2, t2);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "$X(., $X)"
+        .expr = "$X($This, $X)"
     });
 
     test_assert(r != NULL);
@@ -4375,7 +4375,7 @@ void Rules_childof_this() {
     ecs_entity_t child2 = ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Tag, ChildOf($X, .)"
+        .expr = "Tag, ChildOf($X, $This)"
     });
 
     test_assert(r != NULL);
@@ -5596,7 +5596,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
     ecs_add_pair(world, jane, Likes, john);
     ecs_add_pair(world, john, Likes, jane);
 
-    ecs_rule_t *r = ecs_rule_new(world, "(Likes, $X), Likes($X, .)");
+    ecs_rule_t *r = ecs_rule_new(world, "(Likes, $X), Likes($X, $This)");
     int x_var = ecs_rule_find_var(r, "X");
 
     ecs_iter_t it = ecs_rule_iter(world, r);

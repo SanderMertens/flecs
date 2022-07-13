@@ -14,7 +14,6 @@
 #define TOK_NOT '!'
 #define TOK_OPTIONAL '?'
 #define TOK_BITWISE_OR '|'
-#define TOK_NAME_SEP '.'
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
 #define TOK_WILDCARD '*'
@@ -30,13 +29,10 @@
 
 #define TOK_OVERRIDE "OVERRIDE"
 
-#define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
 #define TOK_ROLE_NOT "NOT"
-#define TOK_ROLE_SWITCH "SWITCH"
-#define TOK_ROLE_CASE "CASE"
 #define TOK_ROLE_DISABLED "DISABLED"
 
 #define TOK_IN "in"
@@ -149,7 +145,7 @@ static
 bool valid_identifier_start_char(
     char ch)
 {
-    if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
+    if (ch && (isalpha(ch) || (ch == '_') || (ch == '*') ||
         (ch == '0') || (ch == TOK_VARIABLE) || isdigit(ch))) 
     {
         return true;
@@ -318,10 +314,7 @@ ecs_entity_t parse_role(
     int64_t column,
     const char *token)
 {
-    if        (!ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
-    {
-        return ECS_PAIR;            
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
+    if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
         return ECS_AND;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
         return ECS_OR;

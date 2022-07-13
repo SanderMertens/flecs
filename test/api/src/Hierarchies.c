@@ -208,7 +208,7 @@ void Hierarchies_path_this_w_empty_prefix() {
     ecs_world_t *world = ecs_mini();
 
     char *path = ecs_get_path_w_sep(world, 0, EcsThis, ".", "");
-    test_str(path, ".");
+    test_str(path, "flecs.core.This");
     ecs_os_free(path);
 
     ecs_fini(world);
