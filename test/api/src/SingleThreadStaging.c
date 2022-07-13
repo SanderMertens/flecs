@@ -2323,7 +2323,7 @@ void SingleThreadStaging_get_parent_in_progress() {
 
     ecs_progress(world, 1);
 
-    ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+    ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
     test_assert(parent != 0);
 
     ecs_fini(world);
@@ -2752,10 +2752,10 @@ void SingleThreadStaging_get_case_from_stage() {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_entity_t c = ecs_get_object(world, e, Switch, 0);
+    ecs_entity_t c = ecs_get_target(world, e, Switch, 0);
     test_assert(c == CaseOne);
 
-    c = ecs_get_object(stage, e, Switch, 0);
+    c = ecs_get_target(stage, e, Switch, 0);
     test_assert(c == CaseOne);
 
     ecs_readonly_end(world);
@@ -2775,7 +2775,7 @@ void SingleThreadStaging_get_object_from_stage() {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    test_assert(parent == ecs_get_object(stage, e, EcsChildOf, 0));
+    test_assert(parent == ecs_get_target(stage, e, EcsChildOf, 0));
 
     ecs_readonly_end(world);
 

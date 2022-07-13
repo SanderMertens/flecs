@@ -187,7 +187,7 @@ ecs_id_record_t* flecs_id_record_new(
     /* Flag for OnDelete policies */
     flecs_add_flag(world, rel, EcsEntityObservedId);
     if (obj) {
-        /* Flag for OnDeleteObject policies */
+        /* Flag for OnDeleteTarget policies */
         flecs_add_flag(world, obj, EcsEntityObservedObject);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when

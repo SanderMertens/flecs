@@ -793,7 +793,7 @@ void Query_inspect_terms() {
     test_int(t.id(), world.pair(flecs::ChildOf, p));
     test_int(t.oper(), flecs::And);
     test_int(t.inout(), flecs::InOutDefault);
-    test_assert(t.id().object() == p);
+    test_assert(t.id().second() == p);
 }
 
 void Query_inspect_terms_w_each() {
@@ -814,7 +814,7 @@ void Query_inspect_terms_w_each() {
             test_int(t.id(), world.id<Velocity>());
         } else if (count == 2) {
             test_int(t.id(), world.pair(flecs::ChildOf, p));
-            test_assert(t.id().object() == p);
+            test_assert(t.id().second() == p);
         } else {
             test_assert(false);
         }
@@ -1104,7 +1104,7 @@ void Query_each_pair_object() {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
-        .set_w_object<Begin, Event>({"Big Bang"})
+        .set_second<Begin, Event>({"Big Bang"})
         .set<EndEvent>({"Heat Death"});
 
     auto q = ecs.query<BeginEvent, EndEvent>();
@@ -1124,7 +1124,7 @@ void Query_iter_pair_object() {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
-        .set_w_object<Begin, Event>({"Big Bang"})
+        .set_second<Begin, Event>({"Big Bang"})
         .set<EndEvent>({"Heat Death"});
 
     auto q = ecs.query<BeginEvent, EndEvent>();

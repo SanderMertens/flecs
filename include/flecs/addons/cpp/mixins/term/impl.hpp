@@ -157,11 +157,11 @@ inline flecs::term world::term() const {
     return flecs::term(m_world, _::cpp_type<T>::id(m_world));
 }
 
-template <typename R, typename O>
+template <typename First, typename Second>
 inline flecs::term world::term() const {
     return flecs::term(m_world, ecs_pair(
-        _::cpp_type<R>::id(m_world),
-        _::cpp_type<O>::id(m_world)));
+        _::cpp_type<First>::id(m_world),
+        _::cpp_type<Second>::id(m_world)));
 }
 
 }

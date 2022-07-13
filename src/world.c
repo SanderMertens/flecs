@@ -87,7 +87,7 @@ const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnComponentHooks =      ECS_HI_COMPONENT_ID + 45;
-const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 46;
+const ecs_entity_t EcsOnDeleteTarget =        ECS_HI_COMPONENT_ID + 46;
 
 /* Actions */
 const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
@@ -449,7 +449,7 @@ void fini_roots(ecs_world_t *world) {
     /* Delete root entities that are not modules. This prioritizes deleting 
      * regular entities first, which reduces the chance of components getting
      * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteObject policy. */
+     * thereby bypassing the OnDeleteTarget policy. */
     ecs_defer_begin(world);
 
     const ecs_table_record_t *tr;
@@ -1101,7 +1101,7 @@ ecs_entity_t flecs_get_oneof(
     if (ecs_has_id(world, e, EcsOneOf)) {
         return e;
     } else {
-        return ecs_get_object(world, e, EcsOneOf, 0);
+        return ecs_get_target(world, e, EcsOneOf, 0);
     }
 }
 

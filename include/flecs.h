@@ -988,7 +988,7 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/** Ensures that entity/component cannot be used as object in IsA relation.
+/** Ensures that entity/component cannot be used as target in IsA relation.
  * Final can improve the performance of rule-based queries, as they will not 
  * attempt to substitute a final component with its subsets.
  * 
@@ -997,7 +997,7 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
-/** Ensures that component is never inherited from an IsA object.
+/** Ensures that component is never inherited from an IsA target.
  * 
  * Behavior:
  *   if DontInherit(X) and X(B) and IsA(A, B) then X(A) is false.
@@ -1038,7 +1038,7 @@ FLECS_API extern const ecs_entity_t EcsWith;
 FLECS_API extern const ecs_entity_t EcsOneOf;
 
 /* Can be added to relation to indicate that it should never hold data, even
- * when it or the relation object is a component. */
+ * when it or the relation target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
 /* Tag to indicate that relation is stored as union. Union relations enable
@@ -1058,25 +1058,7 @@ FLECS_API extern const ecs_entity_t EcsAlias;
 /* Used to express parent-child relationships. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
 
-/* Used to express is-a relationships. An IsA relationship indicates that the 
- * subject is a subset of the relation object. For example:
- *   ecs_add_pair(world, Freighter, EcsIsA, SpaceShip);
- *
- * Here the Freighter is considered a subset of SpaceShip, meaning that every
- * entity that has Freighter also implicitly has SpaceShip.
- *
- * The subject of the relation (Freighter) inherits all components from any IsA
- * object (SpaceShip). If SpaceShip has a component "MaxSpeed", this component
- * will also appear on Freighter after adding (IsA, SpaceShip) to Freighter.
- *
- * The IsA relation is transitive. This means that if SpaceShip IsA Machine, 
- * then Freigther is also a Machine. As a result, Freighter also inherits all
- * components from Machine, just as it does from SpaceShip.
- *
- * Queries/filters may implicitly substitute predicates, subjects and objects 
- * with their IsA super/subsets. This behavior can be controlled by the "set" 
- * member of a query term.
- */
+/* Used to express inheritance relationships. */
 FLECS_API extern const ecs_entity_t EcsIsA;
 
 /* Used to express dependency relationships */
@@ -1128,24 +1110,22 @@ FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 /* Event. Triggers when a table becomes non-empty. */
 FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
-/* Relationship used to define what should happen when an entity is deleted that
- * is added to other entities. For details see: 
+/* Relationship used to define what should happen when a target entity (second
+ * element of a pair) is deleted. For details see: 
  * https://github.com/SanderMertens/flecs/blob/master/docs/Relations.md#relation-cleanup-properties
  */
-FLECS_API extern const ecs_entity_t EcsOnDeleteObject;
+FLECS_API extern const ecs_entity_t EcsOnDeleteTarget;
 
-/* Specifies that a component/relation/object of relation should be removed when
- * it is deleted. Must be combined with EcsOnDelete or EcsOnDeleteObject. */
+/* Remove cleanup policy. Must be used as target in pair with EcsOnDelete or
+ * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsRemove;
 
-/* Specifies that entities with a component/relation/object of relation should 
- * be deleted when the component/relation/object of relation is deleted. Must be 
- * combined with EcsOnDelete or EcsOnDeleteObject. */
+/* Delete cleanup policy. Must be used as target in pair with EcsOnDelete or
+ * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsDelete;
 
-/* Specifies that whenever a component/relation/object of relation is deleted an
- * error should be thrown. Must be combined with EcsOnDelete or 
- * EcsOnDeleteObject. Panic actions are ignored after ecs_quit is called. */
+/* Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
+ * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /* Used like (EcsDefaultChildComponent, Component). When added to an entity,
@@ -1199,14 +1179,14 @@ FLECS_API extern const ecs_entity_t EcsPhase;
  * 
  * This operation creates a world with all builtin modules loaded. 
  *
- * @return A new world object
+ * @return A new world
  */
 FLECS_API
 ecs_world_t* ecs_init(void);
 
 /** Same as ecs_init, but with minimal set of modules loaded.
  *
- * @return A new world object
+ * @return A new tiny world
  */
 FLECS_API
 ecs_world_t* ecs_mini(void);
@@ -1216,7 +1196,7 @@ ecs_world_t* ecs_mini(void);
  * used to dynamically enable flecs features to an application. Currently these
  * arguments are not used.
  *
- * @return A new world object
+ * @return A new world
  */
 FLECS_API
 ecs_world_t* ecs_init_w_args(
@@ -1316,7 +1296,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
- * that can be accessed anywhere where the application has the world object.
+ * that can be accessed anywhere where the application has the world.
  *
  * @param world The world.
  * @param ctx A pointer to a user defined structure.
@@ -1762,13 +1742,13 @@ bool ecs_is_component_enabled_w_id(
  * This function is equivalent to using the ecs_pair macro, and is added for
  * convenience to make it easier for non C/C++ bindings to work with pairs.
  *
- * @param relation The relation of the pair.
- * @param object The object of the pair.
+ * @param first The first element of the pair of the pair.
+ * @param second The target of the pair.
  */
 FLECS_API
 ecs_id_t ecs_make_pair(
-    ecs_entity_t relation,
-    ecs_entity_t object);
+    ecs_entity_t first,
+    ecs_entity_t second);
 
 /** @} */
 
@@ -2124,7 +2104,7 @@ ecs_id_t ecs_strip_generation(
  * when iterating relationships in an entity type.
  *
  * For example, when obtaining the parent id from a ChildOf relation, the parent
- * (object part of the pair) will have been stored in a 32 bit value, which 
+ * (second element of the pair) will have been stored in a 32 bit value, which 
  * cannot store the entity generation. This function can retrieve the identifier
  * with the current generation for that id.
  *
@@ -2258,9 +2238,9 @@ const ecs_type_info_t* ecs_get_type_info(
  * 
  * For a pair id the operation will return the type associated with the pair, by
  * applying the following rules in order:
- * - The relation entity is returned if it is a component
+ * - The first pair element is returned if it is a component
  * - 0 is returned if the relation entity has the Tag property
- * - The object entity is returned if it is a component
+ * - The second pair element is returned if it is a component
  * - 0 is returned.
  *
  * @param world The world.
@@ -2454,28 +2434,28 @@ bool ecs_has_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Get the object of a relation.
- * This will return a object of the entity for the specified relation. The index
- * allows for iterating through the objects, if a single entity has multiple
- * objects for the same relation.
+/** Get the target of a relation.
+ * This will return a target (second element of a pair) of the entity for the 
+ * specified relation. The index allows for iterating through the targets, if a 
+ * single entity has multiple targets for the same relation.
  *
  * If the index is larger than the total number of instances the entity has for
  * the relation, the operation will return 0.
  *
  * @param world The world.
  * @param entity The entity.
- * @param rel The relation between the entity and the object.
+ * @param rel The relation between the entity and the target.
  * @param index The index of the relation instance.
- * @return The object for the relation at the specified index.
+ * @return The target for the relation at the specified index.
  */
 FLECS_API
-ecs_entity_t ecs_get_object(
+ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
     int32_t index);
 
-/** Get the object of a relation for a given id.
+/** Get the target of a relation for a given id.
  * This operation returns the first entity that has the provided id by following
  * the specified relationship. If the entity itself has the id then entity will
  * be returned. If the id cannot be found on the entity or by following the
@@ -2485,16 +2465,16 @@ ecs_entity_t ecs_get_object(
  * a component by specifying the IsA relation:
  * 
  *   // Is Position provided by the entity or one of its base entities?
- *   ecs_get_object_for_id(world, entity, EcsIsA, ecs_id(Position))
+ *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
  * 
  * @param world The world.
  * @param entity The entity.
  * @param rel The relationship to follow.
  * @param id The id to lookup.
- * @return The entity for which the object has been found.
+ * @return The entity for which the target has been found.
  */
 FLECS_API
-ecs_entity_t ecs_get_object_for_id(
+ecs_entity_t ecs_get_target_for_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
@@ -2944,7 +2924,7 @@ ecs_term_t ecs_term_move(
 
 /** Free resources of term.
  * This operation frees all resources (such as identifiers) of a term. The term
- * object itself is not freed.
+ * itself is not freed.
  *
  * @param term The term to free.
  */
@@ -3249,8 +3229,8 @@ FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 
-/** Get filter object of query.
- * This operation obtains a pointer to the internally constructed filter object
+/** Get filter from a query.
+ * This operation obtains a pointer to the internally constructed filter
  * of the query and can be used to introspect the query terms.
  *
  * @param query The query.
@@ -4241,8 +4221,8 @@ FLECS_API
 const ecs_world_t* ecs_get_world(
     const ecs_poly_t *world);
 
-/** Test whether the current world object is readonly.
- * This function allows the code to test whether the currently used world object
+/** Test whether the current world is readonly.
+ * This function allows the code to test whether the currently used world
  * is readonly or whether it allows for writing.  
  *
  * @param world A pointer to a stage or the world.
@@ -4340,8 +4320,8 @@ int32_t ecs_search(
  * When the id has the form (id) or (rel, *) and the operation is invoked as 
  * in the above example, it is guaranteed to be constant time.
  * 
- * If the provided id has the form (*, obj) the operation takes linear time. The
- * reason for this is that ids for an object are not packed together, as they
+ * If the provided id has the form (*, tgt) the operation takes linear time. The
+ * reason for this is that ids for an target are not packed together, as they
  * are sorted relation first.
  * 
  * If the id at the offset does not match the provided id, the operation will do

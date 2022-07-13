@@ -107,40 +107,40 @@ struct entity_view : public id {
     template <typename Func>
     void each(const Func& func) const;
 
-    /** Iterate matching relation ids of an entity.
+    /** Iterate matching pair ids of an entity.
      * The function parameter must match the following signature:
      *   void(*)(flecs::id id)
      *
      * @param func The function invoked for each id.
      */
     template <typename Func>
-    void each(flecs::id_t rel, flecs::id_t obj, const Func& func) const;
+    void each(flecs::id_t first, flecs::id_t second, const Func& func) const;
 
-    /** Iterate objects for a given relationship.
+    /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity object)
+     *   void(*)(flecs::entity target)
      *
-     * @param rel The relationship for which to iterate the objects.
-     * @param func The function invoked for each object.
+     * @param rel The relationship for which to iterate the targets.
+     * @param func The function invoked for each target.
      */
     template <typename Func>
     void each(const flecs::entity_view& rel, const Func& func) const;
 
-    /** Iterate objects for a given relationship.
+    /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity object)
+     *   void(*)(flecs::entity target)
      *
-     * @tparam Rel The relationship for which to iterate the objects.
-     * @param func The function invoked for each object.     
+     * @tparam First The relationship for which to iterate the targets.
+     * @param func The function invoked for each target.     
      */
-    template <typename Rel, typename Func>
+    template <typename First, typename Func>
     void each(const Func& func) const { 
-        return each(_::cpp_type<Rel>::id(m_world), func);
+        return each(_::cpp_type<First>::id(m_world), func);
     }
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity object)
+     *   void(*)(flecs::entity target)
      *
      * @param func The function invoked for each child.     
      */
@@ -200,11 +200,11 @@ struct entity_view : public id {
     /** Get a pair.
      * This operation gets the value for a pair from the entity.
      *
-     * @tparam R the relation type.
-     * @tparam O the object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
      */
-    template <typename R, typename O, typename P = pair<R, O>, 
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<R>::value > = 0>
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
     const A* get() const {
         return this->get<P>();
     }
@@ -212,28 +212,28 @@ struct entity_view : public id {
     /** Get a pair.
      * This operation gets the value for a pair from the entity. 
      *
-     * @tparam R the relation type.
-     * @param object the object.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      */
-    template<typename R, typename O, if_not_t< is_enum<O>::value> = 0>
-    const R* get(O object) const {
-        auto comp_id = _::cpp_type<R>::id(m_world);
-        ecs_assert(_::cpp_type<R>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const R*>(
-            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object)));
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
+    const First* get(Second second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const First*>(
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
 
     /** Get a pair.
      * This operation gets the value for a pair from the entity. 
      *
-     * @tparam R the relation type.
+     * @tparam First The first element of the pair.
      * @param constant the enum constant.
      */
-    template<typename R, typename O, if_t<is_enum<O>::value> = 0>
-    const R* get(O constant) const {
-        const auto& et = enum_type<O>(this->m_world);
-        flecs::entity_t object = et.entity(constant);
-        return get<R>(object);
+    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    const First* get(Second constant) const {
+        const auto& et = enum_type<Second>(this->m_world);
+        flecs::entity_t target = et.entity(constant);
+        return get<First>(target);
     }
 
     /** Get component value (untyped).
@@ -248,14 +248,14 @@ struct entity_view : public id {
 
     /** Get a pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * relation nor the object part of the pair are components, the operation 
+     * first nor the second part of the pair are components, the operation 
      * will fail.
      *
-     * @param relation the relation.
-     * @param object the object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    const void* get(flecs::entity_t relation, flecs::entity_t object) const {
-        return ecs_get_id(m_world, m_id, ecs_pair(relation, object));
+    const void* get(flecs::entity_t first, flecs::entity_t second) const {
+        return ecs_get_id(m_world, m_id, ecs_pair(first, second));
     }
 
     /** Get 1..N components.
@@ -300,77 +300,77 @@ struct entity_view : public id {
     template <typename T, if_t< is_enum<T>::value > = 0>
     const T* get() const;
 
-    /** Get the object part from a pair.
-     * This operation gets the value for a pair from the entity. The relation
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam O the object type.
-     * @param relation the relation.
+     * @tparam Second the second element of a pair.
+     * @param first The first part of the pair.
      */
-    template<typename O>
-    const O* get_w_object(flecs::entity_t relation) const {
-        auto comp_id = _::cpp_type<O>::id(m_world);
-        ecs_assert(_::cpp_type<O>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const O*>(
-            ecs_get_id(m_world, m_id, ecs_pair(relation, comp_id)));
+    template<typename Second>
+    const Second* get_second(flecs::entity_t first) const {
+        auto second = _::cpp_type<Second>::id(m_world);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<const Second*>(
+            ecs_get_id(m_world, m_id, ecs_pair(first, second)));
     }
 
-    /** Get the object part from a pair.
-     * This operation gets the value for a pair from the entity. The relation
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam R the relation type.
-     * @tparam O the object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
      */
-    template<typename R, typename O>
-    const O* get_w_object() const {
-        return get<pair_object<R, O>>();
+    template<typename First, typename Second>
+    const Second* get_second() const {
+        return get<pair_object<First, Second>>();
     }
 
-    /** Get object for a given relation.
-     * This operation returns the object for a given relation. The optional
-     * index can be used to iterate through objects, in case the entity has
+    /** Get target for a given pair.
+     * This operation returns the target for a given pair. The optional
+     * index can be used to iterate through targets, in case the entity has
      * multiple instances for the same relation.
      *
-     * @tparam R The relation for which to retrieve the object.
+     * @tparam First The first element of the pair.
      * @param index The index (0 for the first instance of the relation).
      */
-    template<typename R>
-    flecs::entity get_object(int32_t index = 0) const;
+    template<typename First>
+    flecs::entity target(int32_t index = 0) const;
 
-    /** Get object for a given relation.
-     * This operation returns the object for a given relation. The optional
-     * index can be used to iterate through objects, in case the entity has
+    /** Get target for a given pair.
+     * This operation returns the target for a given pair. The optional
+     * index can be used to iterate through targets, in case the entity has
      * multiple instances for the same relation.
      *
-     * @param relation The relation for which to retrieve the object.
+     * @param first The first element of the pair for which to retrieve the target.
      * @param index The index (0 for the first instance of the relation).
      */
-    flecs::entity get_object(flecs::entity_t relation, int32_t index = 0) const;
+    flecs::entity target(flecs::entity_t first, int32_t index = 0) const;
 
-    /** Get the object of a relation for a given id.
+    /** Get the target of a pair for a given relationship id.
      * This operation returns the first entity that has the provided id by following
      * the specified relationship. If the entity itself has the id then entity will
      * be returned. If the id cannot be found on the entity or by following the
-     * relation, the operation will return 0.
+     * relationship, the operation will return 0.
      * 
      * This operation can be used to lookup, for example, which prefab is providing
-     * a component by specifying the IsA relation:
+     * a component by specifying the IsA pair:
      * 
      *   // Is Position provided by the entity or one of its base entities?
-     *   ecs_get_object_for_id(world, entity, EcsIsA, ecs_id(Position))
+     *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
      * 
      * @param relation The relationship to follow.
      * @param id The id to lookup.
-     * @return The entity for which the object has been found.
+     * @return The entity for which the target has been found.
      */
-    flecs::entity get_object_for(flecs::entity_t relation, flecs::id_t id) const;
+    flecs::entity target_for(flecs::entity_t relation, flecs::id_t id) const;
 
     template <typename T>
-    flecs::entity get_object_for(flecs::entity_t relation) const;
+    flecs::entity target_for(flecs::entity_t relation) const;
 
-    template <typename R, typename O>
-    flecs::entity get_object_for(flecs::entity_t relation) const;
+    template <typename First, typename Second>
+    flecs::entity target_for(flecs::entity_t relation) const;
     
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may
@@ -425,60 +425,59 @@ struct entity_view : public id {
 
     /** Check if entity has the provided pair.
      *
-     * @tparam Relation The relation type.
-     * @tparam Object The object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template <typename Relation, typename Object>
+    template <typename First, typename Second>
     bool has() const {
-        return this->has<Relation>(_::cpp_type<Object>::id(m_world));
+        return this->has<First>(_::cpp_type<Second>::id(m_world));
     }
 
     /** Check if entity has the provided pair.
      *
-     * @tparam R The relation type.
-     * @param object The object.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
-    bool has(O object) const {
-        auto comp_id = _::cpp_type<R>::id(m_world);
-        return ecs_has_id(m_world, m_id, ecs_pair(comp_id, object));
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
+    bool has(Second second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        return ecs_has_id(m_world, m_id, ecs_pair(comp_id, second));
     }
 
     /** Check if entity has the provided pair.
      *
-     * @tparam R The relation type.
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     * @return True if the entity has the provided component, false otherwise.
+     */
+    template <typename Second>
+    bool has_second(flecs::entity_t first) const {
+        return this->has(first, _::cpp_type<Second>::id(m_world));
+    }
+
+    /** Check if entity has the provided pair.
+     *
+     * @tparam First The first element of the pair.
      * @param value The enum constant.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template<typename R, typename E, if_t< is_enum<E>::value > = 0>
+    template<typename First, typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
         const auto& et = enum_type<E>(this->m_world);
-        flecs::entity_t object = et.entity(value);
-        return has<R>(object);
+        flecs::entity_t second = et.entity(value);
+        return has<First>(second);
     }
 
     /** Check if entity has the provided pair.
      *
-     * @param relation The relation.
-     * @param object The object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      * @return True if the entity has the provided component, false otherwise.
      */
-    bool has(flecs::id_t relation, flecs::id_t object) const {
-        return ecs_has_id(m_world, m_id, ecs_pair(relation, object));
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam Object The object type.
-     * @param relation The relation.
-     * @return True if the entity has the provided component, false otherwise.
-     */
-    template <typename Object>
-    bool has_w_object(flecs::id_t relation) const {
-        auto comp_id = _::cpp_type<Object>::id(m_world);
-        return ecs_has_id(m_world, m_id, ecs_pair(relation, comp_id));
+    bool has(flecs::id_t first, flecs::id_t second) const {
+        return ecs_has_id(m_world, m_id, ecs_pair(first, second));
     }
 
     /** Check if entity owns the provided entity.
@@ -493,24 +492,24 @@ struct entity_view : public id {
 
     /** Check if entity owns the provided pair.
      *
-     * @tparam Relation The relation type.
-     * @param object The object.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      * @return True if the entity owns the provided component, false otherwise.
      */
-    template <typename Relation>
-    bool owns(flecs::id_t object) const {
-        auto comp_id = _::cpp_type<Relation>::id(m_world);
-        return owns(ecs_pair(comp_id, object));
+    template <typename First>
+    bool owns(flecs::id_t second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        return owns(ecs_pair(comp_id, second));
     }
 
     /** Check if entity owns the provided pair.
      *
-     * @param relation The relation.
-     * @param object The object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      * @return True if the entity owns the provided component, false otherwise.
      */
-    bool owns(flecs::id_t relation, flecs::id_t object) const {
-        return owns(ecs_pair(relation, object));
+    bool owns(flecs::id_t first, flecs::id_t second) const {
+        return owns(ecs_pair(first, second));
     }
 
     /** Check if entity owns the provided component.

@@ -61,7 +61,7 @@ ecs_entity_t plecs_lookup(
             if (ecs_has_id(world, rel, EcsOneOf)) {
                 oneof = rel;
             } else {
-                oneof = ecs_get_object(world, rel, EcsOneOf, 0);
+                oneof = ecs_get_target(world, rel, EcsOneOf, 0);
             }
             if (oneof) {
                 return ecs_lookup_path_w_sep(
@@ -629,11 +629,11 @@ const char* plecs_parse_scope_open(
             ecs_set_scope(world, state->last_subject);
 
             /* Check if scope has a default child component */
-            ecs_entity_t def_type_src = ecs_get_object_for_id(world, scope, 
+            ecs_entity_t def_type_src = ecs_get_target_for_id(world, scope, 
                 0, ecs_pair(EcsDefaultChildComponent, EcsWildcard));
 
             if (def_type_src) {
-                default_scope_type = ecs_get_object(
+                default_scope_type = ecs_get_target(
                     world, def_type_src, EcsDefaultChildComponent, 0);
             }
         } else {

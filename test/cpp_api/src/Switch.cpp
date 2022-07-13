@@ -31,7 +31,7 @@ void Switch_get_case() {
         .add(Movement, Standing);
     test_assert(e.has(Movement, Standing));
 
-    test_assert(e.get_object(Movement) == Standing);
+    test_assert(e.target(Movement) == Standing);
 }
 
 void Switch_system_w_case() {
@@ -205,7 +205,7 @@ void Switch_add_remove_switch_w_type() {
     test_assert((!e.has<Movement, Standing>()));
     test_assert(e.table() == table);
 
-    auto c = e.get_object<Movement>();
+    auto c = e.target<Movement>();
     test_assert(c != 0);
     test_assert(c == world.id<Walking>());
 

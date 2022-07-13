@@ -226,7 +226,7 @@ void Pairs_get_mut_pair_existing(void);
 void Pairs_get_mut_pair_tag(void);
 void Pairs_get_mut_pair_tag_existing(void);
 void Pairs_get_relation_from_id(void);
-void Pairs_get_w_object_from_id(void);
+void Pairs_get_second_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
 void Pairs_get_recycled_object_from_id(void);
 void Pairs_get_rel_obj(void);
@@ -235,9 +235,9 @@ void Pairs_get_rel_obj_id_t(void);
 void Pairs_get_R_obj(void);
 void Pairs_get_R_obj_id(void);
 void Pairs_get_R_obj_id_t(void);
-void Pairs_get_w_object(void);
-void Pairs_get_w_object_id(void);
-void Pairs_get_w_object_id_t(void);
+void Pairs_get_second(void);
+void Pairs_get_second_id(void);
+void Pairs_get_second_id_t(void);
 void Pairs_each(void);
 void Pairs_each_pair(void);
 void Pairs_each_pair_by_type(void);
@@ -249,7 +249,7 @@ void Pairs_match_pair_obj_wildcard(void);
 void Pairs_match_pair_rel_wildcard(void);
 void Pairs_match_pair_both_wildcard(void);
 void Pairs_has_tag_w_object(void);
-void Pairs_has_w_object_tag(void);
+void Pairs_has_second_tag(void);
 void Pairs_add_pair_type(void);
 void Pairs_remove_pair_type(void);
 void Pairs_set_pair_type(void);
@@ -262,7 +262,7 @@ void Pairs_get_inline_pair_type(void);
 void Pairs_set_inline_pair_type(void);
 void Pairs_get_pair_type_object(void);
 void Pairs_set_pair_type_object(void);
-void Pairs_set_get_w_object_variants(void);
+void Pairs_set_get_second_variants(void);
 void Pairs_get_object_for_type_self(void);
 void Pairs_get_object_for_type_base(void);
 void Pairs_get_object_for_id_self(void);
@@ -707,7 +707,7 @@ void ComponentLifecycle_no_default_ctor_emplace(void);
 void ComponentLifecycle_default_init(void);
 void ComponentLifecycle_no_default_ctor_add(void);
 void ComponentLifecycle_no_default_ctor_add_relation(void);
-void ComponentLifecycle_no_default_ctor_add_w_object(void);
+void ComponentLifecycle_no_default_ctor_add_second(void);
 void ComponentLifecycle_no_default_ctor_set(void);
 void ComponentLifecycle_no_copy_ctor(void);
 void ComponentLifecycle_no_move_ctor(void);
@@ -1814,8 +1814,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_relation_from_id
     },
     {
-        "get_w_object_from_id",
-        Pairs_get_w_object_from_id
+        "get_second_from_id",
+        Pairs_get_second_from_id
     },
     {
         "get_recycled_relation_from_id",
@@ -1850,16 +1850,16 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_R_obj_id_t
     },
     {
-        "get_w_object",
-        Pairs_get_w_object
+        "get_second",
+        Pairs_get_second
     },
     {
-        "get_w_object_id",
-        Pairs_get_w_object_id
+        "get_second_id",
+        Pairs_get_second_id
     },
     {
-        "get_w_object_id_t",
-        Pairs_get_w_object_id_t
+        "get_second_id_t",
+        Pairs_get_second_id_t
     },
     {
         "each",
@@ -1906,8 +1906,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_has_tag_w_object
     },
     {
-        "has_w_object_tag",
-        Pairs_has_w_object_tag
+        "has_second_tag",
+        Pairs_has_second_tag
     },
     {
         "add_pair_type",
@@ -1958,8 +1958,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_set_pair_type_object
     },
     {
-        "set_get_w_object_variants",
-        Pairs_set_get_w_object_variants
+        "set_get_second_variants",
+        Pairs_set_get_second_variants
     },
     {
         "get_object_for_type_self",
@@ -3668,8 +3668,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_default_ctor_add_relation
     },
     {
-        "no_default_ctor_add_w_object",
-        ComponentLifecycle_no_default_ctor_add_w_object
+        "no_default_ctor_add_second",
+        ComponentLifecycle_no_default_ctor_add_second
     },
     {
         "no_default_ctor_set",

@@ -17,7 +17,7 @@ void Hierarchies_get_parent() {
 
     ECS_ENTITY(world, Child, 0);
 
-    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
+    ecs_entity_t e = ecs_get_target(world, Child, EcsChildOf, 0);
     test_assert(e == 0);
 
     ecs_fini(world);
@@ -29,7 +29,7 @@ void Hierarchies_get_parent_from_nested() {
     ECS_ENTITY(world, Scope, 0);
     ECS_ENTITY(world, Child, (ChildOf, Scope));
 
-    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
+    ecs_entity_t e = ecs_get_target(world, Child, EcsChildOf, 0);
     test_assert(e == Scope);
 
     ecs_fini(world);
@@ -42,7 +42,7 @@ void Hierarchies_get_parent_from_nested_2() {
     ECS_ENTITY(world, ChildScope, (ChildOf, Scope));
     ECS_ENTITY(world, Child, (ChildOf, Scope.ChildScope));
 
-    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
+    ecs_entity_t e = ecs_get_target(world, Child, EcsChildOf, 0);
     test_assert(e == ChildScope);
 
     ecs_fini(world);
@@ -53,7 +53,7 @@ void Hierarchies_get_object_from_0() {
     ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
-    ecs_get_object(world, 0, EcsChildOf, 0);
+    ecs_get_target(world, 0, EcsChildOf, 0);
 }
 
 void Hierarchies_delete_children() {

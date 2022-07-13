@@ -176,7 +176,7 @@ void OnDelete_object_remove() {
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsRemove);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsRemove);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, r, o);
@@ -197,7 +197,7 @@ void OnDelete_object_delete() {
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsDelete);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, r, o);
@@ -222,7 +222,7 @@ void OnDelete_object_mixed() {
     ecs_entity_t r_2 = ecs_new_id(world);
 
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r_1, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, r_1, EcsOnDeleteTarget, EcsDelete);
 
     ecs_entity_t e_1 = ecs_new_w_pair(world, r_1, o);
     ecs_add_id(world, e_1, t_1);
@@ -290,7 +290,7 @@ void OnDelete_object_throw() {
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsPanic);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsPanic);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, r, o);
@@ -622,7 +622,7 @@ void OnDelete_cyclic_object_remove() {
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
     ecs_entity_t r = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsRemove);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsRemove);
 
     ecs_add_pair(world, a, r, b);
     ecs_add_pair(world, b, r, a);
@@ -645,7 +645,7 @@ void OnDelete_cyclic_object_delete() {
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
     ecs_entity_t r = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsDelete);
 
     ecs_add_pair(world, a, r, b);
     ecs_add_pair(world, b, r, a);
@@ -660,7 +660,7 @@ void OnDelete_cyclic_object_delete() {
 void OnDelete_cyclic_overlapping_table() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_entity_t obj_a = ecs_new_id(world);
     ecs_entity_t obj_b = ecs_new_id(world);
     ecs_entity_t obj_c = ecs_new_id(world);
@@ -684,7 +684,7 @@ void OnDelete_cyclic_overlapping_new_tables() {
 
     ecs_entity_t tag = ecs_new_id(world);
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_entity_t rel_2 = ecs_new_id(world);
     ecs_entity_t obj_a = ecs_new_id(world);
     ecs_entity_t obj_b = ecs_new_id(world);
@@ -709,7 +709,7 @@ void OnDelete_cyclic_overlapping_new_tables() {
 void OnDelete_cyclic_object_mixed() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_entity_t rel_2 = ecs_new_id(world);
     ecs_entity_t obj_a = ecs_new_id(world);
     ecs_entity_t obj_b = ecs_new_id(world);
@@ -735,7 +735,7 @@ void OnDelete_cyclic_storage_table() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_set(world, rel_1, EcsComponent, {1, 1});
 
     ecs_entity_t obj_a = ecs_new_id(world);
@@ -765,7 +765,7 @@ void OnDelete_cyclic_storage_table_2() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_set(world, rel_1, EcsComponent, {1, 1});
 
     ecs_entity_t obj_a = ecs_new_id(world);
@@ -797,7 +797,7 @@ void OnDelete_cyclic_storage_table_3() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_set(world, rel_1, EcsComponent, {1, 1});
 
     ecs_entity_t obj_a = ecs_new_id(world);
@@ -827,7 +827,7 @@ void OnDelete_cyclic_set_empty() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ecs_entity_t rel_2 = ecs_new_id(world);
     ecs_entity_t obj_a = ecs_new_id(world);
     ecs_entity_t obj_b = ecs_new_id(world);
@@ -930,7 +930,7 @@ void OnDelete_delete_recursive() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsDelete);
 
     ecs_entity_t p = ecs_new_id(world);
 
@@ -1358,9 +1358,9 @@ void OnDelete_stresstest_many_relations_on_delete() {
         objects[i] = ecs_new_id(world);
     }
 
-    /* Add (OnDeleteObject, Delete) to a dummy object so that it won't mess up
+    /* Add (OnDeleteTarget, Delete) to a dummy object so that it won't mess up
      * with the table count */
-    ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
 
     ecs_world_stats_t s = {0};
     ecs_world_stats_get(world, &s); 
@@ -1369,7 +1369,7 @@ void OnDelete_stresstest_many_relations_on_delete() {
     for (oi = 0; oi < COUNT; oi ++) {    
         for (i = 0; i < COUNT; i ++) {
             ecs_entity_t r = ecs_new_id(world);
-            ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
+            ecs_add_pair(world, r, EcsOnDeleteTarget, EcsDelete);
 
             ecs_entity_t e = ecs_new_id(world);
             ecs_add_pair(world, e, r, objects[oi]);
@@ -1828,7 +1828,7 @@ void OnDelete_remove_childof_wildcard() {
     ecs_entity_t child_of = ecs_new_id(world);
 
     /* Simulate same behavior as ChildOf */
-    ecs_add_pair(world, child_of, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, child_of, EcsOnDeleteTarget, EcsDelete);
 
     ecs_entity_t parent_1 = ecs_new_id(world);
     ecs_entity_t parent_2 = ecs_new_id(world);
@@ -2006,7 +2006,7 @@ void OnDelete_delete_with_component_after_delete_cyclic_w_alive_moved() {
 void OnDelete_deep_clean_64() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     test_assert(r != 0);
 
     ecs_entity_t first = ecs_new_id(world);
@@ -2037,7 +2037,7 @@ void OnDelete_deep_clean_64() {
 void OnDelete_deep_clean_256() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     test_assert(r != 0);
 
     ecs_entity_t first = ecs_new_id(world);
@@ -2268,7 +2268,7 @@ void DeleteTarget(ecs_iter_t *it) {
 void OnDelete_delete_self_in_on_remove() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
@@ -2307,7 +2307,7 @@ void DeleteOther(ecs_iter_t *it) {
 void OnDelete_delete_nested_in_on_remove() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -2393,7 +2393,7 @@ static ecs_entity_t last_deleted = 0;
 static void TestAlive(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(it->world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(it->world, e, EcsChildOf, 0);
         if (parent) {
             test_assert(ecs_is_alive(it->world, parent));
             test_alive_parent_count ++;

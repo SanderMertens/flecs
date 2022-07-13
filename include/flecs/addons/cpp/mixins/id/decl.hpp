@@ -6,7 +6,7 @@ struct id;
 struct entity;
 
 /** Class that stores a flecs id.
- * A flecs id is an identifier that can store an entity id, an relation-object 
+ * A flecs id is an identifier that can store an entity id, an first-second 
  * pair, or role annotated id (such as SWITCH | Movement).
  */
 struct id {
@@ -22,19 +22,19 @@ struct id {
         : m_world(world)
         , m_id(value) { }
 
-    explicit id(flecs::world_t *world, flecs::id_t relation, flecs::id_t object)
+    explicit id(flecs::world_t *world, flecs::id_t first, flecs::id_t second)
         : m_world(world)
-        , m_id(ecs_pair(relation, object)) { }
+        , m_id(ecs_pair(first, second)) { }
 
-    explicit id(flecs::id_t relation, flecs::id_t object)
+    explicit id(flecs::id_t first, flecs::id_t second)
         : m_world(nullptr)
-        , m_id(ecs_pair(relation, object)) { }
+        , m_id(ecs_pair(first, second)) { }
 
-    explicit id(const flecs::id& relation, const flecs::id& object)
-        : m_world(relation.m_world)
-        , m_id(ecs_pair(relation.m_id, object.m_id)) { }
+    explicit id(const flecs::id& first, const flecs::id& second)
+        : m_world(first.m_world)
+        , m_id(ecs_pair(first.m_id, second.m_id)) { }
 
-    /** Test if id is pair (has relation, object) */
+    /** Test if id is pair (has first, second) */
     bool is_pair() const {
         return (m_id & ECS_ROLE_MASK) == flecs::Pair;
     }
@@ -79,12 +79,12 @@ struct id {
 
     flecs::entity role() const;
 
-    /* Test if id has specified relation */
-    bool has_relation(flecs::id_t relation) const {
+    /* Test if id has specified first */
+    bool has_relation(flecs::id_t first) const {
         if (!is_pair()) {
             return false;
         }
-        return ECS_PAIR_FIRST(m_id) == relation;
+        return ECS_PAIR_FIRST(m_id) == first;
     }
 
     /** Get first element from a pair.
@@ -98,12 +98,6 @@ struct id {
      * world, the operation will ensure that the returned id has the correct
      * generation count. */
     flecs::entity second() const;
-
-    /** Same as first() */
-    flecs::entity relation() const;
-
-    /** Same as second() */
-    flecs::entity object() const;
 
     /* Convert id to string */
     flecs::string str() const {

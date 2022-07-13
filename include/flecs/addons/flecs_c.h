@@ -213,8 +213,8 @@
 
 #define ecs_new(world, T) ecs_new_w_id(world, ecs_id(T))
 
-#define ecs_new_w_pair(world, relation, object)\
-    ecs_new_w_id(world, ecs_pair(relation, object))
+#define ecs_new_w_pair(world, first, second)\
+    ecs_new_w_id(world, ecs_pair(first, second))
 
 #define ecs_bulk_new(world, component, count)\
     ecs_bulk_new_w_id(world, ecs_id(component), count)
@@ -235,8 +235,8 @@
 #define ecs_add(world, entity, T)\
     ecs_add_id(world, entity, ecs_id(T))
 
-#define ecs_add_pair(world, subject, relation, object)\
-    ecs_add_id(world, subject, ecs_pair(relation, object))
+#define ecs_add_pair(world, subject, first, second)\
+    ecs_add_id(world, subject, ecs_pair(first, second))
 
 
 /* -- Remove -- */
@@ -244,8 +244,8 @@
 #define ecs_remove(world, entity, T)\
     ecs_remove_id(world, entity, ecs_id(T))
 
-#define ecs_remove_pair(world, subject, relation, object)\
-    ecs_remove_id(world, subject, ecs_pair(relation, object))
+#define ecs_remove_pair(world, subject, first, second)\
+    ecs_remove_id(world, subject, ecs_pair(first, second))
 
 
 /* -- Bulk remove/delete -- */
@@ -262,15 +262,15 @@
 #define ecs_set(world, entity, component, ...)\
     ecs_set_id(world, entity, ecs_id(component), sizeof(component), &(component)__VA_ARGS__)
 
-#define ecs_set_pair(world, subject, relation, object, ...)\
+#define ecs_set_pair(world, subject, First, second, ...)\
     ecs_set_id(world, subject,\
-        ecs_pair(ecs_id(relation), object),\
-        sizeof(relation), &(relation)__VA_ARGS__)
+        ecs_pair(ecs_id(First), second),\
+        sizeof(First), &(First)__VA_ARGS__)
 
-#define ecs_set_pair_second(world, subject, relation, object, ...)\
+#define ecs_set_pair_second(world, subject, first, Second, ...)\
     ecs_set_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)),\
-        sizeof(object), &(object)__VA_ARGS__)
+        ecs_pair(first, ecs_id(Second)),\
+        sizeof(Second), &(Second)__VA_ARGS__)
 
 #define ecs_set_pair_object ecs_set_pair_second
 
@@ -288,13 +288,13 @@
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
 
-#define ecs_get_pair(world, subject, R, object)\
-    (ECS_CAST(const R*, ecs_get_id(world, subject,\
-        ecs_pair(ecs_id(R), object))))
+#define ecs_get_pair(world, subject, First, second)\
+    (ECS_CAST(const First*, ecs_get_id(world, subject,\
+        ecs_pair(ecs_id(First), second))))
 
-#define ecs_get_pair_second(world, subject, relation, O)\
-    (ECS_CAST(const O*, ecs_get_id(world, subject,\
-        ecs_pair(relation, ecs_id(O)))))
+#define ecs_get_pair_second(world, subject, first, Second)\
+    (ECS_CAST(const Second*, ecs_get_id(world, subject,\
+        ecs_pair(first, ecs_id(Second)))))
 
 #define ecs_get_pair_object ecs_get_pair_second
 
@@ -303,28 +303,26 @@
 #define ecs_record_get(world, record, T)\
     (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
 
-#define ecs_record_get_pair(world, record, R, object)\
-    (ECS_CAST(const T*, ecs_record_get_id(world, record, \
-        ecs_pair(ecs_id(R), object))))
+#define ecs_record_get_pair(world, record, First, second)\
+    (ECS_CAST(const First*, ecs_record_get_id(world, record, \
+        ecs_pair(ecs_id(First), second))))
 
-#define ecs_record_get_pair_second(world, record, relation, O)\
-    (ECS_CAST(const O*, ecs_record_get_id(world, record,\
-        ecs_pair(relation, ecs_id(O)))))
-
-#define ecs_record_get_pair_object ecs_record_get_pair_second
+#define ecs_record_get_pair_second(world, record, first, Second)\
+    (ECS_CAST(const Second*, ecs_record_get_id(world, record,\
+        ecs_pair(first, ecs_id(Second)))))
 
 /* -- Get mut from record -- */
 
 #define ecs_record_get_mut(world, record, T)\
     (ECS_CAST(T*, ecs_record_get_mut_id(world, record, ecs_id(T))))
 
-#define ecs_record_get_mut_pair(world, record, R, object)\
-    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, \
-        ecs_pair(ecs_id(R), object))))
+#define ecs_record_get_mut_pair(world, record, First, second)\
+    (ECS_CAST(First*, ecs_record_get_mut_id(world, record, \
+        ecs_pair(ecs_id(First), second))))
 
-#define ecs_record_get_mut_pair_second(world, record, relation, O)\
-    (ECS_CAST(O*, ecs_record_get_mut_id(world, record,\
-        ecs_pair(relation, ecs_id(O)))))
+#define ecs_record_get_mut_pair_second(world, record, first, Second)\
+    (ECS_CAST(Second*, ecs_record_get_mut_id(world, record,\
+        ecs_pair(first, ecs_id(Second)))))
 
 #define ecs_record_get_mut_pair_object ecs_record_get_mut_pair_second
 
@@ -341,21 +339,21 @@
 #define ecs_get_mut(world, entity, T)\
     (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
 
-#define ecs_get_mut_pair(world, subject, relation, object)\
-    (ECS_CAST(relation*, ecs_get_mut_id(world, subject,\
-        ecs_pair(ecs_id(relation), object))))
+#define ecs_get_mut_pair(world, subject, First, second)\
+    (ECS_CAST(First*, ecs_get_mut_id(world, subject,\
+        ecs_pair(ecs_id(First), second))))
 
-#define ecs_get_mut_pair_second(world, subject, relation, object)\
-    (ECS_CAST(object*, ecs_get_mut_id(world, subject,\
-        ecs_pair(relation, ecs_id(object)))))
+#define ecs_get_mut_pair_second(world, subject, first, Second)\
+    (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
+        ecs_pair(first, ecs_id(Second)))))
 
 #define ecs_get_mut_pair_object ecs_get_mut_pair_second
 
 #define ecs_modified(world, entity, component)\
     ecs_modified_id(world, entity, ecs_id(component))
 
-#define ecs_modified_pair(world, subject, relation, object)\
-    ecs_modified_id(world, subject, ecs_pair(relation, object))
+#define ecs_modified_pair(world, subject, first, second)\
+    ecs_modified_id(world, subject, ecs_pair(first, second))
 
 
 /* -- Singletons -- */
@@ -384,14 +382,14 @@
 #define ecs_has(world, entity, T)\
     ecs_has_id(world, entity, ecs_id(T))
 
-#define ecs_has_pair(world, entity, relation, object)\
-    ecs_has_id(world, entity, ecs_pair(relation, object))
+#define ecs_has_pair(world, entity, first, second)\
+    ecs_has_id(world, entity, ecs_pair(first, second))
 
 #define ecs_owns_id(world, entity, id)\
     (ecs_search(world, ecs_get_table(world, entity), id, 0) != -1)
 
-#define ecs_owns_pair(world, entity, relation, object)\
-    ecs_owns_id(world, entity, ecs_pair(relation, object))
+#define ecs_owns_pair(world, entity, first, second)\
+    ecs_owns_id(world, entity, ecs_pair(first, second))
 
 #define ecs_owns(world, entity, T)\
     ecs_owns_id(world, entity, ecs_id(T))
@@ -400,8 +398,8 @@
     (ecs_search_relation(world, ecs_get_table(world, entity), 0, ecs_id(id), \
         EcsIsA, 1, 0, 0, 0, 0) != -1)
 
-#define ecs_shares_pair(world, entity, relation, object)\
-    (ecs_shares_id(world, entity, ecs_pair(relation, object)))
+#define ecs_shares_pair(world, entity, first, second)\
+    (ecs_shares_id(world, entity, ecs_pair(first, second)))
 
 #define ecs_shares(world, entity, T)\
     (ecs_shares_id(world, entity, ecs_id(T)))

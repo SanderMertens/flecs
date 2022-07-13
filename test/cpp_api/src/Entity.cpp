@@ -715,8 +715,8 @@ void Entity_pair_role() {
     
     test_assert(pair.has_role(flecs::Pair));
 
-    auto rel = pair.relation();
-    auto obj = pair.object();
+    auto rel = pair.first();
+    auto obj = pair.second();
 
     test_assert(rel == a);
     test_assert(obj == b);
@@ -1119,23 +1119,23 @@ void Entity_get_parent() {
         .add(Rel, obj2)
         .add(Rel, obj3);
 
-    auto p = child.get_object(Rel);
+    auto p = child.target(Rel);
     test_assert(p != 0);
     test_assert(p == obj1);
 
-    p = child.get_object(Rel, 0);
+    p = child.target(Rel, 0);
     test_assert(p != 0);
     test_assert(p == obj1);
 
-    p = child.get_object(Rel, 1);
+    p = child.target(Rel, 1);
     test_assert(p != 0);
     test_assert(p == obj2);
 
-    p = child.get_object(Rel, 2);
+    p = child.target(Rel, 2);
     test_assert(p != 0);
     test_assert(p == obj3);
 
-    p = child.get_object(Rel, 3);
+    p = child.target(Rel, 3);
     test_assert(p == 0);
 }
 
@@ -3016,16 +3016,16 @@ void Entity_id_pair_from_world() {
 
     flecs::id id_1 = ecs.id(rel, obj);
     test_assert(id_1 != 0);
-    test_assert(id_1.relation() == rel);
-    test_assert(id_1.object() == obj);
+    test_assert(id_1.first() == rel);
+    test_assert(id_1.second() == obj);
     test_assert(id_1.world() == ecs);
     test_bool(id_1.is_pair(), true);
     test_bool(id_1.is_wildcard(), false);
 
     flecs::id id_2 = ecs.id(rel, flecs::Wildcard);
     test_assert(id_2 != 0);
-    test_assert(id_2.relation() == rel);
-    test_assert(id_2.object() == flecs::Wildcard);
+    test_assert(id_2.first() == rel);
+    test_assert(id_2.second() == flecs::Wildcard);
     test_assert(id_2.world() == ecs);
     test_bool(id_2.is_pair(), true);
     test_bool(id_2.is_wildcard(), true);
@@ -3058,7 +3058,7 @@ void Entity_is_a_w_type() {
     auto e = world.entity().is_a<Prefab>();
 
     test_assert(e.has(flecs::IsA, base));
-    test_assert(e.has_w_object<Prefab>(flecs::IsA));
+    test_assert(e.has_second<Prefab>(flecs::IsA));
 }
 
 void Entity_child_of() {
@@ -3081,7 +3081,7 @@ void Entity_child_of_w_type() {
     auto e = world.entity().child_of<Parent>();
 
     test_assert(e.has(flecs::ChildOf, base));
-    test_assert(e.has_w_object<Parent>(flecs::ChildOf));
+    test_assert(e.has_second<Parent>(flecs::ChildOf));
 }
 
 void Entity_id_get_entity() {
@@ -3214,9 +3214,9 @@ void Entity_get_obj_by_template() {
     e1.add<Rel>(o1);
     e1.add<Rel>(o2);
 
-    test_assert(o1 == e1.get_object<Rel>());
-    test_assert(o1 == e1.get_object<Rel>(0));
-    test_assert(o2 == e1.get_object<Rel>(1));
+    test_assert(o1 == e1.target<Rel>());
+    test_assert(o1 == e1.target<Rel>(0));
+    test_assert(o2 == e1.target<Rel>(1));
 }
 
 void Entity_create_named_twice_deferred() {
@@ -3589,24 +3589,24 @@ void Entity_add_if_exclusive_r_o() {
 void Entity_add_if_exclusive_R_o() {
     flecs::world ecs;
 
-    struct R { };
+    struct First { };
 
-    ecs.component<R>().add(flecs::Exclusive);
+    ecs.component<First>().add(flecs::Exclusive);
 
     auto e = ecs.entity();
     auto o_1 = ecs.entity();
     auto o_2 = ecs.entity();
 
-    e.add<R>(o_1);
-    test_assert(e.has<R>(o_1));
+    e.add<First>(o_1);
+    test_assert(e.has<First>(o_1));
 
-    e.add_if<R>(true, o_2);
-    test_assert(!e.has<R>(o_1));
-    test_assert(e.has<R>(o_2));
+    e.add_if<First>(true, o_2);
+    test_assert(!e.has<First>(o_1));
+    test_assert(e.has<First>(o_2));
 
-    e.add_if<R>(false, o_1);
-    test_assert(!e.has<R>(o_1));
-    test_assert(!e.has<R>(o_2));
+    e.add_if<First>(false, o_1);
+    test_assert(!e.has<First>(o_1));
+    test_assert(!e.has<First>(o_2));
 }
 
 void Entity_add_if_exclusive_R_O() {

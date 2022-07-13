@@ -11,12 +11,12 @@ flecs::id id(Args&&... args) const;
 
 /** Get pair id from relation, object
  */
-template <typename R, typename O>
+template <typename First, typename Second>
 flecs::id pair() const;
 
 /** Get pair id from relation, object
  */
-template <typename R>
+template <typename First>
 flecs::id pair(entity_t o) const;
 
 /** Get pair id from relation, object

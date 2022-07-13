@@ -11,5 +11,5 @@ flecs::term term() const;
 
 /** Create a term for a pair.
  */
-template<typename R, typename O>
+template<typename First, typename Second>
 flecs::term term() const;

@@ -92,7 +92,7 @@ flecs::entity get_container(flecs::entity container) {
     if (container.has<Container>()) {
         return container;
     }
-    return container.get_object<Inventory>();
+    return container.target<Inventory>();
 }
 
 // Iterate all items in an inventory

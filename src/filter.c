@@ -1503,7 +1503,9 @@ bool flecs_term_match_table(
 
     ecs_entity_t src_id = src->id;
     if (ecs_term_match_0(term)) {
-        id_out[0] = id; /* If no entity is matched, just set id */
+        if (id_out) {
+            id_out[0] = id; /* If no entity is matched, just set id */
+        }
         return true;
     }
 

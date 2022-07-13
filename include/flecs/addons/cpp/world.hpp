@@ -592,11 +592,11 @@ struct world {
 
     /** Count entities matching a pair.
      *
-     * @param rel The relation id.
-     * @param obj The object id.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    int count(flecs::entity_t rel, flecs::entity_t obj) const {
-        return ecs_count_id(m_world, ecs_pair(rel, obj));
+    int count(flecs::entity_t first, flecs::entity_t second) const {
+        return ecs_count_id(m_world, ecs_pair(first, second));
     }
 
     /** Count entities matching a component.
@@ -610,24 +610,24 @@ struct world {
 
     /** Count entities matching a pair.
      *
-     * @tparam Rel The relation type.
-     * @param obj The object id.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      */
-    template <typename Rel>
-    int count(flecs::entity_t obj) const {
-        return count(_::cpp_type<Rel>::id(m_world), obj);
+    template <typename First>
+    int count(flecs::entity_t second) const {
+        return count(_::cpp_type<First>::id(m_world), second);
     }
 
     /** Count entities matching a pair.
      *
-     * @tparam Rel The relation type.
-     * @tparam Obj The object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
      */
-    template <typename Rel, typename Obj>
+    template <typename First, typename Second>
     int count() const {
         return count( 
-            _::cpp_type<Rel>::id(m_world),
-            _::cpp_type<Obj>::id(m_world));
+            _::cpp_type<First>::id(m_world),
+            _::cpp_type<Second>::id(m_world));
     }
 
     /** All entities created in function are created with id.
@@ -646,25 +646,25 @@ struct world {
         with(this->id<T>(), func);
     }
 
-    /** All entities created in function are created with relation.
+    /** All entities created in function are created with pair.
      */
-    template <typename Relation, typename Object, typename Func>
+    template <typename First, typename Second, typename Func>
     void with(const Func& func) const {
-        with(ecs_pair(this->id<Relation>(), this->id<Object>()), func);
+        with(ecs_pair(this->id<First>(), this->id<Second>()), func);
     }
 
-    /** All entities created in function are created with relation.
+    /** All entities created in function are created with pair.
      */
-    template <typename Relation, typename Func>
-    void with(id_t object, const Func& func) const {
-        with(ecs_pair(this->id<Relation>(), object), func);
+    template <typename First, typename Func>
+    void with(id_t second, const Func& func) const {
+        with(ecs_pair(this->id<First>(), second), func);
     } 
 
-    /** All entities created in function are created with relation.
+    /** All entities created in function are created with pair.
      */
     template <typename Func>
-    void with(id_t relation, id_t object, const Func& func) const {
-        with(ecs_pair(relation, object), func);
+    void with(id_t first, id_t second, const Func& func) const {
+        with(ecs_pair(first, second), func);
     }
 
     /** All entities created in function are created in scope. All operations
@@ -698,9 +698,9 @@ struct world {
         ecs_delete_with(m_world, the_id);
     }
 
-    /** Delete all entities with specified relation. */
-    void delete_with(entity_t rel, entity_t obj) const {
-        delete_with(ecs_pair(rel, obj));
+    /** Delete all entities with specified pair. */
+    void delete_with(entity_t first, entity_t second) const {
+        delete_with(ecs_pair(first, second));
     }
 
     /** Delete all entities with specified component. */
@@ -709,10 +709,10 @@ struct world {
         delete_with(_::cpp_type<T>::id(m_world));
     }
 
-    /** Delete all entities with specified relation. */
-    template <typename R, typename O>
+    /** Delete all entities with specified pair. */
+    template <typename First, typename Second>
     void delete_with() const {
-        delete_with(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
+        delete_with(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
     }
 
     /** Remove all instances of specified id. */
@@ -720,9 +720,9 @@ struct world {
         ecs_remove_all(m_world, the_id);
     }
 
-    /** Remove all instances of specified relation. */
-    void remove_all(entity_t rel, entity_t obj) const {
-        remove_all(ecs_pair(rel, obj));
+    /** Remove all instances of specified pair. */
+    void remove_all(entity_t first, entity_t second) const {
+        remove_all(ecs_pair(first, second));
     }
 
     /** Remove all instances of specified component. */
@@ -731,10 +731,10 @@ struct world {
         remove_all(_::cpp_type<T>::id(m_world));
     }
 
-    /** Remove all instances of specified relation. */
-    template <typename R, typename O>
+    /** Remove all instances of specified pair. */
+    template <typename First, typename Second>
     void remove_all() const {
-        remove_all(_::cpp_type<R>::id(m_world), _::cpp_type<O>::id(m_world));
+        remove_all(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
     }
 
     /** Defer all operations called in function. If the world is already in
@@ -764,7 +764,6 @@ struct world {
     }
 
     /** Check if entity id exists in the world.
-     * Ignores entity relation.
      * 
      * @see ecs_exists
      */
@@ -773,7 +772,6 @@ struct world {
     }
 
     /** Check if entity id exists in the world.
-     * Ignores entity relation.
      *
      * @see ecs_is_alive
      */

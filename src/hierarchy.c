@@ -20,7 +20,7 @@ bool path_append(
     const char *name;
 
     if (ecs_is_valid(world, child)) {
-        cur = ecs_get_object(world, child, EcsChildOf, 0);
+        cur = ecs_get_target(world, child, EcsChildOf, 0);
         if (cur) {
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
             if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
@@ -413,7 +413,7 @@ tail:
     if (!cur && recursive) {
         if (!lookup_path_search) {
             if (parent) {
-                parent = ecs_get_object(world, parent, EcsChildOf, 0);
+                parent = ecs_get_target(world, parent, EcsChildOf, 0);
                 goto retry;
             } else {
                 lookup_path_search = true;
