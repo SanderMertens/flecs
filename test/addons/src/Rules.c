@@ -6760,3 +6760,28 @@ void Rules_page_iter() {
 
     ecs_fini(world);
 }
+
+void Rules_rule_w_short_notation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

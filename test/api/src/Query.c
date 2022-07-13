@@ -6966,3 +6966,30 @@ void Query_rematch_empty_table_w_superset() {
 
     ecs_fini(world);
 }
+
+void Query_query_w_short_notation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = Foo
+        }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.ids[0], ecs_term_id(&it, 1));
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

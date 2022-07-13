@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     // fact, vs reusing a single rule for multiple facts.
     //
     // See the setting_variables example for more details
-    ecs_rule_t *friends = ecs_rule_init(ecs, &(ecs_filter_desc_t){
+    ecs_rule_t *friends = ecs_rule(ecs, {
         .terms = {
             { 
                 .first.id = Likes, 

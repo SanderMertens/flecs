@@ -603,3 +603,19 @@ void ArrayTypes_array_of_standaline_array_bool_3() {
 
     ecs_fini(world);
 }
+
+void ArrayTypes_array_w_short_notation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array(world, {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 3
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+    test_assert(ecs_has(world, a, EcsArray));
+
+    ecs_fini(world);
+}

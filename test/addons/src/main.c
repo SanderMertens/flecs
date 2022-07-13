@@ -363,6 +363,7 @@ void Pipeline_activate_after_add(void);
 void Pipeline_match_all_after_pipeline_rebuild(void);
 void Pipeline_empty_pipeline(void);
 void Pipeline_custom_pipeline_w_system_macro(void);
+void Pipeline_pipeline_w_short_notation(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -427,6 +428,7 @@ void SystemMisc_run_w_offset_limit_custom_run_action(void);
 void SystemMisc_pipeline_custom_run_action(void);
 void SystemMisc_change_custom_run_action(void);
 void SystemMisc_custom_run_action_call_next(void);
+void SystemMisc_system_w_short_notation(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -596,6 +598,7 @@ void Rules_variable_order(void);
 void Rules_table_subj_as_obj_in_not(void);
 void Rules_invalid_variable_only(void);
 void Rules_page_iter(void);
+void Rules_rule_w_short_notation(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -2309,6 +2312,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "custom_pipeline_w_system_macro",
         Pipeline_custom_pipeline_w_system_macro
+    },
+    {
+        "pipeline_w_short_notation",
+        Pipeline_pipeline_w_short_notation
     }
 };
 
@@ -2560,6 +2567,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "custom_run_action_call_next",
         SystemMisc_custom_run_action_call_next
+    },
+    {
+        "system_w_short_notation",
+        SystemMisc_system_w_short_notation
     }
 };
 
@@ -3231,6 +3242,10 @@ bake_test_case Rules_testcases[] = {
     {
         "page_iter",
         Rules_page_iter
+    },
+    {
+        "rule_w_short_notation",
+        Rules_rule_w_short_notation
     }
 };
 
@@ -4401,21 +4416,21 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        39,
+        40,
         Pipeline_testcases
     },
     {
         "SystemMisc",
         NULL,
         NULL,
-        62,
+        63,
         SystemMisc_testcases
     },
     {
         "Rules",
         NULL,
         NULL,
-        167,
+        168,
         Rules_testcases
     },
     {

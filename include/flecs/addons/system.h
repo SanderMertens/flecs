@@ -117,6 +117,10 @@ ecs_entity_t ecs_system_init(
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;
+
+#define ecs_system(world, ...)\
+    ecs_system_init(world, &(ecs_system_desc_t) __VA_ARGS__ )
+
 #endif
 
 /** Run a specific system manually.

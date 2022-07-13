@@ -61,6 +61,7 @@ void PrimitiveTypes_struct_w_double(void);
 void PrimitiveTypes_struct_w_string(void);
 void PrimitiveTypes_struct_w_entity(void);
 void PrimitiveTypes_primitive_init(void);
+void PrimitiveTypes_primitive_w_short_notation(void);
 
 // Testsuite 'EnumTypes'
 void EnumTypes_enum_1_constant(void);
@@ -70,6 +71,7 @@ void EnumTypes_enum_3_constants_manual_values(void);
 void EnumTypes_struct_w_enum(void);
 void EnumTypes_zero_initialized(void);
 void EnumTypes_enum_relation(void);
+void EnumTypes_enum_w_short_notation(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -78,6 +80,7 @@ void BitmaskTypes_bitmask_3_constants(void);
 void BitmaskTypes_bitmask_4_constants(void);
 void BitmaskTypes_bitmask_4_constants_manual_values(void);
 void BitmaskTypes_struct_w_bitmask(void);
+void BitmaskTypes_bitmask_w_short_notation(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -94,6 +97,7 @@ void StructTypes_i32_i64_i32(void);
 void StructTypes_incomplete_member(void);
 void StructTypes_partial_type(void);
 void StructTypes_partial_type_custom_offset(void);
+void StructTypes_struct_w_short_notation(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -141,11 +145,13 @@ void ArrayTypes_standaline_array_bool_3(void);
 void ArrayTypes_array_of_standaline_array_bool_1(void);
 void ArrayTypes_array_of_standaline_array_bool_2(void);
 void ArrayTypes_array_of_standaline_array_bool_3(void);
+void ArrayTypes_array_w_short_notation(void);
 
 // Testsuite 'VectorTypes'
 void VectorTypes_vector_bool(void);
 void VectorTypes_vector_i32(void);
 void VectorTypes_vector_struct(void);
+void VectorTypes_vector_w_short_notation(void);
 
 // Testsuite 'Units'
 void Units_member_w_unit(void);
@@ -173,6 +179,9 @@ void Units_set_unit_w_derived(void);
 void Units_set_unit_w_over(void);
 void Units_set_unit_w_prefix(void);
 void Units_builtin_units(void);
+void Units_unit_w_short_notation(void);
+void Units_unit_prefix_w_short_notation(void);
+void Units_quantity_w_short_notation(void);
 
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
@@ -794,6 +803,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
     {
         "primitive_init",
         PrimitiveTypes_primitive_init
+    },
+    {
+        "primitive_w_short_notation",
+        PrimitiveTypes_primitive_w_short_notation
     }
 };
 
@@ -825,6 +838,10 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "enum_relation",
         EnumTypes_enum_relation
+    },
+    {
+        "enum_w_short_notation",
+        EnumTypes_enum_w_short_notation
     }
 };
 
@@ -852,6 +869,10 @@ bake_test_case BitmaskTypes_testcases[] = {
     {
         "struct_w_bitmask",
         BitmaskTypes_struct_w_bitmask
+    },
+    {
+        "bitmask_w_short_notation",
+        BitmaskTypes_bitmask_w_short_notation
     }
 };
 
@@ -911,6 +932,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "partial_type_custom_offset",
         StructTypes_partial_type_custom_offset
+    },
+    {
+        "struct_w_short_notation",
+        StructTypes_struct_w_short_notation
     }
 };
 
@@ -1089,6 +1114,10 @@ bake_test_case ArrayTypes_testcases[] = {
     {
         "array_of_standaline_array_bool_3",
         ArrayTypes_array_of_standaline_array_bool_3
+    },
+    {
+        "array_w_short_notation",
+        ArrayTypes_array_w_short_notation
     }
 };
 
@@ -1104,6 +1133,10 @@ bake_test_case VectorTypes_testcases[] = {
     {
         "vector_struct",
         VectorTypes_vector_struct
+    },
+    {
+        "vector_w_short_notation",
+        VectorTypes_vector_w_short_notation
     }
 };
 
@@ -1207,6 +1240,18 @@ bake_test_case Units_testcases[] = {
     {
         "builtin_units",
         Units_builtin_units
+    },
+    {
+        "unit_w_short_notation",
+        Units_unit_w_short_notation
+    },
+    {
+        "unit_prefix_w_short_notation",
+        Units_unit_prefix_w_short_notation
+    },
+    {
+        "quantity_w_short_notation",
+        Units_quantity_w_short_notation
     }
 };
 
@@ -2823,28 +2868,28 @@ static bake_test_suite suites[] = {
         "PrimitiveTypes",
         NULL,
         NULL,
-        52,
+        53,
         PrimitiveTypes_testcases
     },
     {
         "EnumTypes",
         NULL,
         NULL,
-        7,
+        8,
         EnumTypes_testcases
     },
     {
         "BitmaskTypes",
         NULL,
         NULL,
-        6,
+        7,
         BitmaskTypes_testcases
     },
     {
         "StructTypes",
         NULL,
         NULL,
-        14,
+        15,
         StructTypes_testcases
     },
     {
@@ -2858,21 +2903,21 @@ static bake_test_suite suites[] = {
         "ArrayTypes",
         NULL,
         NULL,
-        21,
+        22,
         ArrayTypes_testcases
     },
     {
         "VectorTypes",
         NULL,
         NULL,
-        3,
+        4,
         VectorTypes_testcases
     },
     {
         "Units",
         NULL,
         NULL,
-        25,
+        28,
         Units_testcases
     },
     {

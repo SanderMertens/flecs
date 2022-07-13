@@ -455,3 +455,32 @@ void StructTypes_partial_type_custom_offset() {
 
     ecs_fini(world);
 }
+
+void StructTypes_struct_w_short_notation() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t), 1);
+
+    ecs_fini(world);
+}

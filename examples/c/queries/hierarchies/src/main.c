@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     // Create a hierarchical query to compute the global position from the
     // local position and the parent position.
-    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t){
+    ecs_query_t *q = ecs_query(ecs, {
         .filter.terms = {
             // Read from entity's Local position
             { .id = ecs_pair(ecs_id(Position), Local), .inout = EcsIn }, 

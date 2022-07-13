@@ -373,7 +373,8 @@
                 "activate_after_add",
                 "match_all_after_pipeline_rebuild",
                 "empty_pipeline",
-                "custom_pipeline_w_system_macro"
+                "custom_pipeline_w_system_macro",
+                "pipeline_w_short_notation"
             ]
         }, {
             "id": "SystemMisc",
@@ -439,7 +440,8 @@
                 "run_w_offset_limit_custom_run_action",
                 "pipeline_custom_run_action",
                 "change_custom_run_action",
-                "custom_run_action_call_next"
+                "custom_run_action_call_next",
+                "system_w_short_notation"
             ]
         }, {
             "id": "Rules",
@@ -610,7 +612,8 @@
                 "variable_order",
                 "table_subj_as_obj_in_not",
                 "invalid_variable_only",
-                "page_iter"
+                "page_iter",
+                "rule_w_short_notation"
             ]
         }, {
             "id": "TransitiveRules",

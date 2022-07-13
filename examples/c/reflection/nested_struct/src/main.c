@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Point);
     ECS_COMPONENT(ecs, Line);
 
-    ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_struct(ecs, {
         .entity.entity = ecs_id(Point),
         .members = {
             { .name = "x", .type = ecs_id(ecs_f32_t) },
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_struct_init(ecs, &(ecs_struct_desc_t){
+    ecs_struct(ecs, {
         .entity.entity = ecs_id(Line),
         .members = {
             { .name = "start", .type = ecs_id(Point) },
