@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
     // Mass component
     ECS_COMPONENT(world, Mass);
 
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(Mass),
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
         .members = {
             { .name = "value", .type = ecs_id(ecs_f64_t), .unit = EcsKiloGrams}
         }

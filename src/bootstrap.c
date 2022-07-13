@@ -363,7 +363,7 @@ void register_symmetric(ecs_iter_t *it) {
         /* Create observer that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_observer_init(world, &(ecs_observer_desc_t){
-            .entity.add = { ecs_childof(EcsFlecsInternals) },
+            .entity = ecs_entity(world, {.add = {ecs_childof(EcsFlecsInternals)}}),
             .filter.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
@@ -691,7 +691,7 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
     
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.add = { ecs_childof(EcsFlecsInternals) },
+        .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
         .filter.terms[0] = { .id = EcsTag, .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_tag,

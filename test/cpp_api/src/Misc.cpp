@@ -157,9 +157,11 @@ void Misc_c_macros() {
     ECS_ENTITY(world, E1, 0);
     ECS_ENTITY_DEFINE(world, E2, 0);
 
+    ECS_MODULE(world, MyModule);
     ECS_SYSTEM(world, Sys, EcsOnUpdate, Position, Velocity);
     ECS_OBSERVER(world, Obs, EcsOnAdd, Position, Velocity);
     ECS_OBSERVER(world, Trig, EcsOnAdd, Position);
+    ECS_PIPELINE(world, Pip, flecs.system.System, TagA);
 
     test_assert(ecs_id(Position) != 0);
     test_assert(ecs_id(Velocity) != 0);
@@ -169,6 +171,12 @@ void Misc_c_macros() {
 
     test_assert(E1 != 0);
     test_assert(E2 != 0);
+
+    test_assert(ecs_id(MyModule) != 0);
+    test_assert(ecs_id(Sys) != 0);
+    test_assert(ecs_id(Obs) != 0);
+    test_assert(ecs_id(Trig) != 0);
+    test_assert(Pip != 0);
 
     ecs_add(world, E1, TagA);
     ecs_add(world, E1, TagB);
@@ -184,6 +192,9 @@ void Misc_c_macros() {
 
     test_assert( ecs_has(world, E1, Position));
     test_assert( ecs_has(world, E1, Velocity));
+
+    test_assert( ecs_has_id(world, ecs_id(MyModule), EcsModule));
+    test_assert( ecs_has(world, Pip, EcsPipeline));
     
     ecs_progress(world, 0);
 

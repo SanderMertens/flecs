@@ -15,18 +15,18 @@
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
-#define ECS_ENTITY_DEFINE(world, id, ...) \
+#define ECS_ENTITY_DEFINE(world, id_, ...) \
     { \
         ecs_entity_desc_t desc = {0}; \
-        desc.entity = id; \
-        desc.name = #id; \
+        desc.id = id_; \
+        desc.name = #id_; \
         desc.add_expr = #__VA_ARGS__; \
-        id = ecs_entity_init(world, &desc); \
-        ecs_id(id) = id; \
-        ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL); \
+        id_ = ecs_entity_init(world, &desc); \
+        ecs_id(id_) = id_; \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
-    (void)id; \
-    (void)ecs_id(id);
+    (void)id_; \
+    (void)ecs_id(id_);
 
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
@@ -41,16 +41,18 @@
 
 /* Use for declaring component identifiers */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
-#define ECS_COMPONENT_DEFINE(world, id) \
+#define ECS_COMPONENT_DEFINE(world, id_) \
     {\
         ecs_component_desc_t desc = {0}; \
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id; \
-        desc.entity.symbol = #id; \
-        desc.type.size = ECS_SIZEOF(id); \
-        desc.type.alignment = ECS_ALIGNOF(id); \
-        ecs_id(id) = ecs_component_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_); \
+        edesc.name = #id_; \
+        edesc.symbol = #id_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.type.size = ECS_SIZEOF(id_); \
+        desc.type.alignment = ECS_ALIGNOF(id_); \
+        ecs_id(id_) = ecs_component_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
 #define ECS_COMPONENT(world, id)\
@@ -62,16 +64,18 @@
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /* Observers */
-#define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
+#define ECS_OBSERVER_DEFINE(world, id_, kind, ...)\
     {\
         ecs_observer_desc_t desc = {0};\
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id;\
-        desc.callback = id;\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_); \
+        edesc.name = #id_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.callback = id_;\
         desc.filter.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
-        ecs_id(id) = ecs_observer_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_id(id_) = ecs_observer_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
 #define ECS_OBSERVER(world, id, kind, ...)\

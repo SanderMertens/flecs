@@ -84,22 +84,22 @@ ecs_entity_t ecs_import_from_library(
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
+    const char *c_name,
     const ecs_component_desc_t *desc);
 
 /** Define module
  */
 #define ECS_MODULE_DEFINE(world, id)\
-    ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsModule}\
-        }\
-    });\
-    ecs_set_scope(world, ecs_id(id));\
-    (void)ecs_id(id);
+    {\
+        ecs_component_desc_t desc = {0};\
+        desc.entity = ecs_id(id);\
+        ecs_id(id) = ecs_module_init(world, #id, &desc);\
+        ecs_set_scope(world, ecs_id(id));\
+    }
 
 #define ECS_MODULE(world, id)\
-    ecs_entity_t ECS_MODULE_DEFINE(world, id)
+    ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
+    (void)ecs_id(id);\
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can

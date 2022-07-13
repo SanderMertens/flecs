@@ -606,7 +606,7 @@ struct ecs_type_info_t {
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
-    ecs_entity_t entity; /* Optional existing entity handle. */
+    ecs_entity_t id;     /* Set to modify existing entity (optional) */
 
     const char *name;    /* Name of the entity. If no entity is provided, an 
                           * entity with this name will be looked up first. When
@@ -668,8 +668,10 @@ typedef struct ecs_bulk_desc_t {
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
     int32_t _canary;
+    
+    /* Existing entity to associate with observer (optional) */
+    ecs_entity_t entity;
 
-    ecs_entity_desc_t entity;  /* Parameters for component entity */
     ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
@@ -760,8 +762,8 @@ typedef struct ecs_query_desc_t {
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
 
-    /* Entity to associate with observer */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with observer (optional) */
+    ecs_entity_t entity;
 
     /* Filter for observer */
     ecs_filter_desc_t filter;

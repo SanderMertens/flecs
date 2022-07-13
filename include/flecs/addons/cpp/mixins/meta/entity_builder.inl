@@ -9,7 +9,7 @@ Self& unit(
     int32_t power = 0) 
 {
     ecs_unit_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
     desc.base = base;
     desc.over = over;
@@ -30,7 +30,7 @@ Self& unit(
     int32_t power = 0) 
 {
     ecs_unit_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.base = base;
     desc.over = over;
     desc.prefix = prefix;
@@ -48,7 +48,7 @@ Self& unit_prefix(
     int32_t power = 0) 
 {
     ecs_unit_prefix_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
     desc.translation.factor = factor;
     desc.translation.power = power;

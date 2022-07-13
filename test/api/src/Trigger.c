@@ -2306,7 +2306,7 @@ void Trigger_trigger_w_named_entity() {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.name = "MyTrigger",
+        .entity = ecs_entity(world, {.name = "MyTrigger"}),
         .filter.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -2397,7 +2397,7 @@ void Trigger_set_get_context() {
 
     int32_t ctx_a, ctx_b;
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.name = "MyTrigger",
+        .entity = ecs_entity(world, {.name = "MyTrigger"}),
         .filter.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -2408,7 +2408,7 @@ void Trigger_set_get_context() {
     test_assert(ecs_get_observer_ctx(world, t) == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.entity = t,
+        .entity = t,
         .ctx = &ctx_b
     }) == t);
 
@@ -2424,7 +2424,7 @@ void Trigger_set_get_binding_context() {
 
     int32_t ctx_a, ctx_b;
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.name = "MyTrigger",
+        .entity = ecs_entity(world, {.name = "MyTrigger"}),
         .filter.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -2435,7 +2435,7 @@ void Trigger_set_get_binding_context() {
     test_assert(ecs_get_observer_binding_ctx(world, t) == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.entity = t,
+        .entity = t,
         .binding_ctx = &ctx_b
     }) == t);
 

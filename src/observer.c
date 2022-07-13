@@ -1167,7 +1167,10 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
-    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t entity = desc->entity;
+    if (!entity) {
+        entity = ecs_new(world, 0);
+    }
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
         ecs_check(desc->callback != NULL || desc->run != NULL, 
@@ -1184,7 +1187,7 @@ ecs_entity_t ecs_observer_init(
          * make debugging easier, as any error messages related to creating the
          * filter will have the name of the observer. */
         ecs_filter_desc_t filter_desc = desc->filter;
-        filter_desc.name = desc->entity.name;
+        filter_desc.name = ecs_get_name(world, entity);
         ecs_filter_t *filter = filter_desc.storage = &observer->filter;
         *filter = ECS_FILTER_INIT;
 

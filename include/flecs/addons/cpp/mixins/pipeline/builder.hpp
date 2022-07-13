@@ -17,7 +17,7 @@ struct pipeline_builder final : _::pipeline_builder_base<Components...> {
         : _::pipeline_builder_base<Components...>(world)
     {
         _::sig<Components...>(world).populate(this);
-        this->m_desc.entity.entity = id;
+        this->m_desc.entity = id;
     }
 };
 

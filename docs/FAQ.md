@@ -132,7 +132,7 @@ If you want to attach data to a system, you can specify a `ctx` parameter in the
 
 ```c
 ecs_system_init(world, &(ecs_system_init_t){
-    .entity = {.name = "MySystem"},
+    .entity = ecs_entity(world, {.name = "MySystem"}),
     .callback = MySystemCallback,
     .ctx = my_context_ptr
 });

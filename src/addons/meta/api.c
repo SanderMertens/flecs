@@ -6,9 +6,9 @@ ecs_entity_t ecs_primitive_init(
     ecs_world_t *world,
     const ecs_primitive_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_set(world, t, EcsPrimitive, { desc->kind });
@@ -20,9 +20,9 @@ ecs_entity_t ecs_enum_init(
     ecs_world_t *world,
     const ecs_enum_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_add(world, t, EcsEnum);
@@ -63,9 +63,9 @@ ecs_entity_t ecs_bitmask_init(
     ecs_world_t *world,
     const ecs_bitmask_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_add(world, t, EcsBitmask);
@@ -106,9 +106,9 @@ ecs_entity_t ecs_array_init(
     ecs_world_t *world,
     const ecs_array_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_set(world, t, EcsArray, {
@@ -123,9 +123,9 @@ ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_set(world, t, EcsVector, {
@@ -139,9 +139,9 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
@@ -193,9 +193,9 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        goto error;
+        t = ecs_new_low_id(world);
     }
 
     ecs_entity_t quantity = desc->quantity;
@@ -236,9 +236,9 @@ ecs_entity_t ecs_unit_prefix_init(
     ecs_world_t *world,
     const ecs_unit_prefix_desc_t *desc)
 {
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t t = desc->entity;
     if (!t) {
-        return 0;
+        t = ecs_new_low_id(world);
     }
 
     ecs_set(world, t, EcsUnitPrefix, {

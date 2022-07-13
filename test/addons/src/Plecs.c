@@ -1704,7 +1704,7 @@ void Plecs_assign_component_value() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1733,7 +1733,7 @@ void Plecs_assign_2_component_values() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1741,7 +1741,7 @@ void Plecs_assign_2_component_values() {
     });
 
     ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Velocity",
+        .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1781,7 +1781,7 @@ void Plecs_assign_component_value_in_assign_scope() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1813,7 +1813,7 @@ void Plecs_assign_2_component_values_in_assign_scope() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1821,7 +1821,7 @@ void Plecs_assign_2_component_values_in_assign_scope() {
     });
 
     ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Velocity",
+        .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2696,7 +2696,7 @@ void Plecs_scope_after_assign() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2733,7 +2733,7 @@ void Plecs_assign_after_inherit() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2770,7 +2770,7 @@ void Plecs_multiple_assignments_single_line() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2778,7 +2778,7 @@ void Plecs_multiple_assignments_single_line() {
     });
 
     ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Velocity",
+        .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2998,7 +2998,7 @@ void Plecs_assign_component_to_parent() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3123,7 +3123,7 @@ void Plecs_default_child_component_w_assign() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3280,7 +3280,7 @@ void Plecs_default_type_from_with() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}

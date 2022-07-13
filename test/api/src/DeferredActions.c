@@ -1662,7 +1662,7 @@ static
 void RegisterComponent(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_component_init(it->world, 
         &(ecs_component_desc_t){
-            .entity = {.name = "Position"},
+            .entity = ecs_entity(it->world, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });    
@@ -1709,7 +1709,7 @@ void DeferredActions_register_component_while_staged() {
 
     ecs_entity_t ecs_id(Position) = ecs_component_init(stage, 
         &(ecs_component_desc_t){
-            .entity = {.name = "Position"},
+            .entity = ecs_entity(world, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });
@@ -1746,7 +1746,7 @@ void DeferredActions_register_component_while_deferred() {
 
     ecs_entity_t ecs_id(Position) = ecs_component_init(world, 
         &(ecs_component_desc_t){
-            .entity = {.name = "Position"},
+            .entity = ecs_entity(world, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });
@@ -2113,7 +2113,7 @@ void DeferredActions_update_observer_while_deferred() {
 
     ecs_defer_begin(world);
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.entity = observer,
+        .entity = observer,
         .callback = System2
     });
     ecs_defer_end(world);

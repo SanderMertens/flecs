@@ -78,7 +78,7 @@ struct system final : entity
 
     void ctx(void *ctx) {
         ecs_system_desc_t desc = {};
-        desc.entity.entity = m_id;
+        desc.entity = m_id;
         desc.ctx = ctx;
         ecs_system_init(m_world, &desc);
     }

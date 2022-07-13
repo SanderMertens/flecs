@@ -29,15 +29,11 @@
 void flecs_bootstrap(
     ecs_world_t *world);
 
-#define flecs_bootstrap_component(world, id)\
+#define flecs_bootstrap_component(world, id_)\
     ecs_component_init(world, &(ecs_component_desc_t){\
-        .entity = {\
-            .entity = ecs_id(id),\
-            .name = #id,\
-            .symbol = #id\
-        },\
-        .type.size = sizeof(id),\
-        .type.alignment = ECS_ALIGNOF(id)\
+        .entity = ecs_entity(world, { .id = ecs_id(id_), .name = #id_, .symbol = #id_ }),\
+        .type.size = sizeof(id_),\
+        .type.alignment = ECS_ALIGNOF(id_)\
     });
 
 #define flecs_bootstrap_tag(world, name)\

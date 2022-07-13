@@ -268,7 +268,7 @@ void SerializeTypeInfoToJson_struct_array_i32_2() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "T",
+        .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"a", ecs_id(ecs_i32_t), 2}
         }
@@ -286,14 +286,14 @@ void SerializeTypeInfoToJson_struct_array_struct_2() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "U",
+        .entity = ecs_entity(world, {.name = "U"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "T",
+        .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"a", u, 2}
         }
@@ -316,7 +316,7 @@ void SerializeTypeInfoToJson_struct_array_type() {
     });
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "T",
+        .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"a", a}
         }

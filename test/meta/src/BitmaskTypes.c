@@ -162,7 +162,7 @@ void BitmaskTypes_struct_w_bitmask() {
     test_assert(b != 0);
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "T",
+        .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"before", ecs_id(ecs_bool_t)},
             {"v", b},

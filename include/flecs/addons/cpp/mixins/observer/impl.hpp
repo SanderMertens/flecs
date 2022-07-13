@@ -21,7 +21,7 @@ struct observer final : entity
 
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
-        desc.entity.entity = m_id;
+        desc.entity = m_id;
         desc.ctx = ctx;
         ecs_observer_init(m_world, &desc);
     }

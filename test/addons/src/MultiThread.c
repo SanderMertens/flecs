@@ -23,7 +23,7 @@ ecs_world_t* init_world(void) {
     ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Progress,
+        .entity = Progress,
         .multi_threaded = true
     });
 
@@ -591,7 +591,7 @@ void MultiThread_2_thread_1_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.add = {ecs_dependson(EcsOnUpdate)},
+        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
         .query.filter = {
             .expr = "Position",
@@ -630,7 +630,7 @@ void MultiThread_2_thread_5_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.add = {ecs_dependson(EcsOnUpdate)},
+        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
         .query.filter = {
             .expr = "Position",
@@ -669,7 +669,7 @@ void MultiThread_2_thread_10_entity_instanced() {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.add = {ecs_dependson(EcsOnUpdate)},
+        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
         .query.filter = {
             .expr = "Position",
@@ -743,7 +743,7 @@ void test_combs_100_entity(int THREADS) {
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = TestAll,
+        .entity = TestAll,
         .multi_threaded = true
     });
 
@@ -836,7 +836,7 @@ void test_combs_100_entity_2_types(int THREADS) {
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = TestAll,
+        .entity = TestAll,
         .multi_threaded = true
     });
 
@@ -898,7 +898,7 @@ void MultiThread_change_thread_count() {
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = TestAll,
+        .entity = TestAll,
         .multi_threaded = true
     });
 
@@ -956,7 +956,7 @@ void MultiThread_multithread_quit() {
     ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = QuitSystem,
+        .entity = QuitSystem,
         .multi_threaded = true
     });
 
@@ -982,7 +982,7 @@ void MultiThread_schedule_w_tasks() {
     ECS_SYSTEM(world, MtTask, EcsOnUpdate, 0);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = MtTask,
+        .entity = MtTask,
         .multi_threaded = true
     });
 
@@ -1018,7 +1018,7 @@ void MultiThread_reactive_system() {
     ECS_OBSERVER(world, ReactiveDummySystem, EcsOnSet, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = PeriodicDummySystem,
+        .entity = PeriodicDummySystem,
         .multi_threaded = true
     });
 
@@ -1063,7 +1063,7 @@ void MultiThread_2_threads_single_threaded_system() {
     ECS_SYSTEM(world, SingleThreadedSystem, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = SingleThreadedSystem,
+        .entity = SingleThreadedSystem,
         .multi_threaded = false
     });
 
@@ -1104,7 +1104,7 @@ void MultiThread_no_staging_w_multithread() {
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
             .no_staging = true,
-            .entity.add = {ecs_dependson(EcsOnUpdate)}
+            .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
         });
 
         create_query_invoked = 0;

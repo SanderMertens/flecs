@@ -23,7 +23,7 @@ void VectorTypes_vector_bool() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
-        .entity.name = "V",
+        .entity = ecs_entity(world, {.name = "V"}),
         .type = ecs_id(ecs_bool_t)
     });
 
@@ -39,7 +39,7 @@ void VectorTypes_vector_i32() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
-        .entity.name = "V",
+        .entity = ecs_entity(world, {.name = "V"}),
         .type = ecs_id(ecs_i32_t)
     });
 
@@ -55,7 +55,7 @@ void VectorTypes_vector_struct() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "T",
+        .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
@@ -64,7 +64,7 @@ void VectorTypes_vector_struct() {
     test_assert(t != 0);
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
-        .entity.name = "V",
+        .entity = ecs_entity(world, {.name = "V"}),
         .type = t
     });
 
@@ -80,7 +80,7 @@ void VectorTypes_vector_w_short_notation() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_vector(world, {
-        .entity.name = "V",
+        .entity = ecs_entity(world, {.name = "V"}),
         .type = ecs_id(ecs_bool_t)
     });
 

@@ -517,7 +517,8 @@ ecs_entity_t ecs_meta_get_entity(
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with primitive (optional) */
+    ecs_entity_t entity;
     ecs_primitive_kind_t kind;
 } ecs_primitive_desc_t;
 
@@ -529,7 +530,8 @@ ecs_entity_t ecs_primitive_init(
 
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with enum (optional) */
+    ecs_entity_t entity;
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_enum_desc_t;
 
@@ -542,7 +544,8 @@ ecs_entity_t ecs_enum_init(
 
 /** Used with ecs_bitmask_init. */
 typedef struct ecs_bitmask_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with bitmask (optional) */
+    ecs_entity_t entity;
     ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_bitmask_desc_t;
 
@@ -555,7 +558,8 @@ ecs_entity_t ecs_bitmask_init(
 
 /** Used with ecs_array_init. */
 typedef struct ecs_array_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with array (optional) */
+    ecs_entity_t entity;
     ecs_entity_t type;
     int32_t count;
 } ecs_array_desc_t;
@@ -569,7 +573,8 @@ ecs_entity_t ecs_array_init(
 
 /** Used with ecs_vector_init. */
 typedef struct ecs_vector_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with vector (optional) */
+    ecs_entity_t entity;
     ecs_entity_t type;
 } ecs_vector_desc_t;
 
@@ -582,7 +587,8 @@ ecs_entity_t ecs_vector_init(
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with struct (optional) */
+    ecs_entity_t entity;
     ecs_member_t members[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_struct_desc_t;
 
@@ -594,7 +600,8 @@ ecs_entity_t ecs_struct_init(
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with unit (optional) */
+    ecs_entity_t entity;
     
     /* Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
@@ -628,7 +635,8 @@ ecs_entity_t ecs_unit_init(
 
 /** Used with ecs_unit_prefix_init. */
 typedef struct ecs_unit_prefix_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with unit prefix (optional) */
+    ecs_entity_t entity;
     
     /* Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;

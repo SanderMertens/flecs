@@ -36,16 +36,21 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 
-#define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){ \
-        .entity.name = #id, \
-        .query.filter.expr = #__VA_ARGS__\
-    });\
-    ecs_id(id) = id;\
-    ecs_assert(id != 0, ECS_INVALID_OPERATION, NULL);
+#define ECS_PIPELINE_DEFINE(world, id_, ...) \
+    { \
+        ecs_pipeline_desc_t desc = {0}; \
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = id_;\
+        edesc.name = #id_;\
+        desc.entity = ecs_entity_init(world, &edesc);\
+        desc.query.filter.expr = #__VA_ARGS__; \
+        id_ = ecs_pipeline_init(world, &desc); \
+        ecs_id(id_) = id_;\
+    } \
+    ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL);
 
 #define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    ecs_entity_t id = 0, ecs_id(id) = 0; ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
     (void)ecs_id(id);
 
@@ -56,8 +61,8 @@ extern "C" {
 
 /* Pipeline descriptor (used with ecs_pipeline_init) */
 typedef struct ecs_pipeline_desc_t {
-    /* Entity descriptor */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with pipeline (optional) */
+    ecs_entity_t entity;
     
     /* Query descriptor. The first term of the query must match the EcsSystem
      * component. */

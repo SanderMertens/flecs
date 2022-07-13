@@ -1144,7 +1144,7 @@ void FlecsMetaImport(
     /* Initialize primitive types */
     #define ECS_PRIMITIVE(world, type, primitive_kind)\
         ecs_entity_init(world, &(ecs_entity_desc_t){\
-            .entity = ecs_id(ecs_##type##_t),\
+            .id = ecs_id(ecs_##type##_t),\
             .name = #type,\
             .symbol = #type });\
         ecs_set(world, ecs_id(ecs_##type##_t), EcsPrimitive, {\
@@ -1190,7 +1190,7 @@ void FlecsMetaImport(
 
     /* Initialize reflection data for meta components */
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
-        .entity.name = "TypeKind",
+        .entity = ecs_entity(world, { .name = "TypeKind" }),
         .constants = {
             {.name = "PrimitiveType"},
             {.name = "BitmaskType"},
@@ -1202,14 +1202,14 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsMetaType),
+        .entity = ecs_id(EcsMetaType),
         .members = {
             {.name = (char*)"kind", .type = type_kind}
         }
     });
 
     ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
-        .entity.name = "PrimitiveKind",
+        .entity = ecs_entity(world, { .name = "PrimitiveKind" }),
         .constants = {
             {.name = "Bool", 1}, 
             {.name = "Char"}, 
@@ -1232,14 +1232,14 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsPrimitive),
+        .entity = ecs_id(EcsPrimitive),
         .members = {
             {.name = (char*)"kind", .type = primitive_kind}
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsMember),
+        .entity = ecs_id(EcsMember),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
@@ -1249,7 +1249,7 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsArray),
+        .entity = ecs_id(EcsArray),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
@@ -1257,14 +1257,14 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsVector),
+        .entity = ecs_id(EcsVector),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
         }
     });
 
     ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.name = "unit_translation",
+        .entity = ecs_entity(world, { .name = "unit_translation" }),
         .members = {
             {.name = (char*)"factor", .type = ecs_id(ecs_i32_t)},
             {.name = (char*)"power", .type = ecs_id(ecs_i32_t)}
@@ -1272,7 +1272,7 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsUnit),
+        .entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
             {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
@@ -1283,7 +1283,7 @@ void FlecsMetaImport(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity.entity = ecs_id(EcsUnitPrefix),
+        .entity = ecs_id(EcsUnitPrefix),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
             {.name = (char*)"translation", .type = ut}

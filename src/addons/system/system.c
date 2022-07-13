@@ -232,7 +232,10 @@ ecs_entity_t ecs_system_init(
     ecs_assert(!(world->flags & EcsWorldReadonly), 
         ECS_INVALID_WHILE_READONLY, NULL);
 
-    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t entity = desc->entity;
+    if (!entity) {
+        entity = ecs_new(world, 0);
+    }
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);
     if (!poly->poly) {
         ecs_system_t *system = ecs_poly_new(ecs_system_t);
@@ -244,7 +247,6 @@ ecs_entity_t ecs_system_init(
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
-        query_desc.filter.name = desc->entity.name;
         query_desc.entity = entity;
 
         ecs_query_t *query = ecs_query_init(world, &query_desc);
@@ -289,7 +291,7 @@ ecs_entity_t ecs_system_init(
 #endif
         }
 
-        if (desc->entity.name) {
+        if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]system#[reset] %s created", 
                 ecs_get_name(world, entity));
         }
