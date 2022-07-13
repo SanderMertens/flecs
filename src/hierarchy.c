@@ -221,10 +221,6 @@ void ecs_get_path_w_sep_buf(
 
     world = ecs_get_world(world);
 
-    if (child == EcsThis) {
-        ecs_strbuf_appendstr(buf, ".");
-        return;
-    }
     if (child == EcsWildcard) {
         ecs_strbuf_appendstr(buf, "*");
         return;

@@ -1234,7 +1234,7 @@ void Pairs_dsl_pair_w_explicit_subj_this() {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.expr = "Rel(., Obj)"
+        .filter.expr = "Rel($This, Obj)"
     });
 
     test_assert(q != NULL);

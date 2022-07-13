@@ -151,7 +151,7 @@ void Parser_component_explicit_subject_this() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "Pred(.)"
+        .expr = "Pred($This)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -514,7 +514,7 @@ void Parser_pair_implicit_subject_this_pred() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "(., Obj)"
+        .expr = "($This, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -539,7 +539,7 @@ void Parser_pair_implicit_subject_this_obj() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "(Pred, .)"
+        .expr = "(Pred, $This)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -590,7 +590,7 @@ void Parser_pair_explicit_subject_this() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "Pred(., Obj)"
+        .expr = "Pred($This, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1152,7 +1152,7 @@ void Parser_this_singleton() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = ".($)"
+        .expr = "$This($)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1772,7 +1772,7 @@ void Parser_pred_explicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "DISABLED | Pred(.)"
+        .expr = "DISABLED | Pred($This)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1847,7 +1847,7 @@ void Parser_pair_explicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "PAIR | Pred(., Obj)"
+        .expr = "PAIR | Pred($This, Obj)"
     }));
     test_int(filter_count(&f), 1);
 

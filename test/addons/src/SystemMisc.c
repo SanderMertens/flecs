@@ -54,7 +54,7 @@ void SystemMisc_invalid_empty_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $This);
 
     test_assert(true);
 
