@@ -463,7 +463,7 @@ void Query_subquery() {
         .set<Velocity>({1, 2});        
 
     auto q = world.query<Position>();
-    auto sq = world.query_builder<Velocity>().parent(q).build();
+    auto sq = world.query_builder<Velocity>().observable(q).build();
 
     sq.each([](flecs::entity e, Velocity& v) {
         v.x ++;
@@ -490,7 +490,7 @@ void Query_subquery_w_expr() {
         .set<Velocity>({1, 2});        
 
     auto q = world.query<Position>();
-    auto sq = world.query_builder<>().parent(q).expr("Velocity").build();
+    auto sq = world.query_builder<>().observable(q).expr("Velocity").build();
 
     sq.iter([](flecs::iter it) {
         auto v = it.term<Velocity>(1);
@@ -624,7 +624,7 @@ void Query_orphaned() {
     flecs::world world;
 
     auto q = world.query<Position>();
-    auto sq = world.query_builder<Position>().parent(q).build();
+    auto sq = world.query_builder<Position>().observable(q).build();
     
     test_assert(!q.orphaned());
     test_assert(!sq.orphaned());

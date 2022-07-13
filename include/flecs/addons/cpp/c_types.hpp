@@ -16,6 +16,7 @@ using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
+using flags32_t = ecs_flags32_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -35,12 +36,6 @@ enum oper_kind_t {
     NotFrom = EcsNotFrom
 };
 
-enum var_kind_t {
-    VarDefault = EcsVarDefault,
-    VarIsEntity = EcsVarIsEntity,
-    VarIsVariable = EcsVarIsVariable
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,14 +52,14 @@ static const flecs::entity_t Observer = EcsObserver;
 static const flecs::entity_t System = EcsSystem;
 
 /* Builtin set constants */
-static const uint8_t DefaultSet = EcsDefaultSet;
-static const uint8_t Self = EcsSelf;
-static const uint8_t SuperSet = EcsUp;
-static const uint8_t SubSet = EcsSubSet;
-static const uint8_t Cascade = EcsCascade;
-static const uint8_t All = EcsAll;
-static const uint8_t Nothing = EcsNothing;
-static const uint8_t Parent = EcsParent;
+static const uint32_t Self = EcsSelf;
+static const uint32_t Up = EcsUp;
+static const uint32_t Down = EcsDown;
+static const uint32_t Cascade = EcsCascade;
+static const uint32_t Parent = EcsParent;
+static const uint32_t IsVariable = EcsIsVariable;
+static const uint32_t IsEntity = EcsIsEntity;
+static const uint32_t TraverseFlags = EcsTraverseFlags;
 
 /* Builtin tag ids */
 static const flecs::entity_t Private = EcsPrivate;

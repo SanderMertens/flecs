@@ -409,7 +409,7 @@ void FilterBuilder_isa_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().src().set(flecs::SuperSet)
+        .term<Other>().src().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -439,7 +439,7 @@ void FilterBuilder_isa_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().src().set(flecs::Self | flecs::SuperSet)
+        .term<Other>().src().self().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -480,7 +480,7 @@ void FilterBuilder_childof_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().src().set(flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -510,7 +510,7 @@ void FilterBuilder_childof_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().src().self().up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -551,7 +551,7 @@ void FilterBuilder_isa_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).src().set(flecs::SuperSet)
+        .arg(2).src().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -576,7 +576,7 @@ void FilterBuilder_isa_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).src().set(flecs::Self | flecs::SuperSet)
+        .arg(2).src().self().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -603,7 +603,7 @@ void FilterBuilder_childof_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).src().set(flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -628,7 +628,7 @@ void FilterBuilder_childof_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).src().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .arg(2).src().self().up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -655,7 +655,7 @@ void FilterBuilder_isa_superset_shortcut() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super()
+        .arg(2).up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -680,7 +680,7 @@ void FilterBuilder_isa_superset_shortcut_w_self() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super(flecs::IsA, flecs::Self)
+        .arg(2).self().up(flecs::IsA)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -707,7 +707,7 @@ void FilterBuilder_childof_superset_shortcut() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super(flecs::ChildOf)
+        .arg(2).up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -732,7 +732,7 @@ void FilterBuilder_childof_superset_shortcut_w_self() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super(flecs::ChildOf, flecs::Self)
+        .arg(2).self().up(flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -753,150 +753,6 @@ void FilterBuilder_childof_superset_shortcut_w_self() {
     });
     
     test_int(count, 5);
-}
-
-void FilterBuilder_isa_superset_max_depth_1() {
-    flecs::world ecs;
-
-    auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super().max_depth(1)
-        .build();
-
-    auto base_1 = ecs.entity().set<Other>({10});
-    auto base_2 = ecs.entity().is_a(base_1);
-    auto base_3 = ecs.entity().is_a(base_2);
-    auto base_4 = ecs.entity().is_a(base_3);
-
-    auto 
-    e = ecs.entity().is_a(base_1); e.set<Self>({e});
-    e = ecs.entity().is_a(base_1); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_2); e.set<Self>({0});
-    e = ecs.entity().is_a(base_2); e.set<Self>({0});
-
-    e = ecs.entity().is_a(base_3); e.set<Self>({0});
-    e = ecs.entity().is_a(base_3); e.set<Self>({0});
-
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-
-    int32_t count = 0;
-
-    q.each([&](flecs::entity e, Self& s, Other& o) {
-        test_assert(e == s.value);
-        test_int(o.value, 10);
-        count ++;
-    });
-    
-    test_int(count, 2);
-}
-
-void FilterBuilder_isa_superset_max_depth_2() {
-    flecs::world ecs;
-
-    auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super().max_depth(2)
-        .build();
-
-    auto base_1 = ecs.entity().set<Other>({10});
-    auto base_2 = ecs.entity().is_a(base_1);
-    auto base_3 = ecs.entity().is_a(base_2);
-    auto base_4 = ecs.entity().is_a(base_3);
-
-    auto 
-    e = ecs.entity().is_a(base_1); e.set<Self>({e});
-    e = ecs.entity().is_a(base_1); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_3); e.set<Self>({0});
-    e = ecs.entity().is_a(base_3); e.set<Self>({0});
-
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-
-    int32_t count = 0;
-
-    q.each([&](flecs::entity e, Self& s, Other& o) {
-        test_assert(e == s.value);
-        test_int(o.value, 10);
-        count ++;
-    });
-    
-    test_int(count, 4);
-}
-
-void FilterBuilder_isa_superset_min_depth_2() {
-    flecs::world ecs;
-
-    auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super().min_depth(2)
-        .build();
-
-    auto base_1 = ecs.entity().set<Other>({10});
-    auto base_2 = ecs.entity().is_a(base_1);
-    auto base_3 = ecs.entity().is_a(base_2);
-    auto base_4 = ecs.entity().is_a(base_3);
-
-    auto 
-    e = ecs.entity().is_a(base_1); e.set<Self>({0});
-    e = ecs.entity().is_a(base_1); e.set<Self>({0});
-
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_3); e.set<Self>({e});
-    e = ecs.entity().is_a(base_3); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_4); e.set<Self>({e});
-    e = ecs.entity().is_a(base_4); e.set<Self>({e});
-
-    int32_t count = 0;
-
-    q.each([&](flecs::entity e, Self& s, Other& o) {
-        test_assert(e == s.value);
-        test_int(o.value, 10);
-        count ++;
-    });
-    
-    test_int(count, 6);
-}
-
-void FilterBuilder_isa_superset_min_depth_2_max_depth_3() {
-    flecs::world ecs;
-
-    auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).super().min_depth(2).max_depth(3)
-        .build();
-
-    auto base_1 = ecs.entity().set<Other>({10});
-    auto base_2 = ecs.entity().is_a(base_1);
-    auto base_3 = ecs.entity().is_a(base_2);
-    auto base_4 = ecs.entity().is_a(base_3);
-
-    auto 
-    e = ecs.entity().is_a(base_1); e.set<Self>({0});
-    e = ecs.entity().is_a(base_1); e.set<Self>({0});
-
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-    e = ecs.entity().is_a(base_2); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_3); e.set<Self>({e});
-    e = ecs.entity().is_a(base_3); e.set<Self>({e});
-
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-    e = ecs.entity().is_a(base_4); e.set<Self>({0});
-
-    int32_t count = 0;
-
-    q.each([&](flecs::entity e, Self& s, Other& o) {
-        test_assert(e == s.value);
-        test_int(o.value, 10);
-        count ++;
-    });
-    
-    test_int(count, 4);
 }
 
 void FilterBuilder_relation() {
@@ -1040,7 +896,7 @@ void FilterBuilder_explicit_subject_w_id() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
-        .term<Position>().entity(flecs::This)
+        .term<Position>().id(flecs::This)
         .build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -1078,9 +934,9 @@ void FilterBuilder_explicit_subject_w_type() {
 void FilterBuilder_explicit_object_w_id() {
     flecs::world ecs;
 
-    auto Likes = ecs.entity();
-    auto Alice = ecs.entity();
-    auto Bob = ecs.entity();
+    auto Likes = ecs.entity("Likes");
+    auto Alice = ecs.entity("Alice");
+    auto Bob = ecs.entity("Bob");
 
     auto q = ecs.filter_builder<>()
         .term(Likes).second(Alice)
@@ -1125,7 +981,7 @@ void FilterBuilder_explicit_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
-        .term(ecs.term().id<Position>())
+        .term(ecs.term<Position>())
         .build();
 
     auto e1 = ecs.entity().add<Position>();
@@ -1741,4 +1597,60 @@ void FilterBuilder_assert_on_uninitialized_term() {
         .term()
         .term()
         .build();
+}
+
+void FilterBuilder_operator_shortcuts() {
+    flecs::world ecs;
+
+    flecs::entity a = ecs.entity();
+    flecs::entity b = ecs.entity();
+    flecs::entity c = ecs.entity();
+    flecs::entity d = ecs.entity();
+    flecs::entity e = ecs.entity();
+    flecs::entity f = ecs.entity();
+    flecs::entity g = ecs.entity();
+    flecs::entity h = ecs.entity();
+
+    auto filter = ecs.filter_builder()
+        .term(a).and_()
+        .term(b).or_()
+        .term(c).or_()
+        .term(d).not_()
+        .term(e).optional()
+        .term(f).and_from()
+        .term(g).or_from()
+        .term(h).not_from()
+        .build();
+
+    auto t = filter.term(0);
+    test_int(t.id(), a);
+    test_int(t.oper(), flecs::And);
+
+    t = filter.term(1);
+    test_int(t.id(), b);
+    test_int(t.oper(), flecs::Or);
+
+    t = filter.term(2);
+    test_int(t.id(), c);
+    test_int(t.oper(), flecs::Or);
+
+    t = filter.term(3);
+    test_int(t.id(), d);
+    test_int(t.oper(), flecs::Not);
+
+    t = filter.term(4);
+    test_int(t.id(), e);
+    test_int(t.oper(), flecs::Optional);
+
+    t = filter.term(5);
+    test_int(t.id(), f);
+    test_int(t.oper(), flecs::AndFrom);
+
+    t = filter.term(6);
+    test_int(t.id(), g);
+    test_int(t.oper(), flecs::OrFrom);
+
+    t = filter.term(7);
+    test_int(t.id(), h);
+    test_int(t.oper(), flecs::NotFrom);
 }

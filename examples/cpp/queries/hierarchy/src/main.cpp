@@ -48,7 +48,7 @@ int main(int, char *[]) {
         // Extend the 2nd query argument to select it from the parent
         .arg(2)
             // Get from the parent, in breadth-first order (cascade)
-            .set(flecs::Parent | flecs::Cascade)
+            .parent().cascade()
             // Make term component optional so we also match the root (sun)
             .oper(flecs::Optional)
         // Finalize the query
