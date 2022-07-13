@@ -1640,7 +1640,7 @@ int traverse_add(
         bool should_add = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
-            if ((!desc->entity && desc->name) || (name && !name_assigned)) {
+            if ((!desc->id && desc->name) || (name && !name_assigned)) {
                 /* If name is added to entity, pass scope to add_path instead
                  * of adding it to the table. The provided name may have nested
                  * elements, in which case the parent provided here is not the
@@ -1733,7 +1733,7 @@ void deferred_add_remove(
         bool defer = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
-            if (!desc->entity || (name && !name_assigned)) {
+            if (!desc->id || (name && !name_assigned)) {
                 /* New named entities are created by temporarily going out of
                  * readonly mode to ensure no duplicates are created. */
                 defer = false;
@@ -1839,7 +1839,7 @@ ecs_entity_t ecs_entity_init(
     }
 
     /* Find or create entity */
-    ecs_entity_t result = desc->entity;
+    ecs_entity_t result = desc->id;
     if (!result) {
         if (name) {
             /* If add array contains a ChildOf pair, use it as scope instead */
@@ -1979,16 +1979,9 @@ ecs_entity_t ecs_component_init(
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
-    ecs_entity_desc_t entity_desc = desc->entity;
-    entity_desc.use_low_id = true;
-    if (!entity_desc.symbol) {
-        entity_desc.symbol = entity_desc.name;
-    }
-
-    ecs_entity_t e = desc->entity.entity;
-    ecs_entity_t result = ecs_entity_init(world, &entity_desc);
+    ecs_entity_t result = desc->entity;
     if (!result) {
-        goto error;
+        result = ecs_new_low_id(world);
     }
 
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
@@ -2005,10 +1998,14 @@ ecs_entity_t ecs_component_init(
         }
     } else {
         if (ptr->size != desc->type.size) {
-            ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
+            char *path = ecs_get_fullpath(world, result);
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
+            ecs_os_free(path);
         }
         if (ptr->alignment != desc->type.alignment) {
-            ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
+            char *path = ecs_get_fullpath(world, result);
+            ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
+            ecs_os_free(path);
         }
     }
 
@@ -2021,8 +2018,8 @@ ecs_entity_t ecs_component_init(
         ecs_set_hooks_id(world, result, &desc->type.hooks);
     }
 
-    if (e >= world->info.last_component_id && e < ECS_HI_COMPONENT_ID) {
-        world->info.last_component_id = e + 1;
+    if (result >= world->info.last_component_id && result < ECS_HI_COMPONENT_ID) {
+        world->info.last_component_id = result + 1;
     }
 
     /* Ensure components cannot be deleted */

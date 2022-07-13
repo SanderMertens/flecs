@@ -2951,10 +2951,10 @@ void Parser_expr_w_symbol() {
     ECS_TAG(world, Pred);
 
     ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity = {
+        .entity = ecs_entity(world, {
             .name = "Foo",
             .symbol = "FooBar"
-        }
+        })
     });
 
     ecs_filter_t f = ECS_FILTER_INIT;

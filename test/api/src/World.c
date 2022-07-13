@@ -1078,8 +1078,10 @@ void World_redefine_component() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.name = "flecs.core.Component",
-        .entity.symbol = "EcsComponent",
+        .entity = ecs_entity(world, {
+            .name = "flecs.core.Component",
+            .symbol = "EcsComponent"
+        }),
         .type.size = ECS_SIZEOF(EcsComponent),
         .type.alignment = ECS_ALIGNOF(EcsComponent)
     });

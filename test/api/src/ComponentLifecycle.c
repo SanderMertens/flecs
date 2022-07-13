@@ -2354,7 +2354,7 @@ void ComponentLifecycle_component_init_set_hooks() {
     ecs_world_t* world = ecs_mini();
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .type = {
             .size = ECS_SIZEOF(Position),
             .alignment = ECS_ALIGNOF(Position),
@@ -2464,7 +2464,7 @@ void ComponentLifecycle_with_before_hooks() {
 
     ecs_entity_t ecs_id(Position) = 
         ecs_component_init(world, &(ecs_component_desc_t){
-            .entity.entity = pos_id,
+            .entity = pos_id,
             .type = {
                 .size = ECS_SIZEOF(Position),
                 .alignment = ECS_ALIGNOF(Position),

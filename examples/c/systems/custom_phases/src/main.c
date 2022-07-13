@@ -20,27 +20,27 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
 
     /* Create 3 dummy systems */
-    ecs_system_init(ecs, &(ecs_system_desc_t){
-        .entity = {
+    ecs_system(ecs, {
+        .entity = ecs_entity(ecs, {
             .name = "CollisionSystem",
             .add = { ecs_dependson(Collisions) }
-        },
+        }),
         .callback = Sys
     });
 
-    ecs_system_init(ecs, &(ecs_system_desc_t){
-        .entity = {
+    ecs_system(ecs, {
+        .entity = ecs_entity(ecs, {
             .name = "PhysicsSystem",
             .add = { ecs_dependson(Physics) }
-        },
+        }),
         .callback = Sys
     });
 
-    ecs_system_init(ecs, &(ecs_system_desc_t){
-        .entity = {
+    ecs_system(ecs, {
+        .entity = ecs_entity(ecs, {
             .name = "GameSystem",
             .add = { ecs_dependson(EcsOnUpdate) }
-        },
+        }),
         .callback = Sys
     });
 

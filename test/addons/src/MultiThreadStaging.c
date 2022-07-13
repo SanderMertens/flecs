@@ -33,7 +33,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_to_current,
+        .entity = Add_to_current,
         .multi_threaded = true
     });
 
@@ -77,7 +77,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_to_current,
+        .entity = Add_to_current,
         .multi_threaded = true
     });
 
@@ -121,7 +121,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_to_current,
+        .entity = Add_to_current,
         .multi_threaded = true
     });
 
@@ -165,7 +165,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_to_current,
+        .entity = Add_to_current,
         .multi_threaded = true
     });
 
@@ -209,7 +209,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_to_current,
+        .entity = Add_to_current,
         .multi_threaded = true
     });
 
@@ -273,7 +273,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, Velocity());
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = AddVelocity,
+        .entity = AddVelocity,
         .multi_threaded = true
     });
 
@@ -315,7 +315,7 @@ void MultiThreadStaging_new_w_count() {
     ECS_SYSTEM(world, New_w_count, EcsOnUpdate, Position());
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = New_w_count,
+        .entity = New_w_count,
         .multi_threaded = true
     });
 

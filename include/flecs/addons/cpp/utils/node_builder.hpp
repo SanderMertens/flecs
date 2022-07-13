@@ -18,8 +18,10 @@ public:
         , m_world(world)
         , m_instanced(false)
     {
-        m_desc.entity.name = name;
-        m_desc.entity.sep = "::";
+        ecs_entity_desc_t entity_desc = {};
+        entity_desc.name = name;
+        entity_desc.sep = "::";
+        m_desc.entity = ecs_entity_init(m_world, &entity_desc);
     }
 
     /* Iter (or each) is mandatory and always the last thing that 

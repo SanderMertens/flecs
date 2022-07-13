@@ -1732,7 +1732,7 @@ ecs_query_t* ecs_query_init(
     }
 
     if (result->filter.term_count) {
-        observer_desc.entity.entity = entity;
+        observer_desc.entity = entity;
         observer_desc.run = flecs_query_on_event;
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;

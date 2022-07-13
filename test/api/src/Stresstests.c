@@ -103,12 +103,12 @@ void create_delete_entity_random_components_staged(
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Add_random,
+        .entity = Add_random,
         .multi_threaded = true
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Delete_above_1000,
+        .entity = Delete_above_1000,
         .multi_threaded = true
     });
 
@@ -148,12 +148,12 @@ void set_entity_random_components(
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Set_random,
+        .entity = Set_random,
         .multi_threaded = true
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity.entity = Delete_above_1000,
+        .entity = Delete_above_1000,
         .multi_threaded = true
     });
 

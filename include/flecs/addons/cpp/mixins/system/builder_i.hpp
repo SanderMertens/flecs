@@ -4,7 +4,6 @@
 
 namespace flecs 
 {
-
 // System builder interface
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {
@@ -21,8 +20,16 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
-        m_desc->entity.add[1] = phase;
+        flecs::entity_t cur_phase = ecs_get_target(
+            world_v(), m_desc->entity, EcsDependsOn, 0);
+        if (cur_phase) {
+            ecs_remove_id(world_v(), m_desc->entity, ecs_dependson(cur_phase));
+            ecs_remove_id(world_v(), m_desc->entity, cur_phase);
+        }
+        if (phase) {
+            ecs_add_id(world_v(), m_desc->entity, ecs_dependson(phase));
+            ecs_add_id(world_v(), m_desc->entity, phase);
+        }
         return *this;
     }
 
@@ -32,10 +39,7 @@ public:
      */
     template <typename Phase>
     Base& kind() {
-        m_desc->entity.add[0] = ecs_dependson(
-            _::cpp_type<Phase>::id(world_v()));
-        m_desc->entity.add[1] = _::cpp_type<Phase>::id(world_v());
-        return *this;
+        return this->kind(_::cpp_type<Phase>::id(world_v()));
     }
 
     /** Specify whether system can run on multiple threads.

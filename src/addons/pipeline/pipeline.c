@@ -655,15 +655,16 @@ ecs_entity_t ecs_pipeline_init(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = ecs_entity_init(world, &desc->entity);
+    ecs_entity_t result = desc->entity;
     if (!result) {
-        return 0;
+        result = ecs_new(world, 0);
     }
 
     ecs_query_desc_t qd = desc->query;
     if (!qd.order_by) {
         qd.order_by = flecs_entity_compare;
     }
+    qd.entity = result;
 
     ecs_query_t *query = ecs_query_init(world, &qd);
     if (!query) {
@@ -741,7 +742,7 @@ void FlecsPipelineImport(
     });
 
     world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-        .entity = { .name = "BuiltinPipeline" },
+        .entity = ecs_entity(world, { .name = "BuiltinPipeline" }),
         .query = {
             .filter.terms = {
                 { .id = EcsSystem },

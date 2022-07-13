@@ -39,8 +39,8 @@ typedef struct EcsTickSource {
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* Entity creation parameters */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with system (optional) */
+    ecs_entity_t entity;
 
     /* System query parameters */
     ecs_query_desc_t query;
@@ -100,20 +100,23 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM_DEFINE(world, id, phase, ...) \
+#define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
-        desc.entity.name = #id; \
-        desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
-        desc.entity.add[1] = (phase); \
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_);\
+        edesc.name = #id_;\
+        edesc.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
+        edesc.add[1] = (phase); \
+        desc.entity = ecs_entity_init(world, &edesc);\
         desc.query.filter.expr = #__VA_ARGS__; \
-        desc.callback = id; \
-        ecs_id(id) = ecs_system_init(world, &desc); \
+        desc.callback = id_; \
+        ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);
 
 #define ECS_SYSTEM(world, id, phase, ...) \
-    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
+    ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;

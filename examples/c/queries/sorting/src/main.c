@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, 0, Position, {4, 0});
 
     // Create a sorted system
-    ecs_entity_t sys = ecs_system_init(ecs, &(ecs_system_desc_t){
+    ecs_entity_t sys = ecs_system(ecs, {
         .query = {
             .filter.terms = {{ .id = ecs_id(Position) }},
             .order_by = (ecs_order_by_action_t)compare_position,

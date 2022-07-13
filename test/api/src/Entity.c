@@ -229,7 +229,7 @@ void Entity_id_add_1_comp() {
     test_assert(e != 0);
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .add = {TagA}
     });
     test_assert(r != 0);
@@ -249,7 +249,7 @@ void Entity_id_add_2_comp() {
     test_assert(e != 0);
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .add = {TagA, TagB}
     });
     test_assert(r != 0);
@@ -302,7 +302,7 @@ void Entity_find_w_existing_id_name() {
     ecs_entity_t id = ecs_new_id(world);
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = id,
+        .id = id,
         .name = "foo"
     });
     test_assert(e != 0);
@@ -415,7 +415,7 @@ void Entity_find_id_name_match() {
     test_str(ecs_get_name(world, e), "foo");
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "foo"
     });
     test_assert(r != 0);
@@ -448,7 +448,7 @@ void Entity_find_id_name_match_w_scope() {
     ecs_os_free(path);  
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "child"
     });
     test_assert(r != 0);
@@ -457,7 +457,7 @@ void Entity_find_id_name_match_w_scope() {
     ecs_set_scope(world, 0);
 
     r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "parent.child"
     });
     test_assert(r != 0);
@@ -476,7 +476,7 @@ void Entity_find_id_path_match() {
     test_str(ecs_get_name(world, e), "child");
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "parent.child"
     });
     test_assert(r != 0);
@@ -504,7 +504,7 @@ void Entity_find_id_path_match_w_scope() {
     test_str(ecs_get_name(world, e), "grandchild");
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "child.grandchild"
     });
     test_assert(r != 0);
@@ -513,7 +513,7 @@ void Entity_find_id_path_match_w_scope() {
     ecs_set_scope(world, 0);
 
     r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "parent.child.grandchild"
     });
     test_assert(r != 0);
@@ -536,7 +536,7 @@ void Entity_find_id_name_mismatch() {
     });    
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "bar"
     });
     test_assert(r == 0);
@@ -563,7 +563,7 @@ void Entity_find_id_name_mismatch_w_scope() {
     test_str(ecs_get_name(world, e), "child");
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "parent"
     });
     test_assert(r == 0);
@@ -585,7 +585,7 @@ void Entity_find_id_path_mismatch() {
     }); 
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "parent.foo"
     });
     test_assert(r == 0);
@@ -616,7 +616,7 @@ void Entity_find_id_path_mismatch_w_scope() {
     });
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
+        .id = e,
         .name = "child.foo"
     });
     test_assert(r == 0);
@@ -1510,7 +1510,7 @@ void Entity_defer_component_init() {
     ecs_defer_begin(world);
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.name = "Position",
+        .entity = ecs_entity(world, {.name = "Position"}),
         .type.size = ECS_SIZEOF(Position),
         .type.alignment = ECS_ALIGNOF(Position)
     });
@@ -1535,8 +1535,7 @@ void Entity_defer_component_init_w_symbol() {
     ecs_defer_begin(world);
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.name = "Position",
-        .entity.symbol = "Position",
+        .entity = ecs_entity(world, {.name = "Position", .symbol = "Position"}),
         .type.size = ECS_SIZEOF(Position),
         .type.alignment = ECS_ALIGNOF(Position)
     });

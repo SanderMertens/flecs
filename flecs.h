@@ -3475,7 +3475,7 @@ void* _flecs_hashmap_next(
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
-    ecs_entity_t entity; /* Optional existing entity handle. */
+    ecs_entity_t id;     /* Set to modify existing entity (optional) */
 
     const char *name;    /* Name of the entity. If no entity is provided, an 
                           * entity with this name will be looked up first. When
@@ -3537,8 +3537,10 @@ typedef struct ecs_bulk_desc_t {
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
     int32_t _canary;
+    
+    /* Existing entity to associate with observer (optional) */
+    ecs_entity_t entity;
 
-    ecs_entity_desc_t entity;  /* Parameters for component entity */
     ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
@@ -3629,8 +3631,8 @@ typedef struct ecs_query_desc_t {
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
 
-    /* Entity to associate with observer */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with observer (optional) */
+    ecs_entity_t entity;
 
     /* Filter for observer */
     ecs_filter_desc_t filter;
@@ -7491,18 +7493,18 @@ void* ecs_record_get_column(
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
-#define ECS_ENTITY_DEFINE(world, id, ...) \
+#define ECS_ENTITY_DEFINE(world, id_, ...) \
     { \
         ecs_entity_desc_t desc = {0}; \
-        desc.entity = id; \
-        desc.name = #id; \
+        desc.id = id_; \
+        desc.name = #id_; \
         desc.add_expr = #__VA_ARGS__; \
-        id = ecs_entity_init(world, &desc); \
-        ecs_id(id) = id; \
-        ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL); \
+        id_ = ecs_entity_init(world, &desc); \
+        ecs_id(id_) = id_; \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
-    (void)id; \
-    (void)ecs_id(id);
+    (void)id_; \
+    (void)ecs_id(id_);
 
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
@@ -7517,16 +7519,18 @@ void* ecs_record_get_column(
 
 /* Use for declaring component identifiers */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
-#define ECS_COMPONENT_DEFINE(world, id) \
+#define ECS_COMPONENT_DEFINE(world, id_) \
     {\
         ecs_component_desc_t desc = {0}; \
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id; \
-        desc.entity.symbol = #id; \
-        desc.type.size = ECS_SIZEOF(id); \
-        desc.type.alignment = ECS_ALIGNOF(id); \
-        ecs_id(id) = ecs_component_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_); \
+        edesc.name = #id_; \
+        edesc.symbol = #id_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.type.size = ECS_SIZEOF(id_); \
+        desc.type.alignment = ECS_ALIGNOF(id_); \
+        ecs_id(id_) = ecs_component_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
 #define ECS_COMPONENT(world, id)\
@@ -7538,16 +7542,18 @@ void* ecs_record_get_column(
 #define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /* Observers */
-#define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
+#define ECS_OBSERVER_DEFINE(world, id_, kind, ...)\
     {\
         ecs_observer_desc_t desc = {0};\
-        desc.entity.entity = ecs_id(id); \
-        desc.entity.name = #id;\
-        desc.callback = id;\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_); \
+        edesc.name = #id_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.callback = id_;\
         desc.filter.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
-        ecs_id(id) = ecs_observer_init(world, &desc);\
-        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_id(id_) = ecs_observer_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
 #define ECS_OBSERVER(world, id, kind, ...)\
@@ -9139,16 +9145,21 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 
-#define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){ \
-        .entity.name = #id, \
-        .query.filter.expr = #__VA_ARGS__\
-    });\
-    ecs_id(id) = id;\
-    ecs_assert(id != 0, ECS_INVALID_OPERATION, NULL);
+#define ECS_PIPELINE_DEFINE(world, id_, ...) \
+    { \
+        ecs_pipeline_desc_t desc = {0}; \
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = id_;\
+        edesc.name = #id_;\
+        desc.entity = ecs_entity_init(world, &edesc);\
+        desc.query.filter.expr = #__VA_ARGS__; \
+        id_ = ecs_pipeline_init(world, &desc); \
+        ecs_id(id_) = id_;\
+    } \
+    ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL);
 
 #define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    ecs_entity_t id = 0, ecs_id(id) = 0; ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
     (void)ecs_id(id);
 
@@ -9159,8 +9170,8 @@ extern "C" {
 
 /* Pipeline descriptor (used with ecs_pipeline_init) */
 typedef struct ecs_pipeline_desc_t {
-    /* Entity descriptor */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with pipeline (optional) */
+    ecs_entity_t entity;
     
     /* Query descriptor. The first term of the query must match the EcsSystem
      * component. */
@@ -9339,8 +9350,8 @@ typedef struct EcsTickSource {
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* Entity creation parameters */
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with system (optional) */
+    ecs_entity_t entity;
 
     /* System query parameters */
     ecs_query_desc_t query;
@@ -9400,20 +9411,23 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM_DEFINE(world, id, phase, ...) \
+#define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
-        desc.entity.name = #id; \
-        desc.entity.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
-        desc.entity.add[1] = (phase); \
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.id = ecs_id(id_);\
+        edesc.name = #id_;\
+        edesc.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
+        edesc.add[1] = (phase); \
+        desc.entity = ecs_entity_init(world, &edesc);\
         desc.query.filter.expr = #__VA_ARGS__; \
-        desc.callback = id; \
-        ecs_id(id) = ecs_system_init(world, &desc); \
+        desc.callback = id_; \
+        ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);
 
 #define ECS_SYSTEM(world, id, phase, ...) \
-    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
+    ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;
@@ -11193,7 +11207,8 @@ ecs_entity_t ecs_meta_get_entity(
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with primitive (optional) */
+    ecs_entity_t entity;
     ecs_primitive_kind_t kind;
 } ecs_primitive_desc_t;
 
@@ -11205,7 +11220,8 @@ ecs_entity_t ecs_primitive_init(
 
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with enum (optional) */
+    ecs_entity_t entity;
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_enum_desc_t;
 
@@ -11218,7 +11234,8 @@ ecs_entity_t ecs_enum_init(
 
 /** Used with ecs_bitmask_init. */
 typedef struct ecs_bitmask_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with bitmask (optional) */
+    ecs_entity_t entity;
     ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_bitmask_desc_t;
 
@@ -11231,7 +11248,8 @@ ecs_entity_t ecs_bitmask_init(
 
 /** Used with ecs_array_init. */
 typedef struct ecs_array_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with array (optional) */
+    ecs_entity_t entity;
     ecs_entity_t type;
     int32_t count;
 } ecs_array_desc_t;
@@ -11245,7 +11263,8 @@ ecs_entity_t ecs_array_init(
 
 /** Used with ecs_vector_init. */
 typedef struct ecs_vector_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with vector (optional) */
+    ecs_entity_t entity;
     ecs_entity_t type;
 } ecs_vector_desc_t;
 
@@ -11258,7 +11277,8 @@ ecs_entity_t ecs_vector_init(
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with struct (optional) */
+    ecs_entity_t entity;
     ecs_member_t members[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_struct_desc_t;
 
@@ -11270,7 +11290,8 @@ ecs_entity_t ecs_struct_init(
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with unit (optional) */
+    ecs_entity_t entity;
     
     /* Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
@@ -11304,7 +11325,8 @@ ecs_entity_t ecs_unit_init(
 
 /** Used with ecs_unit_prefix_init. */
 typedef struct ecs_unit_prefix_desc_t {
-    ecs_entity_desc_t entity;
+    /* Existing entity to associate with unit prefix (optional) */
+    ecs_entity_t entity;
     
     /* Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
@@ -12577,22 +12599,22 @@ ecs_entity_t ecs_import_from_library(
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
+    const char *c_name,
     const ecs_component_desc_t *desc);
 
 /** Define module
  */
 #define ECS_MODULE_DEFINE(world, id)\
-    ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsModule}\
-        }\
-    });\
-    ecs_set_scope(world, ecs_id(id));\
-    (void)ecs_id(id);
+    {\
+        ecs_component_desc_t desc = {0};\
+        desc.entity = ecs_id(id);\
+        ecs_id(id) = ecs_module_init(world, #id, &desc);\
+        ecs_set_scope(world, ecs_id(id));\
+    }
 
 #define ECS_MODULE(world, id)\
-    ecs_entity_t ECS_MODULE_DEFINE(world, id)
+    ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
+    (void)ecs_id(id);\
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -18307,7 +18329,7 @@ Self& unit(
     int32_t power = 0) 
 {
     ecs_unit_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
     desc.base = base;
     desc.over = over;
@@ -18328,7 +18350,7 @@ Self& unit(
     int32_t power = 0) 
 {
     ecs_unit_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.base = base;
     desc.over = over;
     desc.prefix = prefix;
@@ -18346,7 +18368,7 @@ Self& unit_prefix(
     int32_t power = 0) 
 {
     ecs_unit_prefix_desc_t desc = {};
-    desc.entity.entity = this->m_id;
+    desc.entity = this->m_id;
     desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
     desc.translation.factor = factor;
     desc.translation.power = power;
@@ -21971,8 +21993,10 @@ public:
         , m_world(world)
         , m_instanced(false)
     {
-        m_desc.entity.name = name;
-        m_desc.entity.sep = "::";
+        ecs_entity_desc_t entity_desc = {};
+        entity_desc.name = name;
+        entity_desc.sep = "::";
+        m_desc.entity = ecs_entity_init(m_world, &entity_desc);
     }
 
     /* Iter (or each) is mandatory and always the last thing that 
@@ -22122,7 +22146,7 @@ struct observer final : entity
 
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
-        desc.entity.entity = m_id;
+        desc.entity = m_id;
         desc.ctx = ctx;
         ecs_observer_init(m_world, &desc);
     }
@@ -22248,7 +22272,6 @@ inline flecs::entity world::import() {
 
 namespace flecs 
 {
-
 // System builder interface
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {
@@ -22265,8 +22288,16 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        m_desc->entity.add[0] = phase ? ecs_dependson(phase) : 0;
-        m_desc->entity.add[1] = phase;
+        flecs::entity_t cur_phase = ecs_get_target(
+            world_v(), m_desc->entity, EcsDependsOn, 0);
+        if (cur_phase) {
+            ecs_remove_id(world_v(), m_desc->entity, ecs_dependson(cur_phase));
+            ecs_remove_id(world_v(), m_desc->entity, cur_phase);
+        }
+        if (phase) {
+            ecs_add_id(world_v(), m_desc->entity, ecs_dependson(phase));
+            ecs_add_id(world_v(), m_desc->entity, phase);
+        }
         return *this;
     }
 
@@ -22276,10 +22307,7 @@ public:
      */
     template <typename Phase>
     Base& kind() {
-        m_desc->entity.add[0] = ecs_dependson(
-            _::cpp_type<Phase>::id(world_v()));
-        m_desc->entity.add[1] = _::cpp_type<Phase>::id(world_v());
-        return *this;
+        return this->kind(_::cpp_type<Phase>::id(world_v()));
     }
 
     /** Specify whether system can run on multiple threads.
@@ -22376,8 +22404,8 @@ struct system_builder final : _::system_builder_base<Components...> {
         this->m_desc.query.filter.instanced = this->m_instanced;
 
 #ifdef FLECS_PIPELINE
-        this->m_desc.entity.add[0] = ecs_dependson(flecs::OnUpdate);
-        this->m_desc.entity.add[1] = flecs::OnUpdate;
+        ecs_add_id(world, this->m_desc.entity, ecs_dependson(flecs::OnUpdate));
+        ecs_add_id(world, this->m_desc.entity, flecs::OnUpdate);
 #endif
     }
 };
@@ -22461,7 +22489,7 @@ struct system final : entity
 
     void ctx(void *ctx) {
         ecs_system_desc_t desc = {};
-        desc.entity.entity = m_id;
+        desc.entity = m_id;
         desc.ctx = ctx;
         ecs_system_init(m_world, &desc);
     }
@@ -22592,7 +22620,7 @@ struct pipeline_builder final : _::pipeline_builder_base<Components...> {
         : _::pipeline_builder_base<Components...>(world)
     {
         _::sig<Components...>(world).populate(this);
-        this->m_desc.entity.entity = id;
+        this->m_desc.entity = id;
     }
 };
 

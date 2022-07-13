@@ -233,7 +233,7 @@ void ecs_cpp_component_validate(
      * with the same id for the current world. 
      * If the component was registered already, nothing will change. */
     ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.entity = id,
+        .entity = id,
         .type.size = flecs_uto(int32_t, size),
         .type.alignment = flecs_uto(int32_t, alignment)
     });
@@ -353,17 +353,19 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     ecs_entity_t entity;
     if (is_component || size != 0) {
         entity = ecs_component_init(world, &(ecs_component_desc_t){
-            .entity.entity = s_id,
-            .entity.name = name,
-            .entity.sep = "::",
-            .entity.root_sep = "::",
-            .entity.symbol = symbol,
+            .entity = ecs_entity(world, {
+                .id = s_id,
+                .name = name,
+                .sep = "::",
+                .root_sep = "::",
+                .symbol = symbol
+            }),
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
         });
     } else {
         entity = ecs_entity_init(world, &(ecs_entity_desc_t){
-            .entity = s_id,
+            .id = s_id,
             .name = name,
             .sep = "::",
             .root_sep = "::",
@@ -400,7 +402,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     ecs_entity_t prev = ecs_set_scope(world, parent);
     id = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = id,
+        .id = id,
         .name = name
     });
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);

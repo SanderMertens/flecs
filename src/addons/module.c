@@ -186,29 +186,27 @@ error:
 
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
+    const char *c_name,
     const ecs_component_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(world, ecs_world_t);
 
-    const char *name = desc->entity.name;
-
-    char *module_path = ecs_module_path_from_c(name);
-    ecs_entity_t e = ecs_new_from_fullpath(world, module_path);
-    ecs_set_symbol(world, e, module_path);
-    ecs_os_free(module_path);
+    ecs_entity_t e = desc->entity;
+    if (!e) {
+        char *module_path = ecs_module_path_from_c(c_name);
+        e = ecs_new_from_fullpath(world, module_path);
+        ecs_set_symbol(world, e, module_path);
+        ecs_os_free(module_path);
+    }
+    
+    ecs_add_id(world, e, EcsModule);
 
     ecs_component_desc_t private_desc = *desc;
-    private_desc.entity.entity = e;
-    private_desc.entity.name = NULL;
+    private_desc.entity = e;
 
     if (desc->type.size) {
         ecs_entity_t result = ecs_component_init(world, &private_desc);
-        ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
-        (void)result;
-    } else {
-        ecs_entity_t result = ecs_entity_init(world, &private_desc.entity);
         ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
         (void)result;

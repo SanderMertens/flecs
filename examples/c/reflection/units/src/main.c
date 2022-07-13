@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     // Register reflection data with units. This can improve the way information
     // is visualized in tools, such as the explorer.
     ecs_struct(ecs, {
-        .entity.entity = ecs_id(WeatherStation),
+        .entity = ecs_id(WeatherStation),
         .members = {
             {
                 .name = "temperature", 

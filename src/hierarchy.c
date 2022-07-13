@@ -197,7 +197,7 @@ void on_set_symbol(ecs_iter_t *it) {
 
 void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity.add = { ecs_childof(EcsFlecsInternals) },
+        .entity = ecs_entity(world, {.add = {ecs_childof(EcsFlecsInternals)}}),
         .filter.terms[0] = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), .src.flags = EcsSelf },
         .callback = on_set_symbol,
         .events = {EcsOnSet},

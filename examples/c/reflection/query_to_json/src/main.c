@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     // Add reflection data to components
     ecs_struct(ecs, {
-        .entity.entity = ecs_id(Position), // Make sure to use existing id
+        .entity = ecs_id(Position), // Make sure to use existing id
         .members = {
             { .name = "x", .type = ecs_id(ecs_f32_t) },
             { .name = "y", .type = ecs_id(ecs_f32_t) }
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     });
 
     ecs_struct(ecs, {
-        .entity.entity = ecs_id(Velocity), // Make sure to use existing id
+        .entity = ecs_id(Velocity), // Make sure to use existing id
         .members = {
             { .name = "x", .type = ecs_id(ecs_f32_t) },
             { .name = "y", .type = ecs_id(ecs_f32_t) }
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     });
 
     ecs_struct(ecs, {
-        .entity.entity = ecs_id(Mass), // Make sure to use existing id
+        .entity = ecs_id(Mass), // Make sure to use existing id
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t) }
         }

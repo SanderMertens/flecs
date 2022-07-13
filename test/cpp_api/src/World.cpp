@@ -23,15 +23,16 @@ typedef struct TestInteropModule {
 static
 void TestInteropModuleImport(ecs_world_t *world) {
     ecs_component_desc_t module_desc = {};
-    module_desc.entity.name = "TestInteropModule";
     module_desc.type.size = ECS_SIZEOF(TestInteropModule);
     module_desc.type.alignment = ECS_ALIGNOF(TestInteropModule);
-    ecs_entity_t m = ecs_module_init(world, &module_desc);
+    ecs_entity_t m = ecs_module_init(world, "TestInteropModule", &module_desc);
     ecs_set_scope(world, m);
 
     ecs_component_desc_t desc = {};
-    desc.entity.name = "Position";
-    desc.entity.symbol = "Position";
+    ecs_entity_desc_t edesc = {};
+    edesc.name = "Position";
+    edesc.symbol = "Position";
+    desc.entity = ecs_entity_init(world, &edesc);
     desc.type.size = ECS_SIZEOF(Position);
     desc.type.alignment = ECS_ALIGNOF(Position);
     ecs_component_init(world, &desc);
