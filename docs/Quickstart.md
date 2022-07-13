@@ -271,13 +271,13 @@ Bob.has(Eats, Pears);  // true!
 Bob.has(Grows, Pears); // true!
 ```
 
-The `get_object` function can be used in C and C++ to get the object for a relation:
+The `target` function can be used in C and C++ to get the object for a relation:
 
 ```c
-ecs_entity_t o = ecs_get_object(world, Alice, Likes, 0); // Returns Bob
+ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 ```
 ```cpp
-auto o = Alice.get_object<Likes>(); // Returns Bob
+auto o = Alice.target<Likes>(); // Returns Bob
 ```
 
 Entity relations enable lots of interesting patterns and possibilities. Make sure to check out the [relations manual](Relations.md).

@@ -1927,7 +1927,7 @@ void Pairs_get_1_object() {
 
     ecs_add_pair(world, e, rel, obj);
     test_assert(ecs_has_pair(world, e, rel, obj));
-    test_assert(ecs_get_object(world, e, rel, 0) == obj);
+    test_assert(ecs_get_target(world, e, rel, 0) == obj);
 
     ecs_fini(world);
 }
@@ -1938,7 +1938,7 @@ void Pairs_get_1_object_not_found() {
     ecs_entity_t e = ecs_new_id(world);
     ecs_entity_t rel = ecs_new_id(world);
 
-    test_assert(ecs_get_object(world, e, rel, 0) == 0);
+    test_assert(ecs_get_target(world, e, rel, 0) == 0);
 
     ecs_fini(world);
 }
@@ -1958,10 +1958,10 @@ void Pairs_get_n_objects() {
     test_assert(ecs_has_pair(world, e, rel, obj_1));
     test_assert(ecs_has_pair(world, e, rel, obj_2));
     test_assert(ecs_has_pair(world, e, rel, obj_3));
-    test_assert(ecs_get_object(world, e, rel, 0) == obj_1);
-    test_assert(ecs_get_object(world, e, rel, 1) == obj_2);
-    test_assert(ecs_get_object(world, e, rel, 2) == obj_3);
-    test_assert(ecs_get_object(world, e, rel, 3) == 0);
+    test_assert(ecs_get_target(world, e, rel, 0) == obj_1);
+    test_assert(ecs_get_target(world, e, rel, 1) == obj_2);
+    test_assert(ecs_get_target(world, e, rel, 2) == obj_3);
+    test_assert(ecs_get_target(world, e, rel, 3) == 0);
 
     ecs_fini(world);
 }
@@ -1976,7 +1976,7 @@ void Pairs_get_object_for_id_from_self() {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add_id(world, e, Tag);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
     test_assert(result != 0);
     test_assert(result == e);
 
@@ -1991,7 +1991,7 @@ void Pairs_get_object_for_id_from_base() {
     ecs_entity_t base = ecs_new(world, Tag);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
     test_assert(result != 0);
     test_assert(result == base);
 
@@ -2007,7 +2007,7 @@ void Pairs_get_object_for_id_from_nested_base() {
     ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
     test_assert(result != 0);
     test_assert(result == base);
 
@@ -2023,7 +2023,7 @@ void Pairs_get_object_for_id_not_found() {
     ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
     test_assert(result == 0);
 
     ecs_fini(world);
@@ -2040,7 +2040,7 @@ void Pairs_get_object_for_wildcard_from_self() {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add_id(world, e, pair);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, 
         ecs_pair(Rel, EcsWildcard));
     test_assert(result != 0);
     test_assert(result == e);
@@ -2058,7 +2058,7 @@ void Pairs_get_object_for_wildcard_from_base() {
     ecs_entity_t base = ecs_new_w_id(world, pair);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, 
         ecs_pair(Rel, EcsWildcard));
     test_assert(result != 0);
     test_assert(result == base);
@@ -2078,7 +2078,7 @@ void Pairs_get_object_for_wildcard_from_nested_base() {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
     
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, 
         ecs_pair(Rel, EcsWildcard));
     test_assert(result != 0);
     test_assert(result == base);
@@ -2096,7 +2096,7 @@ void Pairs_ignore_childof_from_base() {
     ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, parent);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, 
         ecs_pair(EcsChildOf, parent));
     test_assert(result == 0);
 

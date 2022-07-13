@@ -696,7 +696,7 @@ void set_member(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (!parent) {
             ecs_err("missing parent for member '%s'", ecs_get_name(world, e));
             continue;
@@ -745,7 +745,7 @@ void add_constant(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (!parent) {
             ecs_err("missing parent for constant '%s'", ecs_get_name(world, e));
             continue;

@@ -59,7 +59,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relation property");
     ecs_doc_set_brief(world, EcsWith, "With relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
-    ecs_doc_set_brief(world, EcsOnDeleteObject, "OnDeleteObject relation cleanup property");
+    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relation cleanup property");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
     ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
@@ -82,7 +82,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
     ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");
     ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsOnDeleteTarget, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");

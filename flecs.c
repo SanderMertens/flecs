@@ -7389,7 +7389,7 @@ bool flecs_id_is_delete_target(
 {
     if (!action && ecs_id_is_pair(id) && ECS_PAIR_FIRST(id) == EcsWildcard) {
         /* If no explicit delete action is provided, and the id we're deleting
-         * has the form (*, Target), use OnDeleteObject action */
+         * has the form (*, Target), use OnDeleteTarget action */
         return true;
     }
     return false;
@@ -8381,7 +8381,7 @@ error:
     return false;
 }
 
-ecs_entity_t ecs_get_object(
+ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
@@ -8426,7 +8426,7 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_get_object_for_id(
+ecs_entity_t ecs_get_target_for_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
@@ -8555,9 +8555,9 @@ void ecs_set_alias(
 
 ecs_id_t ecs_make_pair(
     ecs_entity_t relation,
-    ecs_entity_t object)
+    ecs_entity_t target)
 {
-    return ecs_pair(relation, object);
+    return ecs_pair(relation, target);
 }
 
 bool ecs_is_valid(
@@ -17441,7 +17441,7 @@ ecs_entity_t plecs_lookup(
             if (ecs_has_id(world, rel, EcsOneOf)) {
                 oneof = rel;
             } else {
-                oneof = ecs_get_object(world, rel, EcsOneOf, 0);
+                oneof = ecs_get_target(world, rel, EcsOneOf, 0);
             }
             if (oneof) {
                 return ecs_lookup_path_w_sep(
@@ -18009,11 +18009,11 @@ const char* plecs_parse_scope_open(
             ecs_set_scope(world, state->last_subject);
 
             /* Check if scope has a default child component */
-            ecs_entity_t def_type_src = ecs_get_object_for_id(world, scope, 
+            ecs_entity_t def_type_src = ecs_get_target_for_id(world, scope, 
                 0, ecs_pair(EcsDefaultChildComponent, EcsWildcard));
 
             if (def_type_src) {
-                default_scope_type = ecs_get_object(
+                default_scope_type = ecs_get_target(
                     world, def_type_src, EcsDefaultChildComponent, 0);
             }
         } else {
@@ -24517,7 +24517,7 @@ void set_member(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (!parent) {
             ecs_err("missing parent for member '%s'", ecs_get_name(world, e));
             continue;
@@ -24566,7 +24566,7 @@ void add_constant(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (!parent) {
             ecs_err("missing parent for constant '%s'", ecs_get_name(world, e));
             continue;
@@ -30152,7 +30152,7 @@ bool skip_id(
         }
     }
     if (is_base) {
-        if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
+        if (ecs_get_target_for_id(world, inst, EcsIsA, id) != ent) {
             hidden = true;
         }
     }
@@ -31308,7 +31308,7 @@ int json_typeinfo_ser_unit(
             flecs_json_member(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
-        ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
+        ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
             flecs_json_member(str, "quantity");
             flecs_json_path(str, world, quantity);
@@ -32388,7 +32388,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relation property");
     ecs_doc_set_brief(world, EcsWith, "With relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
-    ecs_doc_set_brief(world, EcsOnDeleteObject, "OnDeleteObject relation cleanup property");
+    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relation cleanup property");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
     ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
@@ -32411,7 +32411,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
     ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");
     ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsOnDeleteTarget, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");
@@ -33919,16 +33919,6 @@ bool valid_operator_char(
     }
 
     return false;
-}
-
-static
-const char* parse_digit(
-    const char *ptr,
-    char *token_out)
-{
-    ptr = ecs_parse_whitespace(ptr);
-    ptr = ecs_parse_digit(ptr, token_out);
-    return ecs_parse_whitespace(ptr);
 }
 
 const char* ecs_parse_token(
@@ -35738,7 +35728,7 @@ const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnComponentHooks =      ECS_HI_COMPONENT_ID + 45;
-const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 46;
+const ecs_entity_t EcsOnDeleteTarget =        ECS_HI_COMPONENT_ID + 46;
 
 /* Actions */
 const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
@@ -36100,7 +36090,7 @@ void fini_roots(ecs_world_t *world) {
     /* Delete root entities that are not modules. This prioritizes deleting 
      * regular entities first, which reduces the chance of components getting
      * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteObject policy. */
+     * thereby bypassing the OnDeleteTarget policy. */
     ecs_defer_begin(world);
 
     const ecs_table_record_t *tr;
@@ -36752,7 +36742,7 @@ ecs_entity_t flecs_get_oneof(
     if (ecs_has_id(world, e, EcsOneOf)) {
         return e;
     } else {
-        return ecs_get_object(world, e, EcsOneOf, 0);
+        return ecs_get_target(world, e, EcsOneOf, 0);
     }
 }
 
@@ -39178,7 +39168,9 @@ bool flecs_term_match_table(
 
     ecs_entity_t src_id = src->id;
     if (ecs_term_match_0(term)) {
-        id_out[0] = id; /* If no entity is matched, just set id */
+        if (id_out) {
+            id_out[0] = id; /* If no entity is matched, just set id */
+        }
         return true;
     }
 
@@ -48045,7 +48037,7 @@ void register_on_delete(ecs_iter_t *it) {
 static
 void register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_term_id(it, 1);
-    register_id_flag_for_relation(it, EcsOnDeleteObject, 
+    register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
         EcsEntityObservedId);  
@@ -48178,7 +48170,7 @@ void ensure_module_tag(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (parent) {
             ecs_add_id(world, parent, EcsModule);
         }
@@ -48528,7 +48520,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsOneOf);
 
     flecs_bootstrap_tag(world, EcsOnDelete);
-    flecs_bootstrap_tag(world, EcsOnDeleteObject);
+    flecs_bootstrap_tag(world, EcsOnDeleteTarget);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
@@ -48558,12 +48550,12 @@ void flecs_bootstrap(
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
-    ecs_add_id(world, EcsOnDeleteObject, EcsExclusive);
+    ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
-    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);
+    ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
@@ -48598,7 +48590,7 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .src.flags = EcsSelf },
+        .filter.terms[0] = {.id = ecs_pair(EcsOnDeleteTarget, EcsWildcard), .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete_object
     });
@@ -48695,7 +48687,7 @@ bool path_append(
     const char *name;
 
     if (ecs_is_valid(world, child)) {
-        cur = ecs_get_object(world, child, EcsChildOf, 0);
+        cur = ecs_get_target(world, child, EcsChildOf, 0);
         if (cur) {
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
             if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
@@ -49088,7 +49080,7 @@ tail:
     if (!cur && recursive) {
         if (!lookup_path_search) {
             if (parent) {
-                parent = ecs_get_object(world, parent, EcsChildOf, 0);
+                parent = ecs_get_target(world, parent, EcsChildOf, 0);
                 goto retry;
             } else {
                 lookup_path_search = true;
@@ -49481,7 +49473,7 @@ ecs_id_record_t* flecs_id_record_new(
     /* Flag for OnDelete policies */
     flecs_add_flag(world, rel, EcsEntityObservedId);
     if (obj) {
-        /* Flag for OnDeleteObject policies */
+        /* Flag for OnDeleteTarget policies */
         flecs_add_flag(world, obj, EcsEntityObservedObject);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when

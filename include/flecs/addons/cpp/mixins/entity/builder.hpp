@@ -34,51 +34,62 @@ struct entity_builder : entity_view {
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @param relation The relation.
-     * @param object The object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    Self& add(entity_t relation, entity_t object) {
-        ecs_add_pair(this->m_world, this->m_id, relation, object);
+    Self& add(entity_t first, entity_t second) {
+        ecs_add_pair(this->m_world, this->m_id, first, second);
         return to_base();
     }
 
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam R The relation type
-     * @tparam O The object type.
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
      */
-    template<typename R, typename O>
+    template<typename First, typename Second>
     Self& add() {
-        return this->add<R>(_::cpp_type<O>::id(this->m_world));
+        return this->add<First>(_::cpp_type<Second>::id(this->m_world));
     }
 
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam R The relation type
-     * @param object The object.
+     * @tparam First The first element of the pair
+     * @param second The second element of the pair.
      */
-    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
-    Self& add(O object) {
-        flecs_static_assert(is_flecs_constructible<R>::value,
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
+    Self& add(Second second) {
+        flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
-        return this->add(_::cpp_type<R>::id(this->m_world), object);
+        return this->add(_::cpp_type<First>::id(this->m_world), second);
     }
 
     /** Add a pair.
      * This operation adds a pair to the entity that consists out of a tag
      * combined with an enum constant.
      *
-     * @tparam R The relation type
+     * @tparam First The first element of the pair
      * @param constant the enum constant.
      */
-    template<typename R, typename O, if_t< is_enum<O>::value > = 0>
-    Self& add(O constant) {
-        flecs_static_assert(is_flecs_constructible<R>::value,
+    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    Self& add(Second constant) {
+        flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
-        const auto& et = enum_type<O>(this->m_world);
-        return this->add<R>(et.entity(constant));
+        const auto& et = enum_type<Second>(this->m_world);
+        return this->add<First>(et.entity(constant));
+    }
+
+    /** Add a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @param first The first element of the pair
+     * @tparam Second The second element of the pair
+     */
+    template<typename Second>
+    Self& add_second(flecs::entity_t first) {
+        return this->add(first, _::cpp_type<Second>::id(this->m_world));
     }
 
     /** Conditional add.
@@ -114,46 +125,46 @@ struct entity_builder : entity_view {
      * This operation adds if condition is true, removes if condition is false.
      * 
      * @param cond The condition to evaluate.
-     * @param relation The relation.
-     * @param object The relation object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    Self& add_if(bool cond, flecs::entity_t relation, flecs::entity_t object) {
+    Self& add_if(bool cond, flecs::entity_t first, flecs::entity_t second) {
         if (cond) {
-            return this->add(relation, object);
+            return this->add(first, second);
         } else {
-            /* If object is 0 or if relationship is exclusive, use wildcard for
-             * object which will remove all instances of the relationship.
-             * Replacing 0 with Wildcard will make it possible to use the object
+            /* If second is 0 or if relationship is exclusive, use wildcard for
+             * second which will remove all instances of the relationship.
+             * Replacing 0 with Wildcard will make it possible to use the second
              * as the condition. */
-            if (!object || ecs_has_id(this->m_world, relation, flecs::Exclusive)) {
-                object = flecs::Wildcard;
+            if (!second || ecs_has_id(this->m_world, first, flecs::Exclusive)) {
+                second = flecs::Wildcard;
             }
-            return this->remove(relation, object);
+            return this->remove(first, second);
         }
     }
 
     /** Conditional add.
      * This operation adds if condition is true, removes if condition is false.
      * 
-     * @tparam R The relation type
+     * @tparam First The first element of the pair
      * @param cond The condition to evaluate.
-     * @param object The relation object.
+     * @param second The second element of the pair.
      */
-    template <typename R>
-    Self& add_if(bool cond, flecs::entity_t object) {
-        return this->add_if(cond, _::cpp_type<R>::id(this->m_world), object);
+    template <typename First>
+    Self& add_if(bool cond, flecs::entity_t second) {
+        return this->add_if(cond, _::cpp_type<First>::id(this->m_world), second);
     }
 
     /** Conditional add.
      * This operation adds if condition is true, removes if condition is false.
      * 
-     * @tparam R The relation type
-     * @tparam O The object type.
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
      * @param cond The condition to evaluate.
      */
-    template <typename R, typename O>
+    template <typename First, typename Second>
     Self& add_if(bool cond) {
-        return this->add_if<R>(cond, _::cpp_type<O>::id(this->m_world));
+        return this->add_if<First>(cond, _::cpp_type<Second>::id(this->m_world));
     }
 
     /** Conditional add.
@@ -168,69 +179,55 @@ struct entity_builder : entity_view {
         return this->add_if<E>(cond, et.entity(constant));
     }
 
-    /** Shortcut for add(IsA, obj).
+    /** Shortcut for add(IsA, entity).
      *
-     * @param object The object.
+     * @param second The second element of the pair.
      */
-    Self& is_a(entity_t object) {
-        return this->add(flecs::IsA, object);
+    Self& is_a(entity_t second) {
+        return this->add(flecs::IsA, second);
     }
 
-    /** Shortcut for add(IsA, obj).
+    /** Shortcut for add(IsA, entity).
      *
-     * @tparam T the type associated with the O.
+     * @tparam T the type associated with the entity.
      */
     template <typename T>
     Self& is_a() {
         return this->add(flecs::IsA, _::cpp_type<T>::id(this->m_world));
     }
 
-    /** Shortcut for add(ChildOf, obj).
+    /** Shortcut for add(ChildOf, entity).
      *
-     * @param object The object.
+     * @param second The second element of the pair.
      */
-    Self& child_of(entity_t object) {
-        return this->add(flecs::ChildOf, object);
+    Self& child_of(entity_t second) {
+        return this->add(flecs::ChildOf, second);
     }
 
-    /** Shortcut for add(DependsOn, obj).
+    /** Shortcut for add(DependsOn, entity).
      *
-     * @param object The object.
+     * @param second The second element of the pair.
      */
-    Self& depends_on(entity_t object) {
-        return this->add(flecs::DependsOn, object);
+    Self& depends_on(entity_t second) {
+        return this->add(flecs::DependsOn, second);
     }
 
-    /** Shortcut for add(ChildOf, obj).
+    /** Shortcut for add(ChildOf, entity).
      *
-     * @tparam T the type associated with the O.
+     * @tparam T the type associated with the entity.
      */
     template <typename T>
     Self& child_of() {
         return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
     }
  
-    /** Shortcut for add(DependsOn, obj).
+    /** Shortcut for add(DependsOn, entity).
      *
-     * @tparam T the type associated with the O.
+     * @tparam T the type associated with the entity.
      */
     template <typename T>
     Self& depends_on() {
         return this->add(flecs::DependsOn, _::cpp_type<T>::id(this->m_world));
-    }
-
-    /** Add a pair with O type.
-     * This operation adds a pair to the entity. The R part of the pair
-     * should not be a component.
-     *
-     * @param relation The relation.
-     * @tparam O The object type.
-     */
-    template<typename O>
-    Self& add_w_object(entity_t relation) {
-        flecs_static_assert(is_flecs_constructible<O>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");      
-        return this->add(relation,  _::cpp_type<O>::id(this->m_world));
     }
 
     /** Remove a component from an entity.
@@ -255,59 +252,59 @@ struct entity_builder : entity_view {
     /** Remove a pair.
      * This operation removes a pair from the entity.
      *
-     * @param relation The relation.
-     * @param object The object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    Self& remove(entity_t relation, entity_t object) {
-        ecs_remove_pair(this->m_world, this->m_id, relation, object);
+    Self& remove(entity_t first, entity_t second) {
+        ecs_remove_pair(this->m_world, this->m_id, first, second);
         return to_base();
     }
 
     /** Removes a pair.
      * This operation removes a pair from the entity.
      *
-     * @tparam R The relation type
-     * @tparam O The object type.
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
      */
-    template<typename R, typename O>
+    template<typename First, typename Second>
     Self& remove() {
-        return this->remove<R>(_::cpp_type<O>::id(this->m_world));
+        return this->remove<First>(_::cpp_type<Second>::id(this->m_world));
     }
 
     /** Remove a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam R The relation type
-     * @param object The object.
+     * @tparam First The first element of the pair
+     * @param second The second element of the pair.
      */
-    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
-    Self& remove(O object) {
-        return this->remove(_::cpp_type<R>::id(this->m_world), object);
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
+    Self& remove(Second second) {
+        return this->remove(_::cpp_type<First>::id(this->m_world), second);
     }
 
-    /** Remove a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @tparam R The relation type
-     * @param constant the enum constant.
-     */
-    template<typename R, typename O, if_t< is_enum<O>::value > = 0>
-    Self& remove(O constant) {
-        const auto& et = enum_type<O>(this->m_world);
-        flecs::entity_t object = et.entity(constant);
-        return this->remove<R>(object);
-    }  
-
-    /** Removes a pair with O type.
+    /** Removes a pair.
      * This operation removes a pair from the entity.
      *
-     * @param relation The relation.
-     * @tparam O The object type.
+     * @tparam Second The second element of the pair
+     * @param first The first element of the pair
      */
-    template<typename O>
-    Self& remove_w_object(entity_t relation) {
-        return this->remove(relation, _::cpp_type<O>::id(this->m_world));
-    }    
+    template<typename Second>
+    Self& remove_second(flecs::entity_t first) {
+        return this->remove(first, _::cpp_type<Second>::id(this->m_world));
+    }
+
+    /** Remove a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @tparam First The first element of the pair
+     * @param constant the enum constant.
+     */
+    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    Self& remove(Second constant) {
+        const auto& et = enum_type<Second>(this->m_world);
+        flecs::entity_t second = et.entity(constant);
+        return this->remove<First>(second);
+    }  
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
@@ -365,8 +362,8 @@ struct entity_builder : entity_view {
     }
 
     /** Add pair for enum constant.
-     * This operation will add a pair to the entity where R is the enumeration
-     * type, and O is the entity representing the enum constant.
+     * This operation will add a pair to the entity where the first element is
+     * the enumeration type, and the second element the enumeration constant.
      * 
      * The operation may be used with regular (C style) enumerations as well as
      * enum classes.
@@ -375,10 +372,10 @@ struct entity_builder : entity_view {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& add(E value) {
-        flecs::entity_t relation = _::cpp_type<E>::id(this->m_world);
+        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
         const auto& et = enum_type<E>(this->m_world);
-        flecs::entity_t object = et.entity(value);
-        return this->add(relation, object);
+        flecs::entity_t second = et.entity(value);
+        return this->add(first, second);
     }
 
     /** Remove pair for enum.
@@ -388,8 +385,8 @@ struct entity_builder : entity_view {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& remove() {
-        flecs::entity_t relation = _::cpp_type<E>::id(this->m_world);
-        return this->remove(relation, flecs::Wildcard);
+        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
+        return this->remove(first, flecs::Wildcard);
     }
 
     /** Enable an entity.
@@ -498,70 +495,70 @@ struct entity_builder : entity_view {
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the R as type. If the
+     * This operation sets the pair value, and uses First as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam R The relation type.
-     * @tparam O The object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair
      * @param value The value to set.
      */
-    template <typename R, typename O, typename P = pair<R, O>, 
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<R>::value> = 0>
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     Self& set(const A& value) {
         flecs::set<P>(this->m_world, this->m_id, value);
         return to_base();
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the R as type. If the
+     * This operation sets the pair value, and uses First as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam R The relation type.
-     * @param object The object.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      * @param value The value to set.
      */
-    template <typename R, typename O, if_not_t< is_enum<O>::value > = 0>
-    Self& set(O object, const R& value) {
-        auto relation = _::cpp_type<R>::id(this->m_world);
+    template <typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
+    Self& set(Second second, const First& value) {
+        auto first = _::cpp_type<First>::id(this->m_world);
         flecs::set(this->m_world, this->m_id, value, 
-            ecs_pair(relation, object));
+            ecs_pair(first, second));
         return to_base();
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the R as type. If the
+     * This operation sets the pair value, and uses First as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam R The relation type.
+     * @tparam First The first element of the pair.
      * @param constant The enum constant.
      * @param value The value to set.
      */
-    template <typename R, typename O, if_t< is_enum<O>::value > = 0>
-    Self& set(O constant, const R& value) {
-        const auto& et = enum_type<O>(this->m_world);
-        flecs::entity_t object = et.entity(constant);
-        return set<R>(object, value);
+    template <typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    Self& set(Second constant, const First& value) {
+        const auto& et = enum_type<Second>(this->m_world);
+        flecs::entity_t second = et.entity(constant);
+        return set<First>(second, value);
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the R as type. If the
+     * This operation sets the pair value, and uses Second as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam O The object type.
-     * @param relation The relation.
+     * @tparam Second The second element of the pair
+     * @param first The first element of the pair.
      * @param value The value to set.
      */
-    template <typename O>
-    Self& set_w_object(entity_t relation, const O& value) {
-        auto object = _::cpp_type<O>::id(this->m_world);
+    template <typename Second>
+    Self& set_second(entity_t first, const Second& value) {
+        auto second = _::cpp_type<Second>::id(this->m_world);
         flecs::set(this->m_world, this->m_id, value, 
-            ecs_pair(relation, object));
+            ecs_pair(first, second));
         return to_base();
     }
 
-    template <typename R, typename O>
-    Self& set_w_object(const O& value) {
-        flecs::set<pair_object<R, O>>(this->m_world, this->m_id, value);
+    template <typename First, typename Second>
+    Self& set_second(const Second& value) {
+        flecs::set<pair_object<First, Second>>(this->m_world, this->m_id, value);
         return to_base();
     }    
 
@@ -585,7 +582,7 @@ struct entity_builder : entity_view {
 
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
-     * destructor on the O passed into the function.
+     * destructor on the value passed into the function.
      *
      * Emplace attempts the following signatures to construct the component:
      *  T{Args...}
@@ -620,27 +617,27 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (relation, this) 
+    /** Entities created in function will have (First, this) 
      * This operation is thread safe.
      *
-     * @tparam R The R to use.
+     * @tparam First The first element of the pair
      * @param func The function to call.
      */
-    template <typename R, typename Func>
+    template <typename First, typename Func>
     Self& with(const Func& func) {
-        with(_::cpp_type<R>::id(this->m_world), func);
+        with(_::cpp_type<First>::id(this->m_world), func);
         return to_base();
     }
 
-    /** Entities created in function will have (relation, this) 
+    /** Entities created in function will have (first, this) 
      *
-     * @param relation The relation.
+     * @param first The first element of the pair.
      * @param func The function to call.
      */
     template <typename Func>
-    Self& with(entity_t relation, const Func& func) {
+    Self& with(entity_t first, const Func& func) {
         ecs_id_t prev = ecs_set_with(this->m_world, 
-            ecs_pair(relation, this->m_id));
+            ecs_pair(first, this->m_id));
         func();
         ecs_set_with(this->m_world, prev);
         return to_base();

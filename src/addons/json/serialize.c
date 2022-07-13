@@ -474,7 +474,7 @@ bool skip_id(
         }
     }
     if (is_base) {
-        if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
+        if (ecs_get_target_for_id(world, inst, EcsIsA, id) != ent) {
             hidden = true;
         }
     }

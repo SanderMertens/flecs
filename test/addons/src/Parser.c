@@ -1821,7 +1821,7 @@ void Parser_pair_implicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "PAIR | (Pred, Obj)"
+        .expr = "(Pred, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1847,7 +1847,7 @@ void Parser_pair_explicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "PAIR | Pred($This, Obj)"
+        .expr = "Pred($This, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1945,7 +1945,7 @@ void Parser_inout_role_pair_implicit_subject() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[inout] PAIR | (Pred, Obj)"
+        .expr = "[inout] (Pred, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1971,7 +1971,7 @@ void Parser_inout_role_pair_explicit_subject() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[inout] PAIR | Pred($This, Obj)"
+        .expr = "[inout] Pred($This, Obj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2189,7 +2189,7 @@ void Parser_2_pair_implicit_subj_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "PAIR | (Pred_1, Obj_1), PAIR | (Pred_2, Obj_2)"
+        .expr = "(Pred_1, Obj_1), (Pred_2, Obj_2)"
     }));
     test_int(filter_count(&f), 2);
 
@@ -2225,7 +2225,7 @@ void Parser_2_pair_explicit_subj_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "PAIR | Pred_1($This, Obj_1), PAIR | Pred_2($This, Obj_2)"
+        .expr = "Pred_1($This, Obj_1), Pred_2($This, Obj_2)"
     }));
     test_int(filter_count(&f), 2);
 

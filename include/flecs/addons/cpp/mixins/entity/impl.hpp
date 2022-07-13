@@ -18,7 +18,7 @@ inline Self& entity_builder<Self>::set(const Func& func) {
 template <typename T, if_t< is_enum<T>::value > >
 const T* entity_view::get() const {
     entity_t r = _::cpp_type<T>::id(m_world);
-    entity_t c = ecs_get_object(m_world, m_id, r, 0);
+    entity_t c = ecs_get_target(m_world, m_id, r, 0);
 
     if (c) {
         // Get constant value from constant entity
@@ -32,37 +32,37 @@ const T* entity_view::get() const {
     }
 }
 
-template<typename R>
-inline flecs::entity entity_view::get_object(int32_t index) const 
+template<typename First>
+inline flecs::entity entity_view::target(int32_t index) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_object(m_world, m_id, _::cpp_type<R>::id(m_world), index));
+        ecs_get_target(m_world, m_id, _::cpp_type<First>::id(m_world), index));
 }
 
-inline flecs::entity entity_view::get_object(
+inline flecs::entity entity_view::target(
     flecs::entity_t relation, 
     int32_t index) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_object(m_world, m_id, relation, index));
+        ecs_get_target(m_world, m_id, relation, index));
 }
 
-inline flecs::entity entity_view::get_object_for(
+inline flecs::entity entity_view::target_for(
     flecs::entity_t relation, 
     flecs::id_t id) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_object_for_id(m_world, m_id, relation, id));
+        ecs_get_target_for_id(m_world, m_id, relation, id));
 }
 
 template <typename T>
-inline flecs::entity entity_view::get_object_for(flecs::entity_t relation) const {
-    return get_object_for(relation, _::cpp_type<T>::id(m_world));
+inline flecs::entity entity_view::target_for(flecs::entity_t relation) const {
+    return target_for(relation, _::cpp_type<T>::id(m_world));
 }
 
-template <typename R, typename O>
-inline flecs::entity entity_view::get_object_for(flecs::entity_t relation) const {
-    return get_object_for(relation, _::cpp_type<R, O>::id(m_world));
+template <typename First, typename Second>
+inline flecs::entity entity_view::target_for(flecs::entity_t relation) const {
+    return target_for(relation, _::cpp_type<First, Second>::id(m_world));
 }
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
@@ -113,7 +113,7 @@ inline void entity_view::each(const Func& func) const {
         // Union object is not stored in type, so handle separately
         if (ECS_PAIR_FIRST(id) == EcsUnion) {
             ent = flecs::id(m_world, ECS_PAIR_SECOND(id),
-                ecs_get_object(m_world, m_id, ECS_PAIR_SECOND(id), 0));
+                ecs_get_target(m_world, m_id, ECS_PAIR_SECOND(id), 0));
             func(ent);
         }
     }

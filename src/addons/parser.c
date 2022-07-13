@@ -191,16 +191,6 @@ bool valid_operator_char(
     return false;
 }
 
-static
-const char* parse_digit(
-    const char *ptr,
-    char *token_out)
-{
-    ptr = ecs_parse_whitespace(ptr);
-    ptr = ecs_parse_digit(ptr, token_out);
-    return ecs_parse_whitespace(ptr);
-}
-
 const char* ecs_parse_token(
     const char *name,
     const char *expr,

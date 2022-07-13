@@ -93,14 +93,14 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    template<typename R>
+    template<typename First>
     Base& term(id_t o) {
-        return this->term(_::cpp_type<R>::id(this->world_v()), o);
+        return this->term(_::cpp_type<First>::id(this->world_v()), o);
     }
 
-    template<typename R, typename O>
+    template<typename First, typename Second>
     Base& term() {
-        return this->term<R>(_::cpp_type<O>::id(this->world_v()));
+        return this->term<First>(_::cpp_type<Second>::id(this->world_v()));
     }
 
     template <typename E, if_t< is_enum<E>::value > = 0>

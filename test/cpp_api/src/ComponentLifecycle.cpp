@@ -378,10 +378,10 @@ static void try_add_relation(flecs::world& ecs) {
 }
 
 template <typename T>
-static void try_add_w_object(flecs::world& ecs) {
+static void try_add_second(flecs::world& ecs) {
     flecs::entity rel = ecs.entity();
 
-    flecs::entity e = ecs.entity().add_w_object<T>(rel);
+    flecs::entity e = ecs.entity().add_second<T>(rel);
     test_assert(e.has<T>());
 
     const T *ptr = e.get<T>();
@@ -469,7 +469,7 @@ void ComponentLifecycle_no_default_ctor_add_relation() {
     try_add_relation<NoDefaultCtor>(ecs); 
 }
 
-void ComponentLifecycle_no_default_ctor_add_w_object() {
+void ComponentLifecycle_no_default_ctor_add_second() {
     install_test_abort();
 
     flecs::world ecs;
@@ -478,7 +478,7 @@ void ComponentLifecycle_no_default_ctor_add_w_object() {
 
     test_expect_abort();
 
-    try_add_w_object<NoDefaultCtor>(ecs);
+    try_add_second<NoDefaultCtor>(ecs);
 }
 
 void ComponentLifecycle_no_default_ctor_set() {

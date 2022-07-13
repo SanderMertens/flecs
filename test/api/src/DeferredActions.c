@@ -830,8 +830,8 @@ void DeferredActions_defer_add_to_recycled_relation() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t object = ecs_new_id(world);
-    test_assert(object != 0);
+    ecs_entity_t target = ecs_new_id(world);
+    test_assert(target != 0);
 
     ecs_entity_t rel = ecs_new_id(world);
     test_assert(rel != 0);
@@ -846,18 +846,18 @@ void DeferredActions_defer_add_to_recycled_relation() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_pair(world, rel_2, object);
+    ecs_entity_t child = ecs_new_w_pair(world, rel_2, target);
     ecs_add(world, child, Velocity);
 
     ecs_defer_end(world);  
 
     ecs_frame_end(world);    
 
-    test_assert(ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, target));
     test_assert(!ecs_is_alive(world, rel));
     test_assert(ecs_is_alive(world, rel_2));
     test_assert(ecs_is_alive(world, child));
-    test_assert(ecs_has_pair(world, child, rel_2, object));
+    test_assert(ecs_has_pair(world, child, rel_2, target));
 
     ecs_fini(world); 
 }
@@ -869,14 +869,14 @@ void DeferredActions_defer_add_to_recycled_object() {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t object = ecs_new(world, 0);
-    test_assert(object != 0);
+    ecs_entity_t target = ecs_new(world, 0);
+    test_assert(target != 0);
 
-    ecs_delete(world, object);
+    ecs_delete(world, target);
 
     ecs_entity_t object_2 = ecs_new_id(world);
-    test_assert(object != object_2);
-    test_assert((int32_t)object == (int32_t)object_2);
+    test_assert(target != object_2);
+    test_assert((int32_t)target == (int32_t)object_2);
     
     ecs_frame_begin(world, 1);
 
@@ -889,7 +889,7 @@ void DeferredActions_defer_add_to_recycled_object() {
 
     ecs_frame_end(world);    
 
-    test_assert(!ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, target));
     test_assert(ecs_is_alive(world, object_2));
     test_assert(ecs_is_alive(world, child));
     test_assert(ecs_has_pair(world, child, Rel, object_2));
@@ -993,8 +993,8 @@ void DeferredActions_defer_add_to_deleted_relation() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t object = ecs_new_id(world);
-    test_assert(object != 0);
+    ecs_entity_t target = ecs_new_id(world);
+    test_assert(target != 0);
 
     ecs_entity_t rel = ecs_new_id(world);
     test_assert(rel != 0);
@@ -1004,17 +1004,17 @@ void DeferredActions_defer_add_to_deleted_relation() {
     ecs_defer_begin(world);
 
     ecs_delete(world, rel);
-    ecs_entity_t child = ecs_new_w_pair(world, rel, object);
+    ecs_entity_t child = ecs_new_w_pair(world, rel, target);
     ecs_add(world, child, Velocity);
 
     ecs_defer_end(world);  
 
     ecs_frame_end(world);    
 
-    test_assert(ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, target));
     test_assert(!ecs_is_alive(world, rel));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_pair(world, child, rel, object));
+    test_assert(!ecs_has_pair(world, child, rel, target));
 
     ecs_fini(world); 
 }
@@ -1027,23 +1027,23 @@ void DeferredActions_defer_add_to_deleted_object() {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t object = ecs_new(world, 0);
+    ecs_entity_t target = ecs_new(world, 0);
 
     ecs_frame_begin(world, 1);
 
     ecs_defer_begin(world);
 
-    ecs_delete(world, object);
-    ecs_entity_t child = ecs_new_w_pair(world, Rel, object);
+    ecs_delete(world, target);
+    ecs_entity_t child = ecs_new_w_pair(world, Rel, target);
     ecs_add(world, child, Velocity);
 
     ecs_defer_end(world);  
 
     ecs_frame_end(world);    
 
-    test_assert(!ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, target));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_pair(world, child, Rel, object));
+    test_assert(!ecs_has_pair(world, child, Rel, target));
 
     ecs_fini(world); 
 }
@@ -1136,8 +1136,8 @@ void DeferredActions_defer_delete_added_relation() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t object = ecs_new_id(world);
-    test_assert(object != 0);
+    ecs_entity_t target = ecs_new_id(world);
+    test_assert(target != 0);
 
     ecs_entity_t rel = ecs_new_id(world);
     test_assert(rel != 0);
@@ -1146,7 +1146,7 @@ void DeferredActions_defer_delete_added_relation() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_pair(world, rel, object);
+    ecs_entity_t child = ecs_new_w_pair(world, rel, target);
     ecs_add(world, child, Velocity);
     ecs_delete(world, rel);
 
@@ -1154,10 +1154,10 @@ void DeferredActions_defer_delete_added_relation() {
 
     ecs_frame_end(world);    
 
-    test_assert(ecs_is_alive(world, object));
+    test_assert(ecs_is_alive(world, target));
     test_assert(!ecs_is_alive(world, rel));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_pair(world, child, rel, object));
+    test_assert(!ecs_has_pair(world, child, rel, target));
 
     ecs_fini(world); 
 }
@@ -1170,23 +1170,23 @@ void DeferredActions_defer_delete_added_object() {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t object = ecs_new(world, 0);
+    ecs_entity_t target = ecs_new(world, 0);
 
     ecs_frame_begin(world, 1);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_pair(world, Rel, object);
+    ecs_entity_t child = ecs_new_w_pair(world, Rel, target);
     ecs_add(world, child, Velocity);
-    ecs_delete(world, object);
+    ecs_delete(world, target);
 
     ecs_defer_end(world);  
 
     ecs_frame_end(world);    
 
-    test_assert(!ecs_is_alive(world, object));
+    test_assert(!ecs_is_alive(world, target));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_pair(world, child, Rel, object));
+    test_assert(!ecs_has_pair(world, child, Rel, target));
 
     ecs_fini(world);
 }
@@ -1892,7 +1892,7 @@ static void update_counter(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         test_assert(parent != 0);
 
         Counter *ptr = ecs_get_mut(world, parent, Counter);

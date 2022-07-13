@@ -31,14 +31,6 @@ inline flecs::entity id::second() const {
     }
 }
 
-inline flecs::entity id::relation() const {
-    return first();
-}
-
-inline flecs::entity id::object() const {
-    return second();
-}
-
 inline flecs::entity id::add_role(flecs::id_t role) const {
     return flecs::entity(m_world, m_id | role);
 }
@@ -78,21 +70,21 @@ inline flecs::id world::id(Args&&... args) const {
     return flecs::id(m_world, FLECS_FWD(args)...);
 }
 
-template <typename R, typename O>
+template <typename First, typename Second>
 inline flecs::id world::pair() const {
     return flecs::id(
         m_world, 
         ecs_pair(
-            _::cpp_type<R>::id(m_world), 
-            _::cpp_type<O>::id(m_world)));
+            _::cpp_type<First>::id(m_world), 
+            _::cpp_type<Second>::id(m_world)));
 }
 
-template <typename R>
+template <typename First>
 inline flecs::id world::pair(entity_t o) const {
     return flecs::id(
         m_world,
         ecs_pair(
-            _::cpp_type<R>::id(m_world), 
+            _::cpp_type<First>::id(m_world), 
             o));
 }
 

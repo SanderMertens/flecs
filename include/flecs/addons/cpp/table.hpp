@@ -30,14 +30,14 @@ struct table {
         return has(ecs_pair(r, o));
     }
 
-    template <typename R>
+    template <typename First>
     bool has(flecs::entity_t o) const {
-        return has(_::cpp_type<R>::id(m_world), o);
+        return has(_::cpp_type<First>::id(m_world), o);
     }
 
-    template <typename R, typename O>
+    template <typename First, typename Second>
     bool has() const {
-        return has<R>(_::cpp_type<O>::id(m_world));
+        return has<First>(_::cpp_type<Second>::id(m_world));
     }
 
     /* Implicit conversion to table_t */

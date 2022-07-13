@@ -27,33 +27,33 @@ struct event_builder_base {
     
     /** 
      * Add pair to emit for
-     * @tparam R the relation type.
-     * @tparam O the object type.
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
      */
-    template <typename R, typename O>
+    template <typename First, typename Second>
     Base& id() {
         return id(
-            ecs_pair(_::cpp_type<R>::id(this->m_world), 
-                _::cpp_type<O>::id(this->m_world)));
+            ecs_pair(_::cpp_type<First>::id(this->m_world), 
+                _::cpp_type<Second>::id(this->m_world)));
     }
 
     /** 
      * Add pair to emit for
-     * @tparam R the relation type.
-     * @param object The object id.
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair id.
      */
-    template <typename R>
-    Base& id(entity_t object) {
-        return id(ecs_pair(_::cpp_type<R>::id(this->m_world), object));
+    template <typename First>
+    Base& id(entity_t second) {
+        return id(ecs_pair(_::cpp_type<First>::id(this->m_world), second));
     }
 
     /** 
      * Add pair to emit for
-     * @param relation The relation type.
-     * @param object The object id.
+     * @param first The first element of the pair type.
+     * @param second The second element of the pair id.
      */
-    Base& id(entity_t relation, entity_t object) {
-        return id(ecs_pair(relation, object));
+    Base& id(entity_t first, entity_t second) {
+        return id(ecs_pair(first, second));
     }
 
     /** Add (component) id to emit for */

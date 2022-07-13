@@ -9,7 +9,7 @@ void Switch_get_case_no_switch() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    test_uint(ecs_get_object(world, e, Rel, 0), 0);
+    test_uint(ecs_get_target(world, e, Rel, 0), 0);
 
     ecs_fini(world);
 }
@@ -28,7 +28,7 @@ void Switch_get_case_set() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_fini(world);
 }
@@ -47,21 +47,21 @@ void Switch_get_case_change() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_add_pair(world, e, Movement, Running);
 
     test_assert( !ecs_has_pair(world, e, Movement, Walking));
     test_assert( ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Running);
+    test_uint(ecs_get_target(world, e, Movement, 0), Running);
 
     ecs_add_pair(world, e, Movement, Jumping);
 
     test_assert( !ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Jumping);
+    test_uint(ecs_get_target(world, e, Movement, 0), Jumping);
 
     ecs_fini(world);
 }
@@ -80,14 +80,14 @@ void Switch_remove_case() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_remove_pair(world, e, Movement, Walking);
 
     test_assert( !ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), 0);
+    test_uint(ecs_get_target(world, e, Movement, 0), 0);
 
     test_assert(ecs_get_type(world, e) == NULL);
 
@@ -250,9 +250,9 @@ void Switch_3_entities_same_case() {
     test_assert( ecs_has_pair(world, e2, Movement, Running));
     test_assert( ecs_has_pair(world, e3, Movement, Running));
 
-    test_int(ecs_get_object(world, e1, Movement, 0), Running);
-    test_int(ecs_get_object(world, e2, Movement, 0), Running);
-    test_int(ecs_get_object(world, e3, Movement, 0), Running);
+    test_int(ecs_get_target(world, e1, Movement, 0), Running);
+    test_int(ecs_get_target(world, e2, Movement, 0), Running);
+    test_int(ecs_get_target(world, e3, Movement, 0), Running);
 
     ecs_fini(world);
 }
@@ -272,8 +272,8 @@ void Switch_2_entities_1_change_case() {
     test_assert( ecs_has_pair(world, e1, Movement, Running));
     test_assert( ecs_has_pair(world, e2, Movement, Jumping));
 
-    test_int(ecs_get_object(world, e1, Movement, 0), Running);
-    test_int(ecs_get_object(world, e2, Movement, 0), Jumping);
+    test_int(ecs_get_target(world, e1, Movement, 0), Running);
+    test_int(ecs_get_target(world, e2, Movement, 0), Jumping);
 
     ecs_fini(world);
 }
@@ -295,27 +295,27 @@ void Switch_3_entities_change_case() {
     test_assert( ecs_has_pair(world, e2, Movement, Running));
     test_assert( ecs_has_pair(world, e3, Movement, Running));
 
-    test_int(ecs_get_object(world, e1, Movement, 0), Walking);
-    test_int(ecs_get_object(world, e2, Movement, 0), Running);
-    test_int(ecs_get_object(world, e3, Movement, 0), Running);
+    test_int(ecs_get_target(world, e1, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e2, Movement, 0), Running);
+    test_int(ecs_get_target(world, e3, Movement, 0), Running);
 
     ecs_add_pair(world, e2, Movement, Jumping);
     test_assert( ecs_has_pair(world, e1, Movement, Walking));
     test_assert( ecs_has_pair(world, e2, Movement, Jumping));
     test_assert( ecs_has_pair(world, e3, Movement, Running));
 
-    test_int(ecs_get_object(world, e1, Movement, 0), Walking);
-    test_int(ecs_get_object(world, e2, Movement, 0), Jumping);
-    test_int(ecs_get_object(world, e3, Movement, 0), Running); 
+    test_int(ecs_get_target(world, e1, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e2, Movement, 0), Jumping);
+    test_int(ecs_get_target(world, e3, Movement, 0), Running); 
 
     ecs_add_pair(world, e3, Movement, Walking);
     test_assert( ecs_has_pair(world, e1, Movement, Walking));
     test_assert( ecs_has_pair(world, e2, Movement, Jumping));
     test_assert( ecs_has_pair(world, e3, Movement, Walking));
 
-    test_int(ecs_get_object(world, e1, Movement, 0), Walking);
-    test_int(ecs_get_object(world, e2, Movement, 0), Jumping);
-    test_int(ecs_get_object(world, e3, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e1, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e2, Movement, 0), Jumping);
+    test_int(ecs_get_target(world, e3, Movement, 0), Walking);
 
     ecs_fini(world);
 }
@@ -568,7 +568,7 @@ void Switch_query_after_remove() {
 
     ecs_remove_pair(world, e4, Movement, Running);
     test_assert(!ecs_has_pair(world, e4, Movement, Running));
-    ecs_entity_t c = ecs_get_object(world, e4, Movement, 0);
+    ecs_entity_t c = ecs_get_target(world, e4, Movement, 0);
     test_int(c, 0);
 
     /* Verify queries are still correctly matched, now excluding e4 */
@@ -595,7 +595,7 @@ void Switch_query_after_remove() {
 
     ecs_add_pair(world, e4, Movement, Running);
     test_assert(ecs_has_pair(world, e4, Movement, Running));
-    c = ecs_get_object(world, e4, Movement, 0);
+    c = ecs_get_target(world, e4, Movement, 0);
     test_int(c, Running);
 
     /* Verify e4 is now matched again */
@@ -824,12 +824,12 @@ void Switch_add_to_entity_w_switch() {
     test_assert(e != 0);
 
     test_assert( ecs_has_pair(world, e, Movement, Walking));
-    test_int(ecs_get_object(world, e, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_add(world, e, Position);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has_pair(world, e, Movement, Walking));
-    test_int(ecs_get_object(world, e, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_fini(world);
 }
@@ -848,13 +848,13 @@ void Switch_add_pair_to_entity_w_switch() {
     ecs_entity_t e = ecs_new_w_pair(world, Movement, Walking);
     test_assert(e != 0);
     test_assert( ecs_has_pair(world, e, Movement, Walking));
-    test_int(ecs_get_object(world, e, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_entity_t pair_id = ecs_pair(ecs_id(Position), Pair);
     ecs_add_id(world, e, pair_id);
     test_assert(ecs_has_id(world, e, pair_id));
     test_assert( ecs_has_pair(world, e, Movement, Walking));
-    test_int(ecs_get_object(world, e, Movement, 0), Walking);
+    test_int(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_fini(world);
 }
@@ -902,10 +902,10 @@ void Switch_sort() {
     test_assert(it.entities[3] == e1);
 
     /* Entities will have shuffled around, ensure cases got shuffled too */
-    test_uint(ecs_get_object(world, e1, Movement, 0), Walking);
-    test_uint(ecs_get_object(world, e2, Movement, 0), Running);
-    test_uint(ecs_get_object(world, e3, Movement, 0), Jumping);
-    test_uint(ecs_get_object(world, e4, Movement, 0), Sitting);
+    test_uint(ecs_get_target(world, e1, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e2, Movement, 0), Running);
+    test_uint(ecs_get_target(world, e3, Movement, 0), Jumping);
+    test_uint(ecs_get_target(world, e4, Movement, 0), Sitting);
 
     ecs_fini(world);
 }
@@ -1043,7 +1043,7 @@ void Switch_match_switch_on_base_instance() {
     test_assert(e1 != 0);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    test_uint(ecs_get_object(world, e1, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e1, Movement, 0), Walking);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
@@ -1558,14 +1558,14 @@ void Switch_remove_wildcard() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), Walking);
+    test_uint(ecs_get_target(world, e, Movement, 0), Walking);
 
     ecs_remove_pair(world, e, Movement, EcsWildcard);
 
     test_assert( !ecs_has_pair(world, e, Movement, Walking));
     test_assert( !ecs_has_pair(world, e, Movement, Running));
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
-    test_uint(ecs_get_object(world, e, Movement, 0), 0);
+    test_uint(ecs_get_target(world, e, Movement, 0), 0);
     test_assert( !ecs_has_pair(world, e, Movement, EcsWildcard));
 
     ecs_fini(world);
@@ -1695,8 +1695,8 @@ void Switch_add_2() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( ecs_has_pair(world, e, Direction, Up));
 
-    test_assert(ecs_get_object(world, e, Movement, 0) == Walking);
-    test_assert(ecs_get_object(world, e, Direction, 0) == Up);
+    test_assert(ecs_get_target(world, e, Movement, 0) == Walking);
+    test_assert(ecs_get_target(world, e, Direction, 0) == Up);
 
     ecs_fini(world);
 }
@@ -1720,8 +1720,8 @@ void Switch_add_2_reverse() {
     test_assert( ecs_has_pair(world, e, Movement, Walking));
     test_assert( ecs_has_pair(world, e, Direction, Up));
 
-    test_assert(ecs_get_object(world, e, Movement, 0) == Walking);
-    test_assert(ecs_get_object(world, e, Direction, 0) == Up);
+    test_assert(ecs_get_target(world, e, Movement, 0) == Walking);
+    test_assert(ecs_get_target(world, e, Direction, 0) == Up);
 
     ecs_fini(world);
 }

@@ -7,16 +7,16 @@ namespace _ {
 
 
 // Type that represents a pair and can encapsulate a temporary value
-template <typename R, typename O>
+template <typename First, typename Second>
 struct pair : _::pair_base { 
     // Traits used to deconstruct the pair
 
     // The actual type of the pair is determined by which type of the pair is
     // empty. If both types are empty or not empty, the pair assumes the type
-    // of the relation.
-    using type = conditional_t<!is_empty<R>::value || is_empty<O>::value, R, O>;
-    using relation = R;
-    using object = O;
+    // of the first element.
+    using type = conditional_t<!is_empty<First>::value || is_empty<Second>::value, First, Second>;
+    using first = First;
+    using second = Second;
 
     pair(type& v) : ref_(v) { }
 
@@ -51,8 +51,8 @@ private:
     type& ref_;
 };
 
-template <typename R, typename O, if_t<is_empty<R>::value> = 0>
-using pair_object = pair<R, O>;
+template <typename First, typename Second, if_t<is_empty<First>::value> = 0>
+using pair_object = pair<First, Second>;
 
 
 // Utilities to test if type is a pair
@@ -64,10 +64,10 @@ struct is_pair {
 
 // Get actual type, relation or object from pair while preserving cv qualifiers.
 template <typename P>
-using pair_relation_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::relation>;
+using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::first>;
 
 template <typename P>
-using pair_object_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::object>;
+using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::second>;
 
 template <typename P>
 using pair_type_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::type>;

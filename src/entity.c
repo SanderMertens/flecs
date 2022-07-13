@@ -2185,7 +2185,7 @@ bool flecs_id_is_delete_target(
 {
     if (!action && ecs_id_is_pair(id) && ECS_PAIR_FIRST(id) == EcsWildcard) {
         /* If no explicit delete action is provided, and the id we're deleting
-         * has the form (*, Target), use OnDeleteObject action */
+         * has the form (*, Target), use OnDeleteTarget action */
         return true;
     }
     return false;
@@ -3177,7 +3177,7 @@ error:
     return false;
 }
 
-ecs_entity_t ecs_get_object(
+ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
@@ -3222,7 +3222,7 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_get_object_for_id(
+ecs_entity_t ecs_get_target_for_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel,
@@ -3351,9 +3351,9 @@ void ecs_set_alias(
 
 ecs_id_t ecs_make_pair(
     ecs_entity_t relation,
-    ecs_entity_t object)
+    ecs_entity_t target)
 {
-    return ecs_pair(relation, object);
+    return ecs_pair(relation, target);
 }
 
 bool ecs_is_valid(

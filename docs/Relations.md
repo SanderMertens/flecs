@@ -599,7 +599,7 @@ There are three cleanup actions:
 There are two cleanup conditions:
 
 - `OnDelete`: the component, tag or relationship is deleted
-- `OnDeleteObject`: a target used with the relationship is deleted
+- `OnDeleteTarget`: a target used with the relationship is deleted
 
 Policies apply to both regular and pair instances, so to all entities with `T` as well as `(T, *)`. 
 
@@ -650,11 +650,11 @@ auto e = world.entity().add<Archer>();
 world.component<Archer>().destruct();
 ```
 
-**(OnDeleteObject, Delete)**
+**(OnDeleteTarget, Delete)**
 ```c
 // Delete children when deleting parent
 ECS_TAG(world, ChildOf);
-ecs_add_pair(world, EcsOnDeleteObject, EcsDelete);
+ecs_add_pair(world, EcsOnDeleteTarget, EcsDelete);
 
 ecs_entity_t p = ecs_new_id(world);
 ecs_entity_t e = ecs_new_w_pair(world, ChildOf, p);
@@ -665,7 +665,7 @@ ecs_delete(world, p);
 ```cpp
 // Delete children when deleting parent
 world.component<ChildOf>()
-  .add(flecs::OnDeleteObject, flecs::Delete);
+  .add(flecs::OnDeleteTarget, flecs::Delete);
 
 auto p = world.entity();
 auto e = world.entity().add<ChildOf>(p);

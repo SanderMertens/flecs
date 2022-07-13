@@ -310,8 +310,8 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
     // Override id method to return id of pair
     static id_t id(world_t *world = nullptr) {
         return ecs_pair(
-            cpp_type< pair_relation_t<T> >::id(world),
-            cpp_type< pair_object_t<T> >::id(world));
+            cpp_type< pair_first_t<T> >::id(world),
+            cpp_type< pair_second_t<T> >::id(world));
     }
 };
 

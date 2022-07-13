@@ -93,51 +93,52 @@ struct entity : entity_builder<entity>
     /** Get mutable pointer for a pair.
      * This operation gets the value for a pair from the entity.
      *
-     * @tparam Relation the relation type.
-     * @tparam Object the object type.
+     * @tparam First The first part of the pair.
+     * @tparam Second the second part of the pair.
      */
-    template <typename Relation, typename Object>
-    Relation* get_mut() const {
-        return this->get_mut<Relation>(_::cpp_type<Object>::id(m_world));
+    template <typename First, typename Second>
+    First* get_mut() const {
+        return this->get_mut<First>(_::cpp_type<Second>::id(m_world));
     }
 
     /** Get mutable pointer for a pair.
      * This operation gets the value for a pair from the entity.
      *
-     * @tparam Relation the relation type.
-     * @param object the object.
+     * @tparam First The first part of the pair.
+     * @param second The second element of the pair.
      */
-    template <typename Relation>
-    Relation* get_mut(entity_t object) const {
-        auto comp_id = _::cpp_type<Relation>::id(m_world);
-        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<Relation*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, object)));
+    template <typename First>
+    First* get_mut(entity_t second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<First*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
 
     /** Get mutable pointer for a pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * relation or object are a component, the operation will fail.
+     * first nor second element of the pair is a component, the operation will 
+     * fail.
      *
-     * @param relation the relation.
-     * @param object the object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    void* get_mut(entity_t relation, entity_t object) const {
-        return ecs_get_mut_id(m_world, m_id, ecs_pair(relation, object));
+    void* get_mut(entity_t first, entity_t second) const {
+        return ecs_get_mut_id(m_world, m_id, ecs_pair(first, second));
     }
 
-    /** Get mutable pointer for the object from a pair.
+    /** Get mutable pointer for the second element of a pair.
      * This operation gets the value for a pair from the entity.
      *
-     * @tparam Object the object type.
-     * @param relation the relation.
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
      */
-    template <typename Object>
-    Object* get_mut_w_object(entity_t relation) const {
-        auto comp_id = _::cpp_type<Object>::id(m_world);
-        ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<Object*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(relation, comp_id)));
+    template <typename Second>
+    Second* get_mut_second(entity_t first) const {
+        auto second = _::cpp_type<Second>::id(m_world);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<Second*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
     }           
 
     /** Signal that component was modified.
@@ -151,37 +152,37 @@ struct entity : entity_builder<entity>
         this->modified(comp_id);
     } 
 
-    /** Signal that the relation part of a pair was modified.
+    /** Signal that the first element of a pair was modified.
      *
-     * @tparam Relation the relation type.
-     * @tparam Object the object type.
+     * @tparam First The first part of the pair.
+     * @tparam Second the second part of the pair.
      */
-    template <typename Relation, typename Object>
+    template <typename First, typename Second>
     void modified() const {
-        this->modified<Relation>(_::cpp_type<Object>::id(m_world));
+        this->modified<First>(_::cpp_type<Second>::id(m_world));
     }
 
-    /** Signal that the relation part of a pair was modified.
+    /** Signal that the first part of a pair was modified.
      *
-     * @tparam Relation the relation type.
-     * @param object the object.
+     * @tparam First The first part of the pair.
+     * @param second The second element of the pair.
      */
-    template <typename Relation>
-    void modified(entity_t object) const {
-        auto comp_id = _::cpp_type<Relation>::id(m_world);
-        ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        this->modified(comp_id, object);
+    template <typename First>
+    void modified(entity_t second) const {
+        auto first = _::cpp_type<First>::id(m_world);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        this->modified(first, second);
     }
 
     /** Signal that a pair has modified (untyped).
-     * If neither the relation or object part of the pair are a component, the
+     * If neither the first or second element of the pair are a component, the
      * operation will fail.
      *
-     * @param relation the relation.
-     * @param object the object.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
      */
-    void modified(entity_t relation, entity_t object) const {
-        this->modified(ecs_pair(relation, object));
+    void modified(entity_t first, entity_t second) const {
+        this->modified(ecs_pair(first, second));
     }
 
     /** Signal that component was modified.
@@ -217,14 +218,14 @@ struct entity : entity_builder<entity>
 
     /** Delete an entity.
      * Entities have to be deleted explicitly, and are not deleted when the
-     * flecs::entity object goes out of scope.
+     * entity object goes out of scope.
      */
     void destruct() const {
         ecs_delete(m_world, m_id);
     }
 
     /** Entity id 0.
-     * This function is useful when the API must provide an entity object that
+     * This function is useful when the API must provide an entity that
      * belongs to a world, but the entity id is 0.
      *
      * @param world The world.

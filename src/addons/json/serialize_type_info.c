@@ -163,7 +163,7 @@ int json_typeinfo_ser_unit(
             flecs_json_member(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
-        ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
+        ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
             flecs_json_member(str, "quantity");
             flecs_json_path(str, world, quantity);
