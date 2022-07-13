@@ -509,10 +509,6 @@ void QueryBuilder_isa_superset_shortcut(void);
 void QueryBuilder_isa_superset_shortcut_w_self(void);
 void QueryBuilder_childof_superset_shortcut(void);
 void QueryBuilder_childof_superset_shortcut_w_self(void);
-void QueryBuilder_isa_superset_max_depth_1(void);
-void QueryBuilder_isa_superset_max_depth_2(void);
-void QueryBuilder_isa_superset_min_depth_2(void);
-void QueryBuilder_isa_superset_min_depth_2_max_depth_3(void);
 void QueryBuilder_relation(void);
 void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
@@ -570,10 +566,6 @@ void FilterBuilder_isa_superset_shortcut(void);
 void FilterBuilder_isa_superset_shortcut_w_self(void);
 void FilterBuilder_childof_superset_shortcut(void);
 void FilterBuilder_childof_superset_shortcut_w_self(void);
-void FilterBuilder_isa_superset_max_depth_1(void);
-void FilterBuilder_isa_superset_max_depth_2(void);
-void FilterBuilder_isa_superset_min_depth_2(void);
-void FilterBuilder_isa_superset_min_depth_2_max_depth_3(void);
 void FilterBuilder_relation(void);
 void FilterBuilder_relation_w_object_wildcard(void);
 void FilterBuilder_relation_w_predicate_wildcard(void);
@@ -607,6 +599,7 @@ void FilterBuilder_const_optional(void);
 void FilterBuilder_create_w_no_template_args(void);
 void FilterBuilder_2_terms_w_expr(void);
 void FilterBuilder_assert_on_uninitialized_term(void);
+void FilterBuilder_operator_shortcuts(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -627,6 +620,9 @@ void RuleBuilder_get_first(void);
 void RuleBuilder_get_count_direct(void);
 void RuleBuilder_get_is_true_direct(void);
 void RuleBuilder_get_first_direct(void);
+void RuleBuilder_var_src_w_prefixed_name(void);
+void RuleBuilder_var_first_w_prefixed_name(void);
+void RuleBuilder_var_second_w_prefixed_name(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -2910,22 +2906,6 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_childof_superset_shortcut_w_self
     },
     {
-        "isa_superset_max_depth_1",
-        QueryBuilder_isa_superset_max_depth_1
-    },
-    {
-        "isa_superset_max_depth_2",
-        QueryBuilder_isa_superset_max_depth_2
-    },
-    {
-        "isa_superset_min_depth_2",
-        QueryBuilder_isa_superset_min_depth_2
-    },
-    {
-        "isa_superset_min_depth_2_max_depth_3",
-        QueryBuilder_isa_superset_min_depth_2_max_depth_3
-    },
-    {
         "relation",
         QueryBuilder_relation
     },
@@ -3149,22 +3129,6 @@ bake_test_case FilterBuilder_testcases[] = {
         FilterBuilder_childof_superset_shortcut_w_self
     },
     {
-        "isa_superset_max_depth_1",
-        FilterBuilder_isa_superset_max_depth_1
-    },
-    {
-        "isa_superset_max_depth_2",
-        FilterBuilder_isa_superset_max_depth_2
-    },
-    {
-        "isa_superset_min_depth_2",
-        FilterBuilder_isa_superset_min_depth_2
-    },
-    {
-        "isa_superset_min_depth_2_max_depth_3",
-        FilterBuilder_isa_superset_min_depth_2_max_depth_3
-    },
-    {
         "relation",
         FilterBuilder_relation
     },
@@ -3295,6 +3259,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "assert_on_uninitialized_term",
         FilterBuilder_assert_on_uninitialized_term
+    },
+    {
+        "operator_shortcuts",
+        FilterBuilder_operator_shortcuts
     }
 };
 
@@ -3370,6 +3338,18 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "get_first_direct",
         RuleBuilder_get_first_direct
+    },
+    {
+        "var_src_w_prefixed_name",
+        RuleBuilder_var_src_w_prefixed_name
+    },
+    {
+        "var_first_w_prefixed_name",
+        RuleBuilder_var_first_w_prefixed_name
+    },
+    {
+        "var_second_w_prefixed_name",
+        RuleBuilder_var_second_w_prefixed_name
     }
 };
 
@@ -4662,21 +4642,21 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        58,
+        54,
         QueryBuilder_testcases
     },
     {
         "FilterBuilder",
         NULL,
         NULL,
-        69,
+        66,
         FilterBuilder_testcases
     },
     {
         "RuleBuilder",
         NULL,
         NULL,
-        18,
+        21,
         RuleBuilder_testcases
     },
     {

@@ -534,3 +534,75 @@ void RuleBuilder_get_first_direct() {
 
     q.destruct();
 }
+
+void RuleBuilder_var_src_w_prefixed_name() {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.rule_builder()
+        .term<Foo>().src("$Var")
+        .build();
+
+    auto e = ecs.entity().add<Foo>();
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_assert(it.get_var("Var") == e);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void RuleBuilder_var_first_w_prefixed_name() {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.rule_builder()
+        .term<Foo>()
+        .term().first("$Var")
+        .build();
+
+    auto e = ecs.entity().add<Foo>();
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == ecs.id<Foo>());
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void RuleBuilder_var_second_w_prefixed_name() {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.rule_builder()
+        .term<Foo>().second("$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add<Foo>(t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}

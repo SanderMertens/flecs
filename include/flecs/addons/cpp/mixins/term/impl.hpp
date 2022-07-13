@@ -11,22 +11,6 @@ struct term final : term_builder_i<term> {
         , value({})
         , m_world(world_ptr) { value.move = true; }
 
-    term(id_t id) 
-        : term_builder_i<term>(&value)
-        , value({})
-        , m_world(nullptr) { 
-            value.move = true; 
-            this->id(id);
-        }
-
-    term(flecs::world_t *world_ptr, id_t id) 
-        : term_builder_i<term>(&value)
-        , value({})
-        , m_world(world_ptr) { 
-            value.move = true; 
-            this->id(id);
-        }
-
     term(flecs::world_t *world_ptr, ecs_term_t t)
         : term_builder_i<term>(&value)
         , value({})
@@ -36,12 +20,46 @@ struct term final : term_builder_i<term> {
             this->set_term(&value);
         }
 
-    term(flecs::world_t *world_ptr, id_t r, id_t o) 
+    term(flecs::world_t *world_ptr, id_t id)
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(world_ptr) { 
+        , m_world(world_ptr) {
+            if (id & ECS_ROLE_MASK) {
+                value.id = id;
+            } else {
+                value.first.id = id;
+            }
+            value.move = false;
+            this->set_term(&value);
+        }
+
+    term(flecs::world_t *world_ptr, entity_t r, entity_t o)
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr) {
+            value.id = ecs_pair(r, o);
+            value.move = false;
+            this->set_term(&value);
+        }
+
+    term(id_t id) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(nullptr) { 
+            if (id & ECS_ROLE_MASK) {
+                value.id = id;
+            } else {
+                value.first.id = id;
+            }
             value.move = true; 
-            this->id(r, o);
+        }
+
+    term(id_t r, id_t o) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(nullptr) { 
+            value.id = ecs_pair(r, o);
+            value.move = true; 
         }
 
     term(const term& t) : term_builder_i<term>(&value) {
@@ -91,6 +109,10 @@ struct term final : term_builder_i<term> {
         return ecs_term_is_initialized(&value);
     }
 
+    flecs::id id() {
+        return flecs::id(m_world, value.id);
+    }
+
     flecs::inout_kind_t inout() {
         return static_cast<flecs::inout_kind_t>(value.inout);
     }
@@ -99,16 +121,16 @@ struct term final : term_builder_i<term> {
         return static_cast<flecs::oper_kind_t>(value.oper);
     }
 
-    flecs::entity get_subj() {
-        return flecs::entity(world(), value.src.id);
+    flecs::entity get_src() {
+        return flecs::entity(m_world, value.src.id);
     }
 
-    flecs::entity get_pred() {
-        return flecs::entity(world(), value.first.id);
+    flecs::entity get_first() {
+        return flecs::entity(m_world, value.first.id);
     }
 
-    flecs::entity get_obj() {
-        return flecs::entity(world(), value.second.id);
+    flecs::entity get_second() {
+        return flecs::entity(m_world, value.second.id);
     }
 
     ecs_term_t move() { /* explicit move to ecs_term_t */
@@ -130,14 +152,16 @@ inline flecs::term world::term(Args &&... args) const {
     return flecs::term(m_world, FLECS_FWD(args)...);
 }
 
-template <typename T, typename... Args>
-inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, FLECS_FWD(args)...).id<T>();
+template <typename T>
+inline flecs::term world::term() const {
+    return flecs::term(m_world, _::cpp_type<T>::id(m_world));
 }
 
-template <typename R, typename O, typename... Args>
-inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, FLECS_FWD(args)...).id<R, O>();
+template <typename R, typename O>
+inline flecs::term world::term() const {
+    return flecs::term(m_world, ecs_pair(
+        _::cpp_type<R>::id(m_world),
+        _::cpp_type<O>::id(m_world)));
 }
 
 }

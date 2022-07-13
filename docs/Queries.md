@@ -1065,7 +1065,7 @@ auto qb = world.query_builder<>()
 // Position(self|up(ChildOf, 3))
 auto qb = world.query_builder<>()
   .term<Position>()
-    .set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+    .self().up(flecs::ChildOf)
       .max_depth(3);
 ```
 

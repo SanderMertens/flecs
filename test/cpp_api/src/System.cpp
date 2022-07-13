@@ -1105,7 +1105,7 @@ void System_custom_pipeline() {
 
     flecs::entity pip = world.pipeline()
         .term(flecs::System)
-        .term(flecs::Phase).set(flecs::Cascade, flecs::DependsOn)
+        .term(flecs::Phase).cascade(flecs::DependsOn)
         .term(Tag)
         .build();
 
@@ -1717,7 +1717,7 @@ void System_system_w_type_kind_type_pipeline() {
 
     world.pipeline<PipelineType>()
         .term(flecs::System)
-        .term(flecs::Phase).set(flecs::Cascade, flecs::DependsOn)
+        .term(flecs::Phase).cascade(flecs::DependsOn)
         .build();
 
     world.set_pipeline<PipelineType>();

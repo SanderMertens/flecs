@@ -533,10 +533,6 @@
                 "isa_superset_shortcut_w_self",
                 "childof_superset_shortcut",
                 "childof_superset_shortcut_w_self",
-                "isa_superset_max_depth_1",
-                "isa_superset_max_depth_2",
-                "isa_superset_min_depth_2",
-                "isa_superset_min_depth_2_max_depth_3",
                 "relation",
                 "relation_w_object_wildcard",
                 "relation_w_predicate_wildcard",
@@ -596,10 +592,6 @@
                 "isa_superset_shortcut_w_self",
                 "childof_superset_shortcut",
                 "childof_superset_shortcut_w_self",
-                "isa_superset_max_depth_1",
-                "isa_superset_max_depth_2",
-                "isa_superset_min_depth_2",
-                "isa_superset_min_depth_2_max_depth_3",
                 "relation",
                 "relation_w_object_wildcard",
                 "relation_w_predicate_wildcard",
@@ -632,7 +624,8 @@
                 "const_optional",
                 "create_w_no_template_args",
                 "2_terms_w_expr",
-                "assert_on_uninitialized_term"
+                "assert_on_uninitialized_term",
+                "operator_shortcuts"
             ]
         }, {
             "id": "RuleBuilder",
@@ -654,7 +647,10 @@
                 "get_first",
                 "get_count_direct",
                 "get_is_true_direct",
-                "get_first_direct"
+                "get_first_direct",
+                "var_src_w_prefixed_name",
+                "var_first_w_prefixed_name",
+                "var_second_w_prefixed_name"
             ]
         }, {
             "id": "SystemBuilder",

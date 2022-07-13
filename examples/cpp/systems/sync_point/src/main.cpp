@@ -17,11 +17,6 @@ int main(int, char *[]) {
     // it is safe to merge. By default this merge happens at the end of the
     // frame, but we can annotate systems to give the scheduler more information
     // about what it's doing, which allows it to insert sync points earlier.
-    // 
-    // The flecs::Nothing ("from Nothing") set mask for Velocity indicates that 
-    // the component is not used to match entities, while [out] indicates that 
-    // it is written. A subsequent system that accesses the component will cause 
-    // the scheduler to insert a sync point.
     //
     // Note that sync points are never necessary/inserted for systems that write
     // components provided by their signature, as these writes directly happen
@@ -32,7 +27,7 @@ int main(int, char *[]) {
     // writing the component value.
     ecs.system("SetVelocity")
         .term<Position>().inout(flecs::InOutFilter)
-        .term<Velocity>().inout(flecs::Out).set(flecs::Nothing)
+        .term<Velocity>().write() // Signal Velocity is written, but shouldn't be matched
         .each([](flecs::entity e) {
             e.set<Velocity>({1, 2});
         });

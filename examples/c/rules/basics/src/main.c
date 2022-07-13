@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
             // By replacing * with _Food, both terms are constrained to use the
             // same entity.
             { .first.id = Eats, .second = { 
-                .name = (char*)"Food", .var = EcsVarIsVariable },
+                .name = (char*)"Food", .flags = EcsIsVariable },
             },
             { .first.id = Healthy, .src = {
-                .name = (char*)"Food", .var = EcsVarIsVariable }
+                .name = (char*)"Food", .flags = EcsIsVariable }
             }
         }
     });

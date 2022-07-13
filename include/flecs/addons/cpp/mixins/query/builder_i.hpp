@@ -91,7 +91,7 @@ public:
     } 
 
     /** Specify parent query (creates subquery) */
-    Base& parent(const query_base& parent);
+    Base& observable(const query_base& parent);
     
 protected:
     virtual flecs::world_t* world_v() = 0;

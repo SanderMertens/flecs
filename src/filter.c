@@ -1030,7 +1030,6 @@ ecs_filter_t* ecs_filter_init(
             }
 
             expr_terms[expr_count ++] = term;
-
             if (ptr[0] == '\n') {
                 break;
             }
@@ -1067,11 +1066,15 @@ ecs_filter_t* ecs_filter_init(
         /* Copy terms to filter storage */
         for (i = 0; i < term_count; i ++) {
             f->terms[i] = ecs_term_copy(&terms[i]);
+            /* Allow freeing resources from expr parser during finalization */
+            f->terms[i].move = true;
         }
 
         /* Move expr terms to filter storage */
         for (i = 0; i < expr_count; i ++) {
             f->terms[i + term_count] = ecs_term_move(&expr_terms[i]);
+            /* Allow freeing resources from expr parser during finalization */
+            f->terms[i + term_count].move = true;
         }
         ecs_os_free(expr_terms);
     }
@@ -1079,6 +1082,11 @@ ecs_filter_t* ecs_filter_init(
     /* Ensure all fields are consistent and properly filled out */
     if (ecs_filter_finalize(world, f)) {
         goto error;
+    }
+
+    /* Any allocated resources remaining in terms are now owned by filter */
+    for (i = 0; i < f->term_count; i ++) {
+        f->terms[i].move = false;
     }
 
     f->name = ecs_os_strdup(name);
@@ -1186,7 +1194,14 @@ void filter_str_add_id(
         is_added = true;
     }
 
-    if ((id->flags & EcsTraverseFlags) != default_traverse_flags) {
+    ecs_flags32_t flags = id->flags;
+    if (!(flags & EcsTraverseFlags)) {
+        /* If flags haven't been set yet, initialize with defaults. This can
+         * happen if an error is thrown while the term is being finalized */
+        flags |= default_traverse_flags;
+    }
+
+    if ((flags & EcsTraverseFlags) != default_traverse_flags) {
         if (is_added) {
             ecs_strbuf_list_push(buf, ":", "|");
         } else {

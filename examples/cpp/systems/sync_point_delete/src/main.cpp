@@ -35,10 +35,8 @@ int main(int, char *[]) {
     // Delete entities when p.x >= 3. Add wildcard annotation to indicate any
     // component could be written by the system. Position itself is added as 
     // const, since inside the system we're only reading it.
-    //
-    // Note how the system uses the same annotations as the sync_point example.
     ecs.system<const Position>("DeleteEntity")
-        .term(flecs::Wildcard).inout(flecs::Out).set(flecs::Nothing)
+        .term(flecs::Wildcard).write()
         .each([](flecs::entity e, const Position& p) {
             if (p.x >= 3) {
                 std::cout << "Delete entity " << e.name() << "\n";

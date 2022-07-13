@@ -146,7 +146,7 @@ inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) cons
 
 // Builder implementation
 template <typename Base, typename ... Components>
-inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
+inline Base& query_builder_i<Base, Components ...>::observable(const query_base& parent) {
     m_desc->parent = parent;
     return *static_cast<Base*>(this);
 }

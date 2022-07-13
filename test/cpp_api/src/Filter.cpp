@@ -210,11 +210,11 @@ void Filter_term_get_subj() {
     
     flecs::term 
     t = q.term(0);
-    test_assert(t.get_subj() == flecs::This);
+    test_assert(t.get_src() == flecs::This);
     t = q.term(1);
-    test_assert(t.get_subj() == Src);
+    test_assert(t.get_src() == Src);
     t = q.term(2);
-    test_assert(t.get_subj() == flecs::This);
+    test_assert(t.get_src() == flecs::This);
 }
 
 void Filter_term_get_pred() {
@@ -234,11 +234,11 @@ void Filter_term_get_pred() {
     
     flecs::term 
     t = q.term(0);
-    test_assert(t.get_pred() == ecs.id<Position>());
+    test_assert(t.get_first() == ecs.id<Position>());
     t = q.term(1);
-    test_assert(t.get_pred() == ecs.id<Velocity>());
+    test_assert(t.get_first() == ecs.id<Velocity>());
     t = q.term(2);
-    test_assert(t.get_pred() == Foo);
+    test_assert(t.get_first() == Foo);
 }
 
 void Filter_term_get_obj() {
@@ -258,11 +258,11 @@ void Filter_term_get_obj() {
     
     flecs::term 
     t = q.term(0);
-    test_assert(t.get_obj() == 0);
+    test_assert(t.get_second() == 0);
     t = q.term(1);
-    test_assert(t.get_obj() == 0);
+    test_assert(t.get_second() == 0);
     t = q.term(2);
-    test_assert(t.get_obj() == Bar);
+    test_assert(t.get_second() == Bar);
 }
 
 void Filter_get_first() {
