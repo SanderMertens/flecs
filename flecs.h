@@ -2402,7 +2402,7 @@ typedef struct ecs_iterable_t {
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
     EcsInOutDefault,  /* InOut for regular terms, In for shared terms */
-    EcsInOutFilter,   /* Term is neither read nor written */
+    EcsInOutNone,   /* Term is neither read nor written */
     EcsInOut,         /* Term is both read and written */
     EcsIn,            /* Term is only read */
     EcsOut,           /* Term is only written */
@@ -6191,7 +6191,7 @@ bool ecs_query_next_instanced(
  * - matched components were changed
  * 
  * The operation will not return true after a write-only (EcsOut) or filter
- * (EcsInOutFilter) term has changed, when a term is not matched with the
+ * (EcsInOutNone) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  * 
  * The changed state of a table is reset after it is iterated. If a iterator was
@@ -7566,7 +7566,7 @@ void* ecs_record_get_column(
 /** @} */
 
 /**
- * @defgroup init_macros Convenience macro's for using init functions with less code
+ * @defgroup init_macros Convenience macros for using init functions with less code
  * @{
  */
 
@@ -11347,7 +11347,7 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
 
-/* Convenience macro's */
+/* Convenience macros */
 
 #define ecs_primitive(world, ...)\
     ecs_primitive_init(world, &(ecs_primitive_desc_t) __VA_ARGS__ )
@@ -12817,7 +12817,7 @@ using flags32_t = ecs_flags32_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
-    InOutFilter = EcsInOutFilter,
+    InOutNone = EcsInOutNone,
     InOut = EcsInOut,
     In = EcsIn,
     Out = EcsOut

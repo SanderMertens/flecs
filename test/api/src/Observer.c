@@ -2048,7 +2048,7 @@ void Observer_filter_term() {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }},
+        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }},
         .events = {EcsOnSet},
         .callback = Observer_w_filter_term,
         .ctx = &ctx
@@ -2081,7 +2081,7 @@ void Observer_2_terms_1_filter() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         },
         .events = {EcsOnSet},
@@ -2121,8 +2121,8 @@ void Observer_3_terms_2_filter() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
-            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone },
             { .id = ecs_id(Mass) }
         },
         .events = {EcsOnSet},

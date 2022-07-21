@@ -88,7 +88,7 @@
 /** @} */
 
 /**
- * @defgroup init_macros Convenience macro's for using init functions with less code
+ * @defgroup init_macros Convenience macros for using init functions with less code
  * @{
  */
 

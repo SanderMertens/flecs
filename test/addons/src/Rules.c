@@ -5053,7 +5053,7 @@ void Rules_filter_term() {
     ECS_COMPONENT(world, Position);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
+        .terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }}
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
@@ -5089,7 +5089,7 @@ void Rules_2_terms_1_filter() {
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         }
     });
@@ -5131,8 +5131,8 @@ void Rules_3_terms_2_filter() {
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
-            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone },
             { .id = ecs_id(Mass) }
         }
     });
@@ -6638,7 +6638,7 @@ void Rules_rule_w_inout_filter() {
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
 
-    ecs_rule_t *r = ecs_rule_new(world, "[filter] Position");
+    ecs_rule_t *r = ecs_rule_new(world, "[none] Position");
     test_assert(r != NULL);
 
     ecs_iter_t it = ecs_rule_iter(world, r);

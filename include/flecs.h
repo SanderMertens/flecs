@@ -402,7 +402,7 @@ typedef struct ecs_iterable_t {
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
     EcsInOutDefault,  /* InOut for regular terms, In for shared terms */
-    EcsInOutFilter,   /* Term is neither read nor written */
+    EcsInOutNone,   /* Term is neither read nor written */
     EcsInOut,         /* Term is both read and written */
     EcsIn,            /* Term is only read */
     EcsOut,           /* Term is only written */
@@ -3301,7 +3301,7 @@ bool ecs_query_next_instanced(
  * - matched components were changed
  * 
  * The operation will not return true after a write-only (EcsOut) or filter
- * (EcsInOutFilter) term has changed, when a term is not matched with the
+ * (EcsInOutNone) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  * 
  * The changed state of a table is reset after it is iterated. If a iterator was

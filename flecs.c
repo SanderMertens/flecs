@@ -15152,7 +15152,7 @@ bool check_term_component(
 
     if ((src->flags & EcsSelf) && ecs_term_match_this(term) && term->oper != EcsNot) {
         switch(term->inout) {
-        case EcsInOutFilter:
+        case EcsInOutNone:
             /* Ignore terms that aren't read/written */
             break;
         case EcsInOutDefault:
@@ -33764,7 +33764,7 @@ void FlecsDocImport(
 #define TOK_IN "in"
 #define TOK_OUT "out"
 #define TOK_INOUT "inout"
-#define TOK_INOUT_FILTER "filter"
+#define TOK_INOUT_NONE "none"
 
 #define ECS_MAX_TOKEN_SIZE (256)
 
@@ -34084,8 +34084,8 @@ const char* parse_annotation(
     } else
     if (!ecs_os_strcmp(token, TOK_INOUT)) {
         *inout_kind_out = EcsInOut;
-    } else if (!ecs_os_strcmp(token, TOK_INOUT_FILTER)) {
-        *inout_kind_out = EcsInOutFilter;
+    } else if (!ecs_os_strcmp(token, TOK_INOUT_NONE)) {
+        *inout_kind_out = EcsInOutNone;
     }
 
     ptr = ecs_parse_whitespace(ptr);
@@ -38275,12 +38275,12 @@ int flecs_term_finalize(
     }
 
     if (term->role == ECS_AND || term->role == ECS_OR || term->role == ECS_NOT){
-        if (term->inout != EcsInOutDefault && term->inout != EcsInOutFilter) {
+        if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
             flecs_filter_error(ctx, "AND/OR terms must be filters");
             return -1;
         }
 
-        term->inout = EcsInOutFilter;
+        term->inout = EcsInOutNone;
 
         /* Translate role to operator */
         if (term->role == ECS_AND) {
@@ -38587,10 +38587,10 @@ int ecs_filter_finalize(
         }
 
         if (ECS_BIT_IS_SET(f->flags, EcsFilterIsFilter)) {
-            term->inout = EcsInOutFilter;
+            term->inout = EcsInOutNone;
         }
 
-        if (term->inout == EcsInOutFilter) {
+        if (term->inout == EcsInOutNone) {
             filter_terms ++;
         }
 
@@ -39022,8 +39022,8 @@ char* flecs_filter_str(
                 ecs_strbuf_appendstr(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendstr(&buf, "[out] ");
-            } else if (term->inout == EcsInOutFilter) {
-                ecs_strbuf_appendstr(&buf, "[filter] ");
+            } else if (term->inout == EcsInOutNone) {
+                ecs_strbuf_appendstr(&buf, "[none] ");
             }
         }
 
@@ -39719,7 +39719,7 @@ bool ecs_term_next(
     it->terms = &iter->term;
     it->sizes = &iter->size;
 
-    if (term->inout != EcsInOutFilter) {
+    if (term->inout != EcsInOutNone) {
         it->ptrs = &iter->ptr;
     } else {
         it->ptrs = NULL;
@@ -40992,7 +40992,7 @@ void flecs_uni_observer_builtin_run(
     ecs_iter_t *it)
 {
     ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-        observer->filter.terms[0].inout == EcsInOutFilter);
+        observer->filter.terms[0].inout == EcsInOutNone);
 
     it->system = observer->entity;
     it->ctx = observer->ctx;
@@ -44879,7 +44879,7 @@ void mark_columns_dirty(
             ecs_term_t *term = &terms[i];
             int32_t ti = term->index;
 
-            if (term->inout == EcsIn || term->inout == EcsInOutFilter) {
+            if (term->inout == EcsIn || term->inout == EcsInOutNone) {
                 /* Don't mark readonly terms dirty */
                 continue;
             }
@@ -46585,7 +46585,7 @@ bool flecs_iter_populate_term_data(
     }
 
     /* Filter terms may match with data but don't return it */
-    if (it->terms[t].inout == EcsInOutFilter) {
+    if (it->terms[t].inout == EcsInOutNone) {
         if (size_out) {
             size = iter_get_size_for_id(world, it->ids[t]);
         }

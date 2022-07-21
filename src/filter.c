@@ -614,12 +614,12 @@ int flecs_term_finalize(
     }
 
     if (term->role == ECS_AND || term->role == ECS_OR || term->role == ECS_NOT){
-        if (term->inout != EcsInOutDefault && term->inout != EcsInOutFilter) {
+        if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
             flecs_filter_error(ctx, "AND/OR terms must be filters");
             return -1;
         }
 
-        term->inout = EcsInOutFilter;
+        term->inout = EcsInOutNone;
 
         /* Translate role to operator */
         if (term->role == ECS_AND) {
@@ -926,10 +926,10 @@ int ecs_filter_finalize(
         }
 
         if (ECS_BIT_IS_SET(f->flags, EcsFilterIsFilter)) {
-            term->inout = EcsInOutFilter;
+            term->inout = EcsInOutNone;
         }
 
-        if (term->inout == EcsInOutFilter) {
+        if (term->inout == EcsInOutNone) {
             filter_terms ++;
         }
 
@@ -1361,8 +1361,8 @@ char* flecs_filter_str(
                 ecs_strbuf_appendstr(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendstr(&buf, "[out] ");
-            } else if (term->inout == EcsInOutFilter) {
-                ecs_strbuf_appendstr(&buf, "[filter] ");
+            } else if (term->inout == EcsInOutNone) {
+                ecs_strbuf_appendstr(&buf, "[none] ");
             }
         }
 
@@ -2058,7 +2058,7 @@ bool ecs_term_next(
     it->terms = &iter->term;
     it->sizes = &iter->size;
 
-    if (term->inout != EcsInOutFilter) {
+    if (term->inout != EcsInOutNone) {
         it->ptrs = &iter->ptr;
     } else {
         it->ptrs = NULL;

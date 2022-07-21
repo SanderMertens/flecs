@@ -1879,7 +1879,7 @@ void Filter_filter_filter() {
     test_int(f.terms[0].id, TagA);
     test_int(f.terms[0].role, 0);
     test_int(f.terms[0].oper, EcsAnd);
-    test_int(f.terms[0].inout, EcsInOutFilter);
+    test_int(f.terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -6632,7 +6632,7 @@ void Filter_term_iter_w_filter_term() {
 
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
         .id = ecs_id(Position),
-        .inout = EcsInOutFilter
+        .inout = EcsInOutNone
     });
 
     test_bool(ecs_term_next(&it), true);
@@ -6662,7 +6662,7 @@ void Filter_filter_iter_w_filter_term() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
+        .terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }}
     }));
 
     test_bool(f.flags & EcsFilterIsFilter, true);
@@ -6701,7 +6701,7 @@ void Filter_filter_iter_w_2_terms_1_filter() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         }
     }));
@@ -6748,8 +6748,8 @@ void Filter_filter_iter_w_3_terms_2_filter() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
-            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone },
             { .id = ecs_id(Mass) }
         }
     }));
@@ -6800,7 +6800,7 @@ void Filter_filter_iter_2_terms_filter_all() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         },
         .flags = EcsFilterIsFilter
@@ -6891,7 +6891,7 @@ void Filter_filter_iter_switch_term_filter() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutFilter }}
+        .terms = {{ .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutNone }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -6926,7 +6926,7 @@ void Filter_filter_iter_2_terms_switch_term_filter() {
         .storage = &f,
         .terms = {
             { .id = ecs_id(Position) },
-            { .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutFilter }
+            { .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutNone }
         }
     });
 

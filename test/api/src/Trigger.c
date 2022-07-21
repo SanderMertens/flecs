@@ -2921,7 +2921,7 @@ void Trigger_filter_term() {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { .id = ecs_id(Position), .inout = EcsInOutFilter },
+        .filter.terms[0] = { .id = ecs_id(Position), .inout = EcsInOutNone },
         .events = {EcsOnSet},
         .callback = Trigger_w_filter_term,
         .ctx = &ctx
@@ -3320,7 +3320,7 @@ void Trigger_on_add_base_2_entities_filter() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
-        .filter.terms[0].inout = EcsInOutFilter,
+        .filter.terms[0].inout = EcsInOutNone,
         .events = {EcsOnAdd},
         .callback = Trigger_w_filter_term,
         .ctx = &ctx
