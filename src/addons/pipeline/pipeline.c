@@ -87,7 +87,7 @@ bool check_term_component(
 
     if ((src->flags & EcsSelf) && ecs_term_match_this(term) && term->oper != EcsNot) {
         switch(term->inout) {
-        case EcsInOutFilter:
+        case EcsInOutNone:
             /* Ignore terms that aren't read/written */
             break;
         case EcsInOutDefault:

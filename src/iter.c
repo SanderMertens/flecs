@@ -143,7 +143,7 @@ bool flecs_iter_populate_term_data(
     }
 
     /* Filter terms may match with data but don't return it */
-    if (it->terms[t].inout == EcsInOutFilter) {
+    if (it->terms[t].inout == EcsInOutNone) {
         if (size_out) {
             size = iter_get_size_for_id(world, it->ids[t]);
         }

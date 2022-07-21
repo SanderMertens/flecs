@@ -1104,7 +1104,7 @@ void Parser_inout_filter_component() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[filter] Pred"
+        .expr = "[none] Pred"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1112,7 +1112,7 @@ void Parser_inout_filter_component() {
     test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutFilter);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 

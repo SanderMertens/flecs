@@ -534,7 +534,7 @@ void flecs_uni_observer_builtin_run(
     ecs_iter_t *it)
 {
     ECS_BIT_COND(it->flags, EcsIterIsFilter, 
-        observer->filter.terms[0].inout == EcsInOutFilter);
+        observer->filter.terms[0].inout == EcsInOutNone);
 
     it->system = observer->entity;
     it->ctx = observer->ctx;

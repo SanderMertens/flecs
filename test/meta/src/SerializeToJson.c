@@ -3401,7 +3401,7 @@ void SerializeToJson_serialize_iterator_w_inout_filter_tag() {
 
     ecs_add(world, e1, TagA);
 
-    ecs_query_t *q = ecs_query_new(world, "[filter] TagA");
+    ecs_query_t *q = ecs_query_new(world, "[none] TagA");
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
@@ -3444,7 +3444,7 @@ void SerializeToJson_serialize_iterator_w_inout_filter_component() {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_t *q = ecs_query_new(world, "[filter] Position, Velocity");
+    ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
@@ -3495,7 +3495,7 @@ void SerializeToJson_serialize_iterator_w_inout_filter_reflected_component() {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_t *q = ecs_query_new(world, "[filter] Position, Velocity");
+    ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);

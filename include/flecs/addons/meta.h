@@ -657,7 +657,7 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
 
-/* Convenience macro's */
+/* Convenience macros */
 
 #define ecs_primitive(world, ...)\
     ecs_primitive_init(world, &(ecs_primitive_desc_t) __VA_ARGS__ )

@@ -22,11 +22,11 @@ int main(int, char *[]) {
     // components provided by their signature, as these writes directly happen
     // in the ECS storage and are never deferred.
     //
-    // flecs::InOutFilter for Position tells the scheduler that while we 
+    // flecs::InOutNone for Position tells the scheduler that while we 
     // want to match entities with Position, we're not interested in reading or 
     // writing the component value.
     ecs.system("SetVelocity")
-        .term<Position>().inout(flecs::InOutFilter)
+        .term<Position>().inout(flecs::InOutNone)
         .term<Velocity>().write() // Signal Velocity is written, but shouldn't be matched
         .each([](flecs::entity e) {
             e.set<Velocity>({1, 2});

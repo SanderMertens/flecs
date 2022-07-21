@@ -55,10 +55,10 @@ int main(int argc, char *argv[]) {
     // components provided by their signature, as these writes directly happen
     // in the ECS storage and are never deferred.
     //
-    // The [filter] annotation for Position tells the scheduler that while we 
+    // The [none] annotation for Position tells the scheduler that while we 
     // want to match entities with Position, we're not interested in reading or 
     // writing the component value.
-    ECS_SYSTEM(ecs, SetVelocity, EcsOnUpdate, [filter] Position, [out] Velocity());
+    ECS_SYSTEM(ecs, SetVelocity, EcsOnUpdate, [none] Position, [out] Velocity());
 
     // This system reads Velocity, which causes the insertion of a sync point.
     ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     //      .query.filter.terms = {
     //          { 
     //              .id = ecs_id(Position), 
-    //              .inout = EcsInOutFilter 
+    //              .inout = EcsInOutNone 
     //          },
     //          { 
     //              .id = ecs_id(Velocity), 

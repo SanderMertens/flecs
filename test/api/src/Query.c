@@ -1672,7 +1672,7 @@ void Query_query_for_switch_filter_term() {
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
 
-    ecs_query_t *q = ecs_query_new(world, "[filter] (Movement, *)");
+    ecs_query_t *q = ecs_query_new(world, "[none] (Movement, *)");
     test_assert(q != NULL);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
@@ -4580,7 +4580,7 @@ void Query_filter_term() {
     ECS_COMPONENT(world, Position);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
+        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }}
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
@@ -4611,7 +4611,7 @@ void Query_2_terms_1_filter() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         }
     });
@@ -4651,8 +4651,8 @@ void Query_3_terms_2_filter() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.terms = {
-            { .id = ecs_id(Position), .inout = EcsInOutFilter },
-            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone },
             { .id = ecs_id(Mass) }
         }
     });
