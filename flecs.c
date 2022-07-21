@@ -32680,15 +32680,35 @@ int http_bind(
 }
 
 static
-void http_close(
+bool http_socket_is_valid(
     ecs_http_socket_t sock)
 {
 #if defined(ECS_TARGET_WINDOWS)
-    closesocket(sock);
+    return sock != INVALID_SOCKET;
 #else
-    shutdown(sock, SHUT_RDWR);
-    close(sock);
+    return sock >= 0;
 #endif
+}
+
+#if defined(ECS_TARGET_WINDOWS)
+#define HTTP_SOCKET_INVALID INVALID_SOCKET
+#else
+#define HTTP_SOCKET_INVALID (-1)
+#endif
+
+static
+void http_close(
+    ecs_http_socket_t *sock)
+{
+    ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+#if defined(ECS_TARGET_WINDOWS)
+    closesocket(*sock);
+#else
+    ecs_dbg_2("http: closing socket %u", *sock);
+    shutdown(*sock, SHUT_RDWR);
+    close(*sock);
+#endif
+    *sock = HTTP_SOCKET_INVALID;
 }
 
 static
@@ -32726,8 +32746,8 @@ void connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t conn_id = conn->pub.id;
 
-    if (conn->sock) {
-        http_close(conn->sock);
+    if (http_socket_is_valid(conn->sock)) {
+        http_close(&conn->sock);
     }
 
     flecs_sparse_remove(conn->pub.server->connections, conn_id);
@@ -33175,13 +33195,16 @@ void accept_connections(
             return;
         }
     } else {
-        http_close(testsocket);
+        http_close(&testsocket);
     }
 #endif
 
     /* Resolve name + port (used for logging) */
     char addr_host[256];
     char addr_port[20];
+
+    ecs_http_socket_t sock = HTTP_SOCKET_INVALID;
+    ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, NULL);
 
     if (http_getnameinfo(
         addr, addr_len, addr_host, ECS_SIZEOF(addr_host), addr_port, 
@@ -33194,9 +33217,9 @@ void accept_connections(
     ecs_os_mutex_lock(srv->lock);
     if (srv->should_run) {
         ecs_dbg_2("http: initializing connection socket");
-        
-        srv->sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
-        if (srv->sock < 0) {
+
+        sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+        if (!http_socket_is_valid(sock)) {
             ecs_err("unable to create new connection socket: %s", 
                 ecs_os_strerror(errno));
             ecs_os_mutex_unlock(srv->lock);
@@ -33204,7 +33227,7 @@ void accept_connections(
         }
 
         int reuse = 1;
-        int result = setsockopt(srv->sock, SOL_SOCKET, SO_REUSEADDR, 
+        int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
             (char*)&reuse, ECS_SIZEOF(reuse)); 
         if (result) {
             ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
@@ -33212,20 +33235,22 @@ void accept_connections(
 
         if (addr->sa_family == AF_INET6) {
             int ipv6only = 0;
-            if (setsockopt(srv->sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+            if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
                 (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
             {
                 ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
             }
         }
-        
-        result = http_bind(srv->sock, addr, addr_len);
+
+        result = http_bind(sock, addr, addr_len);
         if (result) {
             ecs_err("http: failed to bind to '%s:%s': %s", 
                 addr_host, addr_port, ecs_os_strerror(errno));
             ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
+
+        srv->sock = sock;
 
         result = listen(srv->sock, SOMAXCONN);
         if (result) {
@@ -33235,6 +33260,8 @@ void accept_connections(
 
         ecs_trace("http: listening for incoming connections on '%s:%s'",
             addr_host, addr_port);
+    } else {
+        ecs_dbg_2("http: server shut down while initializing");
     }
     ecs_os_mutex_unlock(srv->lock);
 
@@ -33259,10 +33286,12 @@ void accept_connections(
     }
 
 done:
-    if (srv->sock && errno != EBADF) {
-        http_close(srv->sock);
-        srv->sock = 0;
+    ecs_os_mutex_lock(srv->lock);
+    if (http_socket_is_valid(srv->sock) && errno != EBADF) {
+        http_close(&sock);
+        srv->sock = sock;
     }
+    ecs_os_mutex_unlock(srv->lock);
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",
         addr_host, addr_port);
@@ -33377,6 +33406,7 @@ ecs_http_server_t* ecs_http_server_init(
 
     ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
     srv->lock = ecs_os_mutex_new();
+    srv->sock = HTTP_SOCKET_INVALID;
 
     srv->should_run = false;
     srv->initialized = true;
@@ -33450,13 +33480,12 @@ void ecs_http_server_stop(
 
     ecs_os_mutex_lock(srv->lock);
     srv->should_run = false;
-    if (srv->sock >= 0) {
-        http_close(srv->sock);
+    if (http_socket_is_valid(srv->sock)) {
+        http_close(&srv->sock);
     }
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_os_thread_join(srv->thread);
-
     ecs_trace("http: server thread shut down");
 
     /* Cleanup all outstanding requests */

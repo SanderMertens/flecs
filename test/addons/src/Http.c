@@ -93,7 +93,7 @@ void Http_stop_start_stresstest_w_0_sleep() {
     ecs_set_os_api_impl();
 
     ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
-        .port = 27755,
+        .port = 27756,
         .callback = OnRequest
     });
 
