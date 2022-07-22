@@ -3014,7 +3014,7 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    test_assert(ecs_term_source(&it, 2) == base);
+    test_assert(ecs_term_src(&it, 2) == base);
 
     ecs_fini(world);
 }

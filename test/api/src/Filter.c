@@ -2545,7 +2545,7 @@ void Filter_term_iter_w_superset() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     Position *ptr = ecs_term(&it, Position, 1);
     test_int(ptr->x, 10);
@@ -2555,7 +2555,7 @@ void Filter_term_iter_w_superset() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(ptr == ecs_term(&it, Position, 1));
 
@@ -2590,7 +2590,7 @@ void Filter_term_iter_w_superset_base_w_2_components() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     Position *ptr = ecs_term(&it, Position, 1);
     test_int(ptr->x, 10);
@@ -2600,7 +2600,7 @@ void Filter_term_iter_w_superset_base_w_2_components() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(ptr == ecs_term(&it, Position, 1));
 
@@ -2634,7 +2634,7 @@ void Filter_term_iter_w_superset_childof() {
         test_int(it.entities[0], e_1);
         test_int(it.entities[1], e_2);
         test_int(ecs_term_id(&it, 1), ecs_id(Position));
-        test_int(ecs_term_source(&it, 1), parent);
+        test_int(ecs_term_src(&it, 1), parent);
 
         Position *ptr = ecs_term(&it, Position, 1);
         test_int(ptr->x, 10);
@@ -2646,7 +2646,7 @@ void Filter_term_iter_w_superset_childof() {
         test_int(it.count, 1);
         test_int(it.entities[0], e_3);
         test_int(ecs_term_id(&it, 1), ecs_id(Position));
-        test_int(ecs_term_source(&it, 1), parent);
+        test_int(ecs_term_src(&it, 1), parent);
 
         Position *ptr = ecs_term(&it, Position, 1);
         test_int(ptr->x, 10);
@@ -2684,7 +2684,7 @@ void Filter_term_iter_w_superset_self() {
     test_int(it.entities[0], base);
     test_int(it.entities[1], e_0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     ptr = ecs_term(&it, Position, 1);
     test_int(ptr[0].x, 10);
@@ -2697,7 +2697,7 @@ void Filter_term_iter_w_superset_self() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     ptr = ecs_term(&it, Position, 1);
     test_int(ptr->x, 10);
@@ -2707,7 +2707,7 @@ void Filter_term_iter_w_superset_self() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(ptr == ecs_term(&it, Position, 1));
 
@@ -2740,7 +2740,7 @@ void Filter_term_iter_w_superset_self_childof() {
     test_int(it.entities[0], parent);
     test_int(it.entities[1], e_0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     Position *ptr = ecs_term(&it, Position, 1);
     test_int(ptr[0].x, 10);
@@ -2753,7 +2753,7 @@ void Filter_term_iter_w_superset_self_childof() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), parent);
+    test_int(ecs_term_src(&it, 1), parent);
 
     ptr = ecs_term(&it, Position, 1);
     test_int(ptr->x, 10);
@@ -2763,7 +2763,7 @@ void Filter_term_iter_w_superset_self_childof() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), parent);
+    test_int(ecs_term_src(&it, 1), parent);
 
     test_assert(ptr == ecs_term(&it, Position, 1));
 
@@ -2795,13 +2795,13 @@ void Filter_term_iter_w_superset_tag() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(!ecs_term_next(&it));
 
@@ -2832,13 +2832,13 @@ void Filter_term_iter_w_superset_pair() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), base);
+    test_int(ecs_term_src(&it, 1), base);
 
     test_assert(!ecs_term_next(&it));
 
@@ -2872,19 +2872,19 @@ void Filter_term_iter_w_superset_pair_obj_wildcard() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_1));
-    test_int(ecs_term_source(&it, 1), base_1);
+    test_int(ecs_term_src(&it, 1), base_1);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_4);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
-    test_int(ecs_term_source(&it, 1), base_2);
+    test_int(ecs_term_src(&it, 1), base_2);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
-    test_int(ecs_term_source(&it, 1), base_2);
+    test_int(ecs_term_src(&it, 1), base_2);
 
     test_assert(!ecs_term_next(&it));
 
@@ -3088,13 +3088,13 @@ void Filter_filter_iter_1_tag() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3136,14 +3136,14 @@ void Filter_filter_iter_2_tags() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3182,14 +3182,14 @@ void Filter_filter_iter_2_tags_1_not() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3231,14 +3231,14 @@ void Filter_filter_iter_3_tags_2_or() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagC);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3510,7 +3510,7 @@ void Filter_filter_iter_1_component() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
@@ -3523,7 +3523,7 @@ void Filter_filter_iter_1_component() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
@@ -3568,7 +3568,7 @@ void Filter_filter_iter_2_components() {
         test_int(it.entities[0], e_1);
         test_int(it.entities[1], e_2);
         test_int(ecs_term_id(&it, 1), ecs_id(Position));
-        test_int(ecs_term_source(&it, 1), 0);
+        test_int(ecs_term_src(&it, 1), 0);
         
         Position *p = ecs_term(&it, Position, 1);
         test_assert(p != NULL);
@@ -3590,7 +3590,7 @@ void Filter_filter_iter_2_components() {
         test_int(it.count, 1);
         test_int(it.entities[0], e_3);
         test_int(ecs_term_id(&it, 1), ecs_id(Position));
-        test_int(ecs_term_source(&it, 1), 0);
+        test_int(ecs_term_src(&it, 1), 0);
 
         Position *p = ecs_term(&it, Position, 1);
         test_assert(p != NULL);
@@ -3636,13 +3636,13 @@ void Filter_filter_iter_pair_id() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3687,14 +3687,14 @@ void Filter_filter_iter_2_pair_ids() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
     test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
     test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3773,13 +3773,13 @@ void Filter_filter_iter_pair_pred_obj() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Tgt));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3824,14 +3824,14 @@ void Filter_filter_iter_pair_2_pred_obj() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
     test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
     test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3931,7 +3931,7 @@ void Filter_filter_iter_2_tags_1_optional() {
     test_int(ecs_term_id(&it, 2), TagB);
     test_bool(ecs_term_is_set(&it, 1), true);
     test_bool(ecs_term_is_set(&it, 2), false);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
@@ -3940,7 +3940,7 @@ void Filter_filter_iter_2_tags_1_optional() {
     test_int(ecs_term_id(&it, 2), TagB);
     test_bool(ecs_term_is_set(&it, 1), true);
     test_bool(ecs_term_is_set(&it, 2), true);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -3981,7 +3981,7 @@ void Filter_filter_iter_2_components_1_optional() {
     test_int(ecs_term_id(&it, 2), ecs_id(Position));
     test_bool(ecs_term_is_set(&it, 1), true);
     test_bool(ecs_term_is_set(&it, 2), false);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(ecs_term(&it, Position, 2) == NULL);
 
     test_assert(ecs_filter_next(&it));
@@ -3991,7 +3991,7 @@ void Filter_filter_iter_2_components_1_optional() {
     test_int(ecs_term_id(&it, 2), ecs_id(Position));
     test_bool(ecs_term_is_set(&it, 1), true);
     test_bool(ecs_term_is_set(&it, 2), true);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(ecs_term(&it, Position, 2) != NULL);
 
     test_assert(!ecs_filter_next(&it));
@@ -4583,7 +4583,7 @@ void Filter_filter_iter_superset() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagA);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -4623,7 +4623,7 @@ void Filter_filter_iter_superset_childof() {
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagA);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -4673,7 +4673,7 @@ void Filter_filter_iter_w_readonly_term() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_bool(ecs_term_is_readonly(&it, 1), true);
     test_bool(ecs_term_is_readonly(&it, 2), false);
 
@@ -4706,8 +4706,8 @@ void Filter_filter_iter_w_from_nothing_term() {
     test_int(it.entities[0], e_1);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
-    test_int(ecs_term_source(&it, 2), 0);
+    test_int(ecs_term_src(&it, 1), 0);
+    test_int(ecs_term_src(&it, 2), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -5549,7 +5549,7 @@ void Filter_filter_iter_superset_2_rel_instances() {
     test_bool(true, ecs_filter_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_uint(it.subjects[0], b1);
+    test_uint(it.sources[0], b1);
     test_uint(it.ids[0], TagC);
 
     test_bool(false, ecs_filter_next(&it));
@@ -5592,7 +5592,7 @@ void Filter_filter_iter_superset_2_rel_instances_match_2nd() {
     test_bool(true, ecs_filter_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_uint(it.subjects[0], b2);
+    test_uint(it.sources[0], b2);
     test_uint(it.ids[0], TagC);
 
     test_bool(false, ecs_filter_next(&it));
@@ -5637,8 +5637,8 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances() {
     test_bool(true, ecs_filter_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_uint(it.subjects[0], 0);
-    test_uint(it.subjects[1], b1);
+    test_uint(it.sources[0], 0);
+    test_uint(it.sources[1], b1);
     test_uint(it.ids[0], TagA);
     test_uint(it.ids[1], TagC);
 
@@ -5684,8 +5684,8 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd() {
     test_bool(true, ecs_filter_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_uint(it.subjects[0], 0);
-    test_uint(it.subjects[1], b2);
+    test_uint(it.sources[0], 0);
+    test_uint(it.sources[1], b2);
     test_uint(it.ids[0], TagA);
     test_uint(it.ids[1], TagC);
 
@@ -6033,7 +6033,7 @@ void Filter_chain_term_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -6075,7 +6075,7 @@ void Filter_chain_filter_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -6117,7 +6117,7 @@ void Filter_chain_query_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -6161,7 +6161,7 @@ void Filter_chain_rule_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -6214,7 +6214,7 @@ void Filter_chain_iter_2_levels() {
     test_int(ecs_term_id(&it_a, 1), TagA);
     test_int(ecs_term_id(&it_b, 1), TagB);
     test_int(ecs_term_id(&it, 1), TagC);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -6245,7 +6245,7 @@ void Filter_chain_term_iter_w_term_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(it.table != NULL);
     test_assert(it.chain_it != NULL);
 
@@ -6281,7 +6281,7 @@ void Filter_chain_filter_iter_w_term_iter() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(it.table != NULL);
     test_assert(it.chain_it != NULL);
 
@@ -6313,7 +6313,7 @@ void Filter_chain_w_term_iter_component() {
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(it.table != NULL);
 
     Position *ptr = ecs_term(&it, Position, 1);
@@ -7415,7 +7415,7 @@ void Filter_filter_no_this_tag() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_source(&it, 1),  e); 
+    test_int(ecs_term_src(&it, 1),  e); 
 
     test_assert(!ecs_filter_next(&it));
 
@@ -7446,7 +7446,7 @@ void Filter_filter_no_this_component() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1),  e);
+    test_int(ecs_term_src(&it, 1),  e);
 
     Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
@@ -7485,9 +7485,9 @@ void Filter_filter_no_this_tag_2_ents() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1),  e1);
+    test_int(ecs_term_src(&it, 1),  e1);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 2),  e2);
+    test_int(ecs_term_src(&it, 2),  e2);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -7521,9 +7521,9 @@ void Filter_filter_no_this_component_2_ents() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1),  e1);
+    test_int(ecs_term_src(&it, 1),  e1);
     test_int(ecs_term_id(&it, 2), ecs_id(Velocity));
-    test_int(ecs_term_source(&it, 2),  e2);
+    test_int(ecs_term_src(&it, 2),  e2);
 
     Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
@@ -7567,11 +7567,11 @@ void Filter_filter_no_this_tag_2_ents_1_not() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_source(&it, 1),  e1);
+    test_int(ecs_term_src(&it, 1),  e1);
     test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_source(&it, 2),  e2);
+    test_int(ecs_term_src(&it, 2),  e2);
     test_int(ecs_term_id(&it, 3), TagA);
-    test_int(ecs_term_source(&it, 3),  e2);
+    test_int(ecs_term_src(&it, 3),  e2);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -7605,11 +7605,11 @@ void Filter_filter_no_this_component_2_ents_1_not() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1),  e1);
+    test_int(ecs_term_src(&it, 1),  e1);
     test_int(ecs_term_id(&it, 2), ecs_id(Velocity));
-    test_int(ecs_term_source(&it, 2),  e2);
+    test_int(ecs_term_src(&it, 2),  e2);
     test_int(ecs_term_id(&it, 3), ecs_id(Position));
-    test_int(ecs_term_source(&it, 3),  e2);
+    test_int(ecs_term_src(&it, 3),  e2);
 
     Position *p = ecs_term(&it, Position, 1);
     test_assert(p != NULL);
@@ -7650,7 +7650,7 @@ void Filter_filter_no_this_component_1_not() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1),  e1);
+    test_int(ecs_term_src(&it, 1),  e1);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -7685,8 +7685,8 @@ void Filter_filter_iter_entities_optional_flag() {
     test_bool(true, ecs_filter_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(it.subjects[0], 0);
-    test_uint(it.subjects[1], e2);
+    test_uint(it.sources[0], 0);
+    test_uint(it.sources[1], e2);
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_id(&it, 2), TagB);
     test_bool(true, ecs_term_is_set(&it, 1));
@@ -8088,7 +8088,7 @@ void Filter_filter_iter_switch_superset() {
     test_bool(ecs_filter_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(it.subjects[0], b);
+    test_int(it.sources[0], b);
     test_uint(it.ids[0], ecs_pair(SwX, EcsWildcard));
 
     ecs_entity_t *cases = ecs_term(&it, ecs_entity_t, 1);
@@ -8503,7 +8503,7 @@ void Filter_filter_wo_this_var() {
     ecs_iter_t it = ecs_filter_iter(world, &f);
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
-    test_int(it.subjects[0], e1);
+    test_int(it.sources[0], e1);
 
     test_assert(!ecs_filter_next(&it));
 

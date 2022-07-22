@@ -21,7 +21,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
     user_it.ids = NULL;
     user_it.columns = NULL;
-    user_it.subjects = NULL;
+    user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
     flecs_iter_init(&user_it, flecs_iter_cache_all);
@@ -52,7 +52,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+        user_it.columns, user_it.sources, NULL, NULL, false, -1, 
         user_it.flags))
     {
         /* Monitor observers only invoke when the filter matches for the first
@@ -68,10 +68,10 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         /* While filter matching needs to be reversed for a Not term, the
          * component data must be fetched from the table we got notified for.
          * Repeat the matching process for the non-matching table so we get the
-         * correct column ids and subjects, which we need for populate_data */
+         * correct column ids and sources, which we need for populate_data */
         if (term->oper == EcsNot) {
             flecs_filter_match_table(world, &o->filter, prev_table, user_it.ids, 
-                user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+                user_it.columns, user_it.sources, NULL, NULL, false, -1, 
                 user_it.flags | EcsFilterPopulate);
         }
 
@@ -425,11 +425,11 @@ void flecs_init_observer_iter(
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t index = ecs_search_relation(it->real_world, it->table, 0, 
-        it->event_id, EcsIsA, 0, it->subjects, 0, 0);
+        it->event_id, EcsIsA, 0, it->sources, 0, 0);
     
     if (index == -1) {
         it->columns[0] = 0;
-    } else if (it->subjects[0]) {
+    } else if (it->sources[0]) {
         it->columns[0] = -index - 1;
     } else {
         it->columns[0] = index + 1;
@@ -614,7 +614,7 @@ void flecs_notify_entity_observers(
 
             it->offset = i;
             it->count = 1;
-            it->subjects[0] = entities[i];
+            it->sources[0] = entities[i];
             flecs_uni_observer_builtin_run(observer, it);
         }
     }
@@ -622,7 +622,7 @@ void flecs_notify_entity_observers(
     it->offset = offset;
     it->count = count;
     it->entities = entities;
-    it->subjects[0] = 0;
+    it->sources[0] = 0;
 }
 
 static
@@ -661,7 +661,7 @@ void flecs_notify_set_base_observers(
         ecs_term_t *term = &observer->filter.terms[0];
         ecs_id_t id = term->id;
         int32_t column = ecs_search_relation(world, obj_table, 0, id, rel, 
-            0, it->subjects, it->ids, 0);
+            0, it->sources, it->ids, 0);
 
         bool result = column != -1;
         if (term->oper == EcsNot) {
@@ -678,8 +678,8 @@ void flecs_notify_set_base_observers(
         }
 
         if (!ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
-            if (!it->subjects[0]) {
-                it->subjects[0] = obj;
+            if (!it->sources[0]) {
+                it->sources[0] = obj;
             }
 
             /* Populate pointer from object */
@@ -749,9 +749,9 @@ void flecs_notify_set_observers(
         }
 
         if (flecs_term_match_table(world, term, it->table, it->ids, 
-            it->columns, it->subjects, NULL, true, it->flags))
+            it->columns, it->sources, NULL, true, it->flags))
         {
-            if (!it->subjects[0]) {
+            if (!it->sources[0]) {
                 /* Do not match owned components */
                 continue;
             }

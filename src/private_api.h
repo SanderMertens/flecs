@@ -107,7 +107,7 @@ bool flecs_filter_match_table(
     const ecs_table_t *table,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_entity_t *subjects,
+    ecs_entity_t *sources,
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,

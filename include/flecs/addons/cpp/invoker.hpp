@@ -57,7 +57,7 @@ private:
     template <typename T, typename... Targs>
     bool populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         m_terms[index].ptr = iter->ptrs[index];
-        bool is_ref = iter->subjects && iter->subjects[index] != 0;
+        bool is_ref = iter->sources && iter->sources[index] != 0;
         m_terms[index].is_ref = is_ref;
         is_ref |= populate(iter, index + 1, comps ...);
         return is_ref;
@@ -254,6 +254,9 @@ private:
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
 
+        ecs_assert(count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use each() without flecs::entity argument");
+
         for (size_t i = 0; i < count; i ++) {
             func(flecs::entity(world, iter->entities[i]),
                 (ColumnType< remove_reference_t<Components> >(comps, i)
@@ -263,7 +266,6 @@ private:
         ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
-
     // Number of function arguments is two more than number of components, pass
     // iter + index as argument.
     template <template<typename X, typename = int> class ColumnType, 
@@ -272,10 +274,16 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
         size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
         flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
 
         for (size_t i = 0; i < count; i ++) {
             func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
@@ -285,7 +293,6 @@ private:
         ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
-
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
@@ -293,12 +300,19 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
         flecs::iter it(iter);
 
         ECS_TABLE_LOCK(iter->world, iter->table);
 
-        for (auto row : it) {
-            func( (ColumnType< remove_reference_t<Components> >(comps, row)
+        for (size_t i = 0; i < count; i ++) {
+            func( (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...);
         }
 

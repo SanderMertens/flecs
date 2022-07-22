@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     //   "ids": ["Position", "Velocity"],
     //   "results": [{
     //     "ids": ["Position", "Velocity"],
-    //     "subjects": [0, 0],
+    //     "sources": [0, 0],
     //     "is_set": [true, true],
     //     "entities": ["a", "b"],
     //     "values": [
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     //     ]
     //   }, {
     //     "ids": ["Position", "Velocity"],
-    //     "subjects": [0, 0],
+    //     "sources": [0, 0],
     //     "is_set": [true, true],
     //     "entities": ["c", "d"],
     //     "values": [

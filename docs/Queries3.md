@@ -956,9 +956,472 @@ Access modifiers in the query DSL can be specified inside of angular brackets be
 Position, [in] Velocity
 ```
 
-### Operators
+### Operator Overview
+> *Supported by: filters, cached queries, rules*
+
+The following operators are supported by queries:
+
+| Name     | DSL operator   | C identifier  | C++ identifier    | Description |
+|----------|----------------|---------------|-------------------|-------------|
+| And      | `,`            | `EcsAnd`      | `flecs::And`      | Match at least once with term |
+| Or       | `||`           | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
+| Not      | `!`            | `EcsNot`      | `flecs::Not`      | Must not match with term |
+| Optional | `?`            | `EcsOptional` | `flecs::Optional` | May match with term |
+| AndFrom  | `AND |`        | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
+| OrFrom   | `OR |`         | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
+| NotFrom  | `NOT |`        | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
+
+### And Operator
+> *Supported by: filters, cached queries, rules*
+
+The `And` operator is the default operator that is used when no other operators are specified. The following sections show how to use the `And` operator in the different language bindings:
+
+#### Query Descriptor (C)
+When no operator is specified, `And` is assumed. The following two queries are equivalent:
+
+```c
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity) }
+  }
+});
+
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), .oper = EcsAnd }, 
+    { ecs_id(Velocity), .oper = EcsAnd }
+  }
+});
+```
+
+#### Query Builder (C++)
+When no operator is specified, `And` is assumed. The following three queries are equivalent:
+
+```cpp
+flecs::filter<Position, Velocity> f_1 = world.filter<Position, Velocity>();
+
+flecs::filter<> f_2 = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>()
+    .build();
+
+flecs::filter<> f_2 = world.filter_builder()
+    .term<Position>().oper(flecs::And)
+    .term<Velocity>().oper(flecs::And)
+    .build();
+```
+
+The builder API has a `add_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>().and_(); // note escaping, 'and' is a C++ keyword
+    .term<Velocity>().and_();
+    .build();
+```
+
+#### Query DSL
+To use the `And` operator in the query DSL, create a comma-separated list of components:
+
+```
+Position, Velocity
+```
+
+### Or Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Or` operator allows for matching a single component from a list. Using the `Or` operator means that a single term can return results of multiple types. When the value of a component is used while iterating the results of an `Or` operator, an application has to make sure that it is working with the expected type (examples show how).
+
+Another thing to keep in mind is that when using the `Or` operator, all terms participating in the `Or` expression count as a single term, even though they are specified as multiple terms in the descriptor/builder APIs. Consider the following query:
+
+```
+Position, Velocity || Speed, Mass
+```
+
+This query has three terms, while an iterator for the query returns results with 2 fields. This is important to consider when retrieving the field for a term, as its index has to be adjusted. In this example, `Position` has index 1, `Velocity || Speed` has index 2, and `Mass` has index 3.
+
+A limitation of the current query descriptors is that each term participating in an `Or` expression must be created with the `Or` operator. This currently makes it impossible to have a query with two `Or` expressions that come right after each other. This limitation will be addressed in future versions.
+
+The following sections show how to use the `Or` operator in the different language bindings:
+
+#### Query Descriptor (C)
+To create a query with `Or` terms, set `oper` to `EcsOr`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsOr },
+    { ecs_id(Speed), .oper = EcsOr },
+    { ecs_id(Mass) }
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_term(&it, Position, 1);
+  Mass *m = ecs_term(&it, Mass, 3); // not 4, because of the Or expression
+
+  ecs_id_t vs_id = ecs_term_id(&it, 2);
+  if (vs_id == ecs_id(Velocity)) {
+    Velocity *v = ecs_term(&it, Velocity, 2);
+    // iterate as usual
+  } else if (vs_id == ecs_id(Speed)) {
+    Speed *s = ecs_term(&it, Speed, 2);
+    // iterate as usual
+  }
+}
+```
+
+#### Query Builder (C++)
+To create a query with `Or` terms, use the `oper` method with `flecs::Or`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Or)
+    .term<Speed>().oper(flecs::Or)
+    .term<Mass>()
+    .build();
+
+f.iter([&](flecs::iter& it) {
+  auto p = it.term<Position>(1);
+  auto v = it.term<Mass>(3); // not 4, because of the Or expression
+  
+  flecs::id vs_id = it.id(2);
+  if (vs_id == world.id<Velocity>()) {
+    auto v = it.term<Velocity>(2);
+    // iterate as usual
+  } else if (vs_id == world.id<Speed>()) {
+    auto s = it.term<Speed>(2);
+    // iterate as usual
+  }
+});
+```
+
+The builder API has a `or_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().or_(); // note escaping, 'or' is a C++ keyword
+    .term<Speed>().or_();
+    .term<Mass>()
+    .build();
+```
+
+#### Query DSL
+To create a query with `Or` terms, use the `||` symbol:
+
+```
+Position, Velocity || Speed, Mass
+```
+
+### Not Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Not` operator makes it possible to exclude entities with a component. A term that uses the `Not` operator will never return data. 
+
+A note on performance: `Not` terms are efficient to evaluate when combined with other terms, but queries that only have `Not` terms (or `Optional`, see next section) can be expensive. This is because the storage only maintains indices for tables that _have_ a component, not for tables that do _not have_ a component (this would be hard/costly).
+
+The following sections show how to use the `Not` operator in the different language bindings:
+
+#### Query Descriptor (C)
+To create a query with `Not` terms, set `oper` to `EcsNot`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsNot }
+  }
+});
+```
+
+#### Query Builder (C++)
+To create a query with `Not` terms, use the `oper` method with `flecs::Not`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Not)
+    .build();
+```
+
+The builder API has a `not_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().not_(); // note escaping, 'not' is a C++ keyword
+    .build();
+```
+
+#### Query DSL
+To create a query with `Not` terms, use the `!` symbol:
+
+```
+Position, !Velocity
+```
+
+### Optional Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Optional` operator optionally matches with a component. While this operator does not affect the entities that are matched by a query, it can provide more efficient access to a component when compared to conditionally getting the component in user code. Before accessing the value provided by an optional term, code must first check if the term was set.
+
+A note on performance: just like the `Not` operator `Optional` terms are efficient to evaluate when combined with other terms, but queries that only have `Optional` terms can be expensive. Because the `Optional` operator does not restrict query results, a query that only has `Optional` terms will match all entities.
+
+The following sections show how to use the `Not` operator in the different language bindings:
+
+#### Query Descriptor (C)
+To create a query with `Optional` terms, set `oper` to `EcsOptional`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsOptional }
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_term(&it, Position, 1);
+  if (ecs_term_is_set(&it, 2)) {
+    Velocity *v = ecs_term(&it, Velocity, 2);
+    // iterate as usual
+  } else {
+    // iterate as usual
+  }
+}
+```
+
+#### Query Builder (C++)
+To create a query with `Optional` terms, call the `oper` method with `flecs::Optional`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Optional)
+    .build();
+
+f.iter([&](flecs::iter& it) {
+  auto p = it.term<Position>(1);
+  
+  if (it.is_set(2)) {
+    auto v = it.term<Velocity>(2);
+    // iterate as usual
+  } else if (vs_id == world.id<Speed>()) {
+    // iterate as usual
+  }
+});
+```
+
+The builder API has an `optional` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().optional();
+    .build();
+```
+
+#### Query DSL
+To create a query with `Optional` terms, use the `?` symbol:
+
+```
+Position, ?Velocity
+```
+
+### AndFrom, OrFrom, NotFrom Operators
+> *Supported by: filters, cached queries*
+
+The `AndFrom`, `OrFrom` and `NotFrom` operators make it possible to match a list of components that is defined outside of the query. Instead of matching the id provided in the term, the operators match the list of components _of_ the provided id as if they were provided as a list of terms with `And`, `Or` or `Not` operators. For example, if entity `e` has components `Position, Velocity` and is combined in a query with the `AndFrom` operator, entities matching the query must have both `Position` and `Velocity`.
+
+The `AndFrom`, `OrFrom` and `NotFrom` operators are especially useful when combined with prefab entities, which by default are not matched with queries. Components that have the `DontInherit` property are ignored while matching the operators, which means that using a prefab in combination with `AndFrom`, `OrFrom` and `NotFrom` will not cause components like `Prefab` to be considered.
+
+Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` type flags.
+
+A term that uses the `AndFrom`, `OrFrom` or `NotFrom` operators never returns data. Access modifiers for these operators default to `InOutNone`. When a the `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
+
+The following sections show how to use the operators in the different language bindings:
+
+#### Query Descriptor (C)
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, set `oper` to `EcsAndFrom`, `EcsOrFrom` or `EcsNotFrom`
+
+```c
+ecs_entity_t type_list = ecs_new_w_id(world, EcsPrefab);
+ecs_add(world, type_list, Position);
+ecs_add(world, type_list, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { type_list, .oper = EcsAndFrom }, // match Position, Velocity
+    { type_list, .oper = EcsOrFrom },  // match Position || Velocity
+    { type_list, .oper = EcsNotFrom }, // match !Position, !Velocity
+  }
+});
+```
+
+#### Query Builder (C++)
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, call the `oper` method with `flecs::AndFrom`, `flecs::OrFrom` or `flecs::NotFrom`.
+
+```cpp
+flecs::entity type_list = world.prefab()
+  .add<Position>()
+  .add<Velocity>();
+
+flecs::filter<> f = world.filter_builder()
+    .term(type_list).oper(flecs::AndFrom) // match Position, Velocity
+    .term(type_list).oper(flecs::OrFrom)  // match Position || Velocity
+    .term(type_list).oper(flecs::NotFrom) // match !Position, !Velocity
+    .build();
+```
+
+The builder API has the `and_from`, `or_from` and `not_from` convenience methods:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term(type_list).and_from()
+    .term(type_list).or_from()
+    .term(type_list).not_from()
+    .build();
+```
+
+#### Query DSL
+To create a query with the `AndFrom`, `OrFrom` and `NotFrom` operators in the C API, use `AND`, `OR` and `NOT` in combination with the bitwise OR operator (`|`):
+
+```
+AND | type_list, OR | type_list, NOT | type_list
+```
 
 ### Source
+> *Supported by: filters, cached queries, rules*
+
+Source is a property of a term that specifies the entity on which the term should be matched. Queries support two kinds of sources: static and variable. A static source is known when the query is created (for example: match `SimTime` on entity `Game`), whereas a variable source is resolved while the query is evaluated. When no explicit source is specified, a default variable source called `$This` is used (see [Variables](#variables)). 
+
+When a query only has terms with fixed sources, iterating the query will return a result at least once, and at most once if the query terms do not match wildcards. If a query has one or more terms with a fixed source that do not match the entity, the query will return no results. A source does not need to match the query when the query is created.
+
+The following sections show how to use variable and fixed sources with the different language bindings.
+
+#### Query Descriptor (C)
+To specify a fixed source, set the `src.id` member to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```c
+ecs_entity_t Game = ecs_new_id(world);
+ecs_add(world, Game, SimTime);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, // normal term, uses $This source
+    { ecs_id(Velocity) },  // normal term, also uses $This source
+    { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_term(&it, Position, 1);
+  Velocity *v = ecs_term(&it, Velocity, 2);
+  SimTime *st = ecs_term(&it, SimTime, 3);
+  
+  for (int i = 0; i < it.count; i ++) {
+    p[i].x += v[i].x * st->value; // p, v are accessed as array, st as pointer
+    p[i].y += v[i].y * st->value;
+  }
+}
+```
+
+A source may also be specified by name by setting the `src.name` member:
+
+```c
+ecs_entity_t Game = ecs_entity(world, { .name = "Game" });
+ecs_add(world, Game, SimTime);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(SimTime), .src.name = "Game" }
+  }
+});
+```
+
+This examples shows how to access the entities matched by the default `$This` source and a fixed source:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, // normal term, uses $This source
+    { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
+  }
+});
+
+while (ecs_filter_next(&it)) {
+  ecs_entity_t src_1 = ecs_term_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
+  ecs_entity_t src_2 = ecs_term_src(&it, 2); // Returns Game
+
+  for (int i = 0; i < it.count; i ++) {
+    printf("$This = %s, src_2 = %s\n", 
+      ecs_get_name(world, it.entities[i]),
+      ecs_get_name(world, src_2));
+  }
+}
+```
+
+The `entities` and `count` member are solely populated by the number of entities matched by the default `$This` source. If a query only contains fixed sources, `count` will be set to 0. This is important to keep in mind, as the inner for loop from the last example would never be iterated for a query that only has fixed sources.
+
+#### Query Builder (C++)
+To specify a fixed source, call the `src` method to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```cpp
+flecs::entity Game = world.entity()
+  .add<SimTime>();
+
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()  // normal term, uses $This source
+  .term<Velocity>()  // normal term, also uses $This source
+  .term<SimTime>().src(Game) // fixed source, match SimTime on Game
+  .build();
+
+f.iter([](flecs::iter& it) {
+  auto p = it.term<Position>(1);
+  auto v = it.term<Velocity>(2);
+  auto st = it.term<SimTime>(3);
+  
+  for (auto i : it) {
+    p[i].x += v[i].x * st[i].value;
+    p[i].y += v[i].y * st[i].value;
+  }
+});
+```
+
+Note how in this example all components can be accessed as arrays. When a query has mixed `$This` and fixed source terms, results are returned one entity at a time vs. one table at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
+
+Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to change the code to table-based iteration, see [Instancing](#instancing). 
+
+The next example shows how queries with mixed `$This` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
+
+```cpp
+flecs::filter<Position, Velocity, SimTime> f = 
+  world.filter_builder<Position, Velocity, SimTime>()
+    .arg(3).src(Game) // set fixed source for 3rd template argument (SimTime)
+    .build();
+
+// Because all components are now part of the filter type, we can use each
+f.each([](Position& p, Velocity& v, SimTime& st) {
+  p.x += v.x * st.value;
+  p.y += v.y * st.value;
+});
+```
+
+One thing to note is that when a query only contains fixed source terms, `each` cannot be used. The `each` function is called for each entity matched by the `$This` source. 
+
+
+
+
+### Singletons
+
+### Instancing
 
 ### Traversal
 

@@ -2788,7 +2788,7 @@ typedef struct ecs_rule_iter_t {
  * Constants are named to enable easy macro substitution. */
 #define flecs_iter_cache_ids           (1u << 0u)
 #define flecs_iter_cache_columns       (1u << 1u)
-#define flecs_iter_cache_subjects      (1u << 2u)
+#define flecs_iter_cache_sources       (1u << 2u)
 #define flecs_iter_cache_sizes         (1u << 3u)
 #define flecs_iter_cache_ptrs          (1u << 4u)
 #define flecs_iter_cache_match_indices (1u << 5u)
@@ -2799,7 +2799,7 @@ typedef struct ecs_rule_iter_t {
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
     int32_t columns[ECS_TERM_CACHE_SIZE];
-    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
+    ecs_entity_t sources[ECS_TERM_CACHE_SIZE];
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
     int32_t match_indices[ECS_TERM_CACHE_SIZE];
@@ -2838,9 +2838,9 @@ struct ecs_iter_t {
     ecs_table_t *table;           /* Current table */
     ecs_table_t *other_table;     /* Prev or next table when adding/removing */
     ecs_id_t *ids;                /* (Component) ids */
-    ecs_var_t *variables;      /* Values of variables (if any) */
+    ecs_var_t *variables;         /* Values of variables (if any) */
     int32_t *columns;             /* Query term to table column mapping */
-    ecs_entity_t *subjects;       /* Subject (source) entities */
+    ecs_entity_t *sources;        /* Entity on which the id was matched (0 if same as entities) */
     int32_t *match_indices;       /* Indices of current match for term. Allows an iterator to iterate
                                    * all permutations of wildcards in query. */
     ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
@@ -6476,7 +6476,7 @@ void ecs_iter_fini(
 /** Count number of matched entities in query.
  * This operation returns the number of matched entities. If a query contains no
  * matched entities but still yields results (e.g. it has no terms with This
- * subjects) the operation will return 0.
+ * sources) the operation will return 0.
  * 
  * To determine the number of matched entities, the operation iterates the
  * iterator until it yields no more results.
@@ -7954,14 +7954,14 @@ void* ecs_record_get_column(
 #define ecs_term_id(it, index)\
     ((it)->ids[(index) - 1])
 
-#define ecs_term_source(it, index)\
-    ((it)->subjects ? (it)->subjects[(index) - 1] : 0)
+#define ecs_term_src(it, index)\
+    ((it)->sources ? (it)->sources[(index) - 1] : 0)
 
 #define ecs_term_size(it, index)\
     ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
 
 #define ecs_term_is_owned(it, index)\
-    ((it)->subjects == NULL || (it)->subjects[(index) - 1] == 0)
+    ((it)->sources == NULL || (it)->sources[(index) - 1] == 0)
 
 #define ecs_term(it, T, index)\
     (ECS_CAST(T*, ecs_term_w_size(it, sizeof(T), index)))
@@ -10427,7 +10427,7 @@ int ecs_entity_to_json_buf(
 typedef struct ecs_iter_to_json_desc_t {
     bool serialize_term_ids;      /* Include term (query) component ids */
     bool serialize_ids;           /* Include actual (matched) component ids */
-    bool serialize_subjects;      /* Include subjects */
+    bool serialize_subjects;      /* Include sources */
     bool serialize_variables;     /* Include variables */
     bool serialize_is_set;        /* Include is_set (for optional terms) */
     bool serialize_values;        /* Include component values */
@@ -16707,11 +16707,11 @@ public:
         return ecs_term_size(m_iter, index);
     }
 
-    /** Obtain term source (0 if self)
+    /** Obtain term source (0 if This)
      *
      * @param index The term index.
      */    
-    flecs::entity source(int32_t index) const;
+    flecs::entity src(int32_t index) const;
 
     /** Obtain component id of term.
      *
@@ -18707,7 +18707,7 @@ private:
     template <typename T, typename... Targs>
     bool populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         m_terms[index].ptr = iter->ptrs[index];
-        bool is_ref = iter->subjects && iter->subjects[index] != 0;
+        bool is_ref = iter->sources && iter->sources[index] != 0;
         m_terms[index].is_ref = is_ref;
         is_ref |= populate(iter, index + 1, comps ...);
         return is_ref;
@@ -18904,6 +18904,9 @@ private:
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
 
+        ecs_assert(count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use each() without flecs::entity argument");
+
         for (size_t i = 0; i < count; i ++) {
             func(flecs::entity(world, iter->entities[i]),
                 (ColumnType< remove_reference_t<Components> >(comps, i)
@@ -18913,7 +18916,6 @@ private:
         ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
-
     // Number of function arguments is two more than number of components, pass
     // iter + index as argument.
     template <template<typename X, typename = int> class ColumnType, 
@@ -18922,10 +18924,16 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
         size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
         flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
 
         for (size_t i = 0; i < count; i ++) {
             func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
@@ -18935,7 +18943,6 @@ private:
         ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
-
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
@@ -18943,12 +18950,19 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
         flecs::iter it(iter);
 
         ECS_TABLE_LOCK(iter->world, iter->table);
 
-        for (auto row : it) {
-            func( (ColumnType< remove_reference_t<Components> >(comps, row)
+        for (size_t i = 0; i < count; i ++) {
+            func( (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...);
         }
 
@@ -23362,8 +23376,8 @@ inline column<T>::column(iter &iter, int32_t index) {
     *this = iter.term<T>(index);
 }
 
-inline flecs::entity iter::source(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_term_source(m_iter, index));
+inline flecs::entity iter::src(int32_t index) const {
+    return flecs::entity(m_iter->world, ecs_term_src(m_iter, index));
 }
 
 inline flecs::entity iter::id(int32_t index) const {

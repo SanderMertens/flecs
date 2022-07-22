@@ -897,8 +897,8 @@ void Iter_paged_iter_w_shared_comp() {
         test_int(pit.entities[1], e2);
         test_int(pit.ids[0], ecs_id(Self));
         test_int(pit.ids[1], ecs_id(Position));
-        test_int(pit.subjects[0], 0);
-        test_int(pit.subjects[1], foo);
+        test_int(pit.sources[0], 0);
+        test_int(pit.sources[1], foo);
 
         Self *ptr = ecs_term(&pit, Self, 1);
         test_assert(ptr != NULL);
@@ -917,8 +917,8 @@ void Iter_paged_iter_w_shared_comp() {
         test_int(pit.entities[1], e4);
         test_int(pit.ids[0], ecs_id(Self));
         test_int(pit.ids[1], ecs_id(Position));
-        test_int(pit.subjects[0], 0);
-        test_int(pit.subjects[1], foo);
+        test_int(pit.sources[0], 0);
+        test_int(pit.sources[1], foo);
 
         Self *ptr = ecs_term(&pit, Self, 1);
         test_assert(ptr != NULL);
@@ -936,8 +936,8 @@ void Iter_paged_iter_w_shared_comp() {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
         test_int(pit.ids[1], ecs_id(Position));
-        test_int(pit.subjects[0], 0);
-        test_int(pit.subjects[1], foo);
+        test_int(pit.sources[0], 0);
+        test_int(pit.sources[1], foo);
 
         Self *ptr = ecs_term(&pit, Self, 1);
         test_assert(ptr != NULL);
@@ -992,8 +992,8 @@ void Iter_worker_iter_w_shared_comp() {
         test_int(pit_1.entities[0], e1);
         test_int(pit_1.ids[0], ecs_id(Self));
         test_int(pit_1.ids[1], ecs_id(Position));
-        test_int(pit_1.subjects[0], 0);
-        test_int(pit_1.subjects[1], foo);
+        test_int(pit_1.sources[0], 0);
+        test_int(pit_1.sources[1], foo);
 
         Self *ptr = ecs_term(&pit_1, Self, 1);
         test_assert(ptr != NULL);
@@ -1010,8 +1010,8 @@ void Iter_worker_iter_w_shared_comp() {
         test_int(pit_1.entities[0], e3);
         test_int(pit_1.ids[0], ecs_id(Self));
         test_int(pit_1.ids[1], ecs_id(Position));
-        test_int(pit_1.subjects[0], 0);
-        test_int(pit_1.subjects[1], foo);
+        test_int(pit_1.sources[0], 0);
+        test_int(pit_1.sources[1], foo);
 
         Self *ptr = ecs_term(&pit_1, Self, 1);
         test_assert(ptr != NULL);
@@ -1028,8 +1028,8 @@ void Iter_worker_iter_w_shared_comp() {
         test_int(pit_1.entities[0], e5);
         test_int(pit_1.ids[0], ecs_id(Self));
         test_int(pit_1.ids[1], ecs_id(Position));
-        test_int(pit_1.subjects[0], 0);
-        test_int(pit_1.subjects[1], foo);
+        test_int(pit_1.sources[0], 0);
+        test_int(pit_1.sources[1], foo);
 
         Self *ptr = ecs_term(&pit_1, Self, 1);
         test_assert(ptr != NULL);
@@ -1049,8 +1049,8 @@ void Iter_worker_iter_w_shared_comp() {
         test_int(pit_2.entities[0], e2);
         test_int(pit_2.ids[0], ecs_id(Self));
         test_int(pit_2.ids[1], ecs_id(Position));
-        test_int(pit_2.subjects[0], 0);
-        test_int(pit_2.subjects[1], foo);
+        test_int(pit_2.sources[0], 0);
+        test_int(pit_2.sources[1], foo);
 
         Self *ptr = ecs_term(&pit_2, Self, 1);
         test_assert(ptr != NULL);
@@ -1067,8 +1067,8 @@ void Iter_worker_iter_w_shared_comp() {
         test_int(pit_2.entities[0], e4);
         test_int(pit_2.ids[0], ecs_id(Self));
         test_int(pit_2.ids[1], ecs_id(Position));
-        test_int(pit_2.subjects[0], 0);
-        test_int(pit_2.subjects[1], foo);
+        test_int(pit_2.sources[0], 0);
+        test_int(pit_2.sources[1], foo);
 
         Self *ptr = ecs_term(&pit_2, Self, 1);
         test_assert(ptr != NULL);
@@ -1104,7 +1104,7 @@ void Iter_paged_iter_w_task_query() {
         test_bool(ecs_page_next(&pit), true);
         test_int(pit.count, 0);
         test_int(pit.ids[0], ecs_id(Self));
-        test_int(pit.subjects[0], foo);
+        test_int(pit.sources[0], foo);
 
         Self *ptr = ecs_term(&pit, Self, 1);
         test_assert(ptr != NULL);
@@ -1139,7 +1139,7 @@ void Iter_worker_iter_w_task_query() {
         test_bool(ecs_worker_next(&pit_1), true);
         test_int(pit_1.count, 0);
         test_int(pit_1.ids[0], ecs_id(Self));
-        test_int(pit_1.subjects[0], foo);
+        test_int(pit_1.sources[0], foo);
 
         Self *ptr = ecs_term(&pit_1, Self, 1);
         test_assert(ptr != NULL);
@@ -1172,7 +1172,7 @@ void Iter_iter_1_term_no_alloc() {
     test_bool(ecs_filter_next(&it), true);
     test_assert(it.ids == it.priv.cache.ids);
     test_assert(it.columns == it.priv.cache.columns);
-    test_assert(it.subjects == it.priv.cache.subjects);
+    test_assert(it.sources == it.priv.cache.sources);
     test_assert(it.sizes == it.priv.cache.sizes);
     test_assert(it.ptrs == it.priv.cache.ptrs);
     test_assert(it.match_indices == it.priv.cache.match_indices);
@@ -1209,7 +1209,7 @@ void Iter_iter_cache_size_terms_no_alloc() {
     test_bool(ecs_filter_next(&it), true);
     test_assert(it.ids == it.priv.cache.ids);
     test_assert(it.columns == it.priv.cache.columns);
-    test_assert(it.subjects == it.priv.cache.subjects);
+    test_assert(it.sources == it.priv.cache.sources);
     test_assert(it.sizes == it.priv.cache.sizes);
     test_assert(it.ptrs == it.priv.cache.ptrs);
     test_assert(it.match_indices == it.priv.cache.match_indices);
@@ -1248,7 +1248,7 @@ void Iter_iter_lt_cache_size_terms_alloc() {
     test_bool(ecs_filter_next(&it), true);
     test_assert(it.ids != it.priv.cache.ids);
     test_assert(it.columns != it.priv.cache.columns);
-    test_assert(it.subjects != it.priv.cache.subjects);
+    test_assert(it.sources != it.priv.cache.sources);
     test_assert(it.sizes != it.priv.cache.sizes);
     test_assert(it.ptrs != it.priv.cache.ptrs);
     test_assert(it.match_indices != it.priv.cache.match_indices);

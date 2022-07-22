@@ -89,7 +89,7 @@ static
 void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
     dummy_component = ecs_term_id(it, 1);
-    dummy_source = ecs_term_source(it, 1);
+    dummy_source = ecs_term_src(it, 1);
 }
 
 void System_w_FromEntity_task_from_entity() {

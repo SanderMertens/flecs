@@ -173,8 +173,8 @@ Add result-specific "ids" array with components as matched. Can be different fro
 
 **Default**: true
 
-#### **subjects**
-Add result-specific "subjects" array with component source. A 0 element indicates the component is matched on the current (This) entity.
+#### **sources**
+Add result-specific "sources" array with component source. A 0 element indicates the component is matched on the current (This) entity.
 
 **Default**: true
 

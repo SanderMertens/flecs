@@ -1623,7 +1623,7 @@ bool flecs_filter_match_table(
     const ecs_table_t *table,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_entity_t *subjects,
+    ecs_entity_t *sources,
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
@@ -1687,7 +1687,7 @@ bool flecs_filter_match_table(
         bool result = flecs_term_match_table(world, term, match_table,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
-            subjects ? &subjects[t_i] : NULL, 
+            sources ? &sources[t_i] : NULL, 
             &match_index,
             first,
             iter_flags);
@@ -2053,7 +2053,7 @@ bool ecs_term_next(
     ecs_table_t *table;
 
     it->ids = &iter->id;
-    it->subjects = &iter->subject;
+    it->sources = &iter->subject;
     it->columns = &iter->column;
     it->terms = &iter->term;
     it->sizes = &iter->size;
@@ -2076,7 +2076,7 @@ bool ecs_term_next(
 
             table = chain_it->table;
             match = flecs_term_match_table(world, term, table,
-                it->ids, it->columns, it->subjects, it->match_indices, true,
+                it->ids, it->columns, it->sources, it->match_indices, true,
                 it->flags);
         } while (!match);
         goto yield;
@@ -2312,7 +2312,7 @@ bool ecs_filter_next_instanced(
 
             table = chain_it->table;
             match = flecs_filter_match_table(world, filter, table,
-                it->ids, it->columns, it->subjects, it->match_indices, NULL, 
+                it->ids, it->columns, it->sources, it->match_indices, NULL, 
                 true, -1, it->flags);
         } while (!match);
 
@@ -2406,7 +2406,7 @@ bool ecs_filter_next_instanced(
                     if (pivot_term != -1) {
                         int32_t index = term->index;
                         it->ids[index] = term_iter->id;
-                        it->subjects[index] = term_iter->subject;
+                        it->sources[index] = term_iter->subject;
                         it->columns[index] = term_iter->column;
                     }
                 } else {
@@ -2422,7 +2422,7 @@ bool ecs_filter_next_instanced(
 
                 /* Match the remainder of the terms */
                 match = flecs_filter_match_table(world, filter, table,
-                    it->ids, it->columns, it->subjects,
+                    it->ids, it->columns, it->sources,
                     it->match_indices, &iter->matches_left, first, 
                     pivot_term, it->flags);
                 if (!match) {
@@ -2471,13 +2471,13 @@ bool ecs_filter_next_instanced(
 
                 it->columns[i] = column + 1;
                 flecs_term_match_table(world, &filter->terms[i], table, 
-                    &it->ids[i], &it->columns[i], &it->subjects[i],
+                    &it->ids[i], &it->columns[i], &it->sources[i],
                     &it->match_indices[i], false, it->flags);
 
                 /* Reset remaining terms (if any) to first match */
                 for (j = i + 1; j < count; j ++) {
                     flecs_term_match_table(world, &filter->terms[j], table, 
-                        &it->ids[j], &it->columns[j], &it->subjects[j], 
+                        &it->ids[j], &it->columns[j], &it->sources[j], 
                         &it->match_indices[j], true, it->flags);
                 }
             }
