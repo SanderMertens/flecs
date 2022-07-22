@@ -223,6 +223,7 @@ The following language bindings have been developed with Flecs! Note that these 
 - [Lua](https://github.com/flecs-hub/flecs-lua)
 - [Zig](https://github.com/prime31/zig-flecs)
 - [C#](https://github.com/flecs-hub/flecs-cs)
+- [Rust](https://github.com/jazzay/flecs-rs)
 
 ## Links
 - [Discord](https://discord.gg/BEzP5Rgrrp)
