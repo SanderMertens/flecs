@@ -3586,7 +3586,7 @@ void ecs_iter_fini(
 /** Count number of matched entities in query.
  * This operation returns the number of matched entities. If a query contains no
  * matched entities but still yields results (e.g. it has no terms with This
- * subjects) the operation will return 0.
+ * sources) the operation will return 0.
  * 
  * To determine the number of matched entities, the operation iterates the
  * iterator until it yields no more results.

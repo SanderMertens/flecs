@@ -198,7 +198,7 @@ int ecs_entity_to_json_buf(
 typedef struct ecs_iter_to_json_desc_t {
     bool serialize_term_ids;      /* Include term (query) component ids */
     bool serialize_ids;           /* Include actual (matched) component ids */
-    bool serialize_subjects;      /* Include subjects */
+    bool serialize_subjects;      /* Include sources */
     bool serialize_variables;     /* Include variables */
     bool serialize_is_set;        /* Include is_set (for optional terms) */
     bool serialize_values;        /* Include component values */

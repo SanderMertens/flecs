@@ -148,7 +148,7 @@ void flecs_rest_parse_json_ser_iter_params(
 {
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
-    flecs_rest_bool_param(req, "subjects", &desc->serialize_subjects);
+    flecs_rest_bool_param(req, "sources", &desc->serialize_subjects);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
     flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);

@@ -497,7 +497,10 @@
                 "get_first",
                 "get_count_direct",
                 "get_is_true_direct",
-                "get_first_direct"
+                "get_first_direct",
+                "each_w_no_this",
+                "each_w_iter_no_this",
+                "invalid_each_w_no_this"
             ]
         }, {
             "id": "QueryBuilder",
@@ -719,7 +722,10 @@
                 "get_first",
                 "get_count_direct",
                 "get_is_true_direct",
-                "get_first_direct"
+                "get_first_direct",
+                "each_w_no_this",
+                "each_w_iter_no_this",
+                "invalid_each_w_no_this"
             ]
         }, {
             "id": "ComponentLifecycle",

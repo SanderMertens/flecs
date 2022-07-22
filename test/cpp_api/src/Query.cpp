@@ -1972,3 +1972,74 @@ void Query_get_is_true_direct() {
     test_bool(true, q_1.is_true());
     test_bool(false, q_2.is_true());
 }
+
+void Query_each_w_no_this() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position, Velocity>()
+        .arg(1).src(e)
+        .arg(2).src(e)
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](Position& p, Velocity& v) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    });
+
+    test_int(count, 1);
+}
+
+void Query_each_w_iter_no_this() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position, Velocity>()
+        .arg(1).src(e)
+        .arg(2).src(e)
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t index, Position& p, Velocity& v) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        test_int(index, 0);
+        test_int(it.count(), 0);
+    });
+
+    test_int(count, 1);
+}
+
+void Query_invalid_each_w_no_this() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position, Velocity>()
+        .arg(1).src(e)
+        .arg(2).src(e)
+        .build();
+
+    test_expect_abort();
+
+    q.each([&](flecs::entity e, Position& p, Velocity& v) { });
+}

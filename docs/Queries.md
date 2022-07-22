@@ -603,7 +603,7 @@ The term "subject" is borrowed from English grammar. In the sentence "Bob has co
 Position, Velocity
 ```
 
-actually looks like this when written out with explicit subjects:
+actually looks like this when written out with explicit sources:
 
 ```
 Position(This), Velocity(This)
@@ -943,7 +943,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
 **NOTE**: Variables are not yet universally supported yet in cached queries, as not all expressions yield cacheable archetypes. Near future versions of Flecs will have basic variable support for cached queries where variables cannot be used as subject, but are valid in other places. Full caching support for any expression with variables will likely not arrive before the next major release.
 
 ### Set Substitution
-The different parts of a query term (predicates, subjects, objects) can be automatically substituted by following one of their relationships. While this may sound complicated, it is actually pretty common, and quite useful.
+The different parts of a query term (predicates, sources, objects) can be automatically substituted by following one of their relationships. While this may sound complicated, it is actually pretty common, and quite useful.
 
 A typical example of a use case that requires substitution is, "find component `Position` for a parent entity". To achieve this, we need to tell the query term which relationship to follow to reach the parent. In this case that is the builtin `ChildOf` relationship.
 
@@ -1274,7 +1274,7 @@ When all implicit substitution is written out in full, a single component query 
 Component[self|all|subset] (self|superset)
 ```
 
-**NOTE**: cached queries currently do not support implicit substitution on predicates and objects. Implicit `IsA` substitution on subjects needs to be enabled explicitly, by specifying `subset` or `self|subset` as the subject.
+**NOTE**: cached queries currently do not support implicit substitution on predicates and objects. Implicit `IsA` substitution on sources needs to be enabled explicitly, by specifying `subset` or `self|subset` as the subject.
 
 This behavior may change in future versions, as more efficient methods become available to find the set of `IsA` subsets or supersets for an entity.
 

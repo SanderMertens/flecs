@@ -269,11 +269,11 @@ public:
         return ecs_term_size(m_iter, index);
     }
 
-    /** Obtain term source (0 if self)
+    /** Obtain term source (0 if This)
      *
      * @param index The term index.
      */    
-    flecs::entity source(int32_t index) const;
+    flecs::entity src(int32_t index) const;
 
     /** Obtain component id of term.
      *

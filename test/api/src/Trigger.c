@@ -27,7 +27,7 @@ void Trigger_w_value_from_entity(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] == 0);
-    test_assert(it->subjects[0] != 0);
+    test_assert(it->sources[0] != 0);
 
     Position *p = ecs_term(it, Position, 1);
     test_int(p->x, 10);

@@ -476,6 +476,9 @@ void Query_get_first(void);
 void Query_get_count_direct(void);
 void Query_get_is_true_direct(void);
 void Query_get_first_direct(void);
+void Query_each_w_no_this(void);
+void Query_each_w_iter_no_this(void);
+void Query_invalid_each_w_no_this(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -686,6 +689,9 @@ void Filter_get_first(void);
 void Filter_get_count_direct(void);
 void Filter_get_is_true_direct(void);
 void Filter_get_first_direct(void);
+void Filter_each_w_no_this(void);
+void Filter_each_w_iter_no_this(void);
+void Filter_invalid_each_w_no_this(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -2777,6 +2783,18 @@ bake_test_case Query_testcases[] = {
     {
         "get_first_direct",
         Query_get_first_direct
+    },
+    {
+        "each_w_no_this",
+        Query_each_w_no_this
+    },
+    {
+        "each_w_iter_no_this",
+        Query_each_w_iter_no_this
+    },
+    {
+        "invalid_each_w_no_this",
+        Query_invalid_each_w_no_this
     }
 };
 
@@ -3587,6 +3605,18 @@ bake_test_case Filter_testcases[] = {
     {
         "get_first_direct",
         Filter_get_first_direct
+    },
+    {
+        "each_w_no_this",
+        Filter_each_w_no_this
+    },
+    {
+        "each_w_iter_no_this",
+        Filter_each_w_iter_no_this
+    },
+    {
+        "invalid_each_w_no_this",
+        Filter_invalid_each_w_no_this
     }
 };
 
@@ -4635,7 +4665,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        67,
+        70,
         Query_testcases
     },
     {
@@ -4677,7 +4707,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        16,
+        19,
         Filter_testcases
     },
     {

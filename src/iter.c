@@ -44,7 +44,7 @@ void flecs_iter_init(
     it->priv.cache.allocated = 0;
 
     INIT_CACHE(it, fields, ids, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, subjects, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sources, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, match_indices, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, variables, it->variable_count, 
@@ -64,7 +64,7 @@ void iter_validate_cache(
 {
     /* Make sure pointers to cache are up to date in case iter has moved */
     VALIDATE_CACHE(it, ids);
-    VALIDATE_CACHE(it, subjects);
+    VALIDATE_CACHE(it, sources);
     VALIDATE_CACHE(it, match_indices);
     VALIDATE_CACHE(it, columns);
     VALIDATE_CACHE(it, variables);
@@ -90,7 +90,7 @@ void ecs_iter_fini(
 
     FINI_CACHE(it, ids);
     FINI_CACHE(it, columns);
-    FINI_CACHE(it, subjects);
+    FINI_CACHE(it, sources);
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
     FINI_CACHE(it, match_indices);
@@ -184,7 +184,7 @@ bool flecs_iter_populate_term_data(
 
             return true;
         } else {
-            ecs_entity_t subj = it->subjects[t];
+            ecs_entity_t subj = it->sources[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* Don't use ecs_get_id directly. Instead, go directly to the
@@ -567,7 +567,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_entity_t subj = ecs_term_source(it, i + 1);
+            ecs_entity_t subj = ecs_term_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -907,7 +907,7 @@ void offset_iter(
             continue;
         }
 
-        if (it->subjects[t]) {
+        if (it->sources[t]) {
             continue;
         }
 

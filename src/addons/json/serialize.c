@@ -1034,12 +1034,12 @@ void serialize_iter_result_subjects(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_member(buf, "subjects");
+    flecs_json_member(buf, "sources");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->term_count; i ++) {
         flecs_json_next(buf);
-        ecs_entity_t subj = it->subjects[i];
+        ecs_entity_t subj = it->sources[i];
         if (subj) {            
             flecs_json_path(buf, world, subj);
         } else {

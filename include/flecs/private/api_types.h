@@ -195,7 +195,7 @@ typedef struct ecs_rule_iter_t {
  * Constants are named to enable easy macro substitution. */
 #define flecs_iter_cache_ids           (1u << 0u)
 #define flecs_iter_cache_columns       (1u << 1u)
-#define flecs_iter_cache_subjects      (1u << 2u)
+#define flecs_iter_cache_sources       (1u << 2u)
 #define flecs_iter_cache_sizes         (1u << 3u)
 #define flecs_iter_cache_ptrs          (1u << 4u)
 #define flecs_iter_cache_match_indices (1u << 5u)
@@ -206,7 +206,7 @@ typedef struct ecs_rule_iter_t {
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
     int32_t columns[ECS_TERM_CACHE_SIZE];
-    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
+    ecs_entity_t sources[ECS_TERM_CACHE_SIZE];
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
     int32_t match_indices[ECS_TERM_CACHE_SIZE];
@@ -245,9 +245,9 @@ struct ecs_iter_t {
     ecs_table_t *table;           /* Current table */
     ecs_table_t *other_table;     /* Prev or next table when adding/removing */
     ecs_id_t *ids;                /* (Component) ids */
-    ecs_var_t *variables;      /* Values of variables (if any) */
+    ecs_var_t *variables;         /* Values of variables (if any) */
     int32_t *columns;             /* Query term to table column mapping */
-    ecs_entity_t *subjects;       /* Subject (source) entities */
+    ecs_entity_t *sources;        /* Entity on which the id was matched (0 if same as entities) */
     int32_t *match_indices;       /* Indices of current match for term. Allows an iterator to iterate
                                    * all permutations of wildcards in query. */
     ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */

@@ -353,7 +353,7 @@ void flecs_query_get_dirty_state(
     table_dirty_state_t *out)
 {
     ecs_world_t *world = query->world;
-    ecs_entity_t subject = match->subjects[term];
+    ecs_entity_t subject = match->sources[term];
     int32_t column;
 
     if (!subject) {
@@ -663,7 +663,7 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     qm->table = table;
     qm->columns = ecs_os_malloc_n(int32_t, term_count);
     qm->ids = ecs_os_malloc_n(ecs_id_t, term_count);
-    qm->subjects = ecs_os_malloc_n(ecs_entity_t, term_count);
+    qm->sources = ecs_os_malloc_n(ecs_entity_t, term_count);
     qm->sizes = ecs_os_malloc_n(ecs_size_t, term_count);
 
     /* Insert match to iteration list if table is not empty */
@@ -703,7 +703,7 @@ void flecs_query_set_table_match(
 
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count_actual);
     ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count_actual);
-    ecs_os_memcpy_n(qm->subjects, it->subjects, ecs_entity_t, term_count_actual);
+    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, term_count_actual);
     ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
 
     /* Look for union & disabled terms */
@@ -768,7 +768,7 @@ void flecs_query_set_table_match(
         }
 
         int32_t actual_index = terms[i].index;
-        ecs_entity_t src = it->subjects[actual_index];
+        ecs_entity_t src = it->sources[actual_index];
         ecs_size_t size = 0;
         if (it->sizes) {
             size = it->sizes[actual_index];
@@ -1384,7 +1384,7 @@ void flecs_query_table_match_free(
     for (cur = first; cur != NULL; cur = next) {
         ecs_os_free(cur->columns);
         ecs_os_free(cur->ids);
-        ecs_os_free(cur->subjects);
+        ecs_os_free(cur->sources);
         ecs_os_free(cur->sizes);
         ecs_os_free(cur->references);
         ecs_os_free(cur->sparse_columns);
@@ -2308,7 +2308,7 @@ void mark_columns_dirty(
                 continue;
             }
 
-            if (table_data->subjects[ti] != 0) {
+            if (table_data->sources[ti] != 0) {
                 /* Don't mark table dirty if term is not from the table */
                 continue;
             }
@@ -2472,7 +2472,7 @@ bool ecs_query_next_instanced(
             }
         }
 
-        it->subjects = match->subjects;
+        it->sources = match->sources;
         it->references = match->references;
         it->instance_count = 0;
 

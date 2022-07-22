@@ -527,7 +527,7 @@ struct ecs_query_table_match_t {
     ecs_table_t *table;       /* The current table. */
     int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
-    ecs_entity_t *subjects;   /* Subjects (sources) of ids */
+    ecs_entity_t *sources;   /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_ref_t *references;    /* Cached components for non-this terms */
 
@@ -2128,7 +2128,7 @@ bool flecs_filter_match_table(
     const ecs_table_t *table,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_entity_t *subjects,
+    ecs_entity_t *sources,
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
@@ -19402,7 +19402,7 @@ ecs_rule_pair_t term_to_pair(
         }
     }
 
-    /* The pair doesn't do anything with the subject (subjects are the things that
+    /* The pair doesn't do anything with the subject (sources are the things that
      * are matched against pairs) so if the column does not have a object, 
      * there is nothing left to do. */
     if (!obj_is_set(term)) {
@@ -19749,7 +19749,7 @@ int32_t get_variable_depth(
     var->depth = result;    
 
     /* Dependencies are calculated from subject to (first, second). If there were
-     * subjects that are only related by object (like (X, Y), (Z, Y)) it is
+     * sources that are only related by object (like (X, Y), (Z, Y)) it is
      * possible that those have not yet been found yet. To make sure those 
      * variables are found, loop again & follow predicate & object links */
     for (i = 0; i < count; i ++) {
@@ -20802,7 +20802,7 @@ void insert_term_2(
                 second = &rule->vars[obj_id];
                 second = to_entity(rule, second);
 
-                /* Insert instruction to find all subjects and objects */
+                /* Insert instruction to find all sources and objects */
                 ecs_rule_op_t *op = insert_operation(rule, -1, written);
                 op->kind = EcsRuleSelect;
                 set_output_to_subj(rule, op, term, src);
@@ -21578,7 +21578,7 @@ ecs_iter_t ecs_rule_iter(
     flecs_iter_init(&result, 
         flecs_iter_cache_ids |
         /* flecs_iter_cache_columns | provided by rule iterator */
-        flecs_iter_cache_subjects |
+        flecs_iter_cache_sources |
         flecs_iter_cache_sizes |
         flecs_iter_cache_ptrs |
         /* flecs_iter_cache_match_indices | not necessary for iteration */
@@ -21732,9 +21732,9 @@ void set_source(
 
     const ecs_rule_t *rule = it->priv.iter.rule.rule;
     if ((r != UINT8_MAX) && rule->vars[r].kind == EcsRuleVarKindEntity) {
-        it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
+        it->sources[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
-        it->subjects[op->term] = 0;
+        it->sources[op->term] = 0;
     }
 }
 
@@ -22755,7 +22755,7 @@ void populate_iterator(
             const ecs_rule_var_t *var = &rule->vars[v];
             if (var->name[0] != '.') {
                 if (var->kind == EcsRuleVarKindEntity) {
-                    iter->subjects[i] = regs[var->id].entity;
+                    iter->sources[i] = regs[var->id].entity;
                 } else {
                     /* This can happen for Any variables, where the actual
                      * content of the variable is not of interest to the query.
@@ -22763,11 +22763,11 @@ void populate_iterator(
                      * column can be correctly resolved */
                     ecs_table_t *t = regs[var->id].range.table;
                     if (t) {
-                        iter->subjects[i] = ecs_storage_first_t(
+                        iter->sources[i] = ecs_storage_first_t(
                             &t->data.entities, ecs_entity_t)[0];
                     } else {
                         /* Can happen if term is optional */
-                        iter->subjects[i] = 0;
+                        iter->sources[i] = 0;
                     }
                 }
             }
@@ -22777,8 +22777,8 @@ void populate_iterator(
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
     for (i = 0; i < term_count; i ++) {
-        ecs_assert(iter->subjects != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t src = iter->subjects[i];
+        ecs_assert(iter->sources != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t src = iter->sources[i];
         int32_t c = ++ iter->columns[i];
         if (!src) {
             src = iter->terms[i].src.id;
@@ -22855,8 +22855,8 @@ void rule_iter_set_initial_state(
 {
     int32_t i;
 
-    /* Make sure that if there are any terms with literal subjects, they're
-     * initialized in the subjects array */
+    /* Make sure that if there are any terms with literal sources, they're
+     * initialized in the sources array */
     const ecs_filter_t *filter = &rule->filter;
     int32_t term_count = filter->term_count;
     for (i = 0; i < term_count; i ++) {
@@ -22866,7 +22866,7 @@ void rule_iter_set_initial_state(
             ECS_INTERNAL_ERROR, NULL);
 
         if (!(src->flags & EcsIsVariable)) {
-            it->subjects[i] = src->id;
+            it->sources[i] = src->id;
         }
     }
 
@@ -30708,12 +30708,12 @@ void serialize_iter_result_subjects(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_member(buf, "subjects");
+    flecs_json_member(buf, "sources");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->term_count; i ++) {
         flecs_json_next(buf);
-        ecs_entity_t subj = it->subjects[i];
+        ecs_entity_t subj = it->sources[i];
         if (subj) {            
             flecs_json_path(buf, world, subj);
         } else {
@@ -31750,7 +31750,7 @@ void flecs_rest_parse_json_ser_iter_params(
 {
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
-    flecs_rest_bool_param(req, "subjects", &desc->serialize_subjects);
+    flecs_rest_bool_param(req, "sources", &desc->serialize_subjects);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
     flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
@@ -39284,7 +39284,7 @@ bool flecs_filter_match_table(
     const ecs_table_t *table,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_entity_t *subjects,
+    ecs_entity_t *sources,
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
@@ -39348,7 +39348,7 @@ bool flecs_filter_match_table(
         bool result = flecs_term_match_table(world, term, match_table,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
-            subjects ? &subjects[t_i] : NULL, 
+            sources ? &sources[t_i] : NULL, 
             &match_index,
             first,
             iter_flags);
@@ -39714,7 +39714,7 @@ bool ecs_term_next(
     ecs_table_t *table;
 
     it->ids = &iter->id;
-    it->subjects = &iter->subject;
+    it->sources = &iter->subject;
     it->columns = &iter->column;
     it->terms = &iter->term;
     it->sizes = &iter->size;
@@ -39737,7 +39737,7 @@ bool ecs_term_next(
 
             table = chain_it->table;
             match = flecs_term_match_table(world, term, table,
-                it->ids, it->columns, it->subjects, it->match_indices, true,
+                it->ids, it->columns, it->sources, it->match_indices, true,
                 it->flags);
         } while (!match);
         goto yield;
@@ -39973,7 +39973,7 @@ bool ecs_filter_next_instanced(
 
             table = chain_it->table;
             match = flecs_filter_match_table(world, filter, table,
-                it->ids, it->columns, it->subjects, it->match_indices, NULL, 
+                it->ids, it->columns, it->sources, it->match_indices, NULL, 
                 true, -1, it->flags);
         } while (!match);
 
@@ -40067,7 +40067,7 @@ bool ecs_filter_next_instanced(
                     if (pivot_term != -1) {
                         int32_t index = term->index;
                         it->ids[index] = term_iter->id;
-                        it->subjects[index] = term_iter->subject;
+                        it->sources[index] = term_iter->subject;
                         it->columns[index] = term_iter->column;
                     }
                 } else {
@@ -40083,7 +40083,7 @@ bool ecs_filter_next_instanced(
 
                 /* Match the remainder of the terms */
                 match = flecs_filter_match_table(world, filter, table,
-                    it->ids, it->columns, it->subjects,
+                    it->ids, it->columns, it->sources,
                     it->match_indices, &iter->matches_left, first, 
                     pivot_term, it->flags);
                 if (!match) {
@@ -40132,13 +40132,13 @@ bool ecs_filter_next_instanced(
 
                 it->columns[i] = column + 1;
                 flecs_term_match_table(world, &filter->terms[i], table, 
-                    &it->ids[i], &it->columns[i], &it->subjects[i],
+                    &it->ids[i], &it->columns[i], &it->sources[i],
                     &it->match_indices[i], false, it->flags);
 
                 /* Reset remaining terms (if any) to first match */
                 for (j = i + 1; j < count; j ++) {
                     flecs_term_match_table(world, &filter->terms[j], table, 
-                        &it->ids[j], &it->columns[j], &it->subjects[j], 
+                        &it->ids[j], &it->columns[j], &it->sources[j], 
                         &it->match_indices[j], true, it->flags);
                 }
             }
@@ -40479,7 +40479,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
     user_it.ids = NULL;
     user_it.columns = NULL;
-    user_it.subjects = NULL;
+    user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
     flecs_iter_init(&user_it, flecs_iter_cache_all);
@@ -40510,7 +40510,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+        user_it.columns, user_it.sources, NULL, NULL, false, -1, 
         user_it.flags))
     {
         /* Monitor observers only invoke when the filter matches for the first
@@ -40526,10 +40526,10 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         /* While filter matching needs to be reversed for a Not term, the
          * component data must be fetched from the table we got notified for.
          * Repeat the matching process for the non-matching table so we get the
-         * correct column ids and subjects, which we need for populate_data */
+         * correct column ids and sources, which we need for populate_data */
         if (term->oper == EcsNot) {
             flecs_filter_match_table(world, &o->filter, prev_table, user_it.ids, 
-                user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
+                user_it.columns, user_it.sources, NULL, NULL, false, -1, 
                 user_it.flags | EcsFilterPopulate);
         }
 
@@ -40883,11 +40883,11 @@ void flecs_init_observer_iter(
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t index = ecs_search_relation(it->real_world, it->table, 0, 
-        it->event_id, EcsIsA, 0, it->subjects, 0, 0);
+        it->event_id, EcsIsA, 0, it->sources, 0, 0);
     
     if (index == -1) {
         it->columns[0] = 0;
-    } else if (it->subjects[0]) {
+    } else if (it->sources[0]) {
         it->columns[0] = -index - 1;
     } else {
         it->columns[0] = index + 1;
@@ -41072,7 +41072,7 @@ void flecs_notify_entity_observers(
 
             it->offset = i;
             it->count = 1;
-            it->subjects[0] = entities[i];
+            it->sources[0] = entities[i];
             flecs_uni_observer_builtin_run(observer, it);
         }
     }
@@ -41080,7 +41080,7 @@ void flecs_notify_entity_observers(
     it->offset = offset;
     it->count = count;
     it->entities = entities;
-    it->subjects[0] = 0;
+    it->sources[0] = 0;
 }
 
 static
@@ -41119,7 +41119,7 @@ void flecs_notify_set_base_observers(
         ecs_term_t *term = &observer->filter.terms[0];
         ecs_id_t id = term->id;
         int32_t column = ecs_search_relation(world, obj_table, 0, id, rel, 
-            0, it->subjects, it->ids, 0);
+            0, it->sources, it->ids, 0);
 
         bool result = column != -1;
         if (term->oper == EcsNot) {
@@ -41136,8 +41136,8 @@ void flecs_notify_set_base_observers(
         }
 
         if (!ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
-            if (!it->subjects[0]) {
-                it->subjects[0] = obj;
+            if (!it->sources[0]) {
+                it->sources[0] = obj;
             }
 
             /* Populate pointer from object */
@@ -41207,9 +41207,9 @@ void flecs_notify_set_observers(
         }
 
         if (flecs_term_match_table(world, term, it->table, it->ids, 
-            it->columns, it->subjects, NULL, true, it->flags))
+            it->columns, it->sources, NULL, true, it->flags))
         {
-            if (!it->subjects[0]) {
+            if (!it->sources[0]) {
                 /* Do not match owned components */
                 continue;
             }
@@ -42929,7 +42929,7 @@ void flecs_query_get_dirty_state(
     table_dirty_state_t *out)
 {
     ecs_world_t *world = query->world;
-    ecs_entity_t subject = match->subjects[term];
+    ecs_entity_t subject = match->sources[term];
     int32_t column;
 
     if (!subject) {
@@ -43239,7 +43239,7 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     qm->table = table;
     qm->columns = ecs_os_malloc_n(int32_t, term_count);
     qm->ids = ecs_os_malloc_n(ecs_id_t, term_count);
-    qm->subjects = ecs_os_malloc_n(ecs_entity_t, term_count);
+    qm->sources = ecs_os_malloc_n(ecs_entity_t, term_count);
     qm->sizes = ecs_os_malloc_n(ecs_size_t, term_count);
 
     /* Insert match to iteration list if table is not empty */
@@ -43279,7 +43279,7 @@ void flecs_query_set_table_match(
 
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count_actual);
     ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count_actual);
-    ecs_os_memcpy_n(qm->subjects, it->subjects, ecs_entity_t, term_count_actual);
+    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, term_count_actual);
     ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
 
     /* Look for union & disabled terms */
@@ -43344,7 +43344,7 @@ void flecs_query_set_table_match(
         }
 
         int32_t actual_index = terms[i].index;
-        ecs_entity_t src = it->subjects[actual_index];
+        ecs_entity_t src = it->sources[actual_index];
         ecs_size_t size = 0;
         if (it->sizes) {
             size = it->sizes[actual_index];
@@ -43960,7 +43960,7 @@ void flecs_query_table_match_free(
     for (cur = first; cur != NULL; cur = next) {
         ecs_os_free(cur->columns);
         ecs_os_free(cur->ids);
-        ecs_os_free(cur->subjects);
+        ecs_os_free(cur->sources);
         ecs_os_free(cur->sizes);
         ecs_os_free(cur->references);
         ecs_os_free(cur->sparse_columns);
@@ -44884,7 +44884,7 @@ void mark_columns_dirty(
                 continue;
             }
 
-            if (table_data->subjects[ti] != 0) {
+            if (table_data->sources[ti] != 0) {
                 /* Don't mark table dirty if term is not from the table */
                 continue;
             }
@@ -45048,7 +45048,7 @@ bool ecs_query_next_instanced(
             }
         }
 
-        it->subjects = match->subjects;
+        it->sources = match->sources;
         it->references = match->references;
         it->instance_count = 0;
 
@@ -46486,7 +46486,7 @@ void flecs_iter_init(
     it->priv.cache.allocated = 0;
 
     INIT_CACHE(it, fields, ids, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, subjects, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sources, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, match_indices, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, variables, it->variable_count, 
@@ -46506,7 +46506,7 @@ void iter_validate_cache(
 {
     /* Make sure pointers to cache are up to date in case iter has moved */
     VALIDATE_CACHE(it, ids);
-    VALIDATE_CACHE(it, subjects);
+    VALIDATE_CACHE(it, sources);
     VALIDATE_CACHE(it, match_indices);
     VALIDATE_CACHE(it, columns);
     VALIDATE_CACHE(it, variables);
@@ -46532,7 +46532,7 @@ void ecs_iter_fini(
 
     FINI_CACHE(it, ids);
     FINI_CACHE(it, columns);
-    FINI_CACHE(it, subjects);
+    FINI_CACHE(it, sources);
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
     FINI_CACHE(it, match_indices);
@@ -46626,7 +46626,7 @@ bool flecs_iter_populate_term_data(
 
             return true;
         } else {
-            ecs_entity_t subj = it->subjects[t];
+            ecs_entity_t subj = it->sources[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* Don't use ecs_get_id directly. Instead, go directly to the
@@ -47009,7 +47009,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_entity_t subj = ecs_term_source(it, i + 1);
+            ecs_entity_t subj = ecs_term_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -47349,7 +47349,7 @@ void offset_iter(
             continue;
         }
 
-        if (it->subjects[t]) {
+        if (it->sources[t]) {
             continue;
         }
 

@@ -220,8 +220,8 @@ Same as [entities](#entities), but with numerical ids instead of paths.
 
 Type: Array(Number), optional
 
-#### **"subjects"**
-Array with paths of subjects for each term. A subject indicates the actual entity on which a component is stored. If this is the matched entity (default) the array will contain a `0` element.
+#### **"sources"**
+Array with paths of sources for each term. A subject indicates the actual entity on which a component is stored. If this is the matched entity (default) the array will contain a `0` element.
 
 Type: Array([Path](#path)), optional
 
@@ -477,7 +477,7 @@ Example result for query `Position, (Likes, *)`
 ```
 
 #### **serialize_subjects**
-Serialize the ["subjects"](#subjects) member.
+Serialize the ["sources"](#sources) member.
 
 **Default**: `true`
 
@@ -489,7 +489,7 @@ Example result for query `Position, Position(parent)`
   "ids": ["Position", "Position"],
   "results": [{
     "entities": ["Parent.A", "Parent.B"],
-        "subjects": [0, "Parent"]
+        "sources": [0, "Parent"]
   }]
 }
 ```

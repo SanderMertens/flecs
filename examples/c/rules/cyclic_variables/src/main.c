@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     // The equivalent query in the DSL is:
     //   Likes($X, $Y), Likes($Y, $X)
     //
-    // This is also an example of a query where all subjects are variables. By
+    // This is also an example of a query where all sources are variables. By
     // default queries use the builtin "This" variable as subject, which is what
     // populates the entities array in the query result (accessed by the
     // iter::entity function).

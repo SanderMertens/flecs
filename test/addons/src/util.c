@@ -20,7 +20,7 @@ void probe_system_w_ctx(
     int i;
     for (i = 0; i < ctx->term_count; i ++) {
         ctx->c[ctx->invoked][i] = it->ids[i];
-        ctx->s[ctx->invoked][i] = ecs_term_source(it, i + 1);
+        ctx->s[ctx->invoked][i] = ecs_term_src(it, i + 1);
 
         ecs_id_t e = ecs_term_id(it, i + 1);
         test_assert(e != 0);

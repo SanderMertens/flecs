@@ -28,7 +28,7 @@ void test_no_chain(
     test_int(it.entities[0], e1);
     test_int(it.entities[1], e2);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(it.table != NULL);
 
     Position *ptr = ecs_term(&it, Position, 1);
@@ -42,7 +42,7 @@ void test_no_chain(
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_src(&it, 1), 0);
     test_assert(it.table != NULL);
 
     ptr = ecs_term(&it, Position, 1);
@@ -74,7 +74,7 @@ void test_w_chain(
     test_int(it->entities[0], e1);
     test_int(it->entities[1], e2);
     test_int(ecs_term_id(it, 1), Tag);
-    test_int(ecs_term_source(it, 1), 0);
+    test_int(ecs_term_src(it, 1), 0);
     test_assert(it->table != NULL);
 
     ecs_iter_t *chain_it = it->chain_it;
@@ -84,7 +84,7 @@ void test_w_chain(
     test_int(chain_it->entities[0], e1);
     test_int(chain_it->entities[1], e2);
     test_int(ecs_term_id(chain_it, 1), ecs_id(Position));
-    test_int(ecs_term_source(chain_it, 1), 0);
+    test_int(ecs_term_src(chain_it, 1), 0);
 
     Position *ptr = ecs_term(chain_it, Position, 1);
     test_assert(ptr != NULL);

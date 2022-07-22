@@ -960,7 +960,7 @@ ecs_rule_pair_t term_to_pair(
         }
     }
 
-    /* The pair doesn't do anything with the subject (subjects are the things that
+    /* The pair doesn't do anything with the subject (sources are the things that
      * are matched against pairs) so if the column does not have a object, 
      * there is nothing left to do. */
     if (!obj_is_set(term)) {
@@ -1307,7 +1307,7 @@ int32_t get_variable_depth(
     var->depth = result;    
 
     /* Dependencies are calculated from subject to (first, second). If there were
-     * subjects that are only related by object (like (X, Y), (Z, Y)) it is
+     * sources that are only related by object (like (X, Y), (Z, Y)) it is
      * possible that those have not yet been found yet. To make sure those 
      * variables are found, loop again & follow predicate & object links */
     for (i = 0; i < count; i ++) {
@@ -2360,7 +2360,7 @@ void insert_term_2(
                 second = &rule->vars[obj_id];
                 second = to_entity(rule, second);
 
-                /* Insert instruction to find all subjects and objects */
+                /* Insert instruction to find all sources and objects */
                 ecs_rule_op_t *op = insert_operation(rule, -1, written);
                 op->kind = EcsRuleSelect;
                 set_output_to_subj(rule, op, term, src);
@@ -3136,7 +3136,7 @@ ecs_iter_t ecs_rule_iter(
     flecs_iter_init(&result, 
         flecs_iter_cache_ids |
         /* flecs_iter_cache_columns | provided by rule iterator */
-        flecs_iter_cache_subjects |
+        flecs_iter_cache_sources |
         flecs_iter_cache_sizes |
         flecs_iter_cache_ptrs |
         /* flecs_iter_cache_match_indices | not necessary for iteration */
@@ -3290,9 +3290,9 @@ void set_source(
 
     const ecs_rule_t *rule = it->priv.iter.rule.rule;
     if ((r != UINT8_MAX) && rule->vars[r].kind == EcsRuleVarKindEntity) {
-        it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
+        it->sources[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
-        it->subjects[op->term] = 0;
+        it->sources[op->term] = 0;
     }
 }
 
@@ -4313,7 +4313,7 @@ void populate_iterator(
             const ecs_rule_var_t *var = &rule->vars[v];
             if (var->name[0] != '.') {
                 if (var->kind == EcsRuleVarKindEntity) {
-                    iter->subjects[i] = regs[var->id].entity;
+                    iter->sources[i] = regs[var->id].entity;
                 } else {
                     /* This can happen for Any variables, where the actual
                      * content of the variable is not of interest to the query.
@@ -4321,11 +4321,11 @@ void populate_iterator(
                      * column can be correctly resolved */
                     ecs_table_t *t = regs[var->id].range.table;
                     if (t) {
-                        iter->subjects[i] = ecs_storage_first_t(
+                        iter->sources[i] = ecs_storage_first_t(
                             &t->data.entities, ecs_entity_t)[0];
                     } else {
                         /* Can happen if term is optional */
-                        iter->subjects[i] = 0;
+                        iter->sources[i] = 0;
                     }
                 }
             }
@@ -4335,8 +4335,8 @@ void populate_iterator(
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
     for (i = 0; i < term_count; i ++) {
-        ecs_assert(iter->subjects != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t src = iter->subjects[i];
+        ecs_assert(iter->sources != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t src = iter->sources[i];
         int32_t c = ++ iter->columns[i];
         if (!src) {
             src = iter->terms[i].src.id;
@@ -4413,8 +4413,8 @@ void rule_iter_set_initial_state(
 {
     int32_t i;
 
-    /* Make sure that if there are any terms with literal subjects, they're
-     * initialized in the subjects array */
+    /* Make sure that if there are any terms with literal sources, they're
+     * initialized in the sources array */
     const ecs_filter_t *filter = &rule->filter;
     int32_t term_count = filter->term_count;
     for (i = 0; i < term_count; i ++) {
@@ -4424,7 +4424,7 @@ void rule_iter_set_initial_state(
             ECS_INTERNAL_ERROR, NULL);
 
         if (!(src->flags & EcsIsVariable)) {
-            it->subjects[i] = src->id;
+            it->sources[i] = src->id;
         }
     }
 
