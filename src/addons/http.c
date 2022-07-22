@@ -394,7 +394,6 @@ void enqueue_request(
                 srv->requests, ecs_http_request_impl_t);
             req->pub.id = flecs_sparse_last_id(srv->requests);
             req->conn_id = conn->pub.id;
-            ecs_os_mutex_unlock(srv->lock);
 
             req->pub.conn = (ecs_http_connection_t*)conn;
             req->pub.method = frag->method;
@@ -417,6 +416,7 @@ void enqueue_request(
             req->pub.header_count = frag->header_count;
             req->pub.param_count = frag->param_count;
             req->res = res;
+            ecs_os_mutex_unlock(srv->lock);
         }
     }
 }
@@ -875,7 +875,7 @@ void handle_request(
     ecs_http_connection_impl_t *conn = 
         (ecs_http_connection_impl_t*)req->pub.conn;
 
-    if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == 0) {
+    if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
         reply.code = 404;
         reply.status = "Resource not found";
     }
