@@ -1,6 +1,7 @@
 #include "private_api.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
 
 void ecs_os_api_impl(ecs_os_api_t *api);
 
@@ -104,6 +105,45 @@ void log_msg(
     }
 
     bool use_colors = ecs_os_api.flags_ & EcsOsApiLogWithColors;
+    bool timestamp = ecs_os_api.flags_ & EcsOsApiLogWithTimeStamp;
+    bool deltatime = ecs_os_api.flags_ & EcsOsApiLogWithTimeDelta;
+
+    time_t now = 0;
+
+    if (deltatime) {
+        now = time(NULL);
+        time_t delta = 0;
+        if (ecs_os_api.log_last_timestamp_) {
+            delta = now - ecs_os_api.log_last_timestamp_;
+        }
+        ecs_os_api.log_last_timestamp_ = (int64_t)now;
+
+        if (delta) {
+            if (delta < 10) {
+                fputs(" ", stream);
+            }
+            if (delta < 100) {
+                fputs(" ", stream);
+            }
+            char time_buf[20];
+            ecs_os_sprintf(time_buf, "%u", (uint32_t)delta);
+            fputs("+", stream);
+            fputs(time_buf, stream);
+            fputs(" ", stream);
+        } else {
+            fputs("     ", stream);
+        }
+    }
+
+    if (timestamp) {
+        if (!now) {
+            now = time(NULL);
+        }
+        char time_buf[20];
+        ecs_os_sprintf(time_buf, "%u", (uint32_t)now);
+        fputs(time_buf, stream);
+        fputs(" ", stream);
+    }
 
     if (level >= 0) {
         if (level == 0) {

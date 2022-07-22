@@ -261,6 +261,9 @@ typedef struct ecs_os_api_t {
     /* Last error code */
     int32_t log_last_error_;
 
+    /* Last recorded timestamp */
+    int64_t log_last_timestamp_;
+
     /* OS API flags */
     ecs_flags32_t flags_;
 } ecs_os_api_t;

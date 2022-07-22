@@ -922,7 +922,7 @@ int32_t dequeue_requests(
 
     ecs_os_mutex_unlock(srv->lock);
 
-    return request_count;
+    return request_count - 1;
 }
 
 const char* ecs_http_get_header(

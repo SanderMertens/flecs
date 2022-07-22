@@ -99,6 +99,8 @@ void Http_stop_start_stresstest_w_0_sleep() {
 
     test_assert(srv != NULL);
 
+    ecs_log_enable_timedelta(true);
+
     test_int(ecs_http_server_start(srv), 0);
 
     for (int i = 0; i < 10000; i ++) {
