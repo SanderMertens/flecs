@@ -473,6 +473,22 @@ bool ecs_log_enable_colors(
     return prev;
 }
 
+bool ecs_log_enable_timestamp(
+    bool enabled)
+{
+    bool prev = ecs_os_api.flags_ & EcsOsApiLogWithTimeStamp;
+    ECS_BIT_COND(ecs_os_api.flags_, EcsOsApiLogWithTimeStamp, enabled);
+    return prev;
+}
+
+bool ecs_log_enable_timedelta(
+    bool enabled)
+{
+    bool prev = ecs_os_api.flags_ & EcsOsApiLogWithTimeDelta;
+    ECS_BIT_COND(ecs_os_api.flags_, EcsOsApiLogWithTimeDelta, enabled);
+    return prev;
+}
+
 int ecs_log_last_error(void)
 {
     int result = ecs_os_api.log_last_error_;

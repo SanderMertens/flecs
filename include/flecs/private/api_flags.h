@@ -29,6 +29,8 @@ extern "C" {
 
 #define EcsOsApiHighResolutionTimer   (1u << 0)
 #define EcsOsApiLogWithColors         (1u << 1)
+#define EcsOsApiLogWithTimeStamp      (1u << 2)
+#define EcsOsApiLogWithTimeDelta      (1u << 3)
 
 
 ////////////////////////////////////////////////////////////////////////////////

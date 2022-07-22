@@ -165,6 +165,8 @@ extern "C" {
 
 #define EcsOsApiHighResolutionTimer   (1u << 0)
 #define EcsOsApiLogWithColors         (1u << 1)
+#define EcsOsApiLogWithTimeStamp      (1u << 2)
+#define EcsOsApiLogWithTimeDelta      (1u << 3)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1890,6 +1892,9 @@ typedef struct ecs_os_api_t {
 
     /* Last error code */
     int32_t log_last_error_;
+
+    /* Last recorded timestamp */
+    int64_t log_last_timestamp_;
 
     /* OS API flags */
     ecs_flags32_t flags_;
@@ -8593,6 +8598,34 @@ FLECS_API
 bool ecs_log_enable_colors(
     bool enabled);
 
+/** Enable/disable logging timestamp.
+ * By default timestamps are disabled. Note that enabling timestamps introduces
+ * overhead as the logging code will need to obtain the current time.
+ *
+ * @param enabled Whether to enable tracing with timestamps.
+ * @return Previous timestamp setting.
+ */
+FLECS_API
+bool ecs_log_enable_timestamp(
+    bool enabled);
+
+/** Enable/disable logging time since last log.
+ * By default deltatime is disabled. Note that enabling timestamps introduces
+ * overhead as the logging code will need to obtain the current time.
+ * 
+ * When enabled, this logs the amount of time in seconds passed since the last
+ * log, when this amount is non-zero. The format is a '+' character followed by
+ * the number of seconds:
+ * 
+ *   +1 trace: log message
+ *
+ * @param enabled Whether to enable tracing with timestamps.
+ * @return Previous timestamp setting.
+ */
+FLECS_API
+bool ecs_log_enable_timedelta(
+    bool enabled);
+
 /** Get last logged error code.
  * Calling this operation resets the error code.
  *
@@ -14575,8 +14608,16 @@ inline void set_level(int level) {
     ecs_log_set_level(level);
 }
 
-inline void enable_colors(bool enabled) {
+inline void enable_colors(bool enabled = true) {
     ecs_log_enable_colors(enabled);
+}
+
+inline void enable_timestamp(bool enabled = true) {
+    ecs_log_enable_timestamp(enabled);
+}
+
+inline void enable_timedelta(bool enabled = true) {
+    ecs_log_enable_timedelta(enabled);
 }
 
 inline void dbg(const char *fmt, ...) {

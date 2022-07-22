@@ -6,8 +6,16 @@ inline void set_level(int level) {
     ecs_log_set_level(level);
 }
 
-inline void enable_colors(bool enabled) {
+inline void enable_colors(bool enabled = true) {
     ecs_log_enable_colors(enabled);
+}
+
+inline void enable_timestamp(bool enabled = true) {
+    ecs_log_enable_timestamp(enabled);
+}
+
+inline void enable_timedelta(bool enabled = true) {
+    ecs_log_enable_timedelta(enabled);
 }
 
 inline void dbg(const char *fmt, ...) {
