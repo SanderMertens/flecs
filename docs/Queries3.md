@@ -1303,6 +1303,8 @@ Source is a property of a term that specifies the entity on which the term shoul
 
 When a query only has terms with fixed sources, iterating the query will return a result at least once, and at most once if the query terms do not match wildcards. If a query has one or more terms with a fixed source that do not match the entity, the query will return no results. A source does not need to match the query when the query is created.
 
+When a term has a fixed source and the [access modifiers](#access-modifiers) are not explicitly set, the access modifier defaults to `In`, instead of `InOut`. The rationale behind this is that it encourages code that only makes local changes (changes to components owned by the matched entity) which is easier to maintain and multithread.
+
 The following sections show how to use variable and fixed sources with the different language bindings.
 
 #### Query Descriptor (C)
@@ -1408,24 +1410,552 @@ flecs::filter<Position, Velocity, SimTime> f =
     .build();
 
 // Because all components are now part of the filter type, we can use each
-f.each([](Position& p, Velocity& v, SimTime& st) {
+f.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
   p.x += v.x * st.value;
   p.y += v.y * st.value;
 });
 ```
 
-One thing to note is that when a query only contains fixed source terms, `each` cannot be used. The `each` function is called for each entity matched by the `$This` source. 
+When a query has no terms for the `$This` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
+```cpp
+flecs::filter<SimConfig, SimTime> f = 
+  world.filter_builder<SimConfig, SimTime>()
+    .arg(1).src(Cfg)
+    .arg(2).src(Game)
+    .build();
 
+// Ok (note that it.count() will be 0)
+f.iter([](flecs::iter& it, SimConfig *sc, SimTime *st) {
+  st->value += sc->sim_speed;
+});
 
+// Ok
+f.each([](SimConfig& sc, SimTime& st) {
+  st.value += sc.sim_speed;
+});
+
+// Ok
+f.each([](flecs::iter& it, size_t index, SimConfig& sc, SimTime& st) {
+  st.value += sc.sim_speed;
+});
+
+// Not ok: there is no entity to pass to first argument
+f.each([](flecs::entity e, SimConfig& sc, SimTime& st) { 
+  st.value += sc.sim_speed;
+});
+```
+
+#### Query DSL
+To specify a source in the DSL, use parenthesis after the component identifier. The following example uses the default `$This` source for `Position` and `Velocity`, and `Game` as source for `SimTime`.
+
+```
+Position, Velocity, SimTime(Game)
+```
+
+In the previous example the source for `Position` and `Velocity` is implicit. The following example shows the same query with explicit sources for all terms:
+
+```
+Position($This), Velocity($This), SimTime(Game)
+```
+
+To specify a source for a pair, the second element of the pair is placed inside the parenthesis after the source. The following query uses the default `$This` source for the `(Color, Diffuse)` pair, and `Game` as source for the  `(Color, Sky)` pair.
+
+```
+(Color, Diffuse), Color(Game, Sky)
+```
+
+In the previous example the source for `(Color, Diffuse)` is implicit. The following example shows the same query with explicit sources for all terms:
+
+```
+Color($This, Diffuse), Color(Game, Sky)
+```
 
 ### Singletons
+> *Supported by: filters, cached queries, rules*
+
+Singletons are components that are added to themselves, which can be matched by providing the component id as [source](#source). The next sections show how to use singletons in the different language bindings.
+
+#### Query Descriptor (C)
+A singleton query is created by specifying the same id as component and source:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { Player },
+    { ecs_id(Position) },
+    { ecs_id(Input), .src = ecs_id(Input) } // match Input on itself
+  }
+});
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+#### Query Builder (C++)
+A singleton query can be created by specifying the same id as component and source:
+
+```cpp
+flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+  .term<Input>().src<Input>() // match Input on itself
+  .build();
+```
+
+The builder API provides a `singleton` convenience function:
+
+```cpp
+flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+  .term<Input>().singleton() // match Input on itself
+  .build();
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+#### Query DSL
+A singleton query can be created by specifying the same id as component and source:
+
+```
+Player, Position, Input(Input)
+```
+
+For convenience the `$` character may be used as source, which resolves to the component id:
+
+```
+Player, Position, Input($)
+```
+
+### Relationship Traversal
+> *Supported by: filters, cached queries, rules(!)*
+
+Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
+
+![filter diagram](img/relationship_traversal.png)
+
+The arrows in this diagram indicate the direction in which the query is traversing the `ChildOf` relationship to find the component. A query will continue traversing until it has found an entity with the component, or until a root (an entity without the relationship) has been found. The traversal is depth-first. If an entity has multiple instances of a relationship a query will first traverse the first instance until its root entity before continuing with the second instance.
+
+Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the [Query Performance](#query-performance) section for more details.
+
+Any relationship used for traversal must have the [Acyclic](Relations.md#acyclic-property) property. Attempting to create a query that traverses a relationship that does not have the `Acyclic` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
+
+Components that have the [DontInherit](Relations.md#dontinherit-property) property cannot be matched through traversal. Examples of builtin components that have the `DontInherit` property are `Prefab` (instances of prefabs should not be considered prefabs) and `ChildOf` (a child of a parent is not a child of the parent's parent).
+
+Relationship traversal works for both variable and fixed [sources](#source).
+
+#### Traversal Flags
+Traversal behavior can be customized with the following bitflags, in addition to the relationship being traversed:
+
+| Name     | DSL identifier | C identifier  | C++ identifier    | Description |
+|----------|----------------|---------------|-------------------|-------------|
+| Self     | `self`         | `EcsSelf`     | `flecs::Self`     | Match self |
+| Up       | `up`           | `EcsUp`       | `flecs::Up`       | Match by traversing upwards |
+| Down     | `down`         | `EcsDown`     | `flecs::Down`     | Match by traversing downwards (derived, cannot be set) |
+| Parent   | `parent`       | `EcsParent`   | `flecs::Parent`   | Short for up(ChildOf) |
+| Cascade  | `cascade`      | `EcsCascade`  | `flecs::Cascade`  | Same as Up, but iterate in breadth-first order |
+
+If just `Self` is set a query will only match components on the matched entity (no traversal). If just `Up` is set, a query will only match components that can be reached by following the relationship and ignore components from the matched entity. If both `Self` and `Up` are set, the query will first look on the matched entity, and if it does not have the component the query will continue searching by traverse the relationship.
+
+Query terms default to `Self|Up` for the `IsA` relationship. This means that components inherited from prefabs will be matched automatically by queries, unless specified otherwise. When a relationship that is not `IsA` is traversed, the entities visited while traversing will still be tested for inherited components. This means that an entity with a parent that inherits the `Mass` component from a prefab will match a query that traverses the `ChildOf` relationship to match the `Mass` component. A code example:
+
+```cpp
+flecs::entity base = world.entity()
+  .add<Mass>();
+
+flecs::entity parent = world.entity()
+  .add(flecs::IsA, base); // inherits Mass
+
+flecs::entity child = world.entity()
+  .add(flecs::ChildOf, parent);
+
+// This filter matches 'child', because it has a parent that inherits Mass
+flecs::filter<> f = world.filter_builder()
+  .term<Mass>().up(flecs::ChildOf)
+  .build();
+```
+
+When a component is matched through traversal and its [access modifier](#access-modifiers) is not explicitly set, it defaults to `flecs::In`. This behavior is consistent with terms that have a fixed [source](#source).
+
+#### Iteration
+When a component is matched through traversal, the behavior is the same as though the component was matched through a fixed [source](#source): iteration will switch from table-based to entity-based. This happens on a per-result basis, if all terms are matched on the matched entity the entire table will be returned by the iterator. If one of the terms was matched through traversal, entities are returned one by one.
+
+While returning entities one by one is measurably slower than iterating entire tables, this default behavior enables match inherited components by default without requiring the user code to be explicitly aware of the difference between a regular component and an inherited component. An advantage of this approach is that applications that use inherited components can interoperate with third party systems that do not explicitly support them.
+
+To ensure fast table-based iteration an application can enable [instancing](#instancing). Instanced iteration is as fast as, and often faster than regular iteration. Using inherited components that are shared across many entities can improve cache efficiency as less data needs to be loaded from main RAM, and values are more likely to already be stored in the cache.
+
+> Note: the C++ `each` API always uses [instancing](#instancing), which guarantees fast table-based iteration.
+
+#### Limitations
+This list is an overview of current relationship traversal limitations:
+
+- The `Down` flag is currently reserved for internal purposes and should not be set when creating a query.
+- The `Cascade` flag only works for cached queries.
+- Rule queries currently only traverse when this is implicitly required (by transitive relationships, inheritance), but ignores flags set at query creation time.
+- Rule queries do not yet support all forms of implicit traversal (most notably the one used by prefabs)
+- Traversal flags can currently only be specified for the term source.
+- Union relationships are not supported for traversal.
+
+The following sections show how to use traversal in the different language bindings.
+
+#### Query Descriptor (C)
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. In the following example, both `base` and `inst` match the query:
+
+```c
+ecs_entity_t base = ecs_new(world, Position);
+ecs_entity_t inst = ecs_new_w_pair(worl, EcsIsA, base); // Inherits Position
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }
+  }
+});
+```
+
+Implicit traversal can be disabled by setting the `flags` member to `EcsSelf`. The following example only matches `base`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), .src.flags = EcsSelf }
+  }
+});
+```
+
+To use a different relationship for traversal, use the `trav` member in combination with the `EcsUp` flag. The following example only matches `child`:
+
+```c
+ecs_entity_t parent = ecs_new(world, Position);
+ecs_entity_t child = ecs_new(world, Position);
+
+ecs_add_pair(world, child, EcsChildOf, parent);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    // term matches parent & child
+    { ecs_id(Position) },
+    // term just matches child, parent does not have a parent with Position
+    { ecs_id(Position), .src.flags = EcsUp, src.trav = EcsChildOf }
+  }
+});
+```
+
+The `EcsParent` flag can be used which is shorthand for `EcsUp` with `EcsChildOf`. The query in the following example is equivalent to the one in the previous example:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsParent }
+  }
+});
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsParent, .oper = EcsOptional }
+  }
+});
+```
+
+By adding the `EcsCascade` flag, a query will iterate the hierarchy top-down. This is only supported for cached queries:
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .filter.terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsCascade|EcsParent, .oper = EcsOptional }
+  }
+});
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Window), .src.flags = EcsParent, .src.id = my_widget }
+  }
+});
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```cpp
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }
+  }
+});
+
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {{
+    .id = ecs_id(Position),       // match Position
+    .src.flags = EcsSelf | EcsUp  // first match self, traverse upwards while not found
+    .src.trav = EcsIsA,           // traverse using the IsA relationship
+  }}
+});
+```
+
+#### Query Builder (C++)
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. In the following example, both `base` and `inst` match the query:
+
+```cpp
+flecs::entity base = world.entity()
+  .add<Position>();
+
+flecs::entity inst = world.entity()
+  .is_a(base); // short for .add(flecs::IsA, base)
+
+flecs::filter<> f = world.filter<Position>();
+```
+
+Implicit traversal can be disabled by calling the `self` method for the term. The following example only matches `base`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>().self()
+  .build();
+```
+
+To use a different relationship for traversal, use the `up` method with the relationship as argument. The following example only matches `child`:
+
+```cpp
+flecs::entity parent = world.entity()
+  .add<Position>();
+
+flecs::entity child = world.entity()
+  .child_of(parent);  // short for .add(flecs::ChildOf, parent)
+
+flecs::filter<> f = world.filter_builder()
+  // term matches parent & child
+  .term<Position>()
+  // term just matches child, parent does not have a parent with Position
+  .term<Position>().up(flecs::ChildOf)
+  .build();
+```
+
+The `parent` method can be used which is shorthand for `up(flecs::ChildOf)`. The query in the following example is equivalent to the one in the previous example:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()
+  .term<Position>().parent()
+  .build();
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()
+  .term<Position>().parent().optional()
+  .build();
+```
+
+By calling the `cascade` method, a query will iterate the hierarchy top-down. Note that the example could also have called both `parent()` and `cascade()`. The `cascade` feature is only supported for cached queries:
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .term<Position>()
+  .term<Position>().cascade(flecs::ChildOf).optional()
+  .build();
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Window>().src(my_widget).parent()
+  .build();
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```cpp
+flecs::filter<> f = world.filter<Position>();
+
+flecs::filter<> f = world.filter_builder()
+  .term<Position>() // match Position
+    .self()         // first match self
+    .up(flecs::IsA) // traverse IsA upwards while not found
+  .build();
+```
+
+#### Query DSL
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. The following query matches `Position` on entities that either have the component or inherit it:
+
+```
+Position
+```
+
+Implicit traversal can be disabled by adding `self` enclosed by parentheses after the component identifier:
+
+```
+Position(self)
+```
+
+To use a different relationship for traversal, specify `up` with the relationship as argument:
+
+```
+Position(up(ChildOf))
+```
+
+The `parent` keyword can be used which is shorthand for `up(ChildOf)`. The query in the following example is equivalent to the one in the previous example:
+
+```
+Position(parent)
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional:
+
+```
+Position, ?Position(parent)
+```
+
+By adding the `cascade` keyword, a query will iterate the `ChildOf` hierarchy top-down. The `cascade` feature is only supported by cached queries:
+
+```
+Position, ?Position(parent|cascade)
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms, by using a colon (`:`) to separate the traversal flags and the source identifier. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```
+Window(parent:my_widget)
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```
+Position
+Position(self|up(IsA))
+```
 
 ### Instancing
+> *Supported by: filters, cached queries, rules*
 
-### Traversal
+> **Note**: this section is useful when optimizing code, but is not required knowledge for using queries.
 
-### Cascade
+Instancing is the ability to return results with fields that have different numbers of elements. An example of where this is relevant is a query with terms that have both variable and fixed [sources](#source):
+
+```
+Position, Velocity, SimTime(Game)
+```
+
+This query may return a result with a table that has many entities, therefore resulting in many component instances being available for `Position` and `Velocity`, while only having a single instance for the `SimTime` component. 
+
+Another much more common cause of mixed results is if a matched component is inherited from a prefab. Consider this example:
+
+```cpp
+flecs::entity base = world.prefab("base")
+  .set<Mass>({10});
+
+// Entities that share Mass and own Position
+flecs::entity inst_1 = world.entity("inst_1")
+  .is_a(base) // short for .add(flecs::IsA, base)
+  .set<Position>({10, 20});
+
+flecs::entity inst_2 = world.entity("inst_2")
+  .is_a(base)
+  .set<Position>({30, 40});
+
+// Entities that own Mass and Position
+flecs::entity ent_1 = world.entity("ent_1")
+  .set<Mass>({20})
+  .set<Position>({40, 50});
+
+flecs::entity ent_2 = world.entity("ent_2")
+  .set<Mass>({30})
+  .set<Position>({50, 60});
+
+flecs::filter<Position, Mass> f = world.filter<Position, Mass>();
+```
+
+The filter in this example will match both `inst_1`, `inst_2` because they inherit `Mass`, and `ent_1` and `ent_2` because they own `Mass`. The following example shows an example of code that iterates the filter:
+
+```cpp
+f.iter([](flecs::iter& it, Position *p, Mass *m) {
+  std::cout << "Result" << std::endl;
+  for (auto i : it) {
+    std::cout << " - " << it.entity(i).name() << ": " 
+      << m[i].value 
+      << std::endl;
+  }
+});
+```
+
+With iteration being table-based the expectation is that the result looks something like this, where all entities in the same table are iterated in the same result:
+
+```
+Result
+ - inst_1: 10
+ - inst_2: 10
+Result
+ - ent_1: 20
+ - ent_2: 30
+```
+
+Instead, when ran this code produces the following output:
+
+```
+Result
+ - inst_1: 10
+Result
+ - inst_2: 10
+Result
+ - ent_1: 20
+ - ent_2: 30
+```
+
+The prefab instances are returned one at a time, even though they are stored in the same table. The rationale behind this behavior is that it prevents a common error that was present in the previous code example, specifically where the `Mass` component was read:
+
+```cpp
+      << m[i].value
+```
+
+If `inst_1` and `inst_2` would have been returned in the same result it would have caused the inner for loop to loop twice. This means `i` would have become `1` and `m[1].value` would have caused an out of bounds violation, likely crashing the code. Why does this happen?
+
+The reason is that both entities inherit the same instance of the `Mass` component. The `Mass` pointer provided by the iterator is not an array to multiple values, in this case it is _a pointer to a single value_. To fix this error, the component would have to be accessed as:
+
+```cpp
+      << m->value
+```
+
+To prevent subtle errors like this from happening, iterators will switch to entity-based iteration when a result has fields of mixed lengths. This returns entities one by one, and guarantees that the loop variable `i` always has value `0`. The expression `m[0].value` is equivalent to `m->value`, which is the right way to access the component.
+
+> **Note**: As long as all fields in a result are of equal length, the iterator switches to table-based iteration. This is shown in the previous example: both `ent_1` and `ent_2` are returned in the same result.
+
+While this provides a safe default to iterate results with shared components, it does come at a performance cost. Iterating entities one at a time can be much slower than iterating an entire table, especially if tables are large. When this cost is too great, iteration can be *instanced*, which prevents switching from table-based to entity-based iteration.
+
+> **Note**: The implementation of the C++ `each` function always uses instancing.
+
+The following diagram shows the difference in how results are returned between instanced iteration and non-instanced iteration. Each result block corresponds with a call to the `iter` method in the above example:
+
+![filter diagram](img/query_instancing.png)
+
+Note that when iteration is not instanced, `inst_1` and `inst_2` are returned in separate results, whereas with instanced iteration they are both combined in the same result. Iterating the right result is faster for a few reasons:
+
+- Fewer results means less overhead from iteration code
+- Direct access to component arrays allows for optimizations like auto-vectorization
+
+However, what the diagram also shows is that code for instanced iterators must handle results where `Mass` is either an array or a single value. This is the tradeoff of instancing: faster iteration at the cost of more complex iteration code.
+
+The following sections show how to use instancing in the different language bindings.
+
+#### Query Builder (C)
+Queries can be instanced by setting the `instanced` member to true:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), src.flags = EcsSelf }, // Never inherit Position
+    { ecs_id(Mass) }
+  },
+  .instanced = true
+});
+```
+
 
 ### Variables
 
