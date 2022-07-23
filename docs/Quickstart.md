@@ -346,8 +346,8 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Position *p_parent = ecs_term(&it, Position, 2);
+    Position *p = ecs_field(&it, Position, 1);
+    Position *p_parent = ecs_field(&it, Position, 2);
     for (int i = 0; i < it.count; i++) {
         // Do the thing
     }
@@ -476,7 +476,7 @@ A term is the simplest kind of query in Flecs, and enables finding all entities 
 // Create an iterator that finds all entities that have Position
 ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_id(Position) });
 while (ecs_term_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 1);
 
     // Iterate the entities & their Position components
     for (int i = 0; i < it.count; i++) {
@@ -510,7 +510,7 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
     // Each type has its own set of component arrays
-    Position *p = ecs_term(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 1);
 
     // Iterate all entities for the type
     for (int i = 0; i < it.count; i++) {
@@ -623,8 +623,8 @@ ecs_run(world, move_sys, delta_time, NULL); // Run system
 
 // The callback code (same for both options)
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x * it->delta_time;

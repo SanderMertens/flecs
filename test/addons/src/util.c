@@ -20,14 +20,14 @@ void probe_system_w_ctx(
     int i;
     for (i = 0; i < ctx->term_count; i ++) {
         ctx->c[ctx->invoked][i] = it->ids[i];
-        ctx->s[ctx->invoked][i] = ecs_term_src(it, i + 1);
+        ctx->s[ctx->invoked][i] = ecs_field_src(it, i + 1);
 
-        ecs_id_t e = ecs_term_id(it, i + 1);
+        ecs_id_t e = ecs_field_id(it, i + 1);
         test_assert(e != 0);
     }
 
     if (it->entities) {
-        ecs_entity_t *e = ecs_term(it, ecs_entity_t, 0);
+        ecs_entity_t *e = ecs_field(it, ecs_entity_t, 0);
         if (e) {
             test_assert(e != NULL);
             test_assert(it->entities != NULL);
@@ -176,7 +176,7 @@ bool test_iter(
 
                 // Test data
                 for (t = 0; t < it->term_count; t++) {
-                    size_t size = ecs_term_size(it, t + 1);
+                    size_t size = ecs_field_size(it, t + 1);
                     if (!size) {
                         continue;
                     }
@@ -188,7 +188,7 @@ bool test_iter(
 
                     expect_ptr = ECS_OFFSET(expect_ptr, size * entity_index);
 
-                    void *component_ptr = ecs_term_w_size(it, size, t + 1);
+                    void *component_ptr = ecs_field_w_size(it, size, t + 1);
                     if (!if_test_assert(component_ptr != NULL)) {
                         return false;
                     }
@@ -214,7 +214,7 @@ bool test_iter(
                     break;
                 }
 
-                if (!if_test_assert(ecs_term_id(it, t + 1) == ids[t])) {
+                if (!if_test_assert(ecs_field_id(it, t + 1) == ids[t])) {
                     return false;
                 }
             }
@@ -235,7 +235,7 @@ bool test_iter(
                     break;
                 }
 
-                char *id_found = ecs_id_str(it->world, ecs_term_id(it, t + 1));
+                char *id_found = ecs_id_str(it->world, ecs_field_id(it, t + 1));
                 if (!if_test_str(id_found, ids_expect[t])) {
                     printf(" - term %d\n", t);
                     if (e) {

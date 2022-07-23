@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 
     // Outer loop, iterates archetypes
     while (ecs_query_next(&it)) {
-        Position *p = ecs_term(&it, Position, 1);
-        const Velocity *v = ecs_term(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 1);
+        const Velocity *v = ecs_field(&it, Velocity, 2);
 
         // Inner loop, iterates entities in archetype
         for (int i = 0; i < it.count; i ++) {
@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
     it = ecs_filter_iter(ecs, f);
 
     while (ecs_filter_next(&it)) {
-        Position *p = ecs_term(&it, Position, 1);
-        const Velocity *v = ecs_term(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 1);
+        const Velocity *v = ecs_field(&it, Velocity, 2);
 
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;

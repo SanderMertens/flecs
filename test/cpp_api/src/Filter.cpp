@@ -182,7 +182,7 @@ void Filter_term_get_id() {
         .term(Foo, Bar)
         .build();
 
-    test_int(q.term_count(), 3);
+    test_int(q.field_count(), 3);
     
     flecs::term 
     t = q.term(0);
@@ -206,7 +206,7 @@ void Filter_term_get_subj() {
         .term(Foo, Bar)
         .build();
 
-    test_int(q.term_count(), 3);
+    test_int(q.field_count(), 3);
     
     flecs::term 
     t = q.term(0);
@@ -230,7 +230,7 @@ void Filter_term_get_pred() {
         .term(Foo, Bar)
         .build();
 
-    test_int(q.term_count(), 3);
+    test_int(q.field_count(), 3);
     
     flecs::term 
     t = q.term(0);
@@ -254,7 +254,7 @@ void Filter_term_get_obj() {
         .term(Foo, Bar)
         .build();
 
-    test_int(q.term_count(), 3);
+    test_int(q.field_count(), 3);
     
     flecs::term 
     t = q.term(0);

@@ -322,7 +322,7 @@ void Switch_3_entities_change_case() {
 
 static
 void MatchSwitch(ecs_iter_t *it) {
-    ecs_entity_t *movement = ecs_term(it, ecs_entity_t, 1);
+    ecs_entity_t *movement = ecs_field(it, ecs_entity_t, 1);
     test_assert(movement != NULL);
     probe_iter(it);
 }
@@ -348,7 +348,7 @@ void Switch_query_switch() {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
     test_uint(it.entities[2], e3);
-    test_uint(ecs_pair(Movement, EcsWildcard), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -409,22 +409,22 @@ void Switch_query_1_case_2_types() {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e7);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e5);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));    
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));    
 
     test_bool(false, ecs_query_next(&it));
 
@@ -458,14 +458,14 @@ void Switch_query_2_cases_1_type() {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e4);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
-    test_uint(ecs_pair(Direction, Front), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Direction, Front), ecs_field_id(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
-    test_uint(ecs_pair(Direction, Front), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Direction, Front), ecs_field_id(&it, 2));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -503,20 +503,20 @@ void Switch_query_2_cases_2_types() {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e4);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
-    test_uint(ecs_pair(Direction, Front), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Direction, Front), ecs_field_id(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
-    test_uint(ecs_pair(Direction, Front), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Direction, Front), ecs_field_id(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e7);
-    test_uint(ecs_pair(Movement, Running), ecs_term_id(&it, 1));
-    test_uint(ecs_pair(Direction, Front), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Direction, Front), ecs_field_id(&it, 2));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -628,7 +628,7 @@ void Switch_query_after_remove() {
 static
 void SetCase(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_entity_t id = ecs_term_id(it, 2);
+    ecs_entity_t id = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -724,7 +724,7 @@ void Switch_change_one_case_in_stage() {
 static
 void RemoveSwitch(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_entity_t id = ecs_term_id(it, 1);
+    ecs_entity_t id = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -974,7 +974,7 @@ void Switch_query_recycled_tags() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
 
-    ecs_entity_t *cases = ecs_term(&it, ecs_entity_t, 1);
+    ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
     test_assert(cases != NULL);
     test_assert(ecs_get_alive(world, cases[0]) == Standing);
 
@@ -1088,22 +1088,22 @@ void Switch_switch_w_bitset_query() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1142,22 +1142,22 @@ void Switch_switch_w_bitset_query_inv() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1201,33 +1201,33 @@ void Switch_switch_w_bitset_query_2_elems() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1271,33 +1271,33 @@ void Switch_switch_w_bitset_query_2_elems_skip() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1358,22 +1358,22 @@ void Switch_switch_w_bitset_query_elems_interleaved() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e5);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e8);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1476,44 +1476,44 @@ void Switch_switch_w_bitset_query_elems_interleaved_2_types() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e5);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e8);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e5_2);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e8_2);
-    p = ecs_term(&it, Position, 1);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
-    c = ecs_term(&it, ecs_entity_t, 2);
+    c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
@@ -1636,8 +1636,8 @@ void Switch_component_relation() {
     test_uint(it.entities[0], e1);
     test_uint(it.ids[0], ecs_pair(Movement, Walking));
     test_uint(it.ids[1], ecs_pair(Direction, EcsWildcard));
-    m = ecs_term(&it, ecs_entity_t, 1);
-    d = ecs_term(&it, ecs_entity_t, 2);
+    m = ecs_field(&it, ecs_entity_t, 1);
+    d = ecs_field(&it, ecs_entity_t, 2);
     test_uint(m[0], Walking);
     test_uint(d[0], Front);
 

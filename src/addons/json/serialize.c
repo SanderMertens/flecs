@@ -1022,7 +1022,7 @@ void serialize_iter_result_ids(
 
     for (int i = 0; i < it->term_count; i ++) {
         flecs_json_next(buf);
-        serialize_id(world,  ecs_term_id(it, i + 1), buf);
+        serialize_id(world,  ecs_field_id(it, i + 1), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -1060,7 +1060,7 @@ void serialize_iter_result_is_set(
 
     for (int i = 0; i < it->term_count; i ++) {
         ecs_strbuf_list_next(buf);
-        if (ecs_term_is_set(it, i + 1)) {
+        if (ecs_field_is_set(it, i + 1)) {
             flecs_json_true(buf);
         } else {
             flecs_json_false(buf);
@@ -1274,13 +1274,13 @@ void serialize_iter_result_values(
 
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
-            if (ecs_term_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i + 1)) {
                 flecs_json_literal(buf, "0");
                 continue;
             }
         }
 
-        if (ecs_term_is_writeonly(it, i + 1)) {
+        if (ecs_field_is_writeonly(it, i + 1)) {
             flecs_json_literal(buf, "0");
             continue;
         }
@@ -1311,14 +1311,14 @@ void serialize_iter_result_values(
 
         /* If term is not set, append empty array. This indicates that the term
          * could have had data but doesn't */
-        if (!ecs_term_is_set(it, i + 1)) {
+        if (!ecs_field_is_set(it, i + 1)) {
             ecs_assert(ptr == NULL, ECS_INTERNAL_ERROR, NULL);
             flecs_json_array_push(buf);
             flecs_json_array_pop(buf);
             continue;
         }
 
-        if (ecs_term_is_owned(it, i + 1)) {
+        if (ecs_field_is_self(it, i + 1)) {
             int32_t count = it->count;
             array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
         } else {

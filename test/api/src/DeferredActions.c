@@ -362,7 +362,7 @@ void DeferredActions_defer_twice_in_progress() {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     ecs_defer_begin(it->world);
 
@@ -1909,7 +1909,7 @@ static void update_counter(ecs_iter_t *it) {
 }
 
 static void remove_counter(ecs_iter_t *it) {
-    Counter *ptr = ecs_term(it, Counter, 1);
+    Counter *ptr = ecs_field(it, Counter, 1);
 
     for (int i = 0; i < it->count; i ++) {
         test_int(ptr[i].value, 0);

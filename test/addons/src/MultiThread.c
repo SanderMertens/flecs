@@ -7,7 +7,7 @@ void MultiThread_setup() {
 }
 
 void Progress(ecs_iter_t *it) {
-    Position *pos = ecs_term(it, Position, 1);
+    Position *pos = ecs_field(it, Position, 1);
     int row;
     for (row = 0; row < it->count; row ++) {
         Position *p = &pos[row];
@@ -721,9 +721,9 @@ void TestSubset(ecs_iter_t *it) {
 
 static
 void TestAll(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
-    ecs_entity_t TestSubset = ecs_term_id(it, 2);
+    ecs_entity_t TestSubset = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1002,7 +1002,7 @@ void ReactiveDummySystem(ecs_iter_t * it) {
 
 static
 void PeriodicDummySystem(ecs_iter_t * it) {
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
     
     int i;
     for (i = 0; i < it->count; i++ ) {
@@ -1047,7 +1047,7 @@ void MultiThread_fini_after_set_threads() {
 
 static
 void SingleThreadedSystem(ecs_iter_t * it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     
     int i;
     for (i = 0; i < it->count; i++ ) {

@@ -27,11 +27,11 @@ void test_no_chain(
     test_int(it.count, 2);
     test_int(it.entities[0], e1);
     test_int(it.entities[1], e2);
-    test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_src(&it, 1), 0);
+    test_int(ecs_field_id(&it, 1), ecs_id(Position));
+    test_int(ecs_field_src(&it, 1), 0);
     test_assert(it.table != NULL);
 
-    Position *ptr = ecs_term(&it, Position, 1);
+    Position *ptr = ecs_field(&it, Position, 1);
     test_assert(ptr != NULL);
     test_int(ptr[0].x, 10);
     test_int(ptr[0].y, 20);
@@ -41,11 +41,11 @@ void test_no_chain(
     test_assert(ecs_iter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_id(Position));
-    test_int(ecs_term_src(&it, 1), 0);
+    test_int(ecs_field_id(&it, 1), ecs_id(Position));
+    test_int(ecs_field_src(&it, 1), 0);
     test_assert(it.table != NULL);
 
-    ptr = ecs_term(&it, Position, 1);
+    ptr = ecs_field(&it, Position, 1);
     test_assert(ptr != NULL);
     test_int(ptr[0].x, 50);
     test_int(ptr[0].y, 60);
@@ -73,8 +73,8 @@ void test_w_chain(
     test_int(it->count, 2);
     test_int(it->entities[0], e1);
     test_int(it->entities[1], e2);
-    test_int(ecs_term_id(it, 1), Tag);
-    test_int(ecs_term_src(it, 1), 0);
+    test_int(ecs_field_id(it, 1), Tag);
+    test_int(ecs_field_src(it, 1), 0);
     test_assert(it->table != NULL);
 
     ecs_iter_t *chain_it = it->chain_it;
@@ -83,10 +83,10 @@ void test_w_chain(
     test_int(chain_it->count, 2);
     test_int(chain_it->entities[0], e1);
     test_int(chain_it->entities[1], e2);
-    test_int(ecs_term_id(chain_it, 1), ecs_id(Position));
-    test_int(ecs_term_src(chain_it, 1), 0);
+    test_int(ecs_field_id(chain_it, 1), ecs_id(Position));
+    test_int(ecs_field_src(chain_it, 1), 0);
 
-    Position *ptr = ecs_term(chain_it, Position, 1);
+    Position *ptr = ecs_field(chain_it, Position, 1);
     test_assert(ptr != NULL);
     test_int(ptr[0].x, 10);
     test_int(ptr[0].y, 20);
@@ -252,7 +252,7 @@ static
 void PolyTrigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    EcsPoly *poly = ecs_term(it, EcsPoly, 1);
+    EcsPoly *poly = ecs_field(it, EcsPoly, 1);
 
     test_int(1, it->count);
     test_assert(poly->poly != NULL);

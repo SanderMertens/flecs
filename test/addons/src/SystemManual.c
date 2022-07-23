@@ -6,16 +6,16 @@ void SystemManual_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
         
     if (it->term_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 2);
     }
 
     if (it->term_count >= 3) {
-        m = ecs_term(it, Mass, 3);
+        m = ecs_field(it, Mass, 3);
     }
 
     probe_iter(it);
@@ -91,7 +91,7 @@ void NormalSystem(ecs_iter_t *it) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -132,7 +132,7 @@ void SystemManual_no_automerge() {
 static int dummy_ran = 0;
 
 void DummySystem(ecs_iter_t *it) {
-    ecs_entity_t Tag = ecs_term_id(it, 1);
+    ecs_entity_t Tag = ecs_field_id(it, 1);
     ecs_add_id(it->world, Tag, Tag);
     dummy_ran ++;
 }

@@ -366,8 +366,8 @@ void QueryBuilder_singleton_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
         
         const Other& o_ref = *o;
@@ -399,8 +399,8 @@ void QueryBuilder_isa_superset_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -432,9 +432,9 @@ void QueryBuilder_isa_self_superset_term() {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
+        auto o = it.field<const Other>(2);
 
-        if (!it.is_owned(2)) {
+        if (!it.is_self(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -470,8 +470,8 @@ void QueryBuilder_childof_superset_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -503,9 +503,9 @@ void QueryBuilder_childof_self_superset_term() {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
+        auto o = it.field<const Other>(2);
 
-        if (!it.is_owned(2)) {
+        if (!it.is_self(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -1073,7 +1073,7 @@ void QueryBuilder_1_term_to_empty() {
 
     auto q = qb.build();
 
-    test_int(q.term_count(), 2);
+    test_int(q.field_count(), 2);
     test_int(q.term(0).id(), ecs.id<Position>());
     test_int(q.term(1).id(), ecs.pair(Likes, Apples));
 }
@@ -1150,7 +1150,7 @@ void QueryBuilder_10_terms() {
         .term<TagJ>()
         .build();
 
-    test_int(f.term_count(), 10);
+    test_int(f.field_count(), 10);
 
     auto e = ecs.entity()
         .add<TagA>()
@@ -1168,7 +1168,7 @@ void QueryBuilder_10_terms() {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         test_assert(it.entity(0) == e);
-        test_int(it.term_count(), 10);
+        test_int(it.field_count(), 10);
         count ++;
     });
 
@@ -1201,7 +1201,7 @@ void QueryBuilder_20_terms() {
         .term<TagT>()
         .build();
 
-    test_int(f.term_count(), 20);
+    test_int(f.field_count(), 20);
 
     auto e = ecs.entity()
         .add<TagA>()
@@ -1229,7 +1229,7 @@ void QueryBuilder_20_terms() {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         test_assert(it.entity(0) == e);
-        test_int(it.term_count(), 20);
+        test_int(it.field_count(), 20);
         count ++;
     });
 

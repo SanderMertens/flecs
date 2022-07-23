@@ -66,7 +66,7 @@ void Singleton_get_mut_singleton() {
 
 static
 void IncSingleton(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     p->x ++;
     p->y ++;
 }

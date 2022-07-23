@@ -2,10 +2,10 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Position *p_parent = ecs_term(it, Position, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Position *p_parent = ecs_field(it, Position, 2);
 
-    test_assert(!p_parent || !ecs_term_is_owned(it, 2));
+    test_assert(!p_parent || !ecs_field_is_self(it, 2));
 
     probe_iter(it);
 
@@ -251,10 +251,10 @@ void SystemCascade_cascade_depth_2_new_syntax() {
 
 static
 void AddParent(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Position *p_parent = ecs_term(it, Position, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Position *p_parent = ecs_field(it, Position, 2);
 
-    test_assert(!p_parent || !ecs_term_is_owned(it, 2));
+    test_assert(!p_parent || !ecs_field_is_self(it, 2));
 
     probe_iter(it);
 

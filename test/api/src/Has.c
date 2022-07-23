@@ -67,7 +67,7 @@ void Has_1_of_empty() {
 }
 
 void TestHas(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {

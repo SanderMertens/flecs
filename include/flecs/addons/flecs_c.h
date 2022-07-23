@@ -473,20 +473,8 @@
 
 /* -- Iterators -- */
 
-#define ecs_term_id(it, index)\
-    ((it)->ids[(index) - 1])
-
-#define ecs_term_src(it, index)\
-    ((it)->sources ? (it)->sources[(index) - 1] : 0)
-
-#define ecs_term_size(it, index)\
-    ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
-
-#define ecs_term_is_owned(it, index)\
-    ((it)->sources == NULL || (it)->sources[(index) - 1] == 0)
-
-#define ecs_term(it, T, index)\
-    (ECS_CAST(T*, ecs_term_w_size(it, sizeof(T), index)))
+#define ecs_field(it, T, index)\
+    (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
 #define ecs_iter_column(it, T, index)\
     (ECS_CAST(T*, ecs_iter_column_w_size(it, sizeof(T), index)))

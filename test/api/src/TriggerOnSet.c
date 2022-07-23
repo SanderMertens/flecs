@@ -7,11 +7,11 @@ void Trigger(ecs_iter_t *it) {
 
 static
 void OnSet(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     Velocity *v = NULL;
     if (it->term_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 2);
     }
 
     probe_iter(it);
@@ -229,7 +229,7 @@ static bool set_called;
 
 static
 void OnAdd_check_order(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     test_assert(!add_called);
     test_assert(!set_called);
@@ -247,7 +247,7 @@ void OnAdd_check_order(ecs_iter_t *it) {
 
 static
 void OnSet_check_order(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     probe_iter(it);
 
@@ -303,11 +303,11 @@ void TriggerOnSet_set_and_add_system() {
 
 static
 void OnSetShared(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     Velocity *v = NULL;
     if (it->term_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 2);
     }
 
     probe_iter(it);

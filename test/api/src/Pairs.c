@@ -17,7 +17,7 @@ typedef struct Obj {
 } Obj;
 
 void ProcessPairs(ecs_iter_t *it) {
-    Rel *tr = ecs_term(it, Rel, 1);
+    Rel *tr = ecs_field(it, Rel, 1);
 
     probe_iter(it);
 
@@ -271,7 +271,7 @@ void Pairs_add_tag_pair_for_tag() {
 void ProcessValuePairs(ecs_iter_t *it) {
     /* Strictly speaking this can be either Position or Velocity, but they have
      * the same layout. */
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     probe_iter(it);
 
@@ -348,8 +348,8 @@ void Pairs_add_tag_pair_for_component() {
 }
 
 void ProcessTwoPairs(ecs_iter_t *it) {
-    RelA *tr_a = ecs_term(it, RelA, 1);
-    RelB *tr_b = ecs_term(it, RelB, 2);
+    RelA *tr_a = ecs_field(it, RelA, 1);
+    RelB *tr_b = ecs_field(it, RelB, 2);
 
     probe_iter(it);
 
@@ -819,7 +819,7 @@ void Pairs_pair_w_component_query() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Rel *t = ecs_term(&it, Rel, 1);
+        Rel *t = ecs_field(&it, Rel, 1);
         test_assert(t != NULL);
 
         int i;
@@ -849,7 +849,7 @@ void Pairs_query_pair_or_component() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_term(&it, Position, 1);
+        Position *t = ecs_field(&it, Position, 1);
         test_assert(t != NULL);
 
         int i;
@@ -881,7 +881,7 @@ void Pairs_query_pair_or_pair() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_term(&it, Position, 1);
+        Position *t = ecs_field(&it, Position, 1);
         test_assert(t != NULL);
 
         int i;
@@ -911,9 +911,9 @@ void Pairs_query_not_pair() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_term(&it, Position, 1);
+        Position *t = ecs_field(&it, Position, 1);
         test_assert(t == NULL);
-        Position *p = ecs_term(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 2);
         test_assert(p != NULL);
 
         int i;
@@ -1064,7 +1064,7 @@ void Pairs_dsl_pair() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1106,12 +1106,12 @@ void Pairs_dsl_pair_w_pred_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1153,12 +1153,12 @@ void Pairs_dsl_pair_w_obj_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj_2));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1203,22 +1203,22 @@ void Pairs_dsl_pair_w_both_wildcard() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
 
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj_2));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj_2));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1260,7 +1260,7 @@ void Pairs_dsl_pair_w_explicit_subj_this() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1308,8 +1308,8 @@ void Pairs_dsl_pair_w_explicit_subj() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
-    test_int(ecs_term_src(&it, 1), Subj);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_src(&it, 1), Subj);
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1351,7 +1351,7 @@ void Pairs_api_pair() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1393,12 +1393,12 @@ void Pairs_api_pair_w_pred_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1440,12 +1440,12 @@ void Pairs_api_pair_w_obj_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj_2));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1490,22 +1490,22 @@ void Pairs_api_pair_w_both_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj_2));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj));
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj_2));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel_2, Obj_2));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1549,7 +1549,7 @@ void Pairs_api_pair_w_explicit_subj_this() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), false); 
 
@@ -1597,8 +1597,8 @@ void Pairs_api_pair_w_explicit_subj() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
-    test_int(ecs_term_src(&it, 1), Subj);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_src(&it, 1), Subj);
 
     test_bool(ecs_query_next(&it), false); 
 
