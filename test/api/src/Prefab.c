@@ -8,14 +8,14 @@ void Prefab_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_term(it, Mass, 1);
-    bool shared = !ecs_term_is_owned(it, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 1);
+    bool shared = !ecs_field_is_self(it, 1);
 
-    Position *p = ecs_term(it, Position, 2);
+    Position *p = ecs_field(it, Position, 2);
 
     Velocity *v = NULL;
     if (it->term_count >= 3) {
-        v = ecs_term(it, Velocity, 3);
+        v = ecs_field(it, Velocity, 3);
     }
 
     probe_iter(it);
@@ -548,20 +548,20 @@ static
 void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
     if (it->term_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 2);
         if (v) {
-            test_assert(!ecs_term_is_owned(it, 2));
+            test_assert(!ecs_field_is_self(it, 2));
         }
     }
     
     Mass *m = NULL;
     if (it->term_count >= 3) {
-        m = ecs_term(it, Mass, 3);
+        m = ecs_field(it, Mass, 3);
     }
 
     probe_iter(it);
 
-    Position *pos = ecs_term(it, Position, 1);
+    Position *pos = ecs_field(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         Position *p = &pos[i];
@@ -863,8 +863,8 @@ void Prefab_ignore_prefab_parent_component() {
 
 static
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -875,7 +875,7 @@ void Move(ecs_iter_t *it) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1468,7 +1468,7 @@ void Prefab_on_set_on_instance() {
 }
 
 void InstantiateInProgress(ecs_iter_t *it) {
-    ecs_id_t Prefab = ecs_term_id(it, 2);
+    ecs_id_t Prefab = ecs_field_id(it, 2);
     ecs_entity_t *ids = ecs_get_context(it->world);
 
     int i;
@@ -1510,7 +1510,7 @@ void Prefab_instantiate_in_progress() {
 }
 
 void NewInProgress(ecs_iter_t *it) {
-    ecs_id_t Prefab = ecs_term_id(it, 2);
+    ecs_id_t Prefab = ecs_field_id(it, 2);
 
     ecs_entity_t *ids = ecs_get_context(it->world);
 
@@ -1688,7 +1688,7 @@ void Prefab_no_overwrite_on_2nd_add() {
 }
 
 void AddPrefab(ecs_iter_t *it) {
-    ecs_id_t Prefab = ecs_term_id(it, 2);
+    ecs_id_t Prefab = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1818,7 +1818,7 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
 
 void NewPrefab_w_count(ecs_iter_t *it) {
     ecs_entity_t *ids = ecs_get_context(it->world);
-    ecs_id_t Prefab = ecs_term_id(it, 1);
+    ecs_id_t Prefab = ecs_field_id(it, 1);
 
     const ecs_entity_t *new_ids = ecs_bulk_new_w_id(it->world, ecs_pair(EcsIsA, Prefab), 3);
     test_assert(new_ids != NULL);
@@ -1870,8 +1870,8 @@ static int on_set_velocity_invoked;
 
 static
 void OnSetVelocity(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     on_set_velocity_invoked ++;
 
@@ -1879,7 +1879,7 @@ void OnSetVelocity(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
 
-        if (ecs_term_is_owned(it, 1)) {
+        if (ecs_field_is_self(it, 1)) {
             v[i].x ++;
             v[i].y ++;
         }
@@ -1934,8 +1934,8 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
 }
 
 void AddPrefabInProgress(ecs_iter_t *it) {
-    ecs_id_t Prefab = ecs_term_id(it, 2);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 3);
+    ecs_id_t Prefab = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 3);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1980,10 +1980,10 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
 }
 
 void TestBase(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
-    test_assert(!ecs_term_is_owned(it, 2));
+    test_assert(!ecs_field_is_self(it, 2));
 
     test_assert(p != NULL);
     test_assert(v != NULL);
@@ -2012,7 +2012,7 @@ void Prefab_match_base() {
 
 static
 void AddMass(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Mass) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Mass) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2107,7 +2107,7 @@ void Prefab_rematch_twice() {
 
 static
 void AddPosition(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
     
     ecs_entity_t *base = ecs_get_context(it->world);
 
@@ -2162,7 +2162,7 @@ static bool has_cloned = false;
 static
 void CloneInOnAdd(ecs_iter_t *it)
 {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2236,7 +2236,7 @@ void Prefab_override_from_nested() {
 
 static
 void OnAddEntity(ecs_iter_t *it) {
-    ecs_entity_t *e = ecs_term(it, ecs_entity_t, 1);
+    ecs_entity_t *e = ecs_field(it, ecs_entity_t, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2311,7 +2311,7 @@ static ecs_entity_t new_instance_1, new_instance_2;
 
 static
 void CreateInstances(ecs_iter_t *it) {
-    ecs_id_t Prefab = ecs_term_id(it, 1);
+    ecs_id_t Prefab = ecs_field_id(it, 1);
 
     new_instance_1 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
     new_instance_2 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
@@ -2663,7 +2663,7 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
     test_int(it.count, 1);
     test_int(it.entities[0], child);
 
-    Position *p = ecs_term(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -2703,7 +2703,7 @@ void Prefab_rematch_after_prefab_delete() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    Position *p = ecs_term(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -3009,12 +3009,12 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
 
-    const Position *p = ecs_term(&it, Position, 2);
+    const Position *p = ecs_field(&it, Position, 2);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    test_assert(ecs_term_src(&it, 2) == base);
+    test_assert(ecs_field_src(&it, 2) == base);
 
     ecs_fini(world);
 }

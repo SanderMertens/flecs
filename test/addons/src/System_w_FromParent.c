@@ -6,22 +6,22 @@ void System_w_FromParent_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_term(it, Mass, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 1);
     bool shared = false;
     
     if (m_ptr) {
-        shared = !ecs_term_is_owned(it, 1);
+        shared = !ecs_field_is_self(it, 1);
     }
 
     Position *p = NULL;
     Velocity *v = NULL;
 
     if (it->term_count >= 2) {
-        p = ecs_term(it, Position, 2);
+        p = ecs_field(it, Position, 2);
     }
 
     if (it->term_count >= 3) {
-        v = ecs_term(it, Velocity, 3);
+        v = ecs_field(it, Velocity, 3);
     }
 
     probe_iter(it);
@@ -185,22 +185,22 @@ void System_w_FromParent_2_column_1_from_container() {
 
 static
 void Iter_2_shared(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_term(it, Mass, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 1);
 
     Rotation *r_ptr = NULL;
     Position *p = NULL;
     Velocity *v = NULL;
 
     if (it->term_count >= 2) {
-        r_ptr = ecs_term(it, Rotation, 2);
+        r_ptr = ecs_field(it, Rotation, 2);
     }
 
     if (it->term_count >= 3) {
-        p = ecs_term(it, Position, 3);
+        p = ecs_field(it, Position, 3);
     }
 
     if (it->term_count >= 4) {
-        v = ecs_term(it, Velocity, 4);
+        v = ecs_field(it, Velocity, 4);
     }    
 
     probe_iter(it);
@@ -570,10 +570,10 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
 
 static
 void Dummy(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_term(it, Mass, 1);
-    Position *p = ecs_term(it, Position, 2);
+    Mass *m_ptr = ecs_field(it, Mass, 1);
+    Position *p = ecs_field(it, Position, 2);
 
-    test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
+    test_assert(!m_ptr || !ecs_field_is_self(it, 1));
 
     probe_iter(it);
 
@@ -765,7 +765,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
 
 static
 void SetMass(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Mass) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Mass) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1168,10 +1168,10 @@ void System_w_FromParent_new_child_after_match() {
 }
 
 void IterSame(ecs_iter_t *it) {
-    Position *p_parent = ecs_term(it, Position, 1);
-    Position *p = ecs_term(it, Position, 2);
+    Position *p_parent = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 2);
 
-    test_assert(!ecs_term_is_owned(it, 1));
+    test_assert(!ecs_field_is_self(it, 1));
 
     probe_iter(it);
 

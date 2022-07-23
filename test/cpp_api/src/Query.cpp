@@ -74,9 +74,9 @@ void Query_action_shared() {
         .build();
 
     q.iter([](flecs::iter&it, Position *p) {
-            auto v = it.term<const Velocity>(2);
+            auto v = it.field<const Velocity>(2);
 
-            if (!it.is_owned(2)) {
+            if (!it.is_self(2)) {
                 for (auto i : it) {
                     p[i].x += v->x;
                     p[i].y += v->y;
@@ -304,8 +304,8 @@ void Query_signature() {
     auto q = world.query_builder<>().expr("Position, Velocity").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.term<Position>(1);
-        auto v = it.term<Velocity>(2);
+        auto p = it.field<Position>(1);
+        auto v = it.field<Velocity>(2);
 
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -331,8 +331,8 @@ void Query_signature_const() {
     auto q = world.query_builder<>().expr("Position, [in] Velocity").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.term<Position>(1);
-        auto v = it.term<const Velocity>(2);
+        auto p = it.field<Position>(1);
+        auto v = it.field<const Velocity>(2);
         
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -367,10 +367,10 @@ void Query_signature_shared() {
         .build();
     
     q.iter([](flecs::iter&it) {
-        auto p = it.term<Position>(1);
-        auto v = it.term<const Velocity>(2);
+        auto p = it.field<Position>(1);
+        auto v = it.field<const Velocity>(2);
 
-        if (!it.is_owned(2)) {
+        if (!it.is_self(2)) {
             for (auto i : it) {
                 p[i].x += v->x;
                 p[i].y += v->y;
@@ -418,9 +418,9 @@ void Query_signature_optional() {
     auto q = world.query_builder<>().expr("Position, ?Velocity, ?Mass").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.term<Position>(1);
-        auto v = it.term<const Velocity>(2);
-        auto m = it.term<const Mass>(3);
+        auto p = it.field<Position>(1);
+        auto v = it.field<const Velocity>(2);
+        auto m = it.field<const Mass>(3);
 
         if (it.is_set(2) && it.is_set(3)) {
             for (auto i : it) {
@@ -493,7 +493,7 @@ void Query_subquery_w_expr() {
     auto sq = world.query_builder<>().observable(q).expr("Velocity").build();
 
     sq.iter([](flecs::iter it) {
-        auto v = it.term<Velocity>(1);
+        auto v = it.field<Velocity>(1);
 
         for (auto i : it) {
             v[i].x ++;
@@ -777,7 +777,7 @@ void Query_inspect_terms() {
         .term(flecs::ChildOf, p)
         .build();
 
-    test_int(3, q.term_count());
+    test_int(3, q.field_count());
 
     auto t = q.term(0);
     test_int(t.id(), world.id<Position>());
@@ -955,7 +955,7 @@ void Query_term_pair_type() {
     q.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
 
-        auto a = it.term<EatsApples>(1);
+        auto a = it.field<EatsApples>(1);
 
         test_int(a->amount, 10);
         test_assert(it.entity(0) == e1);
@@ -1491,7 +1491,7 @@ void Query_instanced_query_w_base_iter() {
         test_assert(it.count() > 1);
 
         for (auto i : it) {
-            if (it.is_owned(3)) {
+            if (it.is_self(3)) {
                 p[i].x += v[i].x;
                 p[i].y += v[i].y;
             } else {

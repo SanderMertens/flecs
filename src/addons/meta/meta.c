@@ -627,7 +627,7 @@ int add_constant_to_bitmask(
 static
 void set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsPrimitive *type = ecs_term(it, EcsPrimitive, 1);
+    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -691,7 +691,7 @@ void set_primitive(ecs_iter_t *it) {
 static
 void set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMember *member = ecs_term(it, EcsMember, 1);
+    EcsMember *member = ecs_field(it, EcsMember, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -762,7 +762,7 @@ void add_constant(ecs_iter_t *it) {
 static
 void set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsArray *array = ecs_term(it, EcsArray, 1);
+    EcsArray *array = ecs_field(it, EcsArray, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -792,7 +792,7 @@ void set_array(ecs_iter_t *it) {
 static
 void set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsVector *array = ecs_term(it, EcsVector, 1);
+    EcsVector *array = ecs_field(it, EcsVector, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -934,7 +934,7 @@ error:
 
 static
 void set_unit(ecs_iter_t *it) {
-    EcsUnit *u = ecs_term(it, EcsUnit, 1);
+    EcsUnit *u = ecs_field(it, EcsUnit, 1);
 
     ecs_world_t *world = it->world;
 
@@ -966,7 +966,7 @@ void unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetaType *type = ecs_term(it, EcsMetaType, 1);
+    EcsMetaType *type = ecs_field(it, EcsMetaType, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {

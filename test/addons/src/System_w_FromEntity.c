@@ -2,20 +2,20 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_term(it, Mass, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 1);
 
     Position *p = NULL;
     Velocity *v = NULL;
 
     if (it->term_count >= 2) {
-        p = ecs_term(it, Position, 2);
+        p = ecs_field(it, Position, 2);
     }
 
     if (it->term_count >= 3) {
-        v = ecs_term(it, Velocity, 3);
+        v = ecs_field(it, Velocity, 3);
     }
 
-    test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
+    test_assert(!m_ptr || !ecs_field_is_self(it, 1));
 
     probe_iter(it);
 
@@ -88,8 +88,8 @@ void dummy_reset() {
 static
 void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
-    dummy_component = ecs_term_id(it, 1);
-    dummy_source = ecs_term_src(it, 1);
+    dummy_component = ecs_field_id(it, 1);
+    dummy_source = ecs_field_src(it, 1);
 }
 
 void System_w_FromEntity_task_from_entity() {

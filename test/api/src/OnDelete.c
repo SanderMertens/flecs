@@ -1439,7 +1439,7 @@ typedef struct {
 static 
 void delete_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
-    Entity *comp = ecs_term(it, Entity, 1);
+    Entity *comp = ecs_field(it, Entity, 1);
     test_assert(comp != NULL);
     test_assert(comp->other != 0);
     ecs_delete(it->world, comp->other);
@@ -2259,7 +2259,7 @@ static int delete_target_invoked = 0;
 
 static
 void DeleteTarget(ecs_iter_t *it) {
-    ecs_id_t pair = ecs_term_id(it, 1);
+    ecs_id_t pair = ecs_field_id(it, 1);
     test_assert(ecs_id_is_pair(pair));
     ecs_delete(it->world, ECS_PAIR_SECOND(pair));
     delete_target_invoked ++;
@@ -2340,7 +2340,7 @@ void OnDelete_delete_nested_in_on_remove() {
 
 static
 void AddRemoved(ecs_iter_t *it) {
-    ecs_id_t id = ecs_term_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 1);
     for (int i = 0; i < it->count; i ++) {
         ecs_new_w_id(it->world, id); /* create entity with removed id */
     }

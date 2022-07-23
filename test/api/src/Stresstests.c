@@ -59,7 +59,7 @@ void Add_random(ecs_iter_t *it) {
 
 static
 void Set_velocity_callback(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {

@@ -68,9 +68,9 @@ void System_iter_shared() {
 
     world.system<Position>().expr("Velocity(self|up)")
         .iter([](flecs::iter&it, Position *p) {
-            auto v = it.term<const Velocity>(2);
+            auto v = it.field<const Velocity>(2);
 
-            if (!it.is_owned(2)) {
+            if (!it.is_self(2)) {
                 for (auto i : it) {
                     p[i].x += v->x;
                     p[i].y += v->y;
@@ -347,7 +347,7 @@ void System_signature_shared() {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
 
-            if (!it.is_owned(2)) {
+            if (!it.is_self(2)) {
                 for (auto i : it) {
                     p[i].x += v->x;
                     p[i].y += v->y;
@@ -671,7 +671,7 @@ void System_get_query() {
     auto q = sys.query();
 
     q.iter([&](flecs::iter &it) {
-        auto pos = it.term<const Position>(1);
+        auto pos = it.field<const Position>(1);
         for (auto i : it) {
             test_int(i, pos[i].x);
             count ++;
@@ -1504,7 +1504,7 @@ void System_instanced_query_w_base_iter() {
             test_assert(it.count() > 1);
 
             for (auto i : it) {
-                if (it.is_owned(3)) {
+                if (it.is_self(3)) {
                     p[i].x += v[i].x;
                     p[i].y += v[i].y;
                 } else {

@@ -104,7 +104,7 @@ struct filter_base {
         return flecs::term(m_world, m_filter_ptr->terms[index]);
     }
 
-    int32_t term_count() {
+    int32_t field_count() {
         return m_filter_ptr->term_count;
     }
 

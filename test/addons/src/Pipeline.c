@@ -367,7 +367,7 @@ static int sys_out_invoked;
 static int sys_in_invoked;
 
 static void SysOut(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     sys_out_invoked ++;
 
@@ -378,7 +378,7 @@ static void SysOut(ecs_iter_t *it) {
 }
 
 static void SysOutMain(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     sys_out_invoked ++;
 
@@ -390,7 +390,7 @@ static void SysOutMain(ecs_iter_t *it) {
 }
 
 static void SysIn(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -407,8 +407,8 @@ static void SysIn(ecs_iter_t *it) {
 }
 
 static void SysInMain(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -747,7 +747,7 @@ void Pipeline_3_systems_3_types() {
 
 static
 void RandomWrite(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_term_id(it, 2);
+    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -798,7 +798,7 @@ void RandomReadAfterRW(ecs_iter_t *it) {
 
 static
 void RandomRead_Not(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_term_id(it, 2);
+    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1297,7 +1297,7 @@ void Pipeline_mixed_staging() {
 static
 void WritePosition(ecs_iter_t *it) {
     if (*(bool*)it->ctx) {
-        ecs_entity_t ecs_id(Position) = ecs_term_id(it, 2);
+        ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
         for (int i = 0; i < it->count; i ++) {
             ecs_add(it->world, it->entities[i], Position);
         }

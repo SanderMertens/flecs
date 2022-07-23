@@ -26,19 +26,19 @@ inline flecs::entity iter::entity(size_t row) const {
 
 template <typename T>
 inline column<T>::column(iter &iter, int32_t index) {
-    *this = iter.term<T>(index);
+    *this = iter.field<T>(index);
 }
 
 inline flecs::entity iter::src(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_term_src(m_iter, index));
+    return flecs::entity(m_iter->world, ecs_field_src(m_iter, index));
 }
 
 inline flecs::entity iter::id(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
+    return flecs::entity(m_iter->world, ecs_field_id(m_iter, index));
 }
 
 inline flecs::id iter::pair(int32_t index) const {
-    flecs::id_t id = ecs_term_id(m_iter, index);
+    flecs::id_t id = ecs_field_id(m_iter, index);
     ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(m_iter->world, id);
 error:

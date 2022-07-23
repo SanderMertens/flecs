@@ -49,7 +49,7 @@ void Switch_system_w_case() {
     world.system()
         .expr("(Movement, Walking)")
         .iter([&](flecs::iter it) {
-            auto movement = it.term<flecs::entity_t>(1);
+            auto movement = it.field<flecs::entity_t>(1);
 
             invoke_count ++;
             for (auto i : it) {
@@ -79,7 +79,7 @@ void Switch_system_w_case_builder() {
     world.system()
         .term(Movement, Walking)
         .iter([&](flecs::iter it) {
-            auto movement = it.term<flecs::entity_t>(1);
+            auto movement = it.field<flecs::entity_t>(1);
 
             invoke_count ++;
             for (auto i : it) {
@@ -145,7 +145,7 @@ void Switch_system_w_sw_type_builder() {
     world.system<>()
         .term<Movement, Walking>()
         .iter([&](flecs::iter it) {
-            auto movement = it.term<flecs::entity_t>(1);
+            auto movement = it.field<flecs::entity_t>(1);
 
             invoke_count ++;
             for (auto i : it) {

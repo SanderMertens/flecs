@@ -61,8 +61,8 @@ Flecs has different query types, which are optimized for different kinds of use 
 
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -92,8 +92,8 @@ ecs_query_t *q = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -123,8 +123,8 @@ ecs_rule_t *r = ecs_rule(world, {
 
 ecs_iter_t it = ecs_rule_iter(world, r);
 while (ecs_rule_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -256,8 +256,8 @@ ecs_iter_t it = ecs_filter_iter(world, f);
 
 // Outer loop: matching tables
 while (ecs_filter_next(&it)) {
-  Position *p = ecs_term(&it, Position, 1); // 1st term
-  Velocity *v = ecs_term(&it, Velocity, 2); // 2nd term
+  Position *p = ecs_field(&it, Position, 1); // 1st term
+  Velocity *v = ecs_field(&it, Velocity, 2); // 2nd term
 
   // Inner loop: entities in table
   for (int i = 0; i < it.count; i ++) {
@@ -269,7 +269,7 @@ while (ecs_filter_next(&it)) {
 
 Iteration is split up into two loops: the outer loop which iterates tables, and the inner loop which iterates entities. This approach provides direct access to component arrats, which allows for optimizations like auto-vectorization.
 
-The indices provided to the `ecs_term` function must correspond with the order in which terms have been specified in the query. This index starts counting from `1`, with index `0` reserved for the array containing entity ids.
+The indices provided to the `ecs_field` function must correspond with the order in which terms have been specified in the query. This index starts counting from `1`, with index `0` reserved for the array containing entity ids.
 
 ### Each (C++)
 The `each` function is the default and often fastest approach for iterating a query in C++. `each` can be called directly on a `flecs::filter`, `flecs::query` and `flecs::rule`. An example:
@@ -350,8 +350,8 @@ The component arguments may be ommitted, and can be obtained from the iterator o
 auto f = world.filter<Position, const Velocity>();
 
 f.iter([](flecs::iter& it) {
-    auto p = it.term<Position>(1);
-    auto v = it.term<const Velocity>(2);
+    auto p = it.field<Position>(1);
+    auto v = it.field<const Velocity>(2);
 
     for (auto i : it) {
         p[i].x += v[i].x;
@@ -730,7 +730,7 @@ ecs_filter_t *f_2 = ecs_filter(world, {
 });
 ```
 
-When a query pair contains a wildcard, the `ecs_term_id` function can be used to determine the id of the pair element that matched the query:
+When a query pair contains a wildcard, the `ecs_field_id` function can be used to determine the id of the pair element that matched the query:
 
 ```c
 ecs_filter_t *f = ecs_filter(world, {
@@ -741,7 +741,7 @@ ecs_filter_t *f = ecs_filter(world, {
 
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
-    ecs_id_t id = ecs_term_id(&it, 1);
+    ecs_id_t id = ecs_field_id(&it, 1);
     ecs_entity_t second = ecs_pair_second(world, id);
 
     for (int i = 0; i < it.count; i ++) {
@@ -942,10 +942,10 @@ flecs::filter<> f = world.filter_builder()
     .build();
 
 f.iter([](flecs::iter& it) {
-    auto p = it.term<Position>(1);       // OK
-    auto p = it.term<const Position>(1); // OK
-    auto v = it.term<const Velocity>(2); // OK
-    auto v = it.term<Velocity>(2);       // Throws assert
+    auto p = it.field<Position>(1);       // OK
+    auto p = it.field<const Position>(1); // OK
+    auto v = it.field<const Velocity>(2); // OK
+    auto v = it.field<Velocity>(2);       // Throws assert
 });
 ```
 
@@ -1060,15 +1060,15 @@ ecs_filter_t *f = ecs_filter(world, {
 
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
-  Position *p = ecs_term(&it, Position, 1);
-  Mass *m = ecs_term(&it, Mass, 3); // not 4, because of the Or expression
+  Position *p = ecs_field(&it, Position, 1);
+  Mass *m = ecs_field(&it, Mass, 3); // not 4, because of the Or expression
 
-  ecs_id_t vs_id = ecs_term_id(&it, 2);
+  ecs_id_t vs_id = ecs_field_id(&it, 2);
   if (vs_id == ecs_id(Velocity)) {
-    Velocity *v = ecs_term(&it, Velocity, 2);
+    Velocity *v = ecs_field(&it, Velocity, 2);
     // iterate as usual
   } else if (vs_id == ecs_id(Speed)) {
-    Speed *s = ecs_term(&it, Speed, 2);
+    Speed *s = ecs_field(&it, Speed, 2);
     // iterate as usual
   }
 }
@@ -1086,15 +1086,15 @@ flecs::filter<> f = world.filter_builder()
     .build();
 
 f.iter([&](flecs::iter& it) {
-  auto p = it.term<Position>(1);
-  auto v = it.term<Mass>(3); // not 4, because of the Or expression
+  auto p = it.field<Position>(1);
+  auto v = it.field<Mass>(3); // not 4, because of the Or expression
   
   flecs::id vs_id = it.id(2);
   if (vs_id == world.id<Velocity>()) {
-    auto v = it.term<Velocity>(2);
+    auto v = it.field<Velocity>(2);
     // iterate as usual
   } else if (vs_id == world.id<Speed>()) {
-    auto s = it.term<Speed>(2);
+    auto s = it.field<Speed>(2);
     // iterate as usual
   }
 });
@@ -1187,9 +1187,9 @@ ecs_filter_t *f = ecs_filter(world, {
 
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
-  Position *p = ecs_term(&it, Position, 1);
-  if (ecs_term_is_set(&it, 2)) {
-    Velocity *v = ecs_term(&it, Velocity, 2);
+  Position *p = ecs_field(&it, Position, 1);
+  if (ecs_field_is_set(&it, 2)) {
+    Velocity *v = ecs_field(&it, Velocity, 2);
     // iterate as usual
   } else {
     // iterate as usual
@@ -1207,10 +1207,10 @@ flecs::filter<> f = world.filter_builder()
     .build();
 
 f.iter([&](flecs::iter& it) {
-  auto p = it.term<Position>(1);
+  auto p = it.field<Position>(1);
   
   if (it.is_set(2)) {
-    auto v = it.term<Velocity>(2);
+    auto v = it.field<Velocity>(2);
     // iterate as usual
   } else if (vs_id == world.id<Speed>()) {
     // iterate as usual
@@ -1324,9 +1324,9 @@ ecs_filter_t *f = ecs_filter(world, {
 
 ecs_iter_t it = ecs_filter_iter(world, f);
 while (ecs_filter_next(&it)) {
-  Position *p = ecs_term(&it, Position, 1);
-  Velocity *v = ecs_term(&it, Velocity, 2);
-  SimTime *st = ecs_term(&it, SimTime, 3);
+  Position *p = ecs_field(&it, Position, 1);
+  Velocity *v = ecs_field(&it, Velocity, 2);
+  SimTime *st = ecs_field(&it, SimTime, 3);
   
   for (int i = 0; i < it.count; i ++) {
     p[i].x += v[i].x * st->value; // p, v are accessed as array, st as pointer
@@ -1359,8 +1359,8 @@ ecs_filter_t *f = ecs_filter(world, {
 });
 
 while (ecs_filter_next(&it)) {
-  ecs_entity_t src_1 = ecs_term_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
-  ecs_entity_t src_2 = ecs_term_src(&it, 2); // Returns Game
+  ecs_entity_t src_1 = ecs_field_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
+  ecs_entity_t src_2 = ecs_field_src(&it, 2); // Returns Game
 
   for (int i = 0; i < it.count; i ++) {
     printf("$This = %s, src_2 = %s\n", 
@@ -1386,9 +1386,9 @@ flecs::filter<> f = world.filter_builder()
   .build();
 
 f.iter([](flecs::iter& it) {
-  auto p = it.term<Position>(1);
-  auto v = it.term<Velocity>(2);
-  auto st = it.term<SimTime>(3);
+  auto p = it.field<Position>(1);
+  auto v = it.field<Velocity>(2);
+  auto st = it.field<SimTime>(3);
   
   for (auto i : it) {
     p[i].x += v[i].x * st[i].value;
@@ -1943,7 +1943,7 @@ However, what the diagram also shows is that code for instanced iterators must h
 
 The following sections show how to use instancing in the different language bindings.
 
-#### Query Builder (C)
+#### Query Descriptor (C)
 Queries can be instanced by setting the `instanced` member to true:
 
 ```c
@@ -1952,10 +1952,70 @@ ecs_filter_t *f = ecs_filter(world, {
     { ecs_id(Position), src.flags = EcsSelf }, // Never inherit Position
     { ecs_id(Mass) }
   },
+
+  // Instancing is a property of the iterator, but by setting it on the query
+  // all iterators created for the query will be instanced.
   .instanced = true
+});
+
+ecs_iter_t it = ecs_filter_iter(world, &it);
+while (ecs_filter_next(&it)) {
+  // Fetch components as usual
+  Position *p = ecs_field(&it, Position, 1);
+  Mass *m = ecs_field(&it, Mass, 2);
+
+  // If ecs_field_is_self returns false, Mass is matched on another entity
+  // and we cannot access it as an array.
+  if (ecs_field_is_self(&it, 2)) {
+    // Mass is matched on self, access as array
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += 1.0 / m[i].value;
+      p[i].y += 1.0 / m[i].value;
+    }
+  } else {
+    // Mass is matched on other entity, access as single value
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += 1.0 / m->value;
+      p[i].y += 1.0 / m->value;
+    }
+  }
+}
+```
+
+Note how the `ecs_field_is_self` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
+
+#### Query Builder (C++)
+Queries can be instanced by calling the `instanced` method:
+
+```cpp
+flecs::filter<Position, Mass> f = world.filter_builder<Position, Mass>()
+  // Never inherit Position
+  .arg(1).self()
+  // Instancing is a property of the iterator, but by setting it on the query
+  // all iterators created for the query will be instanced.
+  .instanced()
+  .build();
+
+f.iter([](flecs::iter& it, Position *p, Mass *v) {
+  // If self() returns false, Mass is matched on another entity
+  // and we cannot access it as an array.
+  if (it.self()) {
+    // Mass is matched on self, access as array
+    for (auto i : it) {
+      p[i].x += 1.0 / m[i].value;
+      p[i].y += 1.0 / m[i].value;
+    }
+  } else {
+    // Mass is matched on other entity, access as single value
+    for (auto i : it) {
+      p[i].x += 1.0 / m->value;
+      p[i].y += 1.0 / m->value;
+    }
+  }
 });
 ```
 
+Note how the `it.self()` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
 
 ### Variables
 
@@ -2048,8 +2108,8 @@ ecs_add(world, e, Velocity);
 // Iterate the tables in the cache
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;

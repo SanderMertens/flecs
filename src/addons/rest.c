@@ -683,7 +683,7 @@ void flecs_on_set_rest(ecs_iter_t *it)
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_term(it, EcsRest, 1);
+    EcsRest *rest = ecs_field(it, EcsRest, 1);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(

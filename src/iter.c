@@ -395,14 +395,14 @@ bool flecs_iter_next_instanced(
 
 /* --- Public API --- */
 
-void* ecs_term_w_size(
+void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t term)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!size || ecs_term_size(it, term) == size || 
-        (!ecs_term_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
+    ecs_check(!size || ecs_field_size(it, term) == size || 
+        (!ecs_field_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
         ECS_INVALID_PARAMETER, NULL);
 
     (void)size;
@@ -420,7 +420,7 @@ error:
     return NULL;
 }
 
-bool ecs_term_is_readonly(
+bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
@@ -450,7 +450,7 @@ error:
     return false;
 }
 
-bool ecs_term_is_writeonly(
+bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
@@ -479,7 +479,7 @@ error:
     return -1;
 }
 
-bool ecs_term_is_set(
+bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
@@ -501,6 +501,51 @@ bool ecs_term_is_set(
     return true;
 error:
     return false;
+}
+
+bool ecs_field_is_self(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    return it->sources == NULL || it->sources[index - 1] == 0;
+}
+
+ecs_id_t ecs_field_id(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    return it->ids[index - 1];
+}
+
+ecs_entity_t ecs_field_src(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    if (it->sources) {
+        return it->sources[index - 1];
+    } else {
+        return 0;
+    }
+}
+
+size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (index == 0) {
+        return sizeof(ecs_entity_t);
+    } else {
+        return (size_t)it->sizes[index - 1];
+    }
 }
 
 void* ecs_iter_column_w_size(
@@ -558,7 +603,7 @@ char* ecs_iter_str(
     if (it->term_count) {
         ecs_strbuf_list_push(&buf, "term: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_id_t id = ecs_term_id(it, i + 1);
+            ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -567,7 +612,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_entity_t subj = ecs_term_src(it, i + 1);
+            ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);

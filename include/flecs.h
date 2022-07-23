@@ -3813,7 +3813,7 @@ FLECS_API
 bool ecs_worker_next(
     ecs_iter_t *it);
 
-/** Obtain data for a query term.
+/** Obtain data for a query field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from one.
@@ -3821,77 +3821,117 @@ bool ecs_worker_next(
  * For example, the query "Position, Velocity" will return the Position array
  * for index 1, and the Velocity array for index 2.
  *
- * When the specified term is not owned by the entity this function returns a
- * pointer instead of an array. This happens when the source of a term is not
+ * When the specified field is not owned by the entity this function returns a
+ * pointer instead of an array. This happens when the source of a field is not
  * the entity being iterated, such as a shared component (from a prefab), a
- * component from a parent, or another entity. The ecs_term_is_owned operation
- * can be used to test dynamically if a term is owned.
+ * component from a parent, or another entity. The ecs_field_is_self operation
+ * can be used to test dynamically if a field is owned.
  *
  * The provided size must be either 0 or must match the size of the datatype
  * of the returned array. If the size does not match, the operation may assert.
- * The size can be dynamically obtained with ecs_term_size.
+ * The size can be dynamically obtained with ecs_field_size.
  *
  * @param it The iterator.
- * @param size The size of the returned array.
- * @param index The index of the term in the query.
- * @return A pointer to the data associated with the term.
+ * @param size The type size of the requested data.
+ * @param index The index of the field in the iterator.
+ * @return A pointer to the data of the field.
  */
 FLECS_API
-void* ecs_term_w_size(
+void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t index);
 
-/** Test whether the term is readonly.
- * This operation returns whether this is a readonly term. Readonly terms are
+/** Test whether the field is readonly.
+ * This operation returns whether the field is readonly. Readonly fields are
  * annotated with [in], or are added as a const type in the C++ API.
  *
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is readonly.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is readonly.
  */
 FLECS_API
-bool ecs_term_is_readonly(
+bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
 
-/** Test whether the term is writeonly.
- * This operation returns whether this is a writeonly term. Writeonly terms are
+/** Test whether the field is writeonly.
+ * This operation returns whether this is a writeonly field. Writeonly terms are
  * annotated with [out].
  * 
- * Serializers are not required to serialize the values of a writeonly term.
+ * Serializers are not required to serialize the values of a writeonly field.
  *
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is writeonly.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is writeonly.
  */
 FLECS_API
-bool ecs_term_is_writeonly(
+bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t index);
 
-/** Test whether term is set.
+/** Test whether field is set.
  * 
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is set.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is set.
  */
 FLECS_API
-bool ecs_term_is_set(
+bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index); 
 
-/** Test whether the term is owned
- * This operation returns whether the term is owned by the currently iterated
- * entity. This function will return false when the term is owned by another
- * entity, such as a parent or a prefab.
- *
+/** Return id matched for field.
+ * 
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is owned by the iterated over entity/entities.
+ * @param index The index of the field in the iterator.
+ * @return The id matched for the field.
  */
 FLECS_API
-bool ecs_term_is_owned(
+ecs_id_t ecs_field_id(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Return field source.
+ * The field source is the entity on which the field was matched.
+ * 
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The source for the field.
+ */
+FLECS_API
+ecs_entity_t ecs_field_src(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Return field type size.
+ * Return type size of the data returned by field. Returns 0 if field has no 
+ * data.
+ * 
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The type size for the field.
+ */
+FLECS_API
+size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Test whether the field is matched on self.
+ * This operation returns whether the field is matched on the currently iterated
+ * entity. This function will return false when the field is owned by another
+ * entity, such as a parent or a prefab.
+ * 
+ * When this operation returns false, the field must be accessed as a single 
+ * value instead of an array. Fields for which this operation returns true
+ * return arrays with it->count values.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is matched on self.
+ */
+FLECS_API
+bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index);
 
@@ -3939,7 +3979,7 @@ int32_t ecs_iter_find_column(
  * requested by the query.
  *
  * The data in the returned pointer can be accessed using the same index as
- * the one used to access the arrays returned by the ecs_term function.
+ * the one used to access the arrays returned by the ecs_field function.
  *
  * The provided size must be either 0 or must match the size of the datatype
  * of the returned array. If the size does not match, the operation may assert.

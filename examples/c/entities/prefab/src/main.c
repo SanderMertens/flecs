@@ -79,8 +79,8 @@ int main(int argc, char *argv[]) {
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        ImpulseSpeed *is = ecs_term(&it, ImpulseSpeed, 1);
-        Position *p = ecs_term(&it, Position, 2);
+        ImpulseSpeed *is = ecs_field(&it, ImpulseSpeed, 1);
+        Position *p = ecs_field(&it, Position, 2);
 
         for (int i = 0; i < it.count; i ++) {
             // Because prefab is shared between all entities, access it as a

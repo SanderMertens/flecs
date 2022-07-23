@@ -6,16 +6,16 @@ void Run_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
     if (it->term_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 2);
     }
 
     if (it->term_count >= 3) {
-        m = ecs_term(it, Mass, 3);
+        m = ecs_field(it, Mass, 3);
     }
 
     int *param = it->param;
@@ -961,9 +961,9 @@ void TestSubset(ecs_iter_t *it) {
 
 static
 void TestAll(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
-    ecs_entity_t TestSubset = ecs_term_id(it, 2);
+    ecs_entity_t TestSubset = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1071,9 +1071,9 @@ static
 void AddVelocity(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    Position *p = ecs_term(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    Position *p = ecs_field(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

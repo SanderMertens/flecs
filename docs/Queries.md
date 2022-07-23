@@ -201,7 +201,7 @@ auto q = world.query_builder<Position, const Velocity>()
   .build();
 
 q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-  auto mass = it.term<Mass>(3); // 3rd term of the query
+  auto mass = it.field<Mass>(3); // 3rd term of the query
 
   for (auto i : it) {
     p[i].x += v[i].x / mass[i].value;
@@ -234,9 +234,9 @@ Alternatively, the `iter` call can be written in such a way that it is fully gen
 
 ```cpp
 q.iter([](flecs::iter& it) {
-  for (int t = 0; t < it.term_count(); t++) {
+  for (int t = 0; t < it.field_count(); t++) {
     auto id = it.id(t);
-    auto data = it.term(t);
+    auto data = it.field(t);
 
     // Use id & data, for example for reflection
     for (auto i : it) {
@@ -260,8 +260,8 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-  Position *p = ecs_term(&it, Position, 1);
-  Velocity *v = ecs_term(&it, Velocity, 2);
+  Position *p = ecs_field(&it, Position, 1);
+  Velocity *v = ecs_field(&it, Velocity, 2);
 
   for (int i = 0; i < it.count; i++) {
     p[i].x += v[i].x;
@@ -270,9 +270,9 @@ while (ecs_query_next(&it)) {
 }
 ```
 
-Unlike C++, queries are not typed in C, and as such all components are obtained using the `ecs_term` function. Note how the number provided to `ecs_term` corresponds with the location of the component in the query, offset by 1. If a type is provided to `ecs_term` that does not match the term type, the function may throw a runtime error.
+Unlike C++, queries are not typed in C, and as such all components are obtained using the `ecs_field` function. Note how the number provided to `ecs_field` corresponds with the location of the component in the query, offset by 1. If a type is provided to `ecs_field` that does not match the term type, the function may throw a runtime error.
 
-Similar to the `term_id` function in C++, the C API has the `ecs_term_id` function:
+Similar to the `term_id` function in C++, the C API has the `ecs_field_id` function:
 
 ```c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
@@ -283,7 +283,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-  ecs_id_t id = ecs_term_id(&it, 1);
+  ecs_id_t id = ecs_field_id(&it, 1);
   ecs_entity_t obj = ecs_pair_second(it->world, id);
   printf("Entities like %s\n", ecs_get_name(world, object));
 }
@@ -328,7 +328,7 @@ Applications iterate a sorted query in the same way they would iterate a regular
 
 ```c
 while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 1);
 
     for (int i = 0; i < it.count; i++) {
         printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order

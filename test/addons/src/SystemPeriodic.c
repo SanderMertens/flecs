@@ -2,19 +2,19 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
     if (it->term_count >= 2) {
-        if (ecs_term_size(it, 2) == sizeof(Velocity)) {
-            v = ecs_term(it, Velocity, 2);
+        if (ecs_field_size(it, 2) == sizeof(Velocity)) {
+            v = ecs_field(it, Velocity, 2);
         }
     }
 
     if (it->term_count >= 3) {
-        if (ecs_term_size(it, 3) == sizeof(Mass)) {
-            m = ecs_term(it, Mass, 3);
+        if (ecs_field_size(it, 3) == sizeof(Mass)) {
+            m = ecs_field(it, Mass, 3);
         }
     }
 
@@ -1050,8 +1050,8 @@ void SystemPeriodic_match_2_systems_w_populated_table() {
 }
 
 void TestOptional_w_column(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1060,8 +1060,8 @@ void TestOptional_w_column(ecs_iter_t *it) {
 }
 
 void TestOptional_w_shared(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1314,11 +1314,11 @@ void SystemPeriodic_disabled_nested_feature() {
 }
 
 void TwoRefs(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
-    test_assert(!ecs_term_is_owned(it, 1));
-    test_assert(!ecs_term_is_owned(it, 2));
+    test_assert(!ecs_field_is_self(it, 1));
+    test_assert(!ecs_field_is_self(it, 2));
 
     (void)p;
     (void)v;
@@ -1497,7 +1497,7 @@ void SystemPeriodic_match_prefab_and_normal() {
 
 static
 void TestIsSharedOnNotSet(ecs_iter_t *it) {
-    test_assert(ecs_term_is_owned(it, 2) != false);
+    test_assert(ecs_field_is_self(it, 2) != false);
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {
@@ -1883,7 +1883,7 @@ static void AssertReadonly(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
     dummy_invoked = it->entities[0];
 
-    test_assert( ecs_term_is_readonly(it, 1) == true);
+    test_assert( ecs_field_is_readonly(it, 1) == true);
 }
 
 void SystemPeriodic_shared_only() {

@@ -15,7 +15,7 @@ void Trigger_w_value(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -29,7 +29,7 @@ void Trigger_w_value_from_entity(ecs_iter_t *it) {
     test_assert(it->entities[0] == 0);
     test_assert(it->sources[0] != 0);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -40,7 +40,7 @@ void Trigger_w_value_instanced(ecs_iter_t *it) {
 
     test_assert(it->count > 1);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -59,7 +59,7 @@ static
 void Trigger_n_w_values(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     test_assert(it->entities != NULL);
 
@@ -2323,8 +2323,8 @@ void Trigger_trigger_w_named_entity() {
 }
 
 void RemoveSelf(ecs_iter_t *it) {
-    Self *s = ecs_term(it, Self, 1);
-    ecs_id_t ecs_id(Self) = ecs_term_id(it, 1);
+    Self *s = ecs_field(it, Self, 1);
+    ecs_id_t ecs_id(Self) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2540,7 +2540,7 @@ void Trigger_iter_type_set() {
 
 void TriggerReadonly(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
-    test_bool(ecs_term_is_readonly(it, 1), true);
+    test_bool(ecs_field_is_readonly(it, 1), true);
 }
 
 void Trigger_readonly_term() {
@@ -4187,7 +4187,7 @@ void Trigger_w_nonzero_value(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     test_assert(p != NULL);
 }
 

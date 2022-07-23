@@ -6703,7 +6703,7 @@ FLECS_API
 bool ecs_worker_next(
     ecs_iter_t *it);
 
-/** Obtain data for a query term.
+/** Obtain data for a query field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from one.
@@ -6711,77 +6711,117 @@ bool ecs_worker_next(
  * For example, the query "Position, Velocity" will return the Position array
  * for index 1, and the Velocity array for index 2.
  *
- * When the specified term is not owned by the entity this function returns a
- * pointer instead of an array. This happens when the source of a term is not
+ * When the specified field is not owned by the entity this function returns a
+ * pointer instead of an array. This happens when the source of a field is not
  * the entity being iterated, such as a shared component (from a prefab), a
- * component from a parent, or another entity. The ecs_term_is_owned operation
- * can be used to test dynamically if a term is owned.
+ * component from a parent, or another entity. The ecs_field_is_self operation
+ * can be used to test dynamically if a field is owned.
  *
  * The provided size must be either 0 or must match the size of the datatype
  * of the returned array. If the size does not match, the operation may assert.
- * The size can be dynamically obtained with ecs_term_size.
+ * The size can be dynamically obtained with ecs_field_size.
  *
  * @param it The iterator.
- * @param size The size of the returned array.
- * @param index The index of the term in the query.
- * @return A pointer to the data associated with the term.
+ * @param size The type size of the requested data.
+ * @param index The index of the field in the iterator.
+ * @return A pointer to the data of the field.
  */
 FLECS_API
-void* ecs_term_w_size(
+void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t index);
 
-/** Test whether the term is readonly.
- * This operation returns whether this is a readonly term. Readonly terms are
+/** Test whether the field is readonly.
+ * This operation returns whether the field is readonly. Readonly fields are
  * annotated with [in], or are added as a const type in the C++ API.
  *
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is readonly.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is readonly.
  */
 FLECS_API
-bool ecs_term_is_readonly(
+bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
 
-/** Test whether the term is writeonly.
- * This operation returns whether this is a writeonly term. Writeonly terms are
+/** Test whether the field is writeonly.
+ * This operation returns whether this is a writeonly field. Writeonly terms are
  * annotated with [out].
  * 
- * Serializers are not required to serialize the values of a writeonly term.
+ * Serializers are not required to serialize the values of a writeonly field.
  *
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is writeonly.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is writeonly.
  */
 FLECS_API
-bool ecs_term_is_writeonly(
+bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t index);
 
-/** Test whether term is set.
+/** Test whether field is set.
  * 
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is set.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is set.
  */
 FLECS_API
-bool ecs_term_is_set(
+bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index); 
 
-/** Test whether the term is owned
- * This operation returns whether the term is owned by the currently iterated
- * entity. This function will return false when the term is owned by another
- * entity, such as a parent or a prefab.
- *
+/** Return id matched for field.
+ * 
  * @param it The iterator.
- * @param index The index of the term in the query.
- * @return Whether the term is owned by the iterated over entity/entities.
+ * @param index The index of the field in the iterator.
+ * @return The id matched for the field.
  */
 FLECS_API
-bool ecs_term_is_owned(
+ecs_id_t ecs_field_id(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Return field source.
+ * The field source is the entity on which the field was matched.
+ * 
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The source for the field.
+ */
+FLECS_API
+ecs_entity_t ecs_field_src(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Return field type size.
+ * Return type size of the data returned by field. Returns 0 if field has no 
+ * data.
+ * 
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The type size for the field.
+ */
+FLECS_API
+size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int32_t index);
+
+/** Test whether the field is matched on self.
+ * This operation returns whether the field is matched on the currently iterated
+ * entity. This function will return false when the field is owned by another
+ * entity, such as a parent or a prefab.
+ * 
+ * When this operation returns false, the field must be accessed as a single 
+ * value instead of an array. Fields for which this operation returns true
+ * return arrays with it->count values.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return Whether the field is matched on self.
+ */
+FLECS_API
+bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index);
 
@@ -6829,7 +6869,7 @@ int32_t ecs_iter_find_column(
  * requested by the query.
  *
  * The data in the returned pointer can be accessed using the same index as
- * the one used to access the arrays returned by the ecs_term function.
+ * the one used to access the arrays returned by the ecs_field function.
  *
  * The provided size must be either 0 or must match the size of the datatype
  * of the returned array. If the size does not match, the operation may assert.
@@ -7951,20 +7991,8 @@ void* ecs_record_get_column(
 
 /* -- Iterators -- */
 
-#define ecs_term_id(it, index)\
-    ((it)->ids[(index) - 1])
-
-#define ecs_term_src(it, index)\
-    ((it)->sources ? (it)->sources[(index) - 1] : 0)
-
-#define ecs_term_size(it, index)\
-    ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
-
-#define ecs_term_is_owned(it, index)\
-    ((it)->sources == NULL || (it)->sources[(index) - 1] == 0)
-
-#define ecs_term(it, T, index)\
-    (ECS_CAST(T*, ecs_term_w_size(it, sizeof(T), index)))
+#define ecs_field(it, T, index)\
+    (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
 #define ecs_iter_column(it, T, index)\
     (ECS_CAST(T*, ecs_iter_column_w_size(it, sizeof(T), index)))
@@ -16444,8 +16472,8 @@ namespace flecs
  * This class can be used when a system does not know the type of a column at
  * compile time.
  */
-struct unsafe_column {
-    unsafe_column(void* array, size_t size, size_t count, bool is_shared = false)
+struct unchecked_column {
+    unchecked_column(void* array, size_t size, size_t count, bool is_shared = false)
         : m_array(array)
         , m_size(size)
         , m_count(count) 
@@ -16669,60 +16697,60 @@ public:
      */
     flecs::entity entity(size_t row) const;
 
-    /** Returns whether term is owned.
+    /** Returns whether field is matched on self.
      * 
-     * @param index The term index.
+     * @param index The field index.
      */
-    bool is_owned(int32_t index) const {
-        return ecs_term_is_owned(m_iter, index);
+    bool is_self(int32_t index) const {
+        return ecs_field_is_self(m_iter, index);
     }
 
-    /** Returns whether term is set.
+    /** Returns whether field is set.
      * 
-     * @param index The term index.
+     * @param index The field index.
      */
     bool is_set(int32_t index) const {
-        return ecs_term_is_set(m_iter, index);
+        return ecs_field_is_set(m_iter, index);
     }
 
-    /** Returns whether term is readonly.
+    /** Returns whether field is readonly.
      *
-     * @param index The term index.
+     * @param index The field index.
      */
     bool is_readonly(int32_t index) const {
-        return ecs_term_is_readonly(m_iter, index);
+        return ecs_field_is_readonly(m_iter, index);
     }
 
-    /** Number of terms in iteator.
+    /** Number of fields in iteator.
      */
-    int32_t term_count() const {
+    int32_t field_count() const {
         return m_iter->term_count;
     }
 
-    /** Size of term data type.
+    /** Size of field data type.
      *
-     * @param index The term id.
+     * @param index The field id.
      */
     size_t size(int32_t index) const {
-        return ecs_term_size(m_iter, index);
+        return ecs_field_size(m_iter, index);
     }
 
-    /** Obtain term source (0 if This)
+    /** Obtain field source (0 if This)
      *
-     * @param index The term index.
+     * @param index The field index.
      */    
     flecs::entity src(int32_t index) const;
 
-    /** Obtain component id of term.
+    /** Obtain id matched for field.
      *
-     * @param index The term index.
+     * @param index The field index.
      */
     flecs::entity id(int32_t index) const;
 
-    /** Obtain pair id of term.
-     * This operation will fail if the term is not a pair.
+    /** Obtain pair id matched for field.
+     * This operation will fail if the id is not a pair.
      * 
-     * @param index The term index.
+     * @param index The field index.
      */
     flecs::id pair(int32_t index) const;
 
@@ -16733,80 +16761,47 @@ public:
         return flecs::string(s);
     }
 
-    /** Obtain term with const type.
-     * If the specified term index does not match with the provided type, the
+    /** Get readonly access to field data.
+     * If the specified field index does not match with the provided type, the
      * function will assert.
      *
-     * @tparam T Type of the term.
-     * @param index The term index.
-     * @return The term data.
+     * @tparam T Type of the field.
+     * @param index The field index.
+     * @return The field data.
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
         
-    flecs::column<A> term(int32_t index) const {
-        return get_term<A>(index);
+    flecs::column<A> field(int32_t index) const {
+        return get_field<A>(index);
     }
 
-    /** Obtain term with non-const type.
-     * If the specified term id does not match with the provided type or if
-     * the term is readonly, the function will assert.
+    /** Get read/write access to field data.
+     * If the matched id for the specified field does not match with the provided type or if
+     * the field is readonly, the function will assert.
      *
-     * @tparam T Type of the term.
-     * @param index The term index.
-     * @return The term data.
+     * @tparam T Type of the field.
+     * @param index The field index.
+     * @return The field data.
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
 
-    flecs::column<A> term(int32_t index) const {
-        ecs_assert(!ecs_term_is_readonly(m_iter, index), 
+    flecs::column<A> field(int32_t index) const {
+        ecs_assert(!ecs_field_is_readonly(m_iter, index), 
             ECS_ACCESS_VIOLATION, NULL);
-        return get_term<A>(index);
+        return get_field<A>(index);
     }
 
-    /** Obtain unsafe term.
-     * Unsafe terms are required when a system does not know at compile time
-     * which component will be passed to it. 
+    /** Get unchecked access to field data.
+     * Unchecked access is required when a system does not know the type of a
+     * field at compile time.
      *
-     * @param index The term index. 
+     * @param index The field index. 
      */
-    flecs::unsafe_column term(int32_t index) const {
-        return get_unsafe_term(index);
-    }
-
-    /** Obtain owned term.
-     * Same as iter::term, but ensures that term is owned.
-     *
-     * @tparam T of the term.
-     * @param index The term index.
-     * @return The term data.
-     */
-    template <typename T, typename A = actual_type_t<T>>
-    flecs::column<A> term_owned(int32_t index) const {
-        ecs_assert(!!ecs_term_is_owned(m_iter, index), ECS_COLUMN_IS_SHARED, NULL);
-        return this->term<A>(index);
-    }
-
-    /** Obtain shared term.
-     * Same as iter::term, but ensures that term is shared.
-     *
-     * @tparam T of the term.
-     * @param index The term index.
-     * @return The component term.
-     */
-    template <typename T, typename A = actual_type_t<T>>
-    const T& term_shared(int32_t index) const {
-        ecs_assert(
-            ecs_term_id(m_iter, index) == 
-                _::cpp_type<T>::id(m_iter->world), 
-                    ECS_COLUMN_TYPE_MISMATCH, NULL);
-
-        ecs_assert(!ecs_term_is_owned(m_iter, index), 
-            ECS_COLUMN_IS_NOT_SHARED, NULL);
-
-        return *static_cast<A*>(ecs_term_w_size(m_iter, sizeof(A), index));
+    flecs::unchecked_column field(int32_t index) const {
+        return get_unchecked_field(index);
     }
 
     /** Obtain the total number of tables the iterator will iterate over.
@@ -16879,19 +16874,19 @@ public:
 #endif
 
 private:
-    /* Get term, check if correct type is used */
+    /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
-    flecs::column<T> get_term(int32_t index) const {
+    flecs::column<T> get_field(int32_t index) const {
 
 #ifndef FLECS_NDEBUG
-        ecs_entity_t term_id = ecs_term_id(m_iter, index);
+        ecs_entity_t term_id = ecs_field_id(m_iter, index);
         ecs_assert(term_id & ECS_PAIR ||
             term_id == _::cpp_type<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 
         size_t count;
-        bool is_shared = !ecs_term_is_owned(m_iter, index);
+        bool is_shared = !ecs_field_is_self(m_iter, index);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
@@ -16905,14 +16900,14 @@ private:
         }
         
         return flecs::column<A>(
-            static_cast<T*>(ecs_term_w_size(m_iter, sizeof(A), index)), 
+            static_cast<T*>(ecs_field_w_size(m_iter, sizeof(A), index)), 
             count, is_shared);
     }
 
-    flecs::unsafe_column get_unsafe_term(int32_t index) const {
+    flecs::unchecked_column get_unchecked_field(int32_t index) const {
         size_t count;
-        size_t size = ecs_term_size(m_iter, index);
-        bool is_shared = !ecs_term_is_owned(m_iter, index);
+        size_t size = ecs_field_size(m_iter, index);
+        bool is_shared = !ecs_field_is_self(m_iter, index);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
@@ -16925,8 +16920,8 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::unsafe_column(
-            ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
+        return flecs::unchecked_column(
+            ecs_field_w_size(m_iter, 0, index), size, count, is_shared);
     }     
 
     flecs::iter_t *m_iter;
@@ -21522,7 +21517,7 @@ struct filter_base {
         return flecs::term(m_world, m_filter_ptr->terms[index]);
     }
 
-    int32_t term_count() {
+    int32_t field_count() {
         return m_filter_ptr->term_count;
     }
 
@@ -21913,7 +21908,7 @@ struct query_base {
         return flecs::term(m_world, f->terms[index]);
     }
 
-    int32_t term_count() {
+    int32_t field_count() {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         return f->term_count;   
     }
@@ -23373,19 +23368,19 @@ inline flecs::entity iter::entity(size_t row) const {
 
 template <typename T>
 inline column<T>::column(iter &iter, int32_t index) {
-    *this = iter.term<T>(index);
+    *this = iter.field<T>(index);
 }
 
 inline flecs::entity iter::src(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_term_src(m_iter, index));
+    return flecs::entity(m_iter->world, ecs_field_src(m_iter, index));
 }
 
 inline flecs::entity iter::id(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
+    return flecs::entity(m_iter->world, ecs_field_id(m_iter, index));
 }
 
 inline flecs::id iter::pair(int32_t index) const {
-    flecs::id_t id = ecs_term_id(m_iter, index);
+    flecs::id_t id = ecs_field_id(m_iter, index);
     ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(m_iter->world, id);
 error:

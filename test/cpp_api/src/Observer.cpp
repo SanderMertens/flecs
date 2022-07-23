@@ -130,7 +130,7 @@ void Observer_10_terms() {
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
-            test_int(it.term_count(), 10);
+            test_int(it.field_count(), 10);
             count ++;
         });
 
@@ -180,7 +180,7 @@ void Observer_20_terms() {
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
-            test_int(it.term_count(), 20);
+            test_int(it.field_count(), 20);
             count ++;
         });
 

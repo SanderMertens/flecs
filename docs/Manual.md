@@ -60,8 +60,8 @@ typedef struct Velocity {
 // System names ('Move') use PascalCase. API types use snake_case_t
 void Move(ecs_iter_t *it) {
     // Functions use snake_case
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
@@ -720,8 +720,8 @@ void Move(ecs_iter_t *it) { }
 The implementation of a system is a regular query iteration:
 
 ```c
-Position *p = ecs_term(it, Position, 1);
-Velocity *v = ecs_term(it, Velocity, 2);
+Position *p = ecs_field(it, Position, 1);
+Velocity *v = ecs_field(it, Velocity, 2);
 
 for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x;
@@ -733,8 +733,8 @@ for (int i = 0; i < it->count, i++) {
 A system provides a `delta_time` which contains the time passed since the last frame:
 
 ```c
-Position *p = ecs_term(it, Position, 1);
-Velocity *v = ecs_term(it, Velocity, 2);
+Position *p = ecs_field(it, Position, 1);
+Velocity *v = ecs_field(it, Velocity, 2);
 
 for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x * it->delta_time;
@@ -779,7 +779,7 @@ The implementation of the observer looks similar to a system:
 
 ```c
 void AddPosition(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x = 10;
@@ -1314,7 +1314,7 @@ With the following implementation for `SetVelocity`:
 
 ```c
 void SetVelocity(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_entity_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     for (int i = 0; i < it->count; i++) {
         ecs_set(world, it->entities[i], Velocity, {1, 2});

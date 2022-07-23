@@ -118,8 +118,8 @@ static int obs_invoked_count = 0;
 static int trig_invoked_count = 0;
 
 void Sys(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v != NULL);
@@ -128,8 +128,8 @@ void Sys(ecs_iter_t *it) {
 }
 
 void Obs(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v != NULL);
@@ -138,7 +138,7 @@ void Obs(ecs_iter_t *it) {
 }
 
 void Trig(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
 
     test_assert(p != NULL);
 

@@ -244,7 +244,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
 
 static
 void InitVelocity(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -255,7 +255,7 @@ void InitVelocity(ecs_iter_t *it) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -302,7 +302,7 @@ void MultiThreadStaging_2_threads_on_add() {
 
 static
 void New_w_count(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
     ecs_bulk_new(it->world, Position, 10);
 }

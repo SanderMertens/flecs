@@ -88,7 +88,7 @@ struct query_base {
         return flecs::term(m_world, f->terms[index]);
     }
 
-    int32_t term_count() {
+    int32_t field_count() {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         return f->term_count;   
     }

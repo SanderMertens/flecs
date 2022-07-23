@@ -43,7 +43,7 @@ int main(int, char *[]) {
         std::cout << " - number of entities: " << it.count() << std::endl;
 
         // Print information about the components being matched
-        for (int i = 1; i <= it.term_count(); i ++) {
+        for (int i = 1; i <= it.field_count(); i ++) {
             std::cout << " - term " << i << ": " << std::endl;
             std::cout << "   - component: " << it.id(i).str() << std::endl;
             std::cout << "   - type size: " << it.size(i) << std::endl;

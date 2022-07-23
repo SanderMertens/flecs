@@ -389,8 +389,8 @@ void FilterBuilder_singleton_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
         
         const Other& o_ref = *o;
@@ -422,8 +422,8 @@ void FilterBuilder_isa_superset_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -455,9 +455,9 @@ void FilterBuilder_isa_self_superset_term() {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
+        auto o = it.field<const Other>(2);
 
-        if (!it.is_owned(2)) {
+        if (!it.is_self(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -493,8 +493,8 @@ void FilterBuilder_childof_superset_term() {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
-        test_assert(!it.is_owned(2));
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -526,9 +526,9 @@ void FilterBuilder_childof_self_superset_term() {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.term<const Other>(2);
+        auto o = it.field<const Other>(2);
 
-        if (!it.is_owned(2)) {
+        if (!it.is_self(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -1096,7 +1096,7 @@ void FilterBuilder_1_term_to_empty() {
 
     auto q = qb.build();
 
-    test_int(q.term_count(), 2);
+    test_int(q.field_count(), 2);
     test_int(q.term(0).id(), ecs.id<Position>());
     test_int(q.term(1).id(), ecs.pair(Likes, Apples));
 }
@@ -1359,7 +1359,7 @@ void FilterBuilder_10_terms() {
         .term<TagJ>()
         .build();
 
-    test_int(f.term_count(), 10);
+    test_int(f.field_count(), 10);
 
     auto e = ecs.entity()
         .add<TagA>()
@@ -1377,7 +1377,7 @@ void FilterBuilder_10_terms() {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         test_assert(it.entity(0) == e);
-        test_int(it.term_count(), 10);
+        test_int(it.field_count(), 10);
         count ++;
     });
 
@@ -1410,7 +1410,7 @@ void FilterBuilder_20_terms() {
         .term<TagT>()
         .build();
 
-    test_int(f.term_count(), 20);
+    test_int(f.field_count(), 20);
 
     auto e = ecs.entity()
         .add<TagA>()
@@ -1438,7 +1438,7 @@ void FilterBuilder_20_terms() {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         test_assert(it.entity(0) == e);
-        test_int(it.term_count(), 20);
+        test_int(it.field_count(), 20);
         count ++;
     });
 
@@ -1462,7 +1462,7 @@ void FilterBuilder_term_after_arg() {
         .term<TagC>()
         .build();
 
-    test_int(f.term_count(), 3);
+    test_int(f.field_count(), 3);
 
     int count = 0;
     f.each([&](flecs::entity e, TagA, TagB) {
@@ -1504,7 +1504,7 @@ void FilterBuilder_const_in_term() {
 
     int32_t count = 0;
     f.iter([&](flecs::iter& it) {
-        auto p = it.term<const Position>(1);
+        auto p = it.field<const Position>(1);
         test_assert(it.is_readonly(1));
         for (auto i : it) {
             count ++;
@@ -1528,7 +1528,7 @@ void FilterBuilder_const_optional() {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         if (it.is_set(2)) {
-            auto p = it.term<const Position>(2);
+            auto p = it.field<const Position>(2);
             test_assert(it.is_readonly(2));
             test_int(p->x, 10);
             test_int(p->y, 20);
@@ -1569,7 +1569,7 @@ void FilterBuilder_2_terms_w_expr() {
         .expr("A, B")
         .build();
     
-    test_int(f.term_count(), 2);
+    test_int(f.field_count(), 2);
 
     int32_t count = 0;
     f.each([&](flecs::iter& it, size_t index) {

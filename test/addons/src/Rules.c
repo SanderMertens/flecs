@@ -1,7 +1,7 @@
 #include <addons.h>
 
 #define test_term_id(it, column_id, str) {\
-    ecs_id_t _term_id = ecs_term_id(it, column_id);\
+    ecs_id_t _term_id = ecs_field_id(it, column_id);\
     test_assert(_term_id != 0);\
     char *_term_id_str = ecs_id_str((it)->world, _term_id);\
     test_str(_term_id_str, str);\
@@ -9,7 +9,7 @@
 }
 
 #define test_term_source(it, column_id, str) {\
-    ecs_entity_t _term_source = ecs_term_src(it, column_id);\
+    ecs_entity_t _term_source = ecs_field_src(it, column_id);\
     test_assert(_term_source != 0);\
     char *_term_source_str = ecs_id_str((it)->world, _term_source);\
     test_str(_term_source_str, str);\
@@ -444,7 +444,7 @@ void Rules_recycled_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_field_id(&it, 1));
     
     ecs_entity_t x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -483,7 +483,7 @@ void Rules_superset_from_recycled() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_field_id(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -519,7 +519,7 @@ void Rules_superset_from_recycled_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_field_id(&it, 1));
 
     ecs_entity_t x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -568,7 +568,7 @@ void Rules_superset_from_recycled_2_lvls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_field_id(&it, 1));
 
     ecs_entity_t x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -578,7 +578,7 @@ void Rules_superset_from_recycled_2_lvls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_c_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_c_2), ecs_field_id(&it, 1));
 
     x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -588,7 +588,7 @@ void Rules_superset_from_recycled_2_lvls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_b_2, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_c_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_c_2), ecs_field_id(&it, 1));
 
     x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -646,7 +646,7 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_field_id(&it, 1));
 
     ecs_entity_t x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -656,7 +656,7 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_a, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_field_id(&it, 1));
 
     x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -666,7 +666,7 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_b_2, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_field_id(&it, 1));
 
     x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -676,7 +676,7 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(obj_c_2, it.entities[0]);
-    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_field_id(&it, 1));
 
     x = ecs_iter_get_var(&it, x_var);
     test_assert(x != 0);
@@ -719,7 +719,7 @@ void Rules_reflexive_pair_recycled_subj() {
     test_int(it.count, 0);
     test_uint(it.sources[0], e_2);
     test_uint(it.sources[1], e_2);
-    test_uint(ecs_term_id(&it, 2), ecs_pair(Rel, e_2));
+    test_uint(ecs_field_id(&it, 2), ecs_pair(Rel, e_2));
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
@@ -833,7 +833,7 @@ void Rules_1_empty_comp() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 1), Tag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -1131,26 +1131,26 @@ void Rules_wildcard_pred() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), MatchWith);
-    test_int(ecs_term_id(&it, 2), MatchWith);
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), MatchWith);
+    test_int(ecs_field_id(&it, 2), MatchWith);
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MatchWith);
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MatchWith);
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MatchWith);
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MatchWith);
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1177,15 +1177,15 @@ void Rules_wildcard_subj() {
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 0);
-    test_int(ecs_term_id(&it, 1), MatchWith);
-    test_int(ecs_term_src(&it, 1), e1);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), MatchWith);
+    test_int(ecs_field_src(&it, 1), e1);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 0);
-    test_int(ecs_term_id(&it, 1), MatchWith);
-    test_int(ecs_term_src(&it, 1), e2);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), MatchWith);
+    test_int(ecs_field_src(&it, 1), e2);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1215,16 +1215,16 @@ void Rules_wildcard_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjA));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, ObjA));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjB));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, ObjB));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1257,16 +1257,16 @@ void Rules_wildcard_pred_pair() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), ecs_pair(RelA, ObjA));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(RelB, ObjA));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), ecs_pair(RelB, ObjA));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1297,10 +1297,10 @@ void Rules_any_pred() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), EcsAny);
-    test_int(ecs_term_id(&it, 2), MatchWith);
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), EcsAny);
+    test_int(ecs_field_id(&it, 2), MatchWith);
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1327,8 +1327,8 @@ void Rules_any_subj() {
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 0);
-    test_int(ecs_term_id(&it, 1), MatchWith);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), MatchWith);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1358,9 +1358,9 @@ void Rules_any_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, EcsAny));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_bool(true, ecs_term_is_set(&it, 1));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, EcsAny));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_bool(true, ecs_field_is_set(&it, 1));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -1392,22 +1392,22 @@ void Rules_2_wildcard_as_subject() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(e1));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_int(ecs_term_src(&it, 2), c1);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(e1));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_int(ecs_field_src(&it, 2), c1);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(e2));
-    test_int(ecs_term_src(&it, 1), 0);
-    test_int(ecs_term_src(&it, 2), c2);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(e2));
+    test_int(ecs_field_src(&it, 1), 0);
+    test_int(ecs_field_src(&it, 2), c2);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3807,7 +3807,7 @@ void Rules_term_w_nothing_set() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), Pred);
+    test_int(ecs_field_id(&it, 1), Pred);
     test_int(it.count, 0);
 
     test_bool(false, ecs_rule_next(&it));
@@ -3834,8 +3834,8 @@ void Rules_term_w_nothing_set_w_this_term() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), Pred);
-    test_int(ecs_term_id(&it, 2), Tag);
+    test_int(ecs_field_id(&it, 1), Pred);
+    test_int(ecs_field_id(&it, 2), Tag);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
 
@@ -3871,14 +3871,14 @@ void Rules_comp_w_not_term() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 1);
     test_int(it.entities[0], e_4);
 
@@ -3917,14 +3917,14 @@ void Rules_not_term_w_subj_var() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_4);
 
@@ -3966,26 +3966,26 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_2);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_3);
 
     test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e_4);
 
@@ -4087,7 +4087,7 @@ void Rules_not_wildcard() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, EcsWildcard), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 2));
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
@@ -4120,7 +4120,7 @@ void Rules_not_any() {
 
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, EcsAny), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Rel, EcsAny), ecs_field_id(&it, 2));
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
@@ -4146,7 +4146,7 @@ void Rules_not_wildcard_w_expr() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, EcsWildcard), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 2));
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
@@ -4173,7 +4173,7 @@ void Rules_not_any_w_expr() {
     test_bool(true, ecs_rule_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, EcsAny), ecs_term_id(&it, 2));
+    test_uint(ecs_pair(Rel, EcsAny), ecs_field_id(&it, 2));
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
@@ -4200,7 +4200,7 @@ void Rules_rules_w_desc_id() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 1), Tag);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4229,7 +4229,7 @@ void Rules_rules_w_desc_pair() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4258,7 +4258,7 @@ void Rules_rules_w_desc_pair_empty_rel_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4287,7 +4287,7 @@ void Rules_rules_w_desc_pair_pred_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4316,7 +4316,7 @@ void Rules_rules_w_desc_wildcard() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4344,17 +4344,17 @@ void Rules_childof_0() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], EcsFlecs);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsChildOf, 0));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], Tag);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsChildOf, 0));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsChildOf, 0));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4389,8 +4389,8 @@ void Rules_childof_this() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(EcsChildOf, e1));
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child1);
@@ -4398,8 +4398,8 @@ void Rules_childof_this() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(EcsChildOf, e1));
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child2);
@@ -4437,8 +4437,8 @@ void Rules_childof_this_as_identifier() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(EcsChildOf, e1));
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child1);
@@ -4446,8 +4446,8 @@ void Rules_childof_this_as_identifier() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(EcsChildOf, e1));
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child2);
@@ -4485,32 +4485,32 @@ void Rules_optional_term() {
 
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_id(&it, 3), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
-    test_bool(false, ecs_term_is_set(&it, 3));
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 3), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_id(&it, 3), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
-    test_bool(false, ecs_term_is_set(&it, 3));
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 3), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_int(ecs_term_id(&it, 3), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
-    test_bool(true, ecs_term_is_set(&it, 3));
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
+    test_int(ecs_field_id(&it, 3), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4543,20 +4543,20 @@ void Rules_optional_term_w_component() {
 
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), ecs_id(Position));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
-    test_assert(ecs_term(&it, Position, 2) == NULL);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), ecs_id(Position));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
+    test_assert(ecs_field(&it, Position, 2) == NULL);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), ecs_id(Position));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
-    test_assert(ecs_term(&it, Position, 2) != NULL);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), ecs_id(Position));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_assert(ecs_field(&it, Position, 2) != NULL);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4584,10 +4584,10 @@ void Rules_optional_term_on_entity() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 0);
     test_int(it.sources[0], E);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), TagB);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4634,14 +4634,14 @@ void Rules_optional_term_on_variable() {
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_1));
-    test_int(ecs_term_id(&it, 2), TagA);
-    test_int(ecs_term_id(&it, 3), TagB);
-    test_int(ecs_term_id(&it, 4), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
-    test_bool(false, ecs_term_is_set(&it, 3));
-    test_bool(false, ecs_term_is_set(&it, 4));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Likes, obj_1));
+    test_int(ecs_field_id(&it, 2), TagA);
+    test_int(ecs_field_id(&it, 3), TagB);
+    test_int(ecs_field_id(&it, 4), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
@@ -4649,14 +4649,14 @@ void Rules_optional_term_on_variable() {
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_2));
-    test_int(ecs_term_id(&it, 2), TagA);
-    test_int(ecs_term_id(&it, 3), TagB);
-    test_int(ecs_term_id(&it, 4), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
-    test_bool(true, ecs_term_is_set(&it, 3));
-    test_bool(false, ecs_term_is_set(&it, 4));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Likes, obj_2));
+    test_int(ecs_field_id(&it, 2), TagA);
+    test_int(ecs_field_id(&it, 3), TagB);
+    test_int(ecs_field_id(&it, 4), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
@@ -4664,14 +4664,14 @@ void Rules_optional_term_on_variable() {
     var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_3);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_3));
-    test_int(ecs_term_id(&it, 2), TagA);
-    test_int(ecs_term_id(&it, 3), TagB);
-    test_int(ecs_term_id(&it, 4), TagC);
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
-    test_bool(false, ecs_term_is_set(&it, 3));
-    test_bool(true, ecs_term_is_set(&it, 4));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Likes, obj_3));
+    test_int(ecs_field_id(&it, 2), TagA);
+    test_int(ecs_field_id(&it, 3), TagB);
+    test_int(ecs_field_id(&it, 4), TagC);
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4702,18 +4702,18 @@ void Rules_optional_term_on_wildcard() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(EcsWildcard));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(EcsWildcard));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(parent));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(parent));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4743,18 +4743,18 @@ void Rules_optional_term_on_relation_this_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(e1));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(e1));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(EcsWildcard));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_childof(EcsWildcard));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4792,8 +4792,8 @@ void Rules_optional_w_subj_var() {
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), false);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), false);
 
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
@@ -4803,8 +4803,8 @@ void Rules_optional_w_subj_var() {
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), true);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), true);
 
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
@@ -4814,8 +4814,8 @@ void Rules_optional_w_subj_var() {
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), false);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), false);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4855,28 +4855,28 @@ void Rules_optional_w_obj_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(EcsWildcard, ecs_iter_get_var(&it, x_var));
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(Likes, EcsWildcard));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(Likes, EcsWildcard));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(parent, ecs_iter_get_var(&it, x_var));
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(Likes, parent));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(true, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(Likes, parent));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(EcsWildcard, ecs_iter_get_var(&it, x_var));
-    test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_pair(Likes, EcsWildcard));
-    test_bool(true, ecs_term_is_set(&it, 1));
-    test_bool(false, ecs_term_is_set(&it, 2));
+    test_int(ecs_field_id(&it, 1), Tag);
+    test_int(ecs_field_id(&it, 2), ecs_pair(Likes, EcsWildcard));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -4951,8 +4951,8 @@ void Rules_value_set() {
         test_int(it.terms[0].id, ecs_id(Position));
         test_int(it.terms[1].id, ecs_id(Velocity));
 
-        Position *p = ecs_term(&it, Position, 1);
-        Velocity *v = ecs_term(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
         test_assert(p != NULL);
         test_assert(v != NULL);
 
@@ -5679,12 +5679,12 @@ void Rules_term_w_same_subj_obj_var() {
 
     test_bool( ecs_rule_next(&it), true);
     test_int(it.count, 0);
-    test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e1));
+    test_int( ecs_field_id(&it, 1), ecs_pair(Rel, e1));
     test_int( ecs_iter_get_var(&it, x_var), e1);
 
     test_bool( ecs_rule_next(&it), true);
     test_int(it.count, 0);
-    test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e5));
+    test_int( ecs_field_id(&it, 1), ecs_pair(Rel, e5));
     test_int( ecs_iter_get_var(&it, x_var), e5);
 
     test_bool( ecs_rule_next(&it), false);
@@ -5721,22 +5721,22 @@ void Rules_optional_any_object() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), false);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), false);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), true);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), true);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), true);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), true);
     
     test_bool(ecs_rule_next(&it), false);
 
@@ -5772,22 +5772,22 @@ void Rules_optional_any_subject() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), false);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), false);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), true);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), true);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(it.ids[0], Tag);
-    test_bool(ecs_term_is_set(&it, 1), true);
-    test_bool(ecs_term_is_set(&it, 2), true);
+    test_bool(ecs_field_is_set(&it, 1), true);
+    test_bool(ecs_field_is_set(&it, 2), true);
     
     test_bool(ecs_rule_next(&it), false);
 
@@ -5816,12 +5816,12 @@ void Rules_test_subj_w_wildcard_w_pairs() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 1), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 1), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5850,17 +5850,17 @@ void Rules_test_subj_w_wildcard_wildcard_w_pairs() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+    test_int(ecs_field_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5890,20 +5890,20 @@ void Rules_test_this_w_wildcard_w_pairs() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), MyTag);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), MyTag);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5933,14 +5933,14 @@ void Rules_test_this_w_wildcard_wildcard_w_pairs() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5975,13 +5975,13 @@ void Rules_test_subj_w_wildcard_w_pairs_var() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 1), TagA);
     test_int(ecs_iter_get_var(&it, c_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 1), TagB);
     test_int(ecs_iter_get_var(&it, c_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
@@ -6016,21 +6016,21 @@ void Rules_test_subj_w_wildcard_wildcard_w_pairs_var() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+    test_int(ecs_field_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
     test_int(ecs_iter_get_var(&it, r_var), ecs_id(EcsIdentifier));
     test_int(ecs_iter_get_var(&it, o_var), EcsName);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
     test_int(ecs_iter_get_var(&it, r_var), Rel);
     test_int(ecs_iter_get_var(&it, o_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
     test_int(ecs_iter_get_var(&it, r_var), Rel);
     test_int(ecs_iter_get_var(&it, o_var), TagB);
 
@@ -6065,22 +6065,22 @@ void Rules_test_this_w_wildcard_w_pairs_var() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), MyTag);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), MyTag);
+    test_int(ecs_field_id(&it, 2), MyTag);
     test_int(ecs_iter_get_var(&it, c_var), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MyTag);
     test_int(ecs_iter_get_var(&it, c_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MyTag);
     test_int(ecs_iter_get_var(&it, c_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
@@ -6116,16 +6116,16 @@ void Rules_test_this_w_wildcard_wildcard_w_pairs_var() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 2), MyTag);
     test_int(ecs_iter_get_var(&it, r_var), Rel);
     test_int(ecs_iter_get_var(&it, o_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 2), MyTag);
     test_int(ecs_iter_get_var(&it, r_var), Rel);
     test_int(ecs_iter_get_var(&it, o_var), TagB);
 
@@ -6205,22 +6205,22 @@ void Rules_test_subj_w_wildcard_w_isa() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagC);
+    test_int(ecs_field_id(&it, 1), TagC);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagD);
+    test_int(ecs_field_id(&it, 1), TagD);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 1), TagA);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 1), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6260,32 +6260,32 @@ void Rules_test_subj_w_wildcard_w_isa_2_lvls() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagE);
+    test_int(ecs_field_id(&it, 1), TagE);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), TagF);
+    test_int(ecs_field_id(&it, 1), TagF);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), TagC);
+    test_int(ecs_field_id(&it, 1), TagC);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), TagD);
+    test_int(ecs_field_id(&it, 1), TagD);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base_of_base);
-    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 1), TagA);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base_of_base);
-    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 1), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6319,32 +6319,32 @@ void Rules_test_subj_w_pair_wildcard_w_isa() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+    test_int(ecs_field_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsIsA, base));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagC));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagC));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagD));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagD));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6385,47 +6385,47 @@ void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls() {
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+    test_int(ecs_field_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsIsA, base));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagE));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagE));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], e);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagF));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagF));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base_of_base));
+    test_int(ecs_field_id(&it, 1), ecs_pair(EcsIsA, base_of_base));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagC));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagC));
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagD));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagD));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base_of_base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagA));
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.sources[0], base_of_base);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_field_id(&it, 1), ecs_pair(Rel, TagB));
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6460,36 +6460,36 @@ void Rules_test_this_w_wildcard_w_isa() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), MyTag);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), MyTag);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagC);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagC);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagD);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagD);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MyTag);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6526,36 +6526,36 @@ void Rules_test_this_w_wildcard_w_isa_2_lvls() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), MyTag);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), MyTag);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagC);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagC);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagD);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagD);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MyTag);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6592,36 +6592,36 @@ void Rules_test_this_w_wildcard_w_2_isa() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), MyTag);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), MyTag);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagC);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagC);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagD);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagD);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 2), MyTag);
     
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sources[0], 0);
-    test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_field_id(&it, 1), TagB);
+    test_int(ecs_field_id(&it, 2), MyTag);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -6644,7 +6644,7 @@ void Rules_rule_w_inout_filter() {
     ecs_iter_t it = ecs_rule_iter(world, r);
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 2);
-    test_uint(ecs_id(Position), ecs_term_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_int(it.entities[0], e1);
     test_int(it.entities[1], e2);
 

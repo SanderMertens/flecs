@@ -1770,7 +1770,7 @@ static void ecs_on_add(Position)(ecs_iter_t *it) {
     test_assert(it->count >= 1);
     test_assert(it->event == EcsOnAdd);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     for (int i = 0; i < it->count; i ++) {
         on_add_position ++;
         test_int(p[i].x, 0);
@@ -1848,7 +1848,7 @@ static void ecs_on_remove(Position)(ecs_iter_t *it) {
     test_assert(it->count >= 1);
     test_assert(it->event == EcsOnRemove);
 
-    Position *p = ecs_term(it, Position, 1);
+    Position *p = ecs_field(it, Position, 1);
     for (int i = 0; i < it->count; i ++) {
         on_remove_position ++;
         test_int(p[i].x, 10);

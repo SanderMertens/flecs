@@ -15861,8 +15861,8 @@ static
 void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
-    EcsStatsHeader *hdr = ecs_term_w_size(it, 0, 1);
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_term_id(it, 1));
+    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 1);
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
     void *stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
 
     ecs_ftime_t elapsed = hdr->elapsed;
@@ -15920,10 +15920,10 @@ void MonitorStats(ecs_iter_t *it) {
 
 static
 void ReduceStats(ecs_iter_t *it) {
-    void *dst = ecs_term_w_size(it, 0, 1);
-    void *src = ecs_term_w_size(it, 0, 2);
+    void *dst = ecs_field_w_size(it, 0, 1);
+    void *src = ecs_field_w_size(it, 0, 2);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_term_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
@@ -15939,13 +15939,13 @@ static
 void AggregateStats(ecs_iter_t *it) {
     int32_t interval = *(int32_t*)it->ctx;
 
-    EcsStatsHeader *dst_hdr = ecs_term_w_size(it, 0, 1);
-    EcsStatsHeader *src_hdr = ecs_term_w_size(it, 0, 2);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 1);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 2);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_term_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};
@@ -16142,8 +16142,8 @@ void AddTickSource(ecs_iter_t *it) {
 
 static
 void ProgressTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_term(it, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_term(it, EcsTickSource, 2);
+    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
+    EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 2);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -16180,8 +16180,8 @@ void ProgressTimers(ecs_iter_t *it) {
 
 static
 void ProgressRateFilters(ecs_iter_t *it) {
-    EcsRateFilter *filter = ecs_term(it, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_term(it, EcsTickSource, 2);
+    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 1);
+    EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -16218,7 +16218,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 
 static
 void ProgressTickSource(ecs_iter_t *it) {
-    EcsTickSource *tick_src = ecs_term(it, EcsTickSource, 1);
+    EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 1);
 
     /* If tick source has no filters, tick unconditionally */
     int i;
@@ -24442,7 +24442,7 @@ int add_constant_to_bitmask(
 static
 void set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsPrimitive *type = ecs_term(it, EcsPrimitive, 1);
+    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -24506,7 +24506,7 @@ void set_primitive(ecs_iter_t *it) {
 static
 void set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMember *member = ecs_term(it, EcsMember, 1);
+    EcsMember *member = ecs_field(it, EcsMember, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -24577,7 +24577,7 @@ void add_constant(ecs_iter_t *it) {
 static
 void set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsArray *array = ecs_term(it, EcsArray, 1);
+    EcsArray *array = ecs_field(it, EcsArray, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -24607,7 +24607,7 @@ void set_array(ecs_iter_t *it) {
 static
 void set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsVector *array = ecs_term(it, EcsVector, 1);
+    EcsVector *array = ecs_field(it, EcsVector, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -24749,7 +24749,7 @@ error:
 
 static
 void set_unit(ecs_iter_t *it) {
-    EcsUnit *u = ecs_term(it, EcsUnit, 1);
+    EcsUnit *u = ecs_field(it, EcsUnit, 1);
 
     ecs_world_t *world = it->world;
 
@@ -24781,7 +24781,7 @@ void unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetaType *type = ecs_term(it, EcsMetaType, 1);
+    EcsMetaType *type = ecs_field(it, EcsMetaType, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -30696,7 +30696,7 @@ void serialize_iter_result_ids(
 
     for (int i = 0; i < it->term_count; i ++) {
         flecs_json_next(buf);
-        serialize_id(world,  ecs_term_id(it, i + 1), buf);
+        serialize_id(world,  ecs_field_id(it, i + 1), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -30734,7 +30734,7 @@ void serialize_iter_result_is_set(
 
     for (int i = 0; i < it->term_count; i ++) {
         ecs_strbuf_list_next(buf);
-        if (ecs_term_is_set(it, i + 1)) {
+        if (ecs_field_is_set(it, i + 1)) {
             flecs_json_true(buf);
         } else {
             flecs_json_false(buf);
@@ -30948,13 +30948,13 @@ void serialize_iter_result_values(
 
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
-            if (ecs_term_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i + 1)) {
                 flecs_json_literal(buf, "0");
                 continue;
             }
         }
 
-        if (ecs_term_is_writeonly(it, i + 1)) {
+        if (ecs_field_is_writeonly(it, i + 1)) {
             flecs_json_literal(buf, "0");
             continue;
         }
@@ -30985,14 +30985,14 @@ void serialize_iter_result_values(
 
         /* If term is not set, append empty array. This indicates that the term
          * could have had data but doesn't */
-        if (!ecs_term_is_set(it, i + 1)) {
+        if (!ecs_field_is_set(it, i + 1)) {
             ecs_assert(ptr == NULL, ECS_INTERNAL_ERROR, NULL);
             flecs_json_array_push(buf);
             flecs_json_array_pop(buf);
             continue;
         }
 
-        if (ecs_term_is_owned(it, i + 1)) {
+        if (ecs_field_is_self(it, i + 1)) {
             int32_t count = it->count;
             array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
         } else {
@@ -32285,7 +32285,7 @@ void flecs_on_set_rest(ecs_iter_t *it)
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_term(it, EcsRest, 1);
+    EcsRest *rest = ecs_field(it, EcsRest, 1);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
@@ -46837,14 +46837,14 @@ bool flecs_iter_next_instanced(
 
 /* --- Public API --- */
 
-void* ecs_term_w_size(
+void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t term)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!size || ecs_term_size(it, term) == size || 
-        (!ecs_term_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
+    ecs_check(!size || ecs_field_size(it, term) == size || 
+        (!ecs_field_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
         ECS_INVALID_PARAMETER, NULL);
 
     (void)size;
@@ -46862,7 +46862,7 @@ error:
     return NULL;
 }
 
-bool ecs_term_is_readonly(
+bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
@@ -46892,7 +46892,7 @@ error:
     return false;
 }
 
-bool ecs_term_is_writeonly(
+bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
@@ -46921,7 +46921,7 @@ error:
     return -1;
 }
 
-bool ecs_term_is_set(
+bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
@@ -46943,6 +46943,51 @@ bool ecs_term_is_set(
     return true;
 error:
     return false;
+}
+
+bool ecs_field_is_self(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    return it->sources == NULL || it->sources[index - 1] == 0;
+}
+
+ecs_id_t ecs_field_id(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    return it->ids[index - 1];
+}
+
+ecs_entity_t ecs_field_src(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    if (it->sources) {
+        return it->sources[index - 1];
+    } else {
+        return 0;
+    }
+}
+
+size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (index == 0) {
+        return sizeof(ecs_entity_t);
+    } else {
+        return (size_t)it->sizes[index - 1];
+    }
 }
 
 void* ecs_iter_column_w_size(
@@ -47000,7 +47045,7 @@ char* ecs_iter_str(
     if (it->term_count) {
         ecs_strbuf_list_push(&buf, "term: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_id_t id = ecs_term_id(it, i + 1);
+            ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -47009,7 +47054,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
-            ecs_entity_t subj = ecs_term_src(it, i + 1);
+            ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -47801,7 +47846,7 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 static
 void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
-    EcsIdentifier *ptr = ecs_term(it, EcsIdentifier, 1);
+    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 1);
     
     ecs_world_t *world = it->real_world;
     ecs_entity_t evt = it->event;
@@ -48026,7 +48071,7 @@ void register_final(ecs_iter_t *it) {
 
 static
 void register_on_delete(ecs_iter_t *it) {
-    ecs_id_t id = ecs_term_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 1);
     register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
@@ -48035,7 +48080,7 @@ void register_on_delete(ecs_iter_t *it) {
 
 static
 void register_on_delete_object(ecs_iter_t *it) {
-    ecs_id_t id = ecs_term_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 1);
     register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
@@ -48096,7 +48141,7 @@ void register_union(ecs_iter_t *it) {
 
 static
 void on_symmetric_add_remove(ecs_iter_t *it) {
-    ecs_entity_t pair = ecs_term_id(it, 1);
+    ecs_entity_t pair = ecs_field_id(it, 1);
 
     if (!ECS_HAS_ROLE(pair, PAIR)) {
         /* If relationship was not added as a pair, there's nothing to do */
@@ -48145,7 +48190,7 @@ void register_symmetric(ecs_iter_t *it) {
 static
 void on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsComponent *c = ecs_term(it, EcsComponent, 1);
+    EcsComponent *c = ecs_field(it, EcsComponent, 1);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -48850,7 +48895,7 @@ ecs_entity_t get_parent_from_path(
 
 static
 void on_set_symbol(ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
+    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 1);
     ecs_world_t *world = it->world;
 
     int i;

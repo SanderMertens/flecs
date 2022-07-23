@@ -1059,7 +1059,7 @@ void SingleThreadStaging_remove_add_2_same_to_current() {
 
 static
 void AddRemoveAdd(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1967,8 +1967,8 @@ static Probe pv_probe;
 
 static
 void On_PV(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     probe_system_w_ctx(it, &pv_probe);
 
@@ -2029,7 +2029,7 @@ void Set_velocity_on_new(ecs_iter_t *it) {
 
 static
 void On_V(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     probe_iter(it);
 
@@ -2229,7 +2229,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 
 static
 void Task(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
     ecs_entity_t *e = ecs_get_context(it->world);
 
@@ -2256,8 +2256,8 @@ void SingleThreadStaging_merge_after_tasks() {
 
 static
 void OverrideAfterRemove(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    Position *p = ecs_field(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2297,7 +2297,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
 
 static
 void GetParentInProgress(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
     
     ecs_world_t *world = it->world;
 
@@ -2333,8 +2333,8 @@ static
 void AddInProgress(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
     
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2345,8 +2345,8 @@ void AddInProgress(ecs_iter_t *it) {
 
 static
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2432,8 +2432,8 @@ void SingleThreadStaging_clear_stage_after_merge() {
 void MutableTest(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    Velocity *v = ecs_term(it, Velocity, 2);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    Velocity *v = ecs_field(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -2532,9 +2532,9 @@ void SingleThreadStaging_get_mutable_from_main() {
 void MutableTest_w_Add(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    Velocity *v = ecs_term(it, Velocity, 2);
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
-    ecs_id_t ecs_id(MyTag) = ecs_term_id(it, 3);
+    Velocity *v = ecs_field(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(MyTag) = ecs_field_id(it, 3);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -2610,7 +2610,7 @@ void SingleThreadStaging_get_mutable_w_add() {
 
 static
 void OnAdd(ecs_iter_t *it) {
-    Velocity *v = ecs_term(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2621,7 +2621,7 @@ void OnAdd(ecs_iter_t *it) {
 
 static
 void AddInProgress2(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
