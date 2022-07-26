@@ -603,6 +603,7 @@ void FilterBuilder_create_w_no_template_args(void);
 void FilterBuilder_2_terms_w_expr(void);
 void FilterBuilder_assert_on_uninitialized_term(void);
 void FilterBuilder_operator_shortcuts(void);
+void FilterBuilder_inout_shortcuts(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -3281,6 +3282,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "operator_shortcuts",
         FilterBuilder_operator_shortcuts
+    },
+    {
+        "inout_shortcuts",
+        FilterBuilder_inout_shortcuts
     }
 };
 
@@ -4679,7 +4684,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        66,
+        67,
         FilterBuilder_testcases
     },
     {
