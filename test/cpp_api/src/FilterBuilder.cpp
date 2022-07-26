@@ -1654,3 +1654,35 @@ void FilterBuilder_operator_shortcuts() {
     test_int(t.id(), h);
     test_int(t.oper(), flecs::NotFrom);
 }
+
+void FilterBuilder_inout_shortcuts() {
+    flecs::world ecs;
+
+    flecs::entity a = ecs.entity();
+    flecs::entity b = ecs.entity();
+    flecs::entity c = ecs.entity();
+    flecs::entity d = ecs.entity();
+
+    auto filter = ecs.filter_builder()
+        .term(a).in()
+        .term(b).out()
+        .term(c).inout()
+        .term(d).inout_none()
+        .build();
+
+    auto t = filter.term(0);
+    test_int(t.id(), a);
+    test_int(t.inout(), flecs::In);
+
+    t = filter.term(1);
+    test_int(t.id(), b);
+    test_int(t.inout(), flecs::Out);
+
+    t = filter.term(2);
+    test_int(t.id(), c);
+    test_int(t.inout(), flecs::InOut);
+
+    t = filter.term(3);
+    test_int(t.id(), d);
+    test_int(t.inout(), flecs::InOutNone);
+}
