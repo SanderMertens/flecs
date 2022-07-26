@@ -573,7 +573,7 @@ void diff_insert_isa(
         ecs_id_t id = ids[i];
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            /* The base has an IsA relation. Find table without the base, which
+            /* The base has an IsA relationship. Find table without the base, which
              * gives us the list of ids the current base inherits and doesn't
              * override. This saves us from having to recursively check for each
              * base in the hierarchy whether the component is overridden. */
@@ -656,7 +656,7 @@ void diff_insert_removed(
     diff->removed.array[diff->removed.count ++] = id;
 
     if (ECS_HAS_RELATION(id, EcsIsA)) {
-        /* Removing an IsA relation also "removes" all components from the
+        /* Removing an IsA relationship also "removes" all components from the
          * instance. Any id from base that's not overridden should be UnSet. */
         diff_insert_removed_isa(world, table, diff, id);
         return;
@@ -834,7 +834,7 @@ void flecs_add_with_property(
 {
     r = ecs_get_alive(world, r);
 
-    /* Check if component/relation has With pairs, which contain ids
+    /* Check if component/relationship has With pairs, which contain ids
      * that need to be added to the table. */
     ecs_table_t *table = ecs_get_table(world, r);
     if (!table) {

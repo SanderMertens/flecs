@@ -41,7 +41,7 @@ void notify_subset(
         return;
     }
 
-    /* Iterate acyclic relations */
+    /* Iterate acyclic relationships */
     ecs_id_record_t *cur = idr;
     while ((cur = cur->acyclic.next)) {
         flecs_process_pending_tables(world);
@@ -76,7 +76,7 @@ void notify_subset(
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
                 if (flags & EcsEntityObservedAcyclic) {
                     /* Only notify for entities that are used in pairs with
-                    * acyclic relations */
+                    * acyclic relationships */
                     notify_subset(world, it, observable, entities[e], event, ids);
                 }
             }
@@ -103,7 +103,7 @@ void flecs_emit(
     ecs_table_t *table = desc->table;
     int32_t row = desc->offset;
     int32_t i, count = desc->count;
-    ecs_entity_t relation = desc->relation;
+    ecs_entity_t relationship = desc->relationship;
 
     if (!count) {
         count = ecs_table_count(table) - row;
@@ -126,11 +126,11 @@ void flecs_emit(
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (!desc->relation) {
+    if (!desc->relationship) {
         flecs_observers_notify(&it, observable, ids, event);
     } else {
         flecs_set_observers_notify(&it, observable, ids, event, 
-            ecs_pair(relation, EcsWildcard));
+            ecs_pair(relationship, EcsWildcard));
     }
 
     if (count && !desc->table_event) {

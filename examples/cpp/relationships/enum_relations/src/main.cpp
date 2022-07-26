@@ -1,15 +1,15 @@
 #include <enum_relations.h>
 #include <stdio.h>
 
-// When an enumeration constant is added to an entity, it is added as a relation
-// pair where the relation is the enum type, and the target is the constant. For
+// When an enumeration constant is added to an entity, it is added as a relationship
+// pair where the relationship is the enum type, and the target is the constant. For
 // example, this statement:
 //   e.add(Color::Red)
 //
-// adds this relation:
+// adds this relationship:
 //   (Color, Color::Red)
 //
-// Enums are registered as exclusive relations, which means that adding an
+// Enums are registered as exclusive relationships, which means that adding an
 // enum constant will replace the previous constant for that enumeration:
 //   e.add(Color::Green)
 //
@@ -31,7 +31,7 @@ enum class TileStatus {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Create an entity with (Tile, Stone) and (TileStatus, Free) relations
+    // Create an entity with (Tile, Stone) and (TileStatus, Free) relationships
     auto tile = ecs.entity()
         .add(Tile::Stone)
         .add(TileStatus::Free);
@@ -45,7 +45,7 @@ int main(int, char *[]) {
     // (Tile, Tile.Stone), (TileStatus, TileStatus.Occupied)
     printf("%s\n", tile.type().str().c_str());
 
-    // Check if the entity has the Tile relation and the Tile::Stone pair
+    // Check if the entity has the Tile relationship and the Tile::Stone pair
     printf("%s\n", tile.has<Tile>() ? "true" : "false"); // true
     printf("%s\n", tile.has(Tile::Stone) ? "true" : "false"); // true
 
@@ -57,7 +57,7 @@ int main(int, char *[]) {
     ecs.entity().add(Tile::Grass).add(TileStatus::Free);
     ecs.entity().add(Tile::Sand).add(TileStatus::Occupied);
 
-    // Iterate all entities with a Tile relation
+    // Iterate all entities with a Tile relationship
     ecs.filter_builder()
         .term<Tile>(flecs::Wildcard)
         .build()
@@ -85,6 +85,6 @@ int main(int, char *[]) {
     //  ::Tile::Stone
     //  ::Tile::Sand
 
-    // Remove any instance of the TileStatus relation
+    // Remove any instance of the TileStatus relationship
     tile.remove<TileStatus>();
 }

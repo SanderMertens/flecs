@@ -990,7 +990,7 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/** Ensures that entity/component cannot be used as target in IsA relation.
+/** Ensures that entity/component cannot be used as target in IsA relationship.
  * Final can improve the performance of rule-based queries, as they will not 
  * attempt to substitute a final component with its subsets.
  * 
@@ -1012,7 +1012,7 @@ FLECS_API extern const ecs_entity_t EcsDontInherit;
  */
 FLECS_API extern const ecs_entity_t EcsSymmetric;
 
-/* Can be added to relation to indicate that the relationship can only occur
+/* Can be added to relationship to indicate that the relationship can only occur
  * once on an entity. Adding a 2nd instance will replace the 1st. 
  *
  * Behavior:
@@ -1020,7 +1020,7 @@ FLECS_API extern const ecs_entity_t EcsSymmetric;
  */
 FLECS_API extern const ecs_entity_t EcsExclusive;
 
-/* Marks a relation as acyclic. Acyclic relations may not form cycles. */
+/* Marks a relationship as acyclic. Acyclic relationships may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
 
 /* Ensure that a component always is added together with another component.
@@ -1039,11 +1039,11 @@ FLECS_API extern const ecs_entity_t EcsWith;
  */
 FLECS_API extern const ecs_entity_t EcsOneOf;
 
-/* Can be added to relation to indicate that it should never hold data, even
- * when it or the relation target is a component. */
+/* Can be added to relationship to indicate that it should never hold data, even
+ * when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
-/* Tag to indicate that relation is stored as union. Union relations enable
+/* Tag to indicate that relationship is stored as union. Union relationships enable
  * changing the target of a union without switching tables. Union relationships
  * are also marked as exclusive. */
 FLECS_API extern const ecs_entity_t EcsUnion;
@@ -1095,8 +1095,8 @@ FLECS_API extern const ecs_entity_t EcsUnSet;
 FLECS_API extern const ecs_entity_t EcsMonitor;
 
 /* Event. Triggers when an entity is deleted.
- * Also used as relation for defining cleanup behavior, see: 
- * https://github.com/SanderMertens/flecs/blob/master/docs/Relations.md#relation-cleanup-properties
+ * Also used as relationship for defining cleanup behavior, see: 
+ * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
  */
 FLECS_API extern const ecs_entity_t EcsOnDelete;
 
@@ -1114,7 +1114,7 @@ FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
 /* Relationship used to define what should happen when a target entity (second
  * element of a pair) is deleted. For details see: 
- * https://github.com/SanderMertens/flecs/blob/master/docs/Relations.md#relation-cleanup-properties
+ * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
  */
 FLECS_API extern const ecs_entity_t EcsOnDeleteTarget;
 
@@ -2105,7 +2105,7 @@ ecs_id_t ecs_strip_generation(
  * the generation has been stripped. A typical scenario in which this happens is
  * when iterating relationships in an entity type.
  *
- * For example, when obtaining the parent id from a ChildOf relation, the parent
+ * For example, when obtaining the parent id from a ChildOf relationship, the parent
  * (second element of the pair) will have been stored in a 32 bit value, which 
  * cannot store the entity generation. This function can retrieve the identifier
  * with the current generation for that id.
@@ -2241,7 +2241,7 @@ const ecs_type_info_t* ecs_get_type_info(
  * For a pair id the operation will return the type associated with the pair, by
  * applying the following rules in order:
  * - The first pair element is returned if it is a component
- * - 0 is returned if the relation entity has the Tag property
+ * - 0 is returned if the relationship entity has the Tag property
  * - The second pair element is returned if it is a component
  * - 0 is returned.
  *
@@ -2436,19 +2436,19 @@ bool ecs_has_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Get the target of a relation.
+/** Get the target of a relationship.
  * This will return a target (second element of a pair) of the entity for the 
- * specified relation. The index allows for iterating through the targets, if a 
- * single entity has multiple targets for the same relation.
+ * specified relationship. The index allows for iterating through the targets, if a 
+ * single entity has multiple targets for the same relationship.
  *
  * If the index is larger than the total number of instances the entity has for
- * the relation, the operation will return 0.
+ * the relationship, the operation will return 0.
  *
  * @param world The world.
  * @param entity The entity.
- * @param rel The relation between the entity and the target.
- * @param index The index of the relation instance.
- * @return The target for the relation at the specified index.
+ * @param rel The relationship between the entity and the target.
+ * @param index The index of the relationship instance.
+ * @return The target for the relationship at the specified index.
  */
 FLECS_API
 ecs_entity_t ecs_get_target(
@@ -2457,14 +2457,14 @@ ecs_entity_t ecs_get_target(
     ecs_entity_t rel,
     int32_t index);
 
-/** Get the target of a relation for a given id.
+/** Get the target of a relationship for a given id.
  * This operation returns the first entity that has the provided id by following
  * the specified relationship. If the entity itself has the id then entity will
  * be returned. If the id cannot be found on the entity or by following the
- * relation, the operation will return 0.
+ * relationship, the operation will return 0.
  * 
  * This operation can be used to lookup, for example, which prefab is providing
- * a component by specifying the IsA relation:
+ * a component by specifying the IsA relationship:
  * 
  *   // Is Position provided by the entity or one of its base entities?
  *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
@@ -3432,8 +3432,8 @@ typedef struct ecs_event_desc_t {
      * enabled, (up)set triggers are not notified. */
     bool table_event;
 
-    /* When set, events will only be propagated by traversing the relation */
-    ecs_entity_t relation;
+    /* When set, events will only be propagated by traversing the relationship */
+    ecs_entity_t relationship;
 } ecs_event_desc_t;
 
 /** Send event.
@@ -4364,7 +4364,7 @@ int32_t ecs_search(
  * 
  * If the provided id has the form (*, tgt) the operation takes linear time. The
  * reason for this is that ids for an target are not packed together, as they
- * are sorted relation first.
+ * are sorted relationship first.
  * 
  * If the id at the offset does not match the provided id, the operation will do
  * a linear search to find a matching id.
@@ -4384,11 +4384,11 @@ int32_t ecs_search_offset(
     ecs_id_t id,
     ecs_id_t *id_out);
 
-/** Search for component/relation id in table type starting from an offset.
+/** Search for component/relationship id in table type starting from an offset.
  * This operation is the same as ecs_search_offset, but has the additional
  * capability of traversing relationships to find a component. For example, if
  * an application wants to find a component for either the provided table or a
- * prefab (using the IsA relation) of that table, it could use the operation 
+ * prefab (using the IsA relationship) of that table, it could use the operation 
  * like this:
  * 
  * int32_t index = ecs_search_relation(
@@ -4396,15 +4396,15 @@ int32_t ecs_search_offset(
  *   table,            // the table
  *   0,                // offset 0
  *   ecs_id(Position), // the component id
- *   EcsIsA,           // the relation to traverse
+ *   EcsIsA,           // the relationship to traverse
  *   0,                // start at depth 0 (the table itself)
  *   0,                // no depth limit
  *   NULL,             // (optional) entity on which component was found
  *   NULL,             // see above
  *   NULL);            // internal type with information about matched id
  * 
- * The operation searches depth first. If a table type has 2 IsA relations, the
- * operation will first search the IsA tree of the first relation.
+ * The operation searches depth first. If a table type has 2 IsA relationships, the
+ * operation will first search the IsA tree of the first relationship.
  * 
  * When choosing betwen ecs_search, ecs_search_offset and ecs_search_relation,
  * the simpler the function the better its performance.
@@ -4413,7 +4413,7 @@ int32_t ecs_search_offset(
  * @param table The table.
  * @param offset Offset from where to start searching.
  * @param id The id to search for.
- * @param rel The relation to traverse (optional).
+ * @param rel The relationship to traverse (optional).
  * @param flags Whether to search EcsSelf and/or EcsUp.
  * @param subject_out If provided, it will be set to the matched entity.
  * @param id_out If provided, it will be set to the found id (optional).

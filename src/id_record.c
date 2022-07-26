@@ -130,7 +130,7 @@ ecs_id_record_t* flecs_id_record_new(
         rel = ecs_pair_first(world, id);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
-        /* Relation object can be 0, as tables without a ChildOf relation are
+        /* Relationship object can be 0, as tables without a ChildOf relationship are
          * added to the (ChildOf, 0) id record */
         obj = ECS_PAIR_SECOND(id);
         if (obj) {
@@ -147,15 +147,15 @@ ecs_id_record_t* flecs_id_record_new(
         }
 
         if (!is_wildcard) {
-            /* Inherit flags from (relation, *) record */
+            /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
             idr->parent = idr_r;
             idr->flags = idr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relations for an object, or all 
-             * objecs for a relation. */
+             * allow for quickly enumerating all relationships for an object, or all 
+             * objecs for a relationship. */
             insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
             insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
 
@@ -283,7 +283,7 @@ void flecs_id_record_free(
                     flecs_id_record_release(world, cur);
                 }
             } else {
-                /* Iterate (Relation, *) list */
+                /* Iterate (Relationship, *) list */
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_id_record_t *cur, *next = idr->first.next;

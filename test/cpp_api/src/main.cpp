@@ -512,7 +512,7 @@ void QueryBuilder_isa_superset_shortcut(void);
 void QueryBuilder_isa_superset_shortcut_w_self(void);
 void QueryBuilder_childof_superset_shortcut(void);
 void QueryBuilder_childof_superset_shortcut_w_self(void);
-void QueryBuilder_relation(void);
+void QueryBuilder_relationship(void);
 void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
 void QueryBuilder_add_pair_w_rel_type(void);
@@ -569,7 +569,7 @@ void FilterBuilder_isa_superset_shortcut(void);
 void FilterBuilder_isa_superset_shortcut_w_self(void);
 void FilterBuilder_childof_superset_shortcut(void);
 void FilterBuilder_childof_superset_shortcut_w_self(void);
-void FilterBuilder_relation(void);
+void FilterBuilder_relationship(void);
 void FilterBuilder_relation_w_object_wildcard(void);
 void FilterBuilder_relation_w_predicate_wildcard(void);
 void FilterBuilder_add_pair_w_rel_type(void);
@@ -2925,8 +2925,8 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_childof_superset_shortcut_w_self
     },
     {
-        "relation",
-        QueryBuilder_relation
+        "relationship",
+        QueryBuilder_relationship
     },
     {
         "relation_w_object_wildcard",
@@ -3148,8 +3148,8 @@ bake_test_case FilterBuilder_testcases[] = {
         FilterBuilder_childof_superset_shortcut_w_self
     },
     {
-        "relation",
-        FilterBuilder_relation
+        "relationship",
+        FilterBuilder_relationship
     },
     {
         "relation_w_object_wildcard",

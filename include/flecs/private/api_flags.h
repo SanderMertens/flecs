@@ -120,8 +120,8 @@ extern "C" {
 
 #define EcsTableHasBuiltins            (1u << 1u)  /* Does table have builtin components */
 #define EcsTableIsPrefab               (1u << 2u)  /* Does the table store prefabs */
-#define EcsTableHasIsA                 (1u << 3u)  /* Does the table have IsA relation */
-#define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relation */
+#define EcsTableHasIsA                 (1u << 3u)  /* Does the table have IsA relationship */
+#define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relationship */
 #define EcsTableHasPairs               (1u << 5u)  /* Does the table type have pairs */
 #define EcsTableHasModule              (1u << 6u)  /* Does the table have module data */
 #define EcsTableIsDisabled             (1u << 7u)  /* Does the table type has EcsDisabled */

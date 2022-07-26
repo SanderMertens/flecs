@@ -499,7 +499,7 @@ int flecs_term_verify(
                     && !ecs_has_id(world, first_id, EcsReflexive)) 
                 {
                     char *pred_str = ecs_get_fullpath(world, term->first.id);
-                    flecs_filter_error(ctx, "term with acyclic relation"
+                    flecs_filter_error(ctx, "term with acyclic relationship"
                         " '%s' cannot have same subject and object",
                             pred_str);
                     ecs_os_free(pred_str);
@@ -1883,7 +1883,7 @@ bool flecs_term_iter_find_superset(
 {
     ecs_term_id_t *src = &term->src;
 
-    /* Test if following the relation finds the id */
+    /* Test if following the relationship finds the id */
     int32_t index = ecs_search_relation(world, table, 0, 
         term->id, src->trav, src->flags, source, id, 0);
 
@@ -1983,7 +1983,7 @@ bool flecs_term_iter_next(
                 continue;
             }
 
-            /* The tr->count field refers to the number of relation instances,
+            /* The tr->count field refers to the number of relationship instances,
              * not to the number of matches. Superset terms can only yield a
              * single match. */
             iter->match_count = 1;

@@ -1,7 +1,7 @@
 #include <relation_component.h>
 #include <stdio.h>
 
-// This example shows how relations can be combined with components to attach
+// This example shows how relationships can be combined with components to attach
 // data to a relationship.
 
 // Some demo components:

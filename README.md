@@ -11,7 +11,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
 - Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
 - First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
-- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
+- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relationships-manual/#the-childof-relationship) and [prefabs](https://flecs.docsforge.com/master/relationships-manual/#the-isa-relationship)
 - Minimal ECS core with optional [addons](#addons)
 - Entire codebase builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
@@ -53,7 +53,7 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [C++ examples](examples/cpp)
 - [Manual](docs/Manual.md) ([docsforge](https://flecs.docsforge.com/master/manual/))
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
-- [Relations Manual](docs/Relations.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
+- [Relationships Manual](docs/Relationships.md) ([docsforge](https://flecs.docsforge.com/master/relationships-manual/))
 
 ## Usage
 The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in `flecs.h`). In C++ projects, make sure to compile the `flecs.c` file as C code.

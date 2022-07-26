@@ -3705,7 +3705,7 @@ void SerializeToJson_serialize_iterator_ids() {
     desc.serialize_entity_ids = true;
     desc.serialize_values = false;
     desc.serialize_is_set = false;
-    desc.serialize_subjects = false;
+    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 
@@ -3739,7 +3739,7 @@ void SerializeToJson_serialize_iterator_ids_2_entities() {
     desc.serialize_entity_ids = true;
     desc.serialize_values = false;
     desc.serialize_is_set = false;
-    desc.serialize_subjects = false;
+    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 
@@ -3770,7 +3770,7 @@ void SerializeToJson_serialize_iterator_variable_ids() {
     desc.serialize_variable_ids = true;
     desc.serialize_values = false;
     desc.serialize_is_set = false;
-    desc.serialize_subjects = false;
+    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 
@@ -3806,7 +3806,7 @@ void SerializeToJson_serialize_iterator_variable_ids_2_entities() {
     desc.serialize_variable_ids = true;
     desc.serialize_values = false;
     desc.serialize_is_set = false;
-    desc.serialize_subjects = false;
+    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 

@@ -3,7 +3,7 @@
 
 #ifdef FLECS_COREDOC
 
-#define URL_ROOT "https://flecs.docsforge.com/master/relations-manual/"
+#define URL_ROOT "https://flecs.docsforge.com/master/relationships-manual/"
 
 void FlecsCoreDocImport(
     ecs_world_t *world)
@@ -49,24 +49,24 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
-    ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
-    ecs_doc_set_brief(world, EcsFinal, "Final relation property");
-    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relation property");
-    ecs_doc_set_brief(world, EcsTag, "Tag relation property");
-    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
-    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relation property");
-    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relation property");
-    ecs_doc_set_brief(world, EcsWith, "With relation property");
-    ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
-    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relation cleanup property");
+    ecs_doc_set_brief(world, EcsTransitive, "Transitive relationship property");
+    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relationship property");
+    ecs_doc_set_brief(world, EcsFinal, "Final relationship property");
+    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relationship property");
+    ecs_doc_set_brief(world, EcsTag, "Tag relationship property");
+    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relationship property");
+    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relationship property");
+    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relationship property");
+    ecs_doc_set_brief(world, EcsWith, "With relationship property");
+    ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relationship cleanup property");
+    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relationship cleanup property");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
-    ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
-    ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
-    ecs_doc_set_brief(world, EcsPanic, "Panic relation cleanup property");
-    ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relation");
-    ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relation");
-    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relation");
+    ecs_doc_set_brief(world, EcsRemove, "Remove relationship cleanup property");
+    ecs_doc_set_brief(world, EcsDelete, "Delete relationship cleanup property");
+    ecs_doc_set_brief(world, EcsPanic, "Panic relationship cleanup property");
+    ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relationship");
+    ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relationship");
+    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relationship");
     ecs_doc_set_brief(world, EcsOnAdd, "Builtin OnAdd event");
     ecs_doc_set_brief(world, EcsOnRemove, "Builtin OnRemove event");
     ecs_doc_set_brief(world, EcsOnSet, "Builtin OnSet event");
@@ -86,8 +86,8 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relation");
-    ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relation"); 
+    ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relationship");
+    ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relationship"); 
     
     /* Initialize documentation for meta components */
     ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");

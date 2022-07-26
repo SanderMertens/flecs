@@ -40,7 +40,7 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
             printf("role: %s, ", ecs_role_str(role));
         }
 
-        if (ECS_HAS_ROLE(id, PAIR)) { // See relations
+        if (ECS_HAS_ROLE(id, PAIR)) { // See relationships
             ecs_entity_t rel = ecs_pair_first(ecs, id);
             ecs_entity_t obj = ecs_pair_second(ecs, id);
             printf("rel: %s, obj: %s",

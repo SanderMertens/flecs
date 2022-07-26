@@ -40,29 +40,29 @@ inline flecs::entity entity_view::target(int32_t index) const
 }
 
 inline flecs::entity entity_view::target(
-    flecs::entity_t relation, 
+    flecs::entity_t relationship, 
     int32_t index) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_target(m_world, m_id, relation, index));
+        ecs_get_target(m_world, m_id, relationship, index));
 }
 
 inline flecs::entity entity_view::target_for(
-    flecs::entity_t relation, 
+    flecs::entity_t relationship, 
     flecs::id_t id) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_target_for_id(m_world, m_id, relation, id));
+        ecs_get_target_for_id(m_world, m_id, relationship, id));
 }
 
 template <typename T>
-inline flecs::entity entity_view::target_for(flecs::entity_t relation) const {
-    return target_for(relation, _::cpp_type<T>::id(m_world));
+inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const {
+    return target_for(relationship, _::cpp_type<T>::id(m_world));
 }
 
 template <typename First, typename Second>
-inline flecs::entity entity_view::target_for(flecs::entity_t relation) const {
-    return target_for(relation, _::cpp_type<First, Second>::id(m_world));
+inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const {
+    return target_for(relationship, _::cpp_type<First, Second>::id(m_world));
 }
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
