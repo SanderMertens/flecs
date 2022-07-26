@@ -323,7 +323,7 @@ typedef void (*ecs_sort_table_action_t)(
 typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_id_t id,
+    ecs_id_t group_id,
     void *ctx);
 
 /** Initialization action for modules */
