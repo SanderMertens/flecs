@@ -285,6 +285,26 @@ struct term_builder_i : term_id_builder_i<Base> {
         return this->inout_stage(flecs::InOut);
     }
 
+    /** Short for inout(flecs::In) */
+    Base& in() {
+        return this->inout(flecs::In);
+    }
+
+    /** Short for inout(flecs::Out) */
+    Base& out() {
+        return this->inout(flecs::Out);
+    }
+
+    /** Short for inout(flecs::InOut) */
+    Base& inout() {
+        return this->inout(flecs::InOut);
+    }
+
+    /** Short for inout(flecs::In) */
+    Base& inout_none() {
+        return this->inout(flecs::InOutNone);
+    }
+
     /** Set operator of term. */
     Base& oper(flecs::oper_kind_t oper) {
         this->assert_term();
