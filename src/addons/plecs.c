@@ -116,7 +116,7 @@ ecs_entity_t plecs_ensure_entity(
              * with creating an entity as this can cause asserts later on */
             char *relstr = ecs_get_fullpath(world, rel);
             ecs_parser_error(state->name, 0, 0, 
-                "invalid identifier '%s' for relation '%s'", path, relstr);
+                "invalid identifier '%s' for relationship '%s'", path, relstr);
             ecs_os_free(relstr);
             return 0;
         }

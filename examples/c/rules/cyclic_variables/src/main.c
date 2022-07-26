@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    ECS_TAG(ecs, Likes); // Likes relation
+    ECS_TAG(ecs, Likes); // Likes relationship
 
     ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
     ecs_entity_t alice = ecs_new_entity(ecs, "Alice");

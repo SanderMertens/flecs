@@ -1248,10 +1248,10 @@ void OnDelete_stresstest_many_objects() {
 
     float table_count = s.table_count.gauge.avg[s.t];
 
-    /* Precreate relations so we get different relationship ids */
-    ecs_entity_t relations[100];
+    /* Precreate relationships so we get different relationship ids */
+    ecs_entity_t relationships[100];
     for (i = 0; i < 100; i ++) {
-        relations[i] = ecs_new_id(world);
+        relationships[i] = ecs_new_id(world);
     }
 
     for (ri = 0; ri < 100; ri ++) {    
@@ -1259,10 +1259,10 @@ void OnDelete_stresstest_many_objects() {
             ecs_entity_t o = ecs_new_id(world);
             ecs_entity_t e = ecs_new_id(world);
             ecs_add_id(world, e, Tag);
-            ecs_add_pair(world, e, relations[ri], o);
+            ecs_add_pair(world, e, relationships[ri], o);
         }
 
-        ecs_delete(world, relations[ri]);
+        ecs_delete(world, relationships[ri]);
     }
     
     ecs_world_stats_get(world, &s);
@@ -1315,11 +1315,11 @@ void OnDelete_stresstest_many_objects_on_delete() {
 
     int i, ri;
 
-    /* Precreate relations so we get different relationship ids */
-    ecs_entity_t relations[100];
+    /* Precreate relationships so we get different relationship ids */
+    ecs_entity_t relationships[100];
     for (i = 0; i < 100; i ++) {
-        relations[i] = ecs_new_id(world);
-        ecs_add_pair(world, relations[i], EcsOnDelete, EcsDelete);
+        relationships[i] = ecs_new_id(world);
+        ecs_add_pair(world, relationships[i], EcsOnDelete, EcsDelete);
     }
 
     ecs_world_stats_t s = {0};
@@ -1330,11 +1330,11 @@ void OnDelete_stresstest_many_objects_on_delete() {
         for (i = 0; i < 100; i ++) {
             ecs_entity_t o = ecs_new_id(world);
             ecs_entity_t e = ecs_new_id(world);
-            ecs_add_pair(world, e, relations[ri], o);
+            ecs_add_pair(world, e, relationships[ri], o);
             ecs_add_id(world, e, Tag);
         }
 
-        ecs_delete(world, relations[ri]);
+        ecs_delete(world, relationships[ri]);
     }
     
     ecs_world_stats_get(world, &s);
@@ -1823,7 +1823,7 @@ void OnDelete_remove_childof_wildcard() {
 
     ECS_TAG(world, Tag);
 
-    /* Create custom childof relation so we won't try to remove ChildOf from
+    /* Create custom childof relationship so we won't try to remove ChildOf from
      * builtin entities */
     ecs_entity_t child_of = ecs_new_id(world);
 

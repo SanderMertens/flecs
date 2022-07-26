@@ -330,10 +330,10 @@ struct entity_view : public id {
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional
      * index can be used to iterate through targets, in case the entity has
-     * multiple instances for the same relation.
+     * multiple instances for the same relationship.
      *
      * @tparam First The first element of the pair.
-     * @param index The index (0 for the first instance of the relation).
+     * @param index The index (0 for the first instance of the relationship).
      */
     template<typename First>
     flecs::entity target(int32_t index = 0) const;
@@ -341,10 +341,10 @@ struct entity_view : public id {
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional
      * index can be used to iterate through targets, in case the entity has
-     * multiple instances for the same relation.
+     * multiple instances for the same relationship.
      *
      * @param first The first element of the pair for which to retrieve the target.
-     * @param index The index (0 for the first instance of the relation).
+     * @param index The index (0 for the first instance of the relationship).
      */
     flecs::entity target(flecs::entity_t first, int32_t index = 0) const;
 
@@ -360,17 +360,17 @@ struct entity_view : public id {
      *   // Is Position provided by the entity or one of its base entities?
      *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
      * 
-     * @param relation The relationship to follow.
+     * @param relationship The relationship to follow.
      * @param id The id to lookup.
      * @return The entity for which the target has been found.
      */
-    flecs::entity target_for(flecs::entity_t relation, flecs::id_t id) const;
+    flecs::entity target_for(flecs::entity_t relationship, flecs::id_t id) const;
 
     template <typename T>
-    flecs::entity target_for(flecs::entity_t relation) const;
+    flecs::entity target_for(flecs::entity_t relationship) const;
 
     template <typename First, typename Second>
-    flecs::entity target_for(flecs::entity_t relation) const;
+    flecs::entity target_for(flecs::entity_t relationship) const;
     
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may

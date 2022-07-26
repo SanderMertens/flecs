@@ -1416,3 +1416,7 @@ void QueryBuilder_any_wildcard() {
     
     test_int(count, 1);
 }
+
+void QueryBuilder_relationship() {
+    // Implement testcase
+}

@@ -1029,7 +1029,7 @@ void serialize_iter_result_ids(
 }
 
 static
-void serialize_iter_result_subjects(
+void serialize_iter_result_sources(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -1347,7 +1347,7 @@ void serialize_iter_result(
 
     /* Include information on which entity the term is matched with */
     if (!desc || desc->serialize_ids) {
-        serialize_iter_result_subjects(world, it, buf);
+        serialize_iter_result_sources(world, it, buf);
     }
 
     /* Write variable values for current result */

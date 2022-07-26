@@ -74,7 +74,7 @@ void* get_base_component(
     ecs_id_record_t *table_index,
     int32_t recur_depth)
 {
-    /* Cycle detected in IsA relation */
+    /* Cycle detected in IsA relationship */
     ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
 
     /* Table (and thus entity) does not have component, look for base */
@@ -265,7 +265,7 @@ void flecs_notify(
     int32_t count,
     ecs_entity_t event,
     ecs_type_t *ids,
-    ecs_entity_t relation)
+    ecs_entity_t relationship)
 {
     flecs_emit(world, world, &(ecs_event_desc_t){
         .event = event,
@@ -275,7 +275,7 @@ void flecs_notify(
         .offset = row,
         .count = count,
         .observable = world,
-        .relation = relation
+        .relationship = relationship
     });
 }
 
@@ -502,7 +502,7 @@ bool override_from_base(
              * a new component value, and the application should not be 
              * notified. 
              * 
-             * If the override is the result if adding a IsA relation
+             * If the override is the result if adding a IsA relationship
              * with an entity that has components with the OVERRIDE flag, an
              * event should be generated, since this represents a new component
              * (and component value) for the entity.
@@ -1163,7 +1163,7 @@ void flecs_notify_on_add(
         }
     }
 
-    /* When a IsA relation is added to an entity, that entity inherits the
+    /* When a IsA relationship is added to an entity, that entity inherits the
      * components from the base. Send OnSet notifications so that an application
      * can respond to these new components. */
     if (run_on_set && diff->on_set.count) {
@@ -2197,7 +2197,7 @@ ecs_entity_t flecs_get_delete_action(
 {
     ecs_entity_t result = action;
     if (!result && delete_target) {
-        /* If action is not specified and we're deleting a relation target,
+        /* If action is not specified and we're deleting a relationship target,
          * derive the action from the current record */
         ecs_table_record_t *trr = &table->records[tr->column];
         ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
@@ -3347,10 +3347,10 @@ void ecs_set_alias(
 }
 
 ecs_id_t ecs_make_pair(
-    ecs_entity_t relation,
+    ecs_entity_t relationship,
     ecs_entity_t target)
 {
-    return ecs_pair(relation, target);
+    return ecs_pair(relationship, target);
 }
 
 bool ecs_is_valid(
@@ -3616,7 +3616,7 @@ ecs_entity_t ecs_id_is_tag(
 {
     if (ecs_id_is_wildcard(id)) {
         /* If id is a wildcard, we can't tell if it's a tag or not, except
-         * when the relation part of a pair has the Tag property */
+         * when the relationship part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
             if (ECS_PAIR_FIRST(id) != EcsWildcard) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
@@ -3635,7 +3635,7 @@ ecs_entity_t ecs_id_is_tag(
                     }
                 }
             } else {
-                /* If relation is * id is not guaranteed to be a tag */
+                /* If relationship is * id is not guaranteed to be a tag */
             }
         }
     } else {
@@ -3931,14 +3931,14 @@ bool flecs_remove_invalid(
     if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
         if (!rel || !flecs_is_entity_valid(world, rel)) {
-            /* After relation is deleted we can no longer see what its
+            /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
             ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !flecs_is_entity_valid(world, obj)) {
-                /* Check the relation's policy for deleted objects */
+                /* Check the relationship's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
                 if (idr) {
@@ -3964,7 +3964,7 @@ bool flecs_remove_invalid(
     } else {
         id &= ECS_COMPONENT_MASK;
         if (!flecs_is_entity_valid(world, id)) {
-            /* After relation is deleted we can no longer see what its
+            /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;

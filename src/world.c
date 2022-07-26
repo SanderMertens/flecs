@@ -45,7 +45,7 @@ const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
-/* Relation properties */
+/* Relationship properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
@@ -63,7 +63,7 @@ const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 23;
 const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 24;
 
-/* Builtin relations */
+/* Builtin relationships */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
 const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
 const ecs_entity_t EcsDependsOn =             ECS_HI_COMPONENT_ID + 27;
@@ -1366,7 +1366,7 @@ bool flecs_type_info_init_id(
     changed |= flecs_id_record_set_type_info(world, idr, ti);
     bool is_tag = idr->flags & EcsIdTag;
 
-    /* All id records with component as relation inherit type info */
+    /* All id records with component as relationship inherit type info */
     idr = flecs_id_record_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
@@ -1381,7 +1381,7 @@ bool flecs_type_info_init_id(
     } while ((idr = idr->first.next));
 
     /* All non-tag id records with component as object inherit type info,
-     * if relation doesn't have type info */
+     * if relationship doesn't have type info */
     idr = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, component));
     do {
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {

@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
         .query.filter.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
-        .callback = Move,
-        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} })
+        .callback = Move
     });
     assert(s != 0);
 

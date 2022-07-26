@@ -1,343 +1,2391 @@
-Queries are the mechanism that allow applications to get the entities that match with a certain set of conditions. Queries can range from simple lists of components to complex expressions that efficiently traverse an entity graph. This manual explains the ins & outs of how to use them.
-
-**NOTE**: this manual describes queries as they are intended to work. The actual implementation may not have support for certain combinations of features. When an application attempts to use a feature that is not yet supported, an `UNSUPPORTED` error will be thrown.
-
-**NOTE**: features that rely on query variables or automatic substitution of components or objects (like when relying on component inheritance or transitive queries) require the rule query engine, included in the `FLECS_RULES` addon.
-
-## Query kinds
-Flecs has two different kinds of queriers: cached and uncached. The differences are described here. Note that when "query" is mentioned in the other parts of the manual it always refers to all query kinds, unless explicitly mentioned otherwise.
-
-### Filter (uncached)
-A filter is an uncached query that is cheap to create and finds matching entities as it is being iterated. The performance of a filter can be roughly thought of as having to do a hashmap lookup per filter term. The first hashmap lookup retrieves a list of archetypes that matches with the first term. Then the filter does a hashmap lookup for the second term. If it succeeds, the archetype that is being evaluated matches the second term, and we move on to the next term. If the hashmap lookup does not succeed, we go back to our initial list of archetypes and move on to the next one.
-
-In pseudo code, filter evaluation roughly looks like this:
-
-```python
-Archetype archetypes[] = filter.get_archetypes_for_first_term();
-for archetype in archetypes:
-  bool match = true;
-  for each term in filter.range(1, filter.length):
-    if !archetype.match(term):
-      match = false;
-      break;
-  if match:
-    yield archetype;
-```
-
-An application then iterates the archetype, which can contain 1...N entities.
-
-### Query (cached)
-A query is a data structure that caches its results. Queries are heavier to create since they need to build their cache, but are very fast to iterate. Queries cannot be created ad-hoc as they mutate the state of the world, but they can be iterated simultaneously from multiple threads.
-
-The performance of iterating a query is to simply iterate its cached list of archetypes. The actual matching is performed when the query is created, and afterwards, when archetypes are created or deleted.
-
-In pseudo code, query evaluation roughly looks like this:
-
-```python
-for archetype in query.cache.archetypes:
-  yield archetype;
-```
-
-Just like with filters, an application then iterates the archetype, which can contain 1...N entities.
-
-Queries are almost a strict superset of filters, in that they provide the same functionality, but cached. There are a few exceptions to this rule, as there are some filters that cannot be cached.
-
-## Query creation
-Queries can be created in different ways in flecs, which are described here.
-
-### Query DSL
-The query DSL (domain specific language) is a flecs-specific string-based format that can be parsed at runtime into a valid query object. The query DSL is useful when an application cannot know in advance what a query will be, such as when exposing a query interface through a REST endpoint.
-
-This is an example of a simple query in the query DSL:
-```
-Position, Velocity, NPC, (Likes, Apples)
-```
-
-For identifiers to be used in the query DSL they must be registered as named entities.
-
-Another feature of the query DSL is that it can be used in reverse, as a data definition format. This shows how the query DSL can be used to define an entity called "MyEntity" with components Position and Velocity:
+# Queries
+At the core of an Entity Component System are queries, which make it possible to find entities matching a list of conditions in realtime, for example:
 
 ```
-Position(MyEntity)
-Velocity(MyEntity)
+Position, Velocity
 ```
 
-The DSL relies on the optional parser addon. If the parser addon is not enabled, DSL strings cannot be parsed.
+This query returns all entities that at least have the `Position` and `Velocity` components. Queries provide direct access to cache efficient storages of matched components, which gives applications the ability to process large numbers (think millions) of entities each frame.
 
-### Simple queries (C++)
-Queries that are just simple lists of components can be constructed by simply providing a list of types to the query factory function:
+## Highlights
+Here are some of the highlights of Flecs queries:
+
+- Queries can [cache results](#cached-queries), which removes search overhead from time critical game loops
+
+- Queries can efficiently traverse [entity relationship](#Relationships) graphs, reducing the need for building custom hard to maintain data structures ([blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)).
+
+- Queries can be created at runtime and match components that are created at runtime.
+
+- Queries support `and`, `or`, `not` and `optional` [operators](#operator-overview).
+
+- Queries can combine components from multiple [sources](#source), like a transform system that uses `Position` component from an entity and its parent.
+
+- Queries can be observed, allowing applications to get notified when entities start or stop matching a query.
+
+- Query results are self describing, which means iterators can be passed to generic code which can then do things like [serializing it to JSON](https://github.com/SanderMertens/flecs/blob/master/include/flecs/addons/json.h).
+
+- Queries can be created with the regular API or by parsing a query string, making it possible to [create tools that create queries at runtime](https://www.flecs.dev/explorer/).
+
+- Queries support [component inheritance](/examples/cpp/rules/component_inheritance).
+
+## Definitions
+
+| Name         | Description |
+|--------------|-------------|
+| Query        | A list of conditions used to match entities |
+| Term         | A single element of a query |
+| Id           | An id that can be matched, added and removed |
+| Component    | Id with a single element (same as an entity id) |
+| Pair         | Id with two elements |
+| Tag          | Component or pair not associated with data |
+| Relationship | Used to refer to first element of pair |
+| Target       | Used to refer to second element of pair |
+| Source       | Entity on which a term is matched |
+| Iterator     | Object used to iterate a query |
+| Field        | A single value or array of values made available by an iterator. An iterator usually provides a field per query term. |
+
+## Examples
+Make sure to check out the code examples in the repository:
+
+ - [queries (C)](/examples/c/queries)
+ - [queries (C++)](/examples/cpp/queries)
+ - [rules (C)](/examples/c/rules)
+ - [rules (C++)](/examples/cpp/rules)
+
+## Query Types
+Flecs has different query types, which are optimized for different kinds of use cases. This section provides a brief overview of each kind:
+
+ ### Filters
+ Filters are cheap to create, low overhead, reasonably efficient to iterate. They are good for ad-hoc queries with runtime-defined conditions. An example:
+ 
+ ```c
+ ecs_filter_t *f = ecs_filter(world, {
+    .terms = {
+        { ecs_id(Position) }, { ecs_id(Velocity) }
+    }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+```
+```cpp
+flecs::filter<Position, Velocity> f = 
+    world.filter<Position, Velocity>();
+
+f.each([](Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+### Cached Queries
+Cached queries cache the output of a filter. They are more expensive to create and have higher overhead, but are the fastest to iterate. Cached queries are the default for systems. An example:
 
 ```c
-// q will be of type flecs::query<Position, const Velocity>
-auto q = world.query<Position, const Velocity>();
-```
+ecs_query_t *q = ecs_query(world, {
+    .filter.terms = {
+        { ecs_id(Position) }, { ecs_id(Velocity) }
+    }
+});
 
-### Query Builder (C++)
-The query builder is a C++ API to construct queries that follows the fluent API pattern. The query builder can be used to create either fully or partially constructed queries.
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
 
-This is an example of a simple query in the builder API:
-
-```cpp
-// q will be of type flecs::query<Position, const Velocity>
-auto q = world.query_builder<Position, const Velocity>()
-  .term<NPC>()
-  .term(Likes, Apples)
-  .build();
-```
-
-The builder API allows for partially constructing (and then finalizing) queries:
-
-```cpp
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<NPC>();
-
-if (add_fruit) {
-  qb.term(Likes, Apples);
+    for (int i = 0; i < it.count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
 }
-
-auto q = qb.build();
 ```
-
-The builder API has support for adding terms using the DSL:
-
 ```cpp
-auto q = world.query_builder()
-  .expr("Position, [in] Velocity")
-  .term("NPC")
-  .term("(Likes, Apples)")
-  .build();
+flecs::query<Position, Velocity> q = 
+    world.query<Position, Velocity>();
+
+q.each([](Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
+});
 ```
+
+### Rules
+Rules are a constraint-based query engine capable of traversing graphs. They are more expensive to create than filters, have low overhead, and their iteration performance depends on query complexity. An example:
+
+```c
+ecs_rule_t *r = ecs_rule(world, {
+    .terms = {
+        { ecs_id(Position) }, { ecs_id(Velocity) }
+    }
+});
+
+ecs_iter_t it = ecs_rule_iter(world, r);
+while (ecs_rule_next(&it)) {
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+```
+```cpp
+flecs::rule<Position, Velocity> r = 
+    world.rule<Position, Velocity>();
+
+r.each([](Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+For more information on thow each implementation performs, see [Query Performance](#query-performance).
+
+## Query Creation
+This section explains how to create queries in the different language bindings and the flecs query DSL.
 
 ### Query Descriptors (C)
-The query descriptor is a C API to construct queries that follows the struct initialization pattern. Query descriptors can be used to create either fully or partially constructed queries.
-
-This is an example of the query descriptor API:
+Query descriptors are the C API for creating queries. The API uses a type called `ecs_filter_desc_t`, to describe the structure of a query. This type is used to create all query kinds (`ecs_filter_t`, `ecs_query_t`, `ecs_rule_t`). An example:
 
 ```c
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_filter_t *f = ecs_filter(world, {
   .terms = {
-    {ecs_id(Position)},
-    {ecs_id(Velocity)},
-    {NPC},
-    {ecs_pair(Likes, Apples)}
+    { ecs_id(Position) }, { ecs_id(Velocity) },
   }
 });
 ```
 
-The descriptor API has support for using the DSL:
+The example shows the short notation, which looks like this when expanded:
 
 ```c
 ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
   .terms = {
-    {ecs_id(Position)},
-    {ecs_id(Velocity)}
-  },
-  .expr = "NPC, (Likes, Apples)"
-});
-```
-
-Filters and queries can both be created with the descriptor API, and use the same descriptor structs. When creating a query, the `ecs_filter_desc_t` type is embedded by the `filter` member:
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {ecs_id(Velocity)},
-    {NPC},
-    {ecs_pair(Likes, Apples)}
+    { ecs_id(Position) }, { ecs_id(Velocity) },
   }
 });
 ```
+
+Query descriptors can also be used by the C++ API. However because C++ does not support taking the address of a temporary, and not all language revisions support designated initializers, query descriptors in C++ should be used like this:
+
+```c
+ecs_filter_desc_t desc = {}; // Zero-initialize the struct
+desc.terms[0].id = ecs_id(Position);
+desc.terms[1].id = ecs_id(Velocity);
+ecs_filter_t *f = ecs_filter_init(world, &desc);
+```
+
+The following table provides an overview of the query types with the init/fini functions:
+
+| Kind   | Type           | Init              | Fini              | Descriptor type     |
+|--------|----------------|-------------------|-------------------|---------------------|
+| Filter | `ecs_filter_t` | `ecs_filter_init` | `ecs_filter_fini` | `ecs_filter_desc_t` |
+| Query  | `ecs_query_t`  | `ecs_query_init`  | `ecs_query_fini`  | `ecs_query_desc_t`  |
+| Rule   | `ecs_rule_t`   | `ecs_rule_init`   | `ecs_rule_fini`   | `ecs_filter_desc_t` |
+
+Additionally the descriptor types for systems (`ecs_system_desc_t`) and observers (`ecs_observer_desc_t`) embed the `ecs_filter_desc_t` descriptor type.
+
+### Query Builder (C++)
+Query builders are the C++ API for creating queries. The builder API is built on top of the descriptor API, and adds a layer of convenience and type safety that matches modern idiomatic C++. The builder API is implemented for all query kinds (filters, cached queries, rules). An example of a simple query:
+
+```cpp
+flecs::filter<Position, const Velocity> f = 
+    world.filter<Position, const Velocity>();
+```
+
+Queries created with template arguments provide a type safe way to iterate components:
+
+```cpp
+f.each([](Position& p, const Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+The builder API allows for incrementally constructing queries:
+
+```cpp
+flecs::filter<Position> q = world.filter_builder<Position>();
+f.term<const Velocity>();
+
+if (add_npc) {
+    f.term<Npc>(); // Conditionally add
+}
+
+f.build(); // Create query
+```
+
+The following table provides an overview of the query types with the factory functions:
+
+| Kind   | Type            | Factory                 |
+|--------|-----------------|-------------------------|
+| Filter | `flecs::filter` | `world::filter_builder` |
+| Query  | `flecs::query`  | `world::query_builder`  |
+| Rule   | `flecs::rule`   | `world::rule_builder`   |
+
+### Query DSL
+The query DSL (domain specific language) is a string format that can represent a query. The query DSL is used by convenience macros in the C API like `ECS_SYSTEM` and `ECS_OBSERVER`, and makes it easier to create queries at runtime for tools like https://www.flecs.dev/explorer/. An example of a simple query in the DSL:
+
+```
+Position, [in] Velocity
+```
+
+An example of how the DSL is used with the `ECS_SYSTEM` convenience macro:
+
+```c
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
+```
+
+Queries can be created from expressions with both the descriptor and builder APIs:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .expr = "Position, [in] Velocity"
+});
+```
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .expr("Position, [in] Velocity")
+  .build();
+```
+
+The query DSL requires the `FLECS_PARSER` addon to be included in a build.
 
 ## Query Iteration
-This section describes the different ways in which a query can be iterated.
+This section describes the different ways queries can be iterated. The code examples use filters, but also apply to cached queries and rules.
 
-### Each (C++)
-The each function is a simple way to linearly iterate entities in a query. It is used by passing a (lambda) function to the `each` function.
+### Iterators (C)
+In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_filter_iter`, `ecs_query_iter` and `ecs_rule_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_filter_next`, `ecs_query_next` and `ecs_rule_next`.
 
-This is a simple example of using `each`:
+An iterator can also be iterated with the `ecs_iter_next` function which is slightly slower, but does not require knowledge about the source the iterator was created for.
 
-```cpp
-// q will be of type flecs::query<Position, const Velocity>
-auto q = world.query_builder<Position, const Velocity>()
-  .term<NPC>()
-  .build();
+An example:
 
-q.each([](flecs::entity e, Position& p, const Velocity& v) {
-  p.x += v.x;
-  p.y += v.y;
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, { ecs_id(Velocity) },
+  }
 });
-```
 
-Note that the arguments passed to each are derived from the query type. Terms added to the query by the query builder do not affect the query type, and do not appear in the argument list of the `each` function.
+ecs_iter_t it = ecs_filter_iter(world, f);
 
-### Iter (C++)
-The iter function is a more advanced way to iterate entities in a query. It provides an application with more freedom to iterate a query, such as allowing for iterating the set of entities multiple times, or in different ordering.
+// Outer loop: matching tables
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_field(&it, Position, 1); // 1st term
+  Velocity *v = ecs_field(&it, Velocity, 2); // 2nd term
 
-The iter callback is invoked per archetype, which means that it may be invoked multiple times per iter call. All the entities within a single call will be of the same type, meaning they have the exact same components.
-
-This is a simple example of using `iter`:
-
-```cpp
-auto q = world.query_builder<Position, const Velocity>()
-  .term<NPC>()
-  .build();
-
-q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-  for (auto i : it) {
+  // Inner loop: entities in table
+  for (int i = 0; i < it.count; i ++) {
     p[i].x += v[i].x;
     p[i].y += v[i].y;
   }
+}
+```
+
+Iteration is split up into two loops: the outer loop which iterates tables, and the inner loop which iterates the entities in that table. This approach provides direct access to component arrays, which allows compilers to do performance optimizations like auto-vectorization.
+
+The indices provided to the `ecs_field` function must correspond with the order in which terms have been specified in the query. This index starts counting from `1`, with index `0` reserved for the array containing entity ids.
+
+### Each (C++)
+The `each` function is the default and often fastest approach for iterating a query in C++. `each` can be called directly on a `flecs::filter`, `flecs::query` and `flecs::rule`. An example:
+
+```cpp
+auto f = world.filter<Position, const Velocity>();
+
+f.each([](Position& p, const Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
 });
 ```
 
-Note how the iter function provides direct access to the component arrays.
-
-The iter callback can obtain access to components that are not part of the query type:
+A `flecs::entity` can be added as first argument:
 
 ```cpp
-auto q = world.query_builder<Position, const Velocity>()
-  .term<Mass>()
-  .build();
+auto f = world.filter<Position>();
 
-q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-  auto mass = it.field<Mass>(3); // 3rd term of the query
-
-  for (auto i : it) {
-    p[i].x += v[i].x / mass[i].value;
-    p[i].y += v[i].y / mass[i].value;
-  }
+f.each([](flecs::entity e, Position& p) {
+    std::cout << e.name() << ": " 
+              << p.x << ", " << p.y 
+              << std::endl;
 });
 ```
 
-Note how the `iter::term` function accepts a number. This number corresponds to the index of the term in the query, starting from 1. When a query is constructed with both template arguments and builder functions, the template arguments appear first in the query. If the type provided to the `it.term` function does not match with the component, the function will throw a runtime error.
-
-The iter callback an introspect the results of a query. When the type of a query term is not defined at creation time, which happens when using Or queries or wildcards, the type can be obtained in the iter callback:
+A `flecs::iter` and `size_t` argument can be added as first arguments. This variant of `each` provides access to the `flecs::iter` object, which contains more information about the object being iterated. The `size_t` argument contains the index of the entity being iterated, which can be used to obtain entity-specific data from the `flecs::iter` object. An example:
 
 ```cpp
-auto q = world.query_builder<>()
+auto f = world.filter_builder<Position>()
   .term(Likes, flecs::Wildcard)
   .build();
 
-q.iter([](flecs::iter& it) {
-  // Get the type id for the first term.
-  auto likes = it.id(1);
-
-  // Extract the object from the pair
-  std::cout << "Entities like "
-    << likes.second().name()
-    << std::endl;
+f.each([](flecs::iter& it, size_t index, Position& p) {
+    flecs::entity e = it.entity(index);
+    std::cout << e.name() << ": " 
+              << it.id(2).str() // prints pair
+              << std::endl;
 });
 ```
 
-Alternatively, the `iter` call can be written in such a way that it is fully generic, and just prints its inputs:
+When a query contains a template argument that is an empty type (a struct without any members), it should be passed by value instead of by reference:
 
 ```cpp
-q.iter([](flecs::iter& it) {
-  for (int t = 0; t < it.field_count(); t++) {
-    auto id = it.id(t);
-    auto data = it.field(t);
+struct Tag { };
 
-    // Use id & data, for example for reflection
+auto f = world.filter<Tag>();
+
+f.each([](flecs::entity e, Tag) {
+    std::cout << e.name() << std::endl;
+});
+```
+
+Alternatively an empty type can be specified outside of the query type, which removes it from the signature of `each`:
+
+```cpp
+struct Tag { };
+
+auto f = world.filter_builder()
+  .term<Tag>()
+  .build();
+
+f.each([](flecs::entity e) {
+    std::cout << e.name() << std::endl;
+});
+```
+
+### Iter (C++)
+The `iter` function has an outer and inner loop (similar to C iterators) which provides more control over how to iterate entities in a table than `each`. The `iter` function makes it possible, for example, to run code only once per table, or iterate entities multiple times.
+
+An example:
+
+```cpp
+auto f = world.filter<Position, const Velocity>();
+
+f.iter([](flecs::iter& it, Position *p, Velocity *v) {
+    // Inner loop
     for (auto i : it) {
-      void *ptr = data[i];
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+        std::cout << it.entity(i).name() << ": " 
+            << p.x << ", " << p.y 
+            << std::endl;
+    }
+});
+```
+
+Instead of using `flecs::iter` as iterator directly, an application can also use the `flecs::iter::count` method which provides more flexibility:
+
+```cpp
+f.iter([](flecs::iter& it, Position *p, Velocity *v) {
+    // Inner loop with manual iteration
+    for (size_t i = 0; i < it.count(); i ++) {
       // ...
     }
+});
+```
+
+The component arguments may be ommitted, and can be obtained from the iterator object:
+
+```cpp
+auto f = world.filter<Position, const Velocity>();
+
+f.iter([](flecs::iter& it) {
+    auto p = it.field<Position>(1);
+    auto v = it.field<const Velocity>(2);
+
+    for (auto i : it) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+});
+```
+
+This can be combined with an untyped variant of the `field` method to access component data without having to know component types at compile time. This can be useful for generic code, like serializers:
+
+```cpp
+auto f = world.filter<Position, const Velocity>();
+
+f.iter([](flecs::iter& it) {
+    void *ptr = it.field(1);
+    flecs::id type_id = it.id(1);
+
+    // ...
+});
+```
+
+### Iteration safety
+Entities can be moved between tables when components are added or removed. This can cause unwanted side effects while iterating a table, like iterating an entity twice, or missing an entity. To prevent this from happening, a table is locked by the C++ `each` and `iter` functions, meaning no entities can be moved from or to it.
+
+When an application attempts to add or remove components to an entity in a table being iterated over, this can throw a runtime assert. An example:
+
+```cpp
+auto f = world.filter<Position>();
+
+f.each([](flecs::entity e, Position&) {
+    e.add<Velocity>(); // throws locked table assert
+});
+```
+
+This can be addressed by deferring operations while the query is being iterated:
+
+```cpp
+auto f = world.filter<Position>();
+
+world.defer([&]{
+    f.each([](flecs::entity e, Position&) {
+        e.add<Velocity>(); // OK
+    });
+}); // operations are executed here
+```
+
+An application can also use the `defer_begin` and `defer_end` functions which achieve the same goal:
+
+```cpp
+auto f = world.filter<Position>();
+
+world.defer_begin();
+
+f.each([](flecs::entity e, Position&) {
+    e.add<Velocity>(); // OK
+});
+
+world.defer_end(); // operations are executed here
+```
+
+Code ran by a system is deferred by default.
+
+## Query Reference
+This section goes over the different features of queries and how they can be expressed by the query descriptor API, query builder API and in the query DSL.
+
+### Components
+> *Supported by: filters, cached queries, rules*
+
+A component is any single id that can be added to an entity. This includes tags and regular entities, which are ids that are not associated with a datatype.
+
+To match a query, an entity must have all the requested components. An example:
+
+```cpp
+flecs::entity e1 = world.entity()
+  .add<Position>();
+
+flecs::entity e2 = world.entity()
+  .add<Position>()
+  .add<Velocity>();
+
+flecs::entity e3 = world.entity()
+  .add<Position>()
+  .add<Velocity>()
+  .add<Mass>();
+```
+
+Only entities `e2` and `e3` match the query `Position, Velocity`.
+
+The following sections describe how to create queries for components in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Decsriptor (C)
+To query for a component in C, the `id` field of a term can be set:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { .id = ecs_id(Position) }, 
+    { .id = ecs_id(Velocity) }
   }
 });
 ```
 
-### Iter (C)
-The `ecs_query_iter` function is how C applications can iterate queries, and provides functionality similar to the C++ `iter` function. This is a simple example of using `ecs_query_iter`:
+The `id` field is guaranteed to be the first member of a term, which allows the previous code to be rewritten in this shorter form:
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {ecs_id(Velocity)}
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity) }
+  }
+});
+```
+
+The `ecs_id` macro converts the component typename into the variable name that holds the component identifier. This macro is required for components created with `ECS_COMPONENT`, but not when querying for regular tags/entities:
+
+```c
+ECS_TAG(world, Npc);
+ecs_entity_t Platoon_01 = ecs_new_id(world);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { Npc }, 
+    { Platoon_01 }
+  }
+});
+```
+
+Components can also be queried for by name by setting the `.first.name` member in a term:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { .first.name = "Position" }, 
+    { .first.name = "Velocity" }
+  }
+});
+```
+
+#### Query Builder (C++)
+An easy way to query for components in C++ is to pass them as template arguments to the query factory function:
+
+```cpp
+flecs::filter<Position, const Velocity> f = 
+    world.filter<Position, const Velocity>();
+```
+
+This changes the returned query type, which determines the type of the function used to iterate the query:
+
+```cpp
+f.each([](Position& p, const Velocity& v) { });
+```
+
+The builder API makes it possible to add components to a query without modifying the query type:
+
+```cpp
+flecs::filter<Position> f = 
+  world.filter_builder<Position>()
+    .term<const Velocity>()
+    .build();
+```
+
+When template arguments are mixed with the builder API, the components added by the `term` function will be placed after the components provided as template arguments.
+
+The builder API makes it possible to query for regular entity ids created at runtime:
+
+```cpp
+flecs::entity Npc = world.entity();
+flecs::entity Platoon_01 = world.entity();
+
+flecs::filter<> f = world.filter_builder()
+  .term(Npc)
+  .term(Platoon_01)
+  .build();
+```
+
+Components can also be queried for by name. To query for component types by name, they have to be used or registered first.
+
+```cpp
+// Register component type so we can look it up by name
+world.component<Position>();
+
+// Create entity with name so we can look it up
+flecs::entity Npc = world.entity("Npc");
+
+flecs::filter<> f = world.filter_builder()
+  .term("Position")
+  .term("Npc")
+  .build();
+```
+
+#### Query DSL
+To query for a components in the query DSL they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup_fullpath` / `world.lookup` functions. An example:
+
+```
+Position, Velocity
+```
+
+Any named entity can be specified this way. Consider:
+
+```cpp
+struct Npc { };
+
+// Register component type so we can look it up by name
+world.component<Npc>();
+
+// Create entity with name so we can look it up
+flecs::entity Platoon_01 = world.entity("Platoon_01");
+
+flecs::entity e = world.entity()
+  .add<Npc>()
+  .add(Platoon_01);
+```
+
+The entity `e` from this example will be matched by this query:
+```cpp
+Npc, Platoon_01
+```
+
+When an identifier in the query DSL consists purely out of numeric characters it is converted to an entity id. If in the previous example `Npc` has id `100` and `Platoon_01` has id `101`, the following query string would be equivalent:
+
+```
+100, 101
+```
+
+The `,` symbol in the query DSL is referred to as the `and` operator, as an entity must have all comma-separated components in order to match the query.
+
+### Wildcards
+> *Supported by: filters, cached queries, rules*
+
+Wildcards allow a single query term to match with more than one (component) ids. Flecs supports two kinds of wildcards:
+
+| Name  | DSL Symbol | C identifier  | C++ identifier | Description |
+|----------|-----|---------------|----------------|-------------|
+| Wildcard | `*` | `EcsWildcard` | `flecs::Wildcard` | Match all |
+| Any      | `_` | `EcsAny` | `flecs::Any` | Match at most one |
+
+The `Wildcard` wildcard returns an individual result for anything that it matches. The query in the following example will return twice for entity `e`, once for component `Position` and once for component `Velocity`:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, e, Position);
+ecs_add(world, e, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { EcsWildcard }
+  }
+});
+```
+```cpp
+flecs::entity e = world.entity()
+    .add<Position>()
+    .add<Velocity>();
+
+flecs::filter<> f = world.filter_builder()
+    .term(flecs::Wildcard)
+    .build();
+```
+
+The `Any` wildcard returns a single result for the first component that it matches. The query in the following example will return once for entity `e`:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, e, Position);
+ecs_add(world, e, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { EcsAny }
+  }
+});
+```
+```cpp
+flecs::entity e = world.entity()
+    .add<Position>()
+    .add<Velocity>();
+
+flecs::filter<> f = world.filter_builder()
+    .term(flecs::Any)
+    .build();
+```
+
+When using the `Any` wildcard it is undefined which component will be matched, as this can be influenced by other parts of the query. It is guaranteed that iterating the same query twice on the same dataset will produce the same result.
+
+Wildcards are particularly useful when used in combination with pairs (next section).
+
+### Pairs
+> *Supported by: filters, cached queries, rules*
+
+A pair is an id that encodes two elements. Pairs, like components, can be added to entities and are the foundation for [Relationships](Relationships.md).
+
+The elements of a pair are allowed to be wildcards. When a query pair contains the `Wildcard` wildcard, a query returns a result for each matching pair on an entity. When a query pair returns an `Any` wildcard, the query returns at most a single matching pair on an entity.
+
+The following sections describe how to create queries for pairs in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To query for a pair in C, the `id` field of a term can be set to a pair using the `ecs_pair` macro:
+
+```c
+ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new_id(world);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { .id = ecs_pair(Likes, Bob) }
+  }
+});
+```
+
+The `id` field is guaranteed to be the first member of a term, which allows the previous code to be rewritten in this shorter form:
+
+```c
+ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new_id(world);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_pair(Likes, Bob) }
+  }
+});
+```
+
+When an element of the pair is a component type, use the `ecs_id` macro to obtain the identifier to the id variable of the component type:
+
+```c
+ECS_COMPONENT(world, Eats);
+ecs_entity_t Apples = ecs_new_id(world);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_pair(ecs_id(Eats), Apples) }
+  }
+});
+```
+
+The `ecs_isa`, `ecs_childof` and `ecs_dependson` convenience macros can be used to create pairs for builtin relationships. The two queries in the next example are equivalent:
+
+```c
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { ecs_pair(EcsChildOf, parent) }
   }
 });
 
-ecs_iter_t it = ecs_query_iter(world, q);
-while (ecs_query_next(&it)) {
-  Position *p = ecs_field(&it, Position, 1);
-  Velocity *v = ecs_field(&it, Velocity, 2);
-
-  for (int i = 0; i < it.count; i++) {
-    p[i].x += v[i].x;
-    p[i].y += v[i].y;
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {
+    { ecs_childof(parent) }
   }
-}
+});
 ```
 
-Unlike C++, queries are not typed in C, and as such all components are obtained using the `ecs_field` function. Note how the number provided to `ecs_field` corresponds with the location of the component in the query, offset by 1. If a type is provided to `ecs_field` that does not match the term type, the function may throw a runtime error.
-
-Similar to the `term_id` function in C++, the C API has the `ecs_field_id` function:
+Pair queries can be created by setting their individual elements in the `first.id` and `second.id` members of a term:
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.terms = {
-    {ecs_pair(Likes, EcsWildcard)}
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { .first.id = Eats, .second.id = Apples }
+  }
+});
+```
+
+Alternatively, one or both elements of a pair can be resolved by name. The two queries in the next example are equivalent:
+
+```c
+// ECS_TAG creates named entities
+ECS_TAG(world, Eats);
+ECS_TAG(world, Apples);
+
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { .first.name = "Eats", .second.id = Apples }
   }
 });
 
-ecs_iter_t it = ecs_query_iter(world, q);
-while (ecs_query_next(&it)) {
-  ecs_id_t id = ecs_field_id(&it, 1);
-  ecs_entity_t obj = ecs_pair_second(it->world, id);
-  printf("Entities like %s\n", ecs_get_name(world, object));
-}
-```
-
-## Sorting
-Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled by setting the order_by function:
-
-```c
-ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {{ ecs_id(Position) }},
-    .order_by_component = ecs_id(Position),
-    .order_by = compare_position,
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {
+    { .first.name = "Eats", .second.name = "Apples" }
+  }
 });
 ```
 
-This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
+When a query pair contains a wildcard, the `ecs_field_id` function can be used to determine the id of the pair element that matched the query:
 
 ```c
-int compare_position(ecs_entity_t e1, Position *p1, ecs_entity_t e2, Position *p2) {
-    return p1->x - p2->x;
-}
-```
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_pair(Likes, EcsWildcard) }
+  }
+});
 
-Once sorting is enabled for a query, the data will remain sorted, even after the underlying data changes. The query keeps track of any changes that have happened to the data, and if changes could have invalidated the ordering, data will be resorted. Resorting does not happen when the data is modified, which means that sorting will not decrease performance of regular operations. Instead, the sort will be applied when the application obtains an iterator to the query:
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+    ecs_id_t id = ecs_field_id(&it, 1);
+    ecs_entity_t second = ecs_pair_second(world, id);
 
-```c
-ecs_entity_t e = ecs_new(world, Position); // Does not reorder
-ecs_set(world, e, Position, {10, 20}); // Does not reorder
-ecs_iter_t it = ecs_query_iter(world, q); // Reordering happens here
-```
-
-The following operations mark data dirty can can cause a reordering:
-- Creating a new entity with the ordered component
-- Deleting an entity with the ordered component
-- Adding the ordered component to an entity
-- Removing the ordered component from an entity
-- Setting the ordered component
-- Running a system that writes the ordered component (through an [out] column)
-
-Applications iterate a sorted query in the same way they would iterate a regular query:
-
-```c
-while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-
-    for (int i = 0; i < it.count; i++) {
-        printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order
+    for (int i = 0; i < it.count; i ++) {
+        printf("entity %s likes %s\n",
+            ecs_get_name(world, it.entities[i]),
+            ecs_get_name(world, second));
     }
 }
 ```
 
-### Sorting algorithm
-The algorithm used for the sort is a quicksort. Each table that is matched with the query will be sorted using a quicksort. As a result, sorting one query affects the order of entities in another query. However, just sorting tables is not enough, as the list of ordered entities may have to jump between tables. For example:
+#### Query Builder (C++)
+When both parts of a pair are types, a `flecs::pair` template can be used. Pair templates can be made part of the query type, which makes them part of the argument list of the iterator functions. An example:
+
+```cpp
+struct Eats { float value; };
+struct Apples { };
+// Alias to save typing
+using EatsApples = flecs::pair<Eats, Apples>;
+
+flecs::filter<EatsApples> f = 
+    world.filter<EatsApples>();
+
+// Do not use reference argument for pair
+f.each([](EatsApples v) {
+    // Use -> operator to access value of pair
+    v->value ++;
+});
+```
+
+When using the `iter` function to iterate a query with a pair template, the argument type assumes the type of the pair. This is required as the component array being passed directly to the `iter` function. An example:
+
+```cpp
+flecs::filter<EatsApples> f = 
+    world.filter<EatsApples>();
+
+f.iter([](flecs::iter& it, Eats *v) {
+    for (auto i : it) {
+        v[i].value ++;
+    }
+})
+```
+
+Pairs can also be added to queries using the builder API. This allows for the pair to be composed out of both types and regular entities. The three queries in the following example are equivalent:
+
+```cpp
+struct Eats { float value; };
+struct Apples { };
+
+flecs::entity eats = world.component<Eats>();
+flecs::entity apples = world.component<Apples>();
+
+flecs::filter<> f_1 = world.filter_builder()
+    .term<Eats, Apples>()
+    .build();
+
+flecs::filter<> f_2 = world.filter_builder()
+    .term<Eats>(apples)
+    .build();
+
+flecs::filter<> f_3 = world.filter_builder()
+    .term(eats, apples)
+    .build();
+```
+
+Individual elements of a pair can be specified with the `first` and `second` methods. The methods apply to the last added term. An example:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term().first<Eats>().second(apples)
+    .build();
+```
+
+Individual elements of a pair can be resolved by name by using the `first` and `second` methods:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term().first("Eats").second("Apples")
+    .build();
+```
+
+When a query pair contains a wildcard, the `flecs::iter::pair` method can be used to determine the id of the pair element that matched the query:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Eats>(flecs::Wildcard)
+    .build();
+
+f.each([](flecs::iter& it, size_t index) {
+    flecs::entity second = it.pair(1).second();
+    flecs::entity e = it.entity(index);
+    
+    std::cout << "entity " << e.name() 
+              << " likes " second.name()
+              << std::endl;
+});
+```
+
+#### Query DSL
+To query for a pair in the query DSL, the elements of a pair are a comma separated list surrounded by parentheses. An example:
+
+```
+(Likes, Apples)
+```
+
+A query may contain multiple pairs:
+
+```
+(Likes, Apples), (Likes, Pairs)
+```
+
+Queries for pairs that contain wildcards should use the symbols for either the `Wildcard` or `Any` wildcards:
+
+```
+(Likes, *)
+```
+```
+(Likes, _)
+```
+
+A pair may contain two wildcards:
+
+```
+(*, *)
+```
+
+### Access modifiers
+> *Supported by: filters, cached queries, rules*
+
+Access modifiers specify which components of a query can be read and/or written. The different access modifiers are:
+
+| Name  | DSL identifier | C identifier | C++ identifier | Description |
+|-------|----------------|--------------|----------------|-------------|
+| In    | `in`           | `EcsIn`      | `flecs::In`    | Component is readonly |
+| Out   | `out`          | `EcsOut`     | `flecs::Out`   | Component is write only |
+| InOut | `inout`        | `EcsInOut`   | `flecs::InOut` | Component can be read/written |
+| None  | `none`         | `EcsInOutNone` | `flecs::InOutNone` | Component is neither read nor written |
+| Default | n/a          | `EcsInOutDefault` | `flecs::InOutDefault` | Default modifier is selected for term |
+
+Access modifiers can be used by API functions to ensure a component cannot be written, for example by requiring a component to be accessed with a `const` modifier. APIs may also infer access modifiers where possible, for example by using the `In` modifier for a query term with a type that has a `const` modifier.
+
+When using pipelines, the scheduler may use access modifiers to determine where sync points are inserted. This typically happens when a system acccess modifier indicates a system writing to a component not matched by the query (for example, by using `set`), and is followed by a system that reads that component.
+
+Access modifiers may also be used by serializers that serialize the output of an iterator (for example: `ecs_iter_to_json`). A serializer may for example decide to not serialize component values that have the `Out` or `None` modifiers.
+
+When no access modifier is specified, `Default` is assumed. This selects `InOut` for components owned by the matched entity, and `In` for components that are from entities other than the one matched by the query. 
+
+When a query term can either match a component from the matched entity or another entity (for example: when a component is inherited from a prefab) the `Default` access modifier only provides write access for the results where the component is owned by the matched entity. This prevents accidentally writing to a shared component. This behavior can be overridden by explicitly specifying an access modifier.
+
+When a query term matches a tag (a component not associated with data) with a `Default` modifier, the `None` modifier is selected.
+
+The following sections show how to use access modifiers in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptors (C)
+Access modifiers can be set using the `inout` member:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .inout = EcsIn }
+  }
+});
+```
+
+#### Query Builder (C++)
+Access modifiers can be set using the `inout` method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().inout(flecs::In)
+    .build();
+```
+
+When the `const` modifier is added to a type, the `flecs::In` modifier is automatically set:
+
+```c
+// Velocity term will be added with flecs::In modifier
+flecs::filter<Position, const Velocity> f = 
+    world.filter<Position, const Velocity>();
+```
+
+This also applies to types added with `term`:
+
+```c
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<const Velocity>() // uses flecs::In modifier
+    .build();
+```
+
+When a component is added by the `term` method and retrieved from a `flecs::iter` object during iteration, it must meet the constraints of the access modifiers. If the constraints are not met, a runtime assert may be thrown:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().inout(flecs::In)
+    .build();
+
+f.iter([](flecs::iter& it) {
+    auto p = it.field<Position>(1);       // OK
+    auto p = it.field<const Position>(1); // OK
+    auto v = it.field<const Velocity>(2); // OK
+    auto v = it.field<Velocity>(2);       // Throws assert
+});
+```
+
+The builder API has `in()`, `inout()`, `out()` and `inout_none()` convenience methods:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>().inout()
+    .term<Velocity>().in()
+    .build();
+```
+
+#### Query DSL
+Access modifiers in the query DSL can be specified inside of angular brackets before the component identifier:
+
+```
+Position, [in] Velocity
+```
+
+### Operator Overview
+> *Supported by: filters, cached queries, rules*
+
+The following operators are supported by queries:
+
+| Name     | DSL operator   | C identifier  | C++ identifier    | Description |
+|----------|----------------|---------------|-------------------|-------------|
+| And      | `,`            | `EcsAnd`      | `flecs::And`      | Match at least once with term |
+| Or       | `||`           | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
+| Not      | `!`            | `EcsNot`      | `flecs::Not`      | Must not match with term |
+| Optional | `?`            | `EcsOptional` | `flecs::Optional` | May match with term |
+| AndFrom  | `AND |`        | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
+| OrFrom   | `OR |`         | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
+| NotFrom  | `NOT |`        | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
+
+### And Operator
+> *Supported by: filters, cached queries, rules*
+
+The `And` operator is used when no other operators are specified. The following sections show how to use the `And` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+When no operator is specified, `And` is assumed. The following two queries are equivalent:
+
+```c
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity) }
+  }
+});
+
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), .oper = EcsAnd }, 
+    { ecs_id(Velocity), .oper = EcsAnd }
+  }
+});
+```
+
+#### Query Builder (C++)
+When no operator is specified, `And` is assumed. The following two queries are equivalent:
+
+```cpp
+flecs::filter<Position, Velocity> f_1 = world.filter<Position, Velocity>();
+
+flecs::filter<> f_2 = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>()
+    .build();
+
+flecs::filter<> f_2 = world.filter_builder()
+    .term<Position>().oper(flecs::And)
+    .term<Velocity>().oper(flecs::And)
+    .build();
+```
+
+The builder API has a `and_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>().and_(); // note escaping, 'and' is a C++ keyword
+    .term<Velocity>().and_();
+    .build();
+```
+
+#### Query DSL
+Query expressions with comma separated lists use the `And` operator:
+
+```
+Position, Velocity
+```
+
+### Or Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Or` operator allows for matching a single component from a list. Using the `Or` operator means that a single term can return results of multiple types. When the value of a component is used while iterating the results of an `Or` operator, an application has to make sure that it is working with the expected type.
+
+When using the `Or` operator, the terms participating in the `Or` expression are made available as a single field. Field indices obtained from an iterator need to account for this. Consider the following query:
+
+```
+Position, Velocity || Speed, Mass
+```
+
+This query has 4 terms, while an iterator for the query returns results with 3 fields. This is important to consider when retrieving the field for a term, as its index has to be adjusted. In this example, `Position` has index 1, `Velocity || Speed` has index 2, and `Mass` has index 3.
+
+A limitation of the current query descriptors is that each term participating in an `Or` expression must be created with the `Or` operator. This currently makes it impossible to have a query with two `Or` expressions that come right after each other. This limitation will be addressed in future versions.
+
+The following sections show how to use the `Or` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To create a query with `Or` terms, set `oper` to `EcsOr`:
+
+```c
+// Position, Velocity || Speed, Mass
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsOr },
+    { ecs_id(Speed), .oper = EcsOr },
+    { ecs_id(Mass) }
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_field(&it, Position, 1);
+  Mass *m = ecs_field(&it, Mass, 3); // not 4, because of the Or expression
+
+  ecs_id_t vs_id = ecs_field_id(&it, 2);
+  if (vs_id == ecs_id(Velocity)) {
+    Velocity *v = ecs_field(&it, Velocity, 2);
+    // iterate as usual
+  } else if (vs_id == ecs_id(Speed)) {
+    Speed *s = ecs_field(&it, Speed, 2);
+    // iterate as usual
+  }
+}
+```
+
+#### Query Builder (C++)
+To create a query with `Or` terms, use the `oper` method with `flecs::Or`:
+
+```cpp
+// Position, Velocity || Speed, Mass
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Or)
+    .term<Speed>().oper(flecs::Or)
+    .term<Mass>()
+    .build();
+
+f.iter([&](flecs::iter& it) {
+  auto p = it.field<Position>(1);
+  auto v = it.field<Mass>(3); // not 4, because of the Or expression
+  
+  flecs::id vs_id = it.id(2);
+  if (vs_id == world.id<Velocity>()) {
+    auto v = it.field<Velocity>(2);
+    // iterate as usual
+  } else if (vs_id == world.id<Speed>()) {
+    auto s = it.field<Speed>(2);
+    // iterate as usual
+  }
+});
+```
+
+The builder API has a `or_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().or_(); // note escaping, 'or' is a C++ keyword
+    .term<Speed>().or_();
+    .term<Mass>()
+    .build();
+```
+
+#### Query DSL
+To create a query with `Or` terms, use the `||` symbol:
+
+```
+Position, Velocity || Speed, Mass
+```
+
+### Not Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Not` operator makes it possible to exclude entities with a specified component. Fields for terms that uses the `Not` operator will never provide data. 
+
+A note on performance: `Not` terms are efficient to evaluate when combined with other terms, but queries that only have `Not` terms (or [`Optional`](#optional-operator)) can be expensive. This is because the storage only maintains indices for tables that _have_ a component, not for tables that do _not have_ a component.
+
+The following sections show how to use the `Not` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To create a query with `Not` terms, set `oper` to `EcsNot`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsNot }
+  }
+});
+```
+
+#### Query Builder (C++)
+To create a query with `Not` terms, use the `oper` method with `flecs::Not`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Not)
+    .build();
+```
+
+The builder API has a `not_` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().not_(); // note escaping, 'not' is a C++ keyword
+    .build();
+```
+
+#### Query DSL
+To create a query with `Not` terms, use the `!` symbol:
+
+```
+Position, !Velocity
+```
+
+### Optional Operator
+> *Supported by: filters, cached queries, rules*
+
+The `Optional` operator optionally matches with a component. While this operator does not affect the entities that are matched by a query, it can provide more efficient access to a component when compared to conditionally getting the component in user code. Before accessing the value provided by an optional term, code must first check if the term was set.
+
+A note on performance: just like the `Not` operator `Optional` terms are efficient to evaluate when combined with other terms, but queries that only have `Optional` terms can be expensive. Because the `Optional` operator does not restrict query results, a query that only has `Optional` terms will match all entities.
+
+The following sections show how to use the `Optional` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To create a query with `Optional` terms, set `oper` to `EcsOptional`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, 
+    { ecs_id(Velocity), .oper = EcsOptional }
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_field(&it, Position, 1);
+  if (ecs_field_is_set(&it, 2)) {
+    Velocity *v = ecs_field(&it, Velocity, 2);
+    // iterate as usual
+  } else {
+    // iterate as usual
+  }
+}
+```
+
+#### Query Builder (C++)
+To create a query with `Optional` terms, call the `oper` method with `flecs::Optional`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>()
+    .term<Velocity>().oper(flecs::Optional)
+    .build();
+
+f.iter([&](flecs::iter& it) {
+  auto p = it.field<Position>(1);
+  
+  if (it.is_set(2)) {
+    auto v = it.field<Velocity>(2);
+    // iterate as usual
+  } else if (vs_id == world.id<Speed>()) {
+    // iterate as usual
+  }
+});
+```
+
+The builder API has an `optional` convenience method:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term<Position>() 
+    .term<Velocity>().optional();
+    .build();
+```
+
+#### Query DSL
+To create a query with `Optional` terms, use the `?` symbol:
+
+```
+Position, ?Velocity
+```
+
+### AndFrom, OrFrom, NotFrom Operators
+> *Supported by: filters, cached queries*
+
+The `AndFrom`, `OrFrom` and `NotFrom` operators make it possible to match a list of components that is defined outside of the query. Instead of matching the id provided in the term, the operators match the list of components _of_ the provided id as if they were provided as a list of terms with `And`, `Or` or `Not` operators. For example, if entity `e` has components `Position, Velocity` and is combined in a query with the `AndFrom` operator, entities matching the query must have both `Position` and `Velocity`.
+
+The `AndFrom`, `OrFrom` and `NotFrom` operators are especially useful when combined with prefab entities, which by default are not matched with queries themselves. Components that have the `DontInherit` property are ignored while matching the operators, which means that using a prefab in combination with `AndFrom`, `OrFrom` and `NotFrom` will not cause components like `Prefab` or `ChildOf` to be considered.
+
+Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` type flags.
+
+Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a the `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
+
+The following sections show how to use the operators in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, set `oper` to `EcsAndFrom`, `EcsOrFrom` or `EcsNotFrom`
+
+```c
+ecs_entity_t type_list = ecs_new_w_id(world, EcsPrefab);
+ecs_add(world, type_list, Position);
+ecs_add(world, type_list, Velocity);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { type_list, .oper = EcsAndFrom }, // match Position, Velocity
+    { type_list, .oper = EcsOrFrom },  // match Position || Velocity
+    { type_list, .oper = EcsNotFrom }  // match !Position, !Velocity
+  }
+});
+```
+
+#### Query Builder (C++)
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, call the `oper` method with `flecs::AndFrom`, `flecs::OrFrom` or `flecs::NotFrom`.
+
+```cpp
+flecs::entity type_list = world.prefab()
+  .add<Position>()
+  .add<Velocity>();
+
+flecs::filter<> f = world.filter_builder()
+    .term(type_list).oper(flecs::AndFrom) // match Position, Velocity
+    .term(type_list).oper(flecs::OrFrom)  // match Position || Velocity
+    .term(type_list).oper(flecs::NotFrom) // match !Position, !Velocity
+    .build();
+```
+
+The builder API has the `and_from`, `or_from` and `not_from` convenience methods:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+    .term(type_list).and_from()
+    .term(type_list).or_from()
+    .term(type_list).not_from()
+    .build();
+```
+
+#### Query DSL
+To create a query with the `AndFrom`, `OrFrom` and `NotFrom` operators in the C API, use `AND`, `OR` and `NOT` in combination with the bitwise OR operator (`|`):
+
+```
+AND | type_list, OR | type_list, NOT | type_list
+```
+
+### Source
+> *Supported by: filters, cached queries, rules*
+
+Source is a property of a term that specifies the entity on which the term should be matched. Queries support two kinds of sources: static and variable. A static source is known when the query is created (for example: match `SimTime` on entity `Game`), whereas a variable source is resolved while the query is evaluated. When no explicit source is specified, a default variable source called `$This` is used (see [Variables](#variables)). 
+
+When a query only has terms with fixed sources, iterating the query will return a result at least once when it matches, and at most once if the query terms do not match wildcards. If a query has one or more terms with a fixed source that do not match the entity, the query will return no results. A source does not need to match the query when the query is created.
+
+When a term has a fixed source and the [access modifiers](#access-modifiers) are not explicitly set, the access modifier defaults to `In`, instead of `InOut`. The rationale behind this is that it encourages code that only makes local changes (changes to components owned by the matched entity) which is easier to maintain and multithread. This default can be overridden by explicitly setting access modifiers.
+
+The following sections show how to use variable and fixed sources with the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+To specify a fixed source, set the `src.id` member to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```c
+ecs_entity_t Game = ecs_new_id(world);
+ecs_add(world, Game, SimTime);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, // normal term, uses $This source
+    { ecs_id(Velocity) },  // normal term, also uses $This source
+    { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
+  }
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  Position *p = ecs_field(&it, Position, 1);
+  Velocity *v = ecs_field(&it, Velocity, 2);
+  SimTime *st = ecs_field(&it, SimTime, 3);
+  
+  for (int i = 0; i < it.count; i ++) {
+    p[i].x += v[i].x * st[i].value;
+    p[i].y += v[i].y * st[i].value;
+  }
+}
+```
+
+Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
+
+Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
+
+A source may also be specified by name by setting the `src.name` member:
+
+```c
+ecs_entity_t Game = ecs_entity(world, { .name = "Game" });
+ecs_add(world, Game, SimTime);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(SimTime), .src.name = "Game" }
+  }
+});
+```
+
+This examples shows how to access the entities matched by the default `$This` source and a fixed source:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }, // normal term, uses $This source
+    { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
+  }
+});
+
+while (ecs_filter_next(&it)) {
+  ecs_entity_t src_1 = ecs_field_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
+  ecs_entity_t src_2 = ecs_field_src(&it, 2); // Returns Game
+
+  for (int i = 0; i < it.count; i ++) {
+    printf("$This = %s, src_2 = %s\n", 
+      ecs_get_name(world, it.entities[i]),
+      ecs_get_name(world, src_2));
+  }
+}
+```
+
+The `entities` and `count` member are solely populated by the number of entities matched by the default `$This` source. If a query only contains fixed sources, `count` will be set to 0. This is important to keep in mind, as the inner for loop from the last example would never be iterated for a query that only has fixed sources.
+
+#### Query Builder (C++)
+To specify a fixed source, call the `src` method to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```cpp
+flecs::entity Game = world.entity()
+  .add<SimTime>();
+
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()  // normal term, uses $This source
+  .term<Velocity>()  // normal term, also uses $This source
+  .term<SimTime>().src(Game) // fixed source, match SimTime on Game
+  .build();
+
+f.iter([](flecs::iter& it) {
+  auto p = it.field<Position>(1);
+  auto v = it.field<Velocity>(2);
+  auto st = it.field<SimTime>(3);
+  
+  for (auto i : it) {
+    p[i].x += v[i].x * st[i].value;
+    p[i].y += v[i].y * st[i].value;
+  }
+});
+```
+
+Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
+
+Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
+
+The next example shows how queries with mixed `$This` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
+
+```cpp
+flecs::filter<Position, Velocity, SimTime> f = 
+  world.filter_builder<Position, Velocity, SimTime>()
+    .arg(3).src(Game) // set fixed source for 3rd template argument (SimTime)
+    .build();
+
+// Because all components are now part of the filter type, we can use each
+f.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
+  p.x += v.x * st.value;
+  p.y += v.y * st.value;
+});
+```
+
+When a query has no terms for the `$This` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+
+```cpp
+flecs::filter<SimConfig, SimTime> f = 
+  world.filter_builder<SimConfig, SimTime>()
+    .arg(1).src(Cfg)
+    .arg(2).src(Game)
+    .build();
+
+// Ok (note that it.count() will be 0)
+f.iter([](flecs::iter& it, SimConfig *sc, SimTime *st) {
+  st->value += sc->sim_speed;
+});
+
+// Ok
+f.each([](SimConfig& sc, SimTime& st) {
+  st.value += sc.sim_speed;
+});
+
+// Ok
+f.each([](flecs::iter& it, size_t index, SimConfig& sc, SimTime& st) {
+  st.value += sc.sim_speed;
+});
+
+// Not ok: there is no entity to pass to first argument
+f.each([](flecs::entity e, SimConfig& sc, SimTime& st) { 
+  st.value += sc.sim_speed;
+});
+```
+
+A source may also be specified by name:
+
+```cpp
+flecs::filter<SimConfig, SimTime> f = 
+  world.filter_builder<SimConfig, SimTime>()
+    .arg(1).src("Cfg")
+    .arg(2).src("Game")
+    .build();
+```
+
+#### Query DSL
+To specify a source in the DSL, use parenthesis after the component identifier. The following example uses the default `$This` source for `Position` and `Velocity`, and `Game` as source for `SimTime`.
+
+```
+Position, Velocity, SimTime(Game)
+```
+
+In the previous example the source for `Position` and `Velocity` is implicit. The following example shows the same query with explicit sources for all terms:
+
+```
+Position($This), Velocity($This), SimTime(Game)
+```
+
+To specify a source for a pair, the second element of the pair is placed inside the parenthesis after the source. The following query uses the default `$This` source for the `(Color, Diffuse)` pair, and `Game` as source for the  `(Color, Sky)` pair.
+
+```
+(Color, Diffuse), Color(Game, Sky)
+```
+
+In the previous example the source for `(Color, Diffuse)` is implicit. The following example shows the same query with explicit sources for all terms:
+
+```
+Color($This, Diffuse), Color(Game, Sky)
+```
+
+### Singletons
+> *Supported by: filters, cached queries, rules*
+
+Singletons are components that are added to themselves, which can be matched by providing the component id as [source](#source). 
+
+The following sections show how to use singletons in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+A singleton query is created by specifying the same id as component and source:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { Player },
+    { ecs_id(Position) },
+    { ecs_id(Input), .src = ecs_id(Input) } // match Input on itself
+  }
+});
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+#### Query Builder (C++)
+A singleton query can be created by specifying the same id as component and source:
+
+```cpp
+flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+  .term<Input>().src<Input>() // match Input on itself
+  .build();
+```
+
+The builder API provides a `singleton` convenience function:
+
+```cpp
+flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+  .term<Input>().singleton() // match Input on itself
+  .build();
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+#### Query DSL
+A singleton query can be created by specifying the same id as component and source:
+
+```
+Player, Position, Input(Input)
+```
+
+For convenience the `$` character may be used as source, which resolves to the component id:
+
+```
+Player, Position, Input($)
+```
+
+### Relationship Traversal
+> *Supported by: filters, cached queries, rules(!)*
+
+Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
+
+![filter diagram](img/relationship_traversal.png)
+
+The arrows in this diagram indicate the direction in which the query is traversing the `ChildOf` relationship to find the component. A query will continue traversing until it has found an entity with the component, or until a root (an entity without the relationship) has been found. The traversal is depth-first. If an entity has multiple instances of a relationship a query will first traverse the first instance until its root entity before continuing with the second instance.
+
+Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the [Query Performance](#query-performance) section for more details.
+
+Any relationship used for traversal must have the [Acyclic](Relationships.md#acyclic-property) property. Attempting to create a query that traverses a relationship that does not have the `Acyclic` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
+
+Components that have the [DontInherit](Relationships.md#dontinherit-property) property cannot be matched through traversal. Examples of builtin components that have the `DontInherit` property are `Prefab` (instances of prefabs should not be considered prefabs) and `ChildOf` (a child of a parent is not a child of the parent's parent).
+
+Relationship traversal works for both variable and fixed [sources](#source).
+
+#### Traversal Flags
+Traversal behavior can be customized with the following bitflags, in addition to the relationship being traversed:
+
+| Name     | DSL identifier | C identifier  | C++ identifier    | Description |
+|----------|----------------|---------------|-------------------|-------------|
+| Self     | `self`         | `EcsSelf`     | `flecs::Self`     | Match self |
+| Up       | `up`           | `EcsUp`       | `flecs::Up`       | Match by traversing upwards |
+| Down     | `down`         | `EcsDown`     | `flecs::Down`     | Match by traversing downwards (derived, cannot be set) |
+| Parent   | `parent`       | `EcsParent`   | `flecs::Parent`   | Short for up(ChildOf) |
+| Cascade  | `cascade`      | `EcsCascade`  | `flecs::Cascade`  | Same as Up, but iterate in breadth-first order |
+
+If just `Self` is set a query will only match components on the matched entity (no traversal). If just `Up` is set, a query will only match components that can be reached by following the relationship and ignore components from the matched entity. If both `Self` and `Up` are set, the query will first look on the matched entity, and if it does not have the component the query will continue searching by traverse the relationship.
+
+Query terms default to `Self|Up` for the `IsA` relationship. This means that components inherited from prefabs will be matched automatically by queries, unless specified otherwise. When a relationship that is not `IsA` is traversed, the entities visited while traversing will still be tested for inherited components. This means that an entity with a parent that inherits the `Mass` component from a prefab will match a query that traverses the `ChildOf` relationship to match the `Mass` component. A code example:
+
+```cpp
+flecs::entity base = world.entity()
+  .add<Mass>();
+
+flecs::entity parent = world.entity()
+  .add(flecs::IsA, base); // inherits Mass
+
+flecs::entity child = world.entity()
+  .add(flecs::ChildOf, parent);
+
+// This filter matches 'child', because it has a parent that inherits Mass
+flecs::filter<> f = world.filter_builder()
+  .term<Mass>().up(flecs::ChildOf)
+  .build();
+```
+
+When a component is matched through traversal and its [access modifier](#access-modifiers) is not explicitly set, it defaults to `flecs::In`. This behavior is consistent with terms that have a fixed [source](#source).
+
+#### Iteration
+When a component is matched through traversal, the behavior is the same as though the component was matched through a fixed [source](#source): iteration will switch from table-based to entity-based. This happens on a per-result basis: if all terms are matched on the matched entity the entire table will be returned by the iterator. If one of the terms was matched through traversal, entities are returned one by one.
+
+While returning entities one by one is measurably slower than iterating entire tables, this default behavior enables matching inherited components by default without requiring the user code to be explicitly aware of the difference between a regular component and an inherited component. An advantage of this approach is that applications that use inherited components can interoperate with third party systems that do not explicitly handle them.
+
+To ensure fast table-based iteration an application can enable [instancing](#instancing). Instanced iteration is as fast as, and often faster than regular iteration. Using inherited components that are shared across many entities can improve cache efficiency as less data needs to be loaded from main RAM, and values are more likely to already be stored in the cache.
+
+> Note: the C++ `each` API always uses [instancing](#instancing), which guarantees fast table-based iteration.
+
+#### Limitations
+This list is an overview of current relationship traversal limitations:
+
+- The `Down` flag is currently reserved for internal purposes and should not be set when creating a query.
+- The `Cascade` flag only works for cached queries.
+- Rule queries currently only traverse when this is implicitly required (by transitive relationships, inheritance), but ignores flags set at query creation time.
+- Rule queries do not yet support all forms of implicit traversal (most notably the one used by prefabs)
+- Traversal flags can currently only be specified for the term source.
+- Union relationships are not supported for traversal.
+
+The following sections show how to use traversal in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. In the following example, both `base` and `inst` match the query:
+
+```c
+ecs_entity_t base = ecs_new(world, Position);
+ecs_entity_t inst = ecs_new_w_pair(worl, EcsIsA, base); // Inherits Position
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }
+  }
+});
+```
+
+Implicit traversal can be disabled by setting the `flags` member to `EcsSelf`. The following example only matches `base`:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), .src.flags = EcsSelf }
+  }
+});
+```
+
+To use a different relationship for traversal, use the `trav` member in combination with the `EcsUp` flag. The following example only matches `child`:
+
+```c
+ecs_entity_t parent = ecs_new(world, Position);
+ecs_entity_t child = ecs_new(world, Position);
+
+ecs_add_pair(world, child, EcsChildOf, parent);
+
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    // term matches parent & child
+    { ecs_id(Position) },
+    // term just matches child, parent does not have a parent with Position
+    { ecs_id(Position), .src.flags = EcsUp, src.trav = EcsChildOf }
+  }
+});
+```
+
+The `EcsParent` flag can be used which is shorthand for `EcsUp` with `EcsChildOf`. The query in the following example is equivalent to the one in the previous example:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsParent }
+  }
+});
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsParent, .oper = EcsOptional }
+  }
+});
+```
+
+By adding the `EcsCascade` flag, a query will iterate the hierarchy top-down. This is only supported for cached queries:
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .filter.terms = {
+    { ecs_id(Position) },
+    { ecs_id(Position), .src.flags = EcsCascade|EcsParent, .oper = EcsOptional }
+  }
+});
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Window), .src.flags = EcsParent, .src.id = my_widget }
+  }
+});
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```cpp
+ecs_filter_t *f_1 = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position) }
+  }
+});
+
+ecs_filter_t *f_2 = ecs_filter(world, {
+  .terms = {{
+    .id = ecs_id(Position),       // match Position
+    .src.flags = EcsSelf | EcsUp  // first match self, traverse upwards while not found
+    .src.trav = EcsIsA,           // traverse using the IsA relationship
+  }}
+});
+```
+
+#### Query Builder (C++)
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. In the following example, both `base` and `inst` match the query:
+
+```cpp
+flecs::entity base = world.entity()
+  .add<Position>();
+
+flecs::entity inst = world.entity()
+  .is_a(base); // short for .add(flecs::IsA, base)
+
+flecs::filter<> f = world.filter<Position>();
+```
+
+Implicit traversal can be disabled by calling the `self` method for the term. The following example only matches `base`:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>().self()
+  .build();
+```
+
+To use a different relationship for traversal, use the `up` method with the relationship as argument. The following example only matches `child`:
+
+```cpp
+flecs::entity parent = world.entity()
+  .add<Position>();
+
+flecs::entity child = world.entity()
+  .child_of(parent);  // short for .add(flecs::ChildOf, parent)
+
+flecs::filter<> f = world.filter_builder()
+  // term matches parent & child
+  .term<Position>()
+  // term just matches child, parent does not have a parent with Position
+  .term<Position>().up(flecs::ChildOf)
+  .build();
+```
+
+The `parent` method can be used which is shorthand for `up(flecs::ChildOf)`. The query in the following example is equivalent to the one in the previous example:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()
+  .term<Position>().parent()
+  .build();
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Position>()
+  .term<Position>().parent().optional()
+  .build();
+```
+
+By calling the `cascade` method, a query will iterate the hierarchy top-down. Note that the example could also have called both `parent()` and `cascade()`. The `cascade` feature is only supported for cached queries:
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .term<Position>()
+  .term<Position>().cascade(flecs::ChildOf).optional()
+  .build();
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```cpp
+flecs::filter<> f = world.filter_builder()
+  .term<Window>().src(my_widget).parent()
+  .build();
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```cpp
+flecs::filter<> f = world.filter<Position>();
+
+flecs::filter<> f = world.filter_builder()
+  .term<Position>() // match Position
+    .self()         // first match self
+    .up(flecs::IsA) // traverse IsA upwards while not found
+  .build();
+```
+
+#### Query DSL
+By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. The following query matches `Position` on entities that either have the component or inherit it:
+
+```
+Position
+```
+
+Implicit traversal can be disabled by adding `self` enclosed by parentheses after the component identifier:
+
+```
+Position(self)
+```
+
+To use a different relationship for traversal, specify `up` with the relationship as argument:
+
+```
+Position(up(ChildOf))
+```
+
+The `parent` keyword can be used which is shorthand for `up(ChildOf)`. The query in the following example is equivalent to the one in the previous example:
+
+```
+Position(parent)
+```
+
+If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional:
+
+```
+Position, ?Position(parent)
+```
+
+By adding the `cascade` keyword, a query will iterate the `ChildOf` hierarchy top-down. The `cascade` feature is only supported by cached queries:
+
+```
+Position, ?Position(parent|cascade)
+```
+
+Relationship traversal can be combined with fixed [source](#source) terms, by using a colon (`:`) to separate the traversal flags and the source identifier. The following query matches if the `my_widget` entity has a parent with the `Window` component:
+
+```
+Window(parent:my_widget)
+```
+
+The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
+
+```
+Position
+Position(self|up(IsA))
+```
+
+### Instancing
+> *Supported by: filters, cached queries, rules*
+
+> **Note**: this section is useful when optimizing code, but is not required knowledge for using queries.
+
+Instancing is the ability to return results with fields that have different numbers of elements. An example of where this is relevant is a query with terms that have both variable and fixed [sources](#source):
+
+```
+Position, Velocity, SimTime(Game)
+```
+
+This query may return a result with a table that has many entities, therefore resulting in many component instances being available for `Position` and `Velocity`, while only having a single instance for the `SimTime` component. 
+
+Another much more common cause of mixed results is if a matched component is inherited from a prefab. Consider this example:
+
+```cpp
+flecs::entity base = world.prefab("base")
+  .set<Mass>({10});
+
+// Entities that share Mass and own Position
+flecs::entity inst_1 = world.entity("inst_1")
+  .is_a(base) // short for .add(flecs::IsA, base)
+  .set<Position>({10, 20});
+
+flecs::entity inst_2 = world.entity("inst_2")
+  .is_a(base)
+  .set<Position>({30, 40});
+
+// Entities that own Mass and Position
+flecs::entity ent_1 = world.entity("ent_1")
+  .set<Mass>({20})
+  .set<Position>({40, 50});
+
+flecs::entity ent_2 = world.entity("ent_2")
+  .set<Mass>({30})
+  .set<Position>({50, 60});
+
+flecs::filter<Position, Mass> f = world.filter<Position, Mass>();
+```
+
+The filter in this example will match both `inst_1`, `inst_2` because they inherit `Mass`, and `ent_1` and `ent_2` because they own `Mass`. The following example shows an example of code that iterates the filter:
+
+```cpp
+f.iter([](flecs::iter& it, Position *p, Mass *m) {
+  std::cout << "Result" << std::endl;
+  for (auto i : it) {
+    std::cout << " - " << it.entity(i).name() << ": " 
+      << m[i].value 
+      << std::endl;
+  }
+});
+```
+
+With iteration being table-based the expectation is that the result looks something like this, where all entities in the same table are iterated in the same result:
+
+```
+Result
+ - inst_1: 10
+ - inst_2: 10
+Result
+ - ent_1: 20
+ - ent_2: 30
+```
+
+Instead, when ran this code produces the following output:
+
+```
+Result
+ - inst_1: 10
+Result
+ - inst_2: 10
+Result
+ - ent_1: 20
+ - ent_2: 30
+```
+
+The prefab instances are returned one at a time, even though they are stored in the same table. The rationale behind this behavior is that it prevents a common error that was present in the previous code example, specifically where the `Mass` component was read:
+
+```cpp
+      << m[i].value
+```
+
+If `inst_1` and `inst_2` would have been returned in the same result it would have caused the inner for loop to loop twice. This means `i` would have become `1` and `m[1].value` would have caused an out of bounds violation, likely crashing the code. Why does this happen?
+
+The reason is that both entities inherit the same instance of the `Mass` component. The `Mass` pointer provided by the iterator is not an array to multiple values, in this case it is _a pointer to a single value_. To fix this error, the component would have to be accessed as:
+
+```cpp
+      << m->value
+```
+
+To prevent subtle errors like this from happening, iterators will switch to entity-based iteration when a result has fields of mixed lengths. This returns entities one by one, and guarantees that the loop variable `i` always has value `0`. The expression `m[0].value` is equivalent to `m->value`, which is the right way to access the component.
+
+> **Note**: As long as all fields in a result are of equal length, the iterator switches to table-based iteration. This is shown in the previous example: both `ent_1` and `ent_2` are returned in the same result.
+
+While this provides a safe default to iterate results with shared components, it does come at a performance cost. Iterating entities one at a time can be much slower than iterating an entire table, especially if tables are large. When this cost is too great, iteration can be *instanced*, which prevents switching from table-based to entity-based iteration.
+
+> **Note**: The implementation of the C++ `each` function always uses instancing.
+
+The following diagram shows the difference in how results are returned between instanced iteration and non-instanced iteration. Each result block corresponds with a call to the `iter` method in the above example:
+
+![filter diagram](img/query_instancing.png)
+
+Note that when iteration is not instanced, `inst_1` and `inst_2` are returned in separate results, whereas with instanced iteration they are both combined in the same result. Iterating the right result is faster for a few reasons:
+
+- Fewer results means less overhead from iteration code
+- Direct access to component arrays allows for optimizations like auto-vectorization
+
+However, what the diagram also shows is that code for instanced iterators must handle results where `Mass` is either an array or a single value. This is the tradeoff of instancing: faster iteration at the cost of more complex iteration code.
+
+The following sections show how to use instancing in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
+
+#### Query Descriptor (C)
+Queries can be instanced by setting the `instanced` member to true:
+
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms = {
+    { ecs_id(Position), src.flags = EcsSelf }, // Never inherit Position
+    { ecs_id(Mass) }
+  },
+
+  // Instancing is a property of the iterator, but by setting it on the query
+  // all iterators created for the query will be instanced.
+  .instanced = true
+});
+
+ecs_iter_t it = ecs_filter_iter(world, &it);
+while (ecs_filter_next(&it)) {
+  // Fetch components as usual
+  Position *p = ecs_field(&it, Position, 1);
+  Mass *m = ecs_field(&it, Mass, 2);
+
+  if (ecs_field_is_self(&it, 2)) {
+    // Mass is matched on self, access as array
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += 1.0 / m[i].value;
+      p[i].y += 1.0 / m[i].value;
+    }
+  } else {
+    // Mass is matched on other entity, access as single value
+    for (int i = 0; i < it.count; i ++) {
+      p[i].x += 1.0 / m->value;
+      p[i].y += 1.0 / m->value;
+    }
+  }
+}
+```
+
+Note how the `ecs_field_is_self` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
+
+#### Query Builder (C++)
+Queries can be instanced by calling the `instanced` method:
+
+```cpp
+flecs::filter<Position, Mass> f = world.filter_builder<Position, Mass>()
+  // Never inherit Position
+  .arg(1).self()
+  // Instancing is a property of the iterator, but by setting it on the query
+  // all iterators created for the query will be instanced.
+  .instanced()
+  .build();
+
+f.iter([](flecs::iter& it, Position *p, Mass *v) {
+  if (it.is_self()) {
+    // Mass is matched on self, access as array
+    for (auto i : it) {
+      p[i].x += 1.0 / m[i].value;
+      p[i].y += 1.0 / m[i].value;
+    }
+  } else {
+    // Mass is matched on other entity, access as single value
+    for (auto i : it) {
+      p[i].x += 1.0 / m->value;
+      p[i].y += 1.0 / m->value;
+    }
+  }
+});
+```
+
+Note how the `it.is_self()` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
+
+### Variables
+> *Partial suppport: filters, cached queries. Full support: rules*
+
+Query variables represent the state of a query while it is being evaluated. The most common form of state is "the entity (or table) against which the query is evaluated". While a query is evaluating an entity or table, it has to store it somewhere. In flecs, that "somewhere" is a query variable.
+
+Consider this query example, written down with explicit term [sources](#source):
+
+```
+Position($This), Velocity($This)
+```
+
+The first term to encounter a variable is usually the one to populate it with all candidates that could match that term. Subsequent terms then use the already populated variable to test if it matches. If the condition matches, the query moves on to the next term. If the condition fails, the query moves back to the previous term and, if necessary, populates the variable with the next candidate. These kinds of conditions are usually referred to as [predicates](https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)), and this evaluation process is called [backtracking](https://en.wikipedia.org/wiki/Backtracking).
+
+This process effectively _constrains_ the possible results that a term could yield. By itself, the `Velocity` term would return all entities with the `Velocity` component, but because `$This` has been assigned already with entities that have `Position`, the term only feeds forward entities that have both `Position` and `Velocity`.
+
+While using variables as [source](#source) is the most common application for variables, variables can be used in any part of the term. Consider constructing a query for all spaceships that are docked to a planet. A first attempt could look like this:
+
+```
+SpaceShip, (DockedTo, *)
+```
+
+When rewritten with explicit sources, the query looks like this:
+
+```
+SpaceShip($This), DockedTo($This, *)
+```
+
+This returns all spaceships that are docked to _anything_, instead of docked to planets. To constrain the result of this query, the wildcard used as target for the `DockedTo` relationship can be replaced with a variable. An example:
+
+```
+SpaceShip($This), DockedTo($This, $Location)
+```
+
+When the second term is evaluated for the first time, `$Location` will not yet be populated. This causes the term to do two things:
+
+1. Test if the entity/table populated in `$This` has `(DockedTo, *)`
+2. If so, populate `$Location` with the id matched by `*`.
+
+After evaluating the second term, the `$Location` variable is populated with the location the spaceship is docked to. We can now use this variable in a new term, that constrains the location to only entities that have `Planet`:
+
+```
+SpaceShip($This), DockedTo($This, $Location), Planet($Location)
+```
+
+This query returns the desired result ("return all spaceships docked to a planet").
+
+Variables can also be used to constrain matched components. Consider the following example query:
+
+```
+Serializable($Component), $Component($This)
+```
+
+This query returns serializable components for all entities that have at least one.
+
+#### Setting Variables
+By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
+
+```
+SpaceShip($This), DockedTo($This, $Location)
+```
+
+An application can set the `$This` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
+
+The following sections show how to use queries in the different language bindings. The code examples use rules queries, which currently are the only queries that support using variables other than `$This`.
+
+#### Query Descriptor (C)
+Query variables can be specified by setting the `name` member in combination with setting the `EcsIsVariable` bit in the `flags` member:
+
+```c
+// SpaceShip, (DockedTo, $Location), Planet($Location)
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {
+    { .id = SpaceShip },
+    {
+      .first.id = DockedTo, 
+      .second = {
+        .name = "Location",
+        .flags = EcsIsVariable
+      }
+    },
+    {
+      .id = Planet,
+      .src = {
+        .name = "Location",
+        .flags = EcsIsVariable
+      }
+    }
+  }
+});
+```
+
+An application can constrain the results of the query by setting the variable before starting iteration:
+
+```c
+ecs_entity_t earth = ecs_new(world, Planet);
+
+// Find index for Location variable
+int32_t location_var = ecs_rule_find_var(r, "Location");
+
+// Constrain results of iterator to return spaceships docked to Earth
+ecs_iter_t it = ecs_rule_iter(world, r);
+ecs_iter_set_var(&it, location_var, earth);
+
+// Iterate as usual
+```
+
+#### Query Builder (C++)
+Query variables can be specified by specifying a name with a `$` prefix:
+
+```cpp
+auto r = world.rule_builder()
+  .term<SpaceShip>()
+  .term<DockedTo>().second("$Location")
+  .term<Planet>().src("$Location")
+  .build();
+```
+
+Alternatively, variables can also be specified using the `var` method:
+
+```cpp
+auto r = world.rule_builder()
+  .term<SpaceShip>()
+  .term<DockedTo>().second().var("Location")
+  .term<Planet>().src().var("Location")
+  .build();
+```
+
+An application can constrain the results of the query by setting the variable before starting iteration:
+
+```cpp
+flecs::entity earth = world.entity();
+
+int32_t location_var = r.find_var("Location");
+r.iter().set_var(location_var, earth).each([]{
+  // iterate as usual
+});
+```
+
+Alternatively the variable name can be provided to `set_var` directly:
+
+```cpp
+flecs::entity earth = world.entity();
+
+r.iter().set_var("Location", earth).each([]{
+  // iterate as usual
+});
+```
+
+### Change Detection
+> *Supported by: cached queries*
+
+Change detection makes it possible for applications to know whether data matching a query has changed. Changes are tracked at the table level, for each component in the table. While this is less granular than per entity tracking, the mechanism has minimal overhead, and can be used to skip entities in bulk.
+
+Change detection works by storing a list of counters on tracked tables, where each counter tracks changes for a component in the table. When a component in the table changes, the corresponding counter is increased. An additional counter is stored for changes that add or remove entities to the table. Queries with change detection store a copy of the list of counters for each table in the cache, and compare counters to detect changes. To reduce overhead, counters are only tracked for tables matched with queries that use change detection.
+
+The change detection feature cannot detect all changes. The following scenarios are detected by change detection:
+- Anything that causes adding or removing a component, tag or pair
+- Deleting an entity
+- Setting a component value with `set`
+- Calling `modified` for an entity/component
+- Iterating the table _without skipping it_ with a query that has `inout` or `out` terms
+- A change in tables matched by the query
+
+The following scenarios are not detected by change detection:
+- Modifying a component obtained by `get_mut` without calling `modified`
+- Modifying the value of a ref (`ecs_ref_t` or `flecs::ref`) without calling `modified`
+
+A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.
+
+By default queries do not use change detection. Change detection is automatically enabled when a function that requires change detection is called on the query, for example if an application calls `changed()` on the query. Once change detection is enabled it will stay enabled for both the query and the tables the query is matched with.
+
+When a change occurred in a table matching a query, the query state for that table will remain changed until the table is iterated by the query.
+
+When a query iterates a table for which changes are tracked and the query has `inout` or `out` terms that are matched with components of that table, the counter for those components will be increased by default. An application can indicate that no components were modified by skipping the table (see code examples).
+
+> When a query uses change detection and has `out` or `inout` terms, its state will always be changed as iterating the query increases the table counters. It is recommended to only use terms with the `in` access modifier in combination with change detection.
+
+The following sections show how to use change detection in the different language bindings. The code examples use cached queries, which is the only kind of query for which change detection is supported.
+
+#### Query Descriptor (C)
+The following example shows how the change detection API is used in C:
+
+```c
+// Query used for change detection. Note that change detection is not enabled on
+// the query itself, but by calling change detection functions for the query.
+ecs_query_t *q_read = ecs_query(world, {
+    .filter.terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+});
+
+// Query used to create changes
+ecs_query_t *q_write = ecs_query(world, {
+    .filter.terms = {{ .id = ecs_id(Position) }} // defaults to inout
+});
+
+// Test if changes have occurred for anything matching the query. If this is the
+// first call to the function, it will enable change detection for the query.
+bool changed = ecs_query_changed(q_read, NULL);
+
+// Setting a component will update the changed state
+ecs_entity_t e = ecs_new_id(world);
+ecs_set(world, e, Position, {10, 20});
+
+// Iterating a query with inout/out terms will update the change state
+ecs_iter_t it = ecs_query_iter(world, q_write);
+while (ecs_query_next(&it)) {
+  if (dont_change) {
+    // If no changes are made to the iterated table, the skip function can be
+    // called to prevent marking the matched components as dirty.
+    ecs_query_skip(&it);
+  } else {
+    // Iterate as usual. It does not matter whether the code actually writes the
+    // components or not: when a table is not skipped, components matched with
+    // inout or out terms will be marked dirty by the iterator.
+  }
+}
+
+// Iterating tables with q_read will reset the changed state
+it = ecs_query_iter(world, q_read);
+while (ecs_query_next(&it)) {
+  if (ecs_query_changed(q_read, &it)) {
+    // Check if the current table has changed. The change state will be reset 
+    // after the table is iterated, so code can respond to changes in individual
+    // tables.
+  }
+}
+```
+
+#### Query Builder (C++)
+The following example shows how the change detection API is used in C++:
+
+```cpp
+// Query used for change detection. Note that change detection is not enabled on
+// the query itself, but by calling change detection functions for the query.
+flecs::query<const Position> q_read = world.query<const Position>();
+
+// Query used to create changes
+flecs::query<Position> q_write = world.query<Position>(); // defaults to inout
+
+// Test if changes have occurred for anything matching the query. If this is the
+// first call to the function, it will enable change detection for the query.
+bool changed = q_read.changed();
+
+// Setting a component will update the changed state
+flecs::entity e = world.entity()
+  .set<Position>({10, 20});
+
+q_write.iter([](flecs::iter& it, Position *p) {
+  if (dont_change) {
+    // If no changes are made to the iterated table, the skip function can be
+    // called to prevent marking the matched components as dirty.
+    it.skip();
+  } else {
+    // Iterate as usual. It does not matter whether the code actually writes the
+    // components or not: when a table is not skipped, components matched with
+    // inout or out terms will be marked dirty by the iterator.
+  }
+});
+
+q_read.iter([](flecs::iter& it, Position *p) {
+  if (it.changed()) {
+    // Check if the current table has changed. The change state will be reset 
+    // after the table is iterated, so code can respond to changes in individual
+    // tables.
+  }
+});
+```
+
+### Sorting
+> *Supported by: cached queries*
+
+Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled by setting the `order_by` function in combination with the component to order on. Sorted queries sort the tables they match with when necessary. To determine whether a table needs to be sorted, sorted queries use [change detection](#change-detection). A query determines whether a sort operation is needed when an iterator is created for it.
+
+> Because sorting relies on change detection, it has the same limitations with respect to detecting changes. When using sorted queries, make sure a query is able to detect the changes necessary for knowing when to (re)sort.
+
+Query sorting works best for data that does not change often, as the sorting process can be expensive. This is especially true for queries that match with many tables, as one step of the [sorting algorithm](#sorting-algorithm) scans all matched tables repeatedly to find an ordered set of slices.
+
+An application should also prevent having sorted queries with conflicting sorting requirements. This can cause scenarios in which both queries are invalidating each others ordering, which can result in a resort each time an iterator is created for one of the conflicting queries.
+
+Sorted queries are encouraged to mark the component used for sorting as `In`. If a sorted query has write access to the sorted component, iterating the query will invalidate its own order which can lead to continous resorting.
+
+Components matched through [traversal](#relationship-traversal) can be used to sort entities. This often results in more efficient sorting as component values can be used to sort entire tables, and as a result tables themselves do not have to be sorted.
+
+#### Sorting Algorithm
+Sorted queries use a two-step process to return entities in a sorted order. The sort algorithm used in both steps is quicksort. The first step sorts contents of all tables matched by the query. The second step is to find a list of ordered slices across the tables matched by the query. This second step is necessary to support datasets where ordered results have entities interleaved from multiple tables. An example data set:
 
 Entity  | Components (table) | Value used for sorting
 --------|--------------------|-----------------------
@@ -350,7 +2398,7 @@ E6      | Position, Mass     | 8
 E7      | Position           | 10
 E8      | Position           | 11
 
-To make sure a query iterates the entities in the right order, it will iterate entities in the ordered tables to determine the largest slice of ordered entities in each table, which the query will iterate in order. Slices are precomputed during the sorting step, which means that the performance of query iteration is similar to a regular iteration. For the above set of entities, these slices would look like this:
+To make sure a query iterates the entities in the right order, it will iterate entities in the ordered tables to determine the largest slice of ordered entities in each table, which the query will iterate in order. Slices are computed during the sorting step. For the above set of entities slices would look like this:
 
 Table              | Slice
 -------------------|-------
@@ -359,933 +2407,542 @@ Position, Velocity | 3..4
 Position, Mass     | 5
 Position           | 6..7
 
-This process is transparent for applications, except that the slicing will result in smaller contiguous arrays being iterated by the application.
+To minimize time spent on sorting, the results of a sort are cached. The performnace overhead of iterating an already sorted query is comparable to iterating a regular query, though for degenerate scenarios where a sort produces many slices for comparatively few tables the performance overhead can be significant.
 
-### Sorting by entity id
-Instead of sorting by a component value, applications can sort by entity id by not specifying order_by_component
+The following sections show how to use sorting in the different language bindings. The code examples use cached queries, which is the only kind of query for which change detection is supported.
+
+#### Query Descriptor (C)
+The following example shows how to use sorted queries in C:
 
 ```c
-ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {{ ecs_id(Position) }},
+ecs_query_t *q = ecs_query(world, {
+    .filter.terms = {
+      // Use readonly term for component used for sorting
+      { ecs_id(Depth), .inout = EcsIn }
+      { ecs_id(Position) },
+    },
+    .order_by_component = ecs_id(Position), // The component to use for sorting
+    .order_by = compare_position,
+});
+```
+
+The function signature of the `order_by` function should look like the following example:
+
+```c
+int compare_position(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const void *v2) {
+  const Depth *d1 = v1;
+  const Depth *d2 = v2;
+  return (d1->value > d2->value) - (d1->value < d2->value);
+}
+```
+
+A query may only use entity identifiers to sort by not setting the `order_by_component` member:
+
+```c
+ecs_query_t *q = ecs_query(world, {
+    .filter.terms = {
+      { ecs_id(Position) },
+    },
     .order_by = compare_entity,
 });
 ```
 
-The compare function would look like this:
+The following example shows a function that sorts by entity id:
 
 ```c
-int compare_entity(ecs_entity_t e1, void *p1, ecs_entity_t e2, void *p2) {
-    return e1 - e2;
+int compare_entity(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const void *v2) {
+  return (e1 > e2) - (e1 < e2);
 }
 ```
 
-When no component is provided, no reordering will happen as a result of setting components or running a system with `[out]` columns.
-
-## Query Concepts
-Now that we have the basics under our belt, lets look a bit more in-depth at the different concepts from which queries are composed.
-
-### Expression
-An expression refers to all the terms of the query. For a query that finds all entities with components Position & Velocity, the expression is `Position, Velocity`. An expression can be written down in any of the query description formats (DSL, builder or descriptor). However, when the term expression is used in the API, it typically indicates a DSL string.
-
-### Term
-A term is a single element of a query expression. The query expression `Position, Velocity` has two terms, `Position` and `Velocity`. For a query to match an entity (or archetype), all terms in the expression must match.
-
-In the DSL, each term in an expression is usually separated by a comma, also called the `And` operator.
-
-### Identifier
-A query term may contain one or more string-based identifiers that refer to the different entities in the term, such as `"Position"` and `"Velocity"`. These identifiers are used to lookup their corresponding entities while the query is constructed. Identifiers can be hierarchical, such as `flecs.components.transform.Position`.
-
-### Operator
-An operator specifies how the term should be applied to the query. For example, if the result of a term is `true`, but it has the `Not` operator, the result of the term in the query will be `false`. Queries support the following operators:
-
-#### And operator
-This is the default operator. Here is a simple example of a query with an And operator:
-
-```c
-Position, Velocity // Position And Velocity
-```
-
-Terms added by the builder or descriptor by default use the `And` operator.
-
-#### Not operator
-The Not operator instructs a query to reverse the result of a term. In the query DSL, the Not operator is specified after the And operator:
-
-```c
-Position, !Velocity // Position And Not Velocity
-```
-
-This example shows how to add a `Not` term with the query builder:
+#### Query Builder (C++)
+The following example shows how to use sorted queries in C++:
 
 ```cpp
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<NPC>().oper(flecs::Not);
+// Use readonly term for component used for sorting
+auto q = world.query_builder<const Depth, Position>()
+  .order_by([](flecs::entity e1, const Depth *d1, flecs::entity e2, const Depth *d2) {
+    return (d1->value > d2->value) - (d1->value < d2->value);
+  })
+  .build();
 ```
 
-This example shows how to add a `Not` term with the query descriptor:
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {NPC, .oper = EcsNot}
-  }
-});
-```
-
-#### Optional operator
-The optional operator instructs a query to return the result of the term as `true`, even if the entity/archetype did not match the term. In the query DSL the optional operator is provided after the `And` operator:
-
-```c
-Position, ?Velocity // Position And Optionally Velocity
-```
-
-Optional arguments, while they do not impact query matching, are useful as they provide a quicker way to access the optional component than using `e.get<T>()`. Optional components are faster because of three reasons:
-
-1) Queries iterate archetypes, and if an archetype does not have the optional component, none of the entities in the archetype do.
-
-2) When an archetype does have the optional component, the query can access it as an array, just like a regular component.
-
-3) Cached queries store the archetype location of an optional component  in their cache, which prevents the lookup that is needed by `get<T>()`.
-
-This example shows how to add a `Optional` term with the query builder:
+Queries may specify a component id if the component is not known at compile time:
 
 ```cpp
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<NPC>().oper(flecs::Optional);
+flecs::entity depth_id = world.component<Depth>();
+
+auto q = world.query_builder<Position>()
+  .term(depth_id).in()
+  .order_by(depth_id, [](flecs::entity e1, const void *d1, flecs::entity e2, const void *d2) {
+    // Generic sort code ...
+  })
+  .build();
 ```
 
-This example shows how to add a `Optional` term with the query descriptor:
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {NPC, .oper = EcsOptional}
-  }
-});
-```
-
-#### Or operator
-The `Or` operator instructs a query to match _at least_ one term out of a list of terms that are chained together by the operator. Here is a simple example of a query with an `Or` operator:
-
-```c
-Position || Velocity // Position Or Velocity
-```
-
-When a query contains multiple `Or` chains separated by `And` operators, the entity must at least match one component from each chain:
-
-```c
-// (Position Or Mass) And (Speed Or Velocity)
-Position || Mass, Speed || Velocity
-```
-
-This example shows how to add a `Or` term with the query builder:
+Queries may specify zero for component id to sort on entity ids:
 
 ```cpp
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<NPC>().oper(flecs::Or)
-  .term<Enemy>().oper(flecs::Or);
+auto q = world.query_builder<Position>()
+  .order_by(0, [](flecs::entity e1, const void *d1, flecs::entity e2, const void *d2) {
+    return (e1 > e2) - (e1 < e2);
+  })
+  .build();
 ```
 
-This example shows how to add a `Or` term with the query descriptor:
+### Grouping
+> *Supported by: cached queries*
+
+Grouping is the ability of queries to assign an id ("group id") to a set of tables. Grouped tables are iterated together, as they are stored together in the query cache. Additionally, groups in the query cache are sorted by group id, which guarantees that tables with a lower group id are iterated after tables with a higher group id. Grouping is only supported for cached queries.
+
+Group ids are local to a query, and as a result queries with grouping do not modify the tables they match with.
+
+Grouping is the least granular, most efficient mechanism to order results of a query. Grouping does not rely on sorting individual tables or entities. Instead, sorting only happens when a new group id is introduced to a query, which is rare in many scenarios. Queries maintain an index that maps group ids to the first and last elements in the cache belonging to that group. This allows for tables to be inserted into the cache in a fast constant time operation, while also providing ordered access to tables.
+
+The grouping mechanism is used internally by the `cascade` feature. Queries that use `cascade` use a computed hierarchy depth as group id. Because lower group ids are iterated before higher group ids, this provides in a bread-first topological sort of tables and entities that is almost free to maintain.
+
+Queries may be grouped and [sorted](#sorting) at the same time. When combined, grouping takes precedence over sorting. Tables are first assigned to their groups in the query cache, after which each group is sorted individually.
+
+An example of an internal query that uses `cascade` grouping in combination with [sorting](#sorting) is the builtin pipeline query. The pipeline query first groups systems by their depth in the `DependsOn` relationship tree. Within the depth-based groups systems are ordered based on their entity id, which ensures systems are iterated in order of declaration.
+
+The following sections show how to use sorting in the different language bindings. The code examples use cached queries, which is the only kind of query for which change detection is supported.
+
+#### Query Descriptor (C)
+The following example shows how grouping can be used to group entities that are in the same game region.
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {NPC, .oper = EcsOr},
-    {Enemy, .oper = EcsOr}
-  }
+ecs_entity_t Region = ecs_new_id(world);
+ecs_entity_t Unit = ecs_new_id(world);
+
+ecs_entity_t Region_01 = ecs_new_id(world);
+ecs_entity_t Region_02 = ecs_new_id(world);
+
+// Example of entities created in different regions
+ecs_entity_t unit_01 = ecs_new_w_id(world, Unit);
+ecs_entity_t unit_02 = ecs_new_w_id(world, Unit);
+
+ecs_add_pair(world, unit_01, Region, Region_01);
+ecs_add_pair(world, unit_02, Region, Region_02);
+
+// Create query that groups entities that are in the same region
+ecs_query(world, {
+  .filter.terms = {{ Unit }},
+  .group_by = group_by_target, // function that groups by relationship target
+  .group_by_id = Region // optional, passed to group_by function
 });
 ```
 
-Note that both in the builder and descriptor APIs, each term that participates in an `Or` chain must specify the `Or` operator.
+The following example shows what the implementation of `group_by_target` could look like:
 
-#### AndFrom, OrFrom, NotFrom operators
-The `*From` operators allow a query to match against an external list of components with the `And`, `Or` or `Not` operator. This list of components is specified as a type entity. For example, if an application has the following type entity:
+```c
+uint64_t group_by_target(
+  ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx)
+{
+  // Use id (Region) to find target for relationship
+  ecs_id_t pair = 0;
+  if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &pair) != -1) {
+    return ecs_pair_second(world, pair); // Return second element (target)
+  } else {
+    return 0; // Table does not have relationship
+  }
+}
+```
+
+#### Query Builder (C++)
+The following example shows how grouping can be used to group entities that are in the same game region.
 
 ```cpp
-auto Ingredients = world.type("Ingredients")
-  .add(Bacon)
-  .add(Eggs)
-  .add(Tomato)
-  .add(Lettuce);
-```
-
-A term can select one of the ids in the type with the `OrFrom` operator, which in the query DSL looks like this:
-
-```c
-OR | Ingredients // Match with at least one of Ingredients
-```
-
-Similarly, `AND`, and `NOT` can be used in combination with type entities.
-
-This example shows how to add an `AndFrom` term with the query builder:
-
-```cpp
-auto qb = world.query_builder<Position, const Velocity>()
-  .term(Ingredients).oper(flecs::AndFrom);
-```
-
-This example shows how to add a `AndFrom` term with the query descriptor:
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {Ingredients, .oper = EcsAndFrom}
-  }
-});
-```
-
-### Read/write access
-A query term can specify whether the query intends to read or write data from the term. This is an example of a query term that specifies readonly access:
-
-```
-Position, [in] Velocity
-```
-
-This example shows how to specify read/write access in the builder API:
-
-```cpp
-auto qb = world.query_builder<Position>()
-  .term<Velocity>().inout(flecs::In);
-```
-
-Alternatively a query may also use `const` to indicate readonly access, which is equivalent to specifying `flecs::In`. Using `const` however should be preferred, as the qualifier is propagated to the `each` and `iter` callbacks:
-
-```cpp
-auto q = world.query<Position, const Velocity>();
-
-q.each([](flecs::entity e, Position& p, const Velocity& v){
-  p.x += v.x;
-  p.y += v.y;
-});
-```
-
-This example shows how to specify read/write access in the query descriptor:
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {ecs_id(Position), .inout = EcsIn}
-  }
-});
-```
-
-The default read/write access is `InOut` for terms that have `This` as the subject. Terms that have an entity other than `This` have `In` as default. Either defaults can be overridden.
-
-### Predicate
-Each term has exactly one predicate. Conceptually, a predicate is a function that returns true when its inputs match, and false when its inputs do not match. When translating this to simple flecs query, a component represents a predicate that returns true when its input has the component:
-
-```c
-Position(Bob) // true if entity Bob has Position
-```
-
-For a term to match, its predicate has to evaluate to true.
-
-### Subject
-A subject is the argument passed to a predicate. In most cases this is the entity (or archetype) that is being matched with the query, but not necessarily. Take for example this term:
-
-```
-Position(Bob)
-```
-
-Here `Position` is the predicate, and `Bob` is the subject. If `Bob` has `Position`, the predicate will return true and the term will match. Otherwise the term will return false.
-
-The term "subject" is borrowed from English grammar. In the sentence "Bob has component Position", "Bob" is the subject.
-
-### This
-`This` is the placeholder for an entity (or archetype) being evaluated by a query. When a query is looking for all matching results, it will iterate the set of entities that represent a potential match, and pass each entity (or archetype) as "This" to each term. By default `This` is used as the subject for each predicate. Thus a simple query like this:
-
-```
-Position, Velocity
-```
-
-actually looks like this when written out with explicit sources:
-
-```
-Position(This), Velocity(This)
-```
-
-### Object
-An object is an optional second argument that can be passed to a predicate. Objects are used when querying for relationships. For example, entity `Bob` may have the relationship `Likes` with `Alice`. In this case, `Bob` is the subject, `Likes` is the predicate and `Alice` is the object. When querying for whether `Bob` likes `Alice`, we do:
-
-```c
-Likes(Bob, Alice) // True when Bob Likes Alice
-```
-
-When we are querying for a relationship on `This`, we can use this shorthand notation:
-
-```c
-(Likes, Alice)
-```
-
-which is the same as:
-
-```c
-Likes(This, Alice)
-```
-
-The term "object" is borrowed from English grammar and has nothing to do with the OOP meaning of object (as in an instance of a class). In the sentence "Bob likes Alice", "Bob" is the subject, and "Alice" is the object.
-
-### Component
-When a term refers to a component, it appears as a predicate with a single argument (subject). Components are typically referred to by their language types in APIs. While the query DSL is agnostic to this, the bindings provide dedicated ways for setting a component for a term.
-
-In the builder API components can be specified using template arguments:
-
-```cpp
-// Position & Velocity are C++ types
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<Mass>(); // Mass is a C++ type
-```
-
-In the descriptor API components can be specified with the `ecs_id` macro. This macro requires that the component id is known in the current scope (see the manual for how to register components/declare component identifiers):
-
-```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)},
-    {ecs_id(Velocity)},
-    {ecs_id(Mass)}
-  }
-});
-```
-
-### Tag
-A tag is similar to a component when used in a query, in that it appears as a predicate with a single argument (subject). Tags are regular entities that are not associated with a datatype.
-
-In the builder API tags can be added like this:
-
-```cpp
-// NPC
-auto NPC = world.entity();
-auto qb = world.query_builder<>()
-  .term(NPC);
-```
-
-In the query descriptor API tags can be added like this:
-
-```c
-// NPC
-ecs_entity_t NPC = ecs_new_id(world);
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {NPC}
-  }
-});
-```
-
-Note that in C++ empty types can be used as tags. These can be specified in the same way as a regular component, by their type.
-
-### Relation
-A relation in a term is a predicate with two arguments, a subject and an object. Relations and objects can be specified as either entities or types in the builder API, depending on how the application defines them:
-
-```cpp
-// (Likes, Apples)
-auto qb = world.query_builder<>()
-  .term<Likes, Apples>();
-
-auto qb = world.query_builder<>()
-  .term(Likes, Apples);
-
-auto qb = world.query_builder<>()
-  .term<Likes>(Apples);
-```
-
-In the query descriptor API relations can be specified as pairs:
-
-```c
-// (Likes, Apples)
-ecs_entity_t NPC = ecs_new_id(world);
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_pair(Likes, Apples)}
-  }
-});
-```
-
-Just like in C++, pairs can contain either types or entities:
-
-```c
-// (Likes, Apples)
-ecs_entity_t NPC = ecs_new_id(world);
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_pair(ecs_id(Likes), ecs_id(Apples))}
-  }
-});
-```
-
-### Singleton
-Singletons are a feature that make it easy to work with components for which there is only a single instance in the world. A typical example is a `Game` component, which could contain information that is global to a game, like simulation speed.
-
-In the query language, a singleton can be queried for by providing the `$` symbol as subject:
-
-```
-Game($)
-```
-
-In Flecs singletons are implemented as components that are added to themselves. The above query is short for:
-
-```
-Game(Game)
-```
-
-This example shows how to add a singleton with the query builder:
-
-```cpp
-// $Game
-auto qb = world.query_builder<Position, const Velocity>()
-  .term<Game>().singleton();
-```
-
-This example shows how to add a singleton with the query descriptor. Note that the descriptor does not have a dedicated API for singletons:
-
-```c
-// Game(Game)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    { ecs_id(Game), .src.id = ecs_id(Game) }
-  }
-});
-```
-
-### Assigning Identifiers with the API
-The query builder and descriptor APIs allow for setting the individual predicate, subject and object of a term. These are also referred to as the "term identifiers".
-
-This example shows how to explicitly set identifiers with the builder API:
-
-```cpp
-// Position(This), (Likes, Alice)
-auto qb = world.query_builder<>()
-  .term<Position>().src(flecs::This)
-  .term(Likes).object(Alice);
-```
-
-This example shows how to explicitly set identifiers with the query descriptor:
-
-```c
-// Position(This), (Likes, Alice)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {.first.id = ecs_id(Position), .src.id = EcsThis},
-    {.first.id = Likes, .second.id = Alice}
-  }
-});
-```
-
-Note how in the descriptor API, the subject and object are assigned as elements in an arguments array for the predicate.
-
-In practice it is often enough to just assign the predicate, and an optional object for terms that query for a relation, as by default the subject is set to `EcsThis`. The predicate and object can both be set in a single `id` field. In the descriptor API, the `id` field is the first member of the struct, so it is possible to do this:
-
-```c
-// Position
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position)}
-  }
-});
-```
-
-which is equivalent to
-
-```c
-// Position(This)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {.first.id = ecs_id(Position), .src.id = EcsThis}
-  }
-});
-```
-
-The id can also contain an additional object:
-
-```c
-// (Likes, Alice)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_pair(Likes, Alice)}
-  }
-});
-```
-
-which is equivalent to
-
-```c
-// Likes(This, Alice)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
+struct Region { };
+struct Unit { };
+
+flecs::entity Region_01 = world.entity();
+flecs::entity Region_02 = world.entity();
+
+// Example of entities created in different regions
+flecs::entity unit_01 = world.entity()
+  .add<Unit>()
+  .add<Region>(Region_01);
+
+flecs::entity unit_02 = world.entity()
+  .add<Unit>()
+  .add<Region>(Region_02);
+
+// Create query that groups entities that are in the same region
+flecs::query<> q = world.query_builder()
+  .term<Unit>()
+  .group_by<Region>([](
+      flecs::world_t *world,
+      flecs::table_t *table,
+      flecs::id_t id, 
+      void *ctx) 
     {
-      .first.id = Likes,
-      .src.id = EcsThis,
-      .second.id = Alice
+      flecs::entity_t result = 0;
+      ecs_id_t pair = 0;
+
+      // Use id (Region) to find target for relationship
+      if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &pair) != -1) {
+        result = ecs_pair_second(world, pair); // Return second element (target)
+      }
+
+      return result;
+    })
+  .build();
+```
+
+### Component Inheritance
+> *Supported by: rules*
+
+Component inheritance allows for a query to match entities with a component and all subsets of that component, as defined by the `IsA` relationship. Component inheritance is enabled for all queries by default, for components where it applies.
+
+It is possible to prevent inheriting from a component from by adding the [Final](Relationships.md#final-property) property. Queries for components with the `Final` property will not attempt to resolve component inheritance.
+
+Inheritance relationships can, but are not required to mirror inheritance of the types used as long as it does not impact the layout of the type. Component inheritance is most often used with tags.
+
+The following sections show how to use component inheritance in the different language bindings. The code examples use rules, which is the only kind of query for which component inheritance is currently supported.
+
+#### Query Descriptor (C)
+The following example shows a rule that uses component inheritance to match entities:
+
+```c
+ecs_entity_t Unit = ecs_new_id(world);
+ecs_entity_t MeleeUnit = ecs_new_w_pair(world, EcsIsA, Unit);
+ecs_entity_t RangedUnit = ecs_new_w_pair(world, EcsIsA, Unit);
+
+ecs_entity_t unit_01 = ecs_new_w_id(world, MeleeUnit);
+ecs_entity_t unit_02 = ecs_new_w_id(world, RangedUnit);
+
+// Matches entities with Unit, MeleeUnit and RangedUnit
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {{ Unit }}
+});
+
+// Iterate as usual
+```
+
+#### Query Builder (C++)
+The following example shows a rule that uses component inheritance to match entities:
+
+```cpp
+flecs::entity Unit = ecs_new_id(world);
+flecs::entity MeleeUnit = world.entity().is_a(Unit);
+flecs::entity RangedUnit = world.entity().is_a(Unit);
+
+flecs::entity unit_01 = world.entity().add(MeleeUnit);
+flecs::entity unit_02 = world.entity().add(RangedUnit);
+
+// Matches entities with Unit, MeleeUnit and RangedUnit
+flecs::rule<Unit> r = world.rule<Unit>();
+
+// Iterate as usual
+```
+
+### Transitive Relationships
+> *Supported by: rules*
+
+When a [transitive relationship](Relationships.md#transitive-relationships) is used by a query, a query will automatically look up or test against pairs that satisfy the transitive property. Transitivity is usually defined as:
+
+> If R(X, Y) and R(Y, Z) then R(X, Z)
+
+In this example, `R` is the transitive relationship and `X`, `Y` and `Z` are entities that are used both as source and second element. A typical example of a transitive relationship is `LocatedIn`. If Bob (X) is located in in Manhattan (Y) and Manhattan (Y) is located in New York (Z), then Bob (X) is also located in New York (Z). Therefore "located in" is transitive.
+
+A relationship can be made transitive by adding the [transitive](Relationships.md#transitive-property) property. This would ensure that both `(LocatedIn, ManHattan)` and `(LocatedIn, NewYork)` queries would match `Bob`. When the location is replaced with a variable, the variable will assume all values encountered while traversing the transitive relationship. For example, `(LocatedIn, $Place)` would return results with `Place = [ManHattan, NewYork]` for `Bob`, and a result with `Place = [NewYork]` for `ManHattan`.
+
+An example of a builtin relationship that has the `Transitive` property is the `IsA` relationship.
+
+The following sections show how to use transitive relationships in the different language bindings. The code examples use rules, which is the only kind of query for which transitive relationships are currently supported.
+
+#### Query Descriptor (C)
+The following example shows a rule that uses transitivity to match entities that are located in New York:
+
+```c
+// Create LocatedIn relationship with transitive property
+ecs_entity_t LocatedIn = ecs_new_w_id(world, EcsTransitive);
+
+ecs_entity_t NewYork = ecs_new_id(world);
+ecs_entity_t Manhattan = ecs_new_w_pair(world, LocatedIn, NewYork);
+ecs_entity_t CentralPark = ecs_new_w_pair(world, LocatedIn, Manhattan);
+ecs_entity_t Bob = ecs_new_w_pair(world, LocatedIn, CentralPark);
+
+// Matches ManHattan, CentralPark, Bob
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {{ ecs_pair(LocatedIn, NewYork) }}
+});
+
+// Iterate as usual
+```
+
+Queries for transitive relationships can be compared with variables. This query returns all locations an entity is in:
+
+```c
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = ManHattan, NewYork)
+//  - Bob (Place = CentralPark, ManHattan, NewYork)
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {{ .first.id = LocatedIn, .second.name = "Place", .second.flags = EcsIsVariable }}
+});
+```
+
+Variables can be used to constrain the results of a transitive query. The following query returns locations an entity is in that are a city:
+
+```c
+// Add City property to NewYork
+ecs_entity_t City = ecs_new_id(world);
+ecs_add_id(world, NewYork, City);
+
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = NewYork)
+//  - Bob (Place = NewYork)
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {
+    { .first.id = LocatedIn, .second.name = "Place", .second.flags = EcsIsVariable },
+    { .id = City, .src.name = "Place", .src.flags = EcsIsVariable }
+  }
+});
+```
+
+#### Query Builder (C++)
+The following example shows a rule that uses transitivity to match entities that are located in New York:
+
+```cpp
+// Create LocatedIn relationship with transitive property
+struct LocatedIn { };
+
+world.component<LocatedIn>().add(flecs::Transitive);
+
+flecs::entity NewYork = world.entity();
+flecs::entity Manhattan = world.entity().add<LocatedIn>(NewYork);
+flecs::entity CentralPark = world.entity().add<LocatedIn>(Manhattan);
+flecs::entity Bob = world.entity().add<LocatedIn>(CentralPark);
+
+// Matches ManHattan, CentralPark, Bob
+flecs::rule<> r = world.rule_builder()
+  .term<LocatedIn>(NewYork)
+  .build();
+
+// Iterate as usual
+```
+
+Queries for transitive relationships can be compared with variables. This query returns all locations an entity is in:
+
+```cpp
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = ManHattan, NewYork)
+//  - Bob (Place = CentralPark, ManHattan, NewYork)
+flecs::rule<> r = world.rule_builder()
+  .term<LocatedIn>().second("$Place")
+  .build();
+```
+
+Variables can be used to constrain the results of a transitive query. The following query returns locations an entity is in that are a city:
+
+```cpp
+struct City { };
+
+// Add City property to NewYork
+NewYork.add(City);
+
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = NewYork)
+//  - Bob (Place = NewYork)
+flecs::rule<> r = world.rule_builder()
+  .term<LocatedIn>().second("$Place")
+  .term<City>().src("$Place")
+  .build();
+```
+
+#### Query DSL
+Transitivity in a query is enabled by adding the `Transitive` property to a relationship. As a result, a query for a transitive relationship looks the same as a query for a non-transitive relationship. The following examples show the queries used in the C/C++ examples:
+
+Match all entities located in New York:
+
+```
+(LocatedIn, NewYork)
+```
+
+Return all locations an entity is in:
+
+```
+(LocatedIn, $Place)
+```
+
+Return the city entities are in:
+
+```
+(LocatedIn, $Place), City($Place)
+```
+
+### Reflexive Relationships
+> *Supported by: rules*
+
+When a query matches a [relfexive](Relationships.md#reflexive-property) relationship, a query term will evaluate to true if the source and target are equal. Reflexivity can be defined as:
+
+> R(X, X)
+
+For example, if relationship IsA (R) is reflexive, then a Tree (X) is a Tree (X). An example of a builtin relationship that has the `Reflexive` property is the `IsA` relationship.
+
+The following sections show how to use transitive relationships in the different language bindings. The code examples use rules, which is the only kind of query for which transitive relationships are currently supported.
+
+#### Query Descriptor (C)
+The following example shows a rule that uses the `IsA` reflexive relationship:
+
+```c
+ecs_entity_t Tree = ecs_new_id(world);
+ecs_entity_t Oak = ecs_new_w_pair(world, EcsIsA, Tree);
+
+// Matches Tree, Oak
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {{ ecs_pair(EcsIsA, Tree )}}
+});
+```
+
+#### Query Builder (C++)
+The following example shows a rule that uses the `IsA` reflexive relationship:
+
+```cpp
+flecs::entity Tree = world.entity();
+flecs::entity Oak = world.entity().is_a(Tree);
+
+// Matches Tree, Oak
+flecs::rule<> r = world.rule_builder()
+  .term(flecs::IsA, Tree)
+  .build();
+```
+
+#### Query DSL
+Reflexivity in a query is enabled by adding the `Reflexive` property to a relationship. As a result, a query for a reflexive relationship looks the same as a query for a non-reflexive relationship. The following example shows the query used in the C/C++ examples:
+
+```
+(IsA, Tree)
+```
+
+## Query Performance
+This section describes performance characteristics for each query type.
+
+### Filter
+A filter is a data type that describes the structure of a query in Flecs. Filters are the cheapest to create, as creating one just requires initializing the value of the filter object.
+
+Filters can serve different purposes, like iterating all matching entities, or testing if a specific entity matches with a filter. Filters can also be used to filter the output of other queries, including other filters.
+
+While the exact way a filter is evaluated depends on what kind of filter it is, almost all filter evaluation follows steps similar to the ones in this diagram:
+
+![filter diagram](img/filter_diagram.png)
+
+Each node in the diagram represents a function that can return either true or false. When a node returns true, evaluation moves on to the next node. When it returns false, evaluation goes back one node. These kinds of functions are called [predicates](https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)), and this evaluation process is called [backtracking](https://en.wikipedia.org/wiki/Backtracking).
+
+Whether a node returns true or false depends on what its function does:
+
+- The first node invokes the function `select(Position)`. This function finds all *tables* with `Position`, and will forward these tables to the next node. As long as `select` is able to find more tables with `Position`, the node will keep returning true. When no more tables can be found the node returns false.
+
+- The second node invokes the function `with(Velocity)`. This function takes the table found by the previous node and returns true if the table has `Velocity`, and false if it does not.
+
+Both functions are O(1) operations.
+
+When a table reaches the `yield` node it means that it matched all parts of the filter, and it will be returned by the iterator doing the evaluation.
+
+> A table groups all entities that have _exactly_ the same components. Thus if one entity in a table matches a node, all entities in the table match the node. This is one of the main reasons queries are fast: instead of checking each individual entity for components, we can eliminate a table with thousands of entities in a single operation.
+
+Because filters are fast to create, have low overhead, and are reasonably efficient to iterate, they are the goto solution for when an application cannot know in advance what it needs to query for, like finding all children for a specific entity:
+
+```c
+ecs_filter_f fs = ECS_FILTER_INIT;
+ecs_filter_t *f = ecs_filter(world, {
+    .storage = &fs, // optional, but prevents allocation
+    .terms = {{ ecs_childof(e) }}
+});
+
+ecs_iter_t child_it = ecs_filter_iter(f);
+while (ecs_filter_next(&child_it)) {
+    for (int c = 0; c < child_it.count; c ++) {
+        printf("child %s\n", ecs_get_name(world, 
+            child_it.entities[c]));
     }
-  }
+}
+
+ecs_filter_fini(f);
+```
+```cpp
+auto f = world.filter_builder()
+  .term(flecs::ChildOf, e)
+  .build();
+
+f.each([](flecs::entity child) {
+    std::cout << child.path().str() << "\n";
 });
 ```
 
-### Wildcard
-We can use the wildcard to match with any entity. Wildcards are typically used in combination with relationships. This is a simple example of a term that returns all entities (objects) that `This` likes.
+While filter evaluation for a single component is very fast, each additional component adds some overhead. This is not just because of the time it takes to do an additional check, but because more tables will get discarded during evaluation. The cost of discarded tables adds up as they pass through one or more nodes before getting rejected, consuming resources while not contributing to the query result.
 
-```
-(Likes, *)
-```
+This cost can be particularly significant for filters that match a large (5-10) number of components in applications with many (>1000s) tables. While Flecs implements several strategies to limit this overhead, like storing empty tables separately from non-empty tables, this is something to keep in mind when using filters.
 
-A single entity may have multiple `Likes` relationships. When this is the case, the above term will cause the same entity to be returned multiple times, once for each object of the `Likes` relationship.
+### Cached Queries
+A cached query is an object that caches the output of a filter. Cached queries are significantly faster to iterate than a filter, as an iterator just needs to walk the list of cache entries and return each one to the application.
 
-Wildcards can also be used as predicate. This term returns all entities that have a relationship with Alice:
+This also makes the performance of cached queries more predictable. The overhead per returned table for a filter depends on how many components it matches with, and how many tables it had to discard. For a cached query the cost per table is much lower, and is constant time.
 
-```
-(*, Alice)
-```
+> [A benchmark showing the difference between cached queries and filters](https://twitter.com/ajmmertens/status/1509473999205507080).
 
-It is also possible to query for all relationships for an entity:
+This predictable behavior is why cached queries are the default for Flecs systems. Once tables are created and caches are initialized, the (often time critical) main loop of an application does not have to spend  time matching entities with systems, which frees up resources for application logic.
 
-```
-(*, *)
-```
+Another benefit of cached queries is that they are compatible with good code practices. Cached queries add minimal overhead to systems, which means applications do not have to compromise on design where the cost of evaluating a query has to be weighed against the benefit of having many small decoupled systems.
 
-Wildcards are not limited to relationships. The following query is also valid, and requests all components from the iterated over entity:
-
-```
-*
-```
-
-Note that `(*, *)` only matches relations, and `*` only matches components. To create a query that matches everything from an entity, the two wildcard expressions have to be combined with an `Or` expression:
-
-```
-(*, *) || *
-```
-
-This example shows how to use wildcards in the C++ API:
-
-```cpp
-// (Likes, *)
-auto qb = world.query_builder<>()
-  .term(Likes, flecs::Wildcard);
-```
-
-This example shows how to use wildcards in the query descriptor:
+The following example shows how cached queries are used:
 
 ```c
-// (Likes, *)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_pair(Likes, EcsWildcard)}
-  }
+// Creates query, populates the cache with existing tables
+ecs_query_t *q = ecs_query(world, {
+    .filter.terms = {
+        { ecs_id(Position) }, { ecs_id(Velocity) }
+    }
+});
+
+// When a new table is created that matches the query, it is
+// added to the cache
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, e, Position);
+ecs_add(world, e, Velocity);
+
+// Iterate the tables in the cache
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+```
+```cpp
+// Creates query, populates the cache with existing tables
+auto q = world.query<Position, Velocity>();
+
+// When a new table is created that matches the query, it is
+// added to the cache
+auto e = world.entity()
+    .add<Position>()
+    .add<Velocity>();
+
+// Iterate the tables in the cache
+q.each([](Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
 });
 ```
 
-### Variables
-A variable is a wildcard that must match with the same entity across terms. To illustrate where this is useful, let's first start with a query that finds all the `Likes` relationships for entities that have them:
+The scenarios described so far are in the sweetspot of cached queries, where their performance is amongst the fastest of any ECS implementation. To build games that perform well however, it also helps to know when cached queries perform badly:
 
-```
-(Likes, *)
-```
+- Cached queries do not perform well when they are repeatedly created and destroyed, or when they are only used a handful of times. The overhead of initializing the query cache and the cost of keeping it up to date would be many times higher than using a filter.
 
-Now suppose we want to know whether the object matched by the wildcard (`*`) is also a colleague of the subject. We could do this:
+- Large numbers of cached queries (>1000s) can become a bottleneck. When this happens in combination with large table turnover, matching each new table with all queries can become expensive.
 
-```
-(Likes, *), (Colleague, *)
-```
+- ECS operations can cause matched tables to no longer match. A simple example is that of a query matching `Position` on a parent entity, where the component is removed from the parent. This triggers cache revalidation, where a query reevaluates its filter to correct invalid entries. When this happens for a large number of queries and tables, this can be time consuming.
 
-But that does not work, as this query would return all Likes relationships * all Colleague relationships. To constrain the query to only return `Likes` relationships for objects that are also colleagues, we can use a variable:
+- Performance can degrade when a query needs to traverse a deep (>50 levels) hierarchy in order to determine if a table matches. If a hierarchy has deeply nested children and a parent component can only be found on the root, a query will have to traverse this tree likely for multiple tables, which is expensive.
 
-```
-(Likes, $X), (Colleague, $X)
-```
 
-A variable is an identifier that is local to the query and does not need to be defined in advance. In the query DSL identifiers that start with a `$` are interpreted as a variable.
 
-Variables can occur in multiple places. For example, this query returns all the relationships the `This` entity has with each object it likes as `R`:
-
-```
-(Likes, $X), ($R, $X)
-```
-
-A useful application for variables is ensuring that an entity has a component referenced by a relationship. Consider an application that has an `ExpiryTimer` relationship that removes a component after a certain time has expired. This logic only needs to be executed when the entity actually has the component to remove.
-
-With variables this can be ensured:
-
-```
-(ExpiryTimer, $C), $C
-```
-
-Variables allow queries to arbitrarily traverse the entity relationship graph. For example, the following query tests whether there exist entities that like objects that like their enemies:
-
-```
-(Likes, $Friend), Likes($Friend, $Enemy), (Enemy, $Enemy)
-```
-
-This example shows how to use variables in the C++ API:
-
-```cpp
-// (Likes, X), (Colleague, X)
-auto qb = world.query_builder<>()
-  .term(Likes).second().var("X")
-  .term(Colleague).second().var("X");
-```
-
-This example shows how to use wildcards in the query descriptor:
-
-```c
-// (Likes, X), (Colleague, X)
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {.first.id = Likes, .second.name = "X", .var = EcsVarIsVariable }
-    {.first.id = Colleague, .second.name = "X", .var = EcsVarIsVariable }
-  }
-});
-```
-
-**NOTE**: Variables are not yet universally supported yet in cached queries, as not all expressions yield cacheable archetypes. Near future versions of Flecs will have basic variable support for cached queries where variables cannot be used as subject, but are valid in other places. Full caching support for any expression with variables will likely not arrive before the next major release.
-
-### Set Substitution
-The different parts of a query term (predicates, sources, objects) can be automatically substituted by following one of their relationships. While this may sound complicated, it is actually pretty common, and quite useful.
-
-A typical example of a use case that requires substitution is, "find component `Position` for a parent entity". To achieve this, we need to tell the query term which relationship to follow to reach the parent. In this case that is the builtin `ChildOf` relationship.
-
-We also need to tell the query in which direction to follow the relationship. We can either follow the relationship upwards, which gives us parents, or downwards, which gives us children of the substituted entity.
-
-The following term shows how to write the above example down in the DSL:
-
-```
-Position(up(ChildOf))
-```
-
-Let's unpack what is happening here. First of all the term has a regular `Position` predicate. The subject of this term is `super(ChildOf)`. What this does is, it instructs the term to search upwards (`superset`) for the `ChildOf` relationship.
-
-As a result, this term will follow the `ChildOf` relation of the `This` subject until it has found an object with `Position`. Here is the behavior in pseudo code:
-
-```python
-def find_object_w_component(This, Component):
-  for pair in This.each(ChildOf, *):
-    if pair.object.has(Component):
-      yield pair.object
-    else
-      find_object_w_component(pair.object, Component)
-  return 0 '// No match
-```
-
-### Parent components
-Queries may use the `parent` shortcut to select components from a parent entity which is short for `super(ChildOf)` /`This` query:
-
-```
-Position(parent)
-```
-
-is equivalent to
-
-```
-Position(up(ChildOf))
-```
-
-#### Self Substitution
-Substitution can do more than just searching supersets. It is for example possible to start the search on `This` itself, and when the component is not found on `This`, keep searching by following the `ChildOf` relation:
-
-```c
-Position(self|up(ChildOf))
-```
-
-A substitution that has both `self` and `superset` or `subset` is also referred to as an "inclusive" substitution.
-
-This behavior is equivalent to this almost identical pseudo code:
-
-```python
-def find_object_w_component(This, Component):
-  if This.has(Component):
-    yield This
-
-  for pair in This.each(ChildOf, *):
-    find_object_w_component(pair.object, Component)
-
-  return 0 '// No match
-```
-
-#### Substitution Depth
-Queries can specify how deep the query should search. For example, the following term specifies to search the `ChildOf` relation, but no more than 3 levels deep:
-
-```c
-Position(up(ChildOf, 3))
-```
-
-Additionally, it is also possible to specify a minimum search depth:
-
-```c
-// Start at depth 2, search until at most depth 4
-Position(up(ChildOf, 2, 4))
-```
-
-#### Cascade Ordering
-Substitution expressions may contain the `cascade` modifier, which ensures that results of the query are iterated in breadth-first order, where depth is defined by the relation used int the substitution.
-
-A useful application of `cascade` is transform systems, where parents need to be transformed before their children. The term in the following example finds the `Transform` component from both `This` and its parent, while ordering the results of the query breadth-first:
-
-```
-Transform, Transform(cascade|up(ChildOf))
-```
-
-In an actual transform system we would also want to match the root, which can be achieved by making the second term optional:
-
-```
-Transform, ?Transform(cascade|up(ChildOf))
-```
-
-#### Substitute for All
-The default behavior of a substitution term is to stop looking when an object with the required component has been found. The following example shows a term that specifies that the substitution needs to keep looking, so that the entire tree (upwards or downwards) for a subject is returned:
-
-```
-Transform(all|up(ChildOf))
-```
-
-#### Substitution on Identifiers
-So far all the substitution terms have applied to a default (`This`) subject. Substitution can also be defined on entities other than `This`:
-
-```c
-// Get Position for a parent of Bob
-Position(Bob[super(ChildOf)])
-```
-
-Additionally, substitution is not limited to the subject:
-
-```c
-// Does the entity like any of the parents of Alice?
-(Likes, Alice[super(ChildOf)])
-```
-
-This example shows how to use substitution in the C++ API:
-
-```cpp
-// Position(up(ChildOf))
-auto qb = world.query_builder<>()
-  .term<Position>().super(ChildOf);
-
-// Position(self|up(ChildOf, 3))
-auto qb = world.query_builder<>()
-  .term<Position>()
-    .self().up(flecs::ChildOf)
-      .max_depth(3);
-```
-
-This example shows how to use wildcards in the query descriptor:
-
-```c
-// Position(up(ChildOf))
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position), .src.set = {
-      .mask = EcsUp,
-      .relation = EcsChildOf
-    }}
-  }
-});
-
-// Position(self|up(ChildOf, 3))
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
-  .filter.terms = {
-    {ecs_id(Position), .src.set = {
-      .mask = EcsSelf | EcsUp,
-      .relation = EcsChildOf,
-      .max_depth = 3
-    }}
-  }
-});
-```
-
-**NOTE**: While substitution can require recursive algorithms, cached queries do not perform this logic when iterating results. Matching for cached queries is only performed when queries are created, and afterwards, when new archetypes are created. As a result, cached queries can have complex expressions without visible impact on iteration performance.
-
-**NOTE**: Subset substitution rules are not yet supported for cached queries. Terms with `all` are not supported yet in cached queries.
-
-## Transitivity
-Queries can work with transitive relations. A relation `R` is transitive if the following is true:
-
-```basic
-if R(X, Y) and R(Y, Z) then R(X, Z)
-```
-
-A common example of transitivity is inheritance. Consider, if `GrannySmith` is an `Apple`, and an `Apple` is `Fruit`, then a `GrannySmith` is also `Fruit`.
-
-Suppose an application keeps track of the location of entities. Entities can be located in a neighborhood, which are part of a city, which are part of a country. We could create a `LocatedIn` relation with a few locations like this:
-
-```cpp
-// Create the LocatedIn relation
-auto LocatedIn = world.entity();
-
-// Create locations & their relations to each other
-auto US = world.entity();
-auto SanFrancisco = world.entity().add(LocatedIn, US);
-auto Mission = world.entity().add(LocatedIn, SanFrancisco);
-auto SOMA = world.entity().add(LocatedIn, SanFrancisco);
-
-// An entity located in the Mission
-auto e = world.entity().add(LocatedIn, Mission);
-```
-
-We could now create the following query:
-```c
-(LocatedIn, SanFrancisco)
-```
-
-At the moment this query will not match with the entity, because the entity itself does not have `(LocatedIn, SanFrancisco)`. We can however change this behavior by making the `LocatedIn` relation transitive:
-
-```cpp
-auto LocatedIn = world.entity().add(flecs::Transitive);
-```
-
-This tells the query that it should treat an entity that has `(LocatedIn, Mission)` as an entity that has `(LocatedIn, SanFrancisco)`, because `Mission` has `(LocatedIn, SanFrancisco)`. We can now also run this query:
-
-```
-(LocatedIn, US)
-```
-
-which will also return the entity, as it has `(LocatedIn, Mission)`, `Mission` has `(LocatedIn, SanFrancisco)`, and `SanFrancisco` has `(LocatedIn, US)`.
-
-### Transitivity and Substitution
-To understand how transitivity is implemented, we need to look at how queries interpret a transitive relation. When a query encounters a transitive relation, it inserts a substitution term for that relation. Consider the previous example with a transitive `LocatedIn` relation:
-
-```
-(LocatedIn, SanFrancisco)
-```
-
-To find whether the subject should match this term, it should not just consider `(LocatedIn, SanFrancisco)`, but also `(LocatedIn, Mission)` and `(LocatedIn, SOMA)`. To achieve this, a query will insert an implicit substitution on the object, when the relation is transitive:
-
-```
-(LocatedIn, SanFrancisco[self|down(LocatedIn)])
-```
-
-Note that the substitution includes `self`, as we also should match entities that are in `SanFrancisco` itself.
-
-### Transitivity and Cycles
-Transitive relations are not allows to have cycles. While neither queries nor the storage check for cycles (doing so would be too expensive), adding a cycle with a transitive relation can cause infinite recursion when evaluating the relation with a query.
-
-## The IsA relation
-The `IsA` relation is a builtin flecs relation that allows applications to define that an object is a subset of another object. Consider an application that categorizes artworks. It could create the following `IsA` hierarchy:
-
-```cpp
-auto Artwork = world.entity();
-auto Painting = world.entity().add(flecs::IsA, Artwork);
-auto Portrait = world.entity().add(flecs::IsA, Painting);
-auto SelfPortrait = world.entity().add(flecs::IsA, Portrait);
-```
-
-Alternatively, it could use the shorthand `is_a`: function
-
-```cpp
-auto Artwork = world.entity();
-auto Painting = world.entity().is_a(Artwork);
-auto Portrait = world.entity().is_a(Painting);
-auto SelfPortrait = world.entity().is_a(Portrait);
-```
-
-We could now instantiate artworks with these "classes":
-
-```cpp
-auto MonaLisa = world.entity().add(Portrait);
-```
-
-The `IsA` relation is transitive. This means that adding `Portrait` to `MonaLisa`, also means that the entity should be treated _as if_ it also had `Artwork` and `Painting`.
-
-### The IsA relation and Queries
-Queries do automatic `IsA` substitution on the predicate, subject and object. To see how this works exactly, let's use the previous example. A query term could ask for all entities that are an artwork:
-
-```
-Artwork
-```
-
-Ordinarily this would only match entities that have `Artwork`, but because there are entities with an `IsA` relation to `Artwork`, this query should expand to:
-
-```
-Artwork
-Painting
-Portrait
-SelfPortrait
-```
-
-To achieve this, a query implicitly substitutes terms with their `IsA` subsets. When written out in full, this looks like:
-
-```
-Artwork[self|all|down(IsA)]
-```
-
-The default relation for set substitution is `IsA`, so we can rewrite this as a slightly shorter term:
-
-```
-Artwork[self|all|subset]
-```
-
-Note the `all` modifier. We need to consider all subsets, not just the subsets until a result has been found, to find all entities that are artworks.
-
-The predicate is not the only part of a query for which implicit `IsA` substitution happens. Imagine we use this query to find all things that are an artwork:
-
-```
-(IsA, Artwork)
-```
-
-Instead of storing the actual artworks (the `MonaLisa`) this query returns all the things that _are_ an artwork: `Painting`, `Portrait` and `SelfPortrait`. To achieve this, the query needs to substitute the object. When written out in full, this looks like:
-
-```
-(IsA, Artwork[self|all|subset])
-```
-
-This effectively expands the query to:
-
-```
-(IsA, Artwork)
-(IsA, Painting)
-(IsA, Portrait)
-(IsA, SelfPortrait)
-```
-
-Finally, the subject itself can also be automatically substituted. This is quite common for applications that use the `IsA` relation to construct prefabs. Consider the following code that creates a spaceship prefab:
-
-```cpp
-auto SpaceShip = world.prefab()
-  .set<Attack>({100})
-  .set<Defense>({50})
-  .set<MaxSpeed>({75});
-```
-
-We can now use this prefab to create an entity that shares its components with the `IsA` relation:
-
-```cpp
-auto my_spaceship = world.entity()
-  .is_a(SpaceShip)
-  .set<Position>({10, 20});
-  .set<Velocity>({5, 5});
-```
-
-Suppose we now want to find all entities that exceed their maximum speed. We could use the following query:
-
-```
-MaxSpeed, Velocity
-```
-
-However, `my_spaceship` only has `MaxSpeed` through `SpaceShip`, which this query will not find unless it substitutes the subject. When written out, this substitution looks like this:
-
-```
-MaxSpeed(self|superset), Velocity(self|superset)
-```
-
-When all implicit substitution is written out in full, a single component query looks like this:
-
-```
-Component[self|all|subset] (self|superset)
-```
-
-**NOTE**: cached queries currently do not support implicit substitution on predicates and objects. Implicit `IsA` substitution on sources needs to be enabled explicitly, by specifying `subset` or `self|subset` as the subject.
-
-This behavior may change in future versions, as more efficient methods become available to find the set of `IsA` subsets or supersets for an entity.
-
-### Final Entities
-An application can mark an entity as `Final`, which means that it cannot have  `IsA` subsets. This is similar to the meaning of `Final` in class-based inheritance, where a final class cannot be derived from.
-
-A query will not do implicit `IsA` substitution for predicates if they are final. When a component is registered, it is made `Final` by default, which means that for regular component queries a query will never attempt to substitute the predicate. Additionally, the algorithm that searches for `IsA` subsets may run more efficient when a `Final` subset is found.
-
-To mark an entity as final, an application can add the `Final` tag:
-
-```cpp
-// Don't try to substitute "Likes" in queries
-auto Likes = world.entity().add(flecs::Final);
-```

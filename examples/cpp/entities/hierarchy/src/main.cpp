@@ -30,7 +30,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create a simple hierarchy.
-    // Hierarchies use ECS relations and the builtin flecs::ChildOf relation to
+    // Hierarchies use ECS relationships and the builtin flecs::ChildOf relationship to
     // create entities as children of other entities.
 
     auto sun = ecs.entity("Sun")

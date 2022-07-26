@@ -62,7 +62,7 @@ struct is_pair {
 };
 
 
-// Get actual type, relation or object from pair while preserving cv qualifiers.
+// Get actual type, relationship or object from pair while preserving cv qualifiers.
 template <typename P>
 using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::first>;
 

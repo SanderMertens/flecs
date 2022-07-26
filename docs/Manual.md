@@ -1067,7 +1067,7 @@ ECS_SYSTEM(world, MoveNotInScope, EcsOnUpdate, transform.Position);
 ```
 
 ## Inheritance
-Inheritance is the ability to share components between entities by _inheriting_ from them, by using the `IsA` relation. This is a simple example in the C API:
+Inheritance is the ability to share components between entities by _inheriting_ from them, by using the `IsA` relationship. This is a simple example in the C API:
 
 ```c
 // Create a base entity
@@ -1259,7 +1259,7 @@ Prefabs can also be created with the `ECS_PREFAB` macro:
 ECS_PREFAB(world, prefab, Position, Velocity);
 ```
 
-To instantiate a prefab, an application can use the `IsA` relation:
+To instantiate a prefab, an application can use the `IsA` relationship:
 
 ```c
 ecs_entity_t e = ecs_new_w_pair(world, (IsA, prefab));

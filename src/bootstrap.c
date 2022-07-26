@@ -158,7 +158,7 @@ void assert_relation_unused(
         char *p_str = ecs_get_fullpath(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
-            "cannot change property '%s' for relation '%s': already in use",
+            "cannot change property '%s' for relationship '%s': already in use",
             p_str, r_str);
         
         ecs_os_free(r_str);
@@ -755,7 +755,7 @@ void flecs_bootstrap(
 
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 
-    /* Builtin relations */
+    /* Builtin relationships */
     flecs_bootstrap_tag(world, EcsIsA);
     flecs_bootstrap_tag(world, EcsChildOf);
     flecs_bootstrap_tag(world, EcsDependsOn);
@@ -768,7 +768,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
     bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
 
-    /* Tag relations (relations that should never have data) */
+    /* Tag relationships (relationships that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsDependsOn, EcsTag);
@@ -879,10 +879,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDisabled, EcsDontInherit);
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
-    /* Transitive relations are always Acyclic */
+    /* Transitive relationships are always Acyclic */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
 
-    /* Transitive relations */
+    /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsReflexive);
 

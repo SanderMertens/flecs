@@ -957,7 +957,7 @@ struct ecs_id_record_t {
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
     ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t acyclic; /* (*, O) with only acyclic relations */
+    ecs_id_record_elem_t acyclic; /* (*, O) with only acyclic relationships */
 };
 
 /* Get id record for id */
@@ -2739,14 +2739,14 @@ void flecs_table_init(
     int32_t tgt_wc_count = 0;
     bool has_childof = table->flags & EcsTableHasChildOf;
     if (first_pair != -1) {
-        /* Add a (Relation, *) record for each relationship. */
+        /* Add a (Relationship, *) record for each relationship. */
         ecs_entity_t r = 0;
         for (dst_i = first_pair; dst_i < dst_count; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
             if (!ECS_HAS_ROLE(dst_id, PAIR)) {
                 break; /* no more pairs */
             }
-            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relation, new record */
+            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vector_get(records, ecs_table_record_t, dst_i);
                 idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2765,7 +2765,7 @@ void flecs_table_init(
         last_pair = dst_i;
 
         /* Add a (*, Target) record for each relationship target. Type
-         * ids are sorted relation-first, so we can't simply do a single linear 
+         * ids are sorted relationship-first, so we can't simply do a single linear 
          * scan to find all occurrences for a target. */
 
         /* We're going to insert records from the vector into the index that
@@ -5274,7 +5274,7 @@ void* get_base_component(
     ecs_id_record_t *table_index,
     int32_t recur_depth)
 {
-    /* Cycle detected in IsA relation */
+    /* Cycle detected in IsA relationship */
     ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
 
     /* Table (and thus entity) does not have component, look for base */
@@ -5465,7 +5465,7 @@ void flecs_notify(
     int32_t count,
     ecs_entity_t event,
     ecs_type_t *ids,
-    ecs_entity_t relation)
+    ecs_entity_t relationship)
 {
     flecs_emit(world, world, &(ecs_event_desc_t){
         .event = event,
@@ -5475,7 +5475,7 @@ void flecs_notify(
         .offset = row,
         .count = count,
         .observable = world,
-        .relation = relation
+        .relationship = relationship
     });
 }
 
@@ -5702,7 +5702,7 @@ bool override_from_base(
              * a new component value, and the application should not be 
              * notified. 
              * 
-             * If the override is the result if adding a IsA relation
+             * If the override is the result if adding a IsA relationship
              * with an entity that has components with the OVERRIDE flag, an
              * event should be generated, since this represents a new component
              * (and component value) for the entity.
@@ -6363,7 +6363,7 @@ void flecs_notify_on_add(
         }
     }
 
-    /* When a IsA relation is added to an entity, that entity inherits the
+    /* When a IsA relationship is added to an entity, that entity inherits the
      * components from the base. Send OnSet notifications so that an application
      * can respond to these new components. */
     if (run_on_set && diff->on_set.count) {
@@ -7397,7 +7397,7 @@ ecs_entity_t flecs_get_delete_action(
 {
     ecs_entity_t result = action;
     if (!result && delete_target) {
-        /* If action is not specified and we're deleting a relation target,
+        /* If action is not specified and we're deleting a relationship target,
          * derive the action from the current record */
         ecs_table_record_t *trr = &table->records[tr->column];
         ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
@@ -8547,10 +8547,10 @@ void ecs_set_alias(
 }
 
 ecs_id_t ecs_make_pair(
-    ecs_entity_t relation,
+    ecs_entity_t relationship,
     ecs_entity_t target)
 {
-    return ecs_pair(relation, target);
+    return ecs_pair(relationship, target);
 }
 
 bool ecs_is_valid(
@@ -8816,7 +8816,7 @@ ecs_entity_t ecs_id_is_tag(
 {
     if (ecs_id_is_wildcard(id)) {
         /* If id is a wildcard, we can't tell if it's a tag or not, except
-         * when the relation part of a pair has the Tag property */
+         * when the relationship part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
             if (ECS_PAIR_FIRST(id) != EcsWildcard) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
@@ -8835,7 +8835,7 @@ ecs_entity_t ecs_id_is_tag(
                     }
                 }
             } else {
-                /* If relation is * id is not guaranteed to be a tag */
+                /* If relationship is * id is not guaranteed to be a tag */
             }
         }
     } else {
@@ -9131,14 +9131,14 @@ bool flecs_remove_invalid(
     if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
         if (!rel || !flecs_is_entity_valid(world, rel)) {
-            /* After relation is deleted we can no longer see what its
+            /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
             ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !flecs_is_entity_valid(world, obj)) {
-                /* Check the relation's policy for deleted objects */
+                /* Check the relationship's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
                 if (idr) {
@@ -9164,7 +9164,7 @@ bool flecs_remove_invalid(
     } else {
         id &= ECS_COMPONENT_MASK;
         if (!flecs_is_entity_valid(world, id)) {
-            /* After relation is deleted we can no longer see what its
+            /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
@@ -17492,7 +17492,7 @@ ecs_entity_t plecs_ensure_entity(
              * with creating an entity as this can cause asserts later on */
             char *relstr = ecs_get_fullpath(world, rel);
             ecs_parser_error(state->name, 0, 0, 
-                "invalid identifier '%s' for relation '%s'", path, relstr);
+                "invalid identifier '%s' for relationship '%s'", path, relstr);
             ecs_os_free(relstr);
             return 0;
         }
@@ -18445,172 +18445,6 @@ error:
 #ifdef FLECS_RULES
 
 #include <stdio.h>
-
-/** Implementation of the rule query engine.
- * 
- * A rule (terminology borrowed from prolog) is a list of constraints that 
- * specify which conditions must be met for an entity to match the rule. While
- * this description matches any kind of ECS query, the rule engine has features
- * that go beyond regular (flecs) ECS queries:
- * 
- * - query for all components of an entity (vs. all entities for a component)
- * - query for all relationship pairs of an entity
- * - support for query variables that are resolved at evaluation time
- * - automatic traversal of transitive relationships
- * 
- * Query terms can have the following forms:
- * 
- * - Component(Subject)
- * - Relation(Subject, Object)
- * 
- * Additionally the query parser supports the following shorthand notations:
- * 
- * - Component             // short for Component(This)
- * - (Relation, Object)    // short for Relation(This, Object)
- * 
- * The subject, or first arugment of a term represents the entity on which the
- * component or relation is matched. By default the subject is set to a builtin
- * This variable, which causes the behavior to match a regular ECS query:
- * 
- * - Position, Velocity
- * 
- * Is equivalent to
- *
- * - Position(This), Velocity(This)
- * 
- * The function of the variable is to ensure that all components are matched on
- * the same entity. Conceptually the query first populates the This variable
- * with all entities that have Position. When the query evaluates the Velocity
- * term, the variable is populated and the entity it contains will be checked
- * for whether it has Velocity.
- * 
- * The actual implementation is more efficient and does not check per-entity.
- * 
- * Custom variables can be used to join parts of different terms. For example, 
- * the following query can be used to find entities with a parent that has a
- * Position component (note that variable names start with a _):
- * 
- * - ChildOf(This, _Parent), Component(_Parent)
- * 
- * The rule engine uses a backtracking algorithm to find the set of entities
- * and variables that match all terms. As soon as the engine finds a term that
- * does not match with the currently evaluated entity, the entity is discarded.
- * When an entity is found for which all terms match, the entity is yielded to
- * the iterator.
- * 
- * While a rule is being evaluated, a variable can either contain a single 
- * entity or a table. The engine will attempt to work with tables as much as
- * possible so entities can be eliminated/yielded in bulk. A rule may store
- * both the table and entity version of a variable and only switch from table to
- * entity when necessary.
- * 
- * The rule engine has an algorithm for computing which variables should be 
- * resolved first. This algorithm works by finding a "root" variable, which is
- * the subject variable that occurs in the term with the least dependencies. The
- * remaining variables are then resolved based on their "distance" from the root
- * with the closest variables being resolved first.
- * 
- * This generally results in an ordering that resolves the variables with the 
- * least dependencies first and the most dependencies last, which is beneficial
- * for two reasons:
- * 
- * - it improves the average performance of all queries
- * - it makes performance less dependent on how an application orders the terms
- * 
- * A possible improvement would be for the query engine to also consider
- * the number of tables that need to be evaluated for each term, as starting
- * with the smallest term reduces the amount of work. Other than static variable
- * analysis however, this can only be determined when the query is executed.
- * 
- * Rules are "compiled" into a set of instructions that encode the operations
- * the query needs to perform in order to find the right set of entities.
- * Operations can either yield data, which progresses the program, or signal
- * that there is no (more) matching data, which discards the current variables.
- * 
- * An operation can yield multiple times, if there are multiple matches for its
- * inputs. Operations are called with a redo flag, which can be either true or
- * false. When redo is true the operation will yield the next result. When redo
- * is false, the operation will reset its state and start from the first result.
- * 
- * Operations can have an input, output and a filter. Most commonly an operation
- * either matches the filter against an input and yields if it matches, or uses
- * the filter to find all matching results and store the result in the output.
- *
- * Variables are resolved by matching a filter against the output of an 
- * operation. When a term contains variables, they are encoded as register ids
- * in the filter. When the filter is evaluated, the most recent values of the
- * register are used to match/lookup the output.
- * 
- * For example, a filter could be (ChildOf, _Parent). When the program starts,
- * the _Parent register is initialized with *, so that when this filter is first
- * evaluated, the operation will find all tables with (ChildOf, *). The _Parent
- * register is then populated by taking the actual value of the table. If the
- * table has type [(ChildOf, Sun)], _Parent will be initialized with Sun.
- * 
- * It is possible that a filter matches multiple times. Consider the filter
- * (Likes, _Food), and a table [(Likes, Apples), (Likes, Pears)]. In this case
- * an operation will yield the table twice, once with _Food=Apples, and once
- * with _Food=Pears.
- * 
- * If a rule contains a term with a transitive relation, it will automatically
- * substitute the parts of the term to find a fact that matches. The following
- * examples illustrate how transitivity is resolved:
- * 
- * Query:
- *   LocatedIn(Bob, SanFrancisco)
- *   
- * Expands to:
- *   LocatedIn(Bob, SanFrancisco:self|subset)
- * 
- * Explanation:
- *   "Is Bob located in San Francisco" - This term is true if Bob is either 
- *   located in San Francisco, or is located in anything that is itself located 
- *   in (a subset of) San Francisco.
- * 
- * 
- * Query:
- *   LocatedIn(Bob, X)
- * 
- * Expands to:
- *   LocatedIn(Bob, X:self|superset)
- * 
- * Explanation:
- *   "Where is Bob located?" - This term recursively returns all places that
- *   Bob is located in, which includes his location and the supersets of his
- *   location. When Bob is located in San Francisco, he is also located in
- *   the United States, North America etc.
- * 
- * 
- * Query:
- *   LocatedIn(X, NorthAmerica)
- * 
- * Expands to:
- *   LocatedIn(X, NorthAmerica:self|subset)
- * 
- * Explanation:
- *   "What is located in North America?" - This term returns everything located
- *   in North America and its subsets, as something located in San Francisco is
- *   located in UnitedStates, which is located in NorthAmerica. 
- * 
- * 
- * Query:
- *   LocatedIn(X, Y)
- * 
- * Expands to:
- *   LocatedIn(X, Y)
- * 
- * Explanation:
- *   "Where is everything located" - This term returns everything that is
- *   located somewhere. No substitution is performed as this would explode the
- *   results while not yielding new information.
- * 
- * 
- * In the above terms, the variable indicates the part of the term that is
- * unknown at evaluation time. In an actual rule the picked strategy depends on
- * whether the variable is known when the term is evaluated. For example, if
- * variable X has been resolved by the time Located(X, Y) is evaluated, the
- * strategy from the LocatedIn(Bob, X) example will be used.
- */
 
 #define ECS_RULE_MAX_VAR_COUNT (32)
 
@@ -20748,7 +20582,7 @@ void insert_term_2(
                     set_pair.second.reg = av->id;
                     set_pair.reg_mask |= RULE_PAIR_OBJECT;
 
-                    /* Insert with to find initial object for relation */
+                    /* Insert with to find initial object for relationship */
                     insert_select_or_with(
                         rule, c, term, src, &set_pair, written);
 
@@ -20846,12 +20680,12 @@ void insert_term_2(
     }
 
     if (same_obj_subj) {
-        /* Can't have relation with same variables that is acyclic and not
+        /* Can't have relationship with same variables that is acyclic and not
          * reflexive, this should've been caught earlier. */
         ecs_assert(!filter->acyclic || filter->reflexive, 
             ECS_INTERNAL_ERROR, NULL);
 
-        /* If relation is reflexive and entity has an instance of R, no checks
+        /* If relationship is reflexive and entity has an instance of R, no checks
          * are needed because R(X, X) is always true. */
         if (!filter->reflexive) {
             push_frame(rule);
@@ -21055,7 +20889,7 @@ void compile_program(
         insert_term(rule, term, c, written);
     }
 
-    /* Verify all subject variables have been written. Subject variables are of
+    /* Verify all subject variables have been written. Source variables are of
      * the table type, and a select/subset should have been inserted for each */
     for (v = 0; v < rule->subj_var_count; v ++) {
         if (!written[v]) {
@@ -30703,7 +30537,7 @@ void serialize_iter_result_ids(
 }
 
 static
-void serialize_iter_result_subjects(
+void serialize_iter_result_sources(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -31021,7 +30855,7 @@ void serialize_iter_result(
 
     /* Include information on which entity the term is matched with */
     if (!desc || desc->serialize_ids) {
-        serialize_iter_result_subjects(world, it, buf);
+        serialize_iter_result_sources(world, it, buf);
     }
 
     /* Write variable values for current result */
@@ -31750,7 +31584,7 @@ void flecs_rest_parse_json_ser_iter_params(
 {
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
-    flecs_rest_bool_param(req, "sources", &desc->serialize_subjects);
+    flecs_rest_bool_param(req, "sources", &desc->serialize_sources);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
     flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
@@ -32328,7 +32162,7 @@ void FlecsRestImport(
 
 #ifdef FLECS_COREDOC
 
-#define URL_ROOT "https://flecs.docsforge.com/master/relations-manual/"
+#define URL_ROOT "https://flecs.docsforge.com/master/relationships-manual/"
 
 void FlecsCoreDocImport(
     ecs_world_t *world)
@@ -32374,24 +32208,24 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
-    ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
-    ecs_doc_set_brief(world, EcsFinal, "Final relation property");
-    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relation property");
-    ecs_doc_set_brief(world, EcsTag, "Tag relation property");
-    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
-    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relation property");
-    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relation property");
-    ecs_doc_set_brief(world, EcsWith, "With relation property");
-    ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
-    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relation cleanup property");
+    ecs_doc_set_brief(world, EcsTransitive, "Transitive relationship property");
+    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relationship property");
+    ecs_doc_set_brief(world, EcsFinal, "Final relationship property");
+    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relationship property");
+    ecs_doc_set_brief(world, EcsTag, "Tag relationship property");
+    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relationship property");
+    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relationship property");
+    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relationship property");
+    ecs_doc_set_brief(world, EcsWith, "With relationship property");
+    ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relationship cleanup property");
+    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relationship cleanup property");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
-    ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
-    ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
-    ecs_doc_set_brief(world, EcsPanic, "Panic relation cleanup property");
-    ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relation");
-    ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relation");
-    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relation");
+    ecs_doc_set_brief(world, EcsRemove, "Remove relationship cleanup property");
+    ecs_doc_set_brief(world, EcsDelete, "Delete relationship cleanup property");
+    ecs_doc_set_brief(world, EcsPanic, "Panic relationship cleanup property");
+    ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relationship");
+    ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relationship");
+    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relationship");
     ecs_doc_set_brief(world, EcsOnAdd, "Builtin OnAdd event");
     ecs_doc_set_brief(world, EcsOnRemove, "Builtin OnRemove event");
     ecs_doc_set_brief(world, EcsOnSet, "Builtin OnSet event");
@@ -32411,8 +32245,8 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relation");
-    ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relation"); 
+    ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relationship");
+    ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relationship"); 
     
     /* Initialize documentation for meta components */
     ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");
@@ -35682,7 +35516,7 @@ const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
-/* Relation properties */
+/* Relationship properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
@@ -35700,7 +35534,7 @@ const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 23;
 const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 24;
 
-/* Builtin relations */
+/* Builtin relationships */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
 const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
 const ecs_entity_t EcsDependsOn =             ECS_HI_COMPONENT_ID + 27;
@@ -37003,7 +36837,7 @@ bool flecs_type_info_init_id(
     changed |= flecs_id_record_set_type_info(world, idr, ti);
     bool is_tag = idr->flags & EcsIdTag;
 
-    /* All id records with component as relation inherit type info */
+    /* All id records with component as relationship inherit type info */
     idr = flecs_id_record_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
@@ -37018,7 +36852,7 @@ bool flecs_type_info_init_id(
     } while ((idr = idr->first.next));
 
     /* All non-tag id records with component as object inherit type info,
-     * if relation doesn't have type info */
+     * if relationship doesn't have type info */
     idr = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, component));
     do {
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {
@@ -37536,7 +37370,7 @@ void notify_subset(
         return;
     }
 
-    /* Iterate acyclic relations */
+    /* Iterate acyclic relationships */
     ecs_id_record_t *cur = idr;
     while ((cur = cur->acyclic.next)) {
         flecs_process_pending_tables(world);
@@ -37571,7 +37405,7 @@ void notify_subset(
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
                 if (flags & EcsEntityObservedAcyclic) {
                     /* Only notify for entities that are used in pairs with
-                    * acyclic relations */
+                    * acyclic relationships */
                     notify_subset(world, it, observable, entities[e], event, ids);
                 }
             }
@@ -37598,7 +37432,7 @@ void flecs_emit(
     ecs_table_t *table = desc->table;
     int32_t row = desc->offset;
     int32_t i, count = desc->count;
-    ecs_entity_t relation = desc->relation;
+    ecs_entity_t relationship = desc->relationship;
 
     if (!count) {
         count = ecs_table_count(table) - row;
@@ -37621,11 +37455,11 @@ void flecs_emit(
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (!desc->relation) {
+    if (!desc->relationship) {
         flecs_observers_notify(&it, observable, ids, event);
     } else {
         flecs_set_observers_notify(&it, observable, ids, event, 
-            ecs_pair(relation, EcsWildcard));
+            ecs_pair(relationship, EcsWildcard));
     }
 
     if (count && !desc->table_event) {
@@ -38160,7 +37994,7 @@ int flecs_term_verify(
                     && !ecs_has_id(world, first_id, EcsReflexive)) 
                 {
                     char *pred_str = ecs_get_fullpath(world, term->first.id);
-                    flecs_filter_error(ctx, "term with acyclic relation"
+                    flecs_filter_error(ctx, "term with acyclic relationship"
                         " '%s' cannot have same subject and object",
                             pred_str);
                     ecs_os_free(pred_str);
@@ -39544,7 +39378,7 @@ bool flecs_term_iter_find_superset(
 {
     ecs_term_id_t *src = &term->src;
 
-    /* Test if following the relation finds the id */
+    /* Test if following the relationship finds the id */
     int32_t index = ecs_search_relation(world, table, 0, 
         term->id, src->trav, src->flags, source, id, 0);
 
@@ -39644,7 +39478,7 @@ bool flecs_term_iter_next(
                 continue;
             }
 
-            /* The tr->count field refers to the number of relation instances,
+            /* The tr->count field refers to the number of relationship instances,
              * not to the number of matches. Superset terms can only yield a
              * single match. */
             iter->match_count = 1;
@@ -45755,7 +45589,7 @@ void diff_insert_isa(
         ecs_id_t id = ids[i];
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            /* The base has an IsA relation. Find table without the base, which
+            /* The base has an IsA relationship. Find table without the base, which
              * gives us the list of ids the current base inherits and doesn't
              * override. This saves us from having to recursively check for each
              * base in the hierarchy whether the component is overridden. */
@@ -45838,7 +45672,7 @@ void diff_insert_removed(
     diff->removed.array[diff->removed.count ++] = id;
 
     if (ECS_HAS_RELATION(id, EcsIsA)) {
-        /* Removing an IsA relation also "removes" all components from the
+        /* Removing an IsA relationship also "removes" all components from the
          * instance. Any id from base that's not overridden should be UnSet. */
         diff_insert_removed_isa(world, table, diff, id);
         return;
@@ -46016,7 +45850,7 @@ void flecs_add_with_property(
 {
     r = ecs_get_alive(world, r);
 
-    /* Check if component/relation has With pairs, which contain ids
+    /* Check if component/relationship has With pairs, which contain ids
      * that need to be added to the table. */
     ecs_table_t *table = ecs_get_table(world, r);
     if (!table) {
@@ -47974,7 +47808,7 @@ void assert_relation_unused(
         char *p_str = ecs_get_fullpath(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
-            "cannot change property '%s' for relation '%s': already in use",
+            "cannot change property '%s' for relationship '%s': already in use",
             p_str, r_str);
         
         ecs_os_free(r_str);
@@ -48571,7 +48405,7 @@ void flecs_bootstrap(
 
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 
-    /* Builtin relations */
+    /* Builtin relationships */
     flecs_bootstrap_tag(world, EcsIsA);
     flecs_bootstrap_tag(world, EcsChildOf);
     flecs_bootstrap_tag(world, EcsDependsOn);
@@ -48584,7 +48418,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
     bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
 
-    /* Tag relations (relations that should never have data) */
+    /* Tag relationships (relationships that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsDependsOn, EcsTag);
@@ -48695,10 +48529,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDisabled, EcsDontInherit);
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
-    /* Transitive relations are always Acyclic */
+    /* Transitive relationships are always Acyclic */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
 
-    /* Transitive relations */
+    /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsReflexive);
 
@@ -49460,7 +49294,7 @@ ecs_id_record_t* flecs_id_record_new(
         rel = ecs_pair_first(world, id);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
-        /* Relation object can be 0, as tables without a ChildOf relation are
+        /* Relationship object can be 0, as tables without a ChildOf relationship are
          * added to the (ChildOf, 0) id record */
         obj = ECS_PAIR_SECOND(id);
         if (obj) {
@@ -49477,15 +49311,15 @@ ecs_id_record_t* flecs_id_record_new(
         }
 
         if (!is_wildcard) {
-            /* Inherit flags from (relation, *) record */
+            /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
             idr->parent = idr_r;
             idr->flags = idr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relations for an object, or all 
-             * objecs for a relation. */
+             * allow for quickly enumerating all relationships for an object, or all 
+             * objecs for a relationship. */
             insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
             insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
 
@@ -49613,7 +49447,7 @@ void flecs_id_record_free(
                     flecs_id_record_release(world, cur);
                 }
             } else {
-                /* Iterate (Relation, *) list */
+                /* Iterate (Relationship, *) list */
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_id_record_t *cur, *next = idr->first.next;

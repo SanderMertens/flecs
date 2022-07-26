@@ -476,7 +476,7 @@ Example result for query `Position, (Likes, *)`
 }
 ```
 
-#### **serialize_subjects**
+#### **serialize_sources**
 Serialize the ["sources"](#sources) member.
 
 **Default**: `true`

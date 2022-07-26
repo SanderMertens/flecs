@@ -147,7 +147,7 @@ const EcsComponent *c = pos_e.get<flecs::Component>();
 std::cout << "Component size: " << c->size << std::endl;
 ```
 
-Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relation cleanup properties](Relations.md#relation_cleanup_properties).
+Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relationship cleanup properties](Relationships.md#relation_cleanup_properties).
 
 ## Tag
 A tag is a component that does not have any data. In Flecs tags can be either empty types (in C++) or regular entities (C & C++) that do not have the `EcsComponent` component (or have an `EcsComponent` component with size 0). Tags can be added & removed using the same APIs as adding & removing components, but because tags have no data, they cannot be assigned a value. Because tags (like components) are regular entities, they can be created & deleted at runtime.
@@ -190,13 +190,13 @@ e.has(Enemy); // false!
 
 Note that both options in the C++ example achieve the same effect. The only difference is that in option 1 the tag is fixed at compile time, whereas in option 2 the tag can be created dynamically at runtime.
 
-When a tag is deleted, the same rules apply as for components (see [relation cleanup properties](Relations.md#relation_cleanup_properties)).
+When a tag is deleted, the same rules apply as for components (see [relationship cleanup properties](Relationships.md#relation_cleanup_properties)).
 
 ## Pair
-A pair is a combination of two entity ids. Pairs can be used to store entity relations, where the first id represents the relation kind and the second id represents the relation target (called "object"). This is best explained by an example:
+A pair is a combination of two entity ids. Pairs can be used to store entity relationships, where the first id represents the relationship kind and the second id represents the relationship target (called "object"). This is best explained by an example:
 
 ```c
-// Create Likes relation
+// Create Likes relationship
 ecs_entity_t Likes = ecs_new_id(world);
 
 // Create a small graph with two entities that like each other
@@ -211,7 +211,7 @@ ecs_remove_pair(world, Bob, Likes, Alice);
 ecs_has_pair(world, Bob, Likes, Alice); // false!
 ```
 ```cpp
-// Create Likes relation as empty type (tag)
+// Create Likes relationship as empty type (tag)
 struct Likes { };
 
 // Create a small graph with two entities that like each other
@@ -239,13 +239,13 @@ The following examples show how to get back the elements from a pair:
 
 ```c
 if (ecs_id_is_pair(id)) {
-    ecs_entity_t relation = ecs_pair_first(world, id);
+    ecs_entity_t relationship = ecs_pair_first(world, id);
     ecs_entity_t target = ecs_pair_second(world, id);
 }
 ```
 ```cpp
 if (id.is_pair()) {
-    auto relation = id.first();
+    auto relationship = id.first();
     auto target = id.second();
 }
 ```
@@ -271,7 +271,7 @@ Bob.has(Eats, Pears);  // true!
 Bob.has(Grows, Pears); // true!
 ```
 
-The `target` function can be used in C and C++ to get the object for a relation:
+The `target` function can be used in C and C++ to get the object for a relationship:
 
 ```c
 ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
@@ -280,7 +280,7 @@ ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 auto o = Alice.target<Likes>(); // Returns Bob
 ```
 
-Entity relations enable lots of interesting patterns and possibilities. Make sure to check out the [relations manual](Relations.md).
+Entity relationships enable lots of interesting patterns and possibilities. Make sure to check out the [relationships manual](Relationships.md).
 
 ## Hierarchies
 Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `flecs::ChildOf`, in C++) relationship. A hierarchy can be created with the regular relationship API, or with the `child_of` shortcut in C++:
@@ -339,7 +339,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         { ecs_id(Position) },
         { ecs_id(Position), .src.set = {
             .mask = EcsCascade,    // Force breadth-first order
-            .relation = EcsChildOf // Use ChildOf relation for ordering
+            .relationship = EcsChildOf // Use ChildOf relationship for ordering
         }}
     }
 });
@@ -364,7 +364,7 @@ q.each([](Position& p, Position& p_parent) {
 ```
 
 ## Instancing
-Flecs has builtin support for instancing (sharing a single component with multiple entities) through the builtin `EcsIsA` relation (`flecs::IsA` in C++). An entity with an `IsA` relation to a base entity "inherits" all entities from that base:
+Flecs has builtin support for instancing (sharing a single component with multiple entities) through the builtin `EcsIsA` relationship (`flecs::IsA` in C++). An entity with an `IsA` relationship to a base entity "inherits" all entities from that base:
 
 ```c
 // Shortcut to create entity & set a component
@@ -600,7 +600,7 @@ auto q = world.query_builder<Position>()
 // Iteration is the same as filters
 ```
 
-Queries support additional features, such as breadth-first sorting based on relation (the `cascade` modifier) and sorting by component values. See the [query manual](Queries.md) for more details.
+Queries support additional features, such as breadth-first sorting based on relationship (the `cascade` modifier) and sorting by component values. See the [query manual](Queries.md) for more details.
 
 ## System
 A system is a query combined with a callback. Systems can be either ran manually or ran as part of an ECS-managed main loop (see [Pipeline](#pipeline)). The system API looks similar to queries:
@@ -770,7 +770,7 @@ e.set<Position>({20, 30}); // Invokes the observer
 ```
 
 ## Module
-A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relation. The following examples show how to define a module in C and C++:
+A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relationship. The following examples show how to define a module in C and C++:
 
 ```c
 // Module header (e.g. MyModule.h)

@@ -18,8 +18,8 @@ int compare_position(
 }
 
 // Iterate query, printed values will be ordered
-void print_query(flecs::query<Position>& q) {
-    q.each([](flecs::entity, Position& p) {
+void print_query(flecs::query<const Position>& q) {
+    q.each([](flecs::entity, const Position& p) {
         std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
     });
 }
@@ -35,14 +35,14 @@ int main(int argc, char *argv[]) {
     ecs.entity().set<Position>({4, 0});
 
     // Create a sorted system
-    auto sys = ecs.system<Position>()
+    auto sys = ecs.system<const Position>()
         .order_by(compare_position)
-        .each([](Position &p) {
+        .each([](const Position &p) {
             std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
         });
 
     // Create a sorted query
-    auto q = ecs.query_builder<Position>()
+    auto q = ecs.query_builder<const Position>()
         .order_by(compare_position)
         .build();
 

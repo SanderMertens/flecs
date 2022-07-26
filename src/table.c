@@ -457,14 +457,14 @@ void flecs_table_init(
     int32_t tgt_wc_count = 0;
     bool has_childof = table->flags & EcsTableHasChildOf;
     if (first_pair != -1) {
-        /* Add a (Relation, *) record for each relationship. */
+        /* Add a (Relationship, *) record for each relationship. */
         ecs_entity_t r = 0;
         for (dst_i = first_pair; dst_i < dst_count; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
             if (!ECS_HAS_ROLE(dst_id, PAIR)) {
                 break; /* no more pairs */
             }
-            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relation, new record */
+            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vector_get(records, ecs_table_record_t, dst_i);
                 idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -483,7 +483,7 @@ void flecs_table_init(
         last_pair = dst_i;
 
         /* Add a (*, Target) record for each relationship target. Type
-         * ids are sorted relation-first, so we can't simply do a single linear 
+         * ids are sorted relationship-first, so we can't simply do a single linear 
          * scan to find all occurrences for a target. */
 
         /* We're going to insert records from the vector into the index that
