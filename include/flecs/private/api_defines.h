@@ -310,18 +310,6 @@ typedef int32_t ecs_size_t;
 
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Deprecated constants
-////////////////////////////////////////////////////////////////////////////////
-
-/* These constants should no longer be used, but are required by the core to
- * guarantee backwards compatibility */
-#define ECS_AND (ECS_ID_FLAG_BIT | (0x79ull << 56))
-#define ECS_OR (ECS_ID_FLAG_BIT | (0x78ull << 56))
-#define ECS_XOR (ECS_ID_FLAG_BIT | (0x77ull << 56))
-#define ECS_NOT (ECS_ID_FLAG_BIT | (0x76ull << 56))
-
 #ifdef __cplusplus
 }
 #endif

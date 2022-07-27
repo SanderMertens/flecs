@@ -613,7 +613,10 @@ int flecs_term_finalize(
         return -1;
     }
 
-    if (term->id_flags == ECS_AND || term->id_flags == ECS_OR || term->id_flags == ECS_NOT){
+    if (ECS_HAS_ID_FLAG(term->id_flags, AND) || 
+        ECS_HAS_ID_FLAG(term->id_flags, OR) || 
+        ECS_HAS_ID_FLAG(term->id_flags, NOT))
+    {
         if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
             flecs_filter_error(ctx, "AND/OR terms must be filters");
             return -1;
@@ -622,13 +625,13 @@ int flecs_term_finalize(
         term->inout = EcsInOutNone;
 
         /* Translate role to operator */
-        if (term->id_flags == ECS_AND) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, AND)) {
             term->oper = EcsAndFrom;
         } else
-        if (term->id_flags == ECS_OR) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, OR)) {
             term->oper = EcsOrFrom;
         } else
-        if (term->id_flags == ECS_NOT) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, NOT)) {
             term->oper = EcsNotFrom;
         }
 

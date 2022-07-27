@@ -1748,7 +1748,7 @@ void Parser_pred_implicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "DISABLED | Pred"
+        .expr = "TOGGLE | Pred"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1757,7 +1757,7 @@ void Parser_pred_implicit_subject_w_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -1772,7 +1772,7 @@ void Parser_pred_explicit_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "DISABLED | Pred($This)"
+        .expr = "TOGGLE | Pred($This)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1781,7 +1781,7 @@ void Parser_pred_explicit_subject_w_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -1796,7 +1796,7 @@ void Parser_pred_no_subject_w_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "DISABLED | Pred()"
+        .expr = "TOGGLE | Pred()"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1805,7 +1805,7 @@ void Parser_pred_no_subject_w_role() {
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -1872,7 +1872,7 @@ void Parser_inout_role_pred_implicit_subject() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[inout] DISABLED | Pred"
+        .expr = "[inout] TOGGLE | Pred"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1881,7 +1881,7 @@ void Parser_inout_role_pred_implicit_subject() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -1896,7 +1896,7 @@ void Parser_inout_role_pred_no_subject() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[inout] DISABLED | Pred()"
+        .expr = "[inout] TOGGLE | Pred()"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1905,7 +1905,7 @@ void Parser_inout_role_pred_no_subject() {
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -1920,7 +1920,7 @@ void Parser_inout_role_pred_explicit_subject() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "[inout] DISABLED | Pred($This)"
+        .expr = "[inout] TOGGLE | Pred($This)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1929,7 +1929,7 @@ void Parser_inout_role_pred_explicit_subject() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     ecs_filter_fini(&f);
 
@@ -2155,7 +2155,7 @@ void Parser_2_pred_role() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "DISABLED | Pred_1, DISABLED | Pred_2"
+        .expr = "TOGGLE | Pred_1, TOGGLE | Pred_2"
     }));
     test_int(filter_count(&f), 2);
 
@@ -2164,13 +2164,13 @@ void Parser_2_pred_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].id_flags, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_TOGGLE);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
-    test_int(terms[1].id_flags, ECS_DISABLED);   
+    test_int(terms[1].id_flags, ECS_TOGGLE);   
 
 
     ecs_filter_fini(&f);

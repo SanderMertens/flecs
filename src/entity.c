@@ -3070,7 +3070,7 @@ void ecs_enable_component_w_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
+    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
     
     ecs_table_t *table = r->table;
     int32_t index = -1;
@@ -3114,10 +3114,10 @@ bool ecs_is_component_enabled_w_id(
         return false;
     }
 
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
+    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
     int32_t index = ecs_search(world, table, bs_id, 0);
     if (index == -1) {
-        /* If table does not have DISABLED column for component, component is
+        /* If table does not have TOGGLE column for component, component is
          * always enabled, if the entity has it */
         return ecs_has_id(world, entity, id);
     }
@@ -3745,12 +3745,9 @@ const char* ecs_id_flag_str(
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
-    if (ECS_HAS_ID_FLAG(entity, DISABLED)) {
-        return "DISABLED";
+    if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
+        return "TOGGLE";
     } else    
-    if (ECS_HAS_ID_FLAG(entity, XOR)) {
-        return "XOR";
-    } else
     if (ECS_HAS_ID_FLAG(entity, OR)) {
         return "OR";
     } else

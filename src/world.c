@@ -1,9 +1,12 @@
 #include "private_api.h"
 
-/* Roles */
+/* Id flags */
 const ecs_id_t ECS_PAIR =      (ECS_ID_FLAG_BIT | (0x7Aull << 56));
 const ecs_id_t ECS_OVERRIDE =  (ECS_ID_FLAG_BIT | (0x75ull << 56));
-const ecs_id_t ECS_DISABLED =  (ECS_ID_FLAG_BIT | (0x74ull << 56));
+const ecs_id_t ECS_TOGGLE =    (ECS_ID_FLAG_BIT | (0x74ull << 56));
+const ecs_id_t ECS_AND =       (ECS_ID_FLAG_BIT | (0x79ull << 56));
+const ecs_id_t ECS_OR =        (ECS_ID_FLAG_BIT | (0x78ull << 56));
+const ecs_id_t ECS_NOT =       (ECS_ID_FLAG_BIT | (0x76ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;

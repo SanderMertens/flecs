@@ -23,8 +23,7 @@ extern "C" {
 typedef struct ecs_snapshot_t ecs_snapshot_t;
 
 /** Create a snapshot.
- * This operation makes a copy of all component in the world that matches the 
- * specified filter.
+ * This operation makes a copy of the current state of the world.
  *
  * @param world The world to snapshot.
  * @return The snapshot.
