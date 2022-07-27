@@ -1686,3 +1686,78 @@ void FilterBuilder_inout_shortcuts() {
     test_int(t.id(), d);
     test_int(t.inout(), flecs::InOutNone);
 }
+
+void FilterBuilder_iter_column_w_const_as_array() {
+    flecs::world world;
+
+    auto f = world.filter<Position>();
+
+    auto e1 = world.entity().set<Position>({10, 20});
+    auto e2 = world.entity().set<Position>({20, 30});
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        for (auto i : it) {
+            p[i].x += 1;
+            p[i].y += 2;
+
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+
+    const Position *p = e1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.get<Position>();
+    test_int(p->x, 21);
+    test_int(p->y, 32);
+}
+
+void FilterBuilder_iter_column_w_const_as_ptr() {
+    flecs::world world;
+
+    auto f = world.filter<Position>();
+    
+    auto base = world.prefab().set<Position>({10, 20});
+    world.entity().is_a(base);
+    world.entity().is_a(base);
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        for (size_t i = 0; i < it.count(); i ++) {
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
+void FilterBuilder_iter_column_w_const_deref() {
+    flecs::world world;
+
+    auto f = world.filter<Position>();
+    
+    auto base = world.prefab().set<Position>({10, 20});
+    world.entity().is_a(base);
+    world.entity().is_a(base);
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        Position pv = *p;
+        for (size_t i = 0; i < it.count(); i ++) {
+            test_int(pv.x, 10);
+            test_int(pv.y, 20);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}

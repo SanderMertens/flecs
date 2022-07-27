@@ -633,7 +633,10 @@
                 "2_terms_w_expr",
                 "assert_on_uninitialized_term",
                 "operator_shortcuts",
-                "inout_shortcuts"
+                "inout_shortcuts",
+                "iter_column_w_const_as_array",
+                "iter_column_w_const_as_ptr",
+                "iter_column_w_const_deref"
             ]
         }, {
             "id": "RuleBuilder",
