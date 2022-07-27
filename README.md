@@ -3,7 +3,7 @@
 ## Introduction
 [![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)](https://github.com/SanderMertens/flecs/actions)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/BEzP5Rgrrp)
-[![Documentation](https://img.shields.io/badge/-Documentation-blue)](https://www.flecs.dev/)
+[![Documentation](https://img.shields.io/badge/-Documentation-blue)](https://www.flecs.dev/flecs/#/?id=documentation)
 
 Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
 
