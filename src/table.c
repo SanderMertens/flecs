@@ -81,7 +81,7 @@ void check_table_sanity(ecs_table_t *table) {
             ecs_bitset_t *bs = &table->data.bs_columns[i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], DISABLED),
+            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], TOGGLE),
                 ECS_INTERNAL_ERROR, NULL);
         }
     }
@@ -344,7 +344,7 @@ void flecs_table_init_flags(
                     table->flags |= EcsTableHasBuiltins;
                 }
             }
-            if (ECS_HAS_ID_FLAG(id, DISABLED)) {
+            if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
                 table->flags |= EcsTableHasDisabled;
 
                 if (!table->bs_count) {

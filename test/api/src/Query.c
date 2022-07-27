@@ -1767,7 +1767,7 @@ void Query_query_disabled_from_nothing() {
 
     ecs_entity_t e1 = ecs_new_w_id(world, TagA);
     ecs_add(world, e1, TagB);
-    ecs_add_id(world, e1, ECS_DISABLED | TagB);
+    ecs_add_id(world, e1, ECS_TOGGLE | TagB);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));

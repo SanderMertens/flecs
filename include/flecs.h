@@ -924,11 +924,20 @@ typedef struct ecs_world_info_t {
 /** Indicates that the id is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
-/** Enforce ownership of a component */
+/** Automatically override component when its inherited */
 FLECS_API extern const ecs_id_t ECS_OVERRIDE;
 
-/** Track whether component is enabled or not */
-FLECS_API extern const ecs_id_t ECS_DISABLED;
+/** Adds bitset to storage which allows component to be enabled/disabled */
+FLECS_API extern const ecs_id_t ECS_TOGGLE;
+
+/** Include all components from entity to which AND is applied */
+FLECS_API extern const ecs_id_t ECS_AND;
+
+/** Include at least one component from entity to which OR is applied */
+FLECS_API extern const ecs_id_t ECS_OR;
+
+/** Exclude all components from entity to which NOT is applied */
+FLECS_API extern const ecs_id_t ECS_NOT;
 
 /** @} */
 

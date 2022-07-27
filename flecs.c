@@ -2363,7 +2363,7 @@ void check_table_sanity(ecs_table_t *table) {
             ecs_bitset_t *bs = &table->data.bs_columns[i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], DISABLED),
+            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], TOGGLE),
                 ECS_INTERNAL_ERROR, NULL);
         }
     }
@@ -2626,7 +2626,7 @@ void flecs_table_init_flags(
                     table->flags |= EcsTableHasBuiltins;
                 }
             }
-            if (ECS_HAS_ID_FLAG(id, DISABLED)) {
+            if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
                 table->flags |= EcsTableHasDisabled;
 
                 if (!table->bs_count) {
@@ -8269,7 +8269,7 @@ void ecs_enable_component_w_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
+    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
     
     ecs_table_t *table = r->table;
     int32_t index = -1;
@@ -8313,10 +8313,10 @@ bool ecs_is_component_enabled_w_id(
         return false;
     }
 
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
+    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
     int32_t index = ecs_search(world, table, bs_id, 0);
     if (index == -1) {
-        /* If table does not have DISABLED column for component, component is
+        /* If table does not have TOGGLE column for component, component is
          * always enabled, if the entity has it */
         return ecs_has_id(world, entity, id);
     }
@@ -8944,12 +8944,9 @@ const char* ecs_id_flag_str(
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
-    if (ECS_HAS_ID_FLAG(entity, DISABLED)) {
-        return "DISABLED";
+    if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
+        return "TOGGLE";
     } else    
-    if (ECS_HAS_ID_FLAG(entity, XOR)) {
-        return "XOR";
-    } else
     if (ECS_HAS_ID_FLAG(entity, OR)) {
         return "OR";
     } else
@@ -33584,9 +33581,8 @@ void FlecsDocImport(
 
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
-#define TOK_ROLE_XOR "XOR"
 #define TOK_ROLE_NOT "NOT"
-#define TOK_ROLE_DISABLED "DISABLED"
+#define TOK_ROLE_TOGGLE "TOGGLE"
 
 #define TOK_IN "in"
 #define TOK_OUT "out"
@@ -33861,14 +33857,12 @@ ecs_entity_t parse_role(
         return ECS_AND;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
         return ECS_OR;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_XOR)) {
-        return ECS_XOR;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
         return ECS_NOT;
     } else if (!ecs_os_strcmp(token, TOK_OVERRIDE)) {
         return ECS_OVERRIDE;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
-        return ECS_DISABLED;        
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_TOGGLE)) {
+        return ECS_TOGGLE;        
     } else {
         ecs_parser_error(name, sig, column, "invalid role '%s'", token);
         return 0;
@@ -35467,7 +35461,10 @@ int ecs_app_set_frame_action(
 /* Roles */
 const ecs_id_t ECS_PAIR =      (ECS_ID_FLAG_BIT | (0x7Aull << 56));
 const ecs_id_t ECS_OVERRIDE =  (ECS_ID_FLAG_BIT | (0x75ull << 56));
-const ecs_id_t ECS_DISABLED =  (ECS_ID_FLAG_BIT | (0x74ull << 56));
+const ecs_id_t ECS_TOGGLE =    (ECS_ID_FLAG_BIT | (0x74ull << 56));
+const ecs_id_t ECS_AND =       (ECS_ID_FLAG_BIT | (0x79ull << 56));
+const ecs_id_t ECS_OR =        (ECS_ID_FLAG_BIT | (0x78ull << 56));
+const ecs_id_t ECS_NOT =       (ECS_ID_FLAG_BIT | (0x76ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
@@ -38101,7 +38098,10 @@ int flecs_term_finalize(
         return -1;
     }
 
-    if (term->id_flags == ECS_AND || term->id_flags == ECS_OR || term->id_flags == ECS_NOT){
+    if (ECS_HAS_ID_FLAG(term->id_flags, AND) || 
+        ECS_HAS_ID_FLAG(term->id_flags, OR) || 
+        ECS_HAS_ID_FLAG(term->id_flags, NOT))
+    {
         if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
             flecs_filter_error(ctx, "AND/OR terms must be filters");
             return -1;
@@ -38110,13 +38110,13 @@ int flecs_term_finalize(
         term->inout = EcsInOutNone;
 
         /* Translate role to operator */
-        if (term->id_flags == ECS_AND) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, AND)) {
             term->oper = EcsAndFrom;
         } else
-        if (term->id_flags == ECS_OR) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, OR)) {
             term->oper = EcsOrFrom;
         } else
-        if (term->id_flags == ECS_NOT) {
+        if (ECS_HAS_ID_FLAG(term->id_flags, NOT)) {
             term->oper = EcsNotFrom;
         }
 
@@ -43149,7 +43149,7 @@ void flecs_query_set_table_match(
 
                 int32_t actual_index = terms[i].index;
                 ecs_id_t id = it->ids[actual_index];
-                ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
+                ecs_id_t bs_id = ECS_TOGGLE | (id & ECS_COMPONENT_MASK);
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
                 if (bs_index != -1) {
                     flecs_bitset_term_t *bc = ecs_vector_add(

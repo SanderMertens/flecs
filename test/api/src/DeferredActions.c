@@ -809,7 +809,7 @@ void DeferredActions_defer_add_to_recycled_id_w_role() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id_2);
+    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id_2);
     ecs_add(world, child, Velocity);
 
     ecs_defer_end(world);  
@@ -819,7 +819,7 @@ void DeferredActions_defer_add_to_recycled_id_w_role() {
     test_assert(!ecs_is_alive(world, id));
     test_assert(ecs_is_alive(world, id_2));
     test_assert(ecs_is_alive(world, child));
-    test_assert(ecs_has_id(world, child, ECS_DISABLED | id_2));
+    test_assert(ecs_has_id(world, child, ECS_TOGGLE | id_2));
 
     ecs_fini(world); 
 }
@@ -973,7 +973,7 @@ void DeferredActions_defer_add_to_deleted_id_w_role() {
     ecs_defer_begin(world);
 
     ecs_delete(world, id);
-    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id);
+    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id);
     ecs_add(world, child, Velocity);
 
     ecs_defer_end(world);  
@@ -982,7 +982,7 @@ void DeferredActions_defer_add_to_deleted_id_w_role() {
 
     test_assert(!ecs_is_alive(world, id));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_id(world, child, ECS_DISABLED | id));
+    test_assert(!ecs_has_id(world, child, ECS_TOGGLE | id));
 
     ecs_fini(world); 
 }
@@ -1115,7 +1115,7 @@ void DeferredActions_defer_delete_added_id_w_role() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t child = ecs_new_w_id(world, ECS_DISABLED | id);
+    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id);
     ecs_add(world, child, Velocity);
     ecs_delete(world, id);
 
@@ -1125,7 +1125,7 @@ void DeferredActions_defer_delete_added_id_w_role() {
 
     test_assert(!ecs_is_alive(world, id));
     test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has_id(world, child, ECS_DISABLED | id));
+    test_assert(!ecs_has_id(world, child, ECS_TOGGLE | id));
 
     ecs_fini(world);
 }

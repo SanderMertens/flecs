@@ -31,9 +31,8 @@
 
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
-#define TOK_ROLE_XOR "XOR"
 #define TOK_ROLE_NOT "NOT"
-#define TOK_ROLE_DISABLED "DISABLED"
+#define TOK_ROLE_TOGGLE "TOGGLE"
 
 #define TOK_IN "in"
 #define TOK_OUT "out"
@@ -308,14 +307,12 @@ ecs_entity_t parse_role(
         return ECS_AND;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
         return ECS_OR;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_XOR)) {
-        return ECS_XOR;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
         return ECS_NOT;
     } else if (!ecs_os_strcmp(token, TOK_OVERRIDE)) {
         return ECS_OVERRIDE;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
-        return ECS_DISABLED;        
+    } else if (!ecs_os_strcmp(token, TOK_ROLE_TOGGLE)) {
+        return ECS_TOGGLE;        
     } else {
         ecs_parser_error(name, sig, column, "invalid role '%s'", token);
         return 0;

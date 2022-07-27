@@ -36,6 +36,11 @@ enum oper_kind_t {
     NotFrom = EcsNotFrom
 };
 
+/** Id flags */
+static const flecs::entity_t Pair = ECS_PAIR;
+static const flecs::entity_t Override = ECS_OVERRIDE;
+static const flecs::entity_t Toggle = ECS_TOGGLE;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,13 +50,26 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 
+/* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
 static const flecs::entity_t Observer = EcsObserver;
-
-/* Builtin opaque components */
+static const flecs::entity_t Private = EcsPrivate;
+static const flecs::entity_t Module = EcsModule;
+static const flecs::entity_t Prefab = EcsPrefab;
+static const flecs::entity_t Disabled = EcsDisabled;
+static const flecs::entity_t Empty = EcsEmpty;
+static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t System = EcsSystem;
+static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+static const flecs::entity_t Phase = EcsPhase;
 
-/* Builtin set constants */
+/* Builtin event tags */
+static const flecs::entity_t OnAdd = EcsOnAdd;
+static const flecs::entity_t OnRemove = EcsOnRemove;
+static const flecs::entity_t OnSet = EcsOnSet;
+static const flecs::entity_t UnSet = EcsUnSet;
+
+/* Builtin term flags */
 static const uint32_t Self = EcsSelf;
 static const uint32_t Up = EcsUp;
 static const uint32_t Down = EcsDown;
@@ -60,26 +78,6 @@ static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;
 static const uint32_t TraverseFlags = EcsTraverseFlags;
-
-/* Builtin tag ids */
-static const flecs::entity_t Private = EcsPrivate;
-static const flecs::entity_t Module = EcsModule;
-static const flecs::entity_t Prefab = EcsPrefab;
-static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t Empty = EcsEmpty;
-static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
-static const flecs::entity_t Phase = EcsPhase;
-
-/* Event tags */
-static const flecs::entity_t OnAdd = EcsOnAdd;
-static const flecs::entity_t OnRemove = EcsOnRemove;
-static const flecs::entity_t OnSet = EcsOnSet;
-static const flecs::entity_t UnSet = EcsUnSet;
-
-/** Builtin roles */
-static const flecs::entity_t Pair = ECS_PAIR;
-static const flecs::entity_t Override = ECS_OVERRIDE;
 
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;

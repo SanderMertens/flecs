@@ -284,20 +284,6 @@ void Type_entity_or_str() {
     ecs_fini(world);
 }
 
-void Type_entity_xor_str() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Foo, 0);
-
-    ecs_entity_t e = ECS_XOR | Foo;
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "XOR|Foo");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void Type_entity_not_str() {
     ecs_world_t *world = ecs_mini();
 
@@ -341,11 +327,6 @@ void Type_role_or_str() {
     test_str(ecs_id_flag_str(e), "OR");
 }
 
-void Type_role_xor_str() {
-    ecs_entity_t e = ECS_XOR;
-    test_str(ecs_id_flag_str(e), "XOR");
-}
-
 void Type_role_not_str() {
     ecs_entity_t e = ECS_NOT;
     test_str(ecs_id_flag_str(e), "NOT");
@@ -357,8 +338,8 @@ void Type_role_owned_str() {
 }
 
 void Type_role_disabled_str() {
-    ecs_entity_t e = ECS_DISABLED;
-    test_str(ecs_id_flag_str(e), "DISABLED");
+    ecs_entity_t e = ECS_TOGGLE;
+    test_str(ecs_id_flag_str(e), "TOGGLE");
 }
 
 void Type_large_type_expr() {
