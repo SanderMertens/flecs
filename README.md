@@ -60,6 +60,8 @@ If you want to use the [flecs.c](https://raw.githubusercontent.com/SanderMertens
 By default Flecs includes many features that may not be useful for every project. Builds can be customized to minimize the overhead of the library. See the [Addons](#addons) section for more information on customized builds.
 
 ## Documentation
+Make sure to view the documentation at https://www.flecs.dev/ !
+
 - [FAQ](docs/FAQ.md)
 - [Quickstart](docs/Quickstart.md)
 - [Query Manual](docs/Queries.md)
