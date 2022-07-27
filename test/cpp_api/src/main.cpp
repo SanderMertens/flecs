@@ -608,6 +608,9 @@ void FilterBuilder_2_terms_w_expr(void);
 void FilterBuilder_assert_on_uninitialized_term(void);
 void FilterBuilder_operator_shortcuts(void);
 void FilterBuilder_inout_shortcuts(void);
+void FilterBuilder_iter_column_w_const_as_array(void);
+void FilterBuilder_iter_column_w_const_as_ptr(void);
+void FilterBuilder_iter_column_w_const_deref(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -3306,6 +3309,18 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "inout_shortcuts",
         FilterBuilder_inout_shortcuts
+    },
+    {
+        "iter_column_w_const_as_array",
+        FilterBuilder_iter_column_w_const_as_array
+    },
+    {
+        "iter_column_w_const_as_ptr",
+        FilterBuilder_iter_column_w_const_as_ptr
+    },
+    {
+        "iter_column_w_const_deref",
+        FilterBuilder_iter_column_w_const_deref
     }
 };
 
@@ -4704,7 +4719,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        67,
+        70,
         FilterBuilder_testcases
     },
     {

@@ -16485,7 +16485,7 @@ struct unchecked_column {
      * @param index Index of element.
      * @return Reference to element.
      */
-    void* operator[](size_t index) {
+    void* operator[](size_t index) const {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
         return ECS_OFFSET(m_array, m_size * index);
@@ -16531,7 +16531,7 @@ struct column {
      * @param index Index of element.
      * @return Reference to element.
      */
-    T& operator[](size_t index) {
+    T& operator[](size_t index) const {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
@@ -16543,7 +16543,7 @@ struct column {
      *
      * @return Reference to the first element.
      */
-    T& operator*() {
+    T& operator*() const {
       ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
       return *m_array;
     }
@@ -16553,7 +16553,7 @@ struct column {
      * 
      * @return Pointer to the first element.
      */
-    T* operator->() {
+    T* operator->() const {
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array;
     }
