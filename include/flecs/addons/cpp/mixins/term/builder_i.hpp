@@ -246,7 +246,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Set role of term. */
     Base& role(id_t role) {
         this->assert_term();
-        m_term->role = role;
+        m_term->id_flags = role;
         return *this;
     }
 

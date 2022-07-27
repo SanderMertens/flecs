@@ -440,13 +440,13 @@ bool skip_id(
     ecs_entity_t pred = 0, obj = 0, role = 0;
     bool hidden = false;
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         pred = ecs_pair_first(world, id);
         obj = ecs_pair_second(world, id);
     } else {
         pred = id & ECS_COMPONENT_MASK;
-        if (id & ECS_ROLE_MASK) {
-            role = id & ECS_ROLE_MASK;
+        if (id & ECS_ID_FLAGS_MASK) {
+            role = id & ECS_ID_FLAGS_MASK;
         }
     }
 
@@ -735,7 +735,7 @@ int append_type(
             }
             if (role) {
                 flecs_json_next(buf);
-                flecs_json_string(buf, ecs_role_str(role));
+                flecs_json_string(buf, ecs_id_flag_str(role));
             }
         }
         flecs_json_array_pop(buf);

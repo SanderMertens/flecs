@@ -1,9 +1,9 @@
 #include "private_api.h"
 
 /* Roles */
-const ecs_id_t ECS_PAIR =      (ECS_ROLE | (0x7Aull << 56));
-const ecs_id_t ECS_OVERRIDE =  (ECS_ROLE | (0x75ull << 56));
-const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
+const ecs_id_t ECS_PAIR =      (ECS_ID_FLAG_BIT | (0x7Aull << 56));
+const ecs_id_t ECS_OVERRIDE =  (ECS_ID_FLAG_BIT | (0x75ull << 56));
+const ecs_id_t ECS_DISABLED =  (ECS_ID_FLAG_BIT | (0x74ull << 56));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =          1;
@@ -1306,7 +1306,7 @@ const ecs_type_info_t* flecs_type_info_get(
     ecs_poly_assert(world, ecs_world_t);   
 
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, NULL);
 
     return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }

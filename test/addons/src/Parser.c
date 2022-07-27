@@ -1757,7 +1757,7 @@ void Parser_pred_implicit_subject_w_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1781,7 +1781,7 @@ void Parser_pred_explicit_subject_w_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1805,7 +1805,7 @@ void Parser_pred_no_subject_w_role() {
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1831,7 +1831,7 @@ void Parser_pair_implicit_subject_w_role() {
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     ecs_filter_fini(&f);
 
@@ -1857,7 +1857,7 @@ void Parser_pair_explicit_subject_w_role() {
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     ecs_filter_fini(&f);
 
@@ -1881,7 +1881,7 @@ void Parser_inout_role_pred_implicit_subject() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1905,7 +1905,7 @@ void Parser_inout_role_pred_no_subject() {
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1929,7 +1929,7 @@ void Parser_inout_role_pred_explicit_subject() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     ecs_filter_fini(&f);
 
@@ -1955,7 +1955,7 @@ void Parser_inout_role_pair_implicit_subject() {
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     ecs_filter_fini(&f);
 
@@ -1981,7 +1981,7 @@ void Parser_inout_role_pair_explicit_subject() {
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     ecs_filter_fini(&f);
 
@@ -2164,13 +2164,13 @@ void Parser_2_pred_role() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_DISABLED);
+    test_int(terms[0].id_flags, ECS_DISABLED);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
-    test_int(terms[1].role, ECS_DISABLED);   
+    test_int(terms[1].id_flags, ECS_DISABLED);   
 
 
     ecs_filter_fini(&f);
@@ -2199,14 +2199,14 @@ void Parser_2_pair_implicit_subj_role() {
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
-    test_int(terms[1].role, ECS_PAIR);   
+    test_int(terms[1].id_flags, ECS_PAIR);   
 
 
     ecs_filter_fini(&f);
@@ -2235,14 +2235,14 @@ void Parser_2_pair_explicit_subj_role() {
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].role, ECS_PAIR);
+    test_int(terms[0].id_flags, ECS_PAIR);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
-    test_int(terms[1].role, ECS_PAIR);   
+    test_int(terms[1].id_flags, ECS_PAIR);   
 
 
     ecs_filter_fini(&f);

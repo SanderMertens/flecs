@@ -695,11 +695,11 @@ const char* plecs_parse_scope_close(
 
     ecs_id_t id = state->scope[state->sp];
 
-    if (!id || ECS_HAS_ROLE(id, PAIR)) {
+    if (!id || ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_set_with(world, id);
     }
 
-    if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+    if (!id || !ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_set_scope(world, id);
     }
 

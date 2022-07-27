@@ -327,7 +327,7 @@ static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_field_id(it, 1);
 
-    if (!ECS_HAS_ROLE(pair, PAIR)) {
+    if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
         /* If relationship was not added as a pair, there's nothing to do */
         return;
     }

@@ -160,7 +160,7 @@ extern "C" {
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
- * entity or pair, and can have an optional role. */
+ * entity or pair, and can have optional id flags. */
 typedef uint64_t ecs_id_t;
 
 /** An entity identifier. */
@@ -466,7 +466,7 @@ struct ecs_term_t {
     ecs_inout_kind_t inout;     /* Access to contents matched by term */
     ecs_oper_kind_t oper;       /* Operator of term */
 
-    ecs_id_t role;              /* Role of term */
+    ecs_id_t id_flags;        /* Type flags of term id */
     char *name;                 /* Name of term */
 
     int32_t index;              /* Computed term index in filter which takes 
@@ -909,18 +909,19 @@ typedef struct ecs_world_info_t {
 
 
 /**
- * @defgroup type_roles Type Roles
+ * @defgroup id_flags Id Flags
  * @{
  */
 
-/* Type roles are used to indicate the role of an entity in a type. If no flag
- * is specified, the entity is interpreted as a regular component or tag. Flags
- * are added to an entity by using a bitwise OR (|). */
+/* Id flags are bits that can be set on an id. Flags can store information
+ * about how an id should be interpreted (for example, as a pair) or can be used
+ * to enable features (such as OVERRIDE).
+ */
 
-/** Role bit added to roles to differentiate between roles and generations */
-#define ECS_ROLE (1ull << 63)
+/** Bit added to flags to differentiate between id flags and generation */
+#define ECS_ID_FLAG_BIT (1ull << 63)
 
-/** The PAIR role indicates that the entity is a pair identifier. */
+/** Indicates that the id is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
@@ -1534,9 +1535,8 @@ ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
 /** Create new entity.
- * This operation creates a new entity with a single entity in its type. The
- * entity may contain type roles. This operation recycles ids.
- *
+ * This operation creates a new entity with a (component) id.
+ * 
  * @param world The world.
  * @param id The component id to initialize the new entity with.
  * @return The new entity.
@@ -1658,10 +1658,9 @@ ecs_entity_t ecs_clone(
  * @{
  */
 
-/** Add an entity to an entity.
- * This operation adds a single entity to the type of an entity. Type roles may
- * be used in combination with the added entity. If the entity already has the
- * entity, this operation will have no side effects.
+/** Add a (component) id to an entity.
+ * This operation adds a single (component) id to an entity. If the entity 
+ * already has the id, this operation has no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -1673,10 +1672,9 @@ void ecs_add_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Remove an entity from an entity.
- * This operation removes a single entity from the type of an entity. Type roles
- * may be used in combination with the added entity. If the entity does not have
- * the entity, this operation will have no side effects.
+/** Remove a (component) id from an entity.
+ * This operation removes a single (component) id to an entity. If the entity 
+ * does not have the id, this operation has no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -1740,7 +1738,7 @@ bool ecs_is_component_enabled_w_id(
  * @{
  */
  
-/** Make a pair identifier.
+/** Make a pair id.
  * This function is equivalent to using the ecs_pair macro, and is added for
  * convenience to make it easier for non C/C++ bindings to work with pairs.
  *
@@ -1834,7 +1832,7 @@ const void* ecs_get_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Create a ref.
+/** Create a component ref.
  * A ref is a handle to an entity + component which caches a small amount of
  * data to reduce overhead of repeatedly accessing the component. Use 
  * ecs_ref_get to get the component data.
@@ -2057,9 +2055,8 @@ ecs_entity_t ecs_set_id(
 /** Test whether an entity is valid.
  * Entities that are valid can be used with API functions.
  *
- * An entity is valid if it is not 0 and if it is alive. If the provided id has
- * a role or a pair, the contents of the role or the pair will be checked for
- * validity.
+ * An entity is valid if it is not 0 and if it is alive. If the provided id is
+ * a pair, the contents of the pair will be checked for validity.
  *
  * is_valid will return true for ids that don't exist (alive or not alive). This
  * allows for using ids that have never been created by ecs_new or similar. In
@@ -2147,7 +2144,7 @@ void ecs_ensure(
     ecs_entity_t entity);
 
 /** Same as ecs_ensure, but for (component) ids.
- * An id can be an entity or pair, and can contain type flags. This operation
+ * An id can be an entity or pair, and can contain id flags. This operation
  * ensures that the entity (or entities, for a pair) are alive.
  * 
  * When this operation is successful it guarantees that the provided id can be
@@ -2361,15 +2358,15 @@ void ecs_set_alias(
     ecs_entity_t entity,
     const char *alias);
 
-/** Convert role to string.
- * This operation converts a role to a string.
+/** Convert id flag to string.
+ * This operation converts a id flag to a string.
  * 
- * @param role The role id.
- * @return The role string, or NULL if no valid role is provided.
+ * @param id_flags The id flag.
+ * @return The id flag string, or NULL if no valid id is provided.
  */
 FLECS_API
-const char* ecs_role_str(
-    ecs_id_t role);
+const char* ecs_id_flag_str(
+    ecs_id_t id_flags);
 
 /** Convert id to string.
  * This operation interprets the structure of an id and converts it to a string.

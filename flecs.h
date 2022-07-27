@@ -504,18 +504,18 @@ typedef int32_t ecs_size_t;
 #define ECS_RECORD_TO_ROW_FLAGS(v)    (ECS_CAST(uint32_t, v) & ECS_ROW_FLAGS_MASK)
 #define ECS_ROW_TO_RECORD(row, flags) (ECS_CAST(uint32_t, (ECS_CAST(uint32_t, row) | (flags))))
 
-#define ECS_ROLE_MASK                 (0xFFull << 56)
+#define ECS_ID_FLAGS_MASK             (0xFFull << 56)
 #define ECS_ENTITY_MASK               (0xFFFFFFFFull)
 #define ECS_GENERATION_MASK           (0xFFFFull << 32)
 #define ECS_GENERATION(e)             ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e)         ((e & ~ECS_GENERATION_MASK) | ((0xFFFF & (ECS_GENERATION(e) + 1)) << 32))
-#define ECS_COMPONENT_MASK            (~ECS_ROLE_MASK)
-#define ECS_HAS_ROLE(e, role)         ((e & ECS_ROLE_MASK) == ECS_##role)
+#define ECS_COMPONENT_MASK            (~ECS_ID_FLAGS_MASK)
+#define ECS_HAS_ID_FLAG(e, role)      ((e & ECS_ID_FLAGS_MASK) == ECS_##role)
 #define ECS_PAIR_FIRST(e)             (ecs_entity_t_hi(e & ECS_COMPONENT_MASK))
 #define ECS_PAIR_SECOND(e)            (ecs_entity_t_lo(e))
 #define ECS_PAIR_RELATION             ECS_PAIR_FIRST
 #define ECS_PAIR_OBJECT               ECS_PAIR_SECOND
-#define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
+#define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ID_FLAG(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
 
 #define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
     (ECS_HAS_RELATION(e, rel) && ECS_PAIR_SECOND(e) == obj)
@@ -653,10 +653,10 @@ typedef int32_t ecs_size_t;
 
 /* These constants should no longer be used, but are required by the core to
  * guarantee backwards compatibility */
-#define ECS_AND (ECS_ROLE | (0x79ull << 56))
-#define ECS_OR (ECS_ROLE | (0x78ull << 56))
-#define ECS_XOR (ECS_ROLE | (0x77ull << 56))
-#define ECS_NOT (ECS_ROLE | (0x76ull << 56))
+#define ECS_AND (ECS_ID_FLAG_BIT | (0x79ull << 56))
+#define ECS_OR (ECS_ID_FLAG_BIT | (0x78ull << 56))
+#define ECS_XOR (ECS_ID_FLAG_BIT | (0x77ull << 56))
+#define ECS_NOT (ECS_ID_FLAG_BIT | (0x76ull << 56))
 
 #ifdef __cplusplus
 }
@@ -2160,7 +2160,7 @@ extern "C" {
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
- * entity or pair, and can have an optional role. */
+ * entity or pair, and can have optional id flags. */
 typedef uint64_t ecs_id_t;
 
 /** An entity identifier. */
@@ -2466,7 +2466,7 @@ struct ecs_term_t {
     ecs_inout_kind_t inout;     /* Access to contents matched by term */
     ecs_oper_kind_t oper;       /* Operator of term */
 
-    ecs_id_t role;              /* Role of term */
+    ecs_id_t id_flags;        /* Type flags of term id */
     char *name;                 /* Name of term */
 
     int32_t index;              /* Computed term index in filter which takes 
@@ -3799,18 +3799,19 @@ extern "C" {
 
 
 /**
- * @defgroup type_roles Type Roles
+ * @defgroup id_flags Id Flags
  * @{
  */
 
-/* Type roles are used to indicate the role of an entity in a type. If no flag
- * is specified, the entity is interpreted as a regular component or tag. Flags
- * are added to an entity by using a bitwise OR (|). */
+/* Id flags are bits that can be set on an id. Flags can store information
+ * about how an id should be interpreted (for example, as a pair) or can be used
+ * to enable features (such as OVERRIDE).
+ */
 
-/** Role bit added to roles to differentiate between roles and generations */
-#define ECS_ROLE (1ull << 63)
+/** Bit added to flags to differentiate between id flags and generation */
+#define ECS_ID_FLAG_BIT (1ull << 63)
 
-/** The PAIR role indicates that the entity is a pair identifier. */
+/** Indicates that the id is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
@@ -4424,9 +4425,8 @@ ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
 /** Create new entity.
- * This operation creates a new entity with a single entity in its type. The
- * entity may contain type roles. This operation recycles ids.
- *
+ * This operation creates a new entity with a (component) id.
+ * 
  * @param world The world.
  * @param id The component id to initialize the new entity with.
  * @return The new entity.
@@ -4548,10 +4548,9 @@ ecs_entity_t ecs_clone(
  * @{
  */
 
-/** Add an entity to an entity.
- * This operation adds a single entity to the type of an entity. Type roles may
- * be used in combination with the added entity. If the entity already has the
- * entity, this operation will have no side effects.
+/** Add a (component) id to an entity.
+ * This operation adds a single (component) id to an entity. If the entity 
+ * already has the id, this operation has no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -4563,10 +4562,9 @@ void ecs_add_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Remove an entity from an entity.
- * This operation removes a single entity from the type of an entity. Type roles
- * may be used in combination with the added entity. If the entity does not have
- * the entity, this operation will have no side effects.
+/** Remove a (component) id from an entity.
+ * This operation removes a single (component) id to an entity. If the entity 
+ * does not have the id, this operation has no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -4630,7 +4628,7 @@ bool ecs_is_component_enabled_w_id(
  * @{
  */
  
-/** Make a pair identifier.
+/** Make a pair id.
  * This function is equivalent to using the ecs_pair macro, and is added for
  * convenience to make it easier for non C/C++ bindings to work with pairs.
  *
@@ -4724,7 +4722,7 @@ const void* ecs_get_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Create a ref.
+/** Create a component ref.
  * A ref is a handle to an entity + component which caches a small amount of
  * data to reduce overhead of repeatedly accessing the component. Use 
  * ecs_ref_get to get the component data.
@@ -4947,9 +4945,8 @@ ecs_entity_t ecs_set_id(
 /** Test whether an entity is valid.
  * Entities that are valid can be used with API functions.
  *
- * An entity is valid if it is not 0 and if it is alive. If the provided id has
- * a role or a pair, the contents of the role or the pair will be checked for
- * validity.
+ * An entity is valid if it is not 0 and if it is alive. If the provided id is
+ * a pair, the contents of the pair will be checked for validity.
  *
  * is_valid will return true for ids that don't exist (alive or not alive). This
  * allows for using ids that have never been created by ecs_new or similar. In
@@ -5037,7 +5034,7 @@ void ecs_ensure(
     ecs_entity_t entity);
 
 /** Same as ecs_ensure, but for (component) ids.
- * An id can be an entity or pair, and can contain type flags. This operation
+ * An id can be an entity or pair, and can contain id flags. This operation
  * ensures that the entity (or entities, for a pair) are alive.
  * 
  * When this operation is successful it guarantees that the provided id can be
@@ -5251,15 +5248,15 @@ void ecs_set_alias(
     ecs_entity_t entity,
     const char *alias);
 
-/** Convert role to string.
- * This operation converts a role to a string.
+/** Convert id flag to string.
+ * This operation converts a id flag to a string.
  * 
- * @param role The role id.
- * @return The role string, or NULL if no valid role is provided.
+ * @param id_flags The id flag.
+ * @return The id flag string, or NULL if no valid id is provided.
  */
 FLECS_API
-const char* ecs_role_str(
-    ecs_id_t role);
+const char* ecs_id_flag_str(
+    ecs_id_t id_flags);
 
 /** Convert id to string.
  * This operation interprets the structure of an id and converts it to a string.
@@ -13796,7 +13793,7 @@ struct id {
 
     /** Test if id is pair (has first, second) */
     bool is_pair() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Pair;
+        return (m_id & ECS_ID_FLAGS_MASK) == flecs::Pair;
     }
 
     /* Test if id is a wildcard */
@@ -13806,7 +13803,7 @@ struct id {
 
     /* Test if id is entity */
     bool is_entity() const {
-        return !(m_id & ECS_ROLE_MASK);
+        return !(m_id & ECS_ID_FLAGS_MASK);
     }
 
     /* Return id as entity (only allowed when id is valid entity) */
@@ -13829,12 +13826,12 @@ struct id {
 
     /* Test if id has specified role */
     bool has_role(flecs::id_t role) const {
-        return ((m_id & ECS_ROLE_MASK) == role);
+        return ((m_id & ECS_ID_FLAGS_MASK) == role);
     }
 
     /* Test if id has any role */
     bool has_role() const {
-        return (m_id & ECS_ROLE_MASK) != 0;
+        return (m_id & ECS_ID_FLAGS_MASK) != 0;
     }
 
     flecs::entity role() const;
@@ -13866,7 +13863,7 @@ struct id {
 
     /** Convert role of id to string. */
     flecs::string role_str() const {
-        return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
+        return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
     }
 
     flecs::id_t raw_id() const {
@@ -16880,7 +16877,7 @@ private:
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
-        ecs_assert(term_id & ECS_PAIR ||
+        ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
             term_id == _::cpp_type<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
@@ -20289,7 +20286,7 @@ inline flecs::entity id::entity() const {
 }
 
 inline flecs::entity id::role() const {
-    return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
+    return flecs::entity(m_world, m_id & ECS_ID_FLAGS_MASK);
 }
 
 inline flecs::entity id::first() const {
@@ -20318,7 +20315,7 @@ inline flecs::entity id::add_role(flecs::id_t role) const {
 
 inline flecs::entity id::remove_role(flecs::id_t role) const {
     (void)role;
-    ecs_assert((m_id & ECS_ROLE_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == role, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 
@@ -20913,7 +20910,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Set role of term. */
     Base& role(id_t role) {
         this->assert_term();
-        m_term->role = role;
+        m_term->id_flags = role;
         return *this;
     }
 
@@ -21090,7 +21087,7 @@ struct term final : term_builder_i<term> {
         : term_builder_i<term>(&value)
         , value({})
         , m_world(world_ptr) {
-            if (id & ECS_ROLE_MASK) {
+            if (id & ECS_ID_FLAGS_MASK) {
                 value.id = id;
             } else {
                 value.first.id = id;
@@ -21112,7 +21109,7 @@ struct term final : term_builder_i<term> {
         : term_builder_i<term>(&value)
         , value({})
         , m_world(nullptr) { 
-            if (id & ECS_ROLE_MASK) {
+            if (id & ECS_ID_FLAGS_MASK) {
                 value.id = id;
             } else {
                 value.first.id = id;
@@ -23411,7 +23408,7 @@ inline flecs::entity iter::id(int32_t index) const {
 
 inline flecs::id iter::pair(int32_t index) const {
     flecs::id_t id = ecs_field_id(m_iter, index);
-    ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(m_iter->world, id);
 error:
     return flecs::id();

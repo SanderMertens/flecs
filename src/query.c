@@ -715,7 +715,7 @@ void flecs_query_set_table_match(
                 }
 
                 ecs_id_t id = terms[i].id;
-                if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_SECOND(id) == EcsWildcard) {
+                if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_SECOND(id) == EcsWildcard) {
                     continue;
                 }
                 

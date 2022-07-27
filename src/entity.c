@@ -549,7 +549,7 @@ bool override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (!(e & ECS_ROLE_MASK)) {
+        if (!(e & ECS_ID_FLAGS_MASK)) {
             break;
         }
 
@@ -646,7 +646,7 @@ void flecs_set_union(
 
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = array[i];
-        if (ECS_HAS_ROLE(id, PAIR)) {
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
             ecs_id_record_t *idr = flecs_id_record_get(world, 
                 ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
             if (!idr) {
@@ -812,7 +812,7 @@ void update_component_monitor_w_array(
     int i;
     for (i = 0; i < ids->count; i ++) {
         ecs_entity_t id = ids->array[i];
-        if (ECS_HAS_ROLE(id, PAIR)) {
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
             flecs_monitor_mark_dirty(world, 
                 ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         }
@@ -1109,7 +1109,7 @@ void *get_mutable(
     ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check((id & ECS_COMPONENT_MASK) == id || 
-        ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+        ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
 
     if (r->table) {
         dst = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
@@ -1638,7 +1638,7 @@ int traverse_add(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
         bool should_add = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
             if ((!desc->id && desc->name) || (name && !name_assigned)) {
                 /* If name is added to entity, pass scope to add_path instead
@@ -1731,7 +1731,7 @@ void deferred_add_remove(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
         bool defer = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
             if (!desc->id || (name && !name_assigned)) {
                 /* New named entities are created by temporarily going out of
@@ -1847,7 +1847,7 @@ ecs_entity_t ecs_entity_init(
             ecs_id_t id;
             int32_t i = 0;
             while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
-                if (ECS_HAS_ROLE(id, PAIR) && 
+                if (ECS_HAS_ID_FLAG(id, PAIR) && 
                     (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {
                     scope = ECS_PAIR_SECOND(id);
@@ -2272,7 +2272,7 @@ void flecs_id_mark_for_delete(
 
     /* If id is a wildcard pair, update cache monitors for non-wildcard ids */
     if (ecs_id_is_wildcard(id)) {
-        ecs_assert(ECS_HAS_ROLE(id, PAIR), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ECS_HAS_ID_FLAG(id, PAIR), ECS_INTERNAL_ERROR, NULL);
         ecs_id_record_t *cur = idr;
         if (ECS_PAIR_SECOND(id) == EcsWildcard) {
             while ((cur = cur->first.next)) {
@@ -3157,7 +3157,7 @@ bool ecs_has_id(
     }
 
     table = tr->hdr.table;
-    if ((table->flags & EcsTableHasUnion) && ECS_HAS_ROLE(id, PAIR) &&
+    if ((table->flags & EcsTableHasUnion) && ECS_HAS_ID_FLAG(id, PAIR) &&
         ECS_PAIR_SECOND(id) != EcsWildcard) 
     {
         if (ECS_PAIR_FIRST(table->type.array[column]) == EcsUnion) {
@@ -3240,7 +3240,7 @@ ecs_entity_t ecs_get_target_for_id(
 
         for (i = 0; i < count; i ++) {
             ecs_id_t ent = ids[i];
-            if (ent & ECS_ROLE_MASK) {
+            if (ent & ECS_ID_FLAGS_MASK) {
                 /* Skip ids with pairs, roles since 0 was provided for rel */
                 break;
             }
@@ -3368,7 +3368,7 @@ bool ecs_is_valid(
     world = ecs_get_world(world);
     
     /* Entity identifiers should not contain flag bits */
-    if (entity & ECS_ROLE_MASK) {
+    if (entity & ECS_ID_FLAGS_MASK) {
         return false;
     }
 
@@ -3377,7 +3377,7 @@ bool ecs_is_valid(
         return false;
     }
 
-    if (entity & ECS_ROLE) {
+    if (entity & ECS_ID_FLAG_BIT) {
         return ecs_entity_t_lo(entity) != 0;
     }
 
@@ -3398,7 +3398,7 @@ ecs_id_t ecs_strip_generation(
     ecs_entity_t e)
 {
     /* If this is not a pair, erase the generation bits */
-    if (!(e & ECS_ROLE_MASK)) {
+    if (!(e & ECS_ID_FLAGS_MASK)) {
         e &= ~ECS_GENERATION_MASK;
     }
 
@@ -3488,7 +3488,7 @@ void ecs_ensure_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t r = ECS_PAIR_FIRST(id);
         ecs_entity_t o = ECS_PAIR_SECOND(id);
 
@@ -3573,7 +3573,7 @@ const ecs_type_info_t* ecs_get_type_info(
     world = ecs_get_world(world);
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr && ECS_HAS_ROLE(id, PAIR)) {
+    if (!idr && ECS_HAS_ID_FLAG(id, PAIR)) {
         idr = flecs_id_record_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         if (!idr || !idr->type_info) {
@@ -3590,7 +3590,7 @@ const ecs_type_info_t* ecs_get_type_info(
 
     if (idr) {
         return idr->type_info;
-    } else if (!(id & ECS_ROLE_MASK)) {
+    } else if (!(id & ECS_ID_FLAGS_MASK)) {
         return flecs_sparse_get(world->type_info, ecs_type_info_t, id);
     }
 error:
@@ -3617,7 +3617,7 @@ ecs_entity_t ecs_id_is_tag(
     if (ecs_id_is_wildcard(id)) {
         /* If id is a wildcard, we can't tell if it's a tag or not, except
          * when the relationship part of a pair has the Tag property */
-        if (ECS_HAS_ROLE(id, PAIR)) {
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
             if (ECS_PAIR_FIRST(id) != EcsWildcard) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
@@ -3739,28 +3739,28 @@ error:
     return;
 }
 
-const char* ecs_role_str(
+const char* ecs_id_flag_str(
     ecs_entity_t entity)
 {
-    if (ECS_HAS_ROLE(entity, PAIR)) {
+    if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
-    if (ECS_HAS_ROLE(entity, DISABLED)) {
+    if (ECS_HAS_ID_FLAG(entity, DISABLED)) {
         return "DISABLED";
     } else    
-    if (ECS_HAS_ROLE(entity, XOR)) {
+    if (ECS_HAS_ID_FLAG(entity, XOR)) {
         return "XOR";
     } else
-    if (ECS_HAS_ROLE(entity, OR)) {
+    if (ECS_HAS_ID_FLAG(entity, OR)) {
         return "OR";
     } else
-    if (ECS_HAS_ROLE(entity, AND)) {
+    if (ECS_HAS_ID_FLAG(entity, AND)) {
         return "AND";
     } else
-    if (ECS_HAS_ROLE(entity, NOT)) {
+    if (ECS_HAS_ID_FLAG(entity, NOT)) {
         return "NOT";
     } else
-    if (ECS_HAS_ROLE(entity, OVERRIDE)) {
+    if (ECS_HAS_ID_FLAG(entity, OVERRIDE)) {
         return "OVERRIDE";
     } else {
         return "UNKNOWN";
@@ -3776,12 +3776,12 @@ void ecs_id_str_buf(
 
     world = ecs_get_world(world);
 
-    if (id & ECS_ROLE_MASK && !ECS_HAS_ROLE(id, PAIR)) {
-        ecs_strbuf_appendstr(buf, ecs_role_str(id));
+    if (id & ECS_ID_FLAGS_MASK && !ECS_HAS_ID_FLAG(id, PAIR)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(id));
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
@@ -3928,7 +3928,7 @@ bool flecs_remove_invalid(
 {
     ecs_id_t id = *id_out;
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
         if (!rel || !flecs_is_entity_valid(world, rel)) {
             /* After relationship is deleted we can no longer see what its

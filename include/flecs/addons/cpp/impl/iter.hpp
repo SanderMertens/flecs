@@ -39,7 +39,7 @@ inline flecs::entity iter::id(int32_t index) const {
 
 inline flecs::id iter::pair(int32_t index) const {
     flecs::id_t id = ecs_field_id(m_iter, index);
-    ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(m_iter->world, id);
 error:
     return flecs::id();
