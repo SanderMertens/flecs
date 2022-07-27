@@ -62,14 +62,14 @@ By default Flecs includes many features that may not be useful for every project
 ## Documentation
 Make sure to view the documentation at https://www.flecs.dev/ !
 
-- [FAQ](docs/FAQ.md)
-- [Quickstart](docs/Quickstart.md)
-- [Query Manual](docs/Queries.md)
-- [Relationships Manual](docs/Relationships.md)
-- [Manual](docs/Manual.md)
+- [FAQ](/docs/FAQ.md)
+- [Quickstart](/docs/Quickstart.md)
+- [Query Manual](/docs/Queries.md)
+- [Relationships Manual](/docs/Relationships.md)
+- [Manual](/docs/Manual.md)
 - [API reference](https://flecs.docsforge.com/master/)
-- [C examples](examples/c)
-- [C++ examples](examples/cpp)
+- [C examples](/examples/c)
+- [C++ examples](/examples/cpp)
 
 ## Show me the code!
 C99 example:
