@@ -32,8 +32,6 @@ Here are some of the highlights of Flecs queries:
 
 | Name         | Description |
 |--------------|-------------|
-| Query        | A list of conditions used to match entities |
-| Term         | A single element of a query |
 | Id           | An id that can be matched, added and removed |
 | Component    | Id with a single element (same as an entity id) |
 | Pair         | Id with two elements |
@@ -47,10 +45,12 @@ Here are some of the highlights of Flecs queries:
 ## Examples
 Make sure to check out the code examples in the repository:
 
- - [queries (C)](/examples/c/queries)
- - [queries (C++)](/examples/cpp/queries)
- - [rules (C)](/examples/c/rules)
- - [rules (C++)](/examples/cpp/rules)
+https://github.com/SanderMertens/flecs/tree/master/examples
+
+ - [queries (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/queries)
+ - [queries (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries)
+ - [rules (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/rules)
+ - [rules (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules)
 
 ## Query Types
 Flecs has different query types, which are optimized for different kinds of use cases. This section provides a brief overview of each kind:

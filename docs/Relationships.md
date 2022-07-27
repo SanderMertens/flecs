@@ -3,12 +3,12 @@ The relationships feature makes it possible to describe entity graphs natively i
 
 Adding/removing relationships is similar to adding/removing regular components, with as difference that instead of a single component id, a relationship adds a pair of two things to an entity. In this pair, the first element represents the relationship (e.g. "Eats"), and the second element represents the relationship target (e.g. "Apples").
 
+Relationships can be used to describe many things, from hierarchies to inventory systems to trade relationships betweein players in a game. The following sections go over how to use relationships, and what features they support.
+
 ## Definitions
 
-| Name        | Description |
+| Name         | Description |
 |--------------|-------------|
-| Query        | A list of conditions used to match entities |
-| Term         | A single element of a query |
 | Id           | An id that can be added and removed |
 | Component    | Id with a single element (same as an entity id) |
 | Pair         | Id with two elements |
@@ -20,8 +20,8 @@ Adding/removing relationships is similar to adding/removing regular components, 
 ## Examples
 Make sure to check out the code examples in the repository:
 
- - [relationships (C)](/examples/c/relationships)
- - [relationships (C++)](/examples/cpp/relationships)
+ - [relationships (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/relationships)
+ - [relationships (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/relationships)
 
 ## Introduction
 The following code is a simple example that uses relationships:
