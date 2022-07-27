@@ -1,7 +1,7 @@
-![flecs](https://user-images.githubusercontent.com/9919222/104115165-0a4e4700-52c1-11eb-85d6-9bdfa9a0265f.png)
+![flecs](docs/img/logo.png)
 
+## Introduction
 [![CI build](https://github.com/SanderMertens/flecs/workflows/CI/badge.svg)](https://github.com/SanderMertens/flecs/actions)
-[![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/BEzP5Rgrrp)
 [![Try online](https://img.shields.io/badge/try-online-brightgreen)](https://godbolt.org/z/bs11T3)
 [![Documentation](https://img.shields.io/badge/docs-docsforge-blue)](http://flecs.docsforge.com/)
@@ -27,7 +27,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - [Statistics addon](https://flecs.docsforge.com/master/api-stats/) for profiling ECS performance
 - A web-based dashboard ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)) for inspecting entities, running ECS queries and monitoring games:
 
-[![Dashboard image](https://user-images.githubusercontent.com/9919222/171991682-5053ce51-fbb3-40ad-823f-b1957cedde18.png)](https://flecs.dev/explorer)
+[![Dashboard image](docs/img/explorer.png)](https://flecs.dev/explorer)
 
 **Flecs v3 is the latest, most stable and feature rich version of Flecs, and recommended for new projects.**
 
@@ -47,20 +47,27 @@ For example, a game has a `Move` _system_ that has a _query_ with two _component
 For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-faq)!
 
 ## Getting Started
-- [Quickstart](docs/Quickstart.md) ([docsforge](https://flecs.docsforge.com/master/quickstart/))
-- [FAQ](docs/FAQ.md) ([docsforge](https://flecs.docsforge.com/master/faq/))
+To use Flecs, add the [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) files to your project. When importing the files into a C++ project, make sure to compile [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) as C code (for example by using `gcc` and `clang` instead of `g++` and `clang++`).
+
+Flecs can also be built as a standalone library, by using the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake) build files. If you are using a custom build file to compile Flecs as a library, make sure to define `flecs_EXPORTS`, for example by adding `-Dflecs_EXPORTS` to the compiler command.
+
+If you want to use the [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) files to build a standalone library, make sure to remove this line from the top of the [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) file:
+
+```c
+#define flecs_STATIC
+```
+
+By default Flecs includes many features that may not be useful for every project. Builds can be customized to minimize the overhead of the library. See the [Addons](#addons) section for more information on customized builds.
+
+## Documentation
+- [FAQ](docs/FAQ.md)
+- [Quickstart](docs/Quickstart.md)
+- [Query Manual](docs/Queries.md)
+- [Relationships Manual](docs/Relationships.md)
+- [Manual](docs/Manual.md)
+- [API reference](https://flecs.docsforge.com/master/)
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
-- [Manual](docs/Manual.md) ([docsforge](https://flecs.docsforge.com/master/manual/))
-- [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
-- [Relationships Manual](docs/Relationships.md) ([docsforge](https://flecs.docsforge.com/master/relationships-manual/))
-
-## Usage
-The easiest way to add Flecs to a project is to add [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) to your source code. These files can be added to both C and C++ projects (the C++ API is embedded in `flecs.h`). In C++ projects, make sure to compile the `flecs.c` file as C code.
-
-Flecs can also be built as a standalone library by using the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake).
-
-See the [Addons](#addons) section for learning more about customizing a build.
 
 ## Show me the code!
 C99 example:
@@ -96,7 +103,7 @@ int main(int argc, char *argv[]) {
 ```
 
 Same example in C++11:
-```c++
+```cpp
 struct Position {
   float x, y;
 };
@@ -124,8 +131,32 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-## Community content
+## Projects using Flecs
+If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
+
+### Territory Control
+https://store.steampowered.com/app/690290/Territory_Control_2/
+![image](docs/img/projects/territory_control.png)
+
+### Sol Survivor
+https://nicok.itch.io/sol-survivor-demo
+![image](docs/img/projects/sol_survivor.png)
+
+### The Forge
+https://github.com/ConfettiFX/The-Forge
+![image](docs/img/projects/the_forge.png)
+
+### Gravitas
+https://thepunkcollective.itch.io/gravitas
+![image](docs/img/projects/gravitas.png)
+
+### After Sun
+https://github.com/foxnne/aftersun
+![image](docs/img/projects/after_sun.png)
+
+### Other
 Examples and tutorials contributed by the community :heart:
+
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
 - [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
@@ -136,28 +167,13 @@ Examples and tutorials contributed by the community :heart:
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
-## Projects using Flecs
-If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
+Flecs resources:
 
-### Territory Control
-https://store.steampowered.com/app/690290/Territory_Control_2/
-![image](https://user-images.githubusercontent.com/9919222/170771279-4c3517e0-467d-4a8d-af34-8dd546cbf938.png)
-
-### Sol Survivor
-https://nicok.itch.io/sol-survivor-demo
-![image](https://user-images.githubusercontent.com/9919222/170772047-6dc398f7-cb78-4ffd-9335-a83d034b3849.png)
-
-### The Forge
-https://github.com/ConfettiFX/The-Forge
-![image](https://user-images.githubusercontent.com/9919222/170774256-8d362f82-1213-4eb4-8f5f-3c4521684d11.png)
-
-### Gravitas
-https://thepunkcollective.itch.io/gravitas
-![image](https://user-images.githubusercontent.com/9919222/170774659-4eef4277-98cc-4653-8410-d7b30383d1ab.png)
-
-### After Sun
-https://github.com/foxnne/aftersun
-![image](https://user-images.githubusercontent.com/9919222/170783223-acc3ec2a-ac3e-4120-9ded-5d36a925d562.png)
+- [Discord](https://discord.gg/BEzP5Rgrrp)
+- [Medium](https://ajmmertens.medium.com)
+- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
+- [Twitter](https://twitter.com/ajmmertens)
+- [Reddit](https://www.reddit.com/r/flecs)
 
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
@@ -202,7 +218,7 @@ Addon         | Description                                      | Define       
 [OS API Impl](https://flecs.docsforge.com/master/api-os-api-impl/)   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
 
 ## Flecs Hub
-Flecs Hub is a handy collection of repositories built with Flecs that showcase basic ways of how to build engine features like input handling, transformations and rendering:
+Flecs Hub is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.
 
 Module      | Description      
 ------------|------------------
@@ -217,6 +233,7 @@ Module      | Description
 [flecs.systems.physics](https://github.com/flecs-hub/flecs-systems-physics) | Systems for moving objects and collision detection
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
+[flecs.game](https://github.com/flecs-hub/flecs-game) | Generic game systems, like a camera controller
 
 ## Language bindings
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
@@ -224,13 +241,6 @@ The following language bindings have been developed with Flecs! Note that these 
 - [Zig](https://github.com/prime31/zig-flecs)
 - [C#](https://github.com/flecs-hub/flecs-cs)
 - [Rust](https://github.com/jazzay/flecs-rs)
-
-## Links
-- [Discord](https://discord.gg/BEzP5Rgrrp)
-- [Medium](https://ajmmertens.medium.com)
-- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
-- [Twitter](https://twitter.com/ajmmertens)
-- [Reddit](https://www.reddit.com/r/flecs)
 
 ## Supporting Flecs ♥️
 Supporting Flecs goes a long way towards keeping the project going and the community alive! If you like the project, consider:
