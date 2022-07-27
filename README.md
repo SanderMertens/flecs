@@ -69,8 +69,8 @@ Make sure to view the documentation at https://www.flecs.dev/ !
 - [REST API Manual](/docs/RestApi.md)
 - [Manual](/docs/Manual.md)
 - [API reference](https://flecs.docsforge.com/master/)
-- [C examples](/examples/c)
-- [C++ examples](/examples/cpp)
+- [C examples](https://github.com/SanderMertens/flecs/tree/master/examples/c)
+- [C++ examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp)
 
 ## Show me the code!
 C99 example:
