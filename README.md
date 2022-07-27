@@ -66,6 +66,8 @@ Make sure to view the documentation at https://www.flecs.dev/ !
 - [Quickstart](/docs/Quickstart.md)
 - [Query Manual](/docs/Queries.md)
 - [Relationships Manual](/docs/Relationships.md)
+- [JSON Format Manual](/docs/JsonFormat.md)
+- [REST API Manual](/docs/RestApi.md)
 - [Manual](/docs/Manual.md)
 - [API reference](https://flecs.docsforge.com/master/)
 - [C examples](/examples/c)

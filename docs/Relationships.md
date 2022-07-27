@@ -1140,7 +1140,7 @@ auto b = world.entity().add(Eats, Fork);
 ## Relationship performance
 This section goes over the performance implications of using relationships.
 
-## Introduction
+### Introduction
 The ECS storage needs to know two things in order to store components for entities:
 
 - Which ids are associated with an entity
@@ -1148,7 +1148,7 @@ The ECS storage needs to know two things in order to store components for entiti
 
 Ids represent anything that can be added to an entity. An id that is not associated with a type is called a tag. An id associated with a type is a component. For regular components, the id is a regular entity that has the builtin `Component` component. This component contains the information needed by the storage to associate the entity with a type. If an entity does not have the `Component` component, it is a tag.
 
-## Storing Relationships
+### Storing Relationships
 Relationships do not fundamentally change or extend the capabilities of the storage. Relationship pairs are two elements encoded into a single 64 bit id, which means that on the storage level they are treated the same way as regular component ids. What changes is the function that determines which type is associated with an id. For regular components this is simply a check on whether an entity has `Component`. To support relationships, [new rules](#relationship-components) are added to determine the type of an id.
 
 Because of this, adding/removing relationships to entities has the same performance as adding/removing regular components. This becomes more obvious when looking more closely at a function that adds a relationship pair. The following example shows how the function that adds a regular component and the function that adds a pair actually map to the same functions:
@@ -1182,12 +1182,12 @@ This example also applies to C++, as the C++ API maps to the same C API function
 
 While most of the storage uses the same code paths for regular components and relationships, there are a few properties of the storage that can impact performance when using relationships. These properties are not unique to relationships, but are more likely to be significant when using relationships.
 
-## Id ranges
+### Id ranges
 Flecs reserves entity ids under a threshold (`ECS_HI_COMPONENT_ID`, default is 256) for components. This low id range is used by the storage to more efficiently encode graph edges between tables. Graph edges for components with low ids use direct array indexing, whereas graph edges for high ids use a hashmap. Graph edges are used to find the next archetype when adding/removing component ids, and are a contributing factor to the performance overhead of add/remove operations.
 
 Because of the way pair ids are encoded, a pair will never be in the low id range. This means that adding/removing a pair id always uses a hashmap to find the next archetype. This introduces a small overhead, which is usually 5-10% of the total cost of an operation.
 
-## Fragmentation
+### Fragmentation
 Fragmentation is a property of archetype-based ECS implementations where entities are spread out over more tables as the number of different component combinations increases. The overhead of fragmentation is visible in two areas:
 
 - Table creation
@@ -1197,17 +1197,17 @@ Applications that make extensive use of relationships might observe high levels 
 
 Fragmentation can be reduced by using [union relationships](#union-property). There are additional storage improvements on the roadmap that will decrease the overhead of fragmentation introduced by relationships.
 
-## Table Creation
+### Table Creation
 When an id added to an entity is deleted, all references to that id are deleted from the storage (see [cleanup properties](#cleanup-properties)). For example, when the component `Position` is deleted, it is removed from all entities and all tables with the `Position` component are deleted. While not unique to relationships, it more common for relationships to trigger cleanup actions, as relationship pairs contain regular entities.
 
 The opposite is also true, because relationship pairs can contain regular entities which can be created on the fly, table creation is more common than in applications that do not use relationships. While Flecs is optimized for fast table creation, creating and cleaning up tables is inherently more expensive than creating/deleting an entity. Therefore table creation is a factor to consider, especially for applications that make extensive use of relationships.
 
-## Indexing
+### Indexing
 To improve the speed of evaluating queries, Flecs has indices that store all tables for a given component id. Whenever a new table is created, it is registered with the indices for the ids the table has, including ids for relationship pairs.
 
 While registering a table for a relationship index is not more expensive than registering a table for a regular index, a table with relationships has to also register itself with the appropriate wildcard indices for its relationships. For example, a table with relationship `(Likes, Apples)` registers itself with the `(Likes, Apples)`, `(Likes, *)`, `(*, Apples)` and `(*, *)` indices. For this reason, creating new tables with relationships has a higher overhead than a table without relationships.
 
-## Wildcard Queries
+### Wildcard Queries
 A wildcard query for a relationship pair, like `(Likes, *)` may return multiple results for each instance of the relationship. To find all instances of a relationship, the table index (see previous section) stores two additional pieces of information
 
 - The `column`: at which offset in the table type does the id first occur
