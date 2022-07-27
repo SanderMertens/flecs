@@ -1417,6 +1417,199 @@ void QueryBuilder_any_wildcard() {
     test_int(count, 1);
 }
 
-void QueryBuilder_relationship() {
-    // Implement testcase
+void QueryBuilder_cascade() {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity();
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto e0 = ecs.entity().add(Tag);
+    auto e1 = ecs.entity().is_a(e0);
+    auto e2 = ecs.entity().is_a(e1);
+    auto e3 = ecs.entity().is_a(e2);
+
+    auto q = ecs.query_builder()
+        .term(Tag).cascade()
+        .build();
+
+    e1.add(Bar);
+    e2.add(Foo);
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+
+        if (e == e1) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, true);
+            test_bool(e3_found, false);
+            e3_found = true;
+        }
+    });
+
+    test_bool(e1_found, true);
+    test_bool(e2_found, true);
+    test_bool(e3_found, true);
+    test_int(count, 3);
+}
+
+void QueryBuilder_cascade_w_relationship() {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity();
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto e0 = ecs.entity().add(Tag);
+    auto e1 = ecs.entity().child_of(e0);
+    auto e2 = ecs.entity().child_of(e1);
+    auto e3 = ecs.entity().child_of(e2);
+
+    auto q = ecs.query_builder()
+        .term(Tag).cascade(flecs::ChildOf)
+        .build();
+
+    e1.add(Bar);
+    e2.add(Foo);
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+
+        if (e == e1) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, true);
+            test_bool(e3_found, false);
+            e3_found = true;
+        }
+    });
+
+    test_bool(e1_found, true);
+    test_bool(e2_found, true);
+    test_bool(e3_found, true);
+    test_int(count, 3);
+}
+
+void QueryBuilder_up_w_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    ecs.component<Rel>().add(flecs::Acyclic);
+
+    auto q = ecs.query_builder<Self>()
+        .term<Other>().src().up<Rel>()
+        .build();
+
+    auto base = ecs.entity().set<Other>({10});
+
+    auto 
+    e = ecs.entity().add<Rel>(base); e.set<Self>({e});
+    e = ecs.entity().add<Rel>(base); e.set<Self>({e});
+    e = ecs.entity().add<Rel>(base); e.set<Self>({e});
+
+    int32_t count = 0;
+
+    q.iter([&](flecs::iter& it, Self *s) {
+        auto o = it.field<const Other>(2);
+        test_assert(!it.is_self(2));
+        test_int(o->value, 10);
+
+        for (auto i : it) {
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+    
+    test_int(count, 3);
+}
+
+void QueryBuilder_cascade_w_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    ecs.component<Rel>().add(flecs::Acyclic);
+
+    auto Tag = ecs.entity();
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto e0 = ecs.entity().add(Tag);
+    auto e1 = ecs.entity().add<Rel>(e0);
+    auto e2 = ecs.entity().add<Rel>(e1);
+    auto e3 = ecs.entity().add<Rel>(e2);
+
+    auto q = ecs.query_builder()
+        .term(Tag).cascade<Rel>()
+        .build();
+
+    e1.add(Bar);
+    e2.add(Foo);
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+
+        if (e == e1) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_bool(e1_found, true);
+            test_bool(e2_found, true);
+            test_bool(e3_found, false);
+            e3_found = true;
+        }
+    });
+
+    test_bool(e1_found, true);
+    test_bool(e2_found, true);
+    test_bool(e3_found, true);
+    test_int(count, 3);
 }

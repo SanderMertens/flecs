@@ -35,6 +35,11 @@ struct term_id_builder_i {
         return *this;
     }
 
+    template <typename Trav>
+    Base& up() {
+        return this->up(_::cpp_type<Trav>::id(this->world_v()));
+    }
+
     /* The cascade flag is like up, but returns results in breadth-first order.
      * Only supported for flecs::query */
     Base& cascade(flecs::entity_t trav = 0) {
@@ -44,6 +49,11 @@ struct term_id_builder_i {
             m_term_id->trav = trav;
         }
         return *this;
+    }
+
+    template <typename Trav>
+    Base& cascade() {
+        return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
     }
 
     /* The parent flag is short for up(flecs::ChildOf) */

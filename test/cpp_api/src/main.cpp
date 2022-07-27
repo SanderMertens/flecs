@@ -512,7 +512,7 @@ void QueryBuilder_isa_superset_shortcut(void);
 void QueryBuilder_isa_superset_shortcut_w_self(void);
 void QueryBuilder_childof_superset_shortcut(void);
 void QueryBuilder_childof_superset_shortcut_w_self(void);
-void QueryBuilder_relationship(void);
+void QueryBuilder_relation(void);
 void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
 void QueryBuilder_add_pair_w_rel_type(void);
@@ -535,6 +535,10 @@ void QueryBuilder_group_by_raw(void);
 void QueryBuilder_group_by_template(void);
 void QueryBuilder_create_w_no_template_args(void);
 void QueryBuilder_any_wildcard(void);
+void QueryBuilder_cascade(void);
+void QueryBuilder_cascade_w_relationship(void);
+void QueryBuilder_up_w_type(void);
+void QueryBuilder_cascade_w_type(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -569,7 +573,7 @@ void FilterBuilder_isa_superset_shortcut(void);
 void FilterBuilder_isa_superset_shortcut_w_self(void);
 void FilterBuilder_childof_superset_shortcut(void);
 void FilterBuilder_childof_superset_shortcut_w_self(void);
-void FilterBuilder_relationship(void);
+void FilterBuilder_relation(void);
 void FilterBuilder_relation_w_object_wildcard(void);
 void FilterBuilder_relation_w_predicate_wildcard(void);
 void FilterBuilder_add_pair_w_rel_type(void);
@@ -2925,8 +2929,8 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_childof_superset_shortcut_w_self
     },
     {
-        "relationship",
-        QueryBuilder_relationship
+        "relation",
+        QueryBuilder_relation
     },
     {
         "relation_w_object_wildcard",
@@ -3015,6 +3019,22 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "any_wildcard",
         QueryBuilder_any_wildcard
+    },
+    {
+        "cascade",
+        QueryBuilder_cascade
+    },
+    {
+        "cascade_w_relationship",
+        QueryBuilder_cascade_w_relationship
+    },
+    {
+        "up_w_type",
+        QueryBuilder_up_w_type
+    },
+    {
+        "cascade_w_type",
+        QueryBuilder_cascade_w_type
     }
 };
 
@@ -3148,8 +3168,8 @@ bake_test_case FilterBuilder_testcases[] = {
         FilterBuilder_childof_superset_shortcut_w_self
     },
     {
-        "relationship",
-        FilterBuilder_relationship
+        "relation",
+        FilterBuilder_relation
     },
     {
         "relation_w_object_wildcard",
@@ -4677,7 +4697,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        54,
+        58,
         QueryBuilder_testcases
     },
     {
