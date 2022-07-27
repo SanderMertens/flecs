@@ -536,7 +536,7 @@
                 "isa_superset_shortcut_w_self",
                 "childof_superset_shortcut",
                 "childof_superset_shortcut_w_self",
-                "relationship",
+                "relation",
                 "relation_w_object_wildcard",
                 "relation_w_predicate_wildcard",
                 "add_pair_w_rel_type",
@@ -558,8 +558,12 @@
                 "group_by_raw",
                 "group_by_template",
                 "create_w_no_template_args",
-                "any_wildcard"
-            ]         
+                "any_wildcard",
+                "cascade",
+                "cascade_w_relationship",
+                "up_w_type",
+                "cascade_w_type"
+            ]
         }, {
             "id": "FilterBuilder",
             "testcases": [
@@ -595,7 +599,7 @@
                 "isa_superset_shortcut_w_self",
                 "childof_superset_shortcut",
                 "childof_superset_shortcut_w_self",
-                "relationship",
+                "relation",
                 "relation_w_object_wildcard",
                 "relation_w_predicate_wildcard",
                 "add_pair_w_rel_type",

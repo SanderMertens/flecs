@@ -1686,7 +1686,3 @@ void FilterBuilder_inout_shortcuts() {
     test_int(t.id(), d);
     test_int(t.inout(), flecs::InOutNone);
 }
-
-void FilterBuilder_relationship() {
-    // Implement testcase
-}
