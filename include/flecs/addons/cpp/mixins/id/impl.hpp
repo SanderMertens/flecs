@@ -8,7 +8,7 @@ inline flecs::entity id::entity() const {
 }
 
 inline flecs::entity id::role() const {
-    return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
+    return flecs::entity(m_world, m_id & ECS_ID_FLAGS_MASK);
 }
 
 inline flecs::entity id::first() const {
@@ -37,7 +37,7 @@ inline flecs::entity id::add_role(flecs::id_t role) const {
 
 inline flecs::entity id::remove_role(flecs::id_t role) const {
     (void)role;
-    ecs_assert((m_id & ECS_ROLE_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == role, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 

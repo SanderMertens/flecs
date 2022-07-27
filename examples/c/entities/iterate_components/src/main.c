@@ -35,12 +35,12 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
 
         printf("%d: ", i);
         
-        ecs_id_t role = id & ECS_ROLE_MASK;
+        ecs_id_t role = id & ECS_ID_FLAGS_MASK;
         if (role) {
-            printf("role: %s, ", ecs_role_str(role));
+            printf("role: %s, ", ecs_id_flag_str(role));
         }
 
-        if (ECS_HAS_ROLE(id, PAIR)) { // See relationships
+        if (ECS_HAS_ID_FLAG(id, PAIR)) { // See relationships
             ecs_entity_t rel = ecs_pair_first(ecs, id);
             ecs_entity_t obj = ecs_pair_second(ecs, id);
             printf("rel: %s, obj: %s",

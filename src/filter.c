@@ -273,23 +273,23 @@ int flecs_term_populate_id(
 {
     ecs_entity_t first = flecs_term_id_get_entity(&term->first);
     ecs_entity_t second = flecs_term_id_get_entity(&term->second);
-    ecs_id_t role = term->role;
+    ecs_id_t role = term->id_flags;
 
-    if (first & ECS_ROLE_MASK) {
+    if (first & ECS_ID_FLAGS_MASK) {
         return -1;
     }
-    if (second & ECS_ROLE_MASK) {
+    if (second & ECS_ID_FLAGS_MASK) {
         return -1;
     }
 
     if ((second || term->second.flags == EcsIsEntity) && !role) {
-        role = term->role = ECS_PAIR;
+        role = term->id_flags = ECS_PAIR;
     }
 
-    if (!second && role != ECS_PAIR) {
+    if (!second && !ECS_HAS_ID_FLAG(role, PAIR)) {
         term->id = first | role;
     } else {
-        if (role != ECS_PAIR) {
+        if (!ECS_HAS_ID_FLAG(role, PAIR)) {
             flecs_filter_error(ctx, "invalid role for pair");
             return -1;
         }
@@ -308,21 +308,21 @@ int flecs_term_populate_from_id(
 {
     ecs_entity_t first = 0;
     ecs_entity_t second = 0;
-    ecs_id_t role = term->id & ECS_ROLE_MASK;
+    ecs_id_t role = term->id & ECS_ID_FLAGS_MASK;
 
-    if (!role && term->role) {
-        role = term->role;
+    if (!role && term->id_flags) {
+        role = term->id_flags;
         term->id |= role;
     }
 
-    if (term->role && term->role != role) {
-        flecs_filter_error(ctx, "mismatch between term.id & term.role");
+    if (term->id_flags && term->id_flags != role) {
+        flecs_filter_error(ctx, "mismatch between term.id & term.id_flags");
         return -1;
     }
 
-    term->role = role;
+    term->id_flags = role;
 
-    if (ECS_HAS_ROLE(term->id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(term->id, PAIR)) {
         first = ECS_PAIR_FIRST(term->id);
         second = ECS_PAIR_SECOND(term->id);
 
@@ -384,7 +384,7 @@ int flecs_term_verify(
     const ecs_term_id_t *second = &term->second;
     const ecs_term_id_t *src = &term->src;
     ecs_entity_t first_id = 0, second_id = 0;
-    ecs_id_t role = term->role;
+    ecs_id_t role = term->id_flags;
     ecs_id_t id = term->id;
 
     if (first->flags & EcsIsEntity) {
@@ -394,15 +394,15 @@ int flecs_term_verify(
         second_id = second->id;
     }
 
-    if (role != (id & ECS_ROLE_MASK)) {
-        flecs_filter_error(ctx, "mismatch between term.role & term.id");
+    if (role != (id & ECS_ID_FLAGS_MASK)) {
+        flecs_filter_error(ctx, "mismatch between term.id_flags & term.id");
         return -1;
     }
 
-    if (ecs_term_id_is_set(second) && (role != ECS_PAIR)) {
+    if (ecs_term_id_is_set(second) && !ECS_HAS_ID_FLAG(role, PAIR)) {
         flecs_filter_error(ctx, "expected PAIR flag for term with pair");
         return -1;
-    } else if (!ecs_term_id_is_set(second) && (role == ECS_PAIR)) {
+    } else if (!ecs_term_id_is_set(second) && ECS_HAS_ID_FLAG(role, PAIR)) {
         if (first_id != EcsChildOf) {
             flecs_filter_error(ctx, "unexpected PAIR flag for term without pair");
             return -1;
@@ -422,7 +422,7 @@ int flecs_term_verify(
         return -1;
     }
 
-    if (role == ECS_PAIR) {
+    if (ECS_HAS_ID_FLAG(role, PAIR)) {
         if (!ECS_PAIR_FIRST(id)) {
             flecs_filter_error(ctx, "invalid 0 for first element in pair id");
             return -1;
@@ -613,7 +613,7 @@ int flecs_term_finalize(
         return -1;
     }
 
-    if (term->role == ECS_AND || term->role == ECS_OR || term->role == ECS_NOT){
+    if (term->id_flags == ECS_AND || term->id_flags == ECS_OR || term->id_flags == ECS_NOT){
         if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
             flecs_filter_error(ctx, "AND/OR terms must be filters");
             return -1;
@@ -622,19 +622,19 @@ int flecs_term_finalize(
         term->inout = EcsInOutNone;
 
         /* Translate role to operator */
-        if (term->role == ECS_AND) {
+        if (term->id_flags == ECS_AND) {
             term->oper = EcsAndFrom;
         } else
-        if (term->role == ECS_OR) {
+        if (term->id_flags == ECS_OR) {
             term->oper = EcsOrFrom;
         } else
-        if (term->role == ECS_NOT) {
+        if (term->id_flags == ECS_NOT) {
             term->oper = EcsNotFrom;
         }
 
         /* Zero out role & strip from id */
         term->id &= ECS_COMPONENT_MASK;
-        term->role = 0;
+        term->id_flags = 0;
     }
 
     if (flecs_term_verify(world, term, ctx)) {
@@ -658,7 +658,7 @@ ecs_id_t flecs_from_public_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t first = ECS_PAIR_FIRST(id);
         ecs_id_record_t *idr = flecs_id_record_ensure(world, 
             ecs_pair(first, EcsWildcard));
@@ -684,8 +684,8 @@ bool ecs_id_match(
         return true;
     }
 
-    if (ECS_HAS_ROLE(pattern, PAIR)) {
-        if (!ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(pattern, PAIR)) {
+        if (!ECS_HAS_ID_FLAG(id, PAIR)) {
             return false;
         }
 
@@ -710,7 +710,7 @@ bool ecs_id_match(
             }
         }
     } else {
-        if ((id & ECS_ROLE_MASK) != (pattern & ECS_ROLE_MASK)) {
+        if ((id & ECS_ID_FLAGS_MASK) != (pattern & ECS_ID_FLAGS_MASK)) {
             return false;
         }
 
@@ -726,7 +726,7 @@ error:
 bool ecs_id_is_pair(
     ecs_id_t id)
 {
-    return ECS_HAS_ROLE(id, PAIR);
+    return ECS_HAS_ID_FLAG(id, PAIR);
 }
 
 bool ecs_id_is_wildcard(
@@ -736,7 +736,7 @@ bool ecs_id_is_wildcard(
         return true;
     }
 
-    bool is_pair = ECS_HAS_ROLE(id, PAIR);
+    bool is_pair = ECS_HAS_ID_FLAG(id, PAIR);
     if (!is_pair) {
         return false;
     }
@@ -765,14 +765,14 @@ bool ecs_id_is_valid(
         return false;
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         if (!ECS_PAIR_FIRST(id)) {
             return false;
         }
         if (!ECS_PAIR_SECOND(id)) {
             return false;
         }
-    } else if (id & ECS_ROLE_MASK) {
+    } else if (id & ECS_ID_FLAGS_MASK) {
         if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
             return false;
         }
@@ -1286,8 +1286,8 @@ void term_str_w_strbuf(
             ecs_os_free(str);
         }
     } else {
-        if (term->role && term->role != ECS_PAIR) {
-            ecs_strbuf_appendstr(buf, ecs_role_str(term->role));
+        if (term->id_flags && !ECS_HAS_ID_FLAG(term->id_flags, PAIR)) {
+            ecs_strbuf_appendstr(buf, ecs_id_flag_str(term->id_flags));
             ecs_strbuf_appendch(buf, '|');
         }
 
@@ -1408,7 +1408,7 @@ static
 bool is_any_pair(
     ecs_id_t id)
 {
-    if (!ECS_HAS_ROLE(id, PAIR)) {
+    if (!ECS_HAS_ID_FLAG(id, PAIR)) {
         return false;
     }
 
@@ -1452,9 +1452,9 @@ bool flecs_n_term_match_table(
             continue;
         }
         bool result;
-        if (ECS_HAS_ROLE(id, AND) || ECS_HAS_ROLE(id, OR)) {
-            ecs_oper_kind_t id_oper = ECS_HAS_ROLE(id, AND)
-                ? EcsAndFrom : ECS_HAS_ROLE(id, OR)
+        if (ECS_HAS_ID_FLAG(id, AND) || ECS_HAS_ID_FLAG(id, OR)) {
+            ecs_oper_kind_t id_oper = ECS_HAS_ID_FLAG(id, AND)
+                ? EcsAndFrom : ECS_HAS_ID_FLAG(id, OR)
                     ? EcsOrFrom : 0;
             result = flecs_n_term_match_table(world, term, table, 
                 id & ECS_COMPONENT_MASK, id_oper, id_out, column_out, 

@@ -222,7 +222,7 @@ static
 bool obj_is_set(
     ecs_term_t *term)
 {
-    return ecs_term_id_is_set(&term->second) || term->role == ECS_PAIR;
+    return ecs_term_id_is_set(&term->second) || ECS_HAS_ID_FLAG(term->id_flags, PAIR);
 }
 
 static
@@ -3004,7 +3004,7 @@ int32_t find_next_same_var(
     int32_t i, count = type.count;
     for (i = column + 1; i < count; i ++) {
         ecs_id_t id = ids[i];
-        if (!ECS_HAS_ROLE(id, PAIR)) {
+        if (!ECS_HAS_ID_FLAG(id, PAIR)) {
             /* If id is not a pair, this will definitely not match, and we
              * will find no further matches. */
             return -1;
@@ -3257,7 +3257,7 @@ bool eval_superset(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_id_t col_id = rule_get_column(table->type, column);
-        ecs_assert(ECS_HAS_ROLE(col_id, PAIR), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ECS_HAS_ID_FLAG(col_id, PAIR), ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t col_obj = ecs_pair_second(world, col_id);
 
         reg_set_entity(rule, regs, r, col_obj);
@@ -4196,7 +4196,7 @@ void populate_iterator(
         ecs_id_t id = term->id;
         ecs_entity_t first = 0;
         ecs_entity_t second = 0;
-        bool is_pair = ECS_HAS_ROLE(id, PAIR);
+        bool is_pair = ECS_HAS_ID_FLAG(id, PAIR);
 
         if (!is_pair) {
             first = id;

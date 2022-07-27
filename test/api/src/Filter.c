@@ -1028,7 +1028,7 @@ void Filter_term_w_pair_id() {
 
     test_assert(ecs_term_finalize(world, &term) == 0);
     test_int(term.id, pair);
-    test_int(term.role, ECS_PAIR);
+    test_int(term.id_flags, ECS_PAIR);
     test_int(term.first.id, Rel);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1054,7 +1054,7 @@ void Filter_term_w_pred_obj() {
 
     test_assert(ecs_term_finalize(world, &term) == 0);
     test_int(term.id, pair);
-    test_int(term.role, ECS_PAIR);
+    test_int(term.id_flags, ECS_PAIR);
     test_int(term.first.id, Rel);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1080,7 +1080,7 @@ void Filter_term_w_pair_finalize_twice() {
 
     test_assert(ecs_term_finalize(world, &term) == 0);
     test_int(term.id, pair);
-    test_int(term.role, ECS_PAIR);
+    test_int(term.id_flags, ECS_PAIR);
     test_int(term.first.id, Rel);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1090,7 +1090,7 @@ void Filter_term_w_pair_finalize_twice() {
 
     test_assert(ecs_term_finalize(world, &term) == 0);
     test_int(term.id, pair);
-    test_int(term.role, ECS_PAIR);
+    test_int(term.id_flags, ECS_PAIR);
     test_int(term.first.id, Rel);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1108,16 +1108,16 @@ void Filter_term_w_role() {
 
     ecs_term_t term = {
         .id = Tag,
-        .role = ECS_OVERRIDE
+        .id_flags = ECS_OVERRIDE
     };
 
     test_assert(ecs_term_finalize(world, &term) == 0);
     test_int(term.id, Tag | ECS_OVERRIDE);
-    test_int(term.role, ECS_OVERRIDE);
+    test_int(term.id_flags, ECS_OVERRIDE);
     test_int(term.first.id, Tag);
 
     test_int(term.id, Tag | ECS_OVERRIDE);
-    test_int(term.role, ECS_OVERRIDE);
+    test_int(term.id_flags, ECS_OVERRIDE);
     test_int(term.first.id, Tag);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1133,13 +1133,13 @@ void Filter_term_w_pred_role() {
 
     ecs_term_t term = {
         .first.id = Tag,
-        .role = ECS_OVERRIDE
+        .id_flags = ECS_OVERRIDE
     };
 
     test_assert(ecs_term_finalize(world, &term) == 0);
-    test_int(term.role, ECS_OVERRIDE);
+    test_int(term.id_flags, ECS_OVERRIDE);
     test_int(term.id, Tag | ECS_OVERRIDE);
-    test_int(term.role, ECS_OVERRIDE);
+    test_int(term.id_flags, ECS_OVERRIDE);
     test_int(term.first.id, Tag);
     test_int(term.first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(term.src.id, EcsThis);
@@ -1828,7 +1828,7 @@ void Filter_filter_w_and_flag() {
     test_int(f.term_count, 1);
     test_assert(f.terms != NULL);
     test_int(f.terms[0].id, TagA);
-    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].id_flags, 0);
     test_int(f.terms[0].oper, EcsAndFrom);
 
     ecs_filter_fini(&f);
@@ -1852,7 +1852,7 @@ void Filter_filter_w_or_flag() {
     test_int(f.term_count, 1);
     test_assert(f.terms != NULL);
     test_int(f.terms[0].id, TagA);
-    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].id_flags, 0);
     test_int(f.terms[0].oper, EcsOrFrom);
 
     ecs_filter_fini(&f);
@@ -1877,7 +1877,7 @@ void Filter_filter_filter() {
     test_int(f.term_count, 1);
     test_assert(f.terms != NULL);
     test_int(f.terms[0].id, TagA);
-    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].id_flags, 0);
     test_int(f.terms[0].oper, EcsAnd);
     test_int(f.terms[0].inout, EcsInOutNone);
 
@@ -2034,7 +2034,7 @@ void Filter_filter_w_not_flag() {
     test_int(f.term_count, 1);
     test_assert(f.terms != NULL);
     test_int(f.terms[0].id, TagA);
-    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].id_flags, 0);
     test_int(f.terms[0].oper, EcsNotFrom);
 
     ecs_filter_fini(&f);

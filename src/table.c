@@ -81,8 +81,8 @@ void check_table_sanity(ecs_table_t *table) {
             ecs_bitset_t *bs = &table->data.bs_columns[i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert((ids[i + bs_offset] & ECS_ROLE_MASK) == 
-                    ECS_DISABLED, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], DISABLED),
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 }
@@ -313,8 +313,7 @@ void flecs_table_init_flags(
         } else if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         } else {
-            ecs_entity_t role = id & ECS_ROLE_MASK;
-            if (role == ECS_PAIR) {
+            if (ECS_HAS_ID_FLAG(id, PAIR)) {
                 ecs_entity_t r = ECS_PAIR_FIRST(id);
 
                 table->flags |= EcsTableHasPairs;
@@ -344,14 +343,16 @@ void flecs_table_init_flags(
                 } else if (r == ecs_id(EcsPoly)) {
                     table->flags |= EcsTableHasBuiltins;
                 }
-            } else if (role == ECS_DISABLED) {
+            }
+            if (ECS_HAS_ID_FLAG(id, DISABLED)) {
                 table->flags |= EcsTableHasDisabled;
 
                 if (!table->bs_count) {
                     table->bs_offset = flecs_ito(int16_t, i);
                 }
                 table->bs_count ++;
-            } else if (role == ECS_OVERRIDE) {
+            }
+            if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
                 table->flags |= EcsTableHasOverrides;
             }
         } 
@@ -390,13 +391,12 @@ void flecs_table_init(
     /* Scan to find boundaries of regular ids, pairs and roles */
     for (dst_i = 0; dst_i < dst_count; dst_i ++) {
         ecs_id_t dst_id = dst_ids[dst_i];
-        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
-        if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
+        if (first_pair == -1 && ECS_HAS_ID_FLAG(dst_id, PAIR)) {
             first_pair = dst_i;
         }
         if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
             last_id = dst_i;
-        } else if (first_role == -1 && role != ECS_PAIR) {
+        } else if (first_role == -1 && !ECS_HAS_ID_FLAG(dst_id, PAIR)) {
             first_role = dst_i;
         }
     }
@@ -439,8 +439,7 @@ void flecs_table_init(
     if (first_role != -1) {
         for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
             ecs_id_t id = dst_ids[dst_i];
-            ecs_entity_t role = id & ECS_ROLE_MASK;
-            if (role != ECS_PAIR) {
+            if (!ECS_HAS_ID_FLAG(id, PAIR)) {
                 id &= ECS_COMPONENT_MASK;
                 id = ecs_pair(id, EcsWildcard);
                 tr = ecs_vector_add(&records, ecs_table_record_t);
@@ -461,7 +460,7 @@ void flecs_table_init(
         ecs_entity_t r = 0;
         for (dst_i = first_pair; dst_i < dst_count; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
-            if (!ECS_HAS_ROLE(dst_id, PAIR)) {
+            if (!ECS_HAS_ID_FLAG(dst_id, PAIR)) {
                 break; /* no more pairs */
             }
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */

@@ -560,7 +560,7 @@ const char* parse_arguments(
             if (ptr[0] == TOK_AND) {
                 ptr = ecs_parse_whitespace(ptr + 1);
 
-                term->role = ECS_PAIR;
+                term->id_flags = ECS_PAIR;
 
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
                 ptr = ecs_parse_whitespace(ptr + 1);
@@ -661,8 +661,8 @@ const char* parse_term(
     }
 
 parse_role:
-    term.role = parse_role(name, expr, (ptr - expr), token);
-    if (!term.role) {
+    term.id_flags = parse_role(name, expr, (ptr - expr), token);
+    if (!term.id_flags) {
         goto error;
     }
 
@@ -794,15 +794,15 @@ parse_pair_object:
         goto error;
     }
 
-    if (term.role != 0) {
-        if (term.role != ECS_PAIR) {
+    if (term.id_flags != 0) {
+        if (!ECS_HAS_ID_FLAG(term.id_flags, PAIR)) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid combination of role '%s' with pair", 
-                    ecs_role_str(term.role));
+                    ecs_id_flag_str(term.id_flags));
             goto error;
         }
     } else {
-        term.role = ECS_PAIR;
+        term.id_flags = ECS_PAIR;
     }
 
     ptr = ecs_parse_whitespace(ptr);
@@ -972,15 +972,15 @@ char* ecs_parse_term(
     }
 
     /* Process role */
-    if (term->role == ECS_AND) {
+    if (term->id_flags == ECS_AND) {
         term->oper = EcsAndFrom;
-        term->role = 0;
-    } else if (term->role == ECS_OR) {
+        term->id_flags = 0;
+    } else if (term->id_flags == ECS_OR) {
         term->oper = EcsOrFrom;
-        term->role = 0;
-    } else if (term->role == ECS_NOT) {
+        term->id_flags = 0;
+    } else if (term->id_flags == ECS_NOT) {
         term->oper = EcsNotFrom;
-        term->role = 0;
+        term->id_flags = 0;
     }
 
     ptr = ecs_parse_whitespace(ptr);

@@ -1314,7 +1314,7 @@ The `AndFrom`, `OrFrom` and `NotFrom` operators make it possible to match a list
 
 The `AndFrom`, `OrFrom` and `NotFrom` operators are especially useful when combined with prefab entities, which by default are not matched with queries themselves. Components that have the `DontInherit` property are ignored while matching the operators, which means that using a prefab in combination with `AndFrom`, `OrFrom` and `NotFrom` will not cause components like `Prefab` or `ChildOf` to be considered.
 
-Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` type flags.
+Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` id flags.
 
 Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a the `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
 

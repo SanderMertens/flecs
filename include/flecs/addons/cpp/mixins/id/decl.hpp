@@ -36,7 +36,7 @@ struct id {
 
     /** Test if id is pair (has first, second) */
     bool is_pair() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Pair;
+        return (m_id & ECS_ID_FLAGS_MASK) == flecs::Pair;
     }
 
     /* Test if id is a wildcard */
@@ -46,7 +46,7 @@ struct id {
 
     /* Test if id is entity */
     bool is_entity() const {
-        return !(m_id & ECS_ROLE_MASK);
+        return !(m_id & ECS_ID_FLAGS_MASK);
     }
 
     /* Return id as entity (only allowed when id is valid entity) */
@@ -69,12 +69,12 @@ struct id {
 
     /* Test if id has specified role */
     bool has_role(flecs::id_t role) const {
-        return ((m_id & ECS_ROLE_MASK) == role);
+        return ((m_id & ECS_ID_FLAGS_MASK) == role);
     }
 
     /* Test if id has any role */
     bool has_role() const {
-        return (m_id & ECS_ROLE_MASK) != 0;
+        return (m_id & ECS_ID_FLAGS_MASK) != 0;
     }
 
     flecs::entity role() const;
@@ -106,7 +106,7 @@ struct id {
 
     /** Convert role of id to string. */
     flecs::string role_str() const {
-        return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
+        return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
     }
 
     flecs::id_t raw_id() const {

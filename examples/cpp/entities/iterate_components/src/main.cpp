@@ -35,7 +35,7 @@ void iterate_components(flecs::entity e) {
     e.each([&](flecs::id id) {
         std::cout << i++ << ": ";
 
-        flecs::id role = id.role();
+        flecs::id role = id.id_flags();
         if (role) {
             std::cout << "role: " << role.role_str() << ", ";
         }

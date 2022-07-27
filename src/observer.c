@@ -941,14 +941,14 @@ void flecs_observers_notify(
 
         for (i = 0; i < ids_count; i ++) {
             ecs_id_t id = ids_array[i];
-            ecs_entity_t role = id & ECS_ROLE_MASK;
+            ecs_entity_t role = id & ECS_ID_FLAGS_MASK;
             bool iter_set = false;
 
             it->event_id = id;
 
             flecs_notify_observers_for_id(world, evt, id, it, &iter_set);
 
-            if (role == ECS_PAIR) {
+            if (ECS_HAS_ID_FLAG(role, PAIR)) {
                 ecs_entity_t r = ECS_PAIR_FIRST(id);
                 ecs_entity_t o = ECS_PAIR_SECOND(id);
 

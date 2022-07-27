@@ -58,7 +58,7 @@ bool type_can_inherit_id(
         return false;
     }
     if (idr->flags & EcsIdExclusive) {
-        if (ECS_HAS_ROLE(id, PAIR)) {
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
             ecs_entity_t er = ECS_PAIR_FIRST(id);
             if (flecs_table_record_get(
                 world, table, ecs_pair(er, EcsWildcard))) 

@@ -328,37 +328,37 @@ void Type_entity_str_small_buffer() {
 
 void Type_role_pair_str() {
     ecs_entity_t e = ECS_PAIR;
-    test_str(ecs_role_str(e), "PAIR");
+    test_str(ecs_id_flag_str(e), "PAIR");
 }
 
 void Type_role_and_str() {
     ecs_entity_t e = ECS_AND;
-    test_str(ecs_role_str(e), "AND");
+    test_str(ecs_id_flag_str(e), "AND");
 }
 
 void Type_role_or_str() {
     ecs_entity_t e = ECS_OR;
-    test_str(ecs_role_str(e), "OR");
+    test_str(ecs_id_flag_str(e), "OR");
 }
 
 void Type_role_xor_str() {
     ecs_entity_t e = ECS_XOR;
-    test_str(ecs_role_str(e), "XOR");
+    test_str(ecs_id_flag_str(e), "XOR");
 }
 
 void Type_role_not_str() {
     ecs_entity_t e = ECS_NOT;
-    test_str(ecs_role_str(e), "NOT");
+    test_str(ecs_id_flag_str(e), "NOT");
 }
 
 void Type_role_owned_str() {
     ecs_entity_t e = ECS_OVERRIDE;
-    test_str(ecs_role_str(e), "OVERRIDE");
+    test_str(ecs_id_flag_str(e), "OVERRIDE");
 }
 
 void Type_role_disabled_str() {
     ecs_entity_t e = ECS_DISABLED;
-    test_str(ecs_role_str(e), "DISABLED");
+    test_str(ecs_id_flag_str(e), "DISABLED");
 }
 
 void Type_large_type_expr() {
