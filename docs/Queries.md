@@ -1376,7 +1376,7 @@ Source is a property of a term that specifies the entity on which the term shoul
 
 When a query only has terms with fixed sources, iterating the query will return a result at least once when it matches, and at most once if the query terms do not match wildcards. If a query has one or more terms with a fixed source that do not match the entity, the query will return no results. A source does not need to match the query when the query is created.
 
-When a term has a fixed source and the [access modifiers](#access-modifiers) are not explicitly set, the access modifier defaults to `In`, instead of `InOut`. The rationale behind this is that it encourages code that only makes local changes (changes to components owned by the matched entity) which is easier to maintain and multithread. This default can be overridden by explicitly setting access modifiers.
+When a term has a fixed source and the [access modifiers](#access-modifiers) are not explicitly set, the access modifier defaults to `In`, instead of `InOut`. The rationale behind this is that it encourages code to only makes local changes (changes to components owned by the matched entity) which is easier to maintain and multithread. This default can be overridden by explicitly setting access modifiers.
 
 The following sections show how to use variable and fixed sources with the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 

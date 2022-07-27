@@ -12,7 +12,6 @@ flecs_deps = dependency('threads')
 
 flecs_src = files(
     'src/addons/coredoc.c',
-    'src/addons/deprecated.c',
     'src/addons/doc.c',
     'src/addons/expr/deserialize.c',
     'src/addons/expr/serialize.c',
