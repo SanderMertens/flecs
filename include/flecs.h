@@ -982,7 +982,7 @@ FLECS_API extern const ecs_entity_t EcsWildcard;
 /* Any entity ("_"). Matches any id, returns only the first. */
 FLECS_API extern const ecs_entity_t EcsAny;
 
-/* This entity ("."). Used in expressions to indicate This variable */
+/* This entity. Default source for queries. */
 FLECS_API extern const ecs_entity_t EcsThis;
 
 /* Variable entity ("$"). Used in expressions to prefix variable names */
@@ -1717,7 +1717,7 @@ void ecs_remove_id(
  * @param enable True to enable the component, false to disable.
  */
 FLECS_API 
-void ecs_enable_component_w_id(
+void ecs_enable_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -1734,7 +1734,7 @@ void ecs_enable_component_w_id(
  * @return True if the component is enabled, otherwise false.
  */
 FLECS_API 
-bool ecs_is_component_enabled_w_id(
+bool ecs_is_enabled_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

@@ -2151,7 +2151,7 @@ void flecs_targets_mark_for_delete(
         /* If entity is not used as id or as relationship target, there won't
          * be any tables with a reference to it. */
         ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityObservedId|EcsEntityObservedObject))) {
+        if (!(flags & (EcsEntityObservedId|EcsEntityObservedTarget))) {
             continue;
         }
 
@@ -2166,8 +2166,12 @@ void flecs_targets_mark_for_delete(
                     ECS_ID_ON_DELETE(idr->flags));
             }
         }
-        if (flags & EcsEntityObservedObject) {
+        if (flags & EcsEntityObservedTarget) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
+                flecs_id_mark_for_delete(world, idr, 
+                    ECS_ID_ON_DELETE_OBJECT(idr->flags));
+            }
+            if ((idr = flecs_id_record_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE_OBJECT(idr->flags));
             }
@@ -2334,6 +2338,7 @@ void flecs_remove_from_table(
     ecs_marked_id_t *ids = ecs_vector_first(world->store.marked_ids,
         ecs_marked_id_t);
     const ecs_table_record_t *tr;
+
     for (i = 0; i < count; i ++) {
         const ecs_id_record_t *idr = ids[i].idr;
 
@@ -2559,7 +2564,8 @@ void ecs_delete(
                 flecs_on_delete(world, entity, 0);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0);
             }
-            if (row_flags & EcsEntityObservedObject) {
+            if (row_flags & EcsEntityObservedTarget) {
+                flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0);
             }
 
@@ -3048,7 +3054,7 @@ error:
     return 0;
 }
 
-void ecs_enable_component_w_id(
+void ecs_enable_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -3070,7 +3076,7 @@ void ecs_enable_component_w_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
     
     ecs_table_t *table = r->table;
     int32_t index = -1;
@@ -3080,7 +3086,7 @@ void ecs_enable_component_w_id(
 
     if (index == -1) {
         ecs_add_id(world, entity, bs_id);
-        ecs_enable_component_w_id(world, entity, id, enable);
+        ecs_enable_id(world, entity, id, enable);
         return;
     }
 
@@ -3096,7 +3102,7 @@ error:
     return;
 }
 
-bool ecs_is_component_enabled_w_id(
+bool ecs_is_enabled_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -3114,7 +3120,7 @@ bool ecs_is_component_enabled_w_id(
         return false;
     }
 
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
     int32_t index = ecs_search(world, table, bs_id, 0);
     if (index == -1) {
         /* If table does not have TOGGLE column for component, component is
@@ -4084,10 +4090,10 @@ bool flecs_defer_end(
                     flecs_on_delete(world, op->id, e);
                     break;
                 case EcsOpEnable:
-                    ecs_enable_component_w_id(world, e, op->id, true);
+                    ecs_enable_id(world, e, op->id, true);
                     break;
                 case EcsOpDisable:
-                    ecs_enable_component_w_id(world, e, op->id, false);
+                    ecs_enable_id(world, e, op->id, false);
                     break;
                 case EcsOpBulkNew:
                     flecs_flush_bulk_new(world, op);

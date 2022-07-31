@@ -34,17 +34,12 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
         ecs_id_t id = type_ids[i];
 
         printf("%d: ", i);
-        
-        ecs_id_t role = id & ECS_ID_FLAGS_MASK;
-        if (role) {
-            printf("role: %s, ", ecs_id_flag_str(role));
-        }
 
         if (ECS_HAS_ID_FLAG(id, PAIR)) { // See relationships
             ecs_entity_t rel = ecs_pair_first(ecs, id);
-            ecs_entity_t obj = ecs_pair_second(ecs, id);
-            printf("rel: %s, obj: %s",
-                ecs_get_name(ecs, rel), ecs_get_name(ecs, obj));
+            ecs_entity_t tgt = ecs_pair_second(ecs, id);
+            printf("rel: %s, tgt: %s",
+                ecs_get_name(ecs, rel), ecs_get_name(ecs, tgt));
         } else {
             ecs_entity_t comp = id & ECS_COMPONENT_MASK;
             printf("entity: %s", ecs_get_name(ecs, comp));
@@ -102,7 +97,7 @@ int main(int argc, char *argv[]) {
 // 0: entity: Position
 // 1: entity: Velocity
 // 2: entity: Human
-// 3: role: PAIR, rel: Eats, obj: Eats
+// 3: rel: Eats, tgt: Eats
 
 
 // Position's components:
@@ -114,6 +109,6 @@ int main(int argc, char *argv[]) {
 // 3: (OnDelete,Panic)
 
 // 0: entity: Component
-// 1: role: PAIR, rel: Identifier, obj: Identifier
-// 2: role: PAIR, rel: Identifier, obj: Identifier
-// 3: role: PAIR, rel: OnDelete, obj: OnDelete
+// 1: rel: Identifier, tgt: Identifier
+// 2: rel: Identifier, tgt: Identifier
+// 3: rel: OnDelete, tgt: OnDelete

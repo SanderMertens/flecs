@@ -48,6 +48,8 @@ const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
+const ecs_entity_t EcsFlag =                  ECS_HI_COMPONENT_ID + 9;
+
 /* Relationship properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
@@ -470,7 +472,7 @@ void fini_roots(ecs_world_t *world) {
         for (i = count - 1; i >= 0; i --) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityObservedObject)) {
+            if (!(flags & EcsEntityObservedTarget)) {
                 continue; /* Filter out entities that aren't objects */
             }
 

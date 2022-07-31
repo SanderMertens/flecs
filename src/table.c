@@ -360,6 +360,32 @@ void flecs_table_init_flags(
     }
 }
 
+static
+void flecs_table_append_to_records(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_vector_t **records,
+    ecs_id_t id,
+    int32_t column)
+{
+    /* To avoid a quadratic search, use the O(1) lookup that the index
+     * already provides. */
+    ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+    ecs_table_record_t *tr = (ecs_table_record_t*)flecs_id_record_get_table(
+            idr, table);
+    if (!tr) {
+        tr = ecs_vector_add(records, ecs_table_record_t);
+        tr->column = column;
+        tr->count = 1;
+
+        ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+    } else {
+        tr->count ++;
+    }
+
+    ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+}
+
 void flecs_table_init(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -441,20 +467,27 @@ void flecs_table_init(
         for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
             ecs_id_t id = dst_ids[dst_i];
             if (!ECS_IS_PAIR(id)) {
-                id &= ECS_COMPONENT_MASK;
-                id = ecs_pair(id, EcsWildcard);
-                tr = ecs_vector_add(&records, ecs_table_record_t);
-                tr->hdr.cache = (ecs_table_cache_t*)flecs_id_record_ensure(
-                    world, id);
-                tr->column = dst_i;
-                tr->count = 1;
+                ecs_entity_t first = 0;
+                ecs_entity_t second = 0;
+                if (ECS_HAS_ID_FLAG(id, PAIR)) {
+                    first = ECS_PAIR_FIRST(id);
+                    second = ECS_PAIR_SECOND(id);
+                } else {
+                    first = id & ECS_COMPONENT_MASK;
+                }
+                if (first) {
+                    flecs_table_append_to_records(world, table, &records, 
+                        ecs_pair(EcsFlag, first), dst_i);
+                }
+                if (second) {
+                    flecs_table_append_to_records(world, table, &records, 
+                        ecs_pair(EcsFlag, second), dst_i);
+                }
             }
         }
     }
 
     int32_t last_pair = -1;
-    int32_t first_tgt_wc = -1;
-    int32_t tgt_wc_count = 0;
     bool has_childof = table->flags & EcsTableHasChildOf;
     if (first_pair != -1) {
         /* Add a (Relationship, *) record for each relationship. */
@@ -493,7 +526,7 @@ void flecs_table_init(
 
         int wildcard_count = 3; /* for *, _ and (*, *) */
         wildcard_count += dst_count && !has_childof; /* for (ChildOf, 0) */
-        
+
         ecs_vector_set_min_size(&records, ecs_table_record_t,   
             ecs_vector_count(records) + wildcard_count +
                 (last_pair - first_pair));
@@ -502,27 +535,8 @@ void flecs_table_init(
             ecs_id_t dst_id = dst_ids[dst_i];
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
-            /* To avoid a quadratic search, use the O(1) lookup that the index
-             * already provides. */
-            idr = flecs_id_record_ensure(world, tgt_id);
-            tr = (ecs_table_record_t*)flecs_id_record_get_table(idr, table);
-            if (!tr) {
-                tr = ecs_vector_add(&records, ecs_table_record_t);
-                tr->column = dst_i;
-                tr->count = 1;
-
-                ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
-
-                if (first_tgt_wc == -1) {
-                    first_tgt_wc = ecs_vector_count(records) - 1;
-                }
-
-                tgt_wc_count ++;
-            } else {
-                tr->count ++;
-            }
-
-            ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_table_append_to_records(
+                world, table, &records, tgt_id, dst_i);
         }
     }
 
@@ -565,7 +579,7 @@ void flecs_table_init(
         idr = (ecs_id_record_t*)dst_tr[i].hdr.cache;
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (i >= first_tgt_wc && i < (first_tgt_wc + tgt_wc_count)) {
+        if (ecs_table_cache_get(&idr->cache, table)) {
             /* If this is a target wildcard record it has already been 
              * registered, but the record is now at a different location in
              * memory. Patch up the linked list with the new address */

@@ -1078,8 +1078,8 @@ void Switch_switch_w_bitset_query() {
     ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
     ecs_set(world, e3, Position, {13, 23});
 
-    test_bool(ecs_is_component_enabled(world, e1, Position), true);
-    test_bool(ecs_is_component_enabled(world, e2, Position), false);
+    test_bool(ecs_is_enabled_component(world, e1, Position), true);
+    test_bool(ecs_is_enabled_component(world, e2, Position), false);
 
     Position *p;
     ecs_entity_t *c;

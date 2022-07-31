@@ -3,11 +3,11 @@ namespace flecs {
 
 inline flecs::entity id::entity() const {
     ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!role(), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!flags(), ECS_INVALID_OPERATION, NULL);
     return flecs::entity(m_world, m_id);
 }
 
-inline flecs::entity id::role() const {
+inline flecs::entity id::flags() const {
     return flecs::entity(m_world, m_id & ECS_ID_FLAGS_MASK);
 }
 
@@ -31,17 +31,17 @@ inline flecs::entity id::second() const {
     }
 }
 
-inline flecs::entity id::add_role(flecs::id_t role) const {
-    return flecs::entity(m_world, m_id | role);
+inline flecs::entity id::add_flags(flecs::id_t flags) const {
+    return flecs::entity(m_world, m_id | flags);
 }
 
-inline flecs::entity id::remove_role(flecs::id_t role) const {
-    (void)role;
-    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+inline flecs::entity id::remove_flags(flecs::id_t flags) const {
+    (void)flags;
+    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 
-inline flecs::entity id::remove_role() const {
+inline flecs::entity id::remove_flags() const {
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 

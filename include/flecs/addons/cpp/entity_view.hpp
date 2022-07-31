@@ -530,7 +530,7 @@ struct entity_view : public id {
      */
     template<typename T>
     bool is_enabled() {
-        return ecs_is_component_enabled_w_id(
+        return ecs_is_enabled_id(
             m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
@@ -540,7 +540,7 @@ struct entity_view : public id {
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity_view& e) {
-        return ecs_is_component_enabled_w_id(
+        return ecs_is_enabled_id(
             m_world, m_id, e);
     }
 

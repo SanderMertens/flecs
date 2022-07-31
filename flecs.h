@@ -175,7 +175,7 @@ extern "C" {
 
 #define EcsEntityObserved             (1u << 31)
 #define EcsEntityObservedId           (1u << 30)
-#define EcsEntityObservedObject       (1u << 29)
+#define EcsEntityObservedTarget       (1u << 29)
 #define EcsEntityObservedAcyclic      (1u << 28)
 
 
@@ -3861,7 +3861,7 @@ FLECS_API extern const ecs_entity_t EcsWildcard;
 /* Any entity ("_"). Matches any id, returns only the first. */
 FLECS_API extern const ecs_entity_t EcsAny;
 
-/* This entity ("."). Used in expressions to indicate This variable */
+/* This entity. Default source for queries. */
 FLECS_API extern const ecs_entity_t EcsThis;
 
 /* Variable entity ("$"). Used in expressions to prefix variable names */
@@ -4596,7 +4596,7 @@ void ecs_remove_id(
  * @param enable True to enable the component, false to disable.
  */
 FLECS_API 
-void ecs_enable_component_w_id(
+void ecs_enable_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -4613,7 +4613,7 @@ void ecs_enable_component_w_id(
  * @return True if the component is enabled, otherwise false.
  */
 FLECS_API 
-bool ecs_is_component_enabled_w_id(
+bool ecs_is_enabled_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -7942,11 +7942,16 @@ void* ecs_record_get_column(
 /* -- Enable / Disable component -- */
 
 #define ecs_enable_component(world, entity, T, enable)\
-    ecs_enable_component_w_id(world, entity, ecs_id(T), enable)
+    ecs_enable_id(world, entity, ecs_id(T), enable)
 
-#define ecs_is_component_enabled(world, entity, T)\
-    ecs_is_component_enabled_w_id(world, entity, ecs_id(T))
+#define ecs_is_enabled_component(world, entity, T)\
+    ecs_is_enabled_id(world, entity, ecs_id(T))
 
+#define ecs_enable_pair(world, entity, First, second, enable)\
+    ecs_enable_id(world, entity, ecs_pair(ecs_id(First), second), enable)
+
+#define ecs_is_enabled_pair(world, entity, First, second)\
+    ecs_is_enabled_id(world, entity, ecs_pair(ecs_id(First), second))
 
 /* -- Count -- */
 
@@ -13765,7 +13770,7 @@ struct id {
     id()
         : m_world(nullptr)
         , m_id(0) { }
-    
+
     explicit id(flecs::id_t value) 
         : m_world(nullptr)
         , m_id(value) { }
@@ -13805,13 +13810,13 @@ struct id {
     flecs::entity entity() const;
 
     /* Return id with role added */
-    flecs::entity add_role(flecs::id_t role) const;
+    flecs::entity add_flags(flecs::id_t flags) const;
 
     /* Return id with role removed */
-    flecs::entity remove_role(flecs::id_t role) const;
+    flecs::entity remove_flags(flecs::id_t flags) const;
 
     /* Return id without role */
-    flecs::entity remove_role() const;
+    flecs::entity remove_flags() const;
 
     /* Return id without role */
     flecs::entity remove_generation() const;    
@@ -13820,16 +13825,16 @@ struct id {
     flecs::entity type_id() const;
 
     /* Test if id has specified role */
-    bool has_role(flecs::id_t role) const {
-        return ((m_id & ECS_ID_FLAGS_MASK) == role);
+    bool has_flags(flecs::id_t flags) const {
+        return ((m_id & flags) == flags);
     }
 
     /* Test if id has any role */
-    bool has_role() const {
+    bool has_flags() const {
         return (m_id & ECS_ID_FLAGS_MASK) != 0;
     }
 
-    flecs::entity role() const;
+    flecs::entity flags() const;
 
     /* Test if id has specified first */
     bool has_relation(flecs::id_t first) const {
@@ -13857,7 +13862,7 @@ struct id {
     }
 
     /** Convert role of id to string. */
-    flecs::string role_str() const {
+    flecs::string flags_str() const {
         return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
     }
 
@@ -17501,7 +17506,7 @@ struct entity_view : public id {
      */
     template<typename T>
     bool is_enabled() {
-        return ecs_is_component_enabled_w_id(
+        return ecs_is_enabled_id(
             m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
@@ -17511,7 +17516,7 @@ struct entity_view : public id {
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity_view& e) {
-        return ecs_is_component_enabled_w_id(
+        return ecs_is_enabled_id(
             m_world, m_id, e);
     }
 
@@ -18031,7 +18036,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& enable() {
-        ecs_enable_component_w_id(this->m_world, this->m_id, _::cpp_type<T>::id(), true);
+        ecs_enable_id(this->m_world, this->m_id, _::cpp_type<T>::id(), true);
         return to_base();
     }  
 
@@ -18043,7 +18048,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& disable() {
-        ecs_enable_component_w_id(this->m_world, this->m_id, _::cpp_type<T>::id(), false);
+        ecs_enable_id(this->m_world, this->m_id, _::cpp_type<T>::id(), false);
         return to_base();
     }  
 
@@ -18053,7 +18058,7 @@ struct entity_builder : entity_view {
      * @param comp The component to enable.
      */   
     Self& enable(entity_t comp) {
-        ecs_enable_component_w_id(this->m_world, this->m_id, comp, true);
+        ecs_enable_id(this->m_world, this->m_id, comp, true);
         return to_base();       
     }
 
@@ -18063,7 +18068,7 @@ struct entity_builder : entity_view {
      * @param comp The component to disable.
      */   
     Self& disable(entity_t comp) {
-        ecs_enable_component_w_id(this->m_world, this->m_id, comp, false);
+        ecs_enable_id(this->m_world, this->m_id, comp, false);
         return to_base();       
     }
 
@@ -20276,11 +20281,11 @@ namespace flecs {
 
 inline flecs::entity id::entity() const {
     ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!role(), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!flags(), ECS_INVALID_OPERATION, NULL);
     return flecs::entity(m_world, m_id);
 }
 
-inline flecs::entity id::role() const {
+inline flecs::entity id::flags() const {
     return flecs::entity(m_world, m_id & ECS_ID_FLAGS_MASK);
 }
 
@@ -20304,17 +20309,17 @@ inline flecs::entity id::second() const {
     }
 }
 
-inline flecs::entity id::add_role(flecs::id_t role) const {
-    return flecs::entity(m_world, m_id | role);
+inline flecs::entity id::add_flags(flecs::id_t flags) const {
+    return flecs::entity(m_world, m_id | flags);
 }
 
-inline flecs::entity id::remove_role(flecs::id_t role) const {
-    (void)role;
-    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+inline flecs::entity id::remove_flags(flecs::id_t flags) const {
+    (void)flags;
+    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 
-inline flecs::entity id::remove_role() const {
+inline flecs::entity id::remove_flags() const {
     return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
 }
 

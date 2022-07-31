@@ -23,6 +23,9 @@
 #include "flecs/private/bitset.h"
 #include "flecs/private/switch_list.h"
 
+/* Used in id records to keep track of entities used with id flags */
+extern const ecs_entity_t EcsFlag;
+
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
 /* Magic number for a flecs object */

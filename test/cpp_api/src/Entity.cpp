@@ -669,7 +669,7 @@ void Entity_add_role() {
 
     auto entity = world.entity();
 
-    entity = entity.add_role(flecs::Pair);
+    entity = entity.add_flags(flecs::Pair);
 
     test_assert(entity & ECS_PAIR);
 }
@@ -681,11 +681,11 @@ void Entity_remove_role() {
 
     flecs::entity_t id = entity;
 
-    entity = entity.add_role(flecs::Pair);
+    entity = entity.add_flags(flecs::Pair);
 
     test_assert(entity & ECS_PAIR);
 
-    entity = entity.remove_role();
+    entity = entity.remove_flags();
 
     test_assert(entity == id);
 }
@@ -695,13 +695,13 @@ void Entity_has_role() {
 
     auto entity = world.entity();
 
-    entity = entity.add_role(flecs::Pair);
+    entity = entity.add_flags(flecs::Pair);
 
-    test_assert(entity.has_role(flecs::Pair));
+    test_assert(entity.has_flags(flecs::Pair));
 
-    entity = entity.remove_role();
+    entity = entity.remove_flags();
 
-    test_assert(!entity.has_role(flecs::Pair));
+    test_assert(!entity.has_flags(flecs::Pair));
 }
 
 void Entity_pair_role() {
@@ -711,9 +711,9 @@ void Entity_pair_role() {
     auto b = world.entity();
 
     auto pair = flecs::id(a, b);
-    pair = pair.add_role(flecs::Pair);
+    pair = pair.add_flags(flecs::Pair);
     
-    test_assert(pair.has_role(flecs::Pair));
+    test_assert(pair.has_flags(flecs::Pair));
 
     auto rel = pair.first();
     auto obj = pair.second();

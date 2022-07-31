@@ -13,7 +13,7 @@ struct id {
     id()
         : m_world(nullptr)
         , m_id(0) { }
-    
+
     explicit id(flecs::id_t value) 
         : m_world(nullptr)
         , m_id(value) { }
@@ -53,13 +53,13 @@ struct id {
     flecs::entity entity() const;
 
     /* Return id with role added */
-    flecs::entity add_role(flecs::id_t role) const;
+    flecs::entity add_flags(flecs::id_t flags) const;
 
     /* Return id with role removed */
-    flecs::entity remove_role(flecs::id_t role) const;
+    flecs::entity remove_flags(flecs::id_t flags) const;
 
     /* Return id without role */
-    flecs::entity remove_role() const;
+    flecs::entity remove_flags() const;
 
     /* Return id without role */
     flecs::entity remove_generation() const;    
@@ -68,16 +68,16 @@ struct id {
     flecs::entity type_id() const;
 
     /* Test if id has specified role */
-    bool has_role(flecs::id_t role) const {
-        return ((m_id & ECS_ID_FLAGS_MASK) == role);
+    bool has_flags(flecs::id_t flags) const {
+        return ((m_id & flags) == flags);
     }
 
     /* Test if id has any role */
-    bool has_role() const {
+    bool has_flags() const {
         return (m_id & ECS_ID_FLAGS_MASK) != 0;
     }
 
-    flecs::entity role() const;
+    flecs::entity flags() const;
 
     /* Test if id has specified first */
     bool has_relation(flecs::id_t first) const {
@@ -105,7 +105,7 @@ struct id {
     }
 
     /** Convert role of id to string. */
-    flecs::string role_str() const {
+    flecs::string flags_str() const {
         return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
     }
 
