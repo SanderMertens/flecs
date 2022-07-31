@@ -429,11 +429,16 @@
 /* -- Enable / Disable component -- */
 
 #define ecs_enable_component(world, entity, T, enable)\
-    ecs_enable_component_w_id(world, entity, ecs_id(T), enable)
+    ecs_enable_id(world, entity, ecs_id(T), enable)
 
-#define ecs_is_component_enabled(world, entity, T)\
-    ecs_is_component_enabled_w_id(world, entity, ecs_id(T))
+#define ecs_is_enabled_component(world, entity, T)\
+    ecs_is_enabled_id(world, entity, ecs_id(T))
 
+#define ecs_enable_pair(world, entity, First, second, enable)\
+    ecs_enable_id(world, entity, ecs_pair(ecs_id(First), second), enable)
+
+#define ecs_is_enabled_pair(world, entity, First, second)\
+    ecs_is_enabled_id(world, entity, ecs_pair(ecs_id(First), second))
 
 /* -- Count -- */
 

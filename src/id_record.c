@@ -146,7 +146,7 @@ ecs_id_record_t* flecs_id_record_new(
             (void)oneof;
         }
 
-        if (!is_wildcard && ECS_IS_PAIR(id)) {
+        if (!is_wildcard && ECS_IS_PAIR(id) && (rel != EcsFlag)) {
             /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
@@ -188,7 +188,7 @@ ecs_id_record_t* flecs_id_record_new(
     flecs_add_flag(world, rel, EcsEntityObservedId);
     if (obj) {
         /* Flag for OnDeleteTarget policies */
-        flecs_add_flag(world, obj, EcsEntityObservedObject);
+        flecs_add_flag(world, obj, EcsEntityObservedTarget);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
@@ -266,9 +266,11 @@ void flecs_id_record_free(
         ecs_entity_t rel = ecs_pair_first(world, id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
-            /* If id is not a wildcard, remove it from the wildcard lists */
-            remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
-            remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+            if (ECS_PAIR_FIRST(id) != EcsFlag) {
+                /* If id is not a wildcard, remove it from the wildcard lists */
+                remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
+                remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+            }
         } else {
             ecs_log_push_2();
 

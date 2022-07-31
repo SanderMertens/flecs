@@ -283,6 +283,18 @@ void EnabledComponents_is_enabled_2(void);
 void EnabledComponents_is_enabled_3(void);
 void EnabledComponents_is_enabled_2_after_add(void);
 void EnabledComponents_is_enabled_3_after_add(void);
+void EnabledComponents_is_pair_enabled(void);
+void EnabledComponents_is_enabled_pair_enabled(void);
+void EnabledComponents_is_disabled_pair_enabled(void);
+void EnabledComponents_has_enabled_pair(void);
+void EnabledComponents_is_pair_enabled_after_add(void);
+void EnabledComponents_is_pair_enabled_after_remove(void);
+void EnabledComponents_is_pair_enabled_after_disable(void);
+void EnabledComponents_is_pair_disabled_after_enable(void);
+void EnabledComponents_is_pair_enabled_2(void);
+void EnabledComponents_is_pair_enabled_3(void);
+void EnabledComponents_is_pair_enabled_2_after_add(void);
+void EnabledComponents_is_pair_enabled_3_after_add(void);
 void EnabledComponents_query_disabled(void);
 void EnabledComponents_query_disabled_skip_initial(void);
 void EnabledComponents_query_mod_2(void);
@@ -553,6 +565,7 @@ void OnDelete_remove_object_w_2_relations(void);
 void OnDelete_remove_object_w_5_relations(void);
 void OnDelete_remove_object_w_50_relations(void);
 void OnDelete_remove_object_w_50_relations_3_tables(void);
+void OnDelete_remove_object_w_3_relations_interleaved(void);
 void OnDelete_remove_id_from_2_tables(void);
 void OnDelete_remove_relation_from_2_tables(void);
 void OnDelete_remove_object_from_2_tables(void);
@@ -566,6 +579,13 @@ void OnDelete_empty_table_w_on_remove(void);
 void OnDelete_delete_table_in_on_remove_during_fini(void);
 void OnDelete_delete_other_in_on_remove_during_fini(void);
 void OnDelete_remove_id_w_role(void);
+void OnDelete_remove_rel_w_override_pair(void);
+void OnDelete_remove_obj_w_override_pair(void);
+void OnDelete_remove_rel_w_override_pair_after_on_delete_target(void);
+void OnDelete_remove_rel_w_override_pair_2_ids(void);
+void OnDelete_remove_obj_w_override_pair_2_ids(void);
+void OnDelete_remove_obj_w_override_pair_3_ids(void);
+void OnDelete_remove_mixed_w_override_pair_3_ids(void);
 void OnDelete_merge_pair_component(void);
 void OnDelete_delete_with_tag(void);
 void OnDelete_delete_with_component(void);
@@ -1758,6 +1778,7 @@ void Prefab_auto_override_pair(void);
 void Prefab_auto_override_pair_w_component(void);
 void Prefab_auto_override_2_pairs(void);
 void Prefab_auto_override_2_pairs_w_component(void);
+void Prefab_auto_override_2_pairs_same_obj(void);
 void Prefab_prefab_instanceof_hierarchy(void);
 void Prefab_override_tag(void);
 void Prefab_empty_prefab(void);
@@ -3156,6 +3177,54 @@ bake_test_case EnabledComponents_testcases[] = {
         EnabledComponents_is_enabled_3_after_add
     },
     {
+        "is_pair_enabled",
+        EnabledComponents_is_pair_enabled
+    },
+    {
+        "is_enabled_pair_enabled",
+        EnabledComponents_is_enabled_pair_enabled
+    },
+    {
+        "is_disabled_pair_enabled",
+        EnabledComponents_is_disabled_pair_enabled
+    },
+    {
+        "has_enabled_pair",
+        EnabledComponents_has_enabled_pair
+    },
+    {
+        "is_pair_enabled_after_add",
+        EnabledComponents_is_pair_enabled_after_add
+    },
+    {
+        "is_pair_enabled_after_remove",
+        EnabledComponents_is_pair_enabled_after_remove
+    },
+    {
+        "is_pair_enabled_after_disable",
+        EnabledComponents_is_pair_enabled_after_disable
+    },
+    {
+        "is_pair_disabled_after_enable",
+        EnabledComponents_is_pair_disabled_after_enable
+    },
+    {
+        "is_pair_enabled_2",
+        EnabledComponents_is_pair_enabled_2
+    },
+    {
+        "is_pair_enabled_3",
+        EnabledComponents_is_pair_enabled_3
+    },
+    {
+        "is_pair_enabled_2_after_add",
+        EnabledComponents_is_pair_enabled_2_after_add
+    },
+    {
+        "is_pair_enabled_3_after_add",
+        EnabledComponents_is_pair_enabled_3_after_add
+    },
+    {
         "query_disabled",
         EnabledComponents_query_disabled
     },
@@ -4175,6 +4244,10 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_remove_object_w_50_relations_3_tables
     },
     {
+        "remove_object_w_3_relations_interleaved",
+        OnDelete_remove_object_w_3_relations_interleaved
+    },
+    {
         "remove_id_from_2_tables",
         OnDelete_remove_id_from_2_tables
     },
@@ -4225,6 +4298,34 @@ bake_test_case OnDelete_testcases[] = {
     {
         "remove_id_w_role",
         OnDelete_remove_id_w_role
+    },
+    {
+        "remove_rel_w_override_pair",
+        OnDelete_remove_rel_w_override_pair
+    },
+    {
+        "remove_obj_w_override_pair",
+        OnDelete_remove_obj_w_override_pair
+    },
+    {
+        "remove_rel_w_override_pair_after_on_delete_target",
+        OnDelete_remove_rel_w_override_pair_after_on_delete_target
+    },
+    {
+        "remove_rel_w_override_pair_2_ids",
+        OnDelete_remove_rel_w_override_pair_2_ids
+    },
+    {
+        "remove_obj_w_override_pair_2_ids",
+        OnDelete_remove_obj_w_override_pair_2_ids
+    },
+    {
+        "remove_obj_w_override_pair_3_ids",
+        OnDelete_remove_obj_w_override_pair_3_ids
+    },
+    {
+        "remove_mixed_w_override_pair_3_ids",
+        OnDelete_remove_mixed_w_override_pair_3_ids
     },
     {
         "merge_pair_component",
@@ -8874,6 +8975,10 @@ bake_test_case Prefab_testcases[] = {
         Prefab_auto_override_2_pairs_w_component
     },
     {
+        "auto_override_2_pairs_same_obj",
+        Prefab_auto_override_2_pairs_same_obj
+    },
+    {
         "prefab_instanceof_hierarchy",
         Prefab_prefab_instanceof_hierarchy
     },
@@ -10239,7 +10344,7 @@ static bake_test_suite suites[] = {
         "EnabledComponents",
         NULL,
         NULL,
-        37,
+        49,
         EnabledComponents_testcases
     },
     {
@@ -10302,7 +10407,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        93,
+        101,
         OnDelete_testcases
     },
     {
@@ -10449,7 +10554,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        101,
+        102,
         Prefab_testcases
     },
     {

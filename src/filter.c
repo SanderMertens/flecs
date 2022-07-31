@@ -707,6 +707,17 @@ bool ecs_id_match(
             if (pattern_obj == EcsWildcard || pattern_obj == id_obj) {
                 return true;
             }
+        } else if (pattern_rel == EcsFlag) {
+            /* Used for internals, helps to keep track of which ids are used in
+             * pairs that have additional flags (like OVERRIDE and TOGGLE) */
+            if (ECS_HAS_ID_FLAG(id, PAIR) && !ECS_IS_PAIR(id)) {
+                if (ECS_PAIR_FIRST(id) == pattern_obj) {
+                    return true;
+                }
+                if (ECS_PAIR_SECOND(id) == pattern_obj) {
+                    return true;
+                }
+            }
         } else if (pattern_obj == EcsWildcard) {
             if (pattern_rel == id_rel) {
                 return true;

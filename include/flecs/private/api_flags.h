@@ -39,7 +39,7 @@ extern "C" {
 
 #define EcsEntityObserved             (1u << 31)
 #define EcsEntityObservedId           (1u << 30)
-#define EcsEntityObservedObject       (1u << 29)
+#define EcsEntityObservedTarget       (1u << 29)
 #define EcsEntityObservedAcyclic      (1u << 28)
 
 

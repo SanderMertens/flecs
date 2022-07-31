@@ -637,6 +637,7 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsFlecsCore);
     ecs_ensure(world, EcsOnDelete);
     ecs_ensure(world, EcsPanic);
+    ecs_ensure(world, EcsFlag);
     ecs_ensure(world, EcsWildcard);
     ecs_ensure(world, EcsAny);
     ecs_ensure(world, EcsTag);
@@ -733,6 +734,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsVariable, "$", EcsFlecsCore);
+    bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
@@ -774,6 +776,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
     ecs_add_id(world, EcsUnion, EcsTag);
+    ecs_add_id(world, EcsFlag, EcsTag);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);

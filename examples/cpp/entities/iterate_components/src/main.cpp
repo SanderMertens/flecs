@@ -35,16 +35,11 @@ void iterate_components(flecs::entity e) {
     e.each([&](flecs::id id) {
         std::cout << i++ << ": ";
 
-        flecs::id role = id.id_flags();
-        if (role) {
-            std::cout << "role: " << role.role_str() << ", ";
-        }
-
         if (id.is_pair()) {
             // If id is a pair, extract & print both parts of the pair
             flecs::entity rel = id.first();
-            flecs::entity target = id.second();
-            std::cout << "rel: " << rel.name() << ", " << "obj: " << target.name();
+            flecs::entity tgt = id.second();
+            std::cout << "rel: " << rel.name() << ", " << "tgt: " << tgt.name();
         } else {
             // Id contains a regular entity. Strip role before printing.
             flecs::entity comp = id.entity();
@@ -87,7 +82,7 @@ int main(int, char *[]) {
 // 0: entity: Position
 // 1: entity: Velocity
 // 2: entity: Human
-// 3: role: PAIR, rel: Eats, obj: Apples
+// 3: rel: Eats, tgt: Apples
 // 
 // 
 // Position's components:
@@ -99,6 +94,6 @@ int main(int, char *[]) {
 // 3: (OnDelete,Panic)
 // 
 // 0: entity: Component
-// 1: role: PAIR, rel: Identifier, obj: Name
-// 2: role: PAIR, rel: Identifier, obj: Symbol
-// 3: role: PAIR, rel: OnDelete, obj: Panic
+// 1: rel: Identifier, tgt: Name
+// 2: rel: Identifier, tgt: Symbol
+// 3: rel: OnDelete, tgt: Panic

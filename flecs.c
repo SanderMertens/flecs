@@ -303,6 +303,9 @@ extern "C" {
 #endif
 
 
+/* Used in id records to keep track of entities used with id flags */
+extern const ecs_entity_t EcsFlag;
+
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
 /* Magic number for a flecs object */
@@ -2642,6 +2645,32 @@ void flecs_table_init_flags(
     }
 }
 
+static
+void flecs_table_append_to_records(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_vector_t **records,
+    ecs_id_t id,
+    int32_t column)
+{
+    /* To avoid a quadratic search, use the O(1) lookup that the index
+     * already provides. */
+    ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+    ecs_table_record_t *tr = (ecs_table_record_t*)flecs_id_record_get_table(
+            idr, table);
+    if (!tr) {
+        tr = ecs_vector_add(records, ecs_table_record_t);
+        tr->column = column;
+        tr->count = 1;
+
+        ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+    } else {
+        tr->count ++;
+    }
+
+    ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+}
+
 void flecs_table_init(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -2723,20 +2752,27 @@ void flecs_table_init(
         for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
             ecs_id_t id = dst_ids[dst_i];
             if (!ECS_IS_PAIR(id)) {
-                id &= ECS_COMPONENT_MASK;
-                id = ecs_pair(id, EcsWildcard);
-                tr = ecs_vector_add(&records, ecs_table_record_t);
-                tr->hdr.cache = (ecs_table_cache_t*)flecs_id_record_ensure(
-                    world, id);
-                tr->column = dst_i;
-                tr->count = 1;
+                ecs_entity_t first = 0;
+                ecs_entity_t second = 0;
+                if (ECS_HAS_ID_FLAG(id, PAIR)) {
+                    first = ECS_PAIR_FIRST(id);
+                    second = ECS_PAIR_SECOND(id);
+                } else {
+                    first = id & ECS_COMPONENT_MASK;
+                }
+                if (first) {
+                    flecs_table_append_to_records(world, table, &records, 
+                        ecs_pair(EcsFlag, first), dst_i);
+                }
+                if (second) {
+                    flecs_table_append_to_records(world, table, &records, 
+                        ecs_pair(EcsFlag, second), dst_i);
+                }
             }
         }
     }
 
     int32_t last_pair = -1;
-    int32_t first_tgt_wc = -1;
-    int32_t tgt_wc_count = 0;
     bool has_childof = table->flags & EcsTableHasChildOf;
     if (first_pair != -1) {
         /* Add a (Relationship, *) record for each relationship. */
@@ -2775,7 +2811,7 @@ void flecs_table_init(
 
         int wildcard_count = 3; /* for *, _ and (*, *) */
         wildcard_count += dst_count && !has_childof; /* for (ChildOf, 0) */
-        
+
         ecs_vector_set_min_size(&records, ecs_table_record_t,   
             ecs_vector_count(records) + wildcard_count +
                 (last_pair - first_pair));
@@ -2784,27 +2820,8 @@ void flecs_table_init(
             ecs_id_t dst_id = dst_ids[dst_i];
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
-            /* To avoid a quadratic search, use the O(1) lookup that the index
-             * already provides. */
-            idr = flecs_id_record_ensure(world, tgt_id);
-            tr = (ecs_table_record_t*)flecs_id_record_get_table(idr, table);
-            if (!tr) {
-                tr = ecs_vector_add(&records, ecs_table_record_t);
-                tr->column = dst_i;
-                tr->count = 1;
-
-                ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
-
-                if (first_tgt_wc == -1) {
-                    first_tgt_wc = ecs_vector_count(records) - 1;
-                }
-
-                tgt_wc_count ++;
-            } else {
-                tr->count ++;
-            }
-
-            ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_table_append_to_records(
+                world, table, &records, tgt_id, dst_i);
         }
     }
 
@@ -2847,7 +2864,7 @@ void flecs_table_init(
         idr = (ecs_id_record_t*)dst_tr[i].hdr.cache;
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (i >= first_tgt_wc && i < (first_tgt_wc + tgt_wc_count)) {
+        if (ecs_table_cache_get(&idr->cache, table)) {
             /* If this is a target wildcard record it has already been 
              * registered, but the record is now at a different location in
              * memory. Patch up the linked list with the new address */
@@ -7351,7 +7368,7 @@ void flecs_targets_mark_for_delete(
         /* If entity is not used as id or as relationship target, there won't
          * be any tables with a reference to it. */
         ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityObservedId|EcsEntityObservedObject))) {
+        if (!(flags & (EcsEntityObservedId|EcsEntityObservedTarget))) {
             continue;
         }
 
@@ -7366,8 +7383,12 @@ void flecs_targets_mark_for_delete(
                     ECS_ID_ON_DELETE(idr->flags));
             }
         }
-        if (flags & EcsEntityObservedObject) {
+        if (flags & EcsEntityObservedTarget) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
+                flecs_id_mark_for_delete(world, idr, 
+                    ECS_ID_ON_DELETE_OBJECT(idr->flags));
+            }
+            if ((idr = flecs_id_record_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE_OBJECT(idr->flags));
             }
@@ -7534,6 +7555,7 @@ void flecs_remove_from_table(
     ecs_marked_id_t *ids = ecs_vector_first(world->store.marked_ids,
         ecs_marked_id_t);
     const ecs_table_record_t *tr;
+
     for (i = 0; i < count; i ++) {
         const ecs_id_record_t *idr = ids[i].idr;
 
@@ -7759,7 +7781,8 @@ void ecs_delete(
                 flecs_on_delete(world, entity, 0);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0);
             }
-            if (row_flags & EcsEntityObservedObject) {
+            if (row_flags & EcsEntityObservedTarget) {
+                flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0);
             }
 
@@ -8248,7 +8271,7 @@ error:
     return 0;
 }
 
-void ecs_enable_component_w_id(
+void ecs_enable_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -8270,7 +8293,7 @@ void ecs_enable_component_w_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
     
     ecs_table_t *table = r->table;
     int32_t index = -1;
@@ -8280,7 +8303,7 @@ void ecs_enable_component_w_id(
 
     if (index == -1) {
         ecs_add_id(world, entity, bs_id);
-        ecs_enable_component_w_id(world, entity, id, enable);
+        ecs_enable_id(world, entity, id, enable);
         return;
     }
 
@@ -8296,7 +8319,7 @@ error:
     return;
 }
 
-bool ecs_is_component_enabled_w_id(
+bool ecs_is_enabled_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -8314,7 +8337,7 @@ bool ecs_is_component_enabled_w_id(
         return false;
     }
 
-    ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_TOGGLE;
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
     int32_t index = ecs_search(world, table, bs_id, 0);
     if (index == -1) {
         /* If table does not have TOGGLE column for component, component is
@@ -9284,10 +9307,10 @@ bool flecs_defer_end(
                     flecs_on_delete(world, op->id, e);
                     break;
                 case EcsOpEnable:
-                    ecs_enable_component_w_id(world, e, op->id, true);
+                    ecs_enable_id(world, e, op->id, true);
                     break;
                 case EcsOpDisable:
-                    ecs_enable_component_w_id(world, e, op->id, false);
+                    ecs_enable_id(world, e, op->id, false);
                     break;
                 case EcsOpBulkNew:
                     flecs_flush_bulk_new(world, op);
@@ -35530,6 +35553,8 @@ const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
+const ecs_entity_t EcsFlag =                  ECS_HI_COMPONENT_ID + 9;
+
 /* Relationship properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
@@ -35952,7 +35977,7 @@ void fini_roots(ecs_world_t *world) {
         for (i = count - 1; i >= 0; i --) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityObservedObject)) {
+            if (!(flags & EcsEntityObservedTarget)) {
                 continue; /* Filter out entities that aren't objects */
             }
 
@@ -38215,6 +38240,17 @@ bool ecs_id_match(
         if (pattern_rel == EcsWildcard) {
             if (pattern_obj == EcsWildcard || pattern_obj == id_obj) {
                 return true;
+            }
+        } else if (pattern_rel == EcsFlag) {
+            /* Used for internals, helps to keep track of which ids are used in
+             * pairs that have additional flags (like OVERRIDE and TOGGLE) */
+            if (ECS_HAS_ID_FLAG(id, PAIR) && !ECS_IS_PAIR(id)) {
+                if (ECS_PAIR_FIRST(id) == pattern_obj) {
+                    return true;
+                }
+                if (ECS_PAIR_SECOND(id) == pattern_obj) {
+                    return true;
+                }
             }
         } else if (pattern_obj == EcsWildcard) {
             if (pattern_rel == id_rel) {
@@ -48305,6 +48341,7 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsFlecsCore);
     ecs_ensure(world, EcsOnDelete);
     ecs_ensure(world, EcsPanic);
+    ecs_ensure(world, EcsFlag);
     ecs_ensure(world, EcsWildcard);
     ecs_ensure(world, EcsAny);
     ecs_ensure(world, EcsTag);
@@ -48401,6 +48438,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsVariable, "$", EcsFlecsCore);
+    bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
@@ -48442,6 +48480,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
     ecs_add_id(world, EcsUnion, EcsTag);
+    ecs_add_id(world, EcsFlag, EcsTag);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
@@ -49328,7 +49367,7 @@ ecs_id_record_t* flecs_id_record_new(
             (void)oneof;
         }
 
-        if (!is_wildcard && ECS_IS_PAIR(id)) {
+        if (!is_wildcard && ECS_IS_PAIR(id) && (rel != EcsFlag)) {
             /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
@@ -49370,7 +49409,7 @@ ecs_id_record_t* flecs_id_record_new(
     flecs_add_flag(world, rel, EcsEntityObservedId);
     if (obj) {
         /* Flag for OnDeleteTarget policies */
-        flecs_add_flag(world, obj, EcsEntityObservedObject);
+        flecs_add_flag(world, obj, EcsEntityObservedTarget);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
@@ -49448,9 +49487,11 @@ void flecs_id_record_free(
         ecs_entity_t rel = ecs_pair_first(world, id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
-            /* If id is not a wildcard, remove it from the wildcard lists */
-            remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
-            remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+            if (ECS_PAIR_FIRST(id) != EcsFlag) {
+                /* If id is not a wildcard, remove it from the wildcard lists */
+                remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
+                remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+            }
         } else {
             ecs_log_push_2();
 

@@ -415,7 +415,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& enable() {
-        ecs_enable_component_w_id(this->m_world, this->m_id, _::cpp_type<T>::id(), true);
+        ecs_enable_id(this->m_world, this->m_id, _::cpp_type<T>::id(), true);
         return to_base();
     }  
 
@@ -427,7 +427,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& disable() {
-        ecs_enable_component_w_id(this->m_world, this->m_id, _::cpp_type<T>::id(), false);
+        ecs_enable_id(this->m_world, this->m_id, _::cpp_type<T>::id(), false);
         return to_base();
     }  
 
@@ -437,7 +437,7 @@ struct entity_builder : entity_view {
      * @param comp The component to enable.
      */   
     Self& enable(entity_t comp) {
-        ecs_enable_component_w_id(this->m_world, this->m_id, comp, true);
+        ecs_enable_id(this->m_world, this->m_id, comp, true);
         return to_base();       
     }
 
@@ -447,7 +447,7 @@ struct entity_builder : entity_view {
      * @param comp The component to disable.
      */   
     Self& disable(entity_t comp) {
-        ecs_enable_component_w_id(this->m_world, this->m_id, comp, false);
+        ecs_enable_id(this->m_world, this->m_id, comp, false);
         return to_base();       
     }
 

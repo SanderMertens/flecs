@@ -2623,6 +2623,39 @@ void Prefab_auto_override_2_pairs_w_component() {
     ecs_fini(world);
 }
 
+void Prefab_auto_override_2_pairs_same_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt));
+    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt));
+    test_assert(!ecs_has_pair(world, base, RelA, Tgt));
+    test_assert(!ecs_has_pair(world, base, RelB, Tgt));
+    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt)));
+
+    ecs_add_pair(world, base, RelA, Tgt);
+    ecs_add_pair(world, base, RelB, Tgt);
+
+    test_assert(ecs_has_pair(world, base, RelA, Tgt));
+    test_assert(ecs_has_pair(world, base, RelB, Tgt));
+    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt)));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_pair(world, inst, RelA, Tgt));
+    test_assert(ecs_has_pair(world, inst, RelB, Tgt));
+
+    test_assert(ecs_owns_pair(world, inst, RelA, Tgt));
+    test_assert(ecs_owns_pair(world, inst, RelB, Tgt));
+
+    ecs_fini(world);
+}
+
 void Prefab_prefab_instanceof_hierarchy() {
     ecs_world_t *world = ecs_init();
 
