@@ -739,7 +739,7 @@ bool ecs_id_is_wildcard(
         return true;
     }
 
-    bool is_pair = ECS_HAS_ID_FLAG(id, PAIR);
+    bool is_pair = ECS_IS_PAIR(id);
     if (!is_pair) {
         return false;
     }

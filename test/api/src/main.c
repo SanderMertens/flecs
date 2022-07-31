@@ -20,6 +20,21 @@ void Id_pair_w_wildcard_wildcard_is_wildcard(void);
 void Id_pair_w_rel_any_is_wildcard(void);
 void Id_pair_w_obj_any_is_wildcard(void);
 void Id_pair_w_any_any_is_wildcard(void);
+void Id_pair_w_override_is_wildcard(void);
+void Id_pair_w_toggle_is_wildcard(void);
+void Id_tag_id_is_tag(void);
+void Id_component_id_is_tag(void);
+void Id_pair_id_is_tag(void);
+void Id_pair_id_w_rel_component_is_tag(void);
+void Id_pair_id_w_obj_component_is_tag(void);
+void Id_pair_id_w_rel_component_obj_wildcard_is_tag(void);
+void Id_pair_id_w_obj_wildcard_is_tag(void);
+void Id_pair_id_w_tag_property_w_obj_component_is_tag(void);
+void Id_pair_id_w_tag_property_w_obj_wildcard_is_tag(void);
+void Id_id_w_override_is_tag(void);
+void Id_id_w_toggle_is_tag(void);
+void Id_pair_id_override_is_tag(void);
+void Id_pair_id_toggle_is_tag(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
@@ -1339,6 +1354,8 @@ void Pairs_typeid_from_pair_w_rel_0_obj_type(void);
 void Pairs_typeid_from_pair_w_rel_obj_0_type(void);
 void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void);
 void Pairs_typeid_from_pair_with_0_obj(void);
+void Pairs_typeid_from_pair_w_override(void);
+void Pairs_typeid_from_pair_w_toggle(void);
 void Pairs_tag_pair_w_rel_comp(void);
 void Pairs_tag_pair_w_obj_comp(void);
 void Pairs_tag_pair_w_rel_obj_comp(void);
@@ -1734,9 +1751,13 @@ void Prefab_override_from_nested(void);
 void Prefab_create_multiple_nested_w_on_set(void);
 void Prefab_create_multiple_nested_w_on_set_in_progress(void);
 void Prefab_single_on_set_on_child_w_override(void);
-void Prefab_force_owned(void);
-void Prefab_force_owned_2(void);
-void Prefab_force_owned_nested(void);
+void Prefab_auto_override(void);
+void Prefab_auto_override_2(void);
+void Prefab_auto_override_nested(void);
+void Prefab_auto_override_pair(void);
+void Prefab_auto_override_pair_w_component(void);
+void Prefab_auto_override_2_pairs(void);
+void Prefab_auto_override_2_pairs_w_component(void);
 void Prefab_prefab_instanceof_hierarchy(void);
 void Prefab_override_tag(void);
 void Prefab_empty_prefab(void);
@@ -1857,6 +1878,7 @@ void Type_get_type_from_0(void);
 void Type_type_to_expr_pair(void);
 void Type_type_to_expr_pair_w_comp(void);
 void Type_type_to_expr_scope(void);
+void Type_type_to_expr_pair_w_override(void);
 void Type_entity_str(void);
 void Type_entity_path_str(void);
 void Type_entity_instanceof_str(void);
@@ -2124,6 +2146,66 @@ bake_test_case Id_testcases[] = {
     {
         "pair_w_any_any_is_wildcard",
         Id_pair_w_any_any_is_wildcard
+    },
+    {
+        "pair_w_override_is_wildcard",
+        Id_pair_w_override_is_wildcard
+    },
+    {
+        "pair_w_toggle_is_wildcard",
+        Id_pair_w_toggle_is_wildcard
+    },
+    {
+        "tag_id_is_tag",
+        Id_tag_id_is_tag
+    },
+    {
+        "component_id_is_tag",
+        Id_component_id_is_tag
+    },
+    {
+        "pair_id_is_tag",
+        Id_pair_id_is_tag
+    },
+    {
+        "pair_id_w_rel_component_is_tag",
+        Id_pair_id_w_rel_component_is_tag
+    },
+    {
+        "pair_id_w_obj_component_is_tag",
+        Id_pair_id_w_obj_component_is_tag
+    },
+    {
+        "pair_id_w_rel_component_obj_wildcard_is_tag",
+        Id_pair_id_w_rel_component_obj_wildcard_is_tag
+    },
+    {
+        "pair_id_w_obj_wildcard_is_tag",
+        Id_pair_id_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_id_w_tag_property_w_obj_component_is_tag",
+        Id_pair_id_w_tag_property_w_obj_component_is_tag
+    },
+    {
+        "pair_id_w_tag_property_w_obj_wildcard_is_tag",
+        Id_pair_id_w_tag_property_w_obj_wildcard_is_tag
+    },
+    {
+        "id_w_override_is_tag",
+        Id_id_w_override_is_tag
+    },
+    {
+        "id_w_toggle_is_tag",
+        Id_id_w_toggle_is_tag
+    },
+    {
+        "pair_id_override_is_tag",
+        Id_pair_id_override_is_tag
+    },
+    {
+        "pair_id_toggle_is_tag",
+        Id_pair_id_toggle_is_tag
     }
 };
 
@@ -7224,6 +7306,14 @@ bake_test_case Pairs_testcases[] = {
         Pairs_typeid_from_pair_with_0_obj
     },
     {
+        "typeid_from_pair_w_override",
+        Pairs_typeid_from_pair_w_override
+    },
+    {
+        "typeid_from_pair_w_toggle",
+        Pairs_typeid_from_pair_w_toggle
+    },
+    {
         "tag_pair_w_rel_comp",
         Pairs_tag_pair_w_rel_comp
     },
@@ -8756,16 +8846,32 @@ bake_test_case Prefab_testcases[] = {
         Prefab_single_on_set_on_child_w_override
     },
     {
-        "force_owned",
-        Prefab_force_owned
+        "auto_override",
+        Prefab_auto_override
     },
     {
-        "force_owned_2",
-        Prefab_force_owned_2
+        "auto_override_2",
+        Prefab_auto_override_2
     },
     {
-        "force_owned_nested",
-        Prefab_force_owned_nested
+        "auto_override_nested",
+        Prefab_auto_override_nested
+    },
+    {
+        "auto_override_pair",
+        Prefab_auto_override_pair
+    },
+    {
+        "auto_override_pair_w_component",
+        Prefab_auto_override_pair_w_component
+    },
+    {
+        "auto_override_2_pairs",
+        Prefab_auto_override_2_pairs
+    },
+    {
+        "auto_override_2_pairs_w_component",
+        Prefab_auto_override_2_pairs_w_component
     },
     {
         "prefab_instanceof_hierarchy",
@@ -9223,6 +9329,10 @@ bake_test_case Type_testcases[] = {
     {
         "type_to_expr_scope",
         Type_type_to_expr_scope
+    },
+    {
+        "type_to_expr_pair_w_override",
+        Type_type_to_expr_pair_w_override
     },
     {
         "entity_str",
@@ -10073,7 +10183,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        11,
+        26,
         Id_testcases
     },
     {
@@ -10283,7 +10393,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        98,
+        100,
         Pairs_testcases
     },
     {
@@ -10339,7 +10449,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        97,
+        101,
         Prefab_testcases
     },
     {
@@ -10360,7 +10470,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        28,
+        29,
         Type_testcases
     },
     {

@@ -1772,6 +1772,42 @@ void Pairs_typeid_from_pair_with_0_obj() {
     ecs_fini(world);
 }
 
+void Pairs_typeid_from_pair_w_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ecs_entity_t obj_id = ecs_new_id(world);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ECS_OVERRIDE | ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_typeid_from_pair_w_toggle() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Rel);
+    ecs_id_t rel_id = ecs_id(Rel);
+    test_assert(rel_id != 0);
+
+    ecs_entity_t obj_id = ecs_new_id(world);
+    test_assert(obj_id != 0);
+
+    ecs_id_t pair_id = ECS_TOGGLE | ecs_pair(rel_id, obj_id);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
 void Pairs_tag_pair_w_rel_comp() {
     ecs_world_t *world = ecs_mini();
 
@@ -2734,3 +2770,4 @@ void Pairs_oneof_other_rel_parent_constraint_violated() {
     test_expect_abort();
     ecs_add_pair(world, e, Rel, ObjC);
 }
+
