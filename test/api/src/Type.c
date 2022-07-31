@@ -188,6 +188,25 @@ void Type_type_to_expr_scope() {
     ecs_fini(world);
 }
 
+void Type_type_to_expr_pair_w_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_type_t t = { .array = (ecs_id_t[]){ 
+        ECS_OVERRIDE | ecs_pair(ecs_id(Position), ecs_id(Velocity)) 
+    }, .count = 1 };
+    
+    char *str = ecs_type_str(world, &t);
+
+    test_str(str, "OVERRIDE|(Position,Velocity)");
+
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void Type_entity_str() {
     ecs_world_t *world = ecs_mini();
 

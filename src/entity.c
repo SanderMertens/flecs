@@ -3573,17 +3573,20 @@ const ecs_type_info_t* ecs_get_type_info(
     world = ecs_get_world(world);
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr && ECS_HAS_ID_FLAG(id, PAIR)) {
+    if (!idr && ECS_IS_PAIR(id)) {
         idr = flecs_id_record_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         if (!idr || !idr->type_info) {
             idr = NULL;
         }
         if (!idr) {
-            idr = flecs_id_record_get(world, 
-                ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
-            if (!idr || !idr->type_info) {
-                idr = NULL;
+            ecs_entity_t first = ecs_pair_first(world, id);
+            if (first && !ecs_has_id(world, first, EcsTag)) {
+                idr = flecs_id_record_get(world, 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
+                if (!idr || !idr->type_info) {
+                    idr = NULL;
+                }
             }
         }
     }
@@ -3626,16 +3629,16 @@ ecs_entity_t ecs_id_is_tag(
                     }
                 } else {
                     /* During bootstrap it's possible that not all ids are valid
-                    * yet. Using ecs_get_typeid will ensure correct values are
-                    * returned for only those components initialized during
-                    * bootstrap, while still asserting if another invalid id
-                    * is provided. */
+                     * yet. Using ecs_get_typeid will ensure correct values are
+                     * returned for only those components initialized during
+                     * bootstrap, while still asserting if another invalid id
+                     * is provided. */
                     if (ecs_get_typeid(world, id) == 0) {
                         return true;
                     }
                 }
             } else {
-                /* If relationship is * id is not guaranteed to be a tag */
+                /* If relationship is wildcard id is not guaranteed to be a tag */
             }
         }
     } else {
@@ -3773,8 +3776,28 @@ void ecs_id_str_buf(
 
     world = ecs_get_world(world);
 
-    if (id & ECS_ID_FLAGS_MASK && !ECS_HAS_ID_FLAG(id, PAIR)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(id));
+    if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_TOGGLE));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_OVERRIDE));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, AND)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AND));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, OR)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_OR));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, NOT)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_NOT));
         ecs_strbuf_appendch(buf, '|');
     }
 

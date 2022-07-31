@@ -738,7 +738,7 @@ void flecs_query_set_table_match(
                 qm->ids[actual_index] = id;
             }
         }
-        if (table->flags & EcsTableHasDisabled) {
+        if (table->flags & EcsTableHasToggle) {
             for (i = 0; i < term_count; i ++) {
                 if (ecs_term_match_0(&terms[i])) {
                     continue;
