@@ -1,48 +1,48 @@
 #include "private_api.h"
 
 /* Id flags */
-const ecs_id_t ECS_PAIR =      (ECS_ID_FLAG_BIT | (0x7Aull << 56));
-const ecs_id_t ECS_OVERRIDE =  (ECS_ID_FLAG_BIT | (0x75ull << 56));
-const ecs_id_t ECS_TOGGLE =    (ECS_ID_FLAG_BIT | (0x74ull << 56));
-const ecs_id_t ECS_AND =       (ECS_ID_FLAG_BIT | (0x79ull << 56));
-const ecs_id_t ECS_OR =        (ECS_ID_FLAG_BIT | (0x78ull << 56));
-const ecs_id_t ECS_NOT =       (ECS_ID_FLAG_BIT | (0x76ull << 56));
+const ecs_id_t ECS_PAIR =                                          (1ull << 63);
+const ecs_id_t ECS_OVERRIDE =                                      (1ull << 62);
+const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
+const ecs_id_t ECS_AND =                                           (1ull << 60);
+const ecs_id_t ECS_OR =                                            (1ull << 59);
+const ecs_id_t ECS_NOT =                                           (1ull << 58);
 
 /** Builtin component ids */
-const ecs_entity_t ecs_id(EcsComponent) =          1;
-const ecs_entity_t ecs_id(EcsIdentifier) =         2;
-const ecs_entity_t ecs_id(EcsIterable) =           3;
-const ecs_entity_t ecs_id(EcsPoly) =               4;
+const ecs_entity_t ecs_id(EcsComponent) =                           1;
+const ecs_entity_t ecs_id(EcsIdentifier) =                          2;
+const ecs_entity_t ecs_id(EcsIterable) =                            3;
+const ecs_entity_t ecs_id(EcsPoly) =                                4;
 
-const ecs_entity_t EcsQuery =                      5;
-const ecs_entity_t EcsObserver =                   7;
+const ecs_entity_t EcsQuery =                                       5;
+const ecs_entity_t EcsObserver =                                    7;
 
 /* System module component ids */
-const ecs_entity_t EcsSystem =                     10;
-const ecs_entity_t ecs_id(EcsTickSource) =         11;
+const ecs_entity_t EcsSystem =                                      10;
+const ecs_entity_t ecs_id(EcsTickSource) =                          11;
 
 /** Timer module component ids */
-const ecs_entity_t ecs_id(EcsTimer) =              13;
-const ecs_entity_t ecs_id(EcsRateFilter) =         14;
+const ecs_entity_t ecs_id(EcsTimer) =                               13;
+const ecs_entity_t ecs_id(EcsRateFilter) =                          14;
 
 /** Meta module component ids */
-const ecs_entity_t ecs_id(EcsMetaType) =           15;
-const ecs_entity_t ecs_id(EcsMetaTypeSerialized) = 16;
-const ecs_entity_t ecs_id(EcsPrimitive) =          17;
-const ecs_entity_t ecs_id(EcsEnum) =               18;
-const ecs_entity_t ecs_id(EcsBitmask) =            19;
-const ecs_entity_t ecs_id(EcsMember) =             20;
-const ecs_entity_t ecs_id(EcsStruct) =             21;
-const ecs_entity_t ecs_id(EcsArray) =              22;
-const ecs_entity_t ecs_id(EcsVector) =             23;
-const ecs_entity_t ecs_id(EcsUnit) =               24;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =         25;
+const ecs_entity_t ecs_id(EcsMetaType) =                            15;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =                  16;
+const ecs_entity_t ecs_id(EcsPrimitive) =                           17;
+const ecs_entity_t ecs_id(EcsEnum) =                                18;
+const ecs_entity_t ecs_id(EcsBitmask) =                             19;
+const ecs_entity_t ecs_id(EcsMember) =                              20;
+const ecs_entity_t ecs_id(EcsStruct) =                              21;
+const ecs_entity_t ecs_id(EcsArray) =                               22;
+const ecs_entity_t ecs_id(EcsVector) =                              23;
+const ecs_entity_t ecs_id(EcsUnit) =                                24;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =                          25;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
 const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
 const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
-const ecs_entity_t EcsFlecsInternals =           ECS_HI_COMPONENT_ID + 3;
+const ecs_entity_t EcsFlecsInternals =        ECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
