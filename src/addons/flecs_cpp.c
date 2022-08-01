@@ -358,7 +358,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
                 .name = name,
                 .sep = "::",
                 .root_sep = "::",
-                .symbol = symbol
+                .symbol = symbol,
+                .use_low_id = true
             }),
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
@@ -369,7 +370,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .name = name,
             .sep = "::",
             .root_sep = "::",
-            .symbol = symbol
+            .symbol = symbol,
+            .use_low_id = true
         });
     }
 

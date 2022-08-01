@@ -1584,3 +1584,11 @@ void World_run_post_frame() {
 
     test_int(ctx, 11);
 }
+
+void World_component_w_low_id() {
+    flecs::world ecs;
+
+    flecs::entity p = ecs.component<Position>();
+
+    test_assert(p.id() < ECS_HI_COMPONENT_ID);
+}
