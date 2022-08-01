@@ -77,6 +77,15 @@ void Entity_get_parent(void);
 void Entity_is_component_enabled(void);
 void Entity_is_enabled_component_enabled(void);
 void Entity_is_disabled_component_enabled(void);
+void Entity_is_pair_enabled(void);
+void Entity_is_enabled_pair_enabled(void);
+void Entity_is_disabled_pair_enabled(void);
+void Entity_is_pair_enabled_w_ids(void);
+void Entity_is_enabled_pair_enabled_w_ids(void);
+void Entity_is_disabled_pair_enabled_w_ids(void);
+void Entity_is_pair_enabled_w_tgt_id(void);
+void Entity_is_enabled_pair_enabled_w_tgt_id(void);
+void Entity_is_disabled_pair_enabled_w_tgt_id(void);
 void Entity_get_type(void);
 void Entity_get_nonempty_type(void);
 void Entity_set_no_copy(void);
@@ -1241,6 +1250,42 @@ bake_test_case Entity_testcases[] = {
     {
         "is_disabled_component_enabled",
         Entity_is_disabled_component_enabled
+    },
+    {
+        "is_pair_enabled",
+        Entity_is_pair_enabled
+    },
+    {
+        "is_enabled_pair_enabled",
+        Entity_is_enabled_pair_enabled
+    },
+    {
+        "is_disabled_pair_enabled",
+        Entity_is_disabled_pair_enabled
+    },
+    {
+        "is_pair_enabled_w_ids",
+        Entity_is_pair_enabled_w_ids
+    },
+    {
+        "is_enabled_pair_enabled_w_ids",
+        Entity_is_enabled_pair_enabled_w_ids
+    },
+    {
+        "is_disabled_pair_enabled_w_ids",
+        Entity_is_disabled_pair_enabled_w_ids
+    },
+    {
+        "is_pair_enabled_w_tgt_id",
+        Entity_is_pair_enabled_w_tgt_id
+    },
+    {
+        "is_enabled_pair_enabled_w_tgt_id",
+        Entity_is_enabled_pair_enabled_w_tgt_id
+    },
+    {
+        "is_disabled_pair_enabled_w_tgt_id",
+        Entity_is_disabled_pair_enabled_w_tgt_id
     },
     {
         "get_type",
@@ -4679,7 +4724,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        204,
+        213,
         Entity_testcases
     },
     {

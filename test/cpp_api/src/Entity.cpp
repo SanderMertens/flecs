@@ -1145,7 +1145,8 @@ void Entity_is_component_enabled() {
     auto e = world.entity()
         .add<Position>();
 
-    test_assert(e.is_enabled<Position>());
+    test_assert(e.enabled<Position>());
+    test_assert(!e.enabled<Velocity>());
 }
 
 void Entity_is_enabled_component_enabled() {
@@ -1155,7 +1156,7 @@ void Entity_is_enabled_component_enabled() {
         .add<Position>()
         .enable<Position>();
 
-    test_assert(e.is_enabled<Position>());
+    test_assert(e.enabled<Position>());
 }
 
 void Entity_is_disabled_component_enabled() {
@@ -1165,7 +1166,121 @@ void Entity_is_disabled_component_enabled() {
         .add<Position>()
         .disable<Position>();
 
-    test_assert(!e.is_enabled<Position>());
+    test_assert(!e.enabled<Position>());
+}
+
+void Entity_is_pair_enabled() {
+    flecs::world world;
+
+    struct TgtA { };
+    struct TgtB { };
+
+    auto e = world.entity()
+        .add<Position, TgtA>();
+
+    test_assert((e.enabled<Position, TgtA>()));
+    test_assert((!e.enabled<Position, TgtB>()));
+}
+
+void Entity_is_enabled_pair_enabled() {
+    flecs::world world;
+
+    struct Tgt { };
+
+    auto e = world.entity()
+        .add<Position, Tgt>()
+        .enable<Position, Tgt>();
+
+    test_assert((e.enabled<Position, Tgt>()));
+}
+
+void Entity_is_disabled_pair_enabled() {
+    flecs::world world;
+
+    struct Tgt { };
+
+    auto e = world.entity()
+        .add<Position, Tgt>()
+        .disable<Position, Tgt>();
+
+    test_assert((!e.enabled<Position, Tgt>()));
+}
+
+void Entity_is_pair_enabled_w_ids() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto tgt_a = world.entity();
+    auto tgt_b = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt_a);
+
+    test_assert((e.enabled(rel, tgt_a)));
+    test_assert((!e.enabled(rel, tgt_b)));
+}
+
+void Entity_is_enabled_pair_enabled_w_ids() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto tgt = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt)
+        .enable(rel, tgt);
+
+    test_assert((e.enabled(rel, tgt)));
+}
+
+void Entity_is_disabled_pair_enabled_w_ids() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto tgt = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt)
+        .disable(rel, tgt);
+
+    test_assert((!e.enabled(rel, tgt)));
+}
+
+void Entity_is_pair_enabled_w_tgt_id() {
+    flecs::world world;
+
+    auto tgt_a = world.entity();
+    auto tgt_b = world.entity();
+
+    auto e = world.entity()
+        .add<Position>(tgt_a);
+
+    test_assert((e.enabled<Position>(tgt_a)));
+    test_assert((!e.enabled<Position>(tgt_b)));
+}
+
+void Entity_is_enabled_pair_enabled_w_tgt_id() {
+    flecs::world world;
+
+    auto tgt = world.entity();
+
+    auto e = world.entity()
+        .add<Position>(tgt)
+        .enable<Position>(tgt);
+
+    test_assert((e.enabled<Position>(tgt)));
+}
+
+void Entity_is_disabled_pair_enabled_w_tgt_id() {
+    flecs::world world;
+
+    auto tgt = world.entity();
+
+    auto e = world.entity()
+        .add<Position>(tgt)
+        .disable<Position>(tgt);
+
+    test_assert((!e.enabled<Position>(tgt)));
 }
 
 void Entity_get_type() {
