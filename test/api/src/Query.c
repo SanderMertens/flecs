@@ -1751,6 +1751,44 @@ void Query_query_case_from_nothing() {
     ecs_fini(world);
 }
 
+void Query_query_case_inherited() {
+    test_quarantine("Aug 1st 2022");
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, Union);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+
+    ecs_entity_t base_1 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_entity_t inst_1 = ecs_new_w_pair(world, EcsIsA, base_1);
+
+    ecs_entity_t base_2 = ecs_new_w_pair(world, Movement, Running);
+    ecs_entity_t inst_2 = ecs_new_w_pair(world, EcsIsA, base_2);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
+        .terms = {
+            { ecs_pair(Movement, Walking) }
+        }
+    }});
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base_1);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst_1);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_disabled_from_nothing() {
     ecs_world_t *world = ecs_mini();
 
