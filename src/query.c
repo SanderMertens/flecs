@@ -746,8 +746,9 @@ void flecs_query_set_table_match(
 
                 int32_t actual_index = terms[i].index;
                 ecs_id_t id = it->ids[actual_index];
-                ecs_id_t bs_id = ECS_TOGGLE | (id & ECS_COMPONENT_MASK);
+                ecs_id_t bs_id = ECS_TOGGLE | id;
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
+
                 if (bs_index != -1) {
                     flecs_bitset_term_t *bc = ecs_vector_add(
                         &qm->bitset_columns, flecs_bitset_term_t);
