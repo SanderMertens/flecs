@@ -306,48 +306,95 @@ struct entity_builder : entity_view {
         return this->remove<First>(second);
     }  
 
-    /** Add owned flag for component (forces ownership when instantiating)
+    /** Mark id for auto-overriding.
+     * When an entity inherits from a base entity (using the IsA relationship)
+     * any ids marked for auto-overriding on the base will be overridden
+     * automatically by the entity.
      *
-     * @param entity The entity for which to add the OVERRIDE flag
+     * @param id The id to mark for overriding.
      */    
-    Self& override(entity_t entity) {
-        ecs_add_id(this->m_world, this->m_id, ECS_OVERRIDE | entity);
-        return to_base();  
+    Self& override(flecs::id_t id) {
+        return this->add(ECS_OVERRIDE | id);
     }
 
-    /** Add owned flag for component (forces ownership when instantiating)
+    /** Mark pair for auto-overriding.
+     * @see override(flecs::id_t id)
      *
-     * @tparam T The component for which to add the OVERRIDE flag
-     */    
+     * @param id The id to mark for overriding.
+     */     
+    Self& override(flecs::entity_t first, flecs::entity_t second) {
+        return this->override(ecs_pair(first, second));
+    }
+
+    /** Mark component for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam T The component to mark for overriding.
+     */     
     template <typename T>
     Self& override() {
-        ecs_add_id(this->m_world, this->m_id, ECS_OVERRIDE | _::cpp_type<T>::id(this->m_world));
-        return to_base();  
+        return this->override(_::cpp_type<T>::id(this->m_world));
     }
 
-    /** Set value, add owned flag.
+    /** Mark pair for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     */     
+    template <typename First>
+    Self& override(flecs::entity_t second) {
+        return this->override(_::cpp_type<First>::id(this->m_world), second);
+    }
+
+    /** Mark pair for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
+     */     
+    template <typename First, typename Second>
+    Self& override() {
+        return this->override<First>(_::cpp_type<Second>::id(this->m_world));
+    }
+
+    /** Set component, mark component for auto-overriding.
+     * @see override(flecs::id_t id)
      *
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    Self& set_override(T&& val) {
+    Self& set_override(T val) {
         this->override<T>();
-        this->set<T>(FLECS_FWD(val));
-        return to_base();  
+        return this->set<T>(val);
     }
 
-    /** Set value, add owned flag.
+    /** Set pair, mark component for auto-overriding.
+     * @see override(flecs::id_t id)
      *
-     * @tparam T The component to set and for which to add the OVERRIDE flag
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
      */    
-    template <typename T>
-    Self& set_override(const T& val) {
-        this->override<T>();
-        this->set<T>(val);
-        return to_base();  
+    template <typename First>
+    Self& set_override(flecs::entity_t second, First val) {
+        this->override<First>(second);
+        return this->set<First>(second, val);
     }
 
-    /** Emplace value, add owned flag.
+    /** Set component, mark component for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
+     */    
+    template <typename First, typename Second>
+    Self& set_override(First val) {
+        this->override<First, Second>();
+        return this->set<First, Second>(val);
+    }
+
+    /** Emplace component, mark component for auto-overriding.
+     * @see override(flecs::id_t id)
      *
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    

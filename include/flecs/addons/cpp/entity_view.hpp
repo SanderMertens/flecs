@@ -523,6 +523,20 @@ struct entity_view : public id {
         return owns(_::cpp_type<T>::id(m_world));
     }
 
+    /** Check if entity owns the provided pair.
+     * An pair is owned if it is not shared from a base entity.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if the entity owns the provided pair, false otherwise.
+     */
+    template <typename First, typename Second>
+    bool owns() const {
+        return owns(
+            _::cpp_type<First>::id(m_world),
+            _::cpp_type<Second>::id(m_world));
+    }
+
     /** Test if component is enabled.
      *
      * @tparam T The component to test.
