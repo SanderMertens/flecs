@@ -83,8 +83,14 @@ void Entity_set_no_copy(void);
 void Entity_set_copy(void);
 void Entity_set_deduced(void);
 void Entity_override(void);
+void Entity_override_id(void);
+void Entity_override_pair(void);
+void Entity_override_pair_w_tgt_id(void);
+void Entity_override_pair_w_ids(void);
 void Entity_set_override(void);
 void Entity_set_override_lvalue(void);
+void Entity_set_override_pair(void);
+void Entity_set_override_pair_w_tgt_id(void);
 void Entity_emplace_override(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
@@ -1261,12 +1267,36 @@ bake_test_case Entity_testcases[] = {
         Entity_override
     },
     {
+        "override_id",
+        Entity_override_id
+    },
+    {
+        "override_pair",
+        Entity_override_pair
+    },
+    {
+        "override_pair_w_tgt_id",
+        Entity_override_pair_w_tgt_id
+    },
+    {
+        "override_pair_w_ids",
+        Entity_override_pair_w_ids
+    },
+    {
         "set_override",
         Entity_set_override
     },
     {
         "set_override_lvalue",
         Entity_set_override_lvalue
+    },
+    {
+        "set_override_pair",
+        Entity_set_override_pair
+    },
+    {
+        "set_override_pair_w_tgt_id",
+        Entity_set_override_pair_w_tgt_id
     },
     {
         "emplace_override",
@@ -4649,7 +4679,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        198,
+        204,
         Entity_testcases
     },
     {

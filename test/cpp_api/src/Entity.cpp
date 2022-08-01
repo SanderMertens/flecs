@@ -1253,6 +1253,87 @@ void Entity_override() {
     test_assert(e.owns<Position>());
 }
 
+void Entity_override_id() {
+    flecs::world world;
+    
+    auto tag_a = world.entity();
+    auto tag_b = world.entity();
+
+    auto base = world.entity()
+        .override(tag_a)
+        .add(tag_b);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has(tag_a));
+    test_assert(e.owns(tag_a));
+
+    test_assert(e.has(tag_b));
+    test_assert(!e.owns(tag_b));
+}
+
+void Entity_override_pair_w_tgt_id() {
+    flecs::world world;
+
+    auto tgt_a = world.entity();
+    auto tgt_b = world.entity();
+
+    auto base = world.entity()
+        .override<Position>(tgt_a)
+        .add<Position>(tgt_b);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has<Position>(tgt_a));
+    test_assert(e.owns<Position>(tgt_a));
+
+    test_assert(e.has<Position>(tgt_b));
+    test_assert(!e.owns<Position>(tgt_b));
+}
+
+void Entity_override_pair_w_ids() {
+    flecs::world world;
+
+    auto rel = world.entity();
+    auto tgt_a = world.entity();
+    auto tgt_b = world.entity();
+
+    auto base = world.entity()
+        .override(rel, tgt_a)
+        .add(rel, tgt_b);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has(rel, tgt_a));
+    test_assert(e.owns(rel, tgt_a));
+
+    test_assert(e.has(rel, tgt_b));
+    test_assert(!e.owns(rel, tgt_b));
+}
+
+void Entity_override_pair() {
+    flecs::world world;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto base = world.entity()
+        .override<Position, TagA>()
+        .add<Position, TagB>();
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert((e.has<Position, TagA>()));
+    test_assert((e.owns<Position, TagA>()));
+
+    test_assert((e.has<Position, TagB>()));
+    test_assert((!e.owns<Position, TagB>()));
+}
+
 void Entity_set_override() {
     flecs::world world;
 
@@ -1294,6 +1375,54 @@ void Entity_set_override_lvalue() {
     test_int(p->y, 20);
 
     const Position* p_base = base.get<Position>();
+    test_assert(p != p_base);
+    test_int(p_base->x, 10);
+    test_int(p_base->y, 20);
+}
+
+void Entity_set_override_pair() {
+    flecs::world world;
+
+    struct Tgt { };
+
+    auto base = world.entity()
+        .set_override<Position, Tgt>({10, 20});
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert((e.has<Position, Tgt>()));
+    test_assert((e.owns<Position, Tgt>()));
+
+    const Position* p = e.get<Position, Tgt>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position* p_base = base.get<Position, Tgt>();
+    test_assert(p != p_base);
+    test_int(p_base->x, 10);
+    test_int(p_base->y, 20);
+}
+
+void Entity_set_override_pair_w_tgt_id() {
+    flecs::world world;
+
+    auto tgt = world.entity();
+
+    auto base = world.entity()
+        .set_override<Position>(tgt, {10, 20});
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert((e.has<Position>(tgt)));
+    test_assert((e.owns<Position>(tgt)));
+
+    const Position* p = e.get<Position>(tgt);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position* p_base = base.get<Position>(tgt);
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
