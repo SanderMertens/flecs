@@ -537,25 +537,55 @@ struct entity_view : public id {
             _::cpp_type<Second>::id(m_world));
     }
 
-    /** Test if component is enabled.
+    /** Test if id is enabled.
      *
-     * @tparam T The component to test.
-     * @return True if the component is enabled, false if it has been disabled.
+     * @param id The id to test.
+     * @return True if enabled, false if not.
      */
-    template<typename T>
-    bool is_enabled() {
-        return ecs_is_enabled_id(
-            m_world, m_id, _::cpp_type<T>::id(m_world));
+    bool enabled(flecs::id_t id) {
+        return ecs_is_enabled_id(m_world, m_id, id);
     }
 
     /** Test if component is enabled.
      *
-     * @param e The component to test.
-     * @return True if the component is enabled, false if it has been disabled.
+     * @tparam T The component to test.
+     * @return True if enabled, false if not.
      */
-    bool is_enabled(const flecs::entity_view& e) {
-        return ecs_is_enabled_id(
-            m_world, m_id, e);
+    template<typename T>
+    bool enabled() {
+        return this->enabled(_::cpp_type<T>::id(m_world));
+    }
+
+    /** Test if pair is enabled.
+     *
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     * @return True if enabled, false if not.
+     */
+    bool enabled(flecs::id_t first, flecs::id_t second) {
+        return this->enabled(ecs_pair(first, second));
+    }
+
+    /** Test if pair is enabled.
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     * @return True if enabled, false if not.
+     */
+    template <typename First>
+    bool enabled(flecs::id_t second) {
+        return this->enabled(_::cpp_type<First>::id(m_world), second);
+    }
+
+    /** Test if pair is enabled.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if enabled, false if not.
+     */
+    template <typename First, typename Second>
+    bool enabled() {
+        return this->enabled<First>(_::cpp_type<Second>::id(m_world));
     }
 
     /** Get current delta time.

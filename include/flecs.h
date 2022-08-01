@@ -466,7 +466,7 @@ struct ecs_term_t {
     ecs_inout_kind_t inout;     /* Access to contents matched by term */
     ecs_oper_kind_t oper;       /* Operator of term */
 
-    ecs_id_t id_flags;        /* Type flags of term id */
+    ecs_id_t id_flags;          /* Id flags of term id */
     char *name;                 /* Name of term */
 
     int32_t index;              /* Computed term index in filter which takes 
