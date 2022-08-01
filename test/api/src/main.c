@@ -297,6 +297,8 @@ void EnabledComponents_is_pair_enabled_2_after_add(void);
 void EnabledComponents_is_pair_enabled_3_after_add(void);
 void EnabledComponents_query_disabled(void);
 void EnabledComponents_query_disabled_skip_initial(void);
+void EnabledComponents_query_disabled_pair(void);
+void EnabledComponents_query_disabled_pair_skip_initial(void);
 void EnabledComponents_query_mod_2(void);
 void EnabledComponents_query_mod_8(void);
 void EnabledComponents_query_mod_64(void);
@@ -3231,6 +3233,14 @@ bake_test_case EnabledComponents_testcases[] = {
     {
         "query_disabled_skip_initial",
         EnabledComponents_query_disabled_skip_initial
+    },
+    {
+        "query_disabled_pair",
+        EnabledComponents_query_disabled_pair
+    },
+    {
+        "query_disabled_pair_skip_initial",
+        EnabledComponents_query_disabled_pair_skip_initial
     },
     {
         "query_mod_2",
@@ -10344,7 +10354,7 @@ static bake_test_suite suites[] = {
         "EnabledComponents",
         NULL,
         NULL,
-        49,
+        51,
         EnabledComponents_testcases
     },
     {

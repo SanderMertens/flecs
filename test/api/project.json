@@ -318,6 +318,8 @@
                 "is_pair_enabled_3_after_add",
                 "query_disabled",
                 "query_disabled_skip_initial",
+                "query_disabled_pair",
+                "query_disabled_pair_skip_initial",
                 "query_mod_2",
                 "query_mod_8",
                 "query_mod_64",

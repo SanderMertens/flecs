@@ -615,6 +615,41 @@ void EnabledComponents_query_disabled() {
     ecs_fini(world);
 }
 
+void EnabledComponents_query_disabled_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+    ecs_entity_t e2 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+    ecs_entity_t e3 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+
+    ecs_enable_pair(world, e1, Position, Tgt, true);
+    ecs_enable_pair(world, e2, Position, Tgt, false);
+
+    ecs_query_t *q = ecs_query_new(world, "(Position, Tgt)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    int32_t table_count = 0, count = 0;
+
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e2);
+            test_assert(it.entities[i] == e1 || it.entities[i] == e3);
+            test_assert(ecs_is_enabled_pair(world, it.entities[i], Position, Tgt));
+        }
+        count += it.count;
+        table_count ++;
+    }
+
+    test_int(count, 2);
+    test_int(table_count, 2);
+
+    ecs_fini(world);
+}
+
 void EnabledComponents_query_disabled_skip_initial() {
     ecs_world_t *world = ecs_mini();
 
@@ -638,6 +673,39 @@ void EnabledComponents_query_disabled_skip_initial() {
             test_assert(it.entities[i] != e1);
             test_assert(it.entities[i] == e2 || it.entities[i] == e3);
             test_assert(ecs_is_enabled_component(world, it.entities[i], Position));
+        }
+        count += it.count;
+    }
+
+    test_int(count, 2);
+
+    ecs_fini(world);
+}
+
+void EnabledComponents_query_disabled_pair_skip_initial() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+    ecs_entity_t e2 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+    ecs_entity_t e3 = ecs_new_w_pair(world, ecs_id(Position), Tgt);
+
+    ecs_enable_pair(world, e1, Position, Tgt, false);
+    ecs_enable_pair(world, e2, Position, Tgt, true);
+
+    ecs_query_t *q = ecs_query_new(world, "(Position, Tgt)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    int32_t count = 0;
+
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e1);
+            test_assert(it.entities[i] == e2 || it.entities[i] == e3);
+            test_assert(ecs_is_enabled_pair(world, it.entities[i], Position, Tgt));
         }
         count += it.count;
     }
