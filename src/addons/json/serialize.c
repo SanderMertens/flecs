@@ -721,6 +721,10 @@ int append_type(
             continue;
         }
 
+        if (pred == EcsUnion) {
+            pred = obj;
+            obj = ecs_get_target(world, ent, pred, 0);
+        }
 
         flecs_json_next(buf);
         flecs_json_array_push(buf);

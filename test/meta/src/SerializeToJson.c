@@ -1947,6 +1947,32 @@ void SerializeToJson_serialize_entity_color() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_union_relationship() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Movement, Union);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Walking);
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add_pair(world, e, Movement, Running);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_color = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"ids\":["
+            "[\"Movement\", \"Running\"]"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_w_meta_ids() {
     ecs_world_t *world = ecs_init();
 
