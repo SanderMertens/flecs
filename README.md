@@ -28,11 +28,6 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 
 [![Dashboard image](docs/img/explorer.png)](https://flecs.dev/explorer)
 
-**Flecs v3 is the latest, most stable and feature rich version of Flecs, and recommended for new projects.**
-
-- Latest v3 release: [Flecs v3.0.2-beta](https://github.com/SanderMertens/flecs/releases/tag/v3.0.2-beta).
-- Latest v2 release: [Flecs v2.4.8](https://github.com/SanderMertens/flecs/releases/tag/v2.4.8).
-
 ## What is an Entity Component System?
 ECS is a new way of organizing code and data that lets you build games that are larger, more complex and are easier to extend.
 
