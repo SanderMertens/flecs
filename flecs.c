@@ -30086,6 +30086,11 @@ int append_type_labels(
             continue;
         }
 
+        if (obj && (pred == EcsUnion)) {
+            pred = obj;
+            obj = ecs_get_target(world, ent, pred, 0);
+        }
+
         if (desc && desc->serialize_id_labels) {
             flecs_json_next(buf);
 
@@ -30289,7 +30294,7 @@ int append_type(
             continue;
         }
 
-        if (pred == EcsUnion) {
+        if (obj && (pred == EcsUnion)) {
             pred = obj;
             obj = ecs_get_target(world, ent, pred, 0);
         }
