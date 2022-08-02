@@ -499,3 +499,33 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
 
     ecs_fini(world);
 }
+
+void MultiThreadStaging_set_pair_w_new_target() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_threads(world, 2);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *thr_1 = ecs_get_stage(world, 0);
+
+    ecs_frame_begin(world, 0);
+    ecs_readonly_begin(world);
+
+    ecs_entity_t tgt = ecs_new_id(thr_1);
+    ecs_set_pair(thr_1, e, Position, tgt, {10, 20});
+
+    ecs_readonly_end(world);
+    ecs_frame_end(world);
+
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), tgt));
+
+    const Position *p = ecs_get_pair(world, e, Position, tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

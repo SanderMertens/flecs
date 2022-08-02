@@ -9684,7 +9684,28 @@ bool flecs_defer_set(
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
 
-        ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        if (!idr) {
+            /* If idr doesn't exist yet, create it but only if the application
+             * is not multithreaded. */
+            int32_t stage_count = ecs_get_stage_count(world);
+            if (stage->asynchronous || 
+                (ecs_os_has_threading() && stage_count > 1))
+            {
+                /* If id is a pair, it's possible that the target for the pair
+                 * is created in readonly mode. In that case we can get the
+                 * id record for (R, *). This only works if the first part of
+                 * the pair is a component. If not, the operation will fail. */
+                if (ECS_IS_PAIR(id)) {
+                    idr = flecs_id_record_get(world, 
+                        ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
+                }
+            } else {
+                idr = flecs_id_record_ensure(world, id);
+            }
+        }
+
+        /* Id record must exist, and must be associated with a type. */
         ecs_check(idr != NULL && idr->type_info != NULL, 
             ECS_INVALID_PARAMETER, NULL);
         

@@ -887,7 +887,8 @@
                 "new_w_count",
                 "custom_thread_auto_merge",
                 "custom_thread_manual_merge",
-                "custom_thread_partial_manual_merge"
+                "custom_thread_partial_manual_merge",
+                "set_pair_w_new_target"
             ]
         }, {
             "id": "Snapshot",
