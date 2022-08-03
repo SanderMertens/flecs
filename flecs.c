@@ -15894,11 +15894,11 @@ ECS_COMPONENT_DECLARE(FlecsMonitor);
 ECS_COMPONENT_DECLARE(EcsWorldStats);
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
-ECS_DECLARE(EcsPeriod1s);
-ECS_DECLARE(EcsPeriod1m);
-ECS_DECLARE(EcsPeriod1h);
-ECS_DECLARE(EcsPeriod1d);
-ECS_DECLARE(EcsPeriod1w);
+ecs_entity_t EcsPeriod1s = 0;
+ecs_entity_t EcsPeriod1m = 0;
+ecs_entity_t EcsPeriod1h = 0;
+ecs_entity_t EcsPeriod1d = 0;
+ecs_entity_t EcsPeriod1w = 0;
 
 static int32_t flecs_day_interval_count = 24;
 static int32_t flecs_week_interval_count = 168;
@@ -16176,11 +16176,11 @@ void FlecsMonitorImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    ECS_TAG_DEFINE(world, EcsPeriod1s);
-    ECS_TAG_DEFINE(world, EcsPeriod1m);
-    ECS_TAG_DEFINE(world, EcsPeriod1h);
-    ECS_TAG_DEFINE(world, EcsPeriod1d);
-    ECS_TAG_DEFINE(world, EcsPeriod1w);
+    EcsPeriod1s = ecs_new_entity(world, "EcsPeriod1s");
+    EcsPeriod1m = ecs_new_entity(world, "EcsPeriod1m");
+    EcsPeriod1h = ecs_new_entity(world, "EcsPeriod1h");
+    EcsPeriod1d = ecs_new_entity(world, "EcsPeriod1d");
+    EcsPeriod1w = ecs_new_entity(world, "EcsPeriod1w");
 
     flecs_world_monitor_import(world);
     flecs_pipeline_monitor_import(world);

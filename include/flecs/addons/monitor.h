@@ -24,15 +24,14 @@ extern "C" {
 #endif
 
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMonitor);
-
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
-FLECS_API extern ECS_DECLARE(EcsPeriod1s);
-FLECS_API extern ECS_DECLARE(EcsPeriod1m);
-FLECS_API extern ECS_DECLARE(EcsPeriod1h);
-FLECS_API extern ECS_DECLARE(EcsPeriod1d);
-FLECS_API extern ECS_DECLARE(EcsPeriod1w);
+FLECS_API extern ecs_entity_t EcsPeriod1s;
+FLECS_API extern ecs_entity_t EcsPeriod1m;
+FLECS_API extern ecs_entity_t EcsPeriod1h;
+FLECS_API extern ecs_entity_t EcsPeriod1d;
+FLECS_API extern ecs_entity_t EcsPeriod1w;
 
 typedef struct {
     ecs_ftime_t elapsed;
