@@ -1,7 +1,7 @@
 function(target_default_compile_warnings_c THIS)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
-            OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+            OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
         target_compile_options(${THIS} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror>
@@ -12,8 +12,7 @@ function(target_default_compile_warnings_c THIS)
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion
-                -Wformat=2)
+                -Wdouble-promotion)
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
@@ -26,14 +25,13 @@ function(target_default_compile_warnings_c THIS)
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion
-                -Wformat=2)
+                -Wdouble-promotion)
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
         target_compile_options(${THIS} PRIVATE
                 #$<$<CONFIG:RELEASE>:/WX>
-                /W4
+                /W3
                 /w14242 /w14254 /w14263
                 /w14265 /w14287 /we4289
                 /w14296 /w14311 /w14545
@@ -45,8 +43,7 @@ function(target_default_compile_warnings_c THIS)
     else ()
 
         message(WARNING
-                "No Warnings specified for ${CMAKE_C_COMPILER_ID}. "
-                "Consider using one of the following compilers: Clang, GNU, MSVC.")
+                "No warning settings available for ${CMAKE_C_COMPILER_ID}. ")
 
     endif ()
 
@@ -69,8 +66,7 @@ function(target_default_compile_warnings_cxx THIS)
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion
-                -Wformat=2)
+                -Wdouble-promotion)
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
@@ -86,14 +82,13 @@ function(target_default_compile_warnings_cxx THIS)
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion
-                -Wformat=2)
+                -Wdouble-promotion)
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
         target_compile_options(${THIS} PRIVATE
                 #$<$<CONFIG:RELEASE>:/WX>
-                /W4
+                /W3
                 /w14242 /w14254 /w14263
                 /w14265 /w14287 /we4289
                 /w14296 /w14311 /w14545
