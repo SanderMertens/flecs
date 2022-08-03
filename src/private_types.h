@@ -445,7 +445,7 @@ struct ecs_stage_t {
 
     /* Properties */
     bool auto_merge;             /* Should this stage automatically merge? */
-    bool asynchronous;           /* Is stage asynchronous? (write only) */
+    bool async;                  /* Is stage asynchronous? (write only) */
 };
 
 /* Component monitor */

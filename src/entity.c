@@ -1369,7 +1369,7 @@ ecs_entity_t ecs_new_id(
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     ecs_entity_t entity;
-    if (stage->asynchronous || (unsafe_world->flags & EcsWorldMultiThreaded)) {
+    if (stage->async || (unsafe_world->flags & EcsWorldMultiThreaded)) {
         /* When using an async stage or world is in multithreading mode, make
          * sure OS API has threading functions initialized */
         ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, NULL);
@@ -2680,7 +2680,7 @@ const void* ecs_get_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(flecs_stage_from_readonly_world(world)->asynchronous == false, 
+    ecs_check(flecs_stage_from_readonly_world(world)->async == false, 
         ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);

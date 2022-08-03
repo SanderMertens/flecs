@@ -56,7 +56,7 @@ void merge_stages(
     world->info.merge_count_total ++; 
 
     /* If stage is asynchronous, deferring is always enabled */
-    if (stage->asynchronous) {
+    if (stage->async) {
         ecs_defer_begin((ecs_world_t*)stage);
     }
 }
@@ -304,30 +304,36 @@ bool flecs_defer_set(
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
 
-        ecs_id_record_t *idr = flecs_id_record_get(world, id);
-        if (!idr) {
-            /* If idr doesn't exist yet, create it but only if the application
-             * is not multithreaded. */
-            if (stage->asynchronous || (world->flags & EcsWorldMultiThreaded)) {
-                const ecs_type_info_t *ti = ecs_get_type_info(world, id);
-                ecs_assert(ti != 0, ECS_INVALID_PARAMETER, NULL);
-
-                /* While it's possible the id record for a pair was not yet 
-                 * created in the world, if one of the elements of the pair was
-                 * a component it should have been initialized */
-                idr = flecs_id_record_get(world, ti->component);
+        const ecs_type_info_t *ti = NULL;
+        {
+            ecs_id_record_t *idr = flecs_id_record_get(world, id);
+            if (!idr) {
+                /* If idr doesn't exist yet, create it but only if the 
+                 * application is not multithreaded. */
+                if (stage->async || (world->flags & EcsWorldMultiThreaded)) {
+                    ti = ecs_get_type_info(world, id);
+                    ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+                } else {
+                    /* When not in multi threaded mode, it's safe to find or 
+                     * create the id record. */
+                    idr = flecs_id_record_ensure(world, id);
+                    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    
+                    /* Get type_info from id record. We could have called 
+                    * ecs_get_type_info directly, but since this function can be
+                    * expensive for pairs, creating the id record ensures we can
+                    * find the type_info quickly for subsequent operations. */
+                    ti = idr->type_info;
+                }
             } else {
-                /* When not in multi threaded mode, it's safe to find or create
-                 * the id record */
-                idr = flecs_id_record_ensure(world, id);
+                ti = idr->type_info;
             }
         }
 
-        /* Id record must exist, and must be associated with a type. */
-        ecs_check(idr != NULL && idr->type_info != NULL, 
-            ECS_INVALID_PARAMETER, NULL);
-        
-        const ecs_type_info_t *ti = idr->type_info;
+        /* If the id isn't associated with a type, we can't set anything */
+        ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        /* Make sure the size of the value equals the type size */
         ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
         size = ti->size;
 
@@ -390,7 +396,7 @@ void flecs_stage_init(
     stage->world = world;
     stage->thread_ctx = world;
     stage->auto_merge = true;
-    stage->asynchronous = false;
+    stage->async = false;
     
     flecs_stack_init(&stage->defer_stack);
 }
@@ -616,7 +622,7 @@ bool ecs_stage_is_readonly(
     const ecs_world_t *world = ecs_get_world(stage);
 
     if (ecs_poly_is(stage, ecs_stage_t)) {
-        if (((ecs_stage_t*)stage)->asynchronous) {
+        if (((ecs_stage_t*)stage)->async) {
             return false;
         }
     }
@@ -642,7 +648,7 @@ ecs_world_t* ecs_async_stage_new(
 
     stage->id = -1;
     stage->auto_merge = false;
-    stage->asynchronous = true;
+    stage->async = true;
 
     ecs_defer_begin((ecs_world_t*)stage);
 
@@ -654,7 +660,7 @@ void ecs_async_stage_free(
 {
     ecs_poly_assert(world, ecs_stage_t);
     ecs_stage_t *stage = (ecs_stage_t*)world;
-    ecs_check(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage->async == true, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_deinit(stage->world, stage);
     ecs_os_free(stage);
 error:
@@ -672,7 +678,7 @@ bool ecs_stage_is_async(
         return false;
     }
 
-    return ((ecs_stage_t*)stage)->asynchronous;
+    return ((ecs_stage_t*)stage)->async;
 }
 
 bool ecs_is_deferred(
