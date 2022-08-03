@@ -308,19 +308,17 @@ bool flecs_defer_set(
         if (!idr) {
             /* If idr doesn't exist yet, create it but only if the application
              * is not multithreaded. */
-            int32_t stage_count = ecs_get_stage_count(world);
-            if (stage->asynchronous || 
-                (ecs_os_has_threading() && stage_count > 1))
-            {
-                /* If id is a pair, it's possible that the target for the pair
-                 * is created in readonly mode. In that case we can get the
-                 * id record for (R, *). This only works if the first part of
-                 * the pair is a component. If not, the operation will fail. */
-                if (ECS_IS_PAIR(id)) {
-                    idr = flecs_id_record_get(world, 
-                        ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
-                }
+            if (stage->asynchronous || (world->flags & EcsWorldMultiThreaded)) {
+                const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+                ecs_assert(ti != 0, ECS_INVALID_PARAMETER, NULL);
+
+                /* While it's possible the id record for a pair was not yet 
+                 * created in the world, if one of the elements of the pair was
+                 * a component it should have been initialized */
+                idr = flecs_id_record_get(world, ti->component);
             } else {
+                /* When not in multi threaded mode, it's safe to find or create
+                 * the id record */
                 idr = flecs_id_record_ensure(world, id);
             }
         }
@@ -546,6 +544,14 @@ bool ecs_readonly_begin(
      * allowed to enqueue commands from stages */
     ECS_BIT_SET(world->flags, EcsWorldReadonly);
 
+    /* If world has more than one stage, signal we might be running on multiple
+     * threads. This is a stricter version of readonly mode: while some 
+     * mutations like implicit component registration are still allowed in plain
+     * readonly mode, no mutations are allowed when multithreaded. */
+    if (count > 1) {
+        ECS_BIT_SET(world->flags, EcsWorldMultiThreaded);
+    }
+
     return is_readonly;
 }
 
@@ -557,6 +563,7 @@ void ecs_readonly_end(
 
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
+    ECS_BIT_CLEAR(world->flags, EcsWorldMultiThreaded);
 
     ecs_log_pop_3();
 

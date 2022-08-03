@@ -157,6 +157,7 @@ extern "C" {
 #define EcsWorldFini                  (1u << 3)
 #define EcsWorldMeasureFrameTime      (1u << 4)
 #define EcsWorldMeasureSystemTime     (1u << 5)
+#define EcsWorldMultiThreaded         (1u << 6)
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -845,7 +845,10 @@ void MultiThreadStaging_new_w_count(void);
 void MultiThreadStaging_custom_thread_auto_merge(void);
 void MultiThreadStaging_custom_thread_manual_merge(void);
 void MultiThreadStaging_custom_thread_partial_manual_merge(void);
-void MultiThreadStaging_set_pair_w_new_target(void);
+void MultiThreadStaging_set_pair_w_new_target_readonly(void);
+void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
+void MultiThreadStaging_set_pair_w_new_target_defer(void);
+void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -4143,8 +4146,20 @@ bake_test_case MultiThreadStaging_testcases[] = {
         MultiThreadStaging_custom_thread_partial_manual_merge
     },
     {
-        "set_pair_w_new_target",
-        MultiThreadStaging_set_pair_w_new_target
+        "set_pair_w_new_target_readonly",
+        MultiThreadStaging_set_pair_w_new_target_readonly
+    },
+    {
+        "set_pair_w_new_target_tgt_component_readonly",
+        MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly
+    },
+    {
+        "set_pair_w_new_target_defer",
+        MultiThreadStaging_set_pair_w_new_target_defer
+    },
+    {
+        "set_pair_w_new_target_tgt_component_defer",
+        MultiThreadStaging_set_pair_w_new_target_tgt_component_defer
     }
 };
 
@@ -4533,7 +4548,7 @@ static bake_test_suite suites[] = {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
-        11,
+        14,
         MultiThreadStaging_testcases
     },
     {

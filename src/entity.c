@@ -1369,8 +1369,11 @@ ecs_entity_t ecs_new_id(
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     ecs_entity_t entity;
-    int32_t stage_count = ecs_get_stage_count(unsafe_world);
-    if (stage->asynchronous || (ecs_os_has_threading() && stage_count > 1)) {
+    if (stage->asynchronous || (unsafe_world->flags & EcsWorldMultiThreaded)) {
+        /* When using an async stage or world is in multithreading mode, make
+         * sure OS API has threading functions initialized */
+        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, NULL);
+
         /* Can't atomically increase number above max int */
         ecs_assert(unsafe_world->info.last_id < UINT_MAX, 
             ECS_INVALID_OPERATION, NULL);
@@ -3587,7 +3590,7 @@ const ecs_type_info_t* ecs_get_type_info(
         }
         if (!idr) {
             ecs_entity_t first = ecs_pair_first(world, id);
-            if (first && !ecs_has_id(world, first, EcsTag)) {
+            if (!first || !ecs_has_id(world, first, EcsTag)) {
                 idr = flecs_id_record_get(world, 
                     ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
                 if (!idr || !idr->type_info) {
