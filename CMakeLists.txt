@@ -3,75 +3,53 @@ cmake_policy(SET CMP0063 NEW)
 
 project(flecs LANGUAGES C)
 
-option(FLECS_STATIC_LIBS "Build static flecs lib" ON)
-option(FLECS_PIC "Compile static flecs lib with position-independent-code (PIC)" ON)
-option(FLECS_SHARED_LIBS "Build shared flecs lib" ON)
-option(FLECS_DEVELOPER_WARNINGS "Enable more warnings" OFF)
-
-if(NOT FLECS_STATIC_LIBS AND NOT FLECS_SHARED_LIBS)
-    message(FATAL_ERROR "At least one of FLECS_STATIC_LIBS or FLECS_SHARED_LIBS options must be enabled")
-endif()
-
-# include utilities for compiler options and warnings
+option(FLECS_STATIC "Build static flecs lib" ON)
+option(FLECS_SHARED "Build shared flecs lib" ON)
+option(FLECS_PIC "Compile static flecs lib with position independent code (PIC)" ON)
 
 include(cmake/target_default_compile_warnings.cmake)
 include(cmake/target_default_compile_options.cmake)
 
-# collect all include and source files
-# (use the manual list to improve ide support)
-
 file(GLOB_RECURSE INC include/*.h include/*.hpp)
-
 file(GLOB_RECURSE SRC src/*.c)
 
 set(FLECS_TARGETS "")
 
-# build the shared library
-if(FLECS_SHARED_LIBS)
-    add_library(flecs SHARED ${INC} ${SRC})
-    add_library(flecs::flecs ALIAS flecs)
+macro(add_flecs_target TARGET CONFIG)
+    add_library(${TARGET} ${CONFIG} ${INC} ${SRC})
+    add_library(flecs::${TARGET} ALIAS ${TARGET})
 
-    target_default_compile_options_c(flecs)
-    if(FLECS_DEVELOPER_WARNINGS)
-        target_default_compile_warnings_c(flecs)
-    endif()
+    target_default_compile_options_c(${TARGET})
+    target_default_compile_warnings_c(${TARGET})
 
     if(WIN32)
-        target_link_libraries(flecs wsock32 ws2_32)
+        target_link_libraries(${TARGET} wsock32 ws2_32)
     endif()
-
-    target_include_directories(flecs PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>)
-
-    list(APPEND FLECS_TARGETS flecs)
-endif()
-
-# build the static library
-if(FLECS_STATIC_LIBS)
-    add_library(flecs_static STATIC ${INC} ${SRC})
-    add_library(flecs::flecs_static ALIAS flecs_static)
-
-    target_default_compile_options_c(flecs_static)
-    if(FLECS_DEVELOPER_WARNINGS)
-        target_default_compile_warnings_c(flecs_static)
-    endif()
-
-    if(WIN32)
-        target_link_libraries(flecs_static wsock32 ws2_32)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(${TARGET} pthread)
     endif()
 
     if(FLECS_PIC)
-        set_property(TARGET flecs_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+        set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)
     endif()
 
-    target_include_directories(flecs_static PUBLIC
+    target_include_directories(${TARGET} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-    target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
 
-    list(APPEND FLECS_TARGETS flecs_static)
+    list(APPEND FLECS_TARGETS ${TARGET})
+endmacro()
+
+if(FLECS_SHARED)
+    add_flecs_target(flecs SHARED)
 endif()
+
+if(FLECS_STATIC)
+    add_flecs_target(flecs_static STATIC)
+    target_compile_definitions(flecs_static PUBLIC flecs_STATIC)
+endif()
+
+message(STATUS "Targets: ${FLECS_TARGETS}")
 
 # define the install steps
 include(GNUInstallDirs)
