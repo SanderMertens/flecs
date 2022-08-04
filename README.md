@@ -3,7 +3,7 @@
 ## Introduction
 [![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/#/?id=documentation)
+[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs)
 [![actions](https://img.shields.io/github/workflow/status/SanderMertens/flecs/CI?style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ARust)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)
 
