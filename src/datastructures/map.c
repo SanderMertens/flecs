@@ -261,6 +261,12 @@ void rehash(
     ecs_os_free(old_buckets);
 }
 
+bool ecs_map_is_initialized(
+    const ecs_map_t *result)
+{
+    return result != NULL && result->bucket_count != 0;
+}
+
 void _ecs_map_init(
     ecs_map_t *result,
     ecs_size_t elem_size,
@@ -291,6 +297,18 @@ void _ecs_map_init(
     ensure_buckets(result, get_bucket_count(element_count));
 }
 
+void _ecs_map_init_if(
+    ecs_map_t *result,
+    ecs_size_t elem_size,
+    int32_t element_count)
+{
+    if (ecs_map_is_initialized(result)) {
+        ecs_assert(elem_size == result->elem_size, ECS_INVALID_PARAMETER, NULL);
+        return;
+    }
+    _ecs_map_init(result, elem_size, element_count);
+}
+
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
     int32_t element_count)
@@ -301,12 +319,6 @@ ecs_map_t* _ecs_map_new(
     _ecs_map_init(result, elem_size, element_count);
 
     return result;
-}
-
-bool ecs_map_is_initialized(
-    const ecs_map_t *result)
-{
-    return result != NULL && result->bucket_count != 0;
 }
 
 void ecs_map_fini(

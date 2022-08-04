@@ -232,9 +232,7 @@ void flecs_register_observer_for_id(
             events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!ecs_map_is_initialized(&evt->event_ids)) {
-            ecs_map_init(&evt->event_ids, ecs_event_id_record_t*, 1);
-        }
+        ecs_map_init_if(&evt->event_ids, ecs_event_id_record_t*, 1);
 
         /* Get observers for (component) id for event */
         ecs_event_id_record_t *idt = flecs_ensure_event_id_record(
@@ -242,9 +240,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        if (!ecs_map_is_initialized(observers)) {
-            ecs_map_init(observers, ecs_observer_t*, 1);
-        }
+        ecs_map_init_if(observers, ecs_observer_t*, 1);
 
         ecs_map_ensure(observers, ecs_observer_t*, 
             observer->entity)[0] = observer;

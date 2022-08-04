@@ -306,9 +306,7 @@ ecs_graph_edge_t* ensure_hi_edge(
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    if (!ecs_map_is_initialized(&edges->hi)) {
-        ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
-    }
+    ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
 
     ecs_graph_edge_t **ep = ecs_map_ensure(&edges->hi, ecs_graph_edge_t*, id);
     ecs_graph_edge_t *edge = ep[0];
@@ -340,9 +338,7 @@ ecs_graph_edge_t* ensure_edge(
         }
         edge = &edges->lo[id];
     } else {
-        if (!ecs_map_is_initialized(&edges->hi)) {
-            ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
-        }
+        ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
         edge = ensure_hi_edge(world, edges, id);
     }
 

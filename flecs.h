@@ -1250,6 +1250,16 @@ void _ecs_map_init(
 #define ecs_map_init(map, T, elem_count)\
     _ecs_map_init(map, sizeof(T), elem_count)
 
+/** Initialize new map if uninitialized, leave as is otherwise */
+FLECS_API
+void _ecs_map_init_if(
+    ecs_map_t *map,
+    ecs_size_t elem_size,
+    int32_t elem_count);
+
+#define ecs_map_init_if(map, T, elem_count)\
+    _ecs_map_init_if(map, sizeof(T), elem_count)
+
 /** Deinitialize map. */
 FLECS_API
 void ecs_map_fini(

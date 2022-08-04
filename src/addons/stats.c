@@ -530,9 +530,7 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    if (!ecs_map_is_initialized(&s->system_stats) && sys_count) {
-        ecs_map_init(&s->system_stats, ecs_system_stats_t, sys_count);
-    }
+    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, sys_count);
 
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
@@ -604,10 +602,8 @@ void ecs_pipeline_stats_reduce(
     ecs_entity_t *src_systems = ecs_vector_first(src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -625,10 +621,8 @@ void ecs_pipeline_stats_reduce_last(
     const ecs_pipeline_stats_t *src,
     int32_t count)
 {
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -658,10 +652,8 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;

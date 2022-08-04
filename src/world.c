@@ -335,9 +335,7 @@ void flecs_monitor_register(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    if (!ecs_map_is_initialized(monitors)) {
-        ecs_map_init(monitors, ecs_monitor_t, 1);
-    }
+    ecs_map_init_if(monitors, ecs_monitor_t, 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        

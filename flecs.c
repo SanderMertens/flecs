@@ -13459,6 +13459,12 @@ void rehash(
     ecs_os_free(old_buckets);
 }
 
+bool ecs_map_is_initialized(
+    const ecs_map_t *result)
+{
+    return result != NULL && result->bucket_count != 0;
+}
+
 void _ecs_map_init(
     ecs_map_t *result,
     ecs_size_t elem_size,
@@ -13489,6 +13495,18 @@ void _ecs_map_init(
     ensure_buckets(result, get_bucket_count(element_count));
 }
 
+void _ecs_map_init_if(
+    ecs_map_t *result,
+    ecs_size_t elem_size,
+    int32_t element_count)
+{
+    if (ecs_map_is_initialized(result)) {
+        ecs_assert(elem_size == result->elem_size, ECS_INVALID_PARAMETER, NULL);
+        return;
+    }
+    _ecs_map_init(result, elem_size, element_count);
+}
+
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
     int32_t element_count)
@@ -13499,12 +13517,6 @@ ecs_map_t* _ecs_map_new(
     _ecs_map_init(result, elem_size, element_count);
 
     return result;
-}
-
-bool ecs_map_is_initialized(
-    const ecs_map_t *result)
-{
-    return result != NULL && result->bucket_count != 0;
 }
 
 void ecs_map_fini(
@@ -27382,9 +27394,7 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    if (!ecs_map_is_initialized(&s->system_stats) && sys_count) {
-        ecs_map_init(&s->system_stats, ecs_system_stats_t, sys_count);
-    }
+    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, sys_count);
 
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
@@ -27456,10 +27466,8 @@ void ecs_pipeline_stats_reduce(
     ecs_entity_t *src_systems = ecs_vector_first(src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -27477,10 +27485,8 @@ void ecs_pipeline_stats_reduce_last(
     const ecs_pipeline_stats_t *src,
     int32_t count)
 {
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -27510,10 +27516,8 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    if (!ecs_map_is_initialized(&dst->system_stats)) {
-        ecs_map_init(&dst->system_stats, ecs_system_stats_t,
-            ecs_map_count(&src->system_stats));
-    }
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+        ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -35888,9 +35892,7 @@ void flecs_monitor_register(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    if (!ecs_map_is_initialized(monitors)) {
-        ecs_map_init(monitors, ecs_monitor_t, 1);
-    }
+    ecs_map_init_if(monitors, ecs_monitor_t, 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
@@ -40625,9 +40627,7 @@ void flecs_register_observer_for_id(
             events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!ecs_map_is_initialized(&evt->event_ids)) {
-            ecs_map_init(&evt->event_ids, ecs_event_id_record_t*, 1);
-        }
+        ecs_map_init_if(&evt->event_ids, ecs_event_id_record_t*, 1);
 
         /* Get observers for (component) id for event */
         ecs_event_id_record_t *idt = flecs_ensure_event_id_record(
@@ -40635,9 +40635,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        if (!ecs_map_is_initialized(observers)) {
-            ecs_map_init(observers, ecs_observer_t*, 1);
-        }
+        ecs_map_init_if(observers, ecs_observer_t*, 1);
 
         ecs_map_ensure(observers, ecs_observer_t*, 
             observer->entity)[0] = observer;
@@ -45424,9 +45422,7 @@ ecs_graph_edge_t* ensure_hi_edge(
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    if (!ecs_map_is_initialized(&edges->hi)) {
-        ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
-    }
+    ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
 
     ecs_graph_edge_t **ep = ecs_map_ensure(&edges->hi, ecs_graph_edge_t*, id);
     ecs_graph_edge_t *edge = ep[0];
@@ -45458,9 +45454,7 @@ ecs_graph_edge_t* ensure_edge(
         }
         edge = &edges->lo[id];
     } else {
-        if (!ecs_map_is_initialized(&edges->hi)) {
-            ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
-        }
+        ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
         edge = ensure_hi_edge(world, edges, id);
     }
 
