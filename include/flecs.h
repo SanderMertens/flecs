@@ -1508,6 +1508,25 @@ int32_t ecs_delete_empty_tables(
     int32_t min_id_count,
     double time_budget_seconds);
 
+
+/** Test if pointer is of specified type.
+ * Usage:
+ *   ecs_poly_is(ptr, ecs_world_t)
+ * 
+ * This operation only works for poly types.
+ * 
+ * @param object The object to test.
+ * @param type The id of the type.
+ * @return True if the pointer is of the specified type.
+ */
+FLECS_API
+bool _ecs_poly_is(
+    const ecs_poly_t *object,
+    int32_t type);
+
+#define ecs_poly_is(object, type)\
+    _ecs_poly_is(object, type##_magic)
+
 /** @} */
 
 /**

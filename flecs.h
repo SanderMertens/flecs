@@ -4398,6 +4398,25 @@ int32_t ecs_delete_empty_tables(
     int32_t min_id_count,
     double time_budget_seconds);
 
+
+/** Test if pointer is of specified type.
+ * Usage:
+ *   ecs_poly_is(ptr, ecs_world_t)
+ * 
+ * This operation only works for poly types.
+ * 
+ * @param object The object to test.
+ * @param type The id of the type.
+ * @return True if the pointer is of the specified type.
+ */
+FLECS_API
+bool _ecs_poly_is(
+    const ecs_poly_t *object,
+    int32_t type);
+
+#define ecs_poly_is(object, type)\
+    _ecs_poly_is(object, type##_magic)
+
 /** @} */
 
 /**
@@ -15539,6 +15558,20 @@ struct world {
         return ecs_get_stage_id(m_world);
     }
 
+    /** Test if is a stage.
+     * If this function returns false, it is guaranteed that this is a valid
+     * world object.
+     * 
+     * @return True if the world is a stage, false if not.
+     */
+    bool is_stage() const {
+        ecs_assert(
+            ecs_poly_is(m_world, ecs_world_t) || 
+            ecs_poly_is(m_world, ecs_stage_t),
+                ECS_INVALID_PARAMETER, NULL);
+        return ecs_poly_is(m_world, ecs_stage_t);
+    }
+
     /** Enable/disable automerging for world or stage.
      * When automerging is enabled, staged data will automatically be merged 
      * with the world when staging ends. This happens at the end of progress(), 
@@ -19372,6 +19405,11 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         if (!w.is_deferred()) {
             // Bit of low level code so we only do at most one table move & one
             // entity lookup for the entire operation.
+
+            // Make sure the object is not a stage. Operations on a stage are
+            // only allowed when the stage is in deferred mode, which is when
+            // the world is in readonly mode.
+            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, NULL);
 
             // Find table for entity
             ecs_record_t *r = ecs_record_find(world, id);

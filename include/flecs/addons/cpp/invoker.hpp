@@ -567,6 +567,11 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
             // Bit of low level code so we only do at most one table move & one
             // entity lookup for the entire operation.
 
+            // Make sure the object is not a stage. Operations on a stage are
+            // only allowed when the stage is in deferred mode, which is when
+            // the world is in readonly mode.
+            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, NULL);
+
             // Find table for entity
             ecs_record_t *r = ecs_record_find(world, id);
             if (r) {

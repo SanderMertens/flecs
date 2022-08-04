@@ -1511,13 +1511,6 @@ void* _ecs_poly_assert(
 #define ecs_poly(object, T) ((T*)object)
 #endif
 
-bool _ecs_poly_is(
-    const ecs_poly_t *object,
-    int32_t type);
-
-#define ecs_poly_is(object, type)\
-    _ecs_poly_is(object, type##_magic)
-
 /* Utility functions for getting a mixin from an object */
 ecs_iterable_t* ecs_get_iterable(
     const ecs_poly_t *poly);

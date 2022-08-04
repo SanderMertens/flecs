@@ -318,6 +318,20 @@ struct world {
         return ecs_get_stage_id(m_world);
     }
 
+    /** Test if is a stage.
+     * If this function returns false, it is guaranteed that this is a valid
+     * world object.
+     * 
+     * @return True if the world is a stage, false if not.
+     */
+    bool is_stage() const {
+        ecs_assert(
+            ecs_poly_is(m_world, ecs_world_t) || 
+            ecs_poly_is(m_world, ecs_stage_t),
+                ECS_INVALID_PARAMETER, NULL);
+        return ecs_poly_is(m_world, ecs_stage_t);
+    }
+
     /** Enable/disable automerging for world or stage.
      * When automerging is enabled, staged data will automatically be merged 
      * with the world when staging ends. This happens at the end of progress(), 
