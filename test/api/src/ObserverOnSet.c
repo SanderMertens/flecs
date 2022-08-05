@@ -694,17 +694,7 @@ void ObserverOnSet_set_optional() {
     ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Velocity, {10, 20});
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.system, OnPosition);
-    test_int(ctx.term_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);    
-    test_int(ctx.c[0][1], ecs_id(Velocity));
-    test_int(ctx.s[0][1], 0);
+    test_int(ctx.invoked, 0);
 
     ecs_fini(world);
 }

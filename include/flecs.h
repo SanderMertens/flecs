@@ -1076,6 +1076,9 @@ FLECS_API extern const ecs_entity_t EcsIsA;
 /* Used to express dependency relationships */
 FLECS_API extern const ecs_entity_t EcsDependsOn;
 
+/* Used to express a slot (used with prefab inheritance) */
+FLECS_API extern const ecs_entity_t EcsSlotOf;
+
 /* Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
@@ -1085,8 +1088,6 @@ FLECS_API extern const ecs_entity_t EcsPrivate;
 /* Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
-
-FLECS_API extern const ecs_entity_t EcsSlot;
 
 /* When this tag is added to an entity it is skipped by all queries/filters */
 FLECS_API extern const ecs_entity_t EcsDisabled;

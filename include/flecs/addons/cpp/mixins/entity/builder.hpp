@@ -212,13 +212,21 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
+    /** Shortcut for add(DependsOn, entity).
+     *
+     * @param second The second element of the pair.
+     */
+    Self& slot_of(entity_t second) {
+        return this->add(flecs::SlotOf, second);
+    }
+
     /** Shortcut for add(ChildOf, entity).
      *
      * @tparam T the type associated with the entity.
      */
     template <typename T>
     Self& child_of() {
-        return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
+        return this->child_of(_::cpp_type<T>::id(this->m_world));
     }
  
     /** Shortcut for add(DependsOn, entity).
@@ -227,7 +235,16 @@ struct entity_builder : entity_view {
      */
     template <typename T>
     Self& depends_on() {
-        return this->add(flecs::DependsOn, _::cpp_type<T>::id(this->m_world));
+        return this->depends_on(_::cpp_type<T>::id(this->m_world));
+    }
+
+    /** Shortcut for add(DependsOn, entity).
+     *
+     * @tparam T the type associated with the entity.
+     */
+    template <typename T>
+    Self& slot_of() {
+        return this->slot_of(_::cpp_type<T>::id(this->m_world));
     }
 
     /** Remove a component from an entity.

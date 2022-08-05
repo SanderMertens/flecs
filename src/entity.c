@@ -280,7 +280,7 @@ void flecs_notify(
 }
 
 static
-void instantiate(
+void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_table_t *table,
@@ -288,7 +288,85 @@ void instantiate(
     int32_t count);
 
 static
-void instantiate_children(
+void flecs_instantiate_slot(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    ecs_entity_t slot_of,
+    ecs_entity_t slot,
+    ecs_entity_t child)
+{
+    if (base == slot_of) {
+        /* Instance inherits from slot_of, add slot to instance */
+        ecs_add_pair(world, instance, slot, child);
+    } else {
+        /* Slot is registered for other prefab, travel hierarchy
+         * upwards to find instance that inherits from slot_of */
+        ecs_entity_t parent = instance;
+        int32_t depth = 0;
+        do {
+            if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
+                const char *name = ecs_get_name(world, slot);
+                if (name == NULL) {
+                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
+                    ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
+                        "slot (slots must be named)", slot_of_str);
+                    ecs_os_free(slot_of_str);
+                    return;
+                }
+
+                /* The 'slot' variable is currently pointing to a child (or 
+                 * grandchild) of the current base. Find the original slot by
+                 * looking it up under the prefab it was registered. */
+                if (depth == 0) {
+                    /* If the current instance is an instance of slot_of, just
+                     * lookup the slot by name, which is faster than having to
+                     * create a relative path. */
+                    slot = ecs_lookup_child(world, slot_of, name);
+                } else {
+                    /* If the slot is more than one level away from the slot_of
+                     * parent, use a relative path to find the slot */
+                    char *path = ecs_get_path_w_sep(world, parent, child, ".",
+                        NULL);
+                    slot = ecs_lookup_path_w_sep(world, slot_of, path, ".", 
+                        NULL, false);
+                    ecs_os_free(path);
+                }
+
+                if (slot == 0) {
+                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
+                    char *slot_str = ecs_get_fullpath(world, slot);
+                    ecs_throw(ECS_INVALID_OPERATION,
+                        "'%s' is not in hierarchy for slot '%s'",
+                            slot_of_str, slot_str);
+                    ecs_os_free(slot_of_str);
+                    ecs_os_free(slot_str);
+                }
+
+                ecs_add_pair(world, parent, slot, child);
+                break;
+            }
+
+            depth ++;
+        } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
+        
+        if (parent == 0) {
+            char *slot_of_str = ecs_get_fullpath(world, slot_of);
+            char *slot_str = ecs_get_fullpath(world, slot);
+            ecs_throw(ECS_INVALID_OPERATION,
+                "'%s' is not in hierarchy for slot '%s'",
+                    slot_of_str, slot_str);
+            ecs_os_free(slot_of_str);
+            ecs_os_free(slot_str);
+        }
+    }
+
+error:
+    return;
+}
+
+static
+void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_table_t *table,
@@ -303,6 +381,7 @@ void instantiate_children(
     ecs_type_t type = child_table->type;
     ecs_data_t *child_data = &child_table->data;
 
+    ecs_entity_t slot_of = 0;
     ecs_entity_t *ids = type.array;
     int32_t type_count = type.count;
 
@@ -324,6 +403,18 @@ void instantiate_children(
         /* Make sure instances don't have EcsPrefab */
         if (id == EcsPrefab) {
             continue;
+        }
+
+        /* If child is a slot, keep track of which parent to add it to, but
+         * don't add slot relationship to child of instance. If this is a child
+         * of a prefab, keep the SlotOf relationship intact. */
+        if (!(table->flags & EcsTableIsPrefab)) {
+            if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
+                /* SlotOf is exclusive, can't have more than one */
+                ecs_check(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
+                slot_of = ecs_pair_second(world, id);
+                continue;
+            }
         }
 
         /* Keep track of the element that creates the ChildOf relationship with
@@ -358,11 +449,11 @@ void instantiate_children(
     components.count = pos;
 
     /* Instantiate the prefab child table for each new instance */
-    ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
+    ecs_entity_t *instances = ecs_storage_first(&table->data.entities);
     int32_t child_count = ecs_storage_count(&child_data->entities);
 
     for (i = row; i < count + row; i ++) {
-        ecs_entity_t instance = entities[i];
+        ecs_entity_t instance = instances[i];
         ecs_diff_buffer_t diff = ECS_DIFF_INIT;
         ecs_table_t *i_table = NULL;
  
@@ -397,14 +488,25 @@ void instantiate_children(
         /* Create children */
         int32_t child_row;
         ecs_table_diff_t table_diff = diff_to_table_diff(&diff);
-        new_w_data(world, i_table, NULL, &components, child_count, 
-            component_data, false, &child_row, &table_diff);
+        const ecs_entity_t *i_children = new_w_data(world, i_table, NULL, 
+            &components, child_count, component_data, false, &child_row, 
+            &table_diff);
         diff_free(&diff);
+
+        /* If children are slots, add slot relationships to parent */
+        if (slot_of) {
+            for (j = 0; j < child_count; j ++) {
+                ecs_entity_t child = children[j];
+                ecs_entity_t i_child = i_children[j];
+                flecs_instantiate_slot(world, base, instance, slot_of,
+                    child, i_child);
+            }
+        }
 
         /* If prefab child table has children itself, recursively instantiate */
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];
-            instantiate(world, child, i_table, child_row + j, 1);
+            flecs_instantiate(world, child, i_table, child_row + j, 1);
         }
     }   
 error:
@@ -412,7 +514,7 @@ error:
 }
 
 static
-void instantiate(
+void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_table_t *table,
@@ -432,7 +534,7 @@ void instantiate(
     if (idr && flecs_table_cache_iter((ecs_table_cache_t*)idr, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            instantiate_children(
+            flecs_instantiate_children(
                 world, base, table, row, count, tr->hdr.table);
         }
     }
@@ -599,7 +701,7 @@ void components_override(
                  * which would call instantiate multiple times for the same
                  * level in the hierarchy. */
                 world->stages[0].base = base;
-                instantiate(world, base, table, row, count);
+                flecs_instantiate(world, base, table, row, count);
                 world->stages[0].base = 0;
             }
         }

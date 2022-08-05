@@ -3966,6 +3966,9 @@ FLECS_API extern const ecs_entity_t EcsIsA;
 /* Used to express dependency relationships */
 FLECS_API extern const ecs_entity_t EcsDependsOn;
 
+/* Used to express a slot (used with prefab inheritance) */
+FLECS_API extern const ecs_entity_t EcsSlotOf;
+
 /* Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
@@ -3975,8 +3978,6 @@ FLECS_API extern const ecs_entity_t EcsPrivate;
 /* Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
-
-FLECS_API extern const ecs_entity_t EcsSlot;
 
 /* When this tag is added to an entity it is skipped by all queries/filters */
 FLECS_API extern const ecs_entity_t EcsDisabled;
@@ -12949,6 +12950,7 @@ static const flecs::entity_t OneOf = EcsOneOf;
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
+static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
@@ -17912,13 +17914,21 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
+    /** Shortcut for add(DependsOn, entity).
+     *
+     * @param second The second element of the pair.
+     */
+    Self& slot_of(entity_t second) {
+        return this->add(flecs::SlotOf, second);
+    }
+
     /** Shortcut for add(ChildOf, entity).
      *
      * @tparam T the type associated with the entity.
      */
     template <typename T>
     Self& child_of() {
-        return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
+        return this->child_of(_::cpp_type<T>::id(this->m_world));
     }
  
     /** Shortcut for add(DependsOn, entity).
@@ -17927,7 +17937,16 @@ struct entity_builder : entity_view {
      */
     template <typename T>
     Self& depends_on() {
-        return this->add(flecs::DependsOn, _::cpp_type<T>::id(this->m_world));
+        return this->depends_on(_::cpp_type<T>::id(this->m_world));
+    }
+
+    /** Shortcut for add(DependsOn, entity).
+     *
+     * @tparam T the type associated with the entity.
+     */
+    template <typename T>
+    Self& slot_of() {
+        return this->slot_of(_::cpp_type<T>::id(this->m_world));
     }
 
     /** Remove a component from an entity.

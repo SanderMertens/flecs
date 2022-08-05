@@ -1668,6 +1668,9 @@
                 "on_add_yield_existing",
                 "on_add_yield_existing_2_tables",
                 "on_add_yield_existing_2_terms",
+                "on_add_yield_existing_wildcard",
+                "on_add_yield_existing_wildcard_multi",
+                "on_add_yield_existing_wildcard_multi_w_wildcard_pivot",
                 "observer_superset_wildcard",
                 "observer_superset_wildcard_add_isa",
                 "observer_superset_wildcard_add_isa_at_offset",
@@ -1902,7 +1905,15 @@
                 "get_component_pair_from_base",
                 "get_component_pair_from_prefab_base",
                 "override_dont_inherit",
-                "prefab_w_switch"
+                "prefab_w_switch",
+                "prefab_1_slot",
+                "prefab_2_slots",
+                "prefab_w_nested_slot",
+                "prefab_w_mixed_slots",
+                "prefab_variant_w_slot",
+                "prefab_variant_w_base_slot",
+                "prefab_variant_w_mixed_slots",
+                "override_slot"
             ]
         }, {
             "id": "World",

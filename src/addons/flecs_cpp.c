@@ -313,7 +313,7 @@ ecs_entity_t ecs_cpp_component_register(
      * registered under a different name. */
     } else if (!implicit_name) {
         ent = ecs_lookup_symbol(world, symbol, false);
-        ecs_assert(ent == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
+        ecs_assert(ent == 0 || (ent == id), ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
 
     return ent;
