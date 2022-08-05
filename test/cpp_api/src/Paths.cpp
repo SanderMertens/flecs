@@ -101,6 +101,32 @@ void Paths_entity_lookup_depth_2() {
     test_assert(e.id() == parent_e.id());
 }
 
+void Paths_entity_lookup_from_0() {
+    install_test_abort();
+    flecs::world world;
+
+    flecs::entity foo = world.entity("foo");
+    test_assert(world.lookup("foo") == foo);
+
+    flecs::entity dummy;
+
+    test_expect_abort();
+    dummy.lookup("foo");
+}
+
+void Paths_entity_lookup_from_0_w_world() {
+    install_test_abort();
+    flecs::world world;
+
+    flecs::entity foo = world.entity("foo");
+    test_assert(world.lookup("foo") == foo);
+
+    flecs::entity dummy = world.entity(0);
+
+    test_expect_abort();
+    dummy.lookup("foo");
+}
+
 void Paths_alias_component() {
     flecs::world ecs;
 

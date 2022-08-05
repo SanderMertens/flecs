@@ -45,6 +45,8 @@ void Entity_init_id_add_2_comp(void);
 void Entity_init_id_w_scope(void);
 void Entity_init_id_name_w_scope(void);
 void Entity_init_id_path_w_scope(void);
+void Entity_init_id_fullpath_w_scope(void);
+void Entity_init_id_fullpath_w_scope_existing(void);
 void Entity_init_id_name_1_comp(void);
 void Entity_init_id_name_2_comp(void);
 void Entity_init_id_name_2_comp_w_scope(void);
@@ -2265,6 +2267,14 @@ bake_test_case Entity_testcases[] = {
     {
         "init_id_path_w_scope",
         Entity_init_id_path_w_scope
+    },
+    {
+        "init_id_fullpath_w_scope",
+        Entity_init_id_fullpath_w_scope
+    },
+    {
+        "init_id_fullpath_w_scope_existing",
+        Entity_init_id_fullpath_w_scope_existing
     },
     {
         "init_id_name_1_comp",
@@ -10310,7 +10320,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        77,
+        79,
         Entity_testcases
     },
     {

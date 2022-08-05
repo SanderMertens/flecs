@@ -353,6 +353,8 @@
                 "entity_lookup_name",
                 "entity_lookup_depth_1",
                 "entity_lookup_depth_2",
+                "entity_lookup_from_0",
+                "entity_lookup_from_0_w_world",
                 "alias_component",
                 "alias_scoped_component",
                 "alias_scoped_component_w_name",

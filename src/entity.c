@@ -1881,11 +1881,25 @@ ecs_entity_t ecs_entity_init(
         name_assigned = ecs_has_pair(
             world, result, ecs_id(EcsIdentifier), EcsName);
         if (name && name_assigned) {
-            /* If entity has name, verify that name matches */
-            char *path = ecs_get_path_w_sep(world, scope, result, sep, NULL);
+            /* If entity has name, verify that name matches. The name provided
+             * to the function could either have been relative to the current
+             * scope, or fully qualified. */
+            char *path;
+            ecs_size_t root_sep_len = root_sep ? ecs_os_strlen(root_sep) : 0;
+            if (root_sep && !ecs_os_strncmp(name, root_sep, root_sep_len)) {
+                /* Fully qualified name was provided, so make sure to
+                 * compare with fully qualified name */
+                path = ecs_get_path_w_sep(world, 0, result, sep, root_sep);
+            } else {
+                /* Relative name was provided, so make sure to compare with
+                 * relative name */
+                path = ecs_get_path_w_sep(world, scope, result, sep, "");
+            }
             if (path) {
                 if (ecs_os_strcmp(path, name)) {
                     /* Mismatching name */
+                    ecs_err("existing entity '%s' is initialized with "
+                        "conflicting name '%s'", path, name);
                     ecs_os_free(path);
                     return 0;
                 }

@@ -11712,18 +11712,18 @@ extern "C" {
 
 /** ECS_STRUCT(name, body) */
 #define ECS_STRUCT(name, ...)\
-    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
+    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__);\
+    ECS_STRUCT_TYPE(name, __VA_ARGS__)
 
 /** ECS_ENUM(name, body) */
 #define ECS_ENUM(name, ...)\
-    ECS_ENUM_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__)
+    ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__);\
+    ECS_ENUM_TYPE(name, __VA_ARGS__)
 
 /** ECS_BITMASK(name, body) */
 #define ECS_BITMASK(name, ...)\
-    ECS_ENUM_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__)
+    ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__);\
+    ECS_ENUM_TYPE(name, __VA_ARGS__)
 
 /** Macro used to mark part of type for which no reflection data is created */
 #define ECS_PRIVATE
@@ -11753,17 +11753,17 @@ int ecs_meta_from_desc(
 #define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
 
 #define ECS_STRUCT_IMPL(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
+    extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_STRUCT_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    extern ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_STRUCT_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+    extern ECS_COMPONENT_DECLARE(name)
 
 
 /* ECS_ENUM implementation */
@@ -11773,17 +11773,17 @@ int ecs_meta_from_desc(
 #define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
 
 #define ECS_ENUM_IMPL(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
+    extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_ENUM_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    extern ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_ENUM_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+    extern ECS_COMPONENT_DECLARE(name)
 
 
 /* ECS_BITMASK implementation */
@@ -11793,27 +11793,17 @@ int ecs_meta_from_desc(
 #define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
 
 #define ECS_BITMASK_IMPL(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
+    extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_BITMASK_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
+    extern ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_BITMASK_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
-
-
-/* Symbol export utility macros */
-#if defined(ECS_TARGET_WINDOWS)
-#define FLECS_META_C_EXPORT __declspec(dllexport)
-#define FLECS_META_C_IMPORT __declspec(dllimport)
-#else
-#define FLECS_META_C_EXPORT __attribute__((__visibility__("default")))
-#define FLECS_META_C_IMPORT
-#endif
+    extern ECS_COMPONENT_DECLARE(name)
 
 #ifdef __cplusplus
 }
@@ -19941,16 +19931,20 @@ struct cpp_type_impl {
         // across more than one binary), or if the id does not exists in the 
         // world (indicating a multi-world application), register it. */
         if (!s_id || (world && !ecs_exists(world, s_id))) {
-            if (!s_id) {
-                s_id = id;
-            }
+            init(world, s_id ? s_id : id, allow_tag);
 
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
 
-            init(world, s_id, allow_tag);
+            const char *symbol = nullptr;
+            if (id) {
+                symbol = ecs_get_symbol(world, id);
+            }
+            if (!symbol) {
+                symbol = symbol_name<T>();
+            }
 
             entity_t entity = ecs_cpp_component_register_explicit(
-                    world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
+                    world, s_id, id, name, type_name<T>(), symbol, 
                         s_size, s_alignment, is_component);
 
             s_id = entity;
@@ -20742,6 +20736,7 @@ inline bool entity_view::get(const Func& func) const {
 } 
 
 inline flecs::entity entity_view::lookup(const char *path) const {
+    ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, "invalid lookup from null handle");
     auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
     return flecs::entity(m_world, id);
 }
@@ -21547,7 +21542,7 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& arg(int32_t term_index) {
+    Base& term_at(int32_t term_index) {
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         int32_t prev_index = m_term_index;
         m_term_index = term_index - 1;
@@ -21556,7 +21551,11 @@ struct filter_builder_i : term_builder_i<Base> {
         ecs_assert(ecs_term_is_initialized(this->m_term), 
             ECS_INVALID_PARAMETER, NULL);
         return *this;
-    }    
+    }
+
+    Base& arg(int32_t term_index) {
+        return this->term_at(term_index);
+    }
 
     template<typename T>
     Base& term() {

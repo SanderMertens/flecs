@@ -166,16 +166,20 @@ struct cpp_type_impl {
         // across more than one binary), or if the id does not exists in the 
         // world (indicating a multi-world application), register it. */
         if (!s_id || (world && !ecs_exists(world, s_id))) {
-            if (!s_id) {
-                s_id = id;
-            }
+            init(world, s_id ? s_id : id, allow_tag);
 
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
 
-            init(world, s_id, allow_tag);
+            const char *symbol = nullptr;
+            if (id) {
+                symbol = ecs_get_symbol(world, id);
+            }
+            if (!symbol) {
+                symbol = symbol_name<T>();
+            }
 
             entity_t entity = ecs_cpp_component_register_explicit(
-                    world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
+                    world, s_id, id, name, type_name<T>(), symbol, 
                         s_size, s_alignment, is_component);
 
             s_id = entity;

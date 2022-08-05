@@ -61,7 +61,7 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& arg(int32_t term_index) {
+    Base& term_at(int32_t term_index) {
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         int32_t prev_index = m_term_index;
         m_term_index = term_index - 1;
@@ -70,7 +70,11 @@ struct filter_builder_i : term_builder_i<Base> {
         ecs_assert(ecs_term_is_initialized(this->m_term), 
             ECS_INVALID_PARAMETER, NULL);
         return *this;
-    }    
+    }
+
+    Base& arg(int32_t term_index) {
+        return this->term_at(term_index);
+    }
 
     template<typename T>
     Base& term() {

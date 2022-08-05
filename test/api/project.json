@@ -52,6 +52,8 @@
                 "init_id_w_scope",
                 "init_id_name_w_scope",
                 "init_id_path_w_scope",
+                "init_id_fullpath_w_scope",
+                "init_id_fullpath_w_scope_existing",
                 "init_id_name_1_comp",
                 "init_id_name_2_comp",
                 "init_id_name_2_comp_w_scope",

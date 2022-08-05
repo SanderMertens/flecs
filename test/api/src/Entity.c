@@ -146,6 +146,70 @@ void Entity_init_id_path_w_scope() {
     ecs_fini(world);
 }
 
+void Entity_init_id_fullpath_w_scope() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "parent"
+    });
+    test_assert(scope != 0);
+    test_str(ecs_get_name(world, scope), "parent");
+
+    ecs_set_scope(world, scope);
+    test_int(ecs_get_scope(world), scope);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "::parent.child.grandchild",
+        .root_sep = "::"
+    });
+    test_assert(e != 0);
+
+    test_str(ecs_get_name(world, e), "grandchild");
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "parent.child.grandchild");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Entity_init_id_fullpath_w_scope_existing() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "parent"
+    });
+    test_assert(scope != 0);
+    test_str(ecs_get_name(world, scope), "parent");
+
+    ecs_set_scope(world, scope);
+    test_int(ecs_get_scope(world), scope);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "::parent.child.grandchild",
+        .root_sep = "::"
+    });
+    test_assert(e != 0);
+
+    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .id = e,
+        .name = "::parent.child.grandchild",
+        .root_sep = "::"
+    });
+    test_assert(r != 0);
+    test_assert(r == e);
+
+    test_str(ecs_get_name(world, e), "grandchild");
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "parent.child.grandchild");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
 void Entity_init_id_name_1_comp() {
     ecs_world_t *world = ecs_mini();
 
@@ -535,6 +599,7 @@ void Entity_find_id_name_mismatch() {
         .name = "bar"
     });    
 
+    ecs_log_set_level(-4);
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
         .id = e,
         .name = "bar"
@@ -562,6 +627,7 @@ void Entity_find_id_name_mismatch_w_scope() {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
+    ecs_log_set_level(-4);
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
         .id = e,
         .name = "parent"
@@ -584,6 +650,7 @@ void Entity_find_id_path_mismatch() {
         .name = "parent.foo"
     }); 
 
+    ecs_log_set_level(-4);
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
         .id = e,
         .name = "parent.foo"
@@ -615,6 +682,7 @@ void Entity_find_id_path_mismatch_w_scope() {
         .name = "child.foo"
     });
 
+    ecs_log_set_level(-4);
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
         .id = e,
         .name = "child.foo"
@@ -1641,3 +1709,4 @@ void Entity_entity_w_short_notation() {
 
     ecs_fini(world);
 }
+

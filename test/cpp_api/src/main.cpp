@@ -339,6 +339,8 @@ void Paths_path_depth_2(void);
 void Paths_entity_lookup_name(void);
 void Paths_entity_lookup_depth_1(void);
 void Paths_entity_lookup_depth_2(void);
+void Paths_entity_lookup_from_0(void);
+void Paths_entity_lookup_from_0_w_world(void);
 void Paths_alias_component(void);
 void Paths_alias_scoped_component(void);
 void Paths_alias_scoped_component_w_name(void);
@@ -2279,6 +2281,14 @@ bake_test_case Paths_testcases[] = {
     {
         "entity_lookup_depth_2",
         Paths_entity_lookup_depth_2
+    },
+    {
+        "entity_lookup_from_0",
+        Paths_entity_lookup_from_0
+    },
+    {
+        "entity_lookup_from_0_w_world",
+        Paths_entity_lookup_from_0_w_world
     },
     {
         "alias_component",
@@ -4757,7 +4767,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        12,
+        14,
         Paths_testcases
     },
     {

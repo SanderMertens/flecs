@@ -22,20 +22,10 @@ typedef struct TestInteropModule {
 
 static
 void TestInteropModuleImport(ecs_world_t *world) {
-    ecs_component_desc_t module_desc = {};
-    module_desc.type.size = ECS_SIZEOF(TestInteropModule);
-    module_desc.type.alignment = ECS_ALIGNOF(TestInteropModule);
-    ecs_entity_t m = ecs_module_init(world, "TestInteropModule", &module_desc);
-    ecs_set_scope(world, m);
+    ECS_MODULE(world, TestInteropModule);
 
-    ecs_component_desc_t desc = {};
-    ecs_entity_desc_t edesc = {};
-    edesc.name = "Position";
-    edesc.symbol = "Position";
-    desc.entity = ecs_entity_init(world, &edesc);
-    desc.type.size = ECS_SIZEOF(Position);
-    desc.type.alignment = ECS_ALIGNOF(Position);
-    ecs_component_init(world, &desc);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 }
 
 namespace test {
@@ -43,12 +33,14 @@ namespace interop {
 
 class module : TestInteropModule {
 public:
+    struct Velocity : ::Velocity { };
+
     module(flecs::world& ecs) {
-        TestInteropModuleImport(ecs.c_ptr());
+        TestInteropModuleImport(ecs);
 
         ecs.module<test::interop::module>();
-
         ecs.component<Position>("::test::interop::module::Position");
+        ecs.component<Velocity>("::test::interop::module::Velocity");
     }
 };
 
