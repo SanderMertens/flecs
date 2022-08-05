@@ -208,6 +208,7 @@ void Entity_entity_w_root_name_from_scope(void);
 void Entity_entity_w_type(void);
 void Entity_entity_w_nested_type(void);
 void Entity_entity_w_type_defer(void);
+void Entity_prefab_hierarchy_w_types(void);
 void Entity_entity_array(void);
 void Entity_add_if_true_T(void);
 void Entity_add_if_false_T(void);
@@ -1777,6 +1778,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_type_defer",
         Entity_entity_w_type_defer
+    },
+    {
+        "prefab_hierarchy_w_types",
+        Entity_prefab_hierarchy_w_types
     },
     {
         "entity_array",
@@ -4739,7 +4744,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        213,
+        214,
         Entity_testcases
     },
     {

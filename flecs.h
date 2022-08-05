@@ -3976,6 +3976,8 @@ FLECS_API extern const ecs_entity_t EcsPrivate;
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
 
+FLECS_API extern const ecs_entity_t EcsSlot;
+
 /* When this tag is added to an entity it is skipped by all queries/filters */
 FLECS_API extern const ecs_entity_t EcsDisabled;
 

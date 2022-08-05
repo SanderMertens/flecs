@@ -214,6 +214,7 @@
                 "entity_w_type",
                 "entity_w_nested_type",
                 "entity_w_type_defer",
+                "prefab_hierarchy_w_types",
                 "entity_array",
                 "add_if_true_T",
                 "add_if_false_T",

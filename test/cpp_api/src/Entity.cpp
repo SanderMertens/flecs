@@ -3634,6 +3634,55 @@ void Entity_entity_w_type() {
     test_assert(e == e_2);
 }
 
+struct Turret {
+    struct Base { };
+};
+
+struct Railgun {
+    struct Head { };
+    struct Beam { };
+};
+
+void Entity_prefab_hierarchy_w_types() {
+    flecs::world ecs;
+
+    auto turret = ecs.prefab<Turret>();
+        auto turret_base = ecs.prefab<Turret::Base>();
+
+    test_assert(turret != 0);
+    test_assert(turret_base != 0);
+    test_assert(turret_base.has(flecs::ChildOf, turret));
+    
+    test_str(turret.path().c_str(), "::Turret");
+    test_str(turret_base.path().c_str(), "::Turret::Base");
+
+    test_str(turret.symbol(), "Turret");
+    test_str(turret_base.symbol(), "Turret.Base");
+
+    auto railgun = ecs.prefab<Railgun>().is_a<Turret>();
+        auto railgun_base = railgun.lookup("Base");
+        auto railgun_head = ecs.prefab<Railgun::Head>();
+        auto railgun_beam = ecs.prefab<Railgun::Beam>();
+
+    test_assert(railgun != 0);
+    test_assert(railgun_base != 0);
+    test_assert(railgun_head != 0);
+    test_assert(railgun_beam != 0);
+    test_assert(railgun_base.has(flecs::ChildOf, railgun));
+    test_assert(railgun_head.has(flecs::ChildOf, railgun));
+    test_assert(railgun_beam.has(flecs::ChildOf, railgun));
+
+    test_str(railgun.path().c_str(), "::Railgun");
+    test_str(railgun_base.path().c_str(), "::Railgun::Base");
+    test_str(railgun_head.path().c_str(), "::Railgun::Head");
+    test_str(railgun_beam.path().c_str(), "::Railgun::Beam");
+
+    test_str(railgun.symbol().c_str(), "Railgun");
+    test_str(railgun_base.symbol().c_str(), "Railgun.Base");
+    test_str(railgun_head.symbol().c_str(), "Railgun.Head");
+    test_str(railgun_beam.symbol().c_str(), "Railgun.Beam");
+}
+
 struct Parent {
     struct EntityType { };
 };

@@ -36,34 +36,56 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     ecs_entity_t evt = it->event;
     ecs_id_t evt_id = it->event_id;
     ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
-
     ecs_id_t pair = ecs_childof(0);
+    ecs_hashmap_t *index = NULL;
 
-    ecs_hashmap_t *name_index = NULL;
     if (kind == EcsSymbol) {
-        name_index = &world->symbols;
+        index = &world->symbols;
     } else if (kind == EcsAlias) {
-        name_index = &world->aliases;
+        index = &world->aliases;
     } else if (kind == EcsName) {
         ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_search(world, it->table, ecs_childof(EcsWildcard), &pair);
         ecs_assert(pair != 0, ECS_INTERNAL_ERROR, NULL);
 
         if (evt == EcsOnSet) {
-            name_index = flecs_id_name_index_ensure(world, pair);
+            index = flecs_id_name_index_ensure(world, pair);
         } else {
-            name_index = flecs_id_name_index_get(world, pair);
+            index = flecs_id_name_index_get(world, pair);
         }
     }
 
     int i, count = it->count;
+
+    /* If the kind is Symbol and the table contains child entities, make sure
+     * the symbol names are correct. This makes it possible to inherit from
+     * entities with symbols, without getting symbol conflicts */
+    if (kind == EcsSymbol && (it->table->flags & EcsTableHasChildOf)) {
+        for (i = 0; i < count; i ++) {
+            EcsIdentifier *cur = &ptr[i];
+            if (!ptr->value) {
+                continue;
+            }
+
+            /* If the name index contains a different entity for the symbol,
+             * generate a new symbol based on the entity path. This is 
+             * consistent with how the C++ API generates symbols for types. */
+            ecs_entity_t e = it->entities[i];
+            ecs_entity_t ei = flecs_name_index_find(index, cur->value, 0, 0);
+            if (ei && (e != ei)) {
+                ecs_os_free(cur->value);
+                cur->value = ecs_get_path_w_sep(world, 0, e, NULL, NULL);
+            }
+        }
+    }
+    
     for (i = 0; i < count; i ++) {
         EcsIdentifier *cur = &ptr[i];
         uint64_t hash;
         ecs_size_t len;
         const char *name = cur->value;
 
-        if (cur->index && cur->index != name_index) {
+        if (cur->index && cur->index != index) {
             /* If index doesn't match up, the value must have been copied from
              * another entity, so reset index & cached index hash */
             cur->index = NULL;
@@ -79,23 +101,23 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
             cur->index = NULL;
         }
 
-        if (name_index) {
+        if (index) {
             uint64_t index_hash = cur->index_hash;
             ecs_entity_t e = it->entities[i];
 
             if (hash != index_hash) {
                 if (index_hash) {
-                    flecs_name_index_remove(name_index, e, index_hash);
+                    flecs_name_index_remove(index, e, index_hash);
                 }
                 if (hash) {
-                    flecs_name_index_ensure(name_index, e, name, len, hash);
+                    flecs_name_index_ensure(index, e, name, len, hash);
                     cur->index_hash = hash;
-                    cur->index = name_index;
+                    cur->index = index;
                 }
             } else {
                 /* Name didn't change, but the string could have been 
                  * reallocated. Make sure name index points to correct string */
-                flecs_name_index_update_name(name_index, e, hash, name);
+                flecs_name_index_update_name(index, e, hash, name);
             }
         }
     }
@@ -712,6 +734,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrivate);
     flecs_bootstrap_tag(world, EcsPrefab);
+    flecs_bootstrap_tag(world, EcsSlot);
     flecs_bootstrap_tag(world, EcsDisabled);
     flecs_bootstrap_tag(world, EcsEmpty);
 
