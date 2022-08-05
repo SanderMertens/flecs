@@ -60,21 +60,27 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     /* If the kind is Symbol and the table contains child entities, make sure
      * the symbol names are correct. This makes it possible to inherit from
      * entities with symbols, without getting symbol conflicts */
-    if (kind == EcsSymbol && (it->table->flags & EcsTableHasChildOf)) {
-        for (i = 0; i < count; i ++) {
-            EcsIdentifier *cur = &ptr[i];
-            if (!ptr->value) {
-                continue;
-            }
+    if (evt == EcsOnSet) {
+        if (kind == EcsSymbol && (it->table->flags & EcsTableHasChildOf)) {
+            for (i = 0; i < count; i ++) {
+                EcsIdentifier *cur = &ptr[i];
+                if (!cur->value) {
+                    continue;
+                }
 
-            /* If the name index contains a different entity for the symbol,
-             * generate a new symbol based on the entity path. This is 
-             * consistent with how the C++ API generates symbols for types. */
-            ecs_entity_t e = it->entities[i];
-            ecs_entity_t ei = flecs_name_index_find(index, cur->value, 0, 0);
-            if (ei && (e != ei)) {
-                ecs_os_free(cur->value);
-                cur->value = ecs_get_path_w_sep(world, 0, e, NULL, NULL);
+                /* If symbol contains a '.' it's a scoped symbol generated from
+                 * a path (likely a type). Only replace symbols that are scoped,
+                 * as we should not replace names of plain C types. */
+                ecs_entity_t e = it->entities[i];
+                if (strrchr(cur->value, '.')) {
+                    char *path = ecs_get_path_w_sep(world, 0, e, NULL, NULL);
+                    if (ecs_os_strcmp(path, cur->value)) {
+                        ecs_os_free(cur->value);
+                        cur->value = path;
+                    } else {
+                        ecs_os_free(path);
+                    }
+                }
             }
         }
     }
