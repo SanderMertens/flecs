@@ -2431,6 +2431,121 @@ void Observer_on_add_yield_existing_2_terms() {
     ecs_fini(world);
 }
 
+void Observer_on_add_yield_existing_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+    test_int(ctx.c[1][0], ecs_pair(Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_yield_existing_wildcard_multi() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_new_w_pair(world, Rel, TgtB);
+
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+    test_int(ctx.c[0][1], Tag);
+    test_int(ctx.c[1][0], ecs_pair(Rel, TgtB));
+    test_int(ctx.c[1][1], Tag);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+    ecs_new(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+    test_int(ctx.c[0][1], Tag);
+    test_int(ctx.c[1][0], ecs_pair(Rel, TgtB));
+    test_int(ctx.c[1][1], Tag);
+
+    ecs_fini(world);
+}
+
 void Observer_observer_superset_wildcard() {
     ecs_world_t *world = ecs_mini();
 

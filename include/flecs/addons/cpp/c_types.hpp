@@ -104,6 +104,7 @@ static const flecs::entity_t OneOf = EcsOneOf;
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
+static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;

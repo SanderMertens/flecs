@@ -3586,3 +3586,244 @@ void Prefab_prefab_w_switch() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_1_slot() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_2_slots() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot_a = ecs_new_prefab(world, "Base.SlotA");
+    ecs_entity_t base_slot_b = ecs_new_prefab(world, "Base.SlotB");
+    ecs_add_pair(world, base_slot_a, EcsSlotOf, base);
+    ecs_add_pair(world, base_slot_b, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot_a, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot_a, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot_a, EcsExclusive));
+    test_assert(ecs_has_pair(world, base_slot_b, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot_b, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot_b, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot_a = ecs_get_target(world, inst, base_slot_a, 0);
+    test_assert(inst_slot_a != 0);
+    test_str(ecs_get_name(world, inst_slot_a), "SlotA");
+    test_assert(!ecs_has_pair(world, inst_slot_a, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot_a, EcsChildOf, inst));
+
+    ecs_entity_t inst_slot_b = ecs_get_target(world, inst, base_slot_b, 0);
+    test_assert(inst_slot_b != 0);
+    test_str(ecs_get_name(world, inst_slot_b), "SlotB");
+    test_assert(!ecs_has_pair(world, inst_slot_b, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot_b, EcsChildOf, inst));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_w_nested_slot() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_entity_t base_slot_slot = ecs_new_prefab(world, "Base.Slot.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    ecs_add_pair(world, base_slot_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+    test_assert(ecs_has_pair(world, base_slot_slot, EcsChildOf, base_slot));
+    test_assert(ecs_has_pair(world, base_slot_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_entity_t inst_slot_slot = ecs_get_target(world, inst, base_slot_slot, 0);
+    test_assert(inst_slot_slot != 0);
+    test_assert(inst_slot_slot != inst_slot);
+    test_str(ecs_get_name(world, inst_slot_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot_slot, EcsChildOf, inst_slot));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_w_mixed_slots() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_entity_t base_slot_slot = ecs_new_prefab(world, "Base.Slot.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    ecs_add_pair(world, base_slot_slot, EcsSlotOf, base_slot);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+    test_assert(ecs_has_pair(world, base_slot_slot, EcsChildOf, base_slot));
+    test_assert(ecs_has_pair(world, base_slot_slot, EcsSlotOf, base_slot));
+    test_assert(ecs_has_id(world, base_slot_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_entity_t inst_slot_slot = ecs_get_target(world, inst, base_slot_slot, 0);
+    test_assert(inst_slot_slot == 0);
+
+    inst_slot_slot = ecs_get_target(world, inst_slot, base_slot_slot, 0);
+    test_assert(inst_slot_slot != 0);
+    test_assert(inst_slot_slot != inst_slot);
+    test_str(ecs_get_name(world, inst_slot_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot_slot, EcsChildOf, inst_slot));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_variant_w_slot() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t variant = ecs_new_prefab(world, "Variant");
+    ecs_entity_t variant_slot = ecs_new_prefab(world, "Variant.Slot");
+    ecs_add_pair(world, variant, EcsIsA, base);
+    ecs_add_pair(world, variant_slot, EcsSlotOf, variant);
+    test_assert(ecs_has_pair(world, variant_slot, EcsChildOf, variant));
+    test_assert(ecs_has_pair(world, variant_slot, EcsSlotOf, variant));
+    test_assert(ecs_has_id(world, variant_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, variant);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, variant_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_variant_w_base_slot() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+
+    ecs_entity_t variant = ecs_new_prefab(world, "Variant");
+    ecs_add_pair(world, variant, EcsIsA, base);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, variant);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_variant_w_mixed_slots() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.BaseSlot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+
+    ecs_entity_t variant = ecs_new_prefab(world, "Variant");
+    ecs_add_pair(world, variant, EcsIsA, base);
+    ecs_entity_t variant_slot = ecs_new_prefab(world, "Variant.VariantSlot");
+    ecs_add_pair(world, variant, EcsIsA, base);
+    ecs_add_pair(world, variant_slot, EcsSlotOf, variant);
+    test_assert(ecs_has_pair(world, variant_slot, EcsChildOf, variant));
+    test_assert(ecs_has_pair(world, variant_slot, EcsSlotOf, variant));
+    test_assert(ecs_has_id(world, variant_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, variant);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_base_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_base_slot != 0);
+    test_str(ecs_get_name(world, inst_base_slot), "BaseSlot");
+    test_assert(!ecs_has_pair(world, inst_base_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_base_slot, EcsChildOf, inst));
+
+    ecs_entity_t inst_variant_slot = ecs_get_target(world, inst, variant_slot, 0);
+    test_assert(inst_variant_slot != 0);
+    test_assert(inst_variant_slot != inst_base_slot);
+    test_str(ecs_get_name(world, inst_variant_slot), "VariantSlot");
+    test_assert(!ecs_has_pair(world, inst_variant_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_variant_slot, EcsChildOf, inst));
+
+    ecs_fini(world);
+}
+
+void Prefab_override_slot() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+    test_assert(ecs_has_id(world, base_slot, EcsExclusive));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_str(ecs_get_name(world, inst_slot), "Slot");
+    test_assert(!ecs_has_pair(world, inst_slot, EcsSlotOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, inst_slot, EcsChildOf, inst));
+
+    ecs_entity_t slot_override = ecs_new_id(world);
+    ecs_add_pair(world, inst, base_slot, slot_override);
+
+    test_assert(ecs_has_pair(world, inst, base_slot, slot_override));
+    test_assert(!ecs_has_pair(world, inst, base_slot, inst_slot));
+
+    ecs_fini(world);
+}

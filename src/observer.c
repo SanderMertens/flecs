@@ -78,9 +78,9 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
 
-        user_it.ids[it->term_index] = it->event_id;
+        user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->entity;
-        user_it.term_index = it->term_index;
+        user_it.term_index = pivot_term;
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
         user_it.term_count = o->filter.term_count_actual;
@@ -90,6 +90,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         o->callback(&user_it);
 
         ecs_iter_fini(&user_it);
+
         return true;
     }
 
@@ -573,6 +574,7 @@ void flecs_notify_self_observers(
         if (flecs_ignore_observer(world, observer, it->table)) {
             continue;
         }
+
         flecs_uni_observer_builtin_run(observer, it);
     }
 }
@@ -860,6 +862,8 @@ void flecs_multi_observer_yield_existing(
         run = flecs_default_multi_observer_run_callback;
     }
 
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
         return;
@@ -888,6 +892,7 @@ void flecs_multi_observer_yield_existing(
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
+            it.event_id = it.ids[0];
             run(&it);
             world->event_id ++;
         }
@@ -1066,6 +1071,7 @@ int flecs_multi_observer_init(
     child_desc.filter.terms_buffer_count = 0;
     child_desc.binding_ctx = NULL;
     child_desc.binding_ctx_free = NULL;
+    child_desc.yield_existing = false;
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.filter.terms);
     ecs_os_memcpy_n(child_desc.events, observer->events, 
@@ -1133,6 +1139,8 @@ int flecs_multi_observer_init(
             term->src.id = EcsThis;
             term->src.flags = EcsIsVariable;
             term->second.id = 0;
+        } else if (term->oper == EcsOptional) {
+            continue;
         }
         if (ecs_observer_init(world, &child_desc) == 0) {
             goto error;

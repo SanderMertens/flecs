@@ -48,7 +48,7 @@ const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
-const ecs_entity_t EcsSlot =                  ECS_HI_COMPONENT_ID + 8;
+const ecs_entity_t EcsSlotOf =                  ECS_HI_COMPONENT_ID + 8;
 const ecs_entity_t EcsFlag =                  ECS_HI_COMPONENT_ID + 9;
 
 /* Relationship properties */

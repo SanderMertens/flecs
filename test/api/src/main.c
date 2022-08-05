@@ -1599,6 +1599,9 @@ void Observer_notify_propagated_twice(void);
 void Observer_on_add_yield_existing(void);
 void Observer_on_add_yield_existing_2_tables(void);
 void Observer_on_add_yield_existing_2_terms(void);
+void Observer_on_add_yield_existing_wildcard(void);
+void Observer_on_add_yield_existing_wildcard_multi(void);
+void Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot(void);
 void Observer_observer_superset_wildcard(void);
 void Observer_observer_superset_wildcard_add_isa(void);
 void Observer_observer_superset_wildcard_add_isa_at_offset(void);
@@ -1822,6 +1825,14 @@ void Prefab_get_component_pair_from_base(void);
 void Prefab_get_component_pair_from_prefab_base(void);
 void Prefab_override_dont_inherit(void);
 void Prefab_prefab_w_switch(void);
+void Prefab_prefab_1_slot(void);
+void Prefab_prefab_2_slots(void);
+void Prefab_prefab_w_nested_slot(void);
+void Prefab_prefab_w_mixed_slots(void);
+void Prefab_prefab_variant_w_slot(void);
+void Prefab_prefab_variant_w_base_slot(void);
+void Prefab_prefab_variant_w_mixed_slots(void);
+void Prefab_override_slot(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -8302,6 +8313,18 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_yield_existing_2_terms
     },
     {
+        "on_add_yield_existing_wildcard",
+        Observer_on_add_yield_existing_wildcard
+    },
+    {
+        "on_add_yield_existing_wildcard_multi",
+        Observer_on_add_yield_existing_wildcard_multi
+    },
+    {
+        "on_add_yield_existing_wildcard_multi_w_wildcard_pivot",
+        Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot
+    },
+    {
         "observer_superset_wildcard",
         Observer_observer_superset_wildcard
     },
@@ -9154,6 +9177,38 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_w_switch",
         Prefab_prefab_w_switch
+    },
+    {
+        "prefab_1_slot",
+        Prefab_prefab_1_slot
+    },
+    {
+        "prefab_2_slots",
+        Prefab_prefab_2_slots
+    },
+    {
+        "prefab_w_nested_slot",
+        Prefab_prefab_w_nested_slot
+    },
+    {
+        "prefab_w_mixed_slots",
+        Prefab_prefab_w_mixed_slots
+    },
+    {
+        "prefab_variant_w_slot",
+        Prefab_prefab_variant_w_slot
+    },
+    {
+        "prefab_variant_w_base_slot",
+        Prefab_prefab_variant_w_base_slot
+    },
+    {
+        "prefab_variant_w_mixed_slots",
+        Prefab_prefab_variant_w_mixed_slots
+    },
+    {
+        "override_slot",
+        Prefab_override_slot
     }
 };
 
@@ -10537,7 +10592,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        67,
+        70,
         Observer_testcases
     },
     {
@@ -10579,7 +10634,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        102,
+        110,
         Prefab_testcases
     },
     {
