@@ -400,9 +400,29 @@ void flecs_instantiate_children(
     for (i = 0; i < type_count; i ++) {
         ecs_id_t id = ids[i];
 
-        /* Make sure instances don't have EcsPrefab */
-        if (id == EcsPrefab) {
-            continue;
+        /* If id has DontInherit flag don't inherit it, except for the name
+         * and ChildOf pairs. The name is preserved so applications can lookup
+         * the instantiated children by name. The ChildOf pair is replaced later
+         * with the instance parent. */
+        if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
+            (id != ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)) &&
+            ECS_PAIR_FIRST(id) != EcsChildOf) 
+        {
+            if (id == EcsUnion) {
+                /* This should eventually be handled by the DontInherit property
+                 * but right now there is no way to selectively apply it to
+                 * EcsUnion itself: it would also apply to (Union, *) pairs,
+                 * which would make all union relationships uninheritable. 
+                 * 
+                 * The reason this is explicitly skipped is so that slot 
+                 * instances don't all end up with the Union property. */
+                continue;
+            }
+            ecs_table_record_t *tr = &child_table->records[i];
+            ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+            if (idr->flags & EcsIdDontInherit) {
+                continue;
+            }
         }
 
         /* If child is a slot, keep track of which parent to add it to, but

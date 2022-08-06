@@ -3546,7 +3546,7 @@ void Prefab_get_component_pair_from_prefab_base() {
 }
 
 void Prefab_override_dont_inherit() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3570,19 +3570,42 @@ void Prefab_override_dont_inherit() {
 }
 
 void Prefab_prefab_w_switch() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union)
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
 
     ecs_entity_t p = ecs_new_w_pair(world, Movement, Running);
-
     test_assert( ecs_has_pair(world, p, Movement, Running));
 
     ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
     test_assert( ecs_has_pair(world, i, Movement, Running));
     test_assert( !ecs_has_pair(world, i, Movement, Walking));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_w_dont_inherit_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, TagA, DontInherit);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_child = ecs_new_prefab(world, "Base.Child");
+    ecs_add(world, base_child, TagA);
+    ecs_add(world, base_child, TagB);
+    test_assert(base != 0);
+    test_assert(base_child != 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
+    test_assert(!ecs_has(world, inst_child, TagA));
+    test_assert(ecs_has(world, inst_child, TagB));
 
     ecs_fini(world);
 }
@@ -3841,3 +3864,26 @@ void Prefab_2_instances_w_slots_same_table() {
 
     ecs_fini(world);
 }
+
+void Prefab_slot_has_union() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_slot = ecs_new_prefab(world, "Base.Slot");
+    ecs_add_pair(world, base_slot, EcsSlotOf, base);
+    test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
+    test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, base_slot, 0);
+    test_assert(inst_slot != 0);
+    test_assert(base_slot != 0);
+
+    test_assert( ecs_has_id(world, base_slot, EcsUnion));
+    test_assert( !ecs_has_id(world, inst_slot, EcsUnion));
+
+    ecs_fini(world);
+}
+
