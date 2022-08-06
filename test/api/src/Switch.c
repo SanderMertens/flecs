@@ -1725,3 +1725,21 @@ void Switch_add_2_reverse() {
 
     ecs_fini(world);
 }
+
+void Switch_add_switch_to_prefab_instance() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, Union);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_pair(world, inst, Movement, Walking);
+
+    test_assert(ecs_has_pair(world, inst, Movement, Walking));
+    test_assert(ecs_get_target(world, inst, Movement, 0) == Walking);
+
+    ecs_fini(world);
+}

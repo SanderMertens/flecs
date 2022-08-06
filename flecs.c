@@ -5958,6 +5958,7 @@ void flecs_set_union(
 
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = array[i];
+
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
             ecs_id_record_t *idr = flecs_id_record_get(world, 
                 ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
@@ -45963,8 +45964,7 @@ void compute_table_diff(
     int32_t i_next = 0, next_count = next_type.count;
     int32_t added_count = 0;
     int32_t removed_count = 0;
-    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && 
-        !(node->flags & EcsTableHasIsA) && !(next->flags & EcsTableHasIsA);
+    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA);
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
      * or alloc more memory than required. */
@@ -45990,6 +45990,15 @@ void compute_table_diff(
 
     trivial_edge &= (added_count + removed_count) <= 1 && 
         !ecs_id_is_wildcard(id);
+
+    if (trivial_edge && removed_count && (node->flags & EcsTableHasIsA)) {
+        /* If a single component was removed from a table with an IsA,
+         * relationship it could reexpose an inherited component. If this is
+         * the case, don't treat it as a trivial edge. */
+        if (ecs_search_relation(world, next, 0, id, EcsIsA, EcsUp, 0, 0, 0) != -1) {
+            trivial_edge = false;
+        }
+    }
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it.
@@ -48240,7 +48249,7 @@ static
 void register_slot_of(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsExclusive);
+        ecs_add_id(it->world, it->entities[i], EcsUnion);
     }
 }
 
@@ -48800,7 +48809,7 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsUnion, .src.flags = EcsSelf },
+        .filter.terms = {{ .id = EcsUnion, .src.flags = EcsSelf }, match_prefab },
         .events = {EcsOnAdd},
         .callback = register_union
     });

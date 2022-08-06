@@ -264,6 +264,7 @@ void Switch_component_relation(void);
 void Switch_delete_case_trigger_after_delete_switch(void);
 void Switch_add_2(void);
 void Switch_add_2_reverse(void);
+void Switch_add_switch_to_prefab_instance(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -1833,6 +1834,7 @@ void Prefab_prefab_variant_w_slot(void);
 void Prefab_prefab_variant_w_base_slot(void);
 void Prefab_prefab_variant_w_mixed_slots(void);
 void Prefab_override_slot(void);
+void Prefab_2_instances_w_slots_same_table(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -3120,6 +3122,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_2_reverse",
         Switch_add_2_reverse
+    },
+    {
+        "add_switch_to_prefab_instance",
+        Switch_add_switch_to_prefab_instance
     }
 };
 
@@ -9209,6 +9215,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "override_slot",
         Prefab_override_slot
+    },
+    {
+        "2_instances_w_slots_same_table",
+        Prefab_2_instances_w_slots_same_table
     }
 };
 
@@ -10417,7 +10427,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        44,
+        45,
         Switch_testcases
     },
     {
@@ -10634,7 +10644,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        110,
+        111,
         Prefab_testcases
     },
     {
