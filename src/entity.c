@@ -2744,6 +2744,17 @@ error:
     return;
 }
 
+void ecs_override_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_add_id(world, entity, ECS_OVERRIDE | id);
+error:
+    return;
+}
+
 ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t dst,

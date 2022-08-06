@@ -1,6 +1,10 @@
 #include <prefab.h>
 #include <iostream>
 
+// Prefabs are entities that can be used as templates for other entities. They
+// are created with a builtin Prefab tag, which by default excludes them from
+// queries and systems.
+
 struct Attack { double value; };
 struct Defense { double value; };
 struct FreightCapacity { double value; };
@@ -12,9 +16,7 @@ struct Position { double x = 0; double y = 0; };
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Create a prefab hierarchy. Prefabs are entities that by default are 
-    // ignored by queries.
-
+    // Create a prefab hierarchy.
     auto spaceship = ecs.prefab("Spaceship")
         // Add components to prefab entity as usual
         .set<ImpulseSpeed>({50})

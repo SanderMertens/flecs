@@ -4607,6 +4607,34 @@ void ecs_remove_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
+/** Add override for (component) id.
+ * Adding an override to an entity ensures that when the entity is instantiated
+ * (by adding an IsA relationship to it) the component with the override is
+ * copied to a component that is private to the instance. By default components
+ * reachable through an IsA relationship are shared.
+ * 
+ * Adding an override does not add the component. If an override is added to an
+ * entity that does not have the component, it will still be added to the
+ * instance, but with an uninitialized value (unless the component has a ctor).
+ * When the entity does have the entity, the component of the instance will be
+ * initialized with the value of the component on the entity.
+ * 
+ * This is the same as what happens when calling ecs_add_id for an id that is
+ * inherited (reachable through an IsA relationship).
+ * 
+ * This operation is equivalent to doing:
+ *   ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id to override.
+ */
+FLECS_API
+void ecs_override_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
 /** @} */
 
 
@@ -7813,6 +7841,15 @@ void* ecs_record_get_column(
 
 #define ecs_remove_pair(world, subject, first, second)\
     ecs_remove_id(world, subject, ecs_pair(first, second))
+
+
+/* -- Override -- */
+
+#define ecs_override(world, entity, T)\
+    ecs_override_id(world, entity, ecs_id(T))
+
+#define ecs_override_pair(world, subject, first, second)\
+    ecs_override_id(world, subject, ecs_pair(first, second))
 
 
 /* -- Bulk remove/delete -- */
