@@ -1907,6 +1907,7 @@
                 "get_component_pair_from_prefab_base",
                 "override_dont_inherit",
                 "prefab_w_switch",
+                "prefab_child_w_dont_inherit_component",
                 "prefab_1_slot",
                 "prefab_2_slots",
                 "prefab_w_nested_slot",
@@ -1915,7 +1916,8 @@
                 "prefab_variant_w_base_slot",
                 "prefab_variant_w_mixed_slots",
                 "override_slot",
-                "2_instances_w_slots_same_table"
+                "2_instances_w_slots_same_table",
+                "slot_has_union"
             ]
         }, {
             "id": "World",
