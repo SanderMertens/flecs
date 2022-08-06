@@ -282,7 +282,8 @@
                 "component_relation",
                 "delete_case_trigger_after_delete_switch",
                 "add_2",
-                "add_2_reverse"
+                "add_2_reverse",
+                "add_switch_to_prefab_instance"
             ]
         }, {
             "id": "EnabledComponents",
@@ -1913,7 +1914,8 @@
                 "prefab_variant_w_slot",
                 "prefab_variant_w_base_slot",
                 "prefab_variant_w_mixed_slots",
-                "override_slot"
+                "override_slot",
+                "2_instances_w_slots_same_table"
             ]
         }, {
             "id": "World",

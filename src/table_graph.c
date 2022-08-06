@@ -709,8 +709,7 @@ void compute_table_diff(
     int32_t i_next = 0, next_count = next_type.count;
     int32_t added_count = 0;
     int32_t removed_count = 0;
-    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && 
-        !(node->flags & EcsTableHasIsA) && !(next->flags & EcsTableHasIsA);
+    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA);
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
      * or alloc more memory than required. */
@@ -736,6 +735,15 @@ void compute_table_diff(
 
     trivial_edge &= (added_count + removed_count) <= 1 && 
         !ecs_id_is_wildcard(id);
+
+    if (trivial_edge && removed_count && (node->flags & EcsTableHasIsA)) {
+        /* If a single component was removed from a table with an IsA,
+         * relationship it could reexpose an inherited component. If this is
+         * the case, don't treat it as a trivial edge. */
+        if (ecs_search_relation(world, next, 0, id, EcsIsA, EcsUp, 0, 0, 0) != -1) {
+            trivial_edge = false;
+        }
+    }
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it.

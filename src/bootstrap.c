@@ -355,7 +355,7 @@ static
 void register_slot_of(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsExclusive);
+        ecs_add_id(it->world, it->entities[i], EcsUnion);
     }
 }
 
@@ -915,7 +915,7 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {.id = EcsUnion, .src.flags = EcsSelf },
+        .filter.terms = {{ .id = EcsUnion, .src.flags = EcsSelf }, match_prefab },
         .events = {EcsOnAdd},
         .callback = register_union
     });
