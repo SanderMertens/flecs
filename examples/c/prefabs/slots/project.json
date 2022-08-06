@@ -1,0 +1,10 @@
+{
+    "id": "slots",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

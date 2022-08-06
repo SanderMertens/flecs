@@ -1,8 +1,8 @@
-#ifndef PREFAB_H
-#define PREFAB_H
+#ifndef SLOTS_H
+#define SLOTS_H
 
 /* This generated file contains includes for project dependencies */
-#include "prefab/bake_config.h"
+#include "slots/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -269,6 +269,15 @@
     ecs_remove_id(world, subject, ecs_pair(first, second))
 
 
+/* -- Override -- */
+
+#define ecs_override(world, entity, T)\
+    ecs_override_id(world, entity, ecs_id(T))
+
+#define ecs_override_pair(world, subject, first, second)\
+    ecs_override_id(world, subject, ecs_pair(first, second))
+
+
 /* -- Bulk remove/delete -- */
 
 #define ecs_delete_children(world, parent)\
