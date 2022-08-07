@@ -17951,12 +17951,22 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
-    /** Shortcut for add(DependsOn, entity).
+    /** Shortcut for add(SlotOf, entity).
      *
      * @param second The second element of the pair.
      */
     Self& slot_of(entity_t second) {
         return this->add(flecs::SlotOf, second);
+    }
+
+    /** Shortcut for add(SlotOf, target(ChildOf)).
+     */
+    Self& slot() {
+        ecs_check(ecs_get_target(m_world, m_id, flecs::ChildOf, 0), 
+            ECS_INVALID_PARAMETER, "add ChildOf pair before using slot()");
+        return this->slot_of(this->target(flecs::ChildOf));
+    error:
+        return to_base();
     }
 
     /** Shortcut for add(ChildOf, entity).
@@ -17977,7 +17987,7 @@ struct entity_builder : entity_view {
         return this->depends_on(_::cpp_type<T>::id(this->m_world));
     }
 
-    /** Shortcut for add(DependsOn, entity).
+    /** Shortcut for add(SlotOf, entity).
      *
      * @tparam T the type associated with the entity.
      */

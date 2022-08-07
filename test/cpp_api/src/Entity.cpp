@@ -3328,6 +3328,49 @@ void Entity_child_of_w_type() {
     test_assert(e.has_second<Parent>(flecs::ChildOf));
 }
 
+void Entity_slot_of() {
+    flecs::world world;
+
+    auto base = world.prefab();
+    auto base_child = world.prefab()
+        .child_of(base)
+        .slot_of(base);
+    
+    test_assert(base_child.has(flecs::SlotOf, base));
+
+    auto inst = world.entity().is_a(base);
+    test_assert(inst.has(base_child, flecs::Wildcard));
+}
+
+void Entity_slot_of_w_type() {
+    flecs::world world;
+
+    struct Parent { };
+
+    auto base = world.prefab<Parent>();
+    auto base_child = world.prefab()
+        .child_of(base)
+        .slot_of<Parent>();
+    
+    test_assert(base_child.has(flecs::SlotOf, base));
+
+    auto inst = world.entity().is_a(base);
+    test_assert(inst.has(base_child, flecs::Wildcard));
+}
+
+void Entity_slot() {
+    flecs::world world;
+
+    auto base = world.prefab();
+    auto base_child = world.prefab()
+        .child_of(base).slot();
+    
+    test_assert(base_child.has(flecs::SlotOf, base));
+
+    auto inst = world.entity().is_a(base);
+    test_assert(inst.has(base_child, flecs::Wildcard));
+}
+
 void Entity_id_get_entity() {
     flecs::world world;
 
