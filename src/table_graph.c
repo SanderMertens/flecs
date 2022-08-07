@@ -872,13 +872,13 @@ static
 ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_entity_t with)
+    ecs_id_t with)
 {    
     ecs_ensure_id(world, with);
     
     ecs_id_record_t *idr = NULL;
     ecs_entity_t r = 0, o = 0;
-    
+
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
@@ -890,6 +890,7 @@ ecs_table_t* flecs_find_table_with(
             if (res == -1) {
                 return node;
             }
+
             return find_or_create(world, &dst_type, true, node);
         } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
@@ -933,7 +934,7 @@ static
 ecs_table_t* flecs_find_table_without(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_entity_t without)
+    ecs_id_t without)
 {
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = 0;

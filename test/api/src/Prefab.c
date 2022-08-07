@@ -3610,6 +3610,62 @@ void Prefab_prefab_child_w_dont_inherit_component() {
     ecs_fini(world);
 }
 
+void Prefab_prefab_child_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t turret = ecs_new_prefab(world, "Turret");
+    ecs_entity_t turret_head = ecs_new_prefab(world, "Turret.Head");
+    ecs_add(world, turret_head, Foo);
+
+    ecs_entity_t railgun = ecs_new_prefab(world, "Railgun");
+    ecs_add_pair(world, railgun, EcsIsA, turret);
+    ecs_entity_t railgun_head = ecs_new_prefab(world, "Railgun.Head");
+    ecs_add(world, railgun_head, Bar);
+
+    ecs_entity_t inst = ecs_new_entity(world, "inst");
+    ecs_add_pair(world, inst, EcsIsA, railgun);
+
+    ecs_entity_t head = ecs_lookup_child(world, inst, "Head");
+    test_assert(head != 0);
+    test_assert(ecs_has(world, head, Foo));
+    test_assert(ecs_has(world, head, Bar));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_override_w_exclusive_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t turret = ecs_new_prefab(world, "Turret");
+    ecs_entity_t turret_head = ecs_new_prefab(world, "Turret.Head");
+    ecs_add_pair(world, turret_head, Rel, ObjA);
+    test_assert(ecs_has_pair(world, turret_head, Rel, ObjA));
+
+    ecs_entity_t railgun = ecs_new_prefab(world, "Railgun");
+    ecs_add_pair(world, railgun, EcsIsA, turret);
+    ecs_entity_t railgun_head = ecs_new_prefab(world, "Railgun.Head");
+    ecs_add_pair(world, railgun_head, Rel, ObjB);
+    test_assert(!ecs_has_pair(world, railgun_head, Rel, ObjA));
+    test_assert(ecs_has_pair(world, railgun_head, Rel, ObjB));
+
+    ecs_entity_t inst = ecs_new_entity(world, "inst");
+    ecs_add_pair(world, inst, EcsIsA, railgun);
+
+    ecs_entity_t head = ecs_lookup_child(world, inst, "Head");
+    test_assert(head != 0);
+    test_assert(!ecs_has_pair(world, head, Rel, ObjA));
+    test_assert(ecs_has_pair(world, head, Rel, ObjB));
+
+    ecs_fini(world);
+}
+
 void Prefab_prefab_1_slot() {
     ecs_world_t *world = ecs_mini();
 
@@ -3887,3 +3943,96 @@ void Prefab_slot_has_union() {
     ecs_fini(world);
 }
 
+void Prefab_slot_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t turret = ecs_new_prefab(world, "Turret");
+    ecs_entity_t turret_base = ecs_new_prefab(world, "Turret.Base");
+    ecs_add_pair(world, turret_base, EcsSlotOf, turret);
+    ecs_entity_t turret_head = ecs_new_prefab(world, "Turret.Head");
+    ecs_add_pair(world, turret_head, EcsSlotOf, turret);
+
+    ecs_entity_t railgun = ecs_new_prefab(world, "Railgun");
+    ecs_add_pair(world, railgun, EcsIsA, turret);
+    ecs_entity_t railgun_head = ecs_new_prefab(world, "Railgun.Head");
+
+    test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
+    ecs_add_pair(world, railgun_head, EcsSlotOf, railgun);
+    test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, railgun));
+    test_assert(!ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
+
+    ecs_entity_t railgun_beam = ecs_new_prefab(world, "Railgun.Beam");
+    ecs_add_pair(world, railgun_beam, EcsSlotOf, railgun);
+
+    ecs_entity_t inst = ecs_new_entity(world, "inst");
+    ecs_add_pair(world, inst, EcsIsA, railgun);
+
+    ecs_entity_t head = ecs_get_target(world, inst, turret_head, 0);
+    ecs_entity_t head_r = ecs_get_target(world, inst, railgun_head, 0);
+    ecs_entity_t base = ecs_get_target(world, inst, turret_base, 0);
+    ecs_entity_t beam = ecs_get_target(world, inst, railgun_beam, 0);
+
+    test_assert(head == 0);
+    test_assert(head_r != 0);
+    test_assert(base != 0);
+    test_assert(beam != 0);
+
+    char *path = ecs_get_fullpath(world, head_r);
+    test_str(path, "inst.Head");
+    ecs_os_free(path);
+
+    path = ecs_get_fullpath(world, base);
+    test_str(path, "inst.Base");
+    ecs_os_free(path);
+
+    path = ecs_get_fullpath(world, beam);
+    test_str(path, "inst.Beam");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Prefab_base_slot_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t turret = ecs_new_prefab(world, "Turret");
+    ecs_entity_t turret_base = ecs_new_prefab(world, "Turret.Base");
+    ecs_add_pair(world, turret_base, EcsSlotOf, turret);
+    ecs_entity_t turret_head = ecs_new_prefab(world, "Turret.Head");
+    ecs_add_pair(world, turret_head, EcsSlotOf, turret);
+
+    ecs_entity_t railgun = ecs_new_prefab(world, "Railgun");
+    ecs_add_pair(world, railgun, EcsIsA, turret);
+    ecs_entity_t railgun_head = ecs_new_prefab(world, "Railgun.Head");
+    test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
+
+    ecs_entity_t railgun_beam = ecs_new_prefab(world, "Railgun.Beam");
+    ecs_add_pair(world, railgun_beam, EcsSlotOf, railgun);
+
+    ecs_entity_t inst = ecs_new_entity(world, "inst");
+    ecs_add_pair(world, inst, EcsIsA, railgun);
+
+    ecs_entity_t head = ecs_get_target(world, inst, turret_head, 0);
+    ecs_entity_t head_r = ecs_get_target(world, inst, railgun_head, 0);
+    ecs_entity_t base = ecs_get_target(world, inst, turret_base, 0);
+    ecs_entity_t beam = ecs_get_target(world, inst, railgun_beam, 0);
+
+    test_assert(head != 0);
+    test_assert(head_r == 0);
+    test_assert(base != 0);
+    test_assert(beam != 0);
+
+    char *path = ecs_get_fullpath(world, head);
+    test_str(path, "inst.Head");
+    ecs_os_free(path);
+
+    path = ecs_get_fullpath(world, base);
+    test_str(path, "inst.Base");
+    ecs_os_free(path);
+
+    path = ecs_get_fullpath(world, beam);
+    test_str(path, "inst.Beam");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}

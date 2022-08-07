@@ -5367,6 +5367,22 @@ char* ecs_table_str(
     const ecs_world_t *world,
     const ecs_table_t *table);
 
+/** Convert entity to string.
+ * Same as combining:
+ * - ecs_get_fullpath(world, entity)
+ * - ecs_type_str(world, ecs_get_type(world, entity))
+ * 
+ * The result of this operation must be freed with ecs_os_free.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The entity path with stringified type.
+ */
+FLECS_API
+char* ecs_entity_str(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
  * type.

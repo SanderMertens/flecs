@@ -818,11 +818,9 @@ void flecs_bootstrap(
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
-    ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
-    ecs_add_id(world, EcsOneOf, EcsExclusive);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
@@ -958,6 +956,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsReflexive);
 
+    /* Exclusive properties */
+    ecs_add_id(world, EcsSlotOf, EcsExclusive);
+    ecs_add_id(world, EcsOneOf, EcsExclusive);
+    
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
 

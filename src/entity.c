@@ -430,8 +430,7 @@ void flecs_instantiate_children(
          * of a prefab, keep the SlotOf relationship intact. */
         if (!(table->flags & EcsTableIsPrefab)) {
             if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
-                /* SlotOf is exclusive, can't have more than one */
-                ecs_check(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
                 slot_of = ecs_pair_second(world, id);
                 continue;
             }
@@ -3993,6 +3992,31 @@ char* ecs_id_str(
     return ecs_strbuf_get(&buf);
 }
 
+static
+void ecs_type_str_buf(
+    const ecs_world_t *world,
+    const ecs_type_t *type,
+    ecs_strbuf_t *buf)
+{
+    ecs_entity_t *ids = type->array;
+    int32_t i, count = type->count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+
+        if (i) {
+            ecs_strbuf_appendch(buf, ',');
+            ecs_strbuf_appendch(buf, ' ');
+        }
+
+        if (id == 1) {
+            ecs_strbuf_appendstr(buf, "Component");
+        } else {
+            ecs_id_str_buf(world, id, buf);
+        }
+    }
+}
+
 char* ecs_type_str(
     const ecs_world_t *world,
     const ecs_type_t *type)
@@ -4002,24 +4026,7 @@ char* ecs_type_str(
     }
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_entity_t *ids = type->array;
-    int32_t i, count = type->count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t id = ids[i];
-
-        if (i) {
-            ecs_strbuf_appendch(&buf, ',');
-            ecs_strbuf_appendch(&buf, ' ');
-        }
-
-        if (id == 1) {
-            ecs_strbuf_appendstr(&buf, "Component");
-        } else {
-            ecs_id_str_buf(world, id, &buf);
-        }
-    }
-
+    ecs_type_str_buf(world, type, &buf);
     return ecs_strbuf_get(&buf);
 }
 
@@ -4032,6 +4039,24 @@ char* ecs_table_str(
     } else {
         return NULL;
     }
+}
+
+char* ecs_entity_str(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf);
+    
+    ecs_strbuf_appendstr(&buf, " [");
+    const ecs_type_t *type = ecs_get_type(world, entity);
+    if (type) {
+        ecs_type_str_buf(world, type, &buf);
+    }
+    ecs_strbuf_appendch(&buf, ']');
+
+    return ecs_strbuf_get(&buf);
 }
 
 static

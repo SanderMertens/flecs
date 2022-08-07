@@ -5640,8 +5640,7 @@ void flecs_instantiate_children(
          * of a prefab, keep the SlotOf relationship intact. */
         if (!(table->flags & EcsTableIsPrefab)) {
             if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
-                /* SlotOf is exclusive, can't have more than one */
-                ecs_check(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
                 slot_of = ecs_pair_second(world, id);
                 continue;
             }
@@ -9203,6 +9202,31 @@ char* ecs_id_str(
     return ecs_strbuf_get(&buf);
 }
 
+static
+void ecs_type_str_buf(
+    const ecs_world_t *world,
+    const ecs_type_t *type,
+    ecs_strbuf_t *buf)
+{
+    ecs_entity_t *ids = type->array;
+    int32_t i, count = type->count;
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+
+        if (i) {
+            ecs_strbuf_appendch(buf, ',');
+            ecs_strbuf_appendch(buf, ' ');
+        }
+
+        if (id == 1) {
+            ecs_strbuf_appendstr(buf, "Component");
+        } else {
+            ecs_id_str_buf(world, id, buf);
+        }
+    }
+}
+
 char* ecs_type_str(
     const ecs_world_t *world,
     const ecs_type_t *type)
@@ -9212,24 +9236,7 @@ char* ecs_type_str(
     }
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_entity_t *ids = type->array;
-    int32_t i, count = type->count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t id = ids[i];
-
-        if (i) {
-            ecs_strbuf_appendch(&buf, ',');
-            ecs_strbuf_appendch(&buf, ' ');
-        }
-
-        if (id == 1) {
-            ecs_strbuf_appendstr(&buf, "Component");
-        } else {
-            ecs_id_str_buf(world, id, &buf);
-        }
-    }
-
+    ecs_type_str_buf(world, type, &buf);
     return ecs_strbuf_get(&buf);
 }
 
@@ -9242,6 +9249,24 @@ char* ecs_table_str(
     } else {
         return NULL;
     }
+}
+
+char* ecs_entity_str(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf);
+    
+    ecs_strbuf_appendstr(&buf, " [");
+    const ecs_type_t *type = ecs_get_type(world, entity);
+    if (type) {
+        ecs_type_str_buf(world, type, &buf);
+    }
+    ecs_strbuf_appendch(&buf, ']');
+
+    return ecs_strbuf_get(&buf);
 }
 
 static
@@ -46147,13 +46172,13 @@ static
 ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_entity_t with)
+    ecs_id_t with)
 {    
     ecs_ensure_id(world, with);
     
     ecs_id_record_t *idr = NULL;
     ecs_entity_t r = 0, o = 0;
-    
+
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
@@ -46165,6 +46190,7 @@ ecs_table_t* flecs_find_table_with(
             if (res == -1) {
                 return node;
             }
+
             return find_or_create(world, &dst_type, true, node);
         } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
@@ -46208,7 +46234,7 @@ static
 ecs_table_t* flecs_find_table_without(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_entity_t without)
+    ecs_id_t without)
 {
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = 0;
@@ -48732,11 +48758,9 @@ void flecs_bootstrap(
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
-    ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
-    ecs_add_id(world, EcsOneOf, EcsExclusive);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
@@ -48872,6 +48896,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsReflexive);
 
+    /* Exclusive properties */
+    ecs_add_id(world, EcsSlotOf, EcsExclusive);
+    ecs_add_id(world, EcsOneOf, EcsExclusive);
+    
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
 

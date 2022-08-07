@@ -1827,6 +1827,8 @@ void Prefab_get_component_pair_from_prefab_base(void);
 void Prefab_override_dont_inherit(void);
 void Prefab_prefab_w_switch(void);
 void Prefab_prefab_child_w_dont_inherit_component(void);
+void Prefab_prefab_child_override(void);
+void Prefab_prefab_child_override_w_exclusive_pair(void);
 void Prefab_prefab_1_slot(void);
 void Prefab_prefab_2_slots(void);
 void Prefab_prefab_w_nested_slot(void);
@@ -1837,6 +1839,8 @@ void Prefab_prefab_variant_w_mixed_slots(void);
 void Prefab_override_slot(void);
 void Prefab_2_instances_w_slots_same_table(void);
 void Prefab_slot_has_union(void);
+void Prefab_slot_override(void);
+void Prefab_base_slot_override(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -9191,6 +9195,14 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_w_dont_inherit_component
     },
     {
+        "prefab_child_override",
+        Prefab_prefab_child_override
+    },
+    {
+        "prefab_child_override_w_exclusive_pair",
+        Prefab_prefab_child_override_w_exclusive_pair
+    },
+    {
         "prefab_1_slot",
         Prefab_prefab_1_slot
     },
@@ -9229,6 +9241,14 @@ bake_test_case Prefab_testcases[] = {
     {
         "slot_has_union",
         Prefab_slot_has_union
+    },
+    {
+        "slot_override",
+        Prefab_slot_override
+    },
+    {
+        "base_slot_override",
+        Prefab_base_slot_override
     }
 };
 
@@ -10654,7 +10674,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        113,
+        117,
         Prefab_testcases
     },
     {
