@@ -2740,6 +2740,27 @@ void flecs_table_init(
         tr->count = 1;
     }
 
+    /* We're going to insert records from the vector into the index that
+     * will get patched up later. To ensure the record pointers don't get
+     * invalidated we need to grow the vector so that it won't realloc as
+     * we're adding the next set of records */
+    if (first_role != -1 || first_pair != -1) {
+        int32_t start = first_role;
+        if (first_pair != -1 && (start != -1 || first_pair < start)) {
+            start = first_pair;
+        }
+
+        /* Total number of records can never be higher than
+         * - number of regular (non-pair) ids +
+         * - three records for pairs: (R,T), (R,*), (*,T)
+         * - one wildcard (*), one any (_) and one pair wildcard (*,*) record
+         * - one record for (ChildOf, 0)
+         */
+        int32_t flag_id_count = dst_count - start;
+        int32_t record_count = start + 3 * flag_id_count + 3 + 1;
+        ecs_vector_set_min_size(&records, ecs_table_record_t, record_count);
+    }
+
     /* Add records for ids with roles (used by cleanup logic) */
     if (first_role != -1) {
         for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
@@ -2796,19 +2817,6 @@ void flecs_table_init(
         /* Add a (*, Target) record for each relationship target. Type
          * ids are sorted relationship-first, so we can't simply do a single linear 
          * scan to find all occurrences for a target. */
-
-        /* We're going to insert records from the vector into the index that
-         * will get patched up later. To ensure the record pointers don't get
-         * invalidated we need to grow the vector so that it won't realloc as
-         * we're adding the next set of records */
-
-        int wildcard_count = 3; /* for *, _ and (*, *) */
-        wildcard_count += dst_count && !has_childof; /* for (ChildOf, 0) */
-
-        ecs_vector_set_min_size(&records, ecs_table_record_t,   
-            ecs_vector_count(records) + wildcard_count +
-                (last_pair - first_pair));
-
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));

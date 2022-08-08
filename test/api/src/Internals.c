@@ -261,3 +261,60 @@ void Internals_override_os_api_w_addon() {
     ecs_world_t *world = ecs_init();
     ecs_fini(world);
 }
+
+void Internals_records_resize_on_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t TagA = ecs_new_id(world);
+    ecs_entity_t TagB = ecs_new_id(world);
+    ecs_entity_t TagC = ecs_new_id(world);
+    ecs_entity_t TagD = ecs_new_id(world);
+    ecs_entity_t TagE = ecs_new_id(world);
+    ecs_entity_t TagF = ecs_new_id(world);
+    ecs_entity_t TagG = ecs_new_id(world);
+    ecs_entity_t TagH = ecs_new_id(world);
+
+    ecs_entity_t RelA = ecs_new_id(world);
+    ecs_entity_t RelB = ecs_new_id(world);
+    ecs_entity_t RelC = ecs_new_id(world);
+    ecs_entity_t RelD = ecs_new_id(world);
+    ecs_entity_t RelE = ecs_new_id(world);
+    ecs_entity_t RelF = ecs_new_id(world);
+    ecs_entity_t RelG = ecs_new_id(world);
+    ecs_entity_t TgtA = ecs_new_id(world);
+    ecs_entity_t TgtB = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+    ecs_add_id(world, e, TagC);
+    ecs_add_id(world, e, TagD);
+    ecs_add_id(world, e, TagE);
+    ecs_add_id(world, e, TagF);
+    ecs_add_id(world, e, TagG);
+    ecs_add_id(world, e, TagH);
+    ecs_add_pair(world, e, RelA, TgtA);
+    ecs_add_pair(world, e, RelB, TgtA);
+    ecs_add_pair(world, e, RelC, TgtA);
+    ecs_add_pair(world, e, RelD, TgtA);
+    ecs_add_pair(world, e, RelE, TgtA);
+    ecs_add_pair(world, e, RelF, TgtA);
+    ecs_override_pair(world, e, RelG, TgtB);
+
+    test_assert(ecs_has_id(world, e, TagA));
+    test_assert(ecs_has_id(world, e, TagB));
+    test_assert(ecs_has_id(world, e, TagC));
+    test_assert(ecs_has_id(world, e, TagD));
+    test_assert(ecs_has_id(world, e, TagE));
+    test_assert(ecs_has_id(world, e, TagF));
+    test_assert(ecs_has_id(world, e, TagG));
+    test_assert(ecs_has_id(world, e, TagH));
+    test_assert(ecs_has_pair(world, e, RelA, TgtA));
+    test_assert(ecs_has_pair(world, e, RelB, TgtA));
+    test_assert(ecs_has_pair(world, e, RelC, TgtA));
+    test_assert(ecs_has_pair(world, e, RelD, TgtA));
+    test_assert(ecs_has_pair(world, e, RelE, TgtA));
+    test_assert(ecs_has_pair(world, e, RelF, TgtA));
+
+    ecs_fini(world);
+}

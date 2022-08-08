@@ -2131,6 +2131,7 @@ void Internals_recreate_deleted_table(void);
 void Internals_create_65k_tables(void);
 void Internals_no_duplicate_root_table_id(void);
 void Internals_override_os_api_w_addon(void);
+void Internals_records_resize_on_override(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -10349,6 +10350,10 @@ bake_test_case Internals_testcases[] = {
     {
         "override_os_api_w_addon",
         Internals_override_os_api_w_addon
+    },
+    {
+        "records_resize_on_override",
+        Internals_records_resize_on_override
     }
 };
 
@@ -10730,7 +10735,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        10,
+        11,
         Internals_testcases
     },
     {
