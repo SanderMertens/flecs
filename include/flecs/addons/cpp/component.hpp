@@ -205,7 +205,7 @@ struct cpp_type_impl {
         bool allow_tag = true)
     {
         // If no id has been registered yet, do it now.
-        if (!registered() || (world && !ecs_exists(world, s_id))) {
+        if (!registered(world)) {
             ecs_entity_t prev_scope = 0;
             ecs_id_t prev_with = 0;
 
@@ -266,11 +266,17 @@ struct cpp_type_impl {
     }
 
     // Was the component already registered.
-    static bool registered() {
+    static bool registered(flecs::world_t *world) {
         if (s_reset_count != ecs_cpp_reset_count_get()) {
             reset();
         }
-        return s_id != 0;
+        if (s_id == 0) {
+            return false;
+        }
+        if (world && !ecs_exists(world, s_id)) {
+            return false;
+        }
+        return true;
     }
 
     // This function is only used to test cross-translation unit features. No
@@ -360,7 +366,7 @@ struct component : untyped_component {
             implicit_name = true;
         }
 
-        if (_::cpp_type<T>::registered()) {
+        if (_::cpp_type<T>::registered(world)) {
             /* Obtain component id. Because the component is already registered,
              * this operation does nothing besides returning the existing id */
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);

@@ -35,7 +35,7 @@ flecs::entity import(world& world) {
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     
-    if (!_::cpp_type<T>::registered()) {
+    if (!_::cpp_type<T>::registered(world)) {
 
         /* Module is registered with world, initialize static data */
         if (m) {

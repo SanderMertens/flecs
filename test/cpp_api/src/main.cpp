@@ -770,6 +770,8 @@ void ComponentLifecycle_on_add_hook_w_entity(void);
 void ComponentLifecycle_on_remove_hook_w_entity(void);
 void ComponentLifecycle_on_set_hook_w_entity(void);
 void ComponentLifecycle_chained_hooks(void);
+void ComponentLifecycle_ctor_w_2_worlds(void);
+void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -3954,6 +3956,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "chained_hooks",
         ComponentLifecycle_chained_hooks
+    },
+    {
+        "ctor_w_2_worlds",
+        ComponentLifecycle_ctor_w_2_worlds
+    },
+    {
+        "ctor_w_2_worlds_explicit_registration",
+        ComponentLifecycle_ctor_w_2_worlds_explicit_registration
     }
 };
 
@@ -4864,7 +4874,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        47,
+        49,
         ComponentLifecycle_testcases
     },
     {

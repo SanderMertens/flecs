@@ -1227,3 +1227,49 @@ void ComponentLifecycle_chained_hooks() {
     test_int(1, set_count);
     test_int(1, remove_count);
 }
+
+void ComponentLifecycle_ctor_w_2_worlds() {
+    {
+        flecs::world ecs;
+
+        test_int(Pod::ctor_invoked, 0);
+
+        ecs.entity().add<Pod>();
+        test_int(Pod::ctor_invoked, 1);
+    }
+
+    Pod::ctor_invoked = 0;
+
+    {
+        flecs::world ecs;
+
+        test_int(Pod::ctor_invoked, 0);
+
+        ecs.entity().add<Pod>();
+        test_int(Pod::ctor_invoked, 1);
+    }
+}
+
+void ComponentLifecycle_ctor_w_2_worlds_explicit_registration() {
+    {
+        flecs::world ecs;
+
+        ecs.component<Pod>();
+        test_int(Pod::ctor_invoked, 0);
+
+        ecs.entity().add<Pod>();
+        test_int(Pod::ctor_invoked, 1);
+    }
+
+    Pod::ctor_invoked = 0;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Pod>();
+        test_int(Pod::ctor_invoked, 0);
+
+        ecs.entity().add<Pod>();
+        test_int(Pod::ctor_invoked, 1);
+    }
+}

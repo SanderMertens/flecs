@@ -6437,7 +6437,7 @@ done:
 }
 
 static
-void *get_mutable(
+void *flecs_get_mut(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t id,
@@ -8104,7 +8104,7 @@ void* ecs_get_mut_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    result = get_mutable(world, entity, id, r);
+    result = flecs_get_mut(world, entity, id, r);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
     flecs_defer_end(world, stage);
@@ -8360,7 +8360,7 @@ ecs_entity_t set_ptr_w_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    void *dst = get_mutable(world, entity, id, r);
+    void *dst = flecs_get_mut(world, entity, id, r);
     ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
