@@ -22,11 +22,11 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef flecs_os_api_stdcpp_STATIC
-#if flecs_os_api_stdcpp_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+#if defined(flecs_os_api_stdcpp_EXPORTS) && (defined(_MSC_VER) || defined(__MINGW32__))
   #define FLECS_OS_API_STDCPP_API __declspec(dllexport)
-#elif flecs_os_api_stdcpp_EXPORTS
+#elif defined(flecs_os_api_stdcpp_EXPORTS)
   #define FLECS_OS_API_STDCPP_API __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
+#elif defined(_MSC_VER)
   #define FLECS_OS_API_STDCPP_API __declspec(dllimport)
 #else
   #define FLECS_OS_API_STDCPP_API

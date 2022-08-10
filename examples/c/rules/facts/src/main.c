@@ -6,7 +6,7 @@
 //   Position, Velocity
 //
 // When written out in full, this query looks like:
-//   Position(This), Velocity(This)
+//   Position($This), Velocity($This)
 //
 // "This" is a (builtin) query variable that is unknown before we evaluate the 
 // query. Therefore this query does not test a fact, we can't know which values

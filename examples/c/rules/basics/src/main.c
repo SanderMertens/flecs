@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(ecs, alice, Eats, Apples);
 
     // Here we're creating a rule that in the query DSL would look like this:
-    //   Eats(This, $Food), Healthy($Food)
+    //   Eats($This, $Food), Healthy($Food)
     //
     // Rules are similar to queries, but support more advanced features. This
     // example shows how the basics of how to use rules & variables.
