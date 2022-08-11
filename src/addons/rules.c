@@ -2,8 +2,6 @@
 
 #ifdef FLECS_RULES
 
-#include <stdio.h>
-
 #define ECS_RULE_MAX_VAR_COUNT (32)
 
 #define RULE_PAIR_PREDICATE (1)

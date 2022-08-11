@@ -14,9 +14,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
-#ifndef FLECS_NDEBUG
-#include <stdio.h> /* easier debugging, throws warning in release for printfs */
-#endif
+#include <stdio.h>
 
 #include "flecs.h"
 #include "datastructures/entity_index.h"

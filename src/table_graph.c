@@ -1,5 +1,4 @@
 #include "private_api.h"
-#include <stdio.h>
 
 /* Marker object used to differentiate a component vs. a tag edge */
 static ecs_table_diff_t ecs_table_edge_is_component;

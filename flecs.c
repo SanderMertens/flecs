@@ -23,9 +23,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
-#ifndef FLECS_NDEBUG
-#include <stdio.h> /* easier debugging, throws warning in release for printfs */
-#endif
+#include <stdio.h>
 
 /**
  * @file entity_index.h
@@ -12653,7 +12651,6 @@ error:
     return;
 }
 
-#include <stdio.h>
 #include <math.h>
 
 /**
@@ -14319,7 +14316,6 @@ void flecs_stack_fini(
 
 #ifdef FLECS_LOG
 
-#include <stdio.h>
 #include <ctype.h>
 
 static
@@ -17650,7 +17646,6 @@ void ecs_set_os_api_impl(void) {
 
 #ifdef FLECS_PLECS
 
-#include <stdio.h>
 #include <ctype.h>
 
 #define TOK_NEWLINE '\n'
@@ -18714,8 +18709,6 @@ error:
 
 
 #ifdef FLECS_RULES
-
-#include <stdio.h>
 
 #define ECS_RULE_MAX_VAR_COUNT (32)
 
@@ -27058,8 +27051,6 @@ error:
 
 #ifdef FLECS_STATS
 
-#include <stdio.h>
-
 #define ECS_GAUGE_RECORD(m, t, value)\
     flecs_gauge_record(m, t, (float)(value))
 
@@ -29771,7 +29762,6 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
 #endif
 
 
-#include <stdio.h>
 
 #ifdef FLECS_JSON
 
@@ -42207,7 +42197,6 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
     return next;
 }
 
-#include <stdio.h>
 #include <ctype.h>
 #include <time.h>
 
@@ -45307,7 +45296,6 @@ int32_t ecs_query_entity_count(
     return result;
 }
 
-#include <stdio.h>
 
 /* Marker object used to differentiate a component vs. a tag edge */
 static ecs_table_diff_t ecs_table_edge_is_component;
@@ -48916,7 +48904,6 @@ void flecs_bootstrap(
     ecs_log_pop();
 }
 
-#include <stdio.h>
 #include <ctype.h>
 
 #define ECS_NAME_BUFFER_LENGTH (64)

@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdio.h>
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)

@@ -1,6 +1,5 @@
 
 #include "json.h"
-#include <stdio.h>
 
 #ifdef FLECS_JSON
 

@@ -11,8 +11,6 @@
 
 #ifdef FLECS_STATS
 
-#include <stdio.h>
-
 #define ECS_GAUGE_RECORD(m, t, value)\
     flecs_gauge_record(m, t, (float)(value))
 

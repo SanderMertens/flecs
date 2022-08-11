@@ -1,5 +1,4 @@
 #include "../private_api.h"
-#include <stdio.h>
 #include <math.h>
 
 /**
