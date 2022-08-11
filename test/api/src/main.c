@@ -1234,6 +1234,11 @@ void Query_get_filter(void);
 void Query_group_by(void);
 void Query_group_by_w_ctx(void);
 void Query_group_by_w_sort_reverse_group_creation(void);
+void Query_group_by_iter_one(void);
+void Query_group_by_iter_one_all_groups(void);
+void Query_group_by_iter_one_empty(void);
+void Query_group_by_iter_one_empty_query(void);
+void Query_group_by_iter_one_empty_table(void);
 void Query_iter_valid(void);
 void Query_query_optional_tag(void);
 void Query_query_optional_shared_tag(void);
@@ -6882,6 +6887,26 @@ bake_test_case Query_testcases[] = {
         Query_group_by_w_sort_reverse_group_creation
     },
     {
+        "group_by_iter_one",
+        Query_group_by_iter_one
+    },
+    {
+        "group_by_iter_one_all_groups",
+        Query_group_by_iter_one_all_groups
+    },
+    {
+        "group_by_iter_one_empty",
+        Query_group_by_iter_one_empty
+    },
+    {
+        "group_by_iter_one_empty_query",
+        Query_group_by_iter_one_empty_query
+    },
+    {
+        "group_by_iter_one_empty_table",
+        Query_group_by_iter_one_empty_table
+    },
+    {
         "iter_valid",
         Query_iter_valid
     },
@@ -10609,7 +10634,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        176,
+        181,
         Query_testcases
     },
     {
