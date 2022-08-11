@@ -395,6 +395,11 @@ public:
         ecs_query_skip(m_iter);
     }
 
+    /* Return group id for current table (grouped queries only) */
+    uint64_t group_id() const {
+        return m_iter->group_id;
+    }
+
 #ifdef FLECS_RULES
     /** Get value of variable by id.
      * Get value of a query variable for current result.

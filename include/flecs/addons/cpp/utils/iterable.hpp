@@ -150,6 +150,12 @@ struct iter_iterable final : iterable<Components...> {
         return result;
     }
 
+    // Limit results to tables with specified group id (grouped queries only)
+    iter_iterable<Components...>& set_group(uint64_t group_id) {
+        ecs_query_set_group(&m_it, group_id);
+        return *this;
+    }
+
 protected:
     ecs_iter_t get_iter() const {
         return m_it;
