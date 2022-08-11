@@ -155,11 +155,11 @@ https://github.com/foxnne/aftersun
 ![image](docs/img/projects/after_sun.png)
 
 ### Tower defense (open source demo)
-https://www.flecs.dev/tower_defense/etc/
+https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderMertens/tower_defense))
 ![image](docs/img/projects/tower_defense.png)
 
 ### Procedural City (open source demo)
-https://www.flecs.dev/city
+https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ![image](docs/img/projects/city.png)
 
 ## Resources
