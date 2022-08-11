@@ -1426,6 +1426,46 @@ void QueryBuilder_group_by_iter_one() {
     test_bool(true, e5_found);
 }
 
+void QueryBuilder_group_by_iter_one_template() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct TgtA { };
+    struct TgtB { };
+    struct TgtC { };
+    struct Tag { };
+
+    ecs.entity().add<Rel, TgtA>();
+    auto e2 = ecs.entity().add<Rel, TgtB>();
+    ecs.entity().add<Rel, TgtC>();
+
+    ecs.entity().add<Rel, TgtA>().add<Tag>();
+    auto e5 = ecs.entity().add<Rel, TgtB>().add<Tag>();
+    ecs.entity().add<Rel, TgtC>().add<Tag>();
+
+    auto q = ecs.query_builder()
+        .term<Rel>(flecs::Wildcard)
+        .group_by<Rel>(group_by_rel)
+        .build();
+
+    bool e2_found = false;
+    bool e5_found = false;
+    int32_t count = 0;
+
+    q.iter().set_group<TgtB>().each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        test_assert(it.group_id() == ecs.id<TgtB>());
+
+        if (e == e2) e2_found = true;
+        if (e == e5) e5_found = true;
+        count ++;
+    });
+
+    test_int(2, count);
+    test_bool(true, e2_found);
+    test_bool(true, e5_found);
+}
+
 void QueryBuilder_group_by_iter_one_all_groups() {
     flecs::world ecs;
 

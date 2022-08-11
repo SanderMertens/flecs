@@ -1,0 +1,11 @@
+{
+    "id": "group_by",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

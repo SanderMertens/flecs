@@ -19786,6 +19786,13 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
         return *this;
     }
 
+    // Limit results to tables with specified group id (grouped queries only)
+    template <typename Group>
+    iter_iterable<Components...>& set_group() {
+        ecs_query_set_group(&m_it, _::cpp_type<Group>().id(m_it.real_world));
+        return *this;
+    }
+
 protected:
     ecs_iter_t get_iter() const {
         return m_it;
