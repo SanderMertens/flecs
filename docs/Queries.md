@@ -2505,6 +2505,13 @@ Queries may be grouped and [sorted](#sorting) at the same time. When combined, g
 
 An example of an internal query that uses `cascade` grouping in combination with [sorting](#sorting) is the builtin pipeline query. The pipeline query first groups systems by their depth in the `DependsOn` relationship tree. Within the depth-based groups systems are ordered based on their entity id, which ensures systems are iterated in order of declaration.
 
+#### Group Iterators
+A group iterator iterates over a single group of a grouped query. This can be useful when an application may need to match different entities based on the context of the game, such as editor mode, day/night, inside/outside or location in the world.
+
+One example is that of an open game which is divided up into world cells. Even though a world may contain many entities, only the entities in cells close to the player need to be processed. Instead of creating a cached query per world cell, apps can create a single query grouped by world cell, and use group iterators to only iterate the necessary cells.
+
+Grouped iterators, when used in combination with a good group_by function are one of the fastest available mechanisms for finding entities in Flecs. The feature provides the iteration performance of having a cached query per group, but without the overhead of having to maintain multiple caches. Whether a group has ten or ten thousand tables does not matter, which makes the feature an enabler for games with large numbers of entities.
+
 The following sections show how to use sorting in the different language bindings. The code examples use cached queries, which is the only kind of query for which change detection is supported.
 
 #### Query Descriptor (C)
