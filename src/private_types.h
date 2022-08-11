@@ -248,7 +248,7 @@ struct ecs_query_table_match_t {
     ecs_table_t *table;       /* The current table. */
     int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
-    ecs_entity_t *sources;   /* Subjects (sources) of ids */
+    ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_ref_t *references;    /* Cached components for non-this terms */
 
@@ -260,7 +260,7 @@ struct ecs_query_table_match_t {
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
 
-    int32_t *monitor;                /* Used to monitor table for changes */
+    int32_t *monitor;         /* Used to monitor table for changes */
 };
 
 /** A single table can occur multiple times in the cache when a term matches

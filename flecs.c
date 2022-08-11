@@ -528,7 +528,7 @@ struct ecs_query_table_match_t {
     ecs_table_t *table;       /* The current table. */
     int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
-    ecs_entity_t *sources;   /* Subjects (sources) of ids */
+    ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_ref_t *references;    /* Cached components for non-this terms */
 
@@ -540,7 +540,7 @@ struct ecs_query_table_match_t {
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
 
-    int32_t *monitor;                /* Used to monitor table for changes */
+    int32_t *monitor;         /* Used to monitor table for changes */
 };
 
 /** A single table can occur multiple times in the cache when a term matches
@@ -44553,7 +44553,6 @@ const ecs_filter_t* ecs_query_get_filter(
     return &query->filter;
 }
 
-/* Create query iterator */
 ecs_iter_t ecs_query_iter(
     const ecs_world_t *stage,
     ecs_query_t *query)
@@ -44590,7 +44589,8 @@ ecs_iter_t ecs_query_iter(
 
     ecs_query_iter_t it = {
         .query = query,
-        .node = query->list.first
+        .node = query->list.first,
+        .last = NULL
     };
 
     if (query->order_by && query->list.count) {
@@ -44644,6 +44644,7 @@ ecs_iter_t ecs_query_iter(
             ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, term_count);
             ecs_os_memcpy_n(result.columns, fit.columns, int32_t, term_count);
         }
+
         ecs_iter_fini(&fit);
     }
 
@@ -44654,6 +44655,37 @@ noresults:
         .flags = EcsIterNoResults,
         .next = ecs_query_next
     };
+}
+
+void ecs_query_set_group(
+    ecs_iter_t *it,
+    uint64_t group_id)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_t *q = qit->query;
+    ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_query_table_list_t *node = flecs_query_get_group(q, group_id);
+    if (!node) {
+        qit->node = NULL;
+        return;
+    }
+
+    ecs_query_table_node_t *first = node->first;
+    if (first) {
+        qit->node = node->first;
+        qit->last = node->last->next;
+    } else {
+        qit->node = NULL;
+        qit->last = NULL;
+    }
+    
+error:
+    return;
 }
 
 static
@@ -45058,7 +45090,7 @@ bool ecs_query_next_instanced(
     (void)world;
 
     query_iter_cursor_t cur;
-    ecs_query_table_node_t *node, *next, *prev;
+    ecs_query_table_node_t *node, *next, *prev, *last;
     if ((prev = iter->prev)) {
         /* Match has been iterated, update monitor for change tracking */
         if (flags & EcsQueryHasMonitor) {
@@ -45073,7 +45105,8 @@ bool ecs_query_next_instanced(
 
     flecs_iter_validate(it);
 
-    for (node = iter->node; node != NULL; node = next) {     
+    last = iter->last;
+    for (node = iter->node; node != last; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
 
@@ -45137,6 +45170,8 @@ bool ecs_query_next_instanced(
                     continue;
                 }
             }
+
+            it->group_id = match->group_id;
         } else {
             cur.count = 0;
             cur.first = 0;
