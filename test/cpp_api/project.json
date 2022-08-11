@@ -578,6 +578,8 @@
                 "20_terms",
                 "group_by_raw",
                 "group_by_template",
+                "group_by_iter_one",
+                "group_by_iter_one_all_groups",
                 "create_w_no_template_args",
                 "any_wildcard",
                 "cascade",

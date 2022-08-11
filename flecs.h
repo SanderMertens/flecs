@@ -16976,6 +16976,11 @@ public:
         ecs_query_skip(m_iter);
     }
 
+    /* Return group id for current table (grouped queries only) */
+    uint64_t group_id() const {
+        return m_iter->group_id;
+    }
+
 #ifdef FLECS_RULES
     /** Get value of variable by id.
      * Get value of a query variable for current result.
@@ -19773,6 +19778,12 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
             ecs_iter_fini(&m_it);
         }
         return result;
+    }
+
+    // Limit results to tables with specified group id (grouped queries only)
+    iter_iterable<Components...>& set_group(uint64_t group_id) {
+        ecs_query_set_group(&m_it, group_id);
+        return *this;
     }
 
 protected:
