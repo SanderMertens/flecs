@@ -154,9 +154,17 @@ https://thepunkcollective.itch.io/gravitas
 https://github.com/foxnne/aftersun
 ![image](docs/img/projects/after_sun.png)
 
-### Other
-Examples and tutorials contributed by the community :heart:
+### Tower defense (open source demo)
+https://www.flecs.dev/tower_defense/etc/
+![image](docs/img/projects/tower_defense.png)
 
+### Procedural City (open source demo)
+https://www.flecs.dev/city
+![image](docs/img/projects/city.png)
+
+## Resources
+
+### Resources provided by the community :heart:
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
 - [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
@@ -167,8 +175,7 @@ Examples and tutorials contributed by the community :heart:
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
-Flecs resources:
-
+### Flecs resources
 - [Discord](https://discord.gg/BEzP5Rgrrp)
 - [Medium](https://ajmmertens.medium.com)
 - [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
