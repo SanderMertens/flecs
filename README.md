@@ -175,12 +175,21 @@ https://www.flecs.dev/city
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
-### Flecs resources
+### Flecs links
 - [Discord](https://discord.gg/BEzP5Rgrrp)
 - [Medium](https://ajmmertens.medium.com)
 - [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
 - [Twitter](https://twitter.com/ajmmertens)
 - [Reddit](https://www.reddit.com/r/flecs)
+
+### Articles
+- [Where are my entities and components](https://ajmmertens.medium.com/building-an-ecs-1-where-are-my-entities-and-components-63d07c7da742)
+- [Archetypes and vectorization](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9)
+- [Making the most of entity identifiers](https://ajmmertens.medium.com/doing-a-lot-with-a-little-ecs-identifiers-25a72bd2647)
+- [Building games in ECS with entity relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)
+- [Why storing state machines in ECS is a bad idea](https://ajmmertens.medium.com/why-storing-state-machines-in-ecs-is-a-bad-idea-742de7a18e59)
+- [Why vanilla ECS is not enough](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5)
+- [ECS: From tool to paradigm](https://ajmmertens.medium.com/ecs-from-tool-to-paradigm-350587cdf216)
 
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
