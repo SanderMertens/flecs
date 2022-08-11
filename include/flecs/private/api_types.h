@@ -253,6 +253,7 @@ struct ecs_iter_t {
     ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
     ecs_flags64_t constrained_vars; /* Bitset that marks constrained variables */
     uint64_t group_id;            /* Group id for table, if group_by is used */
+    int32_t field_count;          /* Number of fields in iterator */
 
     /* Input information */
     ecs_entity_t system;          /* The system (if applicable) */
@@ -262,7 +263,6 @@ struct ecs_iter_t {
     /* Query information */
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
-    int32_t term_count;           /* Number of terms in query */
     int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */

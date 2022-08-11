@@ -100,7 +100,7 @@ static
 void Add_in_progress(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = 0;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         ecs_id(Velocity) = ecs_field_id(it, 2);
     }
 

@@ -16,11 +16,11 @@ void Iter(ecs_iter_t *it) {
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         p = ecs_field(it, Position, 2);
     }
 
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         v = ecs_field(it, Velocity, 3);
     }
 
@@ -191,15 +191,15 @@ void Iter_2_shared(ecs_iter_t *it) {
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         r_ptr = ecs_field(it, Rotation, 2);
     }
 
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         p = ecs_field(it, Position, 3);
     }
 
-    if (it->term_count >= 4) {
+    if (it->field_count >= 4) {
         v = ecs_field(it, Velocity, 4);
     }    
 

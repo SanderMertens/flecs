@@ -2769,6 +2769,113 @@ void Query_query_change_skip_non_instanced() {
     ecs_fini(world);
 }
 
+void Query_query_changed_w_or() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { ecs_id(Position), .inout = EcsIn },
+            { TagA, .oper = EcsOr },
+            { TagB, .oper = EcsOr },
+            { ecs_id(Velocity), .inout = EcsIn }
+        }
+    });
+    test_assert(q != NULL);
+    
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_set(world, e, Position, {10, 20});
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_set(world, e, Velocity, {10, 20});
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_fini(world);
+}
+
+void Query_query_changed_or() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e1, TagB);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e2, TagB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_id(Position), .inout = EcsIn, .oper = EcsOr },
+            { ecs_id(Velocity), .inout = EcsIn, .oper = EcsOr },
+            { TagB }
+        }
+    });
+    test_assert(q != NULL);
+    
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_set(world, e1, Position, {10, 20});
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_set(world, e2, Velocity, {10, 20});
+    test_bool(true, ecs_query_changed(q, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(q, NULL));
+
+    ecs_fini(world);
+}
+
 void Query_subquery_match_existing() {
     ecs_world_t *world = ecs_mini();
 

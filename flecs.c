@@ -2963,7 +2963,7 @@ void on_component_callback(
     ecs_type_info_t *ti)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_iter_t it = { .term_count = 1 };
+    ecs_iter_t it = { .field_count = 1 };
     it.entities = entities;
 
     ecs_size_t size = ti->size;
@@ -6578,7 +6578,7 @@ void flecs_notify_on_set(
                 void *ptr = ecs_storage_get(c, size, row);
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_iter_t it = {.term_count = 1};
+                ecs_iter_t it = { .field_count = 1};
                 it.entities = entities;
                 
                 flecs_iter_init(&it, flecs_iter_cache_all);
@@ -21666,7 +21666,7 @@ ecs_iter_t ecs_rule_iter(
 
     result.variable_names = (char**)rule->var_names;
     result.variable_count = rule->var_count;
-    result.term_count = rule->filter.term_count;
+    result.field_count = rule->filter.term_count;
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
@@ -30709,15 +30709,15 @@ void serialize_iter_ids(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
-    int32_t term_count = it->term_count;
-    if (!term_count) {
+    int32_t field_count = it->field_count;
+    if (!field_count) {
         return;
     }
 
     flecs_json_member(buf, "ids");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < term_count; i ++) {
+    for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
         serialize_id(world, it->terms[i].id, buf);
     }
@@ -30731,15 +30731,15 @@ void serialize_type_info(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
-    int32_t term_count = it->term_count;
-    if (!term_count) {
+    int32_t field_count = it->field_count;
+    if (!field_count) {
         return;
     }
 
     flecs_json_member(buf, "type_info");
     flecs_json_object_push(buf);
 
-    for (int i = 0; i < term_count; i ++) {
+    for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
@@ -30790,7 +30790,7 @@ void serialize_iter_result_ids(
     flecs_json_member(buf, "ids");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
         serialize_id(world,  ecs_field_id(it, i + 1), buf);
     }
@@ -30807,7 +30807,7 @@ void serialize_iter_result_sources(
     flecs_json_member(buf, "sources");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
         ecs_entity_t subj = it->sources[i];
         if (subj) {            
@@ -30828,7 +30828,7 @@ void serialize_iter_result_is_set(
     flecs_json_member(buf, "is_set");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         ecs_strbuf_list_next(buf);
         if (ecs_field_is_set(it, i + 1)) {
             flecs_json_true(buf);
@@ -31033,7 +31033,7 @@ void serialize_iter_result_values(
     flecs_json_member(buf, "values");
     flecs_json_array_push(buf);
 
-    int32_t i, term_count = it->term_count;
+    int32_t i, term_count = it->field_count;
     for (i = 0; i < term_count; i ++) {
         ecs_strbuf_list_next(buf);
 
@@ -37705,7 +37705,7 @@ void flecs_emit(
         .world = stage,
         .real_world = world,
         .table = table,
-        .term_count = 1,
+        .field_count = 1,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,
@@ -38646,7 +38646,7 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
 {
-    int32_t i, term_count = f->term_count, actual_count = 0;
+    int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     bool is_or = false, prev_or = false;
     ecs_flags32_t prev_src_flags = 0;
@@ -38666,8 +38666,8 @@ int ecs_filter_finalize(
         }
 
         is_or = term->oper == EcsOr;
-        actual_count += !(is_or && prev_or);
-        term->index = actual_count - 1;
+        field_count += !(is_or && prev_or);
+        term->field_index = field_count - 1;
 
         if (prev_or && is_or) {
             if (prev_src_flags != term->src.flags) {
@@ -38710,7 +38710,7 @@ int ecs_filter_finalize(
         }
     }
 
-    f->term_count_actual = actual_count;
+    f->field_count = field_count;
 
     if (filter_terms == term_count) {
         ECS_BIT_SET(f->flags, EcsFilterIsFilter);
@@ -39421,7 +39421,7 @@ bool flecs_filter_match_table(
         ecs_term_id_t *src = &term->src;
         ecs_oper_kind_t oper = term->oper;
         const ecs_table_t *match_table = table;
-        int32_t t_i = term->index;
+        int32_t t_i = term->field_index;
 
         if (!is_or && oper == EcsOr) {
             is_or = true;
@@ -39494,7 +39494,7 @@ static
 void term_iter_init_no_data(
     ecs_term_iter_t *iter)
 {
-    iter->term = (ecs_term_t){ .index = -1 };
+    iter->term = (ecs_term_t){ .field_index = -1 };
     iter->self_index = NULL;
     iter->index = 0;
 }
@@ -39525,7 +39525,7 @@ void term_iter_init_wildcard(
     ecs_term_iter_t *iter,
     bool empty_tables)
 {
-    iter->term = (ecs_term_t){ .index = -1 };
+    iter->term = (ecs_term_t){ .field_index = -1 };
     iter->self_index = flecs_id_record_get(world, EcsAny);
     ecs_id_record_t *idr = iter->cur = iter->self_index;
     term_iter_init_w_idr(iter, idr, empty_tables);
@@ -39579,7 +39579,7 @@ ecs_iter_t ecs_term_iter(
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
-        .term_count = 1,
+        .field_count = 1,
         .next = ecs_term_next
     };
 
@@ -39618,7 +39618,7 @@ ecs_iter_t ecs_term_chain_iter(
         .real_world = (ecs_world_t*)world,
         .world = chain_it->world,
         .terms = term,
-        .term_count = 1,
+        .field_count = 1,
         .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_term_next
     };
@@ -39882,7 +39882,7 @@ void flecs_init_filter_iter(
 {
     ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
     it->priv.iter.filter.filter = filter;
-    it->term_count = filter->term_count_actual;
+    it->field_count = filter->field_count;
 }
 
 int32_t ecs_filter_pivot_term(
@@ -40024,7 +40024,7 @@ ecs_iter_t ecs_filter_chain_iter(
 {
     ecs_iter_t it = {
         .terms = filter->terms,
-        .term_count = filter->term_count,
+        .field_count = filter->field_count,
         .world = chain_it->world,
         .real_world = chain_it->real_world,
         .chain_it = (ecs_iter_t*)chain_it,
@@ -40176,7 +40176,7 @@ bool ecs_filter_next_instanced(
                     table = term_iter->table;
 
                     if (pivot_term != -1) {
-                        int32_t index = term->index;
+                        int32_t index = term->field_index;
                         it->ids[index] = term_iter->id;
                         it->sources[index] = term_iter->subject;
                         it->columns[index] = term_iter->column;
@@ -40219,7 +40219,7 @@ bool ecs_filter_next_instanced(
                 table = it->table;
 
                 /* Find first term that still has matches left */
-                int32_t i, j, count = it->term_count;
+                int32_t i, j, count = it->field_count;
                 for (i = count - 1; i >= 0; i --) {
                     int32_t mi = -- it->match_indices[i];
                     if (mi) {
@@ -40583,7 +40583,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     o->last_event_id[0] = world->event_id;
 
     ecs_iter_t user_it = *it;
-    user_it.term_count = o->filter.term_count_actual;
+    user_it.field_count = o->filter.field_count;
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
     ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
@@ -40652,7 +40652,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.term_index = pivot_term;
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
-        user_it.term_count = o->filter.term_count_actual;
+        user_it.field_count = o->filter.field_count;
         flecs_iter_validate(&user_it);
 
         ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -41005,7 +41005,7 @@ void flecs_init_observer_iter(
         .id = it->event_id
     };
 
-    it->term_count = 1;
+    it->field_count = 1;
     it->terms = &term;
     flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
@@ -41451,7 +41451,7 @@ void flecs_multi_observer_yield_existing(
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
         it.terms = observer->filter.terms;
-        it.term_count = 1;
+        it.field_count = 1;
         it.term_index = pivot_term;
         it.system = observer->entity;
         it.ctx = observer;
@@ -41591,7 +41591,7 @@ int flecs_uni_observer_init(
     ecs_term_t *term = &observer->filter.terms[0];
     observer->last_event_id = desc->last_event_id;    
     observer->register_id = flecs_from_public_id(world, term->id);
-    term->index = desc->term_index;
+    term->field_index = desc->term_index;
 
     if (ecs_id_is_tag(world, term->id)) {
         /* If id is a tag, downgrade OnSet/UnSet to OnAdd/OnRemove. */
@@ -41668,7 +41668,7 @@ int flecs_multi_observer_init(
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &child_desc.filter.terms[0];
-        child_desc.term_index = filter->terms[i].index;
+        child_desc.term_index = filter->terms[i].field_index;
         *term = filter->terms[i];
 
         ecs_oper_kind_t oper = term->oper;
@@ -43082,17 +43082,17 @@ bool flecs_query_get_match_monitor(
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */
     const ecs_filter_t *f = &query->filter;
-    int32_t i, t = -1, term_count = f->term_count_actual;
+    int32_t i, t = -1, term_count = f->term_count;
     table_dirty_state_t cur_dirty_state;
 
     for (i = 0; i < term_count; i ++) {
-        if (t == f->terms[i].index) {
+        if (t == f->terms[i].field_index) {
             if (monitor[t + 1] != -1) {
                 continue;
             }
         }
 
-        t = f->terms[i].index;
+        t = f->terms[i].field_index;
         monitor[t + 1] = -1;
 
         if (f->terms[i].inout != EcsIn && 
@@ -43144,9 +43144,9 @@ void flecs_query_sync_match_monitor(
 
     monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
 
-    int32_t i, term_count = query->filter.term_count_actual;
+    int32_t i, term_count = query->filter.term_count;
     for (i = 0; i < term_count; i ++) {
-        int32_t t = query->filter.terms[i].index;
+        int32_t t = query->filter.terms[i].field_index;
         if (monitor[t + 1] == -1) {
             continue;
         }
@@ -43214,10 +43214,10 @@ bool flecs_query_check_match_monitor(
     }
 
     ecs_filter_t *f = &query->filter;
-    int32_t i, term_count = f->term_count_actual;
+    int32_t i, term_count = f->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &f->terms[i];
-        int32_t t = term->index;
+        int32_t t = term->field_index;
         if (monitor[t + 1] == -1) {
             continue;
         }
@@ -43374,7 +43374,7 @@ void flecs_query_set_table_match(
 {    
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
-    int32_t term_count_actual = filter->term_count_actual;
+    int32_t field_count = filter->field_count;
     ecs_term_t *terms = filter->terms;
 
     /* Reset resources in case this is an existing record */
@@ -43391,10 +43391,10 @@ void flecs_query_set_table_match(
         qm->references = NULL;
     }
 
-    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count_actual);
-    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count_actual);
-    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, term_count_actual);
-    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
+    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
+    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
+    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, field_count);
 
     /* Look for union & disabled terms */
     if (table) {
@@ -43409,7 +43409,7 @@ void flecs_query_set_table_match(
                     continue;
                 }
                 
-                int32_t actual_index = terms[i].index;
+                int32_t actual_index = terms[i].field_index;
                 int32_t column = it->columns[actual_index];
                 if (column <= 0) {
                     continue;
@@ -43434,7 +43434,7 @@ void flecs_query_set_table_match(
                     continue;
                 }
 
-                int32_t actual_index = terms[i].index;
+                int32_t actual_index = terms[i].field_index;
                 ecs_id_t id = it->ids[actual_index];
                 ecs_id_t bs_id = ECS_TOGGLE | id;
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
@@ -43458,7 +43458,7 @@ void flecs_query_set_table_match(
             continue;
         }
 
-        int32_t actual_index = terms[i].index;
+        int32_t actual_index = terms[i].field_index;
         ecs_entity_t src = it->sources[actual_index];
         ecs_size_t size = 0;
         if (it->sizes) {
@@ -43805,7 +43805,7 @@ void flecs_query_sort_tables(
     /* Find term that iterates over component (must be at least one) */
     if (order_by_component) {
         const ecs_filter_t *f = &query->filter;
-        int32_t term_count = f->term_count_actual;
+        int32_t term_count = f->term_count;
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &f->terms[i];
             if (!ecs_term_match_this(term)) {
@@ -44607,7 +44607,7 @@ ecs_iter_t ecs_query_iter(
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
-        .term_count = query->filter.term_count_actual,
+        .field_count = query->filter.field_count,
         .table_count = table_count,
         .flags = flags,
         .priv.iter.query = it,
@@ -44635,7 +44635,7 @@ ecs_iter_t ecs_query_iter(
             flecs_iter_cache_columns | flecs_iter_cache_sizes);
 
         /* Copy the data */
-        int32_t term_count = filter->term_count_actual;
+        int32_t term_count = filter->field_count;
         if (term_count) {
             if (result.ptrs) {
                 ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
@@ -45021,10 +45021,10 @@ void mark_columns_dirty(
 
     if (table && table->dirty_state) {
         ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count_actual;
+        int32_t i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            int32_t ti = term->index;
+            int32_t ti = term->field_index;
 
             if (term->inout == EcsIn || term->inout == EcsInOutNone) {
                 /* Don't mark readonly terms dirty */
@@ -45191,7 +45191,7 @@ bool ecs_query_next_instanced(
                     continue;
                 }
 
-                int32_t actual_index = term->index;
+                int32_t actual_index = term->field_index;
                 it->ids[actual_index] = match->ids[actual_index];
                 it->columns[actual_index] = match->columns[actual_index];
                 it->sizes[actual_index] = match->sizes[actual_index];
@@ -46640,16 +46640,16 @@ void flecs_iter_init(
     it->priv.cache.used = 0;
     it->priv.cache.allocated = 0;
 
-    INIT_CACHE(it, fields, ids, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, sources, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, match_indices, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, ids, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sources, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, match_indices, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, columns, it->field_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, variables, it->variable_count, 
         ECS_VARIABLE_CACHE_SIZE);
-    INIT_CACHE(it, fields, sizes, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sizes, it->field_count, ECS_TERM_CACHE_SIZE);
 
     if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, fields, ptrs, it->term_count, ECS_TERM_CACHE_SIZE);
+        INIT_CACHE(it, fields, ptrs, it->field_count, ECS_TERM_CACHE_SIZE);
     } else {
         it->ptrs = NULL;
     }
@@ -46893,7 +46893,7 @@ void flecs_iter_populate_data(
         }
     }
 
-    int t, term_count = it->term_count;
+    int t, field_count = it->field_count;
 
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
@@ -46903,7 +46903,7 @@ void flecs_iter_populate_data(
         }
 
         /* Fetch sizes, skip fetching data */
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             sizes[t] = iter_get_size_for_id(world, it->ids[t]);
         }
         return;
@@ -46912,14 +46912,14 @@ void flecs_iter_populate_data(
     bool has_shared = false;
 
     if (ptrs && sizes) {
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             int32_t column = it->columns[t];
             has_shared |= flecs_iter_populate_term_data(world, it, t, column,
                 &ptrs[t], 
                 &sizes[t]);
         }
     } else {
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
             int32_t column = it->columns[t];
@@ -46953,9 +46953,9 @@ bool flecs_iter_next_row(
 
         if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-            int t, term_count = it->term_count;
+            int t, field_count = it->field_count;
 
-            for (t = 0; t < term_count; t ++) {
+            for (t = 0; t < field_count; t ++) {
                 int32_t column = it->columns[t];
                 if (column >= 0) {
                     void *ptr = it->ptrs[t];
@@ -47197,9 +47197,9 @@ char* ecs_iter_str(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int i;
 
-    if (it->term_count) {
+    if (it->field_count) {
         ecs_strbuf_list_push(&buf, "term: ", ",");
-        for (i = 0; i < it->term_count; i ++) {
+        for (i = 0; i < it->field_count; i ++) {
             ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
@@ -47208,7 +47208,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
-        for (i = 0; i < it->term_count; i ++) {
+        for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
@@ -47542,8 +47542,8 @@ void offset_iter(
 {
     it->entities = &it->entities[offset];
 
-    int32_t t, term_count = it->term_count;
-    for (t = 0; t < term_count; t ++) {
+    int32_t t, field_count = it->field_count;
+    for (t = 0; t < field_count; t ++) {
         void *ptrs = it->ptrs[t];
         if (!ptrs) {
             continue;

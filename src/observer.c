@@ -14,7 +14,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     o->last_event_id[0] = world->event_id;
 
     ecs_iter_t user_it = *it;
-    user_it.term_count = o->filter.term_count_actual;
+    user_it.field_count = o->filter.field_count;
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
     ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
@@ -83,7 +83,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.term_index = pivot_term;
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
-        user_it.term_count = o->filter.term_count_actual;
+        user_it.field_count = o->filter.field_count;
         flecs_iter_validate(&user_it);
 
         ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -436,7 +436,7 @@ void flecs_init_observer_iter(
         .id = it->event_id
     };
 
-    it->term_count = 1;
+    it->field_count = 1;
     it->terms = &term;
     flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
@@ -882,7 +882,7 @@ void flecs_multi_observer_yield_existing(
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
         it.terms = observer->filter.terms;
-        it.term_count = 1;
+        it.field_count = 1;
         it.term_index = pivot_term;
         it.system = observer->entity;
         it.ctx = observer;
@@ -1022,7 +1022,7 @@ int flecs_uni_observer_init(
     ecs_term_t *term = &observer->filter.terms[0];
     observer->last_event_id = desc->last_event_id;    
     observer->register_id = flecs_from_public_id(world, term->id);
-    term->index = desc->term_index;
+    term->field_index = desc->term_index;
 
     if (ecs_id_is_tag(world, term->id)) {
         /* If id is a tag, downgrade OnSet/UnSet to OnAdd/OnRemove. */
@@ -1099,7 +1099,7 @@ int flecs_multi_observer_init(
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &child_desc.filter.terms[0];
-        child_desc.term_index = filter->terms[i].index;
+        child_desc.term_index = filter->terms[i].field_index;
         *term = filter->terms[i];
 
         ecs_oper_kind_t oper = term->oper;

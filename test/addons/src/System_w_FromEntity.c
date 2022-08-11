@@ -7,11 +7,11 @@ void Iter(ecs_iter_t *it) {
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         p = ecs_field(it, Position, 2);
     }
 
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         v = ecs_field(it, Velocity, 3);
     }
 

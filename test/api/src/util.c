@@ -14,7 +14,7 @@ void probe_system_w_ctx(
     ctx->event = it->event;
     ctx->event_id = it->event_id;
     ctx->offset = 0;
-    ctx->term_count = it->term_count;
+    ctx->term_count = it->field_count;
     ctx->term_index = it->term_index;
 
     int i;
@@ -175,7 +175,7 @@ bool test_iter(
                 expect->matched[entity_index] = true;
 
                 // Test data
-                for (t = 0; t < it->term_count; t++) {
+                for (t = 0; t < it->field_count; t++) {
                     size_t size = ecs_field_size(it, t + 1);
                     if (!size) {
                         continue;
@@ -209,7 +209,7 @@ bool test_iter(
                 ids = expect->term_ids[0];
             }
 
-            for (t = 0; t < it->term_count; t++) {
+            for (t = 0; t < it->field_count; t++) {
                 if (!ids[t]) {
                     break;
                 }
@@ -230,7 +230,7 @@ bool test_iter(
                 ids_expect = expect->term_ids_expr[0];
             }
 
-            for (t = 0; t < it->term_count; t++) {
+            for (t = 0; t < it->field_count; t++) {
                 if (!ids_expect[t]) {
                     break;
                 }

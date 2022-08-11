@@ -469,8 +469,7 @@ struct ecs_term_t {
     ecs_id_t id_flags;          /* Id flags of term id */
     char *name;                 /* Name of term */
 
-    int32_t index;              /* Computed term index in filter which takes 
-                                 * into account folded OR terms */
+    int32_t field_index;        /* Index of field for term in iterator */
 
     bool move;                  /* Used by internals */
 };
@@ -484,7 +483,7 @@ struct ecs_filter_t {
     
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
-    int32_t term_count_actual; /* Processed count, which folds OR terms */
+    int32_t field_count;       /* Number of fields in iterator for filter */
     
     bool owned;                /* Is filter object owned by filter */
     bool terms_owned;          /* Is terms array owned by filter */

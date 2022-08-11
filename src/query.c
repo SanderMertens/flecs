@@ -392,17 +392,17 @@ bool flecs_query_get_match_monitor(
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */
     const ecs_filter_t *f = &query->filter;
-    int32_t i, t = -1, term_count = f->term_count_actual;
+    int32_t i, t = -1, term_count = f->term_count;
     table_dirty_state_t cur_dirty_state;
 
     for (i = 0; i < term_count; i ++) {
-        if (t == f->terms[i].index) {
+        if (t == f->terms[i].field_index) {
             if (monitor[t + 1] != -1) {
                 continue;
             }
         }
 
-        t = f->terms[i].index;
+        t = f->terms[i].field_index;
         monitor[t + 1] = -1;
 
         if (f->terms[i].inout != EcsIn && 
@@ -454,9 +454,9 @@ void flecs_query_sync_match_monitor(
 
     monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
 
-    int32_t i, term_count = query->filter.term_count_actual;
+    int32_t i, term_count = query->filter.term_count;
     for (i = 0; i < term_count; i ++) {
-        int32_t t = query->filter.terms[i].index;
+        int32_t t = query->filter.terms[i].field_index;
         if (monitor[t + 1] == -1) {
             continue;
         }
@@ -524,10 +524,10 @@ bool flecs_query_check_match_monitor(
     }
 
     ecs_filter_t *f = &query->filter;
-    int32_t i, term_count = f->term_count_actual;
+    int32_t i, term_count = f->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &f->terms[i];
-        int32_t t = term->index;
+        int32_t t = term->field_index;
         if (monitor[t + 1] == -1) {
             continue;
         }
@@ -684,7 +684,7 @@ void flecs_query_set_table_match(
 {    
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
-    int32_t term_count_actual = filter->term_count_actual;
+    int32_t field_count = filter->field_count;
     ecs_term_t *terms = filter->terms;
 
     /* Reset resources in case this is an existing record */
@@ -701,10 +701,10 @@ void flecs_query_set_table_match(
         qm->references = NULL;
     }
 
-    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count_actual);
-    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count_actual);
-    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, term_count_actual);
-    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
+    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
+    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
+    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, field_count);
 
     /* Look for union & disabled terms */
     if (table) {
@@ -719,7 +719,7 @@ void flecs_query_set_table_match(
                     continue;
                 }
                 
-                int32_t actual_index = terms[i].index;
+                int32_t actual_index = terms[i].field_index;
                 int32_t column = it->columns[actual_index];
                 if (column <= 0) {
                     continue;
@@ -744,7 +744,7 @@ void flecs_query_set_table_match(
                     continue;
                 }
 
-                int32_t actual_index = terms[i].index;
+                int32_t actual_index = terms[i].field_index;
                 ecs_id_t id = it->ids[actual_index];
                 ecs_id_t bs_id = ECS_TOGGLE | id;
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
@@ -768,7 +768,7 @@ void flecs_query_set_table_match(
             continue;
         }
 
-        int32_t actual_index = terms[i].index;
+        int32_t actual_index = terms[i].field_index;
         ecs_entity_t src = it->sources[actual_index];
         ecs_size_t size = 0;
         if (it->sizes) {
@@ -1115,7 +1115,7 @@ void flecs_query_sort_tables(
     /* Find term that iterates over component (must be at least one) */
     if (order_by_component) {
         const ecs_filter_t *f = &query->filter;
-        int32_t term_count = f->term_count_actual;
+        int32_t term_count = f->term_count;
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &f->terms[i];
             if (!ecs_term_match_this(term)) {
@@ -1917,7 +1917,7 @@ ecs_iter_t ecs_query_iter(
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
-        .term_count = query->filter.term_count_actual,
+        .field_count = query->filter.field_count,
         .table_count = table_count,
         .flags = flags,
         .priv.iter.query = it,
@@ -1945,7 +1945,7 @@ ecs_iter_t ecs_query_iter(
             flecs_iter_cache_columns | flecs_iter_cache_sizes);
 
         /* Copy the data */
-        int32_t term_count = filter->term_count_actual;
+        int32_t term_count = filter->field_count;
         if (term_count) {
             if (result.ptrs) {
                 ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
@@ -2331,10 +2331,10 @@ void mark_columns_dirty(
 
     if (table && table->dirty_state) {
         ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count_actual;
+        int32_t i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            int32_t ti = term->index;
+            int32_t ti = term->field_index;
 
             if (term->inout == EcsIn || term->inout == EcsInOutNone) {
                 /* Don't mark readonly terms dirty */
@@ -2501,7 +2501,7 @@ bool ecs_query_next_instanced(
                     continue;
                 }
 
-                int32_t actual_index = term->index;
+                int32_t actual_index = term->field_index;
                 it->ids[actual_index] = match->ids[actual_index];
                 it->columns[actual_index] = match->columns[actual_index];
                 it->sizes[actual_index] = match->sizes[actual_index];

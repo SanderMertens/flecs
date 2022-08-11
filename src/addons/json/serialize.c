@@ -947,15 +947,15 @@ void serialize_iter_ids(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
-    int32_t term_count = it->term_count;
-    if (!term_count) {
+    int32_t field_count = it->field_count;
+    if (!field_count) {
         return;
     }
 
     flecs_json_member(buf, "ids");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < term_count; i ++) {
+    for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
         serialize_id(world, it->terms[i].id, buf);
     }
@@ -969,15 +969,15 @@ void serialize_type_info(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
-    int32_t term_count = it->term_count;
-    if (!term_count) {
+    int32_t field_count = it->field_count;
+    if (!field_count) {
         return;
     }
 
     flecs_json_member(buf, "type_info");
     flecs_json_object_push(buf);
 
-    for (int i = 0; i < term_count; i ++) {
+    for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
@@ -1028,7 +1028,7 @@ void serialize_iter_result_ids(
     flecs_json_member(buf, "ids");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
         serialize_id(world,  ecs_field_id(it, i + 1), buf);
     }
@@ -1045,7 +1045,7 @@ void serialize_iter_result_sources(
     flecs_json_member(buf, "sources");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
         ecs_entity_t subj = it->sources[i];
         if (subj) {            
@@ -1066,7 +1066,7 @@ void serialize_iter_result_is_set(
     flecs_json_member(buf, "is_set");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->term_count; i ++) {
+    for (int i = 0; i < it->field_count; i ++) {
         ecs_strbuf_list_next(buf);
         if (ecs_field_is_set(it, i + 1)) {
             flecs_json_true(buf);
@@ -1271,7 +1271,7 @@ void serialize_iter_result_values(
     flecs_json_member(buf, "values");
     flecs_json_array_push(buf);
 
-    int32_t i, term_count = it->term_count;
+    int32_t i, term_count = it->field_count;
     for (i = 0; i < term_count; i ++) {
         ecs_strbuf_list_next(buf);
 

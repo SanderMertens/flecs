@@ -24,12 +24,12 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         v = ecs_field(it, Velocity, 2);
         test_assert(!ecs_field_is_self(it, 2));
     }
 
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         m = ecs_field(it, Mass, 3);
         test_assert(!m || !ecs_field_is_self(it, 3));
     }
@@ -157,7 +157,7 @@ void Iter_reactive(ecs_iter_t *it) {
     Velocity *v = it->param;
     Mass *m = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         v = ecs_field(it, Velocity, 2);
         test_assert(!ecs_field_is_self(it, 2));
     }

@@ -5,6 +5,6 @@
         "use": [
             "flecs"
         ],
-        "private": true
+        "public": false
     }
 }

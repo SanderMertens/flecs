@@ -4898,7 +4898,7 @@ void Rules_terms_set() {
     test_assert(r != NULL);
     ecs_iter_t it = ecs_rule_iter(world, r);
     
-    test_int(it.term_count, 2);
+    test_int(it.field_count, 2);
     test_assert(it.terms != NULL);
 
     test_int(it.terms[0].id, TagA);
@@ -4908,7 +4908,7 @@ void Rules_terms_set() {
     ecs_add(world, e, TagA);
 
     while (ecs_rule_next(&it)) {
-        test_int(it.term_count, 2);
+        test_int(it.field_count, 2);
         test_assert(it.terms != NULL);
         test_int(it.terms[0].id, TagA);
         test_int(it.terms[1].id, TagB);
@@ -4939,14 +4939,14 @@ void Rules_value_set() {
     test_assert(r != NULL);
     ecs_iter_t it = ecs_rule_iter(world, r);
     
-    test_int(it.term_count, 2);
+    test_int(it.field_count, 2);
     test_assert(it.terms != NULL);
 
     test_int(it.terms[0].id, ecs_id(Position));
     test_int(it.terms[1].id, ecs_id(Velocity));
 
     while (ecs_rule_next(&it)) {
-        test_int(it.term_count, 2);
+        test_int(it.field_count, 2);
         test_assert(it.terms != NULL);
         test_int(it.terms[0].id, ecs_id(Position));
         test_int(it.terms[1].id, ecs_id(Velocity));
@@ -4988,12 +4988,12 @@ void Rules_term_w_this_this_this() {
     test_assert(r != NULL);
     ecs_iter_t it = ecs_rule_iter(world, r);
     
-    test_int(it.term_count, 1);
+    test_int(it.field_count, 1);
     test_assert(it.terms != NULL);
     test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
 
     test_assert(ecs_rule_next(&it));
-    test_int(it.term_count, 1);
+    test_int(it.field_count, 1);
     test_assert(it.terms != NULL);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
@@ -5030,12 +5030,12 @@ void Rules_term_w_x_x_x() {
     test_assert(r != NULL);
     ecs_iter_t it = ecs_rule_iter(world, r);
     
-    test_int(it.term_count, 1);
+    test_int(it.field_count, 1);
     test_assert(it.terms != NULL);
     test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
 
     test_assert(ecs_rule_next(&it));
-    test_int(it.term_count, 1);
+    test_int(it.field_count, 1);
     test_assert(it.terms != NULL);
     test_int(it.count, 0);
     test_assert(ecs_iter_get_var(&it, x_var) == e);

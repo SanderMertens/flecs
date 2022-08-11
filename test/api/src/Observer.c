@@ -17,7 +17,7 @@ void Observer_w_value(ecs_iter_t *it) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    if (it->term_count > 1) {
+    if (it->field_count > 1) {
         Velocity *v = ecs_field(it, Velocity, 2);
         test_int(v->x, 1);
         test_int(v->y, 2);

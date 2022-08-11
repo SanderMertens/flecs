@@ -8,7 +8,7 @@ void Init(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 1);
     
     Velocity *v = NULL;
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         v = ecs_field(it, Velocity, 2);
     }
 

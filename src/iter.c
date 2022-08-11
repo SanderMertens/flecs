@@ -43,16 +43,16 @@ void flecs_iter_init(
     it->priv.cache.used = 0;
     it->priv.cache.allocated = 0;
 
-    INIT_CACHE(it, fields, ids, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, sources, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, match_indices, it->term_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, ids, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sources, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, match_indices, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, columns, it->field_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, variables, it->variable_count, 
         ECS_VARIABLE_CACHE_SIZE);
-    INIT_CACHE(it, fields, sizes, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, sizes, it->field_count, ECS_TERM_CACHE_SIZE);
 
     if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, fields, ptrs, it->term_count, ECS_TERM_CACHE_SIZE);
+        INIT_CACHE(it, fields, ptrs, it->field_count, ECS_TERM_CACHE_SIZE);
     } else {
         it->ptrs = NULL;
     }
@@ -296,7 +296,7 @@ void flecs_iter_populate_data(
         }
     }
 
-    int t, term_count = it->term_count;
+    int t, field_count = it->field_count;
 
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
@@ -306,7 +306,7 @@ void flecs_iter_populate_data(
         }
 
         /* Fetch sizes, skip fetching data */
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             sizes[t] = iter_get_size_for_id(world, it->ids[t]);
         }
         return;
@@ -315,14 +315,14 @@ void flecs_iter_populate_data(
     bool has_shared = false;
 
     if (ptrs && sizes) {
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             int32_t column = it->columns[t];
             has_shared |= flecs_iter_populate_term_data(world, it, t, column,
                 &ptrs[t], 
                 &sizes[t]);
         }
     } else {
-        for (t = 0; t < term_count; t ++) {
+        for (t = 0; t < field_count; t ++) {
             ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
             int32_t column = it->columns[t];
@@ -356,9 +356,9 @@ bool flecs_iter_next_row(
 
         if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-            int t, term_count = it->term_count;
+            int t, field_count = it->field_count;
 
-            for (t = 0; t < term_count; t ++) {
+            for (t = 0; t < field_count; t ++) {
                 int32_t column = it->columns[t];
                 if (column >= 0) {
                     void *ptr = it->ptrs[t];
@@ -600,9 +600,9 @@ char* ecs_iter_str(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int i;
 
-    if (it->term_count) {
+    if (it->field_count) {
         ecs_strbuf_list_push(&buf, "term: ", ",");
-        for (i = 0; i < it->term_count; i ++) {
+        for (i = 0; i < it->field_count; i ++) {
             ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
@@ -611,7 +611,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
 
         ecs_strbuf_list_push(&buf, "subj: ", ",");
-        for (i = 0; i < it->term_count; i ++) {
+        for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
@@ -945,8 +945,8 @@ void offset_iter(
 {
     it->entities = &it->entities[offset];
 
-    int32_t t, term_count = it->term_count;
-    for (t = 0; t < term_count; t ++) {
+    int32_t t, field_count = it->field_count;
+    for (t = 0; t < field_count; t ++) {
         void *ptrs = it->ptrs[t];
         if (!ptrs) {
             continue;

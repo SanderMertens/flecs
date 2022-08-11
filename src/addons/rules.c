@@ -2958,7 +2958,7 @@ ecs_iter_t ecs_rule_iter(
 
     result.variable_names = (char**)rule->var_names;
     result.variable_count = rule->var_count;
-    result.term_count = rule->filter.term_count;
+    result.field_count = rule->filter.term_count;
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;

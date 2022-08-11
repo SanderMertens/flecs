@@ -258,7 +258,7 @@ public:
     /** Number of fields in iteator.
      */
     int32_t field_count() const {
-        return m_iter->term_count;
+        return m_iter->field_count;
     }
 
     /** Size of field data type.

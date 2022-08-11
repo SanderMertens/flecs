@@ -756,7 +756,7 @@ void SystemMisc_one_named_column_of_two() {
     }}));
 
     test_int(f.term_count, 2);
-    test_int(f.term_count_actual, 2);
+    test_int(f.field_count, 2);
 
     ecs_term_t *
     term = &f.terms[0];
@@ -794,7 +794,7 @@ void SystemMisc_two_named_columns_of_two() {
     }}));    
 
     test_int(f.term_count, 2);
-    test_int(f.term_count_actual, 2);
+    test_int(f.field_count, 2);
 
     ecs_term_t *
     term = &f.terms[0];

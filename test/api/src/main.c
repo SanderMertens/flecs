@@ -1029,6 +1029,7 @@ void Filter_filter_from_expr_2_terms_err(void);
 void Filter_chain_term_iter_w_term_iter(void);
 void Filter_chain_filter_iter_w_term_iter(void);
 void Filter_chain_w_term_iter_component(void);
+void Filter_chain_iter_w_or(void);
 void Filter_filter_w_recycled_first(void);
 void Filter_filter_w_recycled_second(void);
 void Filter_filter_w_recycled_first_and_id(void);
@@ -1205,6 +1206,8 @@ void Query_query_change_check_iter_after_skip_write(void);
 void Query_query_change_parent_term(void);
 void Query_query_change_prefab_term(void);
 void Query_query_change_skip_non_instanced(void);
+void Query_query_changed_w_or(void);
+void Query_query_changed_or(void);
 void Query_subquery_match_existing(void);
 void Query_subquery_match_new(void);
 void Query_subquery_inactive(void);
@@ -6077,6 +6080,10 @@ bake_test_case Filter_testcases[] = {
         Filter_chain_w_term_iter_component
     },
     {
+        "chain_iter_w_or",
+        Filter_chain_iter_w_or
+    },
+    {
         "filter_w_recycled_first",
         Filter_filter_w_recycled_first
     },
@@ -6769,6 +6776,14 @@ bake_test_case Query_testcases[] = {
     {
         "query_change_skip_non_instanced",
         Query_query_change_skip_non_instanced
+    },
+    {
+        "query_changed_w_or",
+        Query_query_changed_w_or
+    },
+    {
+        "query_changed_or",
+        Query_query_changed_or
     },
     {
         "subquery_match_existing",
@@ -10620,7 +10635,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        231,
+        232,
         Filter_testcases
     },
     {
@@ -10634,7 +10649,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        181,
+        183,
         Query_testcases
     },
     {

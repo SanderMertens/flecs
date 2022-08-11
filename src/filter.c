@@ -888,7 +888,7 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
 {
-    int32_t i, term_count = f->term_count, actual_count = 0;
+    int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     bool is_or = false, prev_or = false;
     ecs_flags32_t prev_src_flags = 0;
@@ -908,8 +908,8 @@ int ecs_filter_finalize(
         }
 
         is_or = term->oper == EcsOr;
-        actual_count += !(is_or && prev_or);
-        term->index = actual_count - 1;
+        field_count += !(is_or && prev_or);
+        term->field_index = field_count - 1;
 
         if (prev_or && is_or) {
             if (prev_src_flags != term->src.flags) {
@@ -952,7 +952,7 @@ int ecs_filter_finalize(
         }
     }
 
-    f->term_count_actual = actual_count;
+    f->field_count = field_count;
 
     if (filter_terms == term_count) {
         ECS_BIT_SET(f->flags, EcsFilterIsFilter);
@@ -1663,7 +1663,7 @@ bool flecs_filter_match_table(
         ecs_term_id_t *src = &term->src;
         ecs_oper_kind_t oper = term->oper;
         const ecs_table_t *match_table = table;
-        int32_t t_i = term->index;
+        int32_t t_i = term->field_index;
 
         if (!is_or && oper == EcsOr) {
             is_or = true;
@@ -1736,7 +1736,7 @@ static
 void term_iter_init_no_data(
     ecs_term_iter_t *iter)
 {
-    iter->term = (ecs_term_t){ .index = -1 };
+    iter->term = (ecs_term_t){ .field_index = -1 };
     iter->self_index = NULL;
     iter->index = 0;
 }
@@ -1767,7 +1767,7 @@ void term_iter_init_wildcard(
     ecs_term_iter_t *iter,
     bool empty_tables)
 {
-    iter->term = (ecs_term_t){ .index = -1 };
+    iter->term = (ecs_term_t){ .field_index = -1 };
     iter->self_index = flecs_id_record_get(world, EcsAny);
     ecs_id_record_t *idr = iter->cur = iter->self_index;
     term_iter_init_w_idr(iter, idr, empty_tables);
@@ -1821,7 +1821,7 @@ ecs_iter_t ecs_term_iter(
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
-        .term_count = 1,
+        .field_count = 1,
         .next = ecs_term_next
     };
 
@@ -1860,7 +1860,7 @@ ecs_iter_t ecs_term_chain_iter(
         .real_world = (ecs_world_t*)world,
         .world = chain_it->world,
         .terms = term,
-        .term_count = 1,
+        .field_count = 1,
         .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_term_next
     };
@@ -2124,7 +2124,7 @@ void flecs_init_filter_iter(
 {
     ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
     it->priv.iter.filter.filter = filter;
-    it->term_count = filter->term_count_actual;
+    it->field_count = filter->field_count;
 }
 
 int32_t ecs_filter_pivot_term(
@@ -2266,7 +2266,7 @@ ecs_iter_t ecs_filter_chain_iter(
 {
     ecs_iter_t it = {
         .terms = filter->terms,
-        .term_count = filter->term_count,
+        .field_count = filter->field_count,
         .world = chain_it->world,
         .real_world = chain_it->real_world,
         .chain_it = (ecs_iter_t*)chain_it,
@@ -2418,7 +2418,7 @@ bool ecs_filter_next_instanced(
                     table = term_iter->table;
 
                     if (pivot_term != -1) {
-                        int32_t index = term->index;
+                        int32_t index = term->field_index;
                         it->ids[index] = term_iter->id;
                         it->sources[index] = term_iter->subject;
                         it->columns[index] = term_iter->column;
@@ -2461,7 +2461,7 @@ bool ecs_filter_next_instanced(
                 table = it->table;
 
                 /* Find first term that still has matches left */
-                int32_t i, j, count = it->term_count;
+                int32_t i, j, count = it->field_count;
                 for (i = count - 1; i >= 0; i --) {
                     int32_t mi = -- it->match_indices[i];
                     if (mi) {

@@ -14,7 +14,7 @@ void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 2);
 
     Velocity *v = NULL;
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         v = ecs_field(it, Velocity, 3);
     }
 
@@ -547,7 +547,7 @@ void Prefab_get_ptr_prefab() {
 static
 void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         v = ecs_field(it, Velocity, 2);
         if (v) {
             test_assert(!ecs_field_is_self(it, 2));
@@ -555,7 +555,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     }
     
     Mass *m = NULL;
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         m = ecs_field(it, Mass, 3);
     }
 

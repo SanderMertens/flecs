@@ -6,13 +6,13 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (it->term_count >= 2) {
+    if (it->field_count >= 2) {
         if (ecs_field_size(it, 2) == sizeof(Velocity)) {
             v = ecs_field(it, Velocity, 2);
         }
     }
 
-    if (it->term_count >= 3) {
+    if (it->field_count >= 3) {
         if (ecs_field_size(it, 3) == sizeof(Mass)) {
             m = ecs_field(it, Mass, 3);
         }

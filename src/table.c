@@ -687,7 +687,7 @@ void on_component_callback(
     ecs_type_info_t *ti)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_iter_t it = { .term_count = 1 };
+    ecs_iter_t it = { .field_count = 1 };
     it.entities = entities;
 
     ecs_size_t size = ti->size;

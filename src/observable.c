@@ -113,7 +113,7 @@ void flecs_emit(
         .world = stage,
         .real_world = world,
         .table = table,
-        .term_count = 1,
+        .field_count = 1,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,

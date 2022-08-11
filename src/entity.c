@@ -1362,7 +1362,7 @@ void flecs_notify_on_set(
                 void *ptr = ecs_storage_get(c, size, row);
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_iter_t it = {.term_count = 1};
+                ecs_iter_t it = { .field_count = 1};
                 it.entities = entities;
                 
                 flecs_iter_init(&it, flecs_iter_cache_all);
