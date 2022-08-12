@@ -1,5 +1,6 @@
 #include "private_api.h"
 #include <time.h>
+#include <stdio.h>
 
 #ifndef FLECS_NDEBUG
 static int64_t flecs_s_min[] = { 
