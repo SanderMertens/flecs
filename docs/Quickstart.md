@@ -441,10 +441,10 @@ A singleton is a single instance of a component that can be retrieved without an
 
 ```c
 // Set singleton component
-ecs_set_singleton(world, Position, {10, 20});
+ecs_singleton_set(world, Position, {10, 20});
 
 // Get singleton component
-const Position *p = ecs_get_singleton(world, Position);
+const Position *p = ecs_singleton_get(world, Position);
 ```
 ```cpp
 // Set singleton component
