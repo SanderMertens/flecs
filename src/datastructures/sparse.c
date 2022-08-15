@@ -389,11 +389,8 @@ const uint64_t* flecs_sparse_new_ids(
 
     if (to_create > 0) {
         flecs_sparse_set_size(sparse, dense_count + to_create);
-        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
-
         for (i = 0; i < to_create; i ++) {
-            uint64_t index = create_id(sparse, count + i);
-            dense_array[dense_count + i] = index;
+            create_id(sparse, count + i);
         }
     }
 
