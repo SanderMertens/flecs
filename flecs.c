@@ -45328,6 +45328,12 @@ int32_t ecs_query_entity_count(
     return result;
 }
 
+ecs_entity_t ecs_query_entity(
+    const ecs_query_t *query)
+{
+    return query->entity;
+}
+
 
 /* Marker object used to differentiate a component vs. a tag edge */
 static ecs_table_diff_t ecs_table_edge_is_component;

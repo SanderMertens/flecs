@@ -1771,3 +1771,25 @@ void QueryBuilder_cascade_w_type() {
     test_bool(e3_found, true);
     test_int(count, 3);
 }
+
+void QueryBuilder_named_query() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query_builder("my_query")
+        .term<Position>()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "my_query");
+}

@@ -3489,6 +3489,12 @@ FLECS_API
 int32_t ecs_query_entity_count(
     const ecs_query_t *query);
 
+/** Get entity associated with query.
+ */
+FLECS_API
+ecs_entity_t ecs_query_entity(
+    const ecs_query_t *query);
+
 /** @} */
 
 

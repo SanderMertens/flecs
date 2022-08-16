@@ -500,6 +500,7 @@ void Query_get_first_direct(void);
 void Query_each_w_no_this(void);
 void Query_each_w_iter_no_this(void);
 void Query_invalid_each_w_no_this(void);
+void Query_named_query(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -563,6 +564,7 @@ void QueryBuilder_cascade(void);
 void QueryBuilder_cascade_w_relationship(void);
 void QueryBuilder_up_w_type(void);
 void QueryBuilder_cascade_w_type(void);
+void QueryBuilder_named_query(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -2914,6 +2916,10 @@ bake_test_case Query_testcases[] = {
     {
         "invalid_each_w_no_this",
         Query_invalid_each_w_no_this
+    },
+    {
+        "named_query",
+        Query_named_query
     }
 };
 
@@ -3161,6 +3167,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "cascade_w_type",
         QueryBuilder_cascade_w_type
+    },
+    {
+        "named_query",
+        QueryBuilder_named_query
     }
 };
 
@@ -4840,14 +4850,14 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        70,
+        71,
         Query_testcases
     },
     {
         "QueryBuilder",
         NULL,
         NULL,
-        61,
+        62,
         QueryBuilder_testcases
     },
     {

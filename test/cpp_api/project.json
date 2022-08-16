@@ -521,7 +521,8 @@
                 "get_first_direct",
                 "each_w_no_this",
                 "each_w_iter_no_this",
-                "invalid_each_w_no_this"
+                "invalid_each_w_no_this",
+                "named_query"
             ]
         }, {
             "id": "QueryBuilder",
@@ -586,7 +587,8 @@
                 "cascade",
                 "cascade_w_relationship",
                 "up_w_type",
-                "cascade_w_type"
+                "cascade_w_type",
+                "named_query"
             ]
         }, {
             "id": "FilterBuilder",

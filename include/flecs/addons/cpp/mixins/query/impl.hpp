@@ -98,6 +98,10 @@ struct query_base {
         char *result = ecs_filter_str(m_world, f);
         return flecs::string(result);
     }
+
+    flecs::entity entity() {
+        return flecs::entity(m_world, ecs_query_entity(m_query));
+    }
     
     operator query<>() const;
 

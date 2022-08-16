@@ -13,10 +13,16 @@ namespace _ {
 
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
-    query_builder(flecs::world_t* world)
+    query_builder(flecs::world_t* world, const char *name = nullptr)
         : _::query_builder_base<Components...>(world)
     {
         _::sig<Components...>(world).populate(this);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+        }
+
     }
 };
 

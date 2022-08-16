@@ -2640,3 +2640,9 @@ int32_t ecs_query_entity_count(
 
     return result;
 }
+
+ecs_entity_t ecs_query_entity(
+    const ecs_query_t *query)
+{
+    return query->entity;
+}

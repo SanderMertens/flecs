@@ -2043,3 +2043,23 @@ void Query_invalid_each_w_no_this() {
 
     q.each([&](flecs::entity e, Position& p, Velocity& v) { });
 }
+
+void Query_named_query() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my_query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "my_query");
+}
