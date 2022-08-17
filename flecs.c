@@ -469,6 +469,7 @@ struct ecs_table_t {
 
     int32_t refcount;                /* Increased when used as storage table */
     int32_t lock;                    /* Prevents modifications */
+    int32_t observed_count;          /* Number of observed entities in table */
     uint16_t record_count;           /* Table record count including wildcards */
 };
 
@@ -3237,6 +3238,8 @@ void fini_data(
     if (deactivate && count) {
         flecs_table_set_empty(world, table);
     }
+
+    table->observed_count = 0;
 }
 
 /* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
@@ -4542,6 +4545,8 @@ void flecs_table_merge(
             flecs_table_set_empty(world, dst_table);
         }
         flecs_table_set_empty(world, src_table);
+        dst_table->observed_count += src_table->observed_count;
+        src_table->observed_count = 0;
     }
 
     check_table_sanity(src_table);
@@ -4789,6 +4794,12 @@ void ecs_table_swap_rows(
     int32_t row_2)
 {
     flecs_table_swap(world, table, row_1, row_2);
+}
+
+int32_t flecs_table_observed_count(
+    const ecs_table_t *table)
+{
+    return table->observed_count;
 }
 
 
@@ -6181,7 +6192,15 @@ void flecs_commit(
 {
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
     
-    ecs_table_t *src_table = record ? record->table : NULL;
+    ecs_table_t *src_table = NULL;
+    uint32_t row_flags = 0;
+    bool observed = false;
+    if (record) {
+        src_table = record->table;
+        row_flags = record->row & ECS_ROW_FLAGS_MASK;
+        observed = row_flags & EcsEntityObservedAcyclic;
+    }
+
     if (src_table == dst_table) {
         /* If source and destination table are the same no action is needed *
          * However, if a component was added in the process of traversing a
@@ -6198,7 +6217,8 @@ void flecs_commit(
     }
 
     if (src_table) {
-        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);  
+        dst_table->observed_count += observed;
 
         if (dst_table->type.count) { 
             move_entity(world, entity, record, dst_table, diff, 
@@ -6206,12 +6226,15 @@ void flecs_commit(
         } else {
             delete_entity(world, record, diff);
             record->table = NULL;
-        }      
+        }
+
+        src_table->observed_count -= observed;
     } else {        
+        dst_table->observed_count += observed;
         if (dst_table->type.count) {
-            record = new_entity(world, entity, record, dst_table, diff, 
+            new_entity(world, entity, record, dst_table, diff, 
                 construct, notify_on_set);
-        }        
+        }
     }
 
     /* If the entity is being watched, it is being monitored for changes and
@@ -6219,7 +6242,7 @@ void flecs_commit(
      * ensures that systems that rely on components from containers or prefabs
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
-    if (record->row & ECS_ROW_FLAGS_MASK) {
+    if (row_flags) {
         update_component_monitors(world, &diff->added, &diff->removed);
     }
 
@@ -6630,6 +6653,14 @@ void flecs_add_flag(
         ecs_record_t new_record = {.row = flag, .table = NULL};
         flecs_entities_set(world, entity, &new_record);
     } else {
+        if (flag == EcsEntityObservedAcyclic) {
+            if (!(record->row & flag)) {
+                ecs_table_t *table = record->table;
+                if (table) {
+                    table->observed_count ++;
+                }
+            }
+        }
         record->row |= flag;
     }
 }
@@ -7438,6 +7469,10 @@ void ecs_clear(
 
     ecs_table_t *table = r->table;
     if (table) {
+        if (r->row & EcsEntityObservedAcyclic) {
+            table->observed_count --;
+        }
+
         ecs_table_diff_t diff = {
             .removed = table->type,
             .un_set = { table->storage_ids, table->storage_count }
@@ -7914,7 +7949,14 @@ void ecs_delete(
     ecs_record_t *r = flecs_entities_get(world, entity);
     if (r) {
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
+        ecs_table_t *table;
         if (row_flags) {
+            if (row_flags & EcsEntityObservedAcyclic) {
+                table = r->table;
+                if (table) {
+                    table->observed_count --;
+                }
+            }
             if (row_flags & EcsEntityObservedId) {
                 flecs_on_delete(world, entity, 0);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0);
@@ -7929,7 +7971,7 @@ void ecs_delete(
             ecs_defer_begin(world);
         }
 
-        ecs_table_t *table = r->table;
+        table = r->table;
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
@@ -37665,6 +37707,10 @@ void notify_subset(
             flecs_set_observers_notify(it, observable, ids, event,
                 ecs_pair(rel, EcsWildcard));
 
+            if (!table->observed_count) {
+                continue;
+            }
+
             ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
             ecs_record_t **records = ecs_storage_first(&table->data.records);
 
@@ -37672,7 +37718,7 @@ void notify_subset(
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
                 if (flags & EcsEntityObservedAcyclic) {
                     /* Only notify for entities that are used in pairs with
-                    * acyclic relationships */
+                     * acyclic relationships */
                     notify_subset(world, it, observable, entities[e], event, ids);
                 }
             }
@@ -37730,14 +37776,17 @@ void flecs_emit(
     }
 
     if (count && !desc->table_event) {
+        if (!table->observed_count) {
+            return;
+        }
+
         ecs_record_t **recs = ecs_storage_get_t(
             &table->data.records, ecs_record_t*, row);
-
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = recs[i];
             if (!r) {
                 /* If the event is emitted after a bulk operation, it's possible
-                 * that it hasn't been populate with entities yet. */
+                 * that it hasn't been populated with entities yet. */
                 continue;
             }
 
@@ -39705,16 +39754,18 @@ bool flecs_term_iter_next(
         if (!table) {
             if (!(tr = flecs_term_iter_next_table(iter))) {
                 if (iter->cur != iter->set_index && iter->set_index != NULL) {
-                    iter->cur = iter->set_index;
-                    if (iter->empty_tables) {
-                        flecs_table_cache_all_iter(
-                            &iter->set_index->cache, &iter->it);
-                    } else {
-                        flecs_table_cache_iter(
-                            &iter->set_index->cache, &iter->it);
+                    if (iter->observed_table_count != 0) {
+                        iter->cur = iter->set_index;
+                        if (iter->empty_tables) {
+                            flecs_table_cache_all_iter(
+                                &iter->set_index->cache, &iter->it);
+                        } else {
+                            flecs_table_cache_iter(
+                                &iter->set_index->cache, &iter->it);
+                        }
+                        iter->index = 0;
+                        tr = flecs_term_iter_next_table(iter);
                     }
-                    iter->index = 0;
-                    tr = flecs_term_iter_next_table(iter);
                 }
 
                 if (!tr) {
@@ -39723,6 +39774,9 @@ bool flecs_term_iter_next(
             }
 
             table = tr->hdr.table;
+            if (table->observed_count) {
+                iter->observed_table_count ++;
+            }
 
             if (!match_prefab && (table->flags & EcsTableIsPrefab)) {
                 continue;

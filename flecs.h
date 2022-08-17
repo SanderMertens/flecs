@@ -2709,6 +2709,7 @@ typedef struct ecs_term_iter_t {
     ecs_id_record_t *cur;
     ecs_table_cache_iter_t it;
     int32_t index;
+    int32_t observed_table_count;
     
     ecs_table_t *table;
     int32_t cur_match;
@@ -2960,6 +2961,10 @@ FLECS_DBG_API
 char* ecs_asprintf(
     const char *fmt,
     ...);
+
+FLECS_DBG_API
+int32_t flecs_table_observed_count(
+    const ecs_table_t *table);
 
 /** Calculate offset from address */
 #ifdef __cplusplus

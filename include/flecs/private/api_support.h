@@ -63,6 +63,10 @@ char* ecs_asprintf(
     const char *fmt,
     ...);
 
+FLECS_DBG_API
+int32_t flecs_table_observed_count(
+    const ecs_table_t *table);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))

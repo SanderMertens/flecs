@@ -961,6 +961,8 @@ void fini_data(
     if (deactivate && count) {
         flecs_table_set_empty(world, table);
     }
+
+    table->observed_count = 0;
 }
 
 /* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
@@ -2266,6 +2268,8 @@ void flecs_table_merge(
             flecs_table_set_empty(world, dst_table);
         }
         flecs_table_set_empty(world, src_table);
+        dst_table->observed_count += src_table->observed_count;
+        src_table->observed_count = 0;
     }
 
     check_table_sanity(src_table);
@@ -2513,4 +2517,10 @@ void ecs_table_swap_rows(
     int32_t row_2)
 {
     flecs_table_swap(world, table, row_1, row_2);
+}
+
+int32_t flecs_table_observed_count(
+    const ecs_table_t *table)
+{
+    return table->observed_count;
 }

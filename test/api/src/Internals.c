@@ -318,3 +318,177 @@ void Internals_records_resize_on_override() {
 
     ecs_fini(world);
 }
+
+void Internals_table_observed_after_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *pt = ecs_get_table(world, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(pt == NULL);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *pt_a = ecs_get_table(world, p);
+    test_assert(pt_a != NULL);
+    test_int(flecs_table_observed_count(pt_a), 1);
+
+    ecs_add(world, p, TagB);
+    ecs_table_t *pt_b = ecs_get_table(world, p);
+    test_assert(pt_b != NULL);
+    test_int(flecs_table_observed_count(pt_a), 0);
+    test_int(flecs_table_observed_count(pt_b), 1);
+
+    ecs_fini(world);
+}
+
+void Internals_table_observed_after_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *pt = ecs_get_table(world, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(pt == NULL);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *pt_a = ecs_get_table(world, p);
+    test_assert(pt_a != NULL);
+    test_int(flecs_table_observed_count(pt_a), 1);
+
+    ecs_add(world, p, TagB);
+    ecs_table_t *pt_b = ecs_get_table(world, p);
+    test_assert(pt_b != NULL);
+    test_int(flecs_table_observed_count(pt_a), 0);
+    test_int(flecs_table_observed_count(pt_b), 1);
+
+    ecs_remove(world, p, TagB);
+    test_int(flecs_table_observed_count(pt_a), 1);
+    test_int(flecs_table_observed_count(pt_b), 0);
+
+    ecs_remove(world, p, TagA);
+    test_int(flecs_table_observed_count(pt_a), 0);
+    test_int(flecs_table_observed_count(pt_b), 0);
+
+    ecs_fini(world);
+}
+
+void Internals_table_observed_after_clear() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *pt = ecs_get_table(world, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(pt == NULL);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *pt_a = ecs_get_table(world, p);
+    test_assert(pt_a != NULL);
+    test_int(flecs_table_observed_count(pt_a), 1);
+
+    ecs_clear(world, p);
+    test_int(flecs_table_observed_count(pt_a), 0);
+
+    ecs_add(world, p, TagA);
+    test_int(flecs_table_observed_count(pt_a), 1);
+
+    ecs_fini(world);
+}
+
+void Internals_table_observed_after_delete() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *pt = ecs_get_table(world, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(pt == NULL);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *pt_a = ecs_get_table(world, p);
+    test_assert(pt_a != NULL);
+    test_int(flecs_table_observed_count(pt_a), 1);
+
+    ecs_delete(world, p);
+    test_int(flecs_table_observed_count(pt_a), 0);
+
+    ecs_fini(world);
+}
+
+void Internals_table_observed_after_on_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *pt = ecs_get_table(world, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(pt == NULL);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_add_id(world, p, t);
+    ecs_table_t *pt_t = ecs_get_table(world, p);
+    test_assert(pt_t != NULL);
+    test_int(flecs_table_observed_count(pt_t), 1);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *pt_ta = ecs_get_table(world, p);
+    test_assert(pt_ta != NULL);
+    test_int(flecs_table_observed_count(pt_t), 0);
+    test_int(flecs_table_observed_count(pt_ta), 1);
+
+    ecs_delete(world, t);
+    test_assert(!ecs_has_id(world, p, t));
+    test_assert(ecs_has(world, p, TagA));
+
+    ecs_table_t *p_a = ecs_get_table(world, p);
+    test_assert(p_a != NULL);
+    test_int(flecs_table_observed_count(p_a), 1);
+
+    ecs_fini(world);
+}
+
+void Internals_table_observed_after_entity_flag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t p = ecs_new_id(world);
+
+    ecs_add(world, p, TagA);
+    ecs_table_t *p_a = ecs_get_table(world, p);
+    test_assert(p_a != NULL);
+    test_int(flecs_table_observed_count(p_a), 0);
+
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_table_t *ct = ecs_get_table(world, c);
+    test_assert(ct != NULL);
+    test_int(flecs_table_observed_count(ct), 0);
+    test_int(flecs_table_observed_count(p_a), 1);
+
+    ecs_fini(world);
+
+}

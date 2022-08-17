@@ -189,6 +189,7 @@ struct ecs_table_t {
 
     int32_t refcount;                /* Increased when used as storage table */
     int32_t lock;                    /* Prevents modifications */
+    int32_t observed_count;          /* Number of observed entities in table */
     uint16_t record_count;           /* Table record count including wildcards */
 };
 

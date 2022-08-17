@@ -117,6 +117,7 @@ typedef struct ecs_term_iter_t {
     ecs_id_record_t *cur;
     ecs_table_cache_iter_t it;
     int32_t index;
+    int32_t observed_table_count;
     
     ecs_table_t *table;
     int32_t cur_match;

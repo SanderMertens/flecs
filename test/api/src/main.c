@@ -2140,6 +2140,12 @@ void Internals_create_65k_tables(void);
 void Internals_no_duplicate_root_table_id(void);
 void Internals_override_os_api_w_addon(void);
 void Internals_records_resize_on_override(void);
+void Internals_table_observed_after_add(void);
+void Internals_table_observed_after_remove(void);
+void Internals_table_observed_after_clear(void);
+void Internals_table_observed_after_delete(void);
+void Internals_table_observed_after_on_remove(void);
+void Internals_table_observed_after_entity_flag(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -10394,6 +10400,30 @@ bake_test_case Internals_testcases[] = {
     {
         "records_resize_on_override",
         Internals_records_resize_on_override
+    },
+    {
+        "table_observed_after_add",
+        Internals_table_observed_after_add
+    },
+    {
+        "table_observed_after_remove",
+        Internals_table_observed_after_remove
+    },
+    {
+        "table_observed_after_clear",
+        Internals_table_observed_after_clear
+    },
+    {
+        "table_observed_after_delete",
+        Internals_table_observed_after_delete
+    },
+    {
+        "table_observed_after_on_remove",
+        Internals_table_observed_after_on_remove
+    },
+    {
+        "table_observed_after_entity_flag",
+        Internals_table_observed_after_entity_flag
     }
 };
 
@@ -10775,7 +10805,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        11,
+        17,
         Internals_testcases
     },
     {

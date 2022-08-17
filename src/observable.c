@@ -69,6 +69,10 @@ void notify_subset(
             flecs_set_observers_notify(it, observable, ids, event,
                 ecs_pair(rel, EcsWildcard));
 
+            if (!table->observed_count) {
+                continue;
+            }
+
             ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
             ecs_record_t **records = ecs_storage_first(&table->data.records);
 
@@ -76,7 +80,7 @@ void notify_subset(
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
                 if (flags & EcsEntityObservedAcyclic) {
                     /* Only notify for entities that are used in pairs with
-                    * acyclic relationships */
+                     * acyclic relationships */
                     notify_subset(world, it, observable, entities[e], event, ids);
                 }
             }
@@ -134,14 +138,17 @@ void flecs_emit(
     }
 
     if (count && !desc->table_event) {
+        if (!table->observed_count) {
+            return;
+        }
+
         ecs_record_t **recs = ecs_storage_get_t(
             &table->data.records, ecs_record_t*, row);
-
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = recs[i];
             if (!r) {
                 /* If the event is emitted after a bulk operation, it's possible
-                 * that it hasn't been populate with entities yet. */
+                 * that it hasn't been populated with entities yet. */
                 continue;
             }
 
