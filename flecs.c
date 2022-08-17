@@ -9033,7 +9033,14 @@ int32_t ecs_count_id(
     }
 
     int32_t count = 0;
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { .id = id });
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
+        .id = id,
+        .src.flags = EcsSelf
+    });
+
+    it.flags |= EcsIterIsFilter;
+    it.flags |= EcsIterEvalTables;
+
     while (ecs_term_next(&it)) {
         count += it.count;
     }
