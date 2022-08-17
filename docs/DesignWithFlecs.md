@@ -18,67 +18,68 @@ Entities can be created and deleted dynamically. When entities are deleted, the 
 Flecs entities can be named. This makes it easy to identify entities in editors or while debugging, and also allows you to lookup entities by name. While this can be useful, name lookups on the world are expensive! Flecs supports relative name lookups, where you search for an entity name relative to a parent entity, which is much faster. Even so, if you do a lookup by name, it is a good idea to cache the entity handle.
 
 ## Components
-Designing your components is probably the most important thing you will do in your ECS application. The reason is that if you change a component you have to update all systems that use it. Fortunately there are ways to design components that refactoring and do not negatively impact performance.
+Designing your components is probably the most important thing you will do in your ECS application. The reason is that if you change a component you have to update all systems that use it. Fortunately components can be designed in a way that minimizes refactoring and does not negatively impact performance.
 
 ### Component Size
-The most important guideline: keep your components as small and atomic. If you are choosing between a Transform component or separate Position, Rotation, Scale, Matrix components pick the latter. If you have a Turret component with a target and a rotation angle, split them up into two components.
+The first tip is to try keep your components small and atomic. If you are choosing between a Transform component or separate Position, Rotation, Scale, Matrix components pick the latter. If you have a Turret component with a target and a rotation angle, split them up into two components.
 
-The reasoning behind this is simple: it is very cheap (at least in Flecs) to query for multiple components at the same time. There is almost no overhead associated with adding more components to a query, due to how queries cache results.
+The first reason behind this is that querying for multiple components adds minimal overhead, because most queries are cached.
 
-The second reason is that it improves caching performance. If your system only needs Position, but also has to load all of the other data in Transform, you end up loading a lot of data in your cache that remains unused. This may or may not be a problem, but all else being equal it definitely won't hurt.
+The second reason is that it improves caching performance. If your system only needs Position, but also has to load all of the other data in Transform, you end up loading a lot of data in your cache that is not used. This means that useful data will get evicted from the cache more often, and that data needs to be loaded from RAM more often, which is much slower than when data is cached.
 
-The third reason is that you can only split up your components so far. The number of ways in which you can combine components is infinitely larger than the number of ways in which you can split them up, and this translates, in a very practical way, into less refactoring. When you have reduced your components to atomic units of data, there simply isn't anything left to refactor.
+The third reason is that it minimizes refactoring. There are only so many ways to split up components, and infinitely more ways to combine them. Once components are designed as atomic units of data there aren't many reasons to combine them which results in less refactoring.
 
-The fourth and last reason why you want to keep your components small is code reusability. If your components are atomic units of data, they are automatically less opinionated than a component that combines more stuff. As a result, it is more likely that you find the component to work well across projects. This trickles down into the rest of your ECS code: systems written for atomic components will also be more reusable across projects.
+The fourth and last reason is that code using smaller components is more reusable. Reasons to combine two components may work well in one project, but not in another project. Atomic components are less opinionated since it's up to the project how they are combined in queries, which makes it more likely that they work well across projects. This trickles down to systems, as systems written for atomic components also end up being more reusable.
 
-A disadvantage of small components is that you get more of them in a project. This can make it harder to find the components a system needs, especially in large projects with hundreds of components.
+A disadvantage of small components is that you get more of them in a project. This can make it harder to find the components a system needs, especially in large projects with hundreds of components. Tools like https://www.flecs.dev/explorer/ can help with finding and documenting components in a project.
 
 ### Complex component data
-There is a misconception that ECS components can only contain plain data types, and should not have vectors, or more complex data structures. The reality is  more nuanced. You may find yourself often needing specialized data structures, and it is perfectly fine to store these in components.
-
-However, you should ask yourself whether the complexity is _necessary_. For example, if you have a vector with data in a component, would that data be better off as entities? Sometimes the answers to these questions are not black and white. If the elements have individual lifecycles, they might be better stored as entities. If they live and die with the entity, maybe storing them in a vector is fine. If you always need to access the entities in a very specific order, a vector might be better.
-
-Sometimes you might even do both, where you have a component with a vector of entity handles. Which solution works best really depends on the situation, but know that there are no "wrong" approaches here. If it works well for your application, there should be no dogmatic reasons to not do it.
+There is a misconception that ECS components can only be plain data types, and should not have vectors, or more complex data structures. The reality is  more nuanced. You may find yourself often needing specialized data structures, and it is perfectly fine to store these in components.
 
 ## Queries
 Queries are the primary method in Flecs for finding the entities for a set of components (or more specifically: a component expression). Queries are easy to use, but there a few things to keep in mind.
 
-### Cache Your Queries
-Creating a query object is expensive, iterating a query is very cheap. Because of this it really pays off to keep your query objects around, and not recreate them each time you have a need for them. Query objects can be iterated as many times as you need. You can even iterate the same query safely across threads.
+### Use the right query
+Flecs has cached queries and uncached queries. Cached queries (`ecs_query_t` and `flecs::query`) are expensive to create but very cheap to iterate. Uncached queries (`ecs_filter_t`, `flecs::filter`) are fast to create, but more expensive to iterate. If you need to do a quick ad-hoc query for which you couldn't know in advance what you had to query for, an uncached query is the best option. If you have a query that you know in advance and need to iterate many times, a cached query is preferred.
 
-### Use in/inout/out Modifiers
-Flecs does some analysis based on how you read and write your components, and the more accurate the information it has is, the more efficient your code will run. If you don't specify these modifiers, Flecs assumes `[inout]`. This impacts change tracking (an `inout/out` term of a query invalidates a component when it is iterated), which in turn impacts sorting (which depends on change tracking). It can also introduce more synchronization points than strictly needed.
+Another difference is that uncached queries can be created from systems, while cached queries cannot. If you need a cached query in a system, it has to be created in advance and passed into the system, either by setting it as system context, adding a component to the system with the query, or passing it in the lambda capture list (C++ only). Systems themselves use cached queries.
 
-Note that if you use C++, and you use templates to create your queries, putting `const` before your component will automatically make it an `[in]` column.
+Make sure to not repeatedly create and destroy cached queries! For more information, see [the query manual](https://www.flecs.dev/flecs/#/docs/Queries?id=query-types) for more details.
+
+### Use in/inout/out annotations
+Flecs analyzes how components are read and written by queries and uses this for things like change tracking and deciding when to merge command buffers. By default components are marked as `inout`. If a system only reads a component, make sure to mark it as `in`, as this can reduce the time spent by other parts of the application that rely on change detection and sync points.
+
+For more information, see [the query manual](https://www.flecs.dev/flecs/#/docs/Queries?id=access-modifiers).
 
 ### Annotations
 You can further annotate queries with components that are not matched with the query, but that are written using ECS operations (like add, remove, set etc.). Such operations are automatically deferred and merged at the end of the frame. With annotations you can enforce merging at an earlier point, by specifying that a component modification has been queued. When Flecs sees this, it will merge back the modifications before the next read.
 
-Annotating your queries with this information can tel. To annotate that a query writes component `Position` using `ecs_set` looks like this: `[out] :Position`. If you use `get_mut`, you could also read the component, in which case you use `[inout] :Position`. If you use `get`, use `[in] :Position`. In some cases you can't know in advance which components are going to be written. This is for example the case with the `ecs_delete` operation. To annotate a query for this use case, use `[out] :*`.
+See the sync point examples for more detail:
+C: https://github.com/SanderMertens/flecs/blob/master/examples/c/systems/sync_point
+C++: https://github.com/SanderMertens/flecs/blob/master/examples/cpp/systems/sync_point
 
 ## Systems
-Designing systems is probably the hardest thing to do when you are not coming from an ECS background. Object oriented code allows you to write logic that is local to a single object, whereas systems in ECS are ran for collections of similar objects. This requires a different approach towards design.
+Designing systems is one of the hardest things to do when not coming from an ECS background. Object oriented code allows you to write logic that is local to a single object, whereas systems in ECS are ran for collections of similar objects. This requires a different approach towards design.
 
 ### System Scope
 Try to design your systems with a single responsibility. This can sometimes be difficult, especially if you are building new features and are not exactly sure yet what the end result will look like. That is fine. It is better to start with something that works, and refine it afterwards. If you find yourself with a system that does a lot of things, don't worry. Because systems in ECS are decoupled from everything else, it is generally pretty easy to split them up.
 
-If you manage to write systems that do only one thing, and do it well, you will have achieved ECS Zen, as you will be able to use that system across lots of projects!
+While it is perfectly fine to have large systems in an ECS application, there are a few advantages to keeping them small:
 
-### System Size
-This is somewhat related to the system scope, but the question "when is a system too large" is a bit harder to answer. Sometimes a single feature requires a lot of complexity, such as a damage resolution system in a first person shooter. In these cases it can be more complex to split up the logic between different systems than it is to keep it combined. That is ok.
-
-If you have a large, complex system the chances if reusing it across different projects is much smaller, but that is not necessarily a problem. A project will always have code that is generic and specific, so don't feel bad if you wrote a complex system that has 500 lines of code.
+- Smaller systems make it easier to isolate behavior, as you can simply remove systems from your application that you don't want to test.
+- Smaller systems usually have less complicated code, which can allow for more compiler optimizations (like auto vectorization).
+- Smaller systems are easier to reuse across project.
 
 ### System Scheduling
-Flecs has the ability to run and schedule your systems for you. This has a bunch of advantages. You can annotate systems with when they are ran (see phases and pipelines) and this makes it possible to build systems that are plug and play. How does that work?
+Flecs has the ability to run and schedule your systems for you. The advantage of this, versus manually listing and running systems, is that it is easier to import systems from multiple, reusable modules.
 
 A system is basically a combination of three things: a query, a function, and ordering information. The query finds the right entities, and the function is invoked with the matched entities. The ordering information makes sure that the system is inserted in the right point in your frame. If you get this right, you can import any number of systems into your project, and you can just run them without spending any time on manually sorting them out.
 
 The ordering information consists out of a phase (see phases and pipelines) and an implicit declaration order. Systems are ordered according to their phases first. Within a phase, they are ordered by declaration order. This may feel rigid, but is very deliberate. It prevents you from defining dependencies between systems, which can make it difficult to reuse systems across projects.
 
-On the other hand, if you are working with an existing framework or engine, you may not have the luxury of scheduling everything yourself. The engine may for example provide you with callbacks in which you need to do certain logic. Maybe you want to build your own threading system. In those situations it can make sense to take control of running systems yourself. Sometimes you may even not use systems at all, and just use queries!
+On the other hand, if you are working with an existing framework or engine, you may not have the luxury of scheduling everything yourself. The engine may for example provide you with callbacks in which you need to do certain logic. Maybe you want to build your own threading system. In those situations it can make sense to take control of running systems yourself. 
 
-There is no right or wrong approach here. Different projects require different approaches. Fortunately Flecs makes it really easy to do both!
+Sometimes you may even not use systems at all, and just run queries. In this case you may want to disable the system addon (see the addsons section in the README). Note that some Flecs features depend on systems, like the REST API and timers.
 
 ## Phases and Pipelines
 Phases and pipelines are the primitives that Flecs uses to order systems. A pipeline is a set of ordered phases. Systems can be assigned to those phases. When using phases and pipelines correctly, it allows you to write plug & play systems that are easy to reuse in different projects.
@@ -125,8 +126,16 @@ This is where it all comes together. Your frame is ready to be rendered, and tha
 
 That was a quick overview of all the builtin phases. Note that these are just guidelines! Feel free to deviate if your project calls for it.
 
-### Designing a Pipeline
-If you are designing your own pipeline and you feel lost about which phases you should define, start small and expand later. A good pipeline has well defined semantics for each phase, so that you never have to think long about where a system should go. If you want to be really formal about it, create a document that describes how your components are accessed and/or modified in each phase. This will make it much easier to write systems!
+### Custom phases and pipelines
+An application can add phases to the existing list, or define a pipeline from scratch. See the following examples on how to do this:
+
+C:
+https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_phases
+https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_pipeline
+
+C++
+https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_phases
+https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_pipeline
 
 ## Modules
 Large applications can often contain many components and systems. Some large commercial projects have reported up to 800 components! Managing all those components and systems becomes important on that scale, and that is what modules are for. Modules are one of those features that you usually don't think about when selecting an ECS, but they can make your life a lot easier.
@@ -147,18 +156,17 @@ A good practice to employ with modules is to split them up into components.* mod
 This is a powerful pattern enabled by ECS that will give your projects a lot of flexibility and freedom in refactoring code.
 
 ### Module Overhead
-You might wonder whether a module with lots of systems, of which only a few are used by your application makes your application slower. The answer is no. Flecs only inserts systems into the main loop that have matched with actual entities. Any imported systems that have never matched with anything remain dormant, and will not negatively affect your performance.
+You might wonder whether a module with lots of systems, of which only a few are used by your application makes your application slower. The answer is fortunately no. Flecs only inserts systems into the main loop that have matched with actual entities. Any imported systems that have never matched with anything remain dormant, and will not negatively affect performance.
 
-## Hierarchies
-Hierarchies are one of the most used features of Flecs, and often useful in game development. Here are a few guidelines for using them.
+## Relationships
+When you are working with Flecs, chances are that at some point you'll want to use relationships. The two most common uses for relationships are hierarchies like a scene graph (the `ChildOf` relationship) and prefabs (the `IsA` relationship).
 
-### Scene graphs
-The Flecs hierarchy implementation works quite well with scene graphs. Flecs has out of the box features that let you iterate hierarchies top to bottom (see the `cascade` modifier), and this comes in handy when you want to do things like hierarchically applying a transform. Storing a scene graph is a totally fine way to use Flecs hierarchies, and there are nice cross-over benefits from, for example, using prefab hierarchies.
+In many cases you might want to use your own relationships. Here are a few signs to look out for that can tell you to think about relationships:
+- You have a component with an entity handle, and you need to find all entities that point to a specific entity.
+- You have many components with the same or similar set of members, and systems that duplicate code for each component.
+- You need to store multiple instances of the same component on an entity.
+- You're designing some kind of container structure, like an inventory.
+- You are looking to group entities by something like world cells or layers, and want to be able to lookup all entities for a cell.
+- You're adding an enumeration type as component, but want to query for enumeration constants.
 
-### Keep 'em clean!
-It can sometimes be tempting to use Flecs hierarchies as a fancy container for a list of entities. Don't. Or rather, you _can_, but keep the hierarchy separate from your scene graph hierarchy. Maybe it will work, but tomorrow someone may implement a feature that iterates all entities in the scene graph for some kind of visualization, and you don't want to see thousands of entities in that tree that are just there because it was convenient to use hierarchies.
-
-To make sure your application can support multiple hierarchies, make sure that you use an explicit root object. This can be your scene, game world, level or whatever you fancy. This way you can always use that scene root entity to get all entities in your scene graph, and not run into unexpected clutter!
-
-### Don't Sort Manually!
-If you have a hierarchy and you want to apply a hierarchical transform (for example), don't sort your entities outside of the ECS. Flecs comes with the `cascade` query modifier (see the Query manual) which does this for you. The implementation of `cascade` is such that sorting is only performed when new tables are introduced to Flecs. Without going into details as to what that means: this only happens during the early stage of your application, and hardly ever afterwards. As such it is an extremely efficient way to access your entities in a depth-sorted way!
+See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/#/docs/Relationships)for more information.
