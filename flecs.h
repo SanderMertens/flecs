@@ -22421,13 +22421,12 @@ private:
     template <typename Invoker, typename Func>
     T build(Func&& func) {
         auto ctx = FLECS_NEW(Invoker)(FLECS_FWD(func));
-
         m_desc.callback = Invoker::run;
         m_desc.binding_ctx = ctx;
         m_desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
         
-        return T(m_world, &m_desc);
+        return T(m_world, &m_desc, m_instanced);
     }
 };
 
@@ -22528,9 +22527,15 @@ struct observer final : entity
 
     explicit observer() : entity() { }
 
-    observer(flecs::world_t *world, ecs_observer_desc_t *desc) 
-        : entity(world, ecs_observer_init(world, desc)) 
-    { 
+    observer(flecs::world_t *world, ecs_observer_desc_t *desc, bool instanced) 
+    {
+        if (!desc->filter.instanced) {
+            desc->filter.instanced = instanced;
+        }
+
+        m_world = world;
+        m_id = ecs_observer_init(world, desc);
+
         if (desc->filter.terms_buffer) {
             ecs_os_free(desc->filter.terms_buffer);
         }
@@ -22792,8 +22797,6 @@ struct system_builder final : _::system_builder_base<Components...> {
         : _::system_builder_base<Components...>(world, name)
     {
         _::sig<Components...>(world).populate(this);
-        
-        this->m_desc.query.filter.instanced = this->m_instanced;
 
 #ifdef FLECS_PIPELINE
         ecs_add_id(world, this->m_desc.entity, ecs_dependson(flecs::OnUpdate));
@@ -22871,9 +22874,15 @@ struct system final : entity
         m_world = nullptr;
     }
 
-    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) 
-        : entity(world, ecs_system_init(world, desc)) 
+    explicit system(flecs::world_t *world, ecs_system_desc_t *desc, bool instanced) 
     {
+        if (!desc->query.filter.instanced) {
+            desc->query.filter.instanced = instanced;
+        }
+
+        m_world = world;
+        m_id = ecs_system_init(world, desc);
+
         if (desc->query.filter.terms_buffer) {
             ecs_os_free(desc->query.filter.terms_buffer);
         }

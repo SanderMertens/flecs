@@ -1787,3 +1787,26 @@ void System_entity_ctor() {
     sys_from_id.run();
     test_int(invoked, 1);
 }
+
+void System_ensure_instanced_w_each() {
+    flecs::world world;
+
+    flecs::entity e1 = world.entity().set<Position>({10, 20});
+
+    int32_t count = 0;
+    auto sys = world.system<Position>()
+        .each([&](flecs::iter& it, size_t i, Position&) {
+            test_assert(it.c_ptr()->flags & EcsIterIsInstanced);
+            test_assert(it.entity(i) == e1);
+            count ++;
+        });
+
+    auto q = sys.query();
+    auto f = q.filter();
+    const ecs_filter_t *c_f = f;
+    test_assert(c_f->flags & EcsIterIsInstanced);
+
+    test_int(count, 0);
+    sys.run();
+    test_int(count, 1);
+}

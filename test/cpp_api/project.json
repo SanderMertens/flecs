@@ -420,7 +420,8 @@
                 "create_w_no_template_args",
                 "system_w_type_kind_type_pipeline",
                 "default_ctor",
-                "entity_ctor"
+                "entity_ctor",
+                "ensure_instanced_w_each"
             ]
         }, {
             "id": "Event",

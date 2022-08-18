@@ -17,8 +17,6 @@ struct system_builder final : _::system_builder_base<Components...> {
         : _::system_builder_base<Components...>(world, name)
     {
         _::sig<Components...>(world).populate(this);
-        
-        this->m_desc.query.filter.instanced = this->m_instanced;
 
 #ifdef FLECS_PIPELINE
         ecs_add_id(world, this->m_desc.entity, ecs_dependson(flecs::OnUpdate));

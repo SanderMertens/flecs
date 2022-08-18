@@ -405,6 +405,7 @@ void System_create_w_no_template_args(void);
 void System_system_w_type_kind_type_pipeline(void);
 void System_default_ctor(void);
 void System_entity_ctor(void);
+void System_ensure_instanced_w_each(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -2551,6 +2552,10 @@ bake_test_case System_testcases[] = {
     {
         "entity_ctor",
         System_entity_ctor
+    },
+    {
+        "ensure_instanced_w_each",
+        System_ensure_instanced_w_each
     }
 };
 
@@ -4829,7 +4834,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        52,
+        53,
         System_testcases
     },
     {
