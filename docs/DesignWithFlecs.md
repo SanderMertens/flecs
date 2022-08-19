@@ -15,7 +15,11 @@ When creating entities, you typically want to initialize them with a set of defa
 Entities can be created and deleted dynamically. When entities are deleted, the existing handles to that entity are no longer valid. When you are working with entity handles, it is often good practice to make sure they are still alive. You can do this with the `is_alive()` function. Other than that, entity handles are stable, which means that you can safely store them in your components or elsewhere.
 
 ### Entity Names
-Flecs entities can be named. This makes it easy to identify entities in editors or while debugging, and also allows you to lookup entities by name. While this can be useful, name lookups on the world are expensive! Flecs supports relative name lookups, where you search for an entity name relative to a parent entity, which is much faster. Even so, if you do a lookup by name, it is a good idea to cache the entity handle.
+Flecs entities can be named. This makes it easy to identify entities in editors or while debugging, and also allows you to lookup entities by name. Names must be unique inside a scope, which is determined by the `ChildOf` relationship. For example, two entities with the same parent must have different names. 
+
+Names can be looked up using a relative path or absolute path using the `ecs_lookup_fullpath` or `entity::lookup` functions. The default scope separator for C applications is a dot (`.`), whereas in C++ it is a double colon (`::`). Lookups use a hashmap internally, which provides O(1) performance.
+
+Entities can be assigned user friendly names with the doc addon, using the `ecs_doc_set_name` or `entity::set_doc_name` functions. Names assigned by the doc framework do not have to be unique.
 
 ## Components
 Designing your components is probably the most important thing you will do in your ECS application. The reason is that if you change a component you have to update all systems that use it. Fortunately components can be designed in a way that minimizes refactoring and does not negatively impact performance.
