@@ -110,6 +110,120 @@ auto q = world.query<flecs::pair<Eats, Apples>>();
 
 This example just shows a simple relationship query. Relationship queries are much more powerful than this as they provide the ability to match against entity graphs of arbitrary size. For more information on relationship queries see the [query manual](Queries.md).
 
+## Relationship queries
+There are a number of ways an application can query for relationships. The following kinds of queries are available for all (unidirectional) relationships, and are all constant time:
+
+### Test if entity has a relationship pair
+```c
+ecs_has_pair(world, Bob, Eats, Apples);
+```
+```cpp
+Bob.has(Eats, Apples);
+```
+
+### Test if entity has a relationship wildcard
+```c
+ecs_has_pair(world, Bob, Eats, EcsWildcard);
+```
+```cpp
+Bob.has(Eats, flecs::Wildcard);
+```
+
+### Find first instance of a relationship for entity
+```c
+ecs_entity_t food = ecs_get_target(world, Bob, Eats, 0);
+```
+```cpp
+flecs::entity food = Bob.target(Eats);
+```
+
+### Find all instances of a relationship for entity
+```c
+int32_t index = 0;
+while ((food = ecs_get_target(world, Bob, Eats, index ++))) {
+  // ...
+}
+```
+```cpp
+int32_t index = 0;
+while ((food = Bob.target(Eats, index ++))) {
+  // ...
+}
+```
+
+### Iterate all pairs for entity
+```c
+const ecs_type_t *type = ecs_get_type(world, Bob);
+for (int i = 0; i < type->count; i ++) {
+  ecs_id_t id = type->array[i];
+  if (ECS_IS_PAIR(id)) {
+    ecs_entity_t first = ecs_pair_first(world, id);
+    ecs_entity_t second = ecs_pair_second(world, id);
+  }
+}
+```
+```cpp
+Bob.each([](flecs::id id) {
+  if (id.is_pair()) {
+    flecs::entity first = id.pair().first();
+    flecs::entity second = id.pair().second();
+  }
+});
+```
+
+### Find all entities with a pair
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms[0] = ecs_pair(Eats, Apples)
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  for (int i = 0; i < it.count; i ++) {
+    // Iterate as usual
+  }
+}
+
+ecs_filter_fini(f);
+```
+```cpp
+world.filter_builder()
+  .term(Eats, Apples)
+  .build()
+  .each([](flecs::entity e) {
+    // Iterate as usual
+  });
+```
+
+### Find all entities with a pair wildcard
+```c
+ecs_filter_t *f = ecs_filter(world, {
+  .terms[0] = ecs_pair(Eats, EcsWildcard)
+});
+
+ecs_iter_t it = ecs_filter_iter(world, f);
+while (ecs_filter_next(&it)) {
+  ecs_id_t pair_id = ecs_field_id(&it, 1);
+  ecs_entity_t food = ecs_pair_second(world, pair_id); // Apples, ...
+  for (int i = 0; i < it.count; i ++) {
+    // Iterate as usual
+  }
+}
+ecs_filter_fini(f);
+```
+```cpp
+world.filter_builder()
+  .term(Eats, flecs::Wildcard)
+  .build()
+  .each([](flecs::iter& it, size_t i) {
+    flecs::entity food = it.pair().second(); // Apples, ...
+    flecs::entity e = it.entity(i);
+    // Iterate as usual
+  });
+```
+
+More advanced queries are possible with filters, queries and rules. See the [Queries manual](Queries.md) for more details.
+
 ## Relationship components
 Relationship pairs, just like regular component, can be associated with data. To associate data with a relationship pair, at least one of its elements needs to be a component. A pair can be associated with at most one type. To determine which type is associated with a relationship pair, the following rules are followed in order:
 
