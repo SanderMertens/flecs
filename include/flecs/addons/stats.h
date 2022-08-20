@@ -19,15 +19,15 @@ extern "C" {
 
 /** Simple value that indicates current state */
 typedef struct ecs_gauge_t {
-    float avg[ECS_STAT_WINDOW];
-    float min[ECS_STAT_WINDOW];
-    float max[ECS_STAT_WINDOW];
+    ecs_float_t avg[ECS_STAT_WINDOW];
+    ecs_float_t min[ECS_STAT_WINDOW];
+    ecs_float_t max[ECS_STAT_WINDOW];
 } ecs_gauge_t;
 
 /* Monotonically increasing counter */
 typedef struct ecs_counter_t {
     ecs_gauge_t rate;                          /* Keep track of deltas too */
-    float value[ECS_STAT_WINDOW];
+    ecs_float_t value[ECS_STAT_WINDOW];
 } ecs_counter_t;
 
 /* Make all metrics the same size, so we can iterate over fields */

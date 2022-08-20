@@ -27098,10 +27098,10 @@ error:
 #ifdef FLECS_STATS
 
 #define ECS_GAUGE_RECORD(m, t, value)\
-    flecs_gauge_record(m, t, (float)(value))
+    flecs_gauge_record(m, t, (ecs_float_t)(value))
 
 #define ECS_COUNTER_RECORD(m, t, value)\
-    flecs_counter_record(m, t, (float)(value))
+    flecs_counter_record(m, t, (ecs_float_t)(value))
 
 #define ECS_METRIC_FIRST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
@@ -27127,7 +27127,7 @@ static
 void flecs_gauge_record(
     ecs_metric_t *m,
     int32_t t,
-    float value)
+    ecs_float_t value)
 {
     m->gauge.avg[t] = value;
     m->gauge.min[t] = value;
@@ -27135,13 +27135,13 @@ void flecs_gauge_record(
 }
 
 static
-float flecs_counter_record(
+ecs_float_t flecs_counter_record(
     ecs_metric_t *m,
     int32_t t,
-    float value)
+    ecs_float_t value)
 {
     int32_t tp = t_prev(t);
-    float prev = m->counter.value[tp];
+    ecs_float_t prev = m->counter.value[tp];
     m->counter.value[t] = value;
     flecs_gauge_record(m, t, value - prev);
     return value - prev;
@@ -27150,7 +27150,7 @@ float flecs_counter_record(
 static
 void flecs_metric_print(
     const char *name,
-    float value)
+    ecs_float_t value)
 {
     ecs_size_t len = ecs_os_strlen(name);
     ecs_trace("%s: %*s %.2f", name, 32 - len, "", (double)value);
@@ -27331,20 +27331,20 @@ void ecs_world_stats_get(
 
     int32_t t = s->t = t_next(s->t);
 
-    float delta_world_time = ECS_COUNTER_RECORD(&s->world_time_total_raw, t, world->info.world_time_total_raw);
+    ecs_ftime_t delta_world_time = ECS_COUNTER_RECORD(&s->world_time_total_raw, t, world->info.world_time_total_raw);
     ECS_COUNTER_RECORD(&s->world_time_total, t, world->info.world_time_total);
     ECS_COUNTER_RECORD(&s->frame_time_total, t, world->info.frame_time_total);
     ECS_COUNTER_RECORD(&s->system_time_total, t, world->info.system_time_total);
     ECS_COUNTER_RECORD(&s->merge_time_total, t, world->info.merge_time_total);
 
-    float delta_frame_count = ECS_COUNTER_RECORD(&s->frame_count_total, t, world->info.frame_count_total);
+    ecs_ftime_t delta_frame_count = ECS_COUNTER_RECORD(&s->frame_count_total, t, world->info.frame_count_total);
     ECS_COUNTER_RECORD(&s->merge_count_total, t, world->info.merge_count_total);
     ECS_COUNTER_RECORD(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
     ECS_COUNTER_RECORD(&s->systems_ran_frame, t, world->info.systems_ran_frame);
 
     if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
         ECS_GAUGE_RECORD(
-            &s->fps, t, 1.0f / (delta_world_time / (float)delta_frame_count));
+            &s->fps, t, 1.0f / (delta_world_time / (ecs_ftime_t)delta_frame_count));
     } else {
         ECS_GAUGE_RECORD(&s->fps, t, 0);
     }
