@@ -15972,7 +15972,7 @@ bool ecs_progress(
     ecs_world_t *world,
     ecs_ftime_t user_delta_time)
 {
-    float delta_time = ecs_frame_begin(world, user_delta_time);
+    ecs_ftime_t delta_time = ecs_frame_begin(world, user_delta_time);
     
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
@@ -27342,9 +27342,9 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
     ECS_COUNTER_RECORD(&s->systems_ran_frame, t, world->info.systems_ran_frame);
 
-    if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
+    if (delta_world_time != 0 && delta_frame_count != 0) {
         ECS_GAUGE_RECORD(
-            &s->fps, t, 1.0f / (delta_world_time / (ecs_ftime_t)delta_frame_count));
+            &s->fps, t, (ecs_ftime_t)1 / (delta_world_time / (ecs_ftime_t)delta_frame_count));
     } else {
         ECS_GAUGE_RECORD(&s->fps, t, 0);
     }
@@ -33492,7 +33492,7 @@ void handle_request(
 static
 int32_t dequeue_requests(
     ecs_http_server_t *srv,
-    float delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_os_mutex_lock(srv->lock);
 
@@ -33666,7 +33666,7 @@ error:
 
 void ecs_http_server_dequeue(
     ecs_http_server_t* srv,
-    float delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
@@ -36992,7 +36992,7 @@ void ecs_measure_frame_time(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
-    if (world->info.target_fps == 0.0f || enable) {
+    if (world->info.target_fps == (ecs_ftime_t)0 || enable) {
         ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
     }
 error:

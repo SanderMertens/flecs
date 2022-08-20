@@ -891,7 +891,7 @@ void handle_request(
 static
 int32_t dequeue_requests(
     ecs_http_server_t *srv,
-    float delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_os_mutex_lock(srv->lock);
 
@@ -1065,7 +1065,7 @@ error:
 
 void ecs_http_server_dequeue(
     ecs_http_server_t* srv,
-    float delta_time)
+    ecs_ftime_t delta_time)
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);

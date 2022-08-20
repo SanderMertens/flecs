@@ -17,7 +17,7 @@
 
 /* Customizable precision for floating point operations (such as time ops) */
 #ifndef ecs_float_t
-#define ecs_float_t float
+#define ecs_float_t int
 #endif
 
 /* Customizable precision for time scalar values */
@@ -12577,7 +12577,7 @@ int ecs_http_server_start(
 FLECS_API
 void ecs_http_server_dequeue(
     ecs_http_server_t* server,
-    float delta_time);
+    ecs_ftime_t delta_time);
 
 /** Stop server. 
  * After this operation no new requests can be received.

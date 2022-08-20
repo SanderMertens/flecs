@@ -256,9 +256,9 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->pipeline_build_count_total, t, world->info.pipeline_build_count_total);
     ECS_COUNTER_RECORD(&s->systems_ran_frame, t, world->info.systems_ran_frame);
 
-    if (delta_world_time != 0.0f && delta_frame_count != 0.0f) {
+    if (delta_world_time != 0 && delta_frame_count != 0) {
         ECS_GAUGE_RECORD(
-            &s->fps, t, 1.0f / (delta_world_time / (ecs_ftime_t)delta_frame_count));
+            &s->fps, t, (ecs_ftime_t)1 / (delta_world_time / (ecs_ftime_t)delta_frame_count));
     } else {
         ECS_GAUGE_RECORD(&s->fps, t, 0);
     }

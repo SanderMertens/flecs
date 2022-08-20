@@ -599,7 +599,7 @@ bool ecs_progress(
     ecs_world_t *world,
     ecs_ftime_t user_delta_time)
 {
-    float delta_time = ecs_frame_begin(world, user_delta_time);
+    ecs_ftime_t delta_time = ecs_frame_begin(world, user_delta_time);
     
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
