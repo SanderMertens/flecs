@@ -174,6 +174,7 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 - [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
+- [Flecs based 3D game engine with editor](https://bit.ly/3T9cc1o)
 
 ### Flecs links
 - [Discord](https://discord.gg/BEzP5Rgrrp)
