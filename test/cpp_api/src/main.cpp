@@ -566,6 +566,8 @@ void QueryBuilder_cascade_w_relationship(void);
 void QueryBuilder_up_w_type(void);
 void QueryBuilder_cascade_w_type(void);
 void QueryBuilder_named_query(void);
+void QueryBuilder_term_w_write(void);
+void QueryBuilder_term_w_read(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -3176,6 +3178,14 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "named_query",
         QueryBuilder_named_query
+    },
+    {
+        "term_w_write",
+        QueryBuilder_term_w_write
+    },
+    {
+        "term_w_read",
+        QueryBuilder_term_w_read
     }
 };
 
@@ -4862,7 +4872,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        62,
+        64,
         QueryBuilder_testcases
     },
     {

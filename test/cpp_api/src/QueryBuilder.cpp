@@ -1793,3 +1793,33 @@ void QueryBuilder_named_query() {
     test_assert(qe != 0);
     test_str(qe.name(), "my_query");
 }
+
+void QueryBuilder_term_w_write() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Position>().write()
+        .build();
+
+    auto f = q.filter();
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
+    test_assert(f.term(0).get_src() == flecs::This);
+    test_assert(f.term(1).inout() == flecs::Out);
+    test_assert(f.term(1).get_src() == 0);
+}
+
+void QueryBuilder_term_w_read() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Position>().read()
+        .build();
+
+    auto f = q.filter();
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
+    test_assert(f.term(0).get_src() == flecs::This);
+    test_assert(f.term(1).inout() == flecs::In);
+    test_assert(f.term(1).get_src() == 0);
+}
