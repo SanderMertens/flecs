@@ -781,6 +781,8 @@ void ComponentLifecycle_chained_hooks(void);
 void ComponentLifecycle_ctor_w_2_worlds(void);
 void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void);
 void ComponentLifecycle_defer_emplace(void);
+void ComponentLifecycle_emplace_w_on_add(void);
+void ComponentLifecycle_emplace_w_on_add_existing(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4009,6 +4011,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "defer_emplace",
         ComponentLifecycle_defer_emplace
+    },
+    {
+        "emplace_w_on_add",
+        ComponentLifecycle_emplace_w_on_add
+    },
+    {
+        "emplace_w_on_add_existing",
+        ComponentLifecycle_emplace_w_on_add_existing
     }
 };
 
@@ -4919,7 +4929,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        50,
+        52,
         ComponentLifecycle_testcases
     },
     {

@@ -60,7 +60,8 @@ int32_t flecs_table_append(
     ecs_table_t *table,
     ecs_entity_t entity,
     ecs_record_t *record,
-    bool construct);
+    bool construct,
+    bool on_add);
 
 /* Delete an entity from the table. */
 void flecs_table_delete(

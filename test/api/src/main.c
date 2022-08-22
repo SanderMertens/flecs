@@ -765,6 +765,9 @@ void ComponentLifecycle_set_lifecycle_after_trigger(void);
 void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
 void ComponentLifecycle_ctor_w_emplace(void);
 void ComponentLifecycle_ctor_w_emplace_defer(void);
+void ComponentLifecycle_on_add_w_emplace(void);
+void ComponentLifecycle_on_add_w_emplace_existing(void);
+void ComponentLifecycle_on_add_w_emplace_defer(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
@@ -5044,6 +5047,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_w_emplace_defer",
         ComponentLifecycle_ctor_w_emplace_defer
+    },
+    {
+        "on_add_w_emplace",
+        ComponentLifecycle_on_add_w_emplace
+    },
+    {
+        "on_add_w_emplace_existing",
+        ComponentLifecycle_on_add_w_emplace_existing
+    },
+    {
+        "on_add_w_emplace_defer",
+        ComponentLifecycle_on_add_w_emplace_defer
     },
     {
         "dtor_on_fini",
@@ -10649,7 +10664,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        69,
+        72,
         ComponentLifecycle_testcases
     },
     {

@@ -536,6 +536,24 @@ ECS_MOVE(Position, dst, src, {
     move_position ++;
 })
 
+static int on_add_position = 0;
+
+static void ecs_on_add(Position)(ecs_iter_t *it) {
+    test_assert(it->count >= 1);
+    test_assert(it->event == EcsOnAdd);
+
+    Position *p = ecs_field(it, Position, 1);
+    for (int i = 0; i < it->count; i ++) {
+        on_add_position ++;
+        test_int(p[i].x, 0);
+        test_int(p[i].y, 0);
+    }
+}
+
+static void on_add_position_emplace(ecs_iter_t *it) {
+    on_add_position += it->count;
+}
+
 /* Velocity */
 
 static int ctor_velocity = 0;
@@ -1327,6 +1345,74 @@ void ComponentLifecycle_ctor_w_emplace_defer() {
     ecs_fini(world);   
 }
 
+void ComponentLifecycle_on_add_w_emplace() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = on_add_position_emplace
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    test_int(on_add_position, 0);
+    const Position *ptr = ecs_emplace(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(on_add_position, 1);
+
+    ecs_fini(world); 
+}
+
+void ComponentLifecycle_on_add_w_emplace_existing() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = on_add_position_emplace
+    });
+
+    ecs_entity_t e = ecs_new(world, Velocity);
+    test_assert(e != 0);
+
+    test_int(ctor_position, 0);
+    test_int(on_add_position, 0);
+    const Position *ptr = ecs_emplace(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ctor_position, 0);
+    test_int(on_add_position, 1);
+
+    ecs_fini(world); 
+}
+
+void ComponentLifecycle_on_add_w_emplace_defer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = on_add_position_emplace
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_defer_begin(world);
+    test_int(on_add_position, 0);
+    const Position *ptr = ecs_emplace(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(on_add_position, 0);
+    ecs_defer_end(world);
+
+    test_int(on_add_position, 1);
+
+    ecs_fini(world); 
+}
+
 void ComponentLifecycle_dtor_on_fini() {
     ecs_world_t *world = ecs_mini();
 
@@ -1796,20 +1882,6 @@ void ComponentLifecycle_on_set_after_set() {
     test_int(p->y, 22);
 
     ecs_fini(world);
-}
-
-static int on_add_position = 0;
-
-static void ecs_on_add(Position)(ecs_iter_t *it) {
-    test_assert(it->count >= 1);
-    test_assert(it->event == EcsOnAdd);
-
-    Position *p = ecs_field(it, Position, 1);
-    for (int i = 0; i < it->count; i ++) {
-        on_add_position ++;
-        test_int(p[i].x, 0);
-        test_int(p[i].y, 0);
-    }
 }
 
 void ComponentLifecycle_on_add_after_new() {

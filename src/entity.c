@@ -826,7 +826,8 @@ ecs_record_t* new_entity(
         record = flecs_entities_ensure(world, entity);
     }
 
-    new_row = flecs_table_append(world, new_table, entity, record, construct);
+    new_row = flecs_table_append(world, new_table, entity, record, 
+        construct, true);
 
     record->table = new_table;
     record->row = ECS_ROW_TO_RECORD(new_row, record->row & ECS_ROW_FLAGS_MASK);
@@ -869,7 +870,7 @@ void move_entity(
     ecs_assert(record == flecs_entities_get(world, entity), ECS_INTERNAL_ERROR, NULL);
 
     int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-        record, false);
+        record, false, false);
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type.count) {

@@ -816,7 +816,9 @@
                 "chained_hooks",
                 "ctor_w_2_worlds",
                 "ctor_w_2_worlds_explicit_registration",
-                "defer_emplace"
+                "defer_emplace",
+                "emplace_w_on_add",
+                "emplace_w_on_add_existing"
             ]
         }, {
             "id": "Refs",

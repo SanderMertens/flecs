@@ -1299,3 +1299,35 @@ void ComponentLifecycle_defer_emplace() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void ComponentLifecycle_emplace_w_on_add() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity();
+
+    int on_add = 0;
+    ecs.component<Position>()
+        .on_add([&](flecs::entity e, Position&) {
+            on_add = true;
+            test_assert(e == e1);
+        });
+
+    e1.emplace<Position>();
+    test_int(on_add, 1);
+}
+
+void ComponentLifecycle_emplace_w_on_add_existing() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity().add<Velocity>();
+    
+    int on_add = 0;
+    ecs.component<Position>()
+        .on_add([&](flecs::entity e, Position&) {
+            on_add = true;
+            test_assert(e == e1);
+        });
+
+    e1.emplace<Position>();
+    test_int(on_add, 1);
+}

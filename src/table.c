@@ -734,11 +734,14 @@ void add_component(
     ecs_entity_t *entities,
     ecs_id_t id,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool construct)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ctor_component(ti, column, row, count);
+    if (construct) {
+        ctor_component(ti, column, row, count);
+    }
 
     ecs_iter_action_t on_add = ti->hooks.on_add;
     if (on_add) {
@@ -1466,7 +1469,8 @@ int32_t flecs_table_append(
     ecs_table_t *table,
     ecs_entity_t entity,
     ecs_record_t *record,
-    bool construct)
+    bool construct,
+    bool on_add)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
@@ -1523,9 +1527,9 @@ int32_t flecs_table_append(
         ecs_type_info_t *ti = type_info[i];  
         grow_column(column, ti, 1, size, construct);
 
-        ecs_iter_action_t on_add;
-        if (construct && (on_add = ti->hooks.on_add)) {
-            on_component_callback(world, table, on_add, EcsOnAdd, column,
+        ecs_iter_action_t on_add_hook;
+        if (on_add && (on_add_hook = ti->hooks.on_add)) {
+            on_component_callback(world, table, on_add_hook, EcsOnAdd, column,
                 &entities[count], table->storage_ids[i], count, 1, ti);
         }
 
@@ -1831,11 +1835,9 @@ void flecs_table_move(
             }
         } else {
             if (dst_id < src_id) {
-                if (construct) {
-                    add_component(world, dst_table, dst_type_info[i_new],
-                        &dst_columns[i_new], &dst_entity, dst_id, 
-                            dst_index, 1);
-                }
+                add_component(world, dst_table, dst_type_info[i_new],
+                    &dst_columns[i_new], &dst_entity, dst_id, 
+                        dst_index, 1, construct);
             } else {
                 remove_component(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
@@ -1847,11 +1849,10 @@ void flecs_table_move(
         i_old += dst_id >= src_id;
     }
 
-    if (construct) {
-        for (; (i_new < dst_column_count); i_new ++) {
-            add_component(world, dst_table, dst_type_info[i_new],
-                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1);
-        }
+    for (; (i_new < dst_column_count); i_new ++) {
+        add_component(world, dst_table, dst_type_info[i_new],
+            &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1,
+                construct);
     }
 
     for (; (i_old < src_column_count); i_old ++) {

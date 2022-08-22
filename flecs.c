@@ -1269,7 +1269,8 @@ int32_t flecs_table_append(
     ecs_table_t *table,
     ecs_entity_t entity,
     ecs_record_t *record,
-    bool construct);
+    bool construct,
+    bool on_add);
 
 /* Delete an entity from the table. */
 void flecs_table_delete(
@@ -3013,11 +3014,14 @@ void add_component(
     ecs_entity_t *entities,
     ecs_id_t id,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool construct)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ctor_component(ti, column, row, count);
+    if (construct) {
+        ctor_component(ti, column, row, count);
+    }
 
     ecs_iter_action_t on_add = ti->hooks.on_add;
     if (on_add) {
@@ -3745,7 +3749,8 @@ int32_t flecs_table_append(
     ecs_table_t *table,
     ecs_entity_t entity,
     ecs_record_t *record,
-    bool construct)
+    bool construct,
+    bool on_add)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
@@ -3802,9 +3807,9 @@ int32_t flecs_table_append(
         ecs_type_info_t *ti = type_info[i];  
         grow_column(column, ti, 1, size, construct);
 
-        ecs_iter_action_t on_add;
-        if (construct && (on_add = ti->hooks.on_add)) {
-            on_component_callback(world, table, on_add, EcsOnAdd, column,
+        ecs_iter_action_t on_add_hook;
+        if (on_add && (on_add_hook = ti->hooks.on_add)) {
+            on_component_callback(world, table, on_add_hook, EcsOnAdd, column,
                 &entities[count], table->storage_ids[i], count, 1, ti);
         }
 
@@ -4110,11 +4115,9 @@ void flecs_table_move(
             }
         } else {
             if (dst_id < src_id) {
-                if (construct) {
-                    add_component(world, dst_table, dst_type_info[i_new],
-                        &dst_columns[i_new], &dst_entity, dst_id, 
-                            dst_index, 1);
-                }
+                add_component(world, dst_table, dst_type_info[i_new],
+                    &dst_columns[i_new], &dst_entity, dst_id, 
+                        dst_index, 1, construct);
             } else {
                 remove_component(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
@@ -4126,11 +4129,10 @@ void flecs_table_move(
         i_old += dst_id >= src_id;
     }
 
-    if (construct) {
-        for (; (i_new < dst_column_count); i_new ++) {
-            add_component(world, dst_table, dst_type_info[i_new],
-                &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1);
-        }
+    for (; (i_new < dst_column_count); i_new ++) {
+        add_component(world, dst_table, dst_type_info[i_new],
+            &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1,
+                construct);
     }
 
     for (; (i_old < src_column_count); i_old ++) {
@@ -6055,7 +6057,8 @@ ecs_record_t* new_entity(
         record = flecs_entities_ensure(world, entity);
     }
 
-    new_row = flecs_table_append(world, new_table, entity, record, construct);
+    new_row = flecs_table_append(world, new_table, entity, record, 
+        construct, true);
 
     record->table = new_table;
     record->row = ECS_ROW_TO_RECORD(new_row, record->row & ECS_ROW_FLAGS_MASK);
@@ -6098,7 +6101,7 @@ void move_entity(
     ecs_assert(record == flecs_entities_get(world, entity), ECS_INTERNAL_ERROR, NULL);
 
     int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-        record, false);
+        record, false, false);
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type.count) {
@@ -48598,7 +48601,7 @@ void _bootstrap_component(
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, record, false);
+    int32_t index = flecs_table_append(world, table, entity, record, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = ecs_storage_first(&columns[0]);
