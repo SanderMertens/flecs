@@ -39,9 +39,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #pragma comment(lib, "Ws2_32.lib")
-#include <WinSock2.h>
-#include <Ws2tcpip.h>
-#include <Windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
 typedef SOCKET ecs_http_socket_t;
 #else
 #include <unistd.h>
