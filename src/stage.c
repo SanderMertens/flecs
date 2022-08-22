@@ -299,7 +299,8 @@ bool flecs_defer_set(
     ecs_id_t id,
     ecs_size_t size,
     const void *value,
-    void **value_out)
+    void **value_out,
+    bool emplace)
 {
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
@@ -356,7 +357,7 @@ bool flecs_defer_set(
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
-        } else {
+        } else if (!emplace) {
             ecs_xtor_t ctor;
             if ((ctor = ti->hooks.ctor)) {
                 ctor(op->is._1.value, 1, ti);

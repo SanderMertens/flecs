@@ -2911,7 +2911,7 @@ void* ecs_get_mut_id(
     void *result;
 
     if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result))
+        world, stage, EcsOpMut, entity, id, 0, NULL, &result, false))
     {
         return result;
     }
@@ -3097,7 +3097,9 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (flecs_defer_set(world, stage, EcsOpMut, entity, id, 0, NULL, &result)) {
+    if (flecs_defer_set(world, stage, EcsOpEmplace, entity, id, 0, NULL, 
+        &result, true)) 
+    {
         return result;
     }
 
@@ -3167,7 +3169,7 @@ ecs_entity_t set_ptr_w_id(
     }
 
     if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_utosize(size), ptr, NULL))
+        flecs_utosize(size), ptr, NULL, false))
     {
         return entity;
     }
@@ -4282,6 +4284,12 @@ bool flecs_defer_end(
                     set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, true);
+                    break;
+                case EcsOpEmplace:
+                    ecs_emplace_id(world, e, op->id);
+                    set_ptr_w_id(world, e, 
+                        op->id, flecs_itosize(op->is._1.size), 
+                        op->is._1.value, true, false);
                     break;
                 case EcsOpMut:
                     set_ptr_w_id(world, e, 

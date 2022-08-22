@@ -649,6 +649,7 @@ typedef enum ecs_defer_op_kind_t {
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpEmplace,
     EcsOpMut,
     EcsOpModified,
     EcsOpDelete,
@@ -1618,7 +1619,8 @@ bool flecs_defer_set(
     ecs_entity_t component,
     ecs_size_t size,
     const void *value,
-    void **value_out);
+    void **value_out,
+    bool emplace);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -8138,7 +8140,7 @@ void* ecs_get_mut_id(
     void *result;
 
     if (flecs_defer_set(
-        world, stage, EcsOpMut, entity, id, 0, NULL, &result))
+        world, stage, EcsOpMut, entity, id, 0, NULL, &result, false))
     {
         return result;
     }
@@ -8324,7 +8326,9 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
 
-    if (flecs_defer_set(world, stage, EcsOpMut, entity, id, 0, NULL, &result)) {
+    if (flecs_defer_set(world, stage, EcsOpEmplace, entity, id, 0, NULL, 
+        &result, true)) 
+    {
         return result;
     }
 
@@ -8394,7 +8398,7 @@ ecs_entity_t set_ptr_w_id(
     }
 
     if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_utosize(size), ptr, NULL))
+        flecs_utosize(size), ptr, NULL, false))
     {
         return entity;
     }
@@ -9510,6 +9514,12 @@ bool flecs_defer_end(
                         op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, true);
                     break;
+                case EcsOpEmplace:
+                    ecs_emplace_id(world, e, op->id);
+                    set_ptr_w_id(world, e, 
+                        op->id, flecs_itosize(op->is._1.size), 
+                        op->is._1.value, true, false);
+                    break;
                 case EcsOpMut:
                     set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
@@ -9903,7 +9913,8 @@ bool flecs_defer_set(
     ecs_id_t id,
     ecs_size_t size,
     const void *value,
-    void **value_out)
+    void **value_out,
+    bool emplace)
 {
     if (flecs_defer_op(world, stage)) {
         world->info.set_count ++;
@@ -9960,7 +9971,7 @@ bool flecs_defer_set(
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
-        } else {
+        } else if (!emplace) {
             ecs_xtor_t ctor;
             if ((ctor = ti->hooks.ctor)) {
                 ctor(op->is._1.value, 1, ti);

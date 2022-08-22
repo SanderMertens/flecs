@@ -1273,3 +1273,29 @@ void ComponentLifecycle_ctor_w_2_worlds_explicit_registration() {
         test_int(Pod::ctor_invoked, 1);
     }
 }
+
+struct DeferEmplaceTest {
+    double x, y;
+
+    DeferEmplaceTest(double x_, double y_) {
+        x = x_;
+        y = y_;
+    }
+};
+
+void ComponentLifecycle_defer_emplace() {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity();
+
+    ecs.defer_begin();
+    e.emplace<DeferEmplaceTest>(10.0, 20.0);
+    test_assert(!e.has<DeferEmplaceTest>());
+    ecs.defer_end();
+    test_assert(e.has<DeferEmplaceTest>());
+
+    const DeferEmplaceTest *p = e.get<DeferEmplaceTest>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}

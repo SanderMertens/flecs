@@ -369,6 +369,7 @@ typedef enum ecs_defer_op_kind_t {
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
+    EcsOpEmplace,
     EcsOpMut,
     EcsOpModified,
     EcsOpDelete,

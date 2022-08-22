@@ -815,6 +815,7 @@
                 "set_lifecycle_after_trigger",
                 "valid_entity_in_dtor_after_delete",
                 "ctor_w_emplace",
+                "ctor_w_emplace_defer",
                 "dtor_on_fini",
                 "valid_type_in_dtor_on_fini",
                 "valid_other_type_of_entity_in_dtor_on_fini",

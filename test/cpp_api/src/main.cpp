@@ -780,6 +780,7 @@ void ComponentLifecycle_on_set_hook_w_entity(void);
 void ComponentLifecycle_chained_hooks(void);
 void ComponentLifecycle_ctor_w_2_worlds(void);
 void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void);
+void ComponentLifecycle_defer_emplace(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4004,6 +4005,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_w_2_worlds_explicit_registration",
         ComponentLifecycle_ctor_w_2_worlds_explicit_registration
+    },
+    {
+        "defer_emplace",
+        ComponentLifecycle_defer_emplace
     }
 };
 
@@ -4914,7 +4919,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        49,
+        50,
         ComponentLifecycle_testcases
     },
     {

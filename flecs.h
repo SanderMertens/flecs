@@ -17,7 +17,7 @@
 
 /* Customizable precision for floating point operations (such as time ops) */
 #ifndef ecs_float_t
-#define ecs_float_t int
+#define ecs_float_t float
 #endif
 
 /* Customizable precision for time scalar values */

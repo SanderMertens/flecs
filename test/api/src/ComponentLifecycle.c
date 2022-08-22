@@ -1293,6 +1293,40 @@ void ComponentLifecycle_ctor_w_emplace() {
     ecs_fini(world); 
 }
 
+void ComponentLifecycle_ctor_w_emplace_defer() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    test_int(ctor_position, 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_defer_begin(world);
+    Position *ptr = ecs_emplace(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ctor_position, 0);
+    ptr->x = 10;
+    ptr->y = 20;
+    test_assert(!ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);   
+}
+
 void ComponentLifecycle_dtor_on_fini() {
     ecs_world_t *world = ecs_mini();
 
