@@ -1035,12 +1035,12 @@ The following operators are supported by queries:
 | Name     | DSL operator   | C identifier  | C++ identifier    | Description |
 |----------|----------------|---------------|-------------------|-------------|
 | And      | `,`            | `EcsAnd`      | `flecs::And`      | Match at least once with term |
-| Or       | `||`           | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
+| Or       | `\|\|`         | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
 | Not      | `!`            | `EcsNot`      | `flecs::Not`      | Must not match with term |
 | Optional | `?`            | `EcsOptional` | `flecs::Optional` | May match with term |
-| AndFrom  | `AND |`        | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
-| OrFrom   | `OR |`         | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
-| NotFrom  | `NOT |`        | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
+| AndFrom  | `AND \|`        | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
+| OrFrom   | `OR \|`         | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
+| NotFrom  | `NOT \|`        | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
 
 ### And Operator
 > *Supported by: filters, cached queries, rules*
