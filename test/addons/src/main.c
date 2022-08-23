@@ -904,6 +904,8 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 // Testsuite 'App'
 void App_app_w_frame_action(void);
 void App_app_w_default_frame_action(void);
+void App_app_w_set_threads(void);
+void App_app_w_set_target_fps(void);
 
 // Testsuite 'Http'
 void Http_teardown(void);
@@ -4361,6 +4363,14 @@ bake_test_case App_testcases[] = {
     {
         "app_w_default_frame_action",
         App_app_w_default_frame_action
+    },
+    {
+        "app_w_set_threads",
+        App_app_w_set_threads
+    },
+    {
+        "app_w_set_target_fps",
+        App_app_w_set_target_fps
     }
 };
 
@@ -4569,7 +4579,7 @@ static bake_test_suite suites[] = {
         "App",
         NULL,
         NULL,
-        2,
+        4,
         App_testcases
     },
     {

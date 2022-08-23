@@ -952,7 +952,9 @@
             "id": "App",
             "testcases": [
                 "app_w_frame_action",
-                "app_w_default_frame_action"
+                "app_w_default_frame_action",
+                "app_w_set_threads",
+                "app_w_set_target_fps"
             ]
         }, {
             "id": "Http",
