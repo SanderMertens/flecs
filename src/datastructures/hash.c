@@ -21,7 +21,7 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 -------------------------------------------------------------------------------
 */
 
-#ifdef ECS_TARGET_MSVC
+#ifdef ECS_TARGET_WINDOWS
 //FIXME
 #else
 #include <sys/param.h>  /* attempt to define endianness */

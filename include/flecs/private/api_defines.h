@@ -36,7 +36,9 @@
 #endif
 
 #if defined(_MSC_VER)
+#ifndef __clang__
 #define ECS_TARGET_MSVC
+#endif
 #endif
 
 #if defined(__GNUC__)
