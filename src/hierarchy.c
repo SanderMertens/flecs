@@ -492,8 +492,8 @@ const char* ecs_set_name_prefix(
     const char *prefix)
 {
     ecs_poly_assert(world, ecs_world_t);
-    const char *old_prefix = world->name_prefix;
-    world->name_prefix = prefix;
+    const char *old_prefix = world->info.name_prefix;
+    world->info.name_prefix = prefix;
     return old_prefix;
 }
 

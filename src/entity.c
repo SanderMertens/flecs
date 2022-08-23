@@ -1970,7 +1970,7 @@ ecs_entity_t ecs_entity_init(
      * To ensure interoperability between C and C++ (and potentially other 
      * languages with namespacing) the entity must be stored without this prefix
      * and with the proper namespace, which is what the name_prefix is for */
-    const char *prefix = world->name_prefix;
+    const char *prefix = world->info.name_prefix;
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(name, prefix, len) && 

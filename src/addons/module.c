@@ -35,7 +35,7 @@ ecs_entity_t ecs_import(
         ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
-    const char *old_name_prefix = world->name_prefix;
+    const char *old_name_prefix = world->info.name_prefix;
 
     char *path = ecs_module_path_from_c(module_name);
     ecs_entity_t e = ecs_lookup_fullpath(world, path);
@@ -57,7 +57,7 @@ ecs_entity_t ecs_import(
 
     /* Restore to previous state */
     ecs_set_scope(world, old_scope);
-    world->name_prefix = old_name_prefix;
+    world->info.name_prefix = old_name_prefix;
 
     return e;
 error:

@@ -1906,6 +1906,7 @@ void World_get_mut_in_at_fini(void);
 void World_get_type_info(void);
 void World_get_type_info_after_delete_with(void);
 void World_get_type_info_after_reuse(void);
+void World_no_name_prefix_after_init(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -9519,6 +9520,10 @@ bake_test_case World_testcases[] = {
     {
         "get_type_info_after_reuse",
         World_get_type_info_after_reuse
+    },
+    {
+        "no_name_prefix_after_init",
+        World_no_name_prefix_after_init
     }
 };
 
@@ -10776,7 +10781,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        50,
+        51,
         World_testcases
     },
     {

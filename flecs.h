@@ -3772,6 +3772,11 @@ typedef struct ecs_world_info_t {
     int32_t remove_count;
     int32_t set_count;
     int32_t discard_count;
+
+    const char *name_prefix;          /* Value set by ecs_set_name_prefix. Used
+                                       * to remove library prefixes of symbol
+                                       * names (such as Ecs, ecs_) when 
+                                       * registering them as names. */
 } ecs_world_info_t;
 
 /** @} */

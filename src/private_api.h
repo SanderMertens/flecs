@@ -40,7 +40,7 @@ void flecs_bootstrap(
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set(world, name, EcsComponent, {.size = 0});\
-    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->name_prefix)]);\
+    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
 

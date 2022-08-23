@@ -539,7 +539,6 @@ struct ecs_world_t {
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
-    const char *name_prefix;     /* Remove prefix from C names in modules */
 
     /* -- Staging -- */
     ecs_stage_t *stages;         /* Stages */

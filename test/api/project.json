@@ -1988,7 +1988,8 @@
                 "get_mut_in_at_fini",
                 "get_type_info",
                 "get_type_info_after_delete_with",
-                "get_type_info_after_reuse"
+                "get_type_info_after_reuse",
+                "no_name_prefix_after_init"
             ]
         }, {
             "id": "WorldInfo",

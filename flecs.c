@@ -819,7 +819,6 @@ struct ecs_world_t {
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
-    const char *name_prefix;     /* Remove prefix from C names in modules */
 
     /* -- Staging -- */
     ecs_stage_t *stages;         /* Stages */
@@ -2059,7 +2058,7 @@ void flecs_bootstrap(
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set(world, name, EcsComponent, {.size = 0});\
-    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->name_prefix)]);\
+    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
 
@@ -7201,7 +7200,7 @@ ecs_entity_t ecs_entity_init(
      * To ensure interoperability between C and C++ (and potentially other 
      * languages with namespacing) the entity must be stored without this prefix
      * and with the proper namespace, which is what the name_prefix is for */
-    const char *prefix = world->name_prefix;
+    const char *prefix = world->info.name_prefix;
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(name, prefix, len) && 
@@ -23202,7 +23201,7 @@ ecs_entity_t ecs_import(
         ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
-    const char *old_name_prefix = world->name_prefix;
+    const char *old_name_prefix = world->info.name_prefix;
 
     char *path = ecs_module_path_from_c(module_name);
     ecs_entity_t e = ecs_lookup_fullpath(world, path);
@@ -23224,7 +23223,7 @@ ecs_entity_t ecs_import(
 
     /* Restore to previous state */
     ecs_set_scope(world, old_scope);
-    world->name_prefix = old_name_prefix;
+    world->info.name_prefix = old_name_prefix;
 
     return e;
 error:
@@ -49018,6 +49017,8 @@ void flecs_bootstrap(
 
     ecs_set_scope(world, 0);
 
+    ecs_set_name_prefix(world, NULL);
+
     ecs_log_pop();
 }
 
@@ -49514,8 +49515,8 @@ const char* ecs_set_name_prefix(
     const char *prefix)
 {
     ecs_poly_assert(world, ecs_world_t);
-    const char *old_prefix = world->name_prefix;
-    world->name_prefix = prefix;
+    const char *old_prefix = world->info.name_prefix;
+    world->info.name_prefix = prefix;
     return old_prefix;
 }
 

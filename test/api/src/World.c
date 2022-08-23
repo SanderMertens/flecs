@@ -1459,3 +1459,12 @@ void World_get_type_info_after_reuse() {
 
     ecs_fini(world);
 }
+
+void World_no_name_prefix_after_init() {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info->name_prefix == NULL);
+
+    ecs_fini(world);
+}

@@ -965,5 +965,7 @@ void flecs_bootstrap(
 
     ecs_set_scope(world, 0);
 
+    ecs_set_name_prefix(world, NULL);
+
     ecs_log_pop();
 }
