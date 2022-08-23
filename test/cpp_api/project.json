@@ -332,7 +332,9 @@
                 "add_2_union_enums_reverse",
                 "constant_from_entity",
                 "add_if",
-                "add_if_other"
+                "add_if_other",
+                "query_union_enum",
+                "query_union_enum_invalid_query_type"
             ]
         }, {
             "id": "Switch",

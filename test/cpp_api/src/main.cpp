@@ -323,6 +323,8 @@ void Enum_add_2_union_enums_reverse(void);
 void Enum_constant_from_entity(void);
 void Enum_add_if(void);
 void Enum_add_if_other(void);
+void Enum_query_union_enum(void);
+void Enum_query_union_enum_invalid_query_type(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -2244,6 +2246,14 @@ bake_test_case Enum_testcases[] = {
     {
         "add_if_other",
         Enum_add_if_other
+    },
+    {
+        "query_union_enum",
+        Enum_query_union_enum
+    },
+    {
+        "query_union_enum_invalid_query_type",
+        Enum_query_union_enum_invalid_query_type
     }
 };
 
@@ -4838,7 +4848,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        30,
+        32,
         Enum_testcases
     },
     {

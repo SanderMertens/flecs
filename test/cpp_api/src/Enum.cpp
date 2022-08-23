@@ -739,3 +739,49 @@ void Enum_add_if_other() {
     test_assert(!e.has(StandardEnum::Red));
     test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
 }
+
+void Enum_query_union_enum() {
+    flecs::world ecs;
+
+    enum Color {
+        Red,
+        Green,
+        Blue
+    };
+
+    ecs.component<StandardEnum>().add(flecs::Union);
+
+    flecs::entity e1 = ecs.entity().add(StandardEnum::Red);
+    flecs::entity e2 = ecs.entity().add(StandardEnum::Green);
+    flecs::entity e3 = ecs.entity().add(StandardEnum::Blue);
+
+    auto q = ecs.query_builder()
+        .term<StandardEnum>().second(flecs::Wildcard)
+        .build();
+
+    q.iter([&](flecs::iter& it) {
+        flecs::column<flecs::entity_t> colors = it.field<flecs::entity_t>(1);
+        test_int(it.count(), 3);
+        test_uint(it.entity(0), e1);
+        test_uint(it.entity(1), e2);
+        test_uint(it.entity(2), e3);
+
+        test_uint(colors[0], ecs.to_entity(StandardEnum::Red));
+        test_uint(colors[1], ecs.to_entity(StandardEnum::Green));
+        test_uint(colors[2], ecs.to_entity(StandardEnum::Blue));
+    });
+}
+
+void Enum_query_union_enum_invalid_query_type() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<StandardEnum>().add(flecs::Union);
+
+    test_expect_abort();
+
+    ecs.query_builder<StandardEnum>()
+        .term_at(1).second(flecs::Wildcard)
+        .build();
+}
