@@ -470,6 +470,7 @@ void flecs_instantiate_children(
     /* Instantiate the prefab child table for each new instance */
     ecs_entity_t *instances = ecs_storage_first(&table->data.entities);
     int32_t child_count = ecs_storage_count(&child_data->entities);
+    bool has_union = child_table->flags & EcsTableHasUnion;
 
     for (i = row; i < count + row; i ++) {
         ecs_entity_t instance = instances[i];
@@ -511,6 +512,22 @@ void flecs_instantiate_children(
             &components, child_count, component_data, false, &child_row, 
             &table_diff);
         diff_free(&diff);
+
+        /* If children have union relationships, initialize */
+        if (has_union) {
+            int32_t u, u_count = child_table->sw_count;
+            for (u = 0; u < u_count; u ++) {
+                ecs_switch_t *src_sw = &child_table->data.sw_columns[i];
+                ecs_switch_t *dst_sw = &i_table->data.sw_columns[i];
+                ecs_vector_t *v_src_values = flecs_switch_values(src_sw);
+                ecs_vector_t *v_dst_values = flecs_switch_values(dst_sw);
+                uint64_t *src_values = ecs_vector_first(v_src_values, uint64_t);
+                uint64_t *dst_values = ecs_vector_first(v_dst_values, uint64_t);
+                for (j = 0; j < child_count; j ++) {
+                    dst_values[j] = src_values[j];
+                }
+            }
+        }
 
         /* If children are slots, add slot relationships to parent */
         if (slot_of) {

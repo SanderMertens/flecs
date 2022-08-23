@@ -4036,3 +4036,36 @@ void Prefab_base_slot_override() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_child_w_union() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_entity_t base = ecs_new_prefab(world, "Base");
+    ecs_entity_t base_child_a = ecs_new_prefab(world, "Base.ChildA");
+    ecs_entity_t base_child_b = ecs_new_prefab(world, "Base.ChildB");
+    ecs_entity_t base_child_c = ecs_new_prefab(world, "Base.ChildC");
+    ecs_add_pair(world, base_child_a, Rel, TgtA);
+    ecs_add_pair(world, base_child_b, Rel, TgtB);
+    ecs_add_pair(world, base_child_c, Rel, TgtC);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+
+    ecs_entity_t child_a = ecs_lookup_child(world, inst, "ChildA");
+    ecs_entity_t child_b = ecs_lookup_child(world, inst, "ChildB");
+    ecs_entity_t child_c = ecs_lookup_child(world, inst, "ChildC");
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+    test_assert(child_c != 0);
+
+    test_assert(ecs_has_pair(world, child_a, Rel, TgtA));
+    test_assert(ecs_has_pair(world, child_b, Rel, TgtB));
+    test_assert(ecs_has_pair(world, child_c, Rel, TgtC));
+
+    ecs_fini(world);
+}

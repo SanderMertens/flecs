@@ -1853,6 +1853,7 @@ void Prefab_2_instances_w_slots_same_table(void);
 void Prefab_slot_has_union(void);
 void Prefab_slot_override(void);
 void Prefab_base_slot_override(void);
+void Prefab_prefab_child_w_union(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -9317,6 +9318,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "base_slot_override",
         Prefab_base_slot_override
+    },
+    {
+        "prefab_child_w_union",
+        Prefab_prefab_child_w_union
     }
 };
 
@@ -10774,7 +10779,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        117,
+        118,
         Prefab_testcases
     },
     {

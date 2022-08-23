@@ -1933,7 +1933,8 @@
                 "2_instances_w_slots_same_table",
                 "slot_has_union",
                 "slot_override",
-                "base_slot_override"
+                "base_slot_override",
+                "prefab_child_w_union"
             ]
         }, {
             "id": "World",
