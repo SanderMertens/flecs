@@ -12280,7 +12280,7 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 -------------------------------------------------------------------------------
 */
 
-#ifdef ECS_TARGET_MSVC
+#ifdef ECS_TARGET_WINDOWS
 //FIXME
 #else
 #include <sys/param.h>  /* attempt to define endianness */
@@ -32801,7 +32801,7 @@ ecs_size_t http_send(
     ecs_size_t size, 
     int flags)
 {
-#ifndef ECS_TARGET_MSVC
+#ifndef ECS_TARGET_WINDOWS
     ssize_t send_bytes = send(sock, buf, flecs_itosize(size), flags);
     return flecs_itoi32(send_bytes);
 #else
@@ -32818,7 +32818,7 @@ ecs_size_t http_recv(
     int flags)
 {
     ecs_size_t ret;
-#ifndef ECS_TARGET_MSVC
+#ifndef ECS_TARGET_WINDOWS
     ssize_t recv_bytes = recv(sock, buf, flecs_itosize(size), flags);
     ret = flecs_itoi32(recv_bytes);
 #else
