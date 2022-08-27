@@ -3721,9 +3721,33 @@ void Entity_prefab_hierarchy_w_types() {
     test_str(railgun_beam.path().c_str(), "::Railgun::Beam");
 
     test_str(railgun.symbol().c_str(), "Railgun");
-    test_str(railgun_base.symbol().c_str(), "Railgun.Base");
     test_str(railgun_head.symbol().c_str(), "Railgun.Head");
     test_str(railgun_beam.symbol().c_str(), "Railgun.Beam");
+}
+
+struct Base { };
+
+void Entity_prefab_hierarchy_w_root_types() {
+    flecs::world ecs;
+
+    auto turret = ecs.prefab<Turret>();
+    auto turret_base = ecs.prefab<Base>().child_of<Turret>();
+
+    test_assert(turret != 0);
+    test_assert(turret_base != 0);
+    test_assert(turret_base.has(flecs::ChildOf, turret));
+
+    test_str(turret.path().c_str(), "::Turret");
+    test_str(turret_base.path().c_str(), "::Turret::Base");
+
+    test_str(turret.symbol(), "Turret");
+    test_str(turret_base.symbol(), "Base");
+
+    auto inst = ecs.entity().is_a<Turret>();
+    test_assert(inst != 0);
+
+    auto inst_base = inst.lookup("Base");
+    test_assert(inst_base != 0);
 }
 
 struct Parent {

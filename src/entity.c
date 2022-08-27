@@ -405,7 +405,6 @@ void flecs_instantiate_children(
          * the instantiated children by name. The ChildOf pair is replaced later
          * with the instance parent. */
         if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
-            (id != ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)) &&
             ECS_PAIR_FIRST(id) != EcsChildOf) 
         {
             if (id == EcsUnion) {
