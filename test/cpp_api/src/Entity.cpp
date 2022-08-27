@@ -1543,6 +1543,30 @@ void Entity_set_override_pair_w_tgt_id() {
     test_int(p_base->y, 20);
 }
 
+void Entity_set_override_pair_w_rel_tag() {
+    flecs::world world;
+
+    struct Tgt { };
+
+    auto base = world.entity()
+        .set_override<Tgt, Position>({10, 20});
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert((e.has<Tgt, Position>()));
+    test_assert((e.owns<Tgt, Position>()));
+
+    const Position* p = e.get<Tgt, Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position* p_base = base.get<Tgt, Position>();
+    test_assert(p != p_base);
+    test_int(p_base->x, 10);
+    test_int(p_base->y, 20);
+}
+
 void Entity_emplace_override() {
     flecs::world world;
 

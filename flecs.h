@@ -18220,8 +18220,9 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
      */    
-    template <typename First, typename Second>
-    Self& set_override(First val) {
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
+    Self& set_override(A val) {
         this->override<First, Second>();
         return this->set<First, Second>(val);
     }
