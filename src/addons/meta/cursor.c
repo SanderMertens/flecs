@@ -4,7 +4,7 @@
 
 static
 const char* op_kind_str(
-    ecs_meta_type_op_kind_t kind) 
+    ecs_meta_type_op_kind_t kind)
 {
     switch(kind) {
 
@@ -102,7 +102,7 @@ ecs_size_t get_alignment(
 static
 int32_t get_elem_count(
     ecs_meta_scope_t *scope)
-{    
+{
     if (scope->vector) {
         return ecs_vector_count(*(scope->vector));
     }
@@ -198,7 +198,7 @@ int ecs_meta_next(
             ecs_err("out of collection bounds (%d)", scope->elem_cur);
             return -1;
         }
-        
+
         return 0;
     }
 
@@ -247,7 +247,7 @@ int ecs_meta_member(
     const ecs_world_t *world = cursor->world;
 
     ecs_assert(push_op->kind == EcsOpPush, ECS_INTERNAL_ERROR, NULL);
-    
+
     if (!push_op->members) {
         ecs_err("cannot move to member '%s' for non-struct type", name);
         return -1;
@@ -284,7 +284,7 @@ int ecs_meta_push(
 
     void *ptr = get_ptr(world, scope);
     cursor->depth ++;
-    ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH, 
+    ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH,
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_scope_t *next_scope = get_scope(cursor);
@@ -351,7 +351,7 @@ int ecs_meta_push(
     }
 
     if (scope->is_collection) {
-        next_scope[0].ptr = ECS_OFFSET(next_scope[0].ptr, 
+        next_scope[0].ptr = ECS_OFFSET(next_scope[0].ptr,
             scope->elem_cur * get_size(world, scope));
     }
 
@@ -450,7 +450,8 @@ case kind:\
     case_T(EcsOpI16,  ecs_i16_t,  dst, src);\
     case_T(EcsOpI32,  ecs_i32_t,  dst, src);\
     case_T(EcsOpI64,  ecs_i64_t,  dst, src);\
-    case_T(EcsOpIPtr, ecs_iptr_t, dst, src)
+    case_T(EcsOpIPtr, ecs_iptr_t, dst, src);\
+    case_T(EcsOpEnum, ecs_i32_t, dst, src);\
 
 #define cases_T_unsigned(dst, src)\
     case_T(EcsOpByte, ecs_byte_t, dst, src);\
@@ -459,6 +460,8 @@ case kind:\
     case_T(EcsOpU32,  ecs_u32_t,  dst, src);\
     case_T(EcsOpU64,  ecs_u64_t,  dst, src);\
     case_T(EcsOpUPtr, ecs_uptr_t, dst, src);\
+    case_T(EcsOpEntity, ecs_u64_t, dst, src);\
+    case_T(EcsOpBitmask, ecs_u32_t, dst, src);\
 
 #define cases_T_bool(dst, src)\
 case EcsOpBool:\
@@ -525,8 +528,10 @@ int ecs_meta_set_int(
     switch(op->kind) {
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value);
+    cases_T_unsigned(ptr, value);
     cases_T_float(ptr, value);
     default: {
+        if(!value) return ecs_meta_set_null(cursor);
         conversion_error(cursor, op, "int");
         return -1;
     }
@@ -545,12 +550,11 @@ int ecs_meta_set_uint(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
+    cases_T_signed(ptr, value);
     cases_T_unsigned(ptr, value);
     cases_T_float(ptr, value);
-    case EcsOpEntity:
-        set_T(ecs_entity_t, ptr, value);
-        break;
     default:
+        if(!value) return ecs_meta_set_null(cursor);
         conversion_error(cursor, op, "uint");
         return -1;
     }
@@ -581,9 +585,9 @@ int ecs_meta_set_float(
 
 static
 int add_bitmask_constant(
-    ecs_meta_cursor_t *cursor, 
+    ecs_meta_cursor_t *cursor,
     ecs_meta_type_op_t *op,
-    void *out, 
+    void *out,
     const char *value)
 {
     ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
@@ -616,9 +620,9 @@ int add_bitmask_constant(
 
 static
 int parse_bitmask(
-    ecs_meta_cursor_t *cursor, 
+    ecs_meta_cursor_t *cursor,
     ecs_meta_type_op_t *op,
-    void *out, 
+    void *out,
     const char *value)
 {
     char token[ECS_MAX_TOKEN_SIZE];
@@ -731,7 +735,7 @@ int ecs_meta_set_string(
         if (ecs_os_strcmp(value, "0")) {
             if (cursor->lookup_action) {
                 e = cursor->lookup_action(
-                    cursor->world, value, 
+                    cursor->world, value,
                     cursor->lookup_ctx);
             } else {
                 e = ecs_lookup_path(cursor->world, 0, value);
@@ -750,7 +754,7 @@ int ecs_meta_set_string(
         ecs_err("excess element '%s' in scope", value);
         return -1;
     default:
-        ecs_err("unsupported conversion from string '%s' to '%s'", 
+        ecs_err("unsupported conversion from string '%s' to '%s'",
             value, op_kind_str(op->kind));
         return -1;
     }
@@ -776,7 +780,7 @@ int ecs_meta_set_string_literal(
     case EcsOpChar:
         set_T(ecs_char_t, ptr, value[1]);
         break;
-    
+
     default:
     case EcsOpEntity:
     case EcsOpString:
@@ -864,7 +868,7 @@ bool ecs_meta_get_bool(
     case EcsOpEnum: return *(ecs_i32_t*)ptr != 0;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
     case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
-    default: ecs_throw(ECS_INVALID_PARAMETER, 
+    default: ecs_throw(ECS_INVALID_PARAMETER,
                 "invalid element for bool");
     }
 error:
@@ -879,7 +883,7 @@ char ecs_meta_get_char(
     void *ptr = get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpChar: return *(ecs_char_t*)ptr != 0;
-    default: ecs_throw(ECS_INVALID_PARAMETER, 
+    default: ecs_throw(ECS_INVALID_PARAMETER,
                 "invalid element for char");
     }
 error:
@@ -911,8 +915,8 @@ int64_t ecs_meta_get_int(
     case EcsOpString: return atoi(*(const char**)ptr);
     case EcsOpEnum: return *(ecs_i32_t*)ptr;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr;
-    case EcsOpEntity: 
-        ecs_throw(ECS_INVALID_PARAMETER, 
+    case EcsOpEntity:
+        ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to int");
         break;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
@@ -978,8 +982,8 @@ double ecs_meta_get_float(
     case EcsOpString: return atof(*(const char**)ptr);
     case EcsOpEnum: return *(ecs_i32_t*)ptr;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr;
-    case EcsOpEntity: 
-        ecs_throw(ECS_INVALID_PARAMETER, 
+    case EcsOpEntity:
+        ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to float");
         break;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
