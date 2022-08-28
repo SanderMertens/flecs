@@ -18858,6 +18858,17 @@ struct entity : entity_builder<entity>
             ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
     }           
 
+    /** Get mutable pointer for the second element of a pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     */
+    template <typename First, typename Second>
+    Second* get_mut_second() const {
+        return this->get_mut_second<Second>(_::cpp_type<First>::id(m_world));
+    }
+
     /** Signal that component was modified.
      *
      * @tparam T component that was modified.
