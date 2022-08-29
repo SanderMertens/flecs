@@ -304,7 +304,8 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpUPtr,
     EcsOpIPtr,
     EcsOpString,
-    EcsOpEntity
+    EcsOpEntity,
+    EcsMetaTypeOpKindLast = EcsOpEntity
 } ecs_meta_type_op_kind_t;
 
 typedef struct ecs_meta_type_op_t {

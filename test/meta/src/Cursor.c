@@ -276,6 +276,176 @@ void Cursor_set_entity_to_0() {
     ecs_fini(world);
 }
 
+void Cursor_set_enum() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_entity_t t = ecs_enum(world, {
+        .constants = {
+            { "Red" },
+            { "Green" },
+            { "Blue"}
+        }
+    });
+    test_assert(t != 0);
+
+    Color value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_set_int(&cur, Green) );
+
+    test_int(value, Green);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_bitmask() {
+    ecs_world_t *world = ecs_init();
+
+    uint32_t Bacon = 1;
+    uint32_t Lettuce = 2;
+
+    ecs_entity_t t = ecs_bitmask(world, {
+        .constants = {
+            { "Bacon" },
+            { "Lettuce" }
+        }
+    });
+    test_assert(t != 0);
+
+    uint32_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_set_uint(&cur, Bacon | Lettuce) );
+
+    test_uint(value, Bacon | Lettuce);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_signed_as_unsigned() {
+    ecs_world_t *world = ecs_init();
+
+    int32_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i32_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, 10) );
+
+    test_int(value, 10);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_unsigned_as_signed() {
+    ecs_world_t *world = ecs_init();
+
+    uint32_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u32_t), &value);
+    test_ok( ecs_meta_set_int(&cur, 10) );
+
+    test_int(value, 10);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_signed_as_unsigned_out_of_range() {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    int8_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i8_t), &value);
+    test_fail( ecs_meta_set_uint(&cur, 128) );
+
+    test_int(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_unsigned_as_signed_out_of_range() {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    uint32_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u32_t), &value);
+    test_fail( ecs_meta_set_int(&cur, -10) );
+
+    test_int(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_null_as_signed() {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+    test_ok( ecs_meta_set_int(&cur, 0) );
+
+    test_str(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_null_as_unsigned() {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, 0) );
+
+    test_str(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_entity_as_signed() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = 0;
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_ok( ecs_meta_set_int(&cur, (int64_t)e) );
+
+    test_uint(value, e);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_entity_as_unsigned() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = 0;
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, e) );
+
+    test_uint(value, e);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_entity_as_signed_out_of_range() {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_fail( ecs_meta_set_int(&cur, -10) );
+
+    test_uint(value, 0);
+
+    ecs_fini(world);
+}
+
 void Cursor_set_str_to_bool() {
     ecs_world_t *world = ecs_init();
 

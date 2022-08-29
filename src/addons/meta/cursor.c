@@ -3,7 +3,7 @@
 #ifdef FLECS_META
 
 static
-const char* op_kind_str(
+const char* flecs_meta_op_kind_str(
     ecs_meta_type_op_kind_t kind)
 {
     switch(kind) {
@@ -431,7 +431,76 @@ const char* ecs_meta_get_member(
     return op->name;
 }
 
-/* Utility macros to let the compiler do the conversion work for us */
+/* Utilities for type conversions and bounds checking */
+struct {
+    int64_t min, max;
+} ecs_meta_bounds_signed[EcsMetaTypeOpKindLast + 1] = {
+    [EcsOpBool]    = {false,      true},
+    [EcsOpChar]    = {INT8_MIN,   INT8_MAX},
+    [EcsOpByte]    = {0,          UINT8_MAX},
+    [EcsOpU8]      = {0,          UINT8_MAX},
+    [EcsOpU16]     = {0,          UINT16_MAX},
+    [EcsOpU32]     = {0,          UINT32_MAX},
+    [EcsOpU64]     = {0,          INT64_MAX},
+    [EcsOpI8]      = {INT8_MIN,   INT8_MAX},
+    [EcsOpI16]     = {INT16_MIN,  INT16_MAX},
+    [EcsOpI32]     = {INT32_MIN,  INT32_MAX},
+    [EcsOpI64]     = {INT64_MIN,  INT64_MAX},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : INT64_MAX)},
+    [EcsOpIPtr]    = {
+        ((sizeof(void*) == 4) ? INT32_MIN : INT64_MIN), 
+        ((sizeof(void*) == 4) ? INT32_MAX : INT64_MAX)
+    },
+    [EcsOpEntity]  = {0,          INT64_MAX},
+    [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
+    [EcsOpBitmask] = {0,          INT32_MAX}
+};
+
+struct {
+    uint64_t min, max;
+} ecs_meta_bounds_unsigned[EcsMetaTypeOpKindLast + 1] = {
+    [EcsOpBool]    = {false,      true},
+    [EcsOpChar]    = {0,          INT8_MAX},
+    [EcsOpByte]    = {0,          UINT8_MAX},
+    [EcsOpU8]      = {0,          UINT8_MAX},
+    [EcsOpU16]     = {0,          UINT16_MAX},
+    [EcsOpU32]     = {0,          UINT32_MAX},
+    [EcsOpU64]     = {0,          UINT64_MAX},
+    [EcsOpI8]      = {0,          INT8_MAX},
+    [EcsOpI16]     = {0,          INT16_MAX},
+    [EcsOpI32]     = {0,          INT32_MAX},
+    [EcsOpI64]     = {0,          INT64_MAX},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : UINT64_MAX)},
+    [EcsOpIPtr]    = {0, ((sizeof(void*) == 4) ? INT32_MAX : INT64_MAX)},
+    [EcsOpEntity]  = {0,          UINT64_MAX},
+    [EcsOpEnum]    = {0,          INT32_MAX},
+    [EcsOpBitmask] = {0,          UINT32_MAX}
+};
+
+struct {
+    double min, max;
+} ecs_meta_bounds_float[EcsMetaTypeOpKindLast + 1] = {
+    [EcsOpBool]    = {false,      true},
+    [EcsOpChar]    = {INT8_MIN,   INT8_MAX},
+    [EcsOpByte]    = {0,          UINT8_MAX},
+    [EcsOpU8]      = {0,          UINT8_MAX},
+    [EcsOpU16]     = {0,          UINT16_MAX},
+    [EcsOpU32]     = {0,          UINT32_MAX},
+    [EcsOpU64]     = {0,          (double)UINT64_MAX},
+    [EcsOpI8]      = {INT8_MIN,   INT8_MAX},
+    [EcsOpI16]     = {INT16_MIN,  INT16_MAX},
+    [EcsOpI32]     = {INT32_MIN,  INT32_MAX},
+    [EcsOpI64]     = {INT64_MIN,  (double)INT64_MAX},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : (double)UINT64_MAX)},
+    [EcsOpIPtr]    = {
+        ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN), 
+        ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
+    },
+    [EcsOpEntity]  = {0,          (double)UINT64_MAX},
+    [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
+    [EcsOpBitmask] = {0,          UINT32_MAX}
+};
+
 #define set_T(T, ptr, value)\
     ((T*)ptr)[0] = ((T)value)
 
@@ -440,28 +509,38 @@ case kind:\
     set_T(T, dst, src);\
     break
 
+#define case_T_checked(kind, T, dst, src, bounds)\
+case kind:\
+    if ((src < bounds[kind].min) || (src > bounds[kind].max)){\
+        ecs_err("value %.0f is out of bounds for type %s", (double)src,\
+            flecs_meta_op_kind_str(kind));\
+        return -1;\
+    }\
+    set_T(T, dst, src);\
+    break
+
 #define cases_T_float(dst, src)\
     case_T(EcsOpF32,  ecs_f32_t,  dst, src);\
     case_T(EcsOpF64,  ecs_f64_t,  dst, src)
 
-#define cases_T_signed(dst, src)\
-    case_T(EcsOpChar, ecs_char_t, dst, src);\
-    case_T(EcsOpI8,   ecs_i8_t,   dst, src);\
-    case_T(EcsOpI16,  ecs_i16_t,  dst, src);\
-    case_T(EcsOpI32,  ecs_i32_t,  dst, src);\
-    case_T(EcsOpI64,  ecs_i64_t,  dst, src);\
-    case_T(EcsOpIPtr, ecs_iptr_t, dst, src);\
-    case_T(EcsOpEnum, ecs_i32_t, dst, src);\
+#define cases_T_signed(dst, src, bounds)\
+    case_T_checked(EcsOpChar, ecs_char_t, dst, src, bounds);\
+    case_T_checked(EcsOpI8,   ecs_i8_t,   dst, src, bounds);\
+    case_T_checked(EcsOpI16,  ecs_i16_t,  dst, src, bounds);\
+    case_T_checked(EcsOpI32,  ecs_i32_t,  dst, src, bounds);\
+    case_T_checked(EcsOpI64,  ecs_i64_t,  dst, src, bounds);\
+    case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);\
+    case_T_checked(EcsOpEnum, ecs_i32_t, dst, src, bounds)
 
-#define cases_T_unsigned(dst, src)\
-    case_T(EcsOpByte, ecs_byte_t, dst, src);\
-    case_T(EcsOpU8,   ecs_u8_t,   dst, src);\
-    case_T(EcsOpU16,  ecs_u16_t,  dst, src);\
-    case_T(EcsOpU32,  ecs_u32_t,  dst, src);\
-    case_T(EcsOpU64,  ecs_u64_t,  dst, src);\
-    case_T(EcsOpUPtr, ecs_uptr_t, dst, src);\
-    case_T(EcsOpEntity, ecs_u64_t, dst, src);\
-    case_T(EcsOpBitmask, ecs_u32_t, dst, src);\
+#define cases_T_unsigned(dst, src, bounds)\
+    case_T_checked(EcsOpByte, ecs_byte_t, dst, src, bounds);\
+    case_T_checked(EcsOpU8,   ecs_u8_t,   dst, src, bounds);\
+    case_T_checked(EcsOpU16,  ecs_u16_t,  dst, src, bounds);\
+    case_T_checked(EcsOpU32,  ecs_u32_t,  dst, src, bounds);\
+    case_T_checked(EcsOpU64,  ecs_u64_t,  dst, src, bounds);\
+    case_T_checked(EcsOpUPtr, ecs_uptr_t, dst, src, bounds);\
+    case_T_checked(EcsOpEntity, ecs_u64_t, dst, src, bounds);\
+    case_T_checked(EcsOpBitmask, ecs_u32_t, dst, src, bounds)
 
 #define cases_T_bool(dst, src)\
 case EcsOpBool:\
@@ -489,7 +568,7 @@ int ecs_meta_set_bool(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
-    cases_T_unsigned(ptr, value);
+    cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     default:
         conversion_error(cursor, op, "bool");
         return -1;
@@ -508,7 +587,7 @@ int ecs_meta_set_char(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value);
+    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     default:
         conversion_error(cursor, op, "char");
         return -1;
@@ -527,8 +606,8 @@ int ecs_meta_set_int(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value);
-    cases_T_unsigned(ptr, value);
+    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
+    cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
     cases_T_float(ptr, value);
     default: {
         if(!value) return ecs_meta_set_null(cursor);
@@ -550,8 +629,8 @@ int ecs_meta_set_uint(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value);
-    cases_T_unsigned(ptr, value);
+    cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
+    cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_float(ptr, value);
     default:
         if(!value) return ecs_meta_set_null(cursor);
@@ -572,8 +651,8 @@ int ecs_meta_set_float(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value);
-    cases_T_unsigned(ptr, value);
+    cases_T_signed(ptr, value, ecs_meta_bounds_float);
+    cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);
     default:
         conversion_error(cursor, op, "float");
@@ -755,7 +834,7 @@ int ecs_meta_set_string(
         return -1;
     default:
         ecs_err("unsupported conversion from string '%s' to '%s'",
-            value, op_kind_str(op->kind));
+            value, flecs_meta_op_kind_str(op->kind));
         return -1;
     }
 

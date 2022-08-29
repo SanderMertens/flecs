@@ -267,6 +267,17 @@ void Cursor_set_string_to_null(void);
 void Cursor_set_entity(void);
 void Cursor_set_entity_to_number(void);
 void Cursor_set_entity_to_0(void);
+void Cursor_set_enum(void);
+void Cursor_set_bitmask(void);
+void Cursor_set_signed_as_unsigned(void);
+void Cursor_set_unsigned_as_signed(void);
+void Cursor_set_signed_as_unsigned_out_of_range(void);
+void Cursor_set_unsigned_as_signed_out_of_range(void);
+void Cursor_set_string_to_null_as_signed(void);
+void Cursor_set_string_to_null_as_unsigned(void);
+void Cursor_set_entity_as_signed(void);
+void Cursor_set_entity_as_unsigned(void);
+void Cursor_set_entity_as_signed_out_of_range(void);
 void Cursor_set_str_to_bool(void);
 void Cursor_set_str_to_char(void);
 void Cursor_set_str_literal_to_char(void);
@@ -1585,6 +1596,50 @@ bake_test_case Cursor_testcases[] = {
     {
         "set_entity_to_0",
         Cursor_set_entity_to_0
+    },
+    {
+        "set_enum",
+        Cursor_set_enum
+    },
+    {
+        "set_bitmask",
+        Cursor_set_bitmask
+    },
+    {
+        "set_signed_as_unsigned",
+        Cursor_set_signed_as_unsigned
+    },
+    {
+        "set_unsigned_as_signed",
+        Cursor_set_unsigned_as_signed
+    },
+    {
+        "set_signed_as_unsigned_out_of_range",
+        Cursor_set_signed_as_unsigned_out_of_range
+    },
+    {
+        "set_unsigned_as_signed_out_of_range",
+        Cursor_set_unsigned_as_signed_out_of_range
+    },
+    {
+        "set_string_to_null_as_signed",
+        Cursor_set_string_to_null_as_signed
+    },
+    {
+        "set_string_to_null_as_unsigned",
+        Cursor_set_string_to_null_as_unsigned
+    },
+    {
+        "set_entity_as_signed",
+        Cursor_set_entity_as_signed
+    },
+    {
+        "set_entity_as_unsigned",
+        Cursor_set_entity_as_unsigned
+    },
+    {
+        "set_entity_as_signed_out_of_range",
+        Cursor_set_entity_as_signed_out_of_range
     },
     {
         "set_str_to_bool",
@@ -2946,7 +3001,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        64,
+        75,
         Cursor_testcases
     },
     {
