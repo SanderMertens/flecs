@@ -20,15 +20,20 @@ int main(int, char *[]) {
 
     // Convert position component to JSON string
     const Position *ptr = e.get<Position>();
-    std::cout << ecs.to_json(ptr).c_str() << "\n"; // {"x":10, "y":20}
+    std::cout << ecs.to_json(ptr) << "\n"; // {"x":10, "y":20}
 
     // Convert entity to JSON
-    std::cout << e.to_json().c_str() << "\n";
+    flecs::entity_to_json_desc_t desc;
+    desc.serialize_path = true;
+    desc.serialize_values = true;
+    std::cout << e.to_json(&desc) << "\n";
+
     // {
-    //   "path": "ent", 
-    //   "type":[
-    //     {"pred":"Position", "value":{"x":10.00, "y":20.00}}, 
-    //     {"pred":"Identifier", "obj":"Name"}
-    //   ]
+    //     "path":"ent", 
+    //     "ids":[["Position"]], 
+    //     "values":[{
+    //         "x":10, 
+    //         "y":20
+    //     }]
     // }
 }
