@@ -3501,15 +3501,22 @@ const char* ecs_get_symbol(
 }
 
 static
-ecs_entity_t set_identifier(
+ecs_entity_t flecs_set_identifier(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag,
     const char *name)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0 || name != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (!entity) {
         entity = ecs_new_id(world);
+    }
+
+    if (!name) {
+        ecs_remove_pair(world, entity, ecs_id(EcsIdentifier), tag);
+        return entity;
     }
 
     EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag);
@@ -3533,7 +3540,7 @@ ecs_entity_t ecs_set_name(
             .name = name
         });
     }
-    return set_identifier(world, entity, EcsName, name);
+    return flecs_set_identifier(world, entity, EcsName, name);
 }
 
 ecs_entity_t ecs_set_symbol(
@@ -3541,7 +3548,7 @@ ecs_entity_t ecs_set_symbol(
     ecs_entity_t entity,
     const char *name)
 {
-    return set_identifier(world, entity, EcsSymbol, name);
+    return flecs_set_identifier(world, entity, EcsSymbol, name);
 }
 
 void ecs_set_alias(
@@ -3549,7 +3556,7 @@ void ecs_set_alias(
     ecs_entity_t entity,
     const char *name)
 {
-    set_identifier(world, entity, EcsAlias, name);
+    flecs_set_identifier(world, entity, EcsAlias, name);
 }
 
 ecs_id_t ecs_make_pair(

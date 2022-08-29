@@ -717,6 +717,7 @@
                 "lookup_not_found",
                 "lookup_child",
                 "lookup_w_null_name",
+                "lookup_after_name_reset",
                 "get_name",
                 "get_name_no_name",
                 "get_name_from_empty",

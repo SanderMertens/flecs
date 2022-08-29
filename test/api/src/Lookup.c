@@ -32,6 +32,23 @@ void Lookup_lookup_w_null_name() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_after_name_reset() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t lookup = ecs_lookup(world, "foo");
+    test_assert(e == lookup);
+
+    ecs_set_name(world, e, NULL);
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_set_name(world, e, "foo");
+    lookup = ecs_lookup(world, "foo");
+    test_assert(e == lookup);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_component() {
     ecs_world_t *world = ecs_mini();
 

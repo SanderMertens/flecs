@@ -672,6 +672,7 @@ void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
 void Lookup_lookup_w_null_name(void);
+void Lookup_lookup_after_name_reset(void);
 void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
 void Lookup_get_name_from_empty(void);
@@ -4696,6 +4697,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_w_null_name",
         Lookup_lookup_w_null_name
+    },
+    {
+        "lookup_after_name_reset",
+        Lookup_lookup_after_name_reset
     },
     {
         "get_name",
@@ -10653,7 +10658,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        38,
+        39,
         Lookup_testcases
     },
     {
