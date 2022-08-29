@@ -21,13 +21,11 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 -------------------------------------------------------------------------------
 */
 
-#ifdef ECS_TARGET_WINDOWS
-//FIXME
-#else
+#ifdef ECS_TARGET_POSIX
 #include <sys/param.h>  /* attempt to define endianness */
 #endif
 #ifdef ECS_TARGET_LINUX
-# include <endian.h>    /* attempt to define endianness */
+#include <endian.h>     /* attempt to define endianness */
 #endif
 
 /*
