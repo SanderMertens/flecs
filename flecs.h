@@ -4440,7 +4440,9 @@ bool _ecs_poly_is(
  */
 
 /** Create new entity id.
- * This operation returns an unused entity id.
+ * This operation returns an unused entity id. This operation is guaranteed to
+ * return an empty entity as it does not use values set by ecs_set_scope or
+ * ecs_set_with.
  *
  * @param world The world.
  * @return The new entity id.
@@ -4457,6 +4459,9 @@ ecs_entity_t ecs_new_id(
  * Note that ECS_HI_COMPONENT_ID does not represent the maximum number of 
  * components that can be created, only the maximum number of components that
  * can take advantage of these optimizations.
+ * 
+ * This operation is guaranteed to return an empty entity as it does not use 
+ * values set by ecs_set_scope or ecs_set_with.
  * 
  * This operation does not recycle ids.
  *
