@@ -1985,7 +1985,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_offset(ptr, T, index)\
     ECS_CAST(T*, ECS_OFFSET(ptr, ECS_SIZEOF(T) * index))
 
-#if defined(ECS_TARGET_WINDOWS)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
@@ -2008,7 +2008,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Files */
-#if defined(ECS_TARGET_WINDOWS)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
 #else
 #define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
@@ -13503,7 +13503,11 @@ namespace _ {
 #elif defined(__clang__)
 #define ECS_SIZE_T_STR "size_t"
 #else
+#ifdef ECS_TARGET_WINDOWS
+#define ECS_SIZE_T_STR "constexpr size_t; size_t = long long unsigned int"
+#else
 #define ECS_SIZE_T_STR "constexpr size_t; size_t = long unsigned int"
+#endif
 #endif
 
 template <typename E>
@@ -18863,17 +18867,6 @@ struct entity : entity_builder<entity>
         return static_cast<Second*>(
             ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
     }           
-
-    /** Get mutable pointer for the second element of a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     */
-    template <typename First, typename Second>
-    Second* get_mut_second() const {
-        return this->get_mut_second<Second>(_::cpp_type<First>::id(m_world));
-    }
 
     /** Signal that component was modified.
      *
