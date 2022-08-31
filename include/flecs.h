@@ -2910,7 +2910,7 @@ ecs_iter_t ecs_term_chain_iter(
     const ecs_iter_t *it,
     ecs_term_t *term);
 
-/** Progress the term iterator.
+/** Progress a term iterator.
  * This operation progresses the term iterator to the next table. The 
  * iterator must have been initialized with `ecs_term_iter`. This operation 
  * must be invoked at least once before interpreting the contents of the 
@@ -2921,6 +2921,29 @@ ecs_iter_t ecs_term_chain_iter(
  */
 FLECS_API
 bool ecs_term_next(
+    ecs_iter_t *it);
+
+/** Iterator for a parent's children.
+ * This operation is equivalent to a term iterator for (ChildOf, parent). 
+ * Iterate the result with ecs_children_next.
+ * 
+ * @param world The world.
+ * @param parent The parent for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_children(
+    const ecs_world_t *world,
+    ecs_entity_t parent);
+
+/** Progress a children iterator.
+ * Equivalent to ecs_term_next.
+ * 
+ * @param it The iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_API
+bool ecs_children_next(
     ecs_iter_t *it);
 
 /** Test whether term id is set.

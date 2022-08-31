@@ -973,6 +973,7 @@ void Filter_term_iter_type_set(void);
 void Filter_term_iter_any_match_wildcard(void);
 void Filter_term_iter_any_match_tag_and_wildcard(void);
 void Filter_term_iter_any_obj(void);
+void Filter_children_iter(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
@@ -5870,6 +5871,10 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_any_obj
     },
     {
+        "children_iter",
+        Filter_children_iter
+    },
+    {
         "filter_iter_1_tag",
         Filter_filter_iter_1_tag
     },
@@ -10705,7 +10710,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        232,
+        233,
         Filter_testcases
     },
     {

@@ -24,8 +24,8 @@ void iterate_tree(ecs_world_t *ecs, ecs_entity_t e, Position p_parent) {
     printf("{%f, %f}\n\n", p_actual.x, p_actual.y);
 
     // Iterate children recursively
-    ecs_iter_t it = ecs_term_iter(ecs, &(ecs_term_t){ .id = ecs_childof(e) });
-    while (ecs_term_next(&it)) {
+    ecs_iter_t it = ecs_children(ecs, e);
+    while (ecs_children_next(&it)) {
         for (int i = 0; i < it.count; i ++) {
             iterate_tree(ecs, it.entities[i], p_actual);
         }

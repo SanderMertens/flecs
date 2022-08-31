@@ -222,6 +222,22 @@ world.filter_builder()
   });
 ```
 
+### Iterate all children for a parent
+```c
+ecs_iter_t it = ecs_children(world, parent);
+while (ecs_children_next(&it)) {
+  for (int i = 0; i < it.count; i ++) {
+    ecs_entity_t child = it.entities[i];
+    // ...
+  }
+}
+```
+```cpp
+parent.children([](flecs::entity child) {
+   // ...
+});
+```
+
 More advanced queries are possible with filters, queries and rules. See the [Queries manual](Queries.md) for more details.
 
 ## Relationship components

@@ -1874,6 +1874,19 @@ error:
     return (ecs_iter_t){ 0 };
 }
 
+ecs_iter_t ecs_children(
+    const ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    return ecs_term_iter(world,  &(ecs_term_t){ .id = ecs_childof(parent) });
+}
+
+bool ecs_children_next(
+    ecs_iter_t *it)
+{
+    return ecs_term_next(it);
+}
+
 static
 const ecs_table_record_t *flecs_term_iter_next_table(
     ecs_term_iter_t *iter)

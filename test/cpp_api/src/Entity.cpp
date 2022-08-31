@@ -4030,3 +4030,59 @@ void Entity_add_if_pair_w_0_object() {
     test_assert(!e.has(r, o_1));
     test_assert(!e.has(r, flecs::Wildcard));
 }
+
+void Entity_children_w_custom_relation() {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity();
+
+    flecs::entity parent = ecs.entity();
+    flecs::entity child_1 = ecs.entity().add(rel, parent);
+    flecs::entity child_2 = ecs.entity().add(rel, parent);
+    ecs.entity().child_of(parent);
+
+    bool child_1_found = false;
+    bool child_2_found = false;
+    int32_t count = 0;
+
+    parent.children(rel, [&](flecs::entity child) {
+        if (child == child_1) {
+            child_1_found = true;
+        } else if (child == child_2) {
+            child_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_assert(child_1_found == true);
+    test_assert(child_2_found == true);
+}
+
+void Entity_children_w_custom_relation_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    flecs::entity parent = ecs.entity();
+    flecs::entity child_1 = ecs.entity().add<Rel>(parent);
+    flecs::entity child_2 = ecs.entity().add<Rel>(parent);
+    ecs.entity().child_of(parent);
+
+    bool child_1_found = false;
+    bool child_2_found = false;
+    int32_t count = 0;
+
+    parent.children<Rel>([&](flecs::entity child) {
+        if (child == child_1) {
+            child_1_found = true;
+        } else if (child == child_2) {
+            child_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_assert(child_1_found == true);
+    test_assert(child_2_found == true);
+}

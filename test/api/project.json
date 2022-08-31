@@ -1030,6 +1030,7 @@
                 "term_iter_any_match_wildcard",
                 "term_iter_any_match_tag_and_wildcard",
                 "term_iter_any_obj",
+                "children_iter",
                 "filter_iter_1_tag",
                 "filter_iter_2_tags",
                 "filter_iter_2_tags_1_not",

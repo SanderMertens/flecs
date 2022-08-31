@@ -3063,6 +3063,23 @@ void Filter_term_iter_any_obj() {
     ecs_fini(world);
 }
 
+void Filter_children_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_children(world, parent);
+    test_bool(true, ecs_children_next(&it));
+    test_int(it.count, 2);
+    test_uint(child_1, it.entities[0]);
+    test_uint(child_2, it.entities[1]);
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_1_tag() {
     ecs_world_t *world = ecs_mini();
 
@@ -9536,4 +9553,3 @@ void Filter_filter_w_short_notation() {
 
     ecs_fini(world);
 }
-
