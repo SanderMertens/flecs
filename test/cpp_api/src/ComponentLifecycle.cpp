@@ -640,6 +640,36 @@ void ComponentLifecycle_emplace_no_default_ctor() {
     test_int(CountNoDefaultCtor::dtor_invoked, 0); 
 }
 
+void ComponentLifecycle_emplace_defer_use_move_ctor() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    ecs.defer_begin();
+    e.emplace<CountNoDefaultCtor>(10);
+    test_assert(!e.has<CountNoDefaultCtor>());
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
+    ecs.defer_end();
+
+    test_assert(e.has<CountNoDefaultCtor>());
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+    const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+}
+
 void ComponentLifecycle_emplace_existing() {
     install_test_abort();
 

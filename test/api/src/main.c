@@ -766,6 +766,7 @@ void ComponentLifecycle_set_lifecycle_after_trigger(void);
 void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
 void ComponentLifecycle_ctor_w_emplace(void);
 void ComponentLifecycle_ctor_w_emplace_defer(void);
+void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void);
 void ComponentLifecycle_on_add_w_emplace(void);
 void ComponentLifecycle_on_add_w_emplace_existing(void);
 void ComponentLifecycle_on_add_w_emplace_defer(void);
@@ -5054,6 +5055,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_w_emplace_defer",
         ComponentLifecycle_ctor_w_emplace_defer
+    },
+    {
+        "ctor_w_emplace_defer_use_move_ctor",
+        ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor
     },
     {
         "on_add_w_emplace",
@@ -10679,7 +10684,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        72,
+        73,
         ComponentLifecycle_testcases
     },
     {

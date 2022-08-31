@@ -3166,13 +3166,14 @@ error:
 }
 
 static
-ecs_entity_t set_ptr_w_id(
+ecs_entity_t flecs_set_ptr_w_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
     size_t size,
     void *ptr,
     bool is_move,
+    bool is_emplace,
     bool flecs_notify)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -3206,6 +3207,13 @@ ecs_entity_t set_ptr_w_id(
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
+            } else if (is_emplace) {
+                ecs_move_t move = ti->hooks.move_ctor;
+                if (move) {
+                    move(dst, ptr, 1, ti);
+                } else {
+                    ecs_os_memcpy(dst, ptr, flecs_utosize(size));
+                } 
             } else {
                 ecs_copy_t copy = ti->hooks.copy;
                 if (copy) {
@@ -3248,8 +3256,8 @@ ecs_entity_t ecs_set_id(
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Safe to cast away const: function won't modify if move arg is false */
-    return set_ptr_w_id(
-        world, entity, id, size, (void*)ptr, false, true);
+    return flecs_set_ptr_w_id(
+        world, entity, id, size, (void*)ptr, false, false, true);
 error:
     return 0;
 }
@@ -4305,20 +4313,20 @@ bool flecs_defer_end(
                     ecs_clone(world, e, op->id, op->is._1.clone_value);
                     break;
                 case EcsOpSet:
-                    set_ptr_w_id(world, e, 
+                    flecs_set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, true, true);
+                        op->is._1.value, true, false, true);
                     break;
                 case EcsOpEmplace:
                     ecs_emplace_id(world, e, op->id);
-                    set_ptr_w_id(world, e, 
+                    flecs_set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, true, false);
+                        op->is._1.value, false, true, false);
                     break;
                 case EcsOpMut:
-                    set_ptr_w_id(world, e, 
+                    flecs_set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, true, false);
+                        op->is._1.value, true, false, false);
                     break;
                 case EcsOpModified:
                     if (ecs_has_id(world, e, op->id)) {

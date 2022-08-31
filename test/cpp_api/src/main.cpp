@@ -767,6 +767,7 @@ void ComponentLifecycle_default_ctor_w_value_ctor(void);
 void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void);
 void ComponentLifecycle_emplace_w_ctor(void);
 void ComponentLifecycle_emplace_no_default_ctor(void);
+void ComponentLifecycle_emplace_defer_use_move_ctor(void);
 void ComponentLifecycle_emplace_existing(void);
 void ComponentLifecycle_emplace_singleton(void);
 void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void);
@@ -3961,6 +3962,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_emplace_no_default_ctor
     },
     {
+        "emplace_defer_use_move_ctor",
+        ComponentLifecycle_emplace_defer_use_move_ctor
+    },
+    {
         "emplace_existing",
         ComponentLifecycle_emplace_existing
     },
@@ -4949,7 +4954,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        52,
+        53,
         ComponentLifecycle_testcases
     },
     {

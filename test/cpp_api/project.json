@@ -803,6 +803,7 @@
                 "no_default_ctor_move_ctor_on_set",
                 "emplace_w_ctor",
                 "emplace_no_default_ctor",
+                "emplace_defer_use_move_ctor",
                 "emplace_existing",
                 "emplace_singleton",
                 "dtor_w_non_trivial_implicit_move",
