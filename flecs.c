@@ -5384,19 +5384,6 @@ error:
     return NULL;
 }
 
-static
-const ecs_type_info_t *get_c_info(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    ecs_entity_t real_id = ecs_get_typeid(world, component);
-    if (real_id) {
-        return flecs_type_info_get(world, real_id);
-    } else {
-        return NULL;
-    }
-}
-
 /* Utilities for creating a diff struct on the fly between two arbitrary tables.
  * This is temporary code that will eventually be replaced by a cache that 
  * stores the diff between two archetypes. */
@@ -8430,10 +8417,10 @@ void flecs_copy_ptr_w_id(
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
     flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r);
+    const ecs_type_info_t *ti = dst.ti;
     ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
-        const ecs_type_info_t *ti = dst.ti;
         ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
             copy(dst.ptr, ptr, 1, ti);
@@ -8446,9 +8433,12 @@ void flecs_copy_ptr_w_id(
 
     flecs_table_mark_dirty(world, r->table, id);
 
-    ecs_type_t ids = { .array = &id, .count = 1 };
-    flecs_notify_on_set(
-        world, r->table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+    ecs_table_t *table = r->table;
+    if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
+        ecs_type_t ids = { .array = &id, .count = 1 };
+        flecs_notify_on_set(
+            world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+    }
 
     flecs_defer_end(world, stage);
 error:
@@ -8493,9 +8483,12 @@ void flecs_move_ptr_w_id(
     flecs_table_mark_dirty(world, r->table, id);
 
     if (flecs_notify) {
-        ecs_type_t ids = { .array = &id, .count = 1 };
-        flecs_notify_on_set(
-            world, r->table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+        ecs_table_t *table = r->table;
+        if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
+            ecs_type_t ids = { .array = &id, .count = 1 };
+            flecs_notify_on_set(
+                world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+        }
     }
 
     flecs_defer_end(world, stage);
