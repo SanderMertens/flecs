@@ -69,7 +69,7 @@ ecs_meta_type_op_t* get_op(
 
 /* Get component for type in current scope */
 static
-const EcsComponent* get_component_ptr(
+const EcsComponent* get_ecs_component(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
 {
@@ -87,7 +87,7 @@ ecs_size_t get_size(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
 {
-    return get_component_ptr(world, scope)->size;
+    return get_ecs_component(world, scope)->size;
 }
 
 /* Get alignment for type in current scope */
@@ -96,7 +96,7 @@ ecs_size_t get_alignment(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
 {
-    return get_component_ptr(world, scope)->alignment;
+    return get_ecs_component(world, scope)->alignment;
 }
 
 static
