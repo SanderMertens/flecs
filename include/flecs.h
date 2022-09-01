@@ -427,6 +427,7 @@ typedef enum ecs_oper_kind_t {
 #define EcsParent                     (1u << 5) /* Short for up(ChildOf) */
 #define EcsIsVariable                 (1u << 6) /* Term id is a variable */
 #define EcsIsEntity                   (1u << 7) /* Term id is an entity */
+#define EcsFilter                     (1u << 8) /* Prevent observer from triggering on term */
 
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf|EcsCascade|EcsParent)
 

@@ -3035,3 +3035,39 @@ void Observer_observer_w_short_notation() {
 
     ecs_fini(world);
 }
+
+void Observer_observer_w_filter_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ .id = TagA }, { .id = TagB, .src.flags = EcsFilter }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    
+    ecs_remove(world, e, TagB);
+    ecs_add(world, e, TagB);
+    test_int(ctx.invoked, 1);
+
+    ecs_clear(world, e);
+    test_int(ctx.invoked, 1);
+
+    ecs_add(world, e, TagA);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}

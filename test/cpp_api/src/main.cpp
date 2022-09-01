@@ -715,6 +715,7 @@ void Observer_on_add_tag_action(void);
 void Observer_on_add_tag_iter(void);
 void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
+void Observer_observer_w_filter_term(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -3765,6 +3766,10 @@ bake_test_case Observer_testcases[] = {
     {
         "on_add_expr",
         Observer_on_add_expr
+    },
+    {
+        "observer_w_filter_term",
+        Observer_observer_w_filter_term
     }
 };
 
@@ -4955,7 +4960,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        20,
+        21,
         Observer_testcases
     },
     {

@@ -77,6 +77,7 @@ static const uint32_t Cascade = EcsCascade;
 static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;
+static const uint32_t Filter = EcsFilter;
 static const uint32_t TraverseFlags = EcsTraverseFlags;
 
 /* Builtin entity ids */

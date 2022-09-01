@@ -535,3 +535,41 @@ void Observer_on_add_expr() {
 
     test_int(invoked, 1);
 }
+
+void Observer_observer_w_filter_term() {
+    flecs::world world;
+
+    flecs::entity TagA = world.entity();
+    flecs::entity TagB = world.entity();
+
+    int invoked = 0;
+
+    world.observer()
+        .term(TagA)
+        .term(TagB).filter()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity();
+    test_int(invoked, 0);
+
+    e.add(TagB);
+    test_int(invoked, 0);
+
+    e.add(TagA);
+    test_int(invoked, 1);
+
+    e.remove(TagB);
+    test_int(invoked, 1);
+
+    e.add(TagB);
+    test_int(invoked, 1);
+
+    e.clear();
+    test_int(invoked, 1);
+
+    e.add(TagA);
+    test_int(invoked, 1);
+}

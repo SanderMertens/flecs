@@ -2429,6 +2429,7 @@ typedef enum ecs_oper_kind_t {
 #define EcsParent                     (1u << 5) /* Short for up(ChildOf) */
 #define EcsIsVariable                 (1u << 6) /* Term id is a variable */
 #define EcsIsEntity                   (1u << 7) /* Term id is an entity */
+#define EcsFilter                     (1u << 8) /* Prevent observer from triggering on term */
 
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf|EcsCascade|EcsParent)
 
@@ -13050,6 +13051,7 @@ static const uint32_t Cascade = EcsCascade;
 static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;
+static const uint32_t Filter = EcsFilter;
 static const uint32_t TraverseFlags = EcsTraverseFlags;
 
 /* Builtin entity ids */
@@ -17548,7 +17550,9 @@ struct entity_view : public id {
     flecs::entity target_for(flecs::entity_t relationship) const;
 
     /** Get parent of entity.
-     * Short for .target(flecs::ChildOf).
+     * Short for target(flecs::ChildOf).
+     * 
+     * @return The parent of the entity.
      */
     flecs::entity parent() const;
     
@@ -21472,6 +21476,12 @@ struct term_builder_i : term_id_builder_i<Base> {
 
         ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
         m_term->src.id = sid;
+        return *this;
+    }
+
+    /* Filter terms are not triggered on by observers */
+    Base& filter() {
+        m_term->src.flags |= flecs::Filter;
         return *this;
     }
 

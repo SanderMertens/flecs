@@ -41899,6 +41899,10 @@ int flecs_multi_observer_init(
     ecs_entity_t old_scope = ecs_set_scope(world, observer->entity);
 
     for (i = 0; i < term_count; i ++) {
+        if (filter->terms[i].src.flags & EcsFilter) {
+            continue;
+        }
+
         ecs_term_t *term = &child_desc.filter.terms[0];
         child_desc.term_index = filter->terms[i].field_index;
         *term = filter->terms[i];

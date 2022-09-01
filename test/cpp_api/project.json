@@ -746,7 +746,8 @@
                 "on_add_tag_action",
                 "on_add_tag_iter",
                 "on_add_tag_each",
-                "on_add_expr"
+                "on_add_expr",
+                "observer_w_filter_term"
             ]
         }, {
             "id": "Filter",

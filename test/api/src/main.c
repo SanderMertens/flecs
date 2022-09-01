@@ -1631,6 +1631,7 @@ void Observer_custom_run_action_2_terms(void);
 void Observer_custom_run_action_w_iter_next_2_terms(void);
 void Observer_read_in_on_remove_after_add_other_w_not(void);
 void Observer_observer_w_short_notation(void);
+void Observer_observer_w_filter_term(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -8471,6 +8472,10 @@ bake_test_case Observer_testcases[] = {
     {
         "observer_w_short_notation",
         Observer_observer_w_short_notation
+    },
+    {
+        "observer_w_filter_term",
+        Observer_observer_w_filter_term
     }
 };
 
@@ -10752,7 +10757,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        70,
+        71,
         Observer_testcases
     },
     {

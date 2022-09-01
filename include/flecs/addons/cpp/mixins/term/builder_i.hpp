@@ -373,6 +373,12 @@ struct term_builder_i : term_id_builder_i<Base> {
         return *this;
     }
 
+    /* Filter terms are not triggered on by observers */
+    Base& filter() {
+        m_term->src.flags |= flecs::Filter;
+        return *this;
+    }
+
     ecs_term_t *m_term;
 
 protected:
