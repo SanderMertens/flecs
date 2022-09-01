@@ -17546,6 +17546,11 @@ struct entity_view : public id {
 
     template <typename First, typename Second>
     flecs::entity target_for(flecs::entity_t relationship) const;
+
+    /** Get parent of entity.
+     * Short for .target(flecs::ChildOf).
+     */
+    flecs::entity parent() const;
     
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may
@@ -20847,6 +20852,10 @@ inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const
 template <typename First, typename Second>
 inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const {
     return target_for(relationship, _::cpp_type<First, Second>::id(m_world));
+}
+
+inline flecs::entity entity_view::parent() const {
+    return target(flecs::ChildOf);
 }
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {

@@ -65,6 +65,10 @@ inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const
     return target_for(relationship, _::cpp_type<First, Second>::id(m_world));
 }
 
+inline flecs::entity entity_view::parent() const {
+    return target(flecs::ChildOf);
+}
+
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
     ecs_assert(!stage.is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use readonly world/stage to create mutable handle");

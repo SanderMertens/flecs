@@ -397,6 +397,13 @@ struct entity_view : public id {
 
     template <typename First, typename Second>
     flecs::entity target_for(flecs::entity_t relationship) const;
+
+    /** Get parent of entity.
+     * Short for target(flecs::ChildOf).
+     * 
+     * @return The parent of the entity.
+     */
+    flecs::entity parent() const;
     
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may

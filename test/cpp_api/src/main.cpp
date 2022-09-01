@@ -73,6 +73,7 @@ void Entity_force_owned_2(void);
 void Entity_force_owned_nested(void);
 void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
+void Entity_get_target(void);
 void Entity_get_parent(void);
 void Entity_is_component_enabled(void);
 void Entity_is_enabled_component_enabled(void);
@@ -1261,6 +1262,10 @@ bake_test_case Entity_testcases[] = {
     {
         "get_null_name",
         Entity_get_null_name
+    },
+    {
+        "get_target",
+        Entity_get_target
     },
     {
         "get_parent",
@@ -4859,7 +4864,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        221,
+        222,
         Entity_testcases
     },
     {

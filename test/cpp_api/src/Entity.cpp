@@ -1100,7 +1100,7 @@ void Entity_get_null_name() {
     test_assert(n.size() == 0);
 }
 
-void Entity_get_parent() {
+void Entity_get_target() {
     flecs::world world;
 
     auto Rel = world.entity();
@@ -1137,6 +1137,16 @@ void Entity_get_parent() {
 
     p = child.target(Rel, 3);
     test_assert(p == 0);
+}
+
+void Entity_get_parent() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity();
+    flecs::entity child = world.entity().child_of(parent);
+    
+    test_assert(child.target(flecs::ChildOf) == parent);
+    test_assert(child.parent() == parent);
 }
 
 void Entity_is_component_enabled() {
