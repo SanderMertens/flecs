@@ -1600,3 +1600,17 @@ void World_reregister_after_reset_w_hooks_and_in_use() {
     ecs.entity().add<Pod>();
     test_int(2, Pod::ctor_invoked);
 }
+
+void World_reregister_after_reset_w_hooks_and_in_use_implicit() {
+    flecs::world ecs;
+
+    ecs.component<Pod>();
+
+    ecs.entity().add<Pod>();
+    test_int(1, Pod::ctor_invoked);
+
+    flecs::reset();
+
+    ecs.entity().add<Pod>();
+    test_int(2, Pod::ctor_invoked);
+}

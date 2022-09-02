@@ -884,6 +884,7 @@ void World_register_after_reset_register_w_custom_name(void);
 void World_register_builtin_after_reset(void);
 void World_register_meta_after_reset(void);
 void World_reregister_after_reset_w_hooks_and_in_use(void);
+void World_reregister_after_reset_w_hooks_and_in_use_implicit(void);
 void World_count(void);
 void World_count_id(void);
 void World_count_pair(void);
@@ -4405,6 +4406,10 @@ bake_test_case World_testcases[] = {
         World_reregister_after_reset_w_hooks_and_in_use
     },
     {
+        "reregister_after_reset_w_hooks_and_in_use_implicit",
+        World_reregister_after_reset_w_hooks_and_in_use_implicit
+    },
+    {
         "count",
         World_count
     },
@@ -5021,7 +5026,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        90,
+        91,
         World_testcases
     },
     {

@@ -12905,7 +12905,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     const char *symbol,
     size_t size,
     size_t alignment,
-    bool is_component);
+    bool is_component,
+    bool *existing_out);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -20132,7 +20133,7 @@ struct cpp_type_impl {
     // Obtain a component identifier for explicit component registration.
     static entity_t id_explicit(world_t *world = nullptr, 
         const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
-        bool is_component = true)
+        bool is_component = true, bool *existing = nullptr)
     {
         if (!s_id) {
             // If no world was provided the component cannot be registered
@@ -20161,7 +20162,7 @@ struct cpp_type_impl {
 
             entity_t entity = ecs_cpp_component_register_explicit(
                     world, s_id, id, name, type_name<T>(), symbol, 
-                        s_size, s_alignment, is_component);
+                        s_size, s_alignment, is_component, existing);
 
             s_id = entity;
 
@@ -20194,15 +20195,16 @@ struct cpp_type_impl {
                 prev_scope = ecs_set_scope(world, 0);
                 prev_with = ecs_set_with(world, 0);
             }
-            
+
             // This will register a component id, but will not register 
             // lifecycle callbacks.
-            id_explicit(world, name, allow_tag);
+            bool existing;
+            id_explicit(world, name, allow_tag, 0, true, &existing);
 
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's. */
-            if (size()) {
+            if (size() && !existing) {
                 register_lifecycle_actions<T>(world, s_id);
             }
             

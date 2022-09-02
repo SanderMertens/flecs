@@ -932,6 +932,7 @@
                 "register_builtin_after_reset",
                 "register_meta_after_reset",
                 "reregister_after_reset_w_hooks_and_in_use",
+                "reregister_after_reset_w_hooks_and_in_use_implicit",
                 "count",
                 "count_id",
                 "count_pair",

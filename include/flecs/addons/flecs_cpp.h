@@ -88,7 +88,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     const char *symbol,
     size_t size,
     size_t alignment,
-    bool is_component);
+    bool is_component,
+    bool *existing_out);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
