@@ -1625,7 +1625,10 @@
                "on_set_self_superset_from_child_base_of_prefab",
                "on_set_self_auto_override",
                "on_set_self_superset_auto_override",
-               "on_set_superset_auto_override"
+               "on_set_superset_auto_override",
+               "not_only",
+               "not_only_w_base",
+               "not_only_w_base_no_match"
            ]
         }, {
             "id": "Observer",

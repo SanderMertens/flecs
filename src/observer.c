@@ -662,9 +662,9 @@ void flecs_notify_set_base_observers(
             0, it->sources, it->ids, 0);
 
         bool result = column != -1;
-        if (term->oper == EcsNot) {
-            result = !result;
-        }
+        // if (term->oper == EcsNot) {
+        //     result = !result;
+        // }
         if (!result) {
             continue;
         }

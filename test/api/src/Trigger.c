@@ -3712,13 +3712,16 @@ void Trigger_not_from_superset() {
         .filter.terms[0].oper = EcsNot,
         .filter.terms[0].src.flags = EcsUp,
         .events = {EcsOnAdd},
-        .callback = Trigger_w_value_from_entity,
+        .callback = Trigger,
         .ctx = &ctx
     });
 
     ecs_entity_t base = ecs_new(world, Tag);
-    ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.invoked, 0);
+
+    ecs_delete(world, inst);
+    test_int(ctx.invoked, 1);
 
     ecs_fini(world);
 }
@@ -4568,6 +4571,92 @@ void Trigger_on_set_superset_auto_override() {
     test_int(ctx.count, 1);
     test_int(ctx.e[0], inst);
     test_int(ctx.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Trigger_not_only() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t i = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, i);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Trigger_not_only_w_base() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t p = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, i);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Trigger_not_only_w_base_no_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagB, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t p = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, i);
+    test_int(ctx.invoked, 0);
 
     ecs_fini(world);
 }
