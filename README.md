@@ -53,6 +53,10 @@ If you want to use the [flecs.c](https://raw.githubusercontent.com/SanderMertens
 #define flecs_STATIC
 ```
 
+If you are building on Windows with mingw/gcc/clang, add `-lWs2_32` to the linker command (only needed for the HTTP/REST addons).
+
+Make sure to compile C++ files as at least C++11 by adding `-std=c++0x` or higher to gcc/clang compile commands.
+
 By default Flecs includes many features that may not be useful for every project. Builds can be customized to minimize the overhead of the library. See the [Addons](#addons) section for more information on customized builds.
 
 ## Documentation
