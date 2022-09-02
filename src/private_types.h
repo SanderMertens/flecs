@@ -1,5 +1,5 @@
 /**
- * @file private_api.h
+ * @file private_types.h
  * @brief Private types.
  */
 

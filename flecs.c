@@ -8,7 +8,7 @@
 #define FLECS_PRIVATE_H
 
 /**
- * @file private_api.h
+ * @file private_types.h
  * @brief Private types.
  */
 
@@ -17053,7 +17053,8 @@ ecs_entity_t ecs_cpp_component_register(
     const char *symbol,
     ecs_size_t size,
     ecs_size_t alignment,
-    bool implicit_name)
+    bool implicit_name,
+    bool *existing_out)
 {
     (void)size;
     (void)alignment;
@@ -17080,7 +17081,6 @@ ecs_entity_t ecs_cpp_component_register(
             const char *sym = ecs_get_symbol(world, ent);
             ecs_assert(!existing || (sym != NULL), ECS_MISSING_SYMBOL, 
                 ecs_get_name(world, ent));
-            (void)existing;
 
             if (sym && ecs_os_strcmp(sym, symbol)) {
                 /* Application is trying to register a type with an entity that
@@ -17119,6 +17119,10 @@ ecs_entity_t ecs_cpp_component_register(
     } else if (!implicit_name) {
         ent = ecs_lookup_symbol(world, symbol, false);
         ecs_assert(ent == 0 || (ent == id), ECS_INCONSISTENT_COMPONENT_ID, symbol);
+    }
+
+    if (existing_out) {
+        *existing_out = existing;
     }
 
     return ent;

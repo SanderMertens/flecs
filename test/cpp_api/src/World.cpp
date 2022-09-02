@@ -1584,3 +1584,19 @@ void World_component_w_low_id() {
 
     test_assert(p.id() < ECS_HI_COMPONENT_ID);
 }
+
+void World_reregister_after_reset_w_hooks_and_in_use() {
+    flecs::world ecs;
+
+    ecs.component<Pod>();
+
+    ecs.entity().add<Pod>();
+    test_int(1, Pod::ctor_invoked);
+
+    flecs::reset();
+
+    ecs.component<Pod>();
+
+    ecs.entity().add<Pod>();
+    test_int(2, Pod::ctor_invoked);
+}

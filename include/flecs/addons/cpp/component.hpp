@@ -385,14 +385,15 @@ struct component : untyped_component {
             }
 
             /* Find or register component */
+            bool existing;
             id = ecs_cpp_component_register(world, id, n, _::symbol_name<T>(),
-                ECS_SIZEOF(T), ECS_ALIGNOF(T), implicit_name);
+                ECS_SIZEOF(T), ECS_ALIGNOF(T), implicit_name, &existing);
 
             /* Initialize static component data */
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
 
             /* Initialize lifecycle actions (ctor, dtor, copy, move) */
-            if (_::cpp_type<T>::size()) {
+            if (_::cpp_type<T>::size() && !existing) {
                 _::register_lifecycle_actions<T>(world, id);
             }
         }
