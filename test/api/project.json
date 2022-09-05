@@ -1273,6 +1273,8 @@
                 "query_change_check_iter_after_skip_write",
                 "query_change_parent_term",
                 "query_change_prefab_term",
+                "query_change_parent_term_w_tag",
+                "query_change_prefab_term_w_tag",
                 "query_change_skip_non_instanced",
                 "query_changed_w_or",
                 "query_changed_or",

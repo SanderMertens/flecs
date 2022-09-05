@@ -43287,26 +43287,29 @@ void flecs_query_get_dirty_state(
 {
     ecs_world_t *world = query->world;
     ecs_entity_t subject = match->sources[term];
-    int32_t column;
 
     if (!subject) {
         out->table = match->table;
-        column = match->columns[term];
-        if (column == -1) {
-            column = 0;
+        int32_t column = match->columns[term];
+        if (column != -1) {
+            out->column = ecs_table_type_to_storage_index(
+                match->table, column - 1);
+        } else {
+            out->column = -1;
         }
     } else {
         out->table = ecs_get_table(world, subject);
-        column = -match->columns[term];
+        int32_t ref_index = -match->columns[term] - 1;
+        ecs_ref_t *ref = &match->references[ref_index];
+        if (ref->id != 0) {
+            ecs_ref_get_id(world, ref, ref->id);
+            out->column = ref->tr->column;
+        } else {
+            out->column = -1;
+        }
     }
 
     out->dirty_state = flecs_table_get_dirty_state(out->table);
-
-    if (column) {
-        out->column = ecs_table_type_to_storage_index(out->table, column - 1);
-    } else {
-        out->column = -1;
-    }
 }
 
 /* Get match monitor. Monitors are used to keep track of whether components 

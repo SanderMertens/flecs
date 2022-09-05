@@ -1212,6 +1212,8 @@ void Query_query_change_check_iter_after_skip_read(void);
 void Query_query_change_check_iter_after_skip_write(void);
 void Query_query_change_parent_term(void);
 void Query_query_change_prefab_term(void);
+void Query_query_change_parent_term_w_tag(void);
+void Query_query_change_prefab_term_w_tag(void);
 void Query_query_change_skip_non_instanced(void);
 void Query_query_changed_w_or(void);
 void Query_query_changed_or(void);
@@ -6821,6 +6823,14 @@ bake_test_case Query_testcases[] = {
         Query_query_change_prefab_term
     },
     {
+        "query_change_parent_term_w_tag",
+        Query_query_change_parent_term_w_tag
+    },
+    {
+        "query_change_prefab_term_w_tag",
+        Query_query_change_prefab_term_w_tag
+    },
+    {
         "query_change_skip_non_instanced",
         Query_query_change_skip_non_instanced
     },
@@ -10744,7 +10754,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        183,
+        185,
         Query_testcases
     },
     {

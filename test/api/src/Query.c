@@ -2635,10 +2635,9 @@ void Query_query_change_parent_term() {
     ECS_COMPONENT(world, Position);
     
     ecs_entity_t parent = ecs_new(world, Position);
-    ecs_entity_t child = ecs_new(world, Position);
-    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_new_w_pair(world, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "[in] Position, [in] Position(parent)");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(parent)");
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q, 0) == true);
     test_assert(ecs_query_changed(q, 0) == true);
@@ -2667,6 +2666,70 @@ void Query_query_change_prefab_term() {
     ECS_COMPONENT(world, Position);
     
     ecs_entity_t base = ecs_new(world, Position);
+    ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(up)");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_parent_term_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_add_id(world, parent, EcsPrefab);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(parent)");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_prefab_term_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t base = ecs_new(world, Position);
+    ecs_add_id(world, base, EcsPrefab);
     ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query_new(world, "[in] Position(up)");
