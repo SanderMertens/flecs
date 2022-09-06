@@ -2965,7 +2965,7 @@ ecs_iter_t ecs_rule_iter(
     ECS_BIT_COND(result.flags, EcsIterIsFilter, 
         ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsFilter));
 
-    flecs_iter_init(&result, 
+    flecs_iter_init(world, &result, 
         flecs_iter_cache_ids |
         /* flecs_iter_cache_columns | provided by rule iterator */
         flecs_iter_cache_sources |

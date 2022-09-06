@@ -248,6 +248,7 @@ uint64_t flecs_string_hash(
     const void *ptr);
 
 void flecs_table_hashmap_init(
+    ecs_world_t *world,
     ecs_hashmap_t *hm);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
@@ -257,5 +258,8 @@ void _assert_func(
     const char *file,
     int32_t line,
     const char *func);
+
+void flecs_dump_backtrace(
+    FILE *stream);
 
 #endif

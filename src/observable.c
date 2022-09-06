@@ -113,11 +113,21 @@ void flecs_emit(
         count = ecs_table_count(table) - row;
     }
 
+    ecs_id_t ids_cache = 0;
+    void *ptrs_cache = NULL;
+    ecs_size_t sizes_cache = 0;
+    int32_t columns_cache = 0;
+    ecs_entity_t sources_cache = 0;
     ecs_iter_t it = {
         .world = stage,
         .real_world = world,
         .table = table,
         .field_count = 1,
+        .ids = &ids_cache,
+        .ptrs = &ptrs_cache,
+        .sizes = &sizes_cache,
+        .columns = &columns_cache,
+        .sources = &sources_cache,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,

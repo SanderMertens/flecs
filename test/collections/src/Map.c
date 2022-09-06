@@ -308,7 +308,7 @@ void Map_grow() {
         ecs_map_set(map, i, &v);
     }
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 1);
 
     ecs_map_free(map);
 }

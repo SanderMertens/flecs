@@ -528,7 +528,7 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, sys_count);
+    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, NULL, sys_count);
 
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
@@ -601,7 +601,7 @@ void ecs_pipeline_stats_reduce(
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
     ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        ecs_map_count(&src->system_stats));
+        NULL, ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -620,7 +620,7 @@ void ecs_pipeline_stats_reduce_last(
     int32_t count)
 {
     ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        ecs_map_count(&src->system_stats));
+        NULL, ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -650,7 +650,7 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t, NULL,
         ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);

@@ -7,6 +7,7 @@
 #define FLECS_TABLE_CACHE_H_
 
 void ecs_table_cache_init(
+    ecs_world_t *world,
     ecs_table_cache_t *cache);
 
 void ecs_table_cache_fini(

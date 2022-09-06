@@ -23,13 +23,14 @@ void _flecs_hashmap_init(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_action_t compare)
+    ecs_compare_action_t compare,
+    ecs_allocator_t *allocator)
 {
     map->key_size = key_size;
     map->value_size = value_size;
     map->hash = hash;
     map->compare = compare;
-    ecs_map_init(&map->impl, ecs_hm_bucket_t, 0);
+    ecs_map_init(&map->impl, ecs_hm_bucket_t, allocator, 0);
 }
 
 void flecs_hashmap_fini(

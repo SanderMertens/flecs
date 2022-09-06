@@ -177,11 +177,7 @@ typedef struct ecs_switch_node_t {
     int32_t prev;           /* Prev node in list */
 } ecs_switch_node_t;
 
-struct ecs_switch_t {
-    // uint64_t min;           /* Minimum value the switch can store */
-    // uint64_t max;           /* Maximum value the switch can store */
-    // ecs_switch_header_t *headers;   /* Array with headers, indexed by value */
-    
+struct ecs_switch_t {    
     ecs_map_t headers;
     ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
     ecs_vector_t *values;   /* Vector with values, of type uint64_t */
@@ -191,21 +187,12 @@ struct ecs_switch_t {
 FLECS_DBG_API
 void flecs_switch_init(
     ecs_switch_t* sw,
-    int32_t elements);
-
-/** Create new switch. */
-FLECS_DBG_API
-ecs_switch_t* flecs_switch_new(
+    ecs_allocator_t *allocator,
     int32_t elements);
 
 /** Fini switch. */
 FLECS_DBG_API
 void flecs_switch_fini(
-    ecs_switch_t *sw);
-
-/** Free switch. */
-FLECS_DBG_API
-void flecs_switch_free(
     ecs_switch_t *sw);
 
 /** Remove all values. */
@@ -531,7 +518,8 @@ struct ecs_query_table_match_t {
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
-    ecs_ref_t *references;    /* Cached components for non-this terms */
+    ecs_ref_t *refs;          /* Cached components for non-this terms */
+    int32_t refs_count;
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
@@ -573,6 +561,15 @@ typedef struct ecs_query_event_t {
     ecs_table_t *table;
     ecs_query_t *parent_query;
 } ecs_query_event_t;
+
+/* Query level block allocators have sizes that depend on query field count */
+typedef struct ecs_query_allocators_t {
+    ecs_block_allocator_t columns;
+    ecs_block_allocator_t ids;
+    ecs_block_allocator_t sources;
+    ecs_block_allocator_t sizes;
+    ecs_block_allocator_t monitors;
+} ecs_query_allocators_t;
 
 /** Query that is automatically matched against tables */
 struct ecs_query_t {
@@ -619,6 +616,9 @@ struct ecs_query_t {
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
     ecs_entity_t entity;
+
+    /* Query-level allocators */
+    ecs_query_allocators_t allocators;
 };
 
 /** All observers for a specific (component) id */
@@ -694,6 +694,22 @@ typedef struct ecs_stack_t {
     ecs_stack_page_t *cur;
 } ecs_stack_t;
 
+/* World level allocators are for operations that are not multithreaded */
+typedef struct ecs_world_allocators_t {
+    ecs_map_params_t ptr;
+    ecs_map_params_t query_table_list;
+    ecs_block_allocator_t query_table;
+    ecs_block_allocator_t query_table_match;
+    ecs_block_allocator_t graph_edge_lo;
+    ecs_block_allocator_t graph_edge;
+    ecs_allocator_t dyn; /* For dynamic allocation sizes */
+} ecs_world_allocators_t;
+
+/* Stage level allocators are for operations that can be multithreaded */
+typedef struct ecs_stage_allocators_t {
+    ecs_stack_t iter_stack;
+} ecs_stage_allocators_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -726,6 +742,9 @@ struct ecs_stage_t {
     /* Properties */
     bool auto_merge;             /* Should this stage automatically merge? */
     bool async;                  /* Is stage asynchronous? (write only) */
+
+    /* Allocators */
+    ecs_stage_allocators_t allocators;
 };
 
 /* Component monitor */
@@ -759,9 +778,6 @@ typedef struct ecs_store_t {
 
     /* Root table */
     ecs_table_t root;
-
-    /* Table edge cache */
-    ecs_graph_edge_hdr_t *first_free;
 
     /* Records cache */
     ecs_vector_t *records;
@@ -842,6 +858,9 @@ struct ecs_world_t {
     /* -- World flags -- */
     ecs_flags32_t flags;
 
+    /* -- Allocators -- */
+    ecs_world_allocators_t allocators;
+
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
 };
@@ -857,6 +876,7 @@ struct ecs_world_t {
 #define FLECS_TABLE_CACHE_H_
 
 void ecs_table_cache_init(
+    ecs_world_t *world,
     ecs_table_cache_t *cache);
 
 void ecs_table_cache_fini(
@@ -1078,15 +1098,85 @@ void flecs_emit(
 #define FLECS_STORAGE_H
 
 void ecs_storage_init(
+    ecs_world_t *world,
     ecs_column_t *storage,
     ecs_size_t size,
     int32_t elem_count);
 
-#define ecs_storage_init_t(storage, T, elem_count) \
-    ecs_storage_init(storage, ECS_SIZEOF(T), elem_count)
+#define ecs_storage_init_t(world, storage, T, elem_count) \
+    ecs_storage_init(world, storage, ECS_SIZEOF(T), elem_count)
 
 void ecs_storage_fini(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_fini_t(world, storage, T) \
+    ecs_storage_fini(world, storage, ECS_SIZEOF(T))
+
+void* ecs_storage_append(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_append_t(world, storage, T) \
+    ECS_CAST(T*, ecs_storage_append(world, storage, ECS_SIZEOF(T)))
+
+void ecs_storage_remove(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem);
+
+#define ecs_storage_remove_t(world, storage, T) \
+    ECS_CAST(world, T*, ecs_storage_remove(world, storage, ECS_SIZEOF(T)))
+
+void ecs_storage_remove_last(
+    ecs_world_t *world,
     ecs_column_t *storage);
+
+ecs_column_t ecs_storage_copy(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_copy_t(world, storage, T) \
+    ecs_storage_copy(world, storage, ECS_SIZEOF(T))
+
+void ecs_storage_reclaim(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_reclaim_t(world, storage, T) \
+    ecs_storage_reclaim(world, storage, ECS_SIZEOF(T))
+
+void ecs_storage_set_size(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_set_size_t(world, storage, T, elem_count) \
+    ecs_storage_set_size(world, storage, ECS_SIZEOF(T), elem_count)
+
+void ecs_storage_set_count(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_set_count_t(world, storage, T, elem_count) \
+    ecs_storage_set_count(world, storage, ECS_SIZEOF(T), elem_count)
+
+void* ecs_storage_grow(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_grow_t(world, storage, T, elem_count) \
+    ecs_storage_grow(world, storage, ECS_SIZEOF(T), elem_count)
 
 int32_t ecs_storage_count(
     ecs_column_t *storage);
@@ -1115,62 +1205,6 @@ void* ecs_storage_last(
 #define ecs_storage_last_t(storage, T) \
     ECS_CAST(T*, ecs_storage_last(storage, ECS_SIZEOF(T)))
 
-void* ecs_storage_append(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_append_t(storage, T) \
-    ECS_CAST(T*, ecs_storage_append(storage, ECS_SIZEOF(T)))
-
-void ecs_storage_remove(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem);
-
-#define ecs_storage_remove_t(storage, T) \
-    ECS_CAST(T*, ecs_storage_remove(storage, ECS_SIZEOF(T)))
-
-void ecs_storage_remove_last(
-    ecs_column_t *storage);
-
-ecs_column_t ecs_storage_copy(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_copy_t(storage, T) \
-    ecs_storage_copy(storage, ECS_SIZEOF(T))
-
-void ecs_storage_reclaim(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_reclaim_t(storage, T) \
-    ecs_storage_reclaim(storage, ECS_SIZEOF(T))
-
-void ecs_storage_set_size(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_set_size_t(storage, T, elem_count) \
-    ecs_storage_set_size(storage, ECS_SIZEOF(T), elem_count)
-
-void ecs_storage_set_count(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_set_count_t(storage, T, elem_count) \
-    ecs_storage_set_count(storage, ECS_SIZEOF(T), elem_count)
-
-void* ecs_storage_grow(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_grow_t(storage, T, elem_count) \
-    ecs_storage_grow(storage, ECS_SIZEOF(T), elem_count)
-
 #endif 
 
 /**
@@ -1182,6 +1216,7 @@ void* ecs_storage_grow(
 #define FLECS_ITER_H
 
 void flecs_iter_init(
+    const ecs_world_t *world,
     ecs_iter_t *it,
     ecs_flags8_t fields);
 
@@ -1222,10 +1257,12 @@ void flecs_table_init(
 
 /** Copy type. */
 ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
     const ecs_type_t *src);
 
 /** Free type. */
 void flecs_type_free(
+    ecs_world_t *world,
     ecs_type_t *type);
 
 /** Find or create table for a set of components */
@@ -1235,6 +1272,7 @@ ecs_table_t* flecs_table_find_or_create(
 
 /* Initialize columns for data */
 void flecs_table_init_data(
+    ecs_world_t *world,
     ecs_table_t *table); 
 
 /* Clear all entities from a table. */
@@ -1338,6 +1376,7 @@ void flecs_table_free(
 
 /* Free table */
 void flecs_table_free_type(
+    ecs_world_t *world,
     ecs_table_t *table);     
     
 /* Replace data */
@@ -1752,6 +1791,29 @@ void flecs_resume_readonly(
     ecs_world_t *world,
     ecs_suspend_readonly_state_t *state);
 
+/* Convenience macro's for world allocator */
+#define flecs_wallocator(world) (&world->allocators.dyn)
+#define flecs_walloc(world, size)\
+    flecs_alloc(flecs_wallocator(world), size)
+#define flecs_walloc_n(world, T, count)\
+    flecs_alloc_n(flecs_wallocator(world), T, count)
+#define flecs_wcalloc(world, size)\
+    flecs_calloc(flecs_wallocator(world), size)
+#define flecs_wcalloc_n(world, T, count)\
+    flecs_calloc_n(flecs_wallocator(world), T, count)
+#define flecs_wfree(world, size, ptr)\
+    flecs_free(flecs_wallocator(world), size, ptr)
+#define flecs_wfree_n(world, T, count, ptr)\
+    flecs_free_n(flecs_wallocator(world), T, count, ptr)
+#define flecs_wrealloc(world, size_dst, size_src, ptr)\
+    flecs_realloc(flecs_wallocator(world), size_dst, size_src, ptr)
+#define flecs_wrealloc_n(world, T, count_dst, count_src, ptr)\
+    flecs_realloc_n(flecs_wallocator(world), T, count_dst, count_src, ptr)
+#define flecs_wdup(world, size, ptr)\
+    flecs_dup(flecs_wallocator(world), size, ptr)
+#define flecs_wdup_n(world, T, count, ptr)\
+    flecs_dup_n(flecs_wallocator(world), T, count, ptr)
+
 #endif
 
 /* From: https://github.com/svpv/qsort/blob/master/qsort.h 
@@ -1962,9 +2024,11 @@ void ecs_qsort(
 #define FLECS_NAME_INDEX_H
 
 void flecs_name_index_init(
-    ecs_hashmap_t *hm);
+    ecs_hashmap_t *hm,
+    ecs_allocator_t *allocator);
 
-ecs_hashmap_t* flecs_name_index_new(void);
+ecs_hashmap_t* flecs_name_index_new(
+    ecs_allocator_t *allocator);
 
 void flecs_name_index_fini(
     ecs_hashmap_t *map);
@@ -2028,12 +2092,31 @@ void* flecs_stack_alloc(
     ecs_size_t size,
     ecs_size_t align);
 
+void* flecs_stack_allocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count);
+
+void* flecs_stack_callocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count);
+
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size);
 
 void flecs_stack_reset(
     ecs_stack_t *stack);
+
+ecs_stack_cursor_t flecs_stack_get_cursor(
+    ecs_stack_t *stack);
+
+void flecs_stack_restore_cursor(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor);
 
 #endif
 
@@ -2266,6 +2349,7 @@ uint64_t flecs_string_hash(
     const void *ptr);
 
 void flecs_table_hashmap_init(
+    ecs_world_t *world,
     ecs_hashmap_t *hm);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
@@ -2275,6 +2359,9 @@ void _assert_func(
     const char *file,
     int32_t line,
     const char *func);
+
+void flecs_dump_backtrace(
+    FILE *stream);
 
 #endif
 
@@ -2371,6 +2458,7 @@ void check_table_sanity(ecs_table_t *table) {
 
 static
 void flecs_table_init_storage_map(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2389,8 +2477,8 @@ void flecs_table_init_storage_map(
         return;
     }
 
-    table->storage_map = ecs_os_malloc_n(
-        int32_t, ids_count + storage_ids_count);
+    table->storage_map = flecs_walloc_n(world, int32_t, 
+        ids_count + storage_ids_count);
 
     int32_t *t2s = table->storage_map;
     int32_t *s2t = &table->storage_map[ids_count];
@@ -2453,6 +2541,7 @@ ecs_flags32_t flecs_type_info_flags(
 
 static
 void flecs_table_init_type_info(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2461,7 +2550,7 @@ void flecs_table_init_type_info(
 
     ecs_table_record_t *records = table->records;
     int32_t i, count = table->type.count;
-    table->type_info = ecs_os_calloc_n(ecs_type_info_t*, count);
+    table->type_info = flecs_walloc_n(world, ecs_type_info_t*, count);
 
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
@@ -2492,7 +2581,7 @@ void flecs_table_init_storage_table(
     ecs_id_t array[ECS_ID_CACHE_SIZE];
     ecs_type_t storage_ids = { .array = array };
     if (count > ECS_ID_CACHE_SIZE) {
-        storage_ids.array = ecs_os_malloc_n(ecs_id_t, count);
+        storage_ids.array = flecs_walloc_n(world, ecs_id_t, count);
     }
 
     for (i = 0; i < count; i ++) {
@@ -2518,19 +2607,20 @@ void flecs_table_init_storage_table(
         table->storage_table = table;
         table->storage_count = flecs_ito(uint16_t, count);
         table->storage_ids = type.array;
-        flecs_table_init_type_info(table);
+        flecs_table_init_type_info(world, table);
     }
 
     if (storage_ids.array != array) {
-        ecs_os_free(storage_ids.array);
+        flecs_wfree_n(world, ecs_id_t, count, storage_ids.array);
     }
 
     if (!table->storage_map) {
-        flecs_table_init_storage_map(table);
+        flecs_table_init_storage_map(world, table);
     }
 }
 
 void flecs_table_init_data(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
     int32_t sw_count = table->sw_count;
@@ -2545,18 +2635,19 @@ void flecs_table_init_data(
     }
 
     if (count) {
-        storage->columns = ecs_os_calloc_n(ecs_column_t, count);
+        storage->columns = flecs_wcalloc_n(world, ecs_column_t, count);
     }
 
     if (sw_count) {
-        storage->sw_columns = ecs_os_calloc_n(ecs_switch_t, sw_count);
+        storage->sw_columns = flecs_wcalloc_n(world, ecs_switch_t, sw_count);
         for (i = 0; i < sw_count; i ++) {
-            flecs_switch_init(&storage->sw_columns[i], 0);
+            flecs_switch_init(&storage->sw_columns[i], 
+                flecs_wallocator(world), 0);
         }
     }
 
     if (bs_count) {
-        storage->bs_columns = ecs_os_calloc_n(ecs_bitset_t, bs_count);
+        storage->bs_columns = flecs_wcalloc_n(world, ecs_bitset_t, bs_count);
         for (i = 0; i < bs_count; i ++) {
             flecs_bitset_init(&storage->bs_columns[i]);
         }
@@ -2855,8 +2946,8 @@ void flecs_table_init(
 
     /* Now that all records have been added, copy them to array */
     int32_t i, dst_record_count = ecs_vector_count(records);
-    ecs_table_record_t *dst_tr =  ecs_os_memdup_n( ecs_vector_first(records, 
-        ecs_table_record_t), ecs_table_record_t, dst_record_count);
+    ecs_table_record_t *dst_tr = flecs_wdup_n(world, ecs_table_record_t, 
+        dst_record_count, ecs_vector_first(records, ecs_table_record_t));
     table->record_count = flecs_ito(uint16_t, dst_record_count);
     table->records = dst_tr;
 
@@ -2887,7 +2978,7 @@ void flecs_table_init(
     world->store.records = records;
 
     flecs_table_init_storage_table(world, table);
-    flecs_table_init_data(table); 
+    flecs_table_init_data(world, table); 
 }
 
 static
@@ -2910,8 +3001,8 @@ void flecs_table_records_unregister(
         ecs_table_cache_remove(cache, table, &tr->hdr);
         flecs_id_record_release(world, (ecs_id_record_t*)cache);
     }
-    
-    ecs_os_free(table->records);
+
+    flecs_wfree_n(world, ecs_table_record_t, count, table->records);
 }
 
 static
@@ -2972,7 +3063,7 @@ void on_component_callback(
     ecs_size_t size = ti->size;
     void *ptr = ecs_storage_get(column, size, row);
 
-    flecs_iter_init(&it, flecs_iter_cache_all);
+    flecs_iter_init(world, &it, flecs_iter_cache_all);
     it.world = world;
     it.real_world = world;
     it.table = table;
@@ -3211,9 +3302,9 @@ void fini_data(
             ecs_assert(columns[c].count == data->entities.count,
                 ECS_INTERNAL_ERROR, NULL);
 
-            ecs_storage_fini(&columns[c]);
+            ecs_storage_fini(world, &columns[c], table->type_info[c]->size);
         }
-        ecs_os_free(columns);
+        flecs_wfree_n(world, ecs_column_t, column_count, columns);
         data->columns = NULL;
     }
 
@@ -3223,7 +3314,7 @@ void fini_data(
         for (c = 0; c < column_count; c ++) {
             flecs_switch_fini(&sw_columns[c]);
         }
-        ecs_os_free(sw_columns);
+        flecs_wfree_n(world, ecs_switch_t, column_count, sw_columns);
         data->sw_columns = NULL;
     }
 
@@ -3233,12 +3324,12 @@ void fini_data(
         for (c = 0; c < column_count; c ++) {
             flecs_bitset_fini(&bs_columns[c]);
         }
-        ecs_os_free(bs_columns);
+        flecs_wfree_n(world, ecs_bitset_t, column_count, bs_columns);
         data->bs_columns = NULL;
     }
 
-    ecs_storage_fini(&data->entities);
-    ecs_storage_fini(&data->records);
+    ecs_storage_fini_t(world, &data->entities, ecs_entity_t);
+    ecs_storage_fini_t(world, &data->records, ecs_record_t*);
 
     if (deactivate && count) {
         flecs_table_set_empty(world, table);
@@ -3338,14 +3429,14 @@ void flecs_table_free(
     }
 
     ecs_os_free(table->dirty_state);
-    ecs_os_free(table->storage_map);
-
+    flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, table->storage_map);
     flecs_table_records_unregister(world, table);
 
     ecs_table_t *storage_table = table->storage_table;
     if (storage_table == table) {
         if (table->type_info) {
-            ecs_os_free(table->type_info);
+            flecs_wfree_n(world, ecs_type_info_t*, table->storage_count, 
+                table->type_info);
         }
     } else if (storage_table) {
         flecs_table_release(world, storage_table);
@@ -3365,7 +3456,7 @@ void flecs_table_free(
 
     if (!(world->flags & EcsWorldFini)) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
-        flecs_table_free_type(table);
+        flecs_table_free_type(world, table);
         flecs_sparse_remove(&world->store.tables, table->id);
     }
 
@@ -3402,9 +3493,10 @@ bool flecs_table_release(
 /* Free table type. Do this separately from freeing the table as types can be
  * in use by application destructors. */
 void flecs_table_free_type(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_os_free(table->type.array);
+    flecs_wfree_n(world, ecs_id_t, table->type.count, table->type.array);
 }
 
 /* Reset a table to its initial state. */
@@ -3583,6 +3675,7 @@ void move_bitset_columns(
 
 static
 void* grow_column(
+    ecs_world_t *world,
     ecs_column_t *column,
     ecs_type_info_t *ti,
     int32_t to_add,
@@ -3611,7 +3704,7 @@ void* grow_column(
 
         /* Create  vector */
         ecs_column_t dst;
-        ecs_storage_init(&dst, size, dst_size);
+        ecs_storage_init(world, &dst, size, dst_size);
         dst.count = dst_count;
 
         void *src_buffer = column->array;
@@ -3627,16 +3720,16 @@ void* grow_column(
         }
 
         /* Free old vector */
-        ecs_storage_fini(column);
+        ecs_storage_fini(world, column, ti->size);
 
         *column = dst;
     } else {
         /* If array won't realloc or has no move, simply add new elements */
         if (can_realloc) {
-            ecs_storage_set_size(column, size, dst_size);
+            ecs_storage_set_size(world, column, size, dst_size);
         }
 
-        result = ecs_storage_grow(column, size, to_add);
+        result = ecs_storage_grow(world, column, size, to_add);
 
         ecs_xtor_t ctor;
         if (construct && (ctor = ti->hooks.ctor)) {
@@ -3672,7 +3765,7 @@ int32_t grow_data(
     ecs_bitset_t *bs_columns = data->bs_columns; 
 
     /* Add record to record ptr array */
-    ecs_storage_set_size_t(&data->records, ecs_record_t*, size);
+    ecs_storage_set_size_t(world, &data->records, ecs_record_t*, size);
     ecs_record_t **r = ecs_storage_last_t(&data->records, ecs_record_t*) + 1;
     data->records.count += to_add;
     if (data->records.size > size) {
@@ -3680,7 +3773,7 @@ int32_t grow_data(
     }
 
     /* Add entity to column with entity ids */
-    ecs_storage_set_size_t(&data->entities, ecs_entity_t, size);
+    ecs_storage_set_size_t(world, &data->entities, ecs_entity_t, size);
     ecs_entity_t *e = ecs_storage_last_t(&data->entities, ecs_entity_t) + 1;
     data->entities.count += to_add;
     ecs_assert(data->entities.size == size, ECS_INTERNAL_ERROR, NULL);
@@ -3701,7 +3794,7 @@ int32_t grow_data(
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
         ecs_type_info_t *ti = type_info[i];
-        grow_column(column, ti, to_add, size, true);
+        grow_column(world, column, ti, to_add, size, true);
         ecs_assert(columns[i].size == size, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -3730,6 +3823,7 @@ int32_t grow_data(
 
 static
 void fast_append(
+    ecs_world_t *world,
     ecs_type_info_t **type_info,
     ecs_column_t *columns,
     int32_t count)
@@ -3739,7 +3833,7 @@ void fast_append(
     for (i = 0; i < count; i ++) {
         ecs_type_info_t *ti = type_info[i];
         ecs_column_t *column = &columns[i];
-        ecs_storage_append(column, ti->size);
+        ecs_storage_append(world, column, ti->size);
     }
 }
 
@@ -3764,12 +3858,12 @@ int32_t flecs_table_append(
     ecs_column_t *columns = table->data.columns;
     
     /* Grow buffer with entity ids, set new element to new entity */
-    ecs_entity_t *e = ecs_storage_append_t(&data->entities, ecs_entity_t);
+    ecs_entity_t *e = ecs_storage_append_t(world, &data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
 
     /* Add record ptr to array with record ptrs */
-    ecs_record_t **r = ecs_storage_append_t(&data->records, ecs_record_t*);
+    ecs_record_t **r = ecs_storage_append_t(world, &data->records, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
  
@@ -3781,7 +3875,7 @@ int32_t flecs_table_append(
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_append(type_info, columns, column_count);
+        fast_append(world, type_info, columns, column_count);
         if (!count) {
             flecs_table_set_empty(world, table); /* See below */
         }
@@ -3804,7 +3898,7 @@ int32_t flecs_table_append(
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
         ecs_type_info_t *ti = type_info[i];  
-        grow_column(column, ti, 1, size, construct);
+        grow_column(world, column, ti, 1, size, construct);
 
         ecs_iter_action_t on_add_hook;
         if (on_add && (on_add_hook = ti->hooks.on_add)) {
@@ -3845,17 +3939,19 @@ int32_t flecs_table_append(
 
 static
 void fast_delete_last(
+    ecs_world_t *world,
     ecs_column_t *columns,
     int32_t column_count) 
 {
     int i;
     for (i = 0; i < column_count; i ++) {
-        ecs_storage_remove_last(&columns[i]);
+        ecs_storage_remove_last(world, &columns[i]);
     }
 }
 
 static
 void fast_delete(
+    ecs_world_t *world,
     ecs_type_info_t **type_info,
     ecs_column_t *columns,
     int32_t column_count,
@@ -3865,7 +3961,7 @@ void fast_delete(
     for (i = 0; i < column_count; i ++) {
         ecs_type_info_t *ti = type_info[i];
         ecs_column_t *column = &columns[i];
-        ecs_storage_remove(column, ti->size, index);
+        ecs_storage_remove(world, column, ti->size, index);
     }
 }
 
@@ -3893,7 +3989,7 @@ void flecs_table_delete(
     ecs_entity_t entity_to_move = entities[count];
     ecs_entity_t entity_to_delete = entities[index];
     entities[index] = entity_to_move;
-    ecs_storage_remove_last(&data->entities);
+    ecs_storage_remove_last(world, &data->entities);
 
     /* Move last record ptr to index */
     ecs_assert(count < data->records.count, ECS_INTERNAL_ERROR, NULL);
@@ -3901,7 +3997,7 @@ void flecs_table_delete(
     ecs_record_t **records = data->records.array;
     ecs_record_t *record_to_move = records[count];
     records[index] = record_to_move;
-    ecs_storage_remove_last(&data->records); 
+    ecs_storage_remove_last(world, &data->records); 
 
     /* Update record of moved entity in entity index */
     if (index != count) {
@@ -3931,9 +4027,9 @@ void flecs_table_delete(
      * fast path that just remove an element from the array(s) */
     if (!(table->flags & EcsTableIsComplex)) {
         if (index == count) {
-            fast_delete_last(columns, column_count);
+            fast_delete_last(world, columns, column_count);
         } else {
-            fast_delete(type_info, columns, column_count, index);
+            fast_delete(world, type_info, columns, column_count, index);
         }
 
         check_table_sanity(table);
@@ -3952,7 +4048,7 @@ void flecs_table_delete(
             }
         }
 
-        fast_delete_last(columns, column_count);
+        fast_delete_last(world, columns, column_count);
 
     /* Not last element, move last element to deleted element & destruct */
     } else {
@@ -3978,10 +4074,10 @@ void flecs_table_delete(
                     ecs_os_memcpy(dst, src, size);
                 }
 
-                ecs_storage_remove_last(column);
+                ecs_storage_remove_last(world, column);
             }
         } else {
-            fast_delete(type_info, columns, column_count, index);
+            fast_delete(world, type_info, columns, column_count, index);
         }
     }
 
@@ -4193,15 +4289,15 @@ bool flecs_table_shrink(
 
     ecs_data_t *data = &table->data;
     bool has_payload = data->entities.array != NULL;
-    ecs_storage_reclaim_t(&data->entities, ecs_entity_t);
-    ecs_storage_reclaim_t(&data->records, ecs_record_t*);
+    ecs_storage_reclaim_t(world, &data->entities, ecs_entity_t);
+    ecs_storage_reclaim_t(world, &data->records, ecs_record_t*);
 
     int32_t i, count = table->storage_count;
     ecs_type_info_t **type_info = table->type_info;
     for (i = 0; i < count; i ++) {
         ecs_column_t *column = &data->columns[i];
         ecs_type_info_t *ti = type_info[i];
-        ecs_storage_reclaim(column, ti->size);
+        ecs_storage_reclaim(world, column, ti->size);
     }
 
     return has_payload;
@@ -4339,6 +4435,7 @@ void flecs_table_swap(
 
 static
 void flecs_merge_column(
+    ecs_world_t *world,
     ecs_column_t *dst,
     ecs_column_t *src,
     int32_t size,
@@ -4347,7 +4444,7 @@ void flecs_merge_column(
     int32_t dst_count = dst->count;
 
     if (!dst_count) {
-        ecs_storage_fini(dst);
+        ecs_storage_fini(world, dst, size);
         *dst = *src;
         src->array = NULL;
         src->count = 0;
@@ -4357,7 +4454,7 @@ void flecs_merge_column(
      * src into the dst. */
     } else {
         int32_t src_count = src->count;
-        ecs_storage_set_count(dst, size, dst_count + src_count);
+        ecs_storage_set_count(world, dst, size, dst_count + src_count);
 
         /* Construct new values */
         if (ti) {
@@ -4378,7 +4475,7 @@ void flecs_merge_column(
             ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
         }
 
-        ecs_storage_fini(src);
+        ecs_storage_fini(world, src, size);
     }
 }
 
@@ -4410,13 +4507,13 @@ void flecs_merge_table_data(
     }
 
     /* Merge entities */
-    flecs_merge_column(&dst_data->entities, &src_data->entities, 
+    flecs_merge_column(world, &dst_data->entities, &src_data->entities, 
         ECS_SIZEOF(ecs_entity_t), NULL);
     ecs_assert(dst_data->entities.count == src_count + dst_count, 
         ECS_INTERNAL_ERROR, NULL);
 
     /* Merge record pointers */
-    flecs_merge_column(&dst_data->records, &src_data->records, 
+    flecs_merge_column(world, &dst_data->records, &src_data->records, 
         ECS_SIZEOF(ecs_record_t*), 0);
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count); ) {
@@ -4427,7 +4524,7 @@ void flecs_merge_table_data(
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
         if (dst_id == src_id) {
-            flecs_merge_column(&dst[i_new], &src[i_old], size, dst_ti);
+            flecs_merge_column(world, &dst[i_new], &src[i_old], size, dst_ti);
             mark_table_dirty(world, dst_table, i_new + 1);
             
             i_new ++;
@@ -4435,14 +4532,15 @@ void flecs_merge_table_data(
         } else if (dst_id < src_id) {
             /* New column, make sure vector is large enough. */
             ecs_column_t *column = &dst[i_new];
-            ecs_storage_set_count(column, size, src_count + dst_count);
+            ecs_storage_set_count(world, column, size, src_count + dst_count);
             ctor_component(dst_ti, column, 0, src_count + dst_count);
             i_new ++;
         } else if (dst_id > src_id) {
             /* Old column does not occur in new table, destruct */
             ecs_column_t *column = &src[i_old];
-            dtor_component(src_type_info[i_old], column, 0, src_count);
-            ecs_storage_fini(column);
+            ecs_type_info_t *ti = src_type_info[i_old];
+            dtor_component(ti, column, 0, src_count);
+            ecs_storage_fini(world, column, ti->size);
             i_old ++;
         }
     }
@@ -4456,15 +4554,16 @@ void flecs_merge_table_data(
         ecs_type_info_t *ti = dst_type_info[i_new];
         int32_t size = ti->size;        
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_storage_set_count(column, size, src_count + dst_count);
+        ecs_storage_set_count(world, column, size, src_count + dst_count);
         ctor_component(ti, column, 0, src_count + dst_count);
     }
 
     /* Destruct remaining columns */
     for (; i_old < src_column_count; i_old ++) {
         ecs_column_t *column = &src[i_old];
-        dtor_component(src_type_info[i_old], column, 0, src_count);
-        ecs_storage_fini(column);
+        ecs_type_info_t *ti = src_type_info[i_old];
+        dtor_component(ti, column, 0, src_count);
+        ecs_storage_fini(world, column, ti->size);
     }    
 
     /* Mark entity column as dirty */
@@ -4575,7 +4674,7 @@ void flecs_table_replace_data(
     if (data) {
         table->data = *data;
     } else {
-        flecs_table_init_data(table);
+        flecs_table_init_data(world, table);
     }
 
     int32_t count = ecs_table_count(table);
@@ -5067,166 +5166,180 @@ ecs_poly_dtor_t* ecs_get_dtor(
 
 
 void ecs_storage_init(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size,
     int32_t elem_count)
 {
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    storage->array = NULL;
-    storage->count = 0;
+    s->array = NULL;
+    s->count = 0;
     if (elem_count) {
-        storage->array = ecs_os_malloc(size * elem_count);
+        s->array = flecs_walloc(world, size * elem_count);
     }
-    storage->size = elem_count;
+    s->size = elem_count;
 }
 
 void ecs_storage_fini(
-    ecs_column_t *storage)
-{
-    ecs_os_free(storage->array);
-    storage->array = NULL;
-    storage->count = 0;
-    storage->size = 0;
-}
-
-int32_t ecs_storage_count(
-    ecs_column_t *storage)
-{
-    return storage->count;
-}
-
-int32_t ecs_storage_size(
-    ecs_column_t *storage)
-{
-    return storage->size;
-}
-
-void* ecs_storage_get(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t index)
-{
-    ecs_assert(index < storage->count, ECS_OUT_OF_RANGE, NULL);
-    return ECS_ELEM(storage->array, size, index);
-}
-
-void* ecs_storage_last(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size)
 {
-    return ECS_ELEM(storage->array, size, storage->count - 1);
-}
-
-void* ecs_storage_first(
-    ecs_column_t *storage)
-{
-    return storage->array;
-}
-
-void* ecs_storage_append(
-    ecs_column_t *storage,
-    ecs_size_t size)
-{
-    int32_t count = storage->count;
-    if (storage->size == count) {
-        ecs_storage_set_size(storage, size, count + 1);
-    }
-    storage->count = count + 1;
-    return ECS_ELEM(storage->array, size, count);
-}
-
-void ecs_storage_remove(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t index)
-{
-    ecs_assert(index < storage->count, ECS_OUT_OF_RANGE, NULL);
-    if (index == --storage->count) {
-        return;
-    }
-
-    ecs_os_memcpy(
-        ECS_ELEM(storage->array, size, index),
-        ECS_ELEM(storage->array, size, storage->count),
-        size);
-}
-
-void ecs_storage_remove_last(
-    ecs_column_t *storage)
-{
-    storage->count --;
+    flecs_wfree(world, size * s->size, s->array);
+    s->array = NULL;
+    s->count = 0;
+    s->size = 0;
 }
 
 ecs_column_t ecs_storage_copy(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size)
 {
     return (ecs_column_t) {
-        .count = storage->count,
-        .size = storage->size,
-        .array = ecs_os_memdup(storage->array, storage->size * size)
+        .count = s->count,
+        .size = s->size,
+        .array = flecs_wdup(world, s->count * s->size, s->array)
     };
 }
 
 void ecs_storage_reclaim(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size)
 {
-    int32_t count = storage->count;
-    if (count < storage->size) {
+    int32_t count = s->count;
+    if (count < s->size) {
         if (count) {
-            storage->array = ecs_os_realloc(storage->array, size * count);
-            storage->size = count;
+            s->array = flecs_wrealloc(
+                world, size * count, size * s->size, s->array);
+            s->size = count;
         } else {
-            ecs_storage_fini(storage);
+            ecs_storage_fini(world, s, size);
         }
     }
 }
 
 void ecs_storage_set_size(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size,
     int32_t elem_count)
 {
-    if (storage->size != elem_count) {
-        if (elem_count < storage->count) {
-            elem_count = storage->count;
+    if (s->size != elem_count) {
+        if (elem_count < s->count) {
+            elem_count = s->count;
         }
 
         elem_count = flecs_next_pow_of_2(elem_count);
         if (elem_count < 2) {
             elem_count = 2;
         }
-        if (elem_count != storage->size) {
-            storage->array = ecs_os_realloc(storage->array, size * elem_count);
-            storage->size = elem_count;
+        if (elem_count != s->size) {
+            s->array = flecs_wrealloc(
+                world, size * elem_count, size * s->size, s->array);
+            s->size = elem_count;
         }
     }
 }
 
 void ecs_storage_set_count(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size,
     int32_t elem_count)
 {
-    if (storage->count != elem_count) {
-        if (storage->size < elem_count) {
-            ecs_storage_set_size(storage, size, elem_count);
+    if (s->count != elem_count) {
+        if (s->size < elem_count) {
+            ecs_storage_set_size(world, s, size, elem_count);
         }
 
-        storage->count = elem_count;
+        s->count = elem_count;
     }
 }
 
 void* ecs_storage_grow(
-    ecs_column_t *storage,
+    ecs_world_t *world,
+    ecs_column_t *s,
     ecs_size_t size,
     int32_t elem_count)
 {
     ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
-    int32_t count = storage->count;
-    ecs_storage_set_count(storage, size, count + elem_count);
-    return ECS_ELEM(storage->array, size, count);
+    int32_t count = s->count;
+    ecs_storage_set_count(world, s, size, count + elem_count);
+    return ECS_ELEM(s->array, size, count);
+}
+
+void* ecs_storage_append(
+    ecs_world_t *world,
+    ecs_column_t *s,
+    ecs_size_t size)
+{
+    int32_t count = s->count;
+    if (s->size == count) {
+        ecs_storage_set_size(world, s, size, count + 1);
+    }
+    s->count = count + 1;
+    return ECS_ELEM(s->array, size, count);
+}
+
+void ecs_storage_remove(
+    ecs_world_t *world,
+
+    ecs_column_t *s,
+    ecs_size_t size,
+    int32_t index)
+{
+    ecs_assert(index < s->count, ECS_OUT_OF_RANGE, NULL);
+    if (index == --s->count) {
+        return;
+    }
+
+    ecs_os_memcpy(
+        ECS_ELEM(s->array, size, index),
+        ECS_ELEM(s->array, size, s->count),
+        size);
+}
+
+void ecs_storage_remove_last(
+    ecs_world_t *world,
+    ecs_column_t *s)
+{
+    s->count --;
+}
+
+int32_t ecs_storage_count(
+    ecs_column_t *s)
+{
+    return s->count;
+}
+
+int32_t ecs_storage_size(
+    ecs_column_t *s)
+{
+    return s->size;
+}
+
+void* ecs_storage_get(
+    ecs_column_t *s,
+    ecs_size_t size,
+    int32_t index)
+{
+    ecs_assert(index < s->count, ECS_OUT_OF_RANGE, NULL);
+    return ECS_ELEM(s->array, size, index);
+}
+
+void* ecs_storage_last(
+    ecs_column_t *s,
+    ecs_size_t size)
+{
+    return ECS_ELEM(s->array, size, s->count - 1);
+}
+
+void* ecs_storage_first(
+    ecs_column_t *s)
+{
+    return s->array;
 }
 
 #include <ctype.h>
@@ -6629,7 +6742,7 @@ void flecs_notify_on_set(
                 ecs_iter_t it = { .field_count = 1};
                 it.entities = entities;
                 
-                flecs_iter_init(&it, flecs_iter_cache_all);
+                flecs_iter_init(world, &it, flecs_iter_cache_all);
                 it.world = world;
                 it.real_world = world;
                 it.table = table;
@@ -10079,6 +10192,7 @@ void flecs_stage_init(
     stage->async = false;
     
     flecs_stack_init(&stage->defer_stack);
+    flecs_stack_init(&stage->allocators.iter_stack);
 }
 
 void flecs_stage_deinit(
@@ -10097,6 +10211,7 @@ void flecs_stage_deinit(
 
     ecs_vector_free(stage->defer_queue);
     flecs_stack_fini(&stage->defer_stack);
+    flecs_stack_fini(&stage->allocators.iter_stack);
 }
 
 void ecs_set_stage_count(
@@ -10369,6 +10484,42 @@ bool ecs_is_deferred(
     return stage->defer != 0;
 error:
     return false;
+}
+
+
+void flecs_allocator_init(
+    ecs_allocator_t *a)
+{
+    ecs_map_init(&a->sizes, ecs_block_allocator_t, NULL, 0);
+}
+
+void flecs_allocator_fini(
+    ecs_allocator_t *a)
+{
+    ecs_map_iter_t it = ecs_map_iter(&a->sizes);
+    ecs_block_allocator_t *ba;
+    while ((ba = ecs_map_next(&it, ecs_block_allocator_t, NULL))) {
+        flecs_ballocator_fini(ba);
+    }
+    ecs_map_fini(&a->sizes);
+}
+
+ecs_block_allocator_t* flecs_allocator_get(
+    ecs_allocator_t *a, 
+    size_t size)
+{
+    if (!size) {
+        return NULL;
+    }
+
+    ecs_block_allocator_t *result = ecs_map_get(&a->sizes, 
+        ecs_block_allocator_t, size);
+    if (!result) {
+        result = ecs_map_ensure(&a->sizes, ecs_block_allocator_t, size);
+        flecs_ballocator_init(result, size);
+    }
+
+    return result;
 }
 
 
@@ -11804,9 +11955,10 @@ void remove_node(
 
 void flecs_switch_init(
     ecs_switch_t *sw,
+    ecs_allocator_t *allocator,
     int32_t elements)
 {
-    ecs_map_init(&sw->headers, ecs_switch_header_t, 1);
+    ecs_map_init(&sw->headers, ecs_switch_header_t, allocator, 1);
     sw->nodes = ecs_vector_new(ecs_switch_node_t, elements);
     sw->values = ecs_vector_new(uint64_t, elements);
 
@@ -11821,16 +11973,6 @@ void flecs_switch_init(
         nodes[i].next = -1;
         values[i] = 0;
     }
-}
-
-ecs_switch_t* flecs_switch_new(
-    int32_t elements)
-{
-    ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-
-    flecs_switch_init(result, elements);
-
-    return result;
 }
 
 void flecs_switch_clear(
@@ -11850,13 +11992,6 @@ void flecs_switch_fini(
     ecs_map_fini(&sw->headers);
     ecs_vector_free(sw->nodes);
     ecs_vector_free(sw->values);
-}
-
-void flecs_switch_free(
-    ecs_switch_t *sw)
-{
-    flecs_switch_fini(sw);
-    ecs_os_free(sw);
 }
 
 void flecs_switch_add(
@@ -12123,18 +12258,21 @@ int name_index_compare(
 }
 
 void flecs_name_index_init(
-    ecs_hashmap_t *hm) 
+    ecs_hashmap_t *hm,
+    ecs_allocator_t *allocator) 
 {
     _flecs_hashmap_init(hm, 
         ECS_SIZEOF(ecs_hashed_string_t), ECS_SIZEOF(uint64_t), 
         name_index_hash, 
-        name_index_compare);
+        name_index_compare,
+        allocator);
 }
 
-ecs_hashmap_t* flecs_name_index_new(void) 
+ecs_hashmap_t* flecs_name_index_new(
+    ecs_allocator_t *allocator) 
 {
     ecs_hashmap_t *result = ecs_os_calloc_t(ecs_hashmap_t);
-    flecs_name_index_init(result);
+    flecs_name_index_init(result, allocator);
     return result;
 }
 
@@ -13498,61 +13636,6 @@ int32_t ecs_strbuf_written(
     ECS_OFFSET(array, (elem_size) * (index))
 
 static
-ecs_block_allocator_chunk_header_t *ecs_balloc_block(
-    ecs_block_allocator_t *allocator)
-{
-    ecs_block_allocator_chunk_header_t *first_chunk = 
-        ecs_os_malloc(allocator->block_size);
-    ecs_block_allocator_block_t *block = 
-        ecs_os_malloc_t(ecs_block_allocator_block_t);
-
-    block->memory = first_chunk;
-    if (!allocator->block_tail) {
-        ecs_assert(!allocator->block_head, ECS_INTERNAL_ERROR, 0);
-        block->next = NULL;
-        allocator->block_head = block;
-        allocator->block_tail = block;
-    } else {
-        block->next = NULL;
-        allocator->block_tail->next = block;
-        allocator->block_tail = block;
-    }
-
-    ecs_block_allocator_chunk_header_t *chunk = first_chunk;
-    int32_t i, end;
-    for (i = 0, end = allocator->chunks_per_block - 1; i < end; ++i) {
-        chunk->next = ECS_OFFSET(chunk, allocator->chunk_size);
-        chunk = chunk->next;
-    }
-
-    chunk->next = NULL;
-    return first_chunk;
-}
-
-static 
-void *ecs_balloc(
-    ecs_block_allocator_t *allocator) 
-{
-    if (!allocator->head) {
-        allocator->head = ecs_balloc_block(allocator);
-    }
-
-    void *result = allocator->head;
-    allocator->head = allocator->head->next;
-    return result;
-}
-
-static 
-void ecs_bfree(
-    ecs_block_allocator_t *allocator, 
-    void *memory) 
-{
-    ecs_block_allocator_chunk_header_t *chunk = memory;
-    chunk->next = allocator->head;
-    allocator->head = chunk;
-}
-
-static
 uint8_t ecs_log2(uint32_t v) {
     static const uint8_t log2table[32] = 
         {0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -13618,9 +13701,15 @@ void ensure_buckets(
     }
 
     if (new_count && new_count > bucket_count) {
-        map->buckets = ecs_os_realloc_n(map->buckets, ecs_bucket_t, new_count);
-        map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
+        if (map->allocator) {
+            map->buckets = flecs_realloc_n(map->allocator, ecs_bucket_t,
+                new_count, bucket_count, map->buckets);
+        } else {
+            map->buckets = ecs_os_realloc_n(
+                map->buckets, ecs_bucket_t, new_count);
+        }
 
+        map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
         map->bucket_count = new_count;
         map->bucket_shift = get_bucket_shift(new_count);
         ecs_os_memset_n(ECS_ELEM_T(map->buckets, ecs_bucket_t, bucket_count),
@@ -13636,7 +13725,7 @@ void clear_bucket(
 {
     while(bucket) {
       ecs_bucket_entry_t *next = bucket->next;
-      ecs_bfree(allocator, bucket);
+      flecs_bfree(allocator, bucket);
       bucket = next;
     }
 }
@@ -13648,9 +13737,13 @@ void clear_buckets(
 {
     int32_t i, count = map->bucket_count;
     for (i = 0; i < count; i ++) {
-        clear_bucket(&map->allocator, map->buckets[i].first);
+        clear_bucket(map->entry_allocator, map->buckets[i].first);
     }
-    ecs_os_free(map->buckets);
+    if (map->allocator) {
+        flecs_free_n(map->allocator, ecs_bucket_t, count, map->buckets);
+    } else {
+        ecs_os_free(map->buckets);
+    }
     map->buckets = NULL;
     map->bucket_count = 0;
 }
@@ -13664,7 +13757,7 @@ void* add_to_bucket(
     ecs_map_key_t key,
     const void *payload)
 {
-    ecs_bucket_entry_t *new_entry = ecs_balloc(allocator);
+    ecs_bucket_entry_t *new_entry = flecs_balloc(allocator);
     new_entry->key = key;
     new_entry->next = bucket->first;
     bucket->first = new_entry;
@@ -13690,7 +13783,7 @@ bool remove_from_bucket(
                 next_holder = &(*next_holder)->next;
             }
             *next_holder = entry->next;
-            ecs_bfree(allocator, entry);
+            flecs_bfree(allocator, entry);
             return true;
         }
     }
@@ -13729,9 +13822,13 @@ void rehash(
     int32_t new_count = flecs_next_pow_of_2(bucket_count);
     map->bucket_count = new_count;
     map->bucket_shift = get_bucket_shift(new_count);
-    map->buckets = ecs_os_calloc_n(ecs_bucket_t, new_count);
+    if (map->allocator) {
+        map->buckets = flecs_calloc_n(map->allocator, ecs_bucket_t, new_count);
+    } else {
+        map->buckets = ecs_os_calloc_n(ecs_bucket_t, new_count);
+    }
     map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
-    
+
     /* Remap old bucket entries to new buckets */
     int32_t index;
     for (index = 0; index < old_count; ++index) {
@@ -13746,8 +13843,12 @@ void rehash(
             entry = next;
         }
     }
-    
-    ecs_os_free(old_buckets);
+
+    if (map->allocator) {
+        flecs_free_n(map->allocator, ecs_bucket_t, old_count, old_buckets);
+    } else {
+        ecs_os_free(old_buckets);
+    }
 }
 
 bool ecs_map_is_initialized(
@@ -13756,56 +13857,97 @@ bool ecs_map_is_initialized(
     return result != NULL && result->bucket_count != 0;
 }
 
+static
+ecs_size_t flecs_map_chunk_size(
+    ecs_size_t size)
+{
+    int32_t entry_size = size + ECS_SIZEOF(ecs_bucket_entry_t);
+    return ECS_MAX(entry_size, ECS_SIZEOF(ecs_block_allocator_chunk_header_t));
+}
+
+void _ecs_map_params_init(
+    ecs_map_params_t *params,
+    ecs_size_t size)
+{
+    params->size = size;
+    flecs_ballocator_init(&params->entry_allocator,
+        flecs_map_chunk_size(size));
+    params->entry_allocator.shared = true;
+}
+
+void ecs_map_params_fini(
+    ecs_map_params_t *params)
+{
+    flecs_ballocator_fini(&params->entry_allocator);
+}
+
+void _ecs_map_init_w_params(
+    ecs_map_t *result,
+    ecs_map_params_t *params)
+{
+    ecs_assert(params->size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
+
+    result->count = 0;
+    result->elem_size = flecs_ito(int16_t, params->size);
+    result->allocator = params->allocator;
+
+    if (params->entry_allocator.shared) {
+        result->entry_allocator = &params->entry_allocator;
+    } else {
+        result->entry_allocator = flecs_ballocator_new(
+            flecs_map_chunk_size(params->size));
+    }
+
+    ensure_buckets(result, get_bucket_count(params->initial_count));
+}
+
+void _ecs_map_init_w_params_if(
+    ecs_map_t *result,
+    ecs_map_params_t *params)
+{
+    if (ecs_map_is_initialized(result)) {
+        ecs_assert(params->size == result->elem_size, 
+            ECS_INVALID_PARAMETER, NULL);
+        return;
+    }
+    _ecs_map_init_w_params(result, params);
+}
+
 void _ecs_map_init(
     ecs_map_t *result,
     ecs_size_t elem_size,
+    ecs_allocator_t *allocator,
     int32_t element_count)
 {
-    ecs_assert(elem_size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
-
-    result->count = 0;
-    result->elem_size = (int16_t)elem_size;
-    
-    int32_t entry_size = elem_size + ECS_SIZEOF(ecs_bucket_entry_t);
-    int32_t balloc_min_chunk_size = ECS_MAX(entry_size, 
-        ECS_SIZEOF(ecs_block_allocator_chunk_header_t));
-    uint32_t alignment = 16;
-    uint32_t alignment_mask = alignment - 1u;
-
-    /* Align balloc_min_chunk_size up to alignment. */
-    result->allocator.chunk_size = (int32_t)(((uint32_t)balloc_min_chunk_size + 
-        alignment_mask) & ~alignment_mask);
-    result->allocator.chunks_per_block = 
-        ECS_MAX(4096 / result->allocator.chunk_size, 1);
-    result->allocator.block_size = result->allocator.chunks_per_block * 
-        result->allocator.chunk_size;
-    result->allocator.head = NULL;
-    result->allocator.block_head = NULL;
-    result->allocator.block_tail = NULL;
-
-    ensure_buckets(result, get_bucket_count(element_count));
+    _ecs_map_init_w_params(result, &(ecs_map_params_t) {
+        .size = elem_size,
+        .initial_count = element_count,
+        .allocator = allocator
+    });
 }
 
 void _ecs_map_init_if(
     ecs_map_t *result,
     ecs_size_t elem_size,
+    ecs_allocator_t *allocator,
     int32_t element_count)
 {
     if (ecs_map_is_initialized(result)) {
         ecs_assert(elem_size == result->elem_size, ECS_INVALID_PARAMETER, NULL);
         return;
     }
-    _ecs_map_init(result, elem_size, element_count);
+    _ecs_map_init(result, elem_size, allocator, element_count);
 }
 
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
+    ecs_allocator_t *allocator,
     int32_t element_count)
 {
     ecs_map_t *result = ecs_os_calloc_t(ecs_map_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    _ecs_map_init(result, elem_size, element_count);
+    _ecs_map_init(result, elem_size, allocator, element_count);
 
     return result;
 }
@@ -13814,15 +13956,16 @@ void ecs_map_fini(
     ecs_map_t *map)
 {
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_block_allocator_block_t *block;
-    for (block = map->allocator.block_head; block; ){
-        ecs_block_allocator_block_t *next = block->next;
-        ecs_os_free(block->memory);
-        ecs_os_free(block);
-        block = next;
+    if (map->entry_allocator && !map->entry_allocator->shared) {
+        flecs_ballocator_free(map->entry_allocator);
+        map->entry_allocator = NULL;
     }
-    map->allocator.block_head = NULL;
-    ecs_os_free(map->buckets);
+    if (map->allocator) {
+        flecs_free_n(map->allocator, ecs_bucket_t, map->bucket_count, 
+            map->buckets);
+    } else {
+        ecs_os_free(map->buckets);
+    }
     map->buckets = NULL;
     map->buckets_end = NULL;
     map->bucket_count = 0;
@@ -13913,7 +14056,7 @@ void* _ecs_map_set(
     void *elem = get_from_bucket(bucket, key);
     if (!elem) {
         void *added_data = add_to_bucket(
-            &map->allocator, bucket, elem_size, key, payload);
+            map->entry_allocator, bucket, elem_size, key, payload);
         int32_t map_count = ++map->count;
         int32_t target_bucket_count = get_bucket_count(map_count);
         int32_t map_bucket_count = map->bucket_count;
@@ -13940,7 +14083,7 @@ int32_t ecs_map_remove(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_bucket_t *bucket = get_bucket(map, key);
-    if (remove_from_bucket(&map->allocator, bucket, key)) {
+    if (remove_from_bucket(map->entry_allocator, bucket, key)) {
         return --map->count;
     }
     
@@ -14075,7 +14218,9 @@ ecs_map_t* ecs_map_copy(
     }
 
     ecs_size_t elem_size = map->elem_size;
-    ecs_map_t *result = _ecs_map_new(map->elem_size, ecs_map_count(map));
+    ecs_map_t *result = _ecs_map_new(map->elem_size,
+        map->allocator,
+        ecs_map_count(map));
 
     ecs_map_iter_t it = ecs_map_iter(map);
     ecs_map_key_t key;
@@ -14115,6 +14260,151 @@ void ecs_map_memory(
 
 
 static
+ecs_block_allocator_chunk_header_t* flecs_balloc_block(
+    ecs_block_allocator_t *allocator)
+{
+    if (!allocator->chunk_size) {
+        return NULL;
+    }
+
+    ecs_block_allocator_block_t *block = 
+        ecs_os_malloc(ECS_SIZEOF(ecs_block_allocator_block_t) +
+            allocator->block_size);
+    ecs_block_allocator_chunk_header_t *first_chunk = ECS_OFFSET(block, 
+        ECS_SIZEOF(ecs_block_allocator_block_t));
+
+    block->memory = first_chunk;
+    if (!allocator->block_tail) {
+        ecs_assert(!allocator->block_head, ECS_INTERNAL_ERROR, 0);
+        block->next = NULL;
+        allocator->block_head = block;
+        allocator->block_tail = block;
+    } else {
+        block->next = NULL;
+        allocator->block_tail->next = block;
+        allocator->block_tail = block;
+    }
+
+    ecs_block_allocator_chunk_header_t *chunk = first_chunk;
+    int32_t i, end;
+    for (i = 0, end = allocator->chunks_per_block - 1; i < end; ++i) {
+        chunk->next = ECS_OFFSET(chunk, allocator->chunk_size);
+        chunk = chunk->next;
+    }
+
+    chunk->next = NULL;
+    return first_chunk;
+}
+
+void flecs_ballocator_init(
+    ecs_block_allocator_t *ba,
+    ecs_size_t size)
+{
+    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+    uint32_t alignment_mask = flecs_ito(uint32_t, 16) - 1u;
+    ba->chunk_size = (int32_t)(((uint32_t)size + 
+        alignment_mask) & ~alignment_mask);
+    ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
+    ba->block_size = ba->chunks_per_block * ba->chunk_size;
+    ba->head = NULL;
+    ba->block_head = NULL;
+    ba->block_tail = NULL;
+}
+
+ecs_block_allocator_t* flecs_ballocator_new(
+    ecs_size_t size)
+{
+    ecs_block_allocator_t *result = ecs_os_calloc_t(ecs_block_allocator_t);
+    flecs_ballocator_init(result, size);
+    return result;
+}
+
+void flecs_ballocator_fini(
+    ecs_block_allocator_t *ba)
+{
+    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_block_allocator_block_t *block;
+    for (block = ba->block_head; block;) {
+        ecs_block_allocator_block_t *next = block->next;
+        ecs_os_free(block);
+        block = next;
+    }
+    ba->block_head = NULL;
+}
+
+void flecs_ballocator_free(
+    ecs_block_allocator_t *ba)
+{
+    flecs_ballocator_fini(ba);
+    ecs_os_free(ba);
+}
+
+void* flecs_balloc(
+    ecs_block_allocator_t *allocator) 
+{
+    if (!allocator) return NULL;
+
+    if (!allocator->head) {
+        allocator->head = flecs_balloc_block(allocator);
+    }
+
+    void *result = allocator->head;
+    allocator->head = allocator->head->next;
+    return result;
+}
+
+void* flecs_bcalloc(
+    ecs_block_allocator_t *allocator) 
+{
+    if (!allocator) return NULL;
+    void *result = flecs_balloc(allocator);
+    ecs_os_memset(result, 0, allocator->chunk_size);
+    return result;
+}
+
+void flecs_bfree(
+    ecs_block_allocator_t *allocator, 
+    void *memory) 
+{
+    if (!allocator) {
+        ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+    if (memory == NULL) {
+        return;
+    }
+    ecs_block_allocator_chunk_header_t *chunk = memory;
+    chunk->next = allocator->head;
+    allocator->head = chunk;
+}
+
+void* flecs_brealloc(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory)
+{
+    void *result = flecs_balloc(dst);
+    if (result && src) {
+        ecs_os_memcpy(result, memory, src->chunk_size);
+    }
+    flecs_bfree(src, memory);
+    return result;
+}
+
+void* flecs_bdup(
+    ecs_block_allocator_t *ba, 
+    void *memory)
+{
+    void *result = flecs_balloc(ba);
+    if (result) {
+        ecs_os_memcpy(result, memory, ba->chunk_size);
+    }
+    return result;
+}
+
+
+static
 int32_t find_key(
     const ecs_hashmap_t *map,
     ecs_vector_t *keys,
@@ -14137,13 +14427,14 @@ void _flecs_hashmap_init(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_action_t compare)
+    ecs_compare_action_t compare,
+    ecs_allocator_t *allocator)
 {
     map->key_size = key_size;
     map->value_size = value_size;
     map->hash = hash;
     map->compare = compare;
-    ecs_map_init(&map->impl, ecs_hm_bucket_t, 0);
+    ecs_map_init(&map->impl, ecs_hm_bucket_t, allocator, 0);
 }
 
 void flecs_hashmap_fini(
@@ -14395,6 +14686,26 @@ void* flecs_stack_alloc(
     return ECS_OFFSET(page->data, sp);
 }
 
+void* flecs_stack_allocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count)
+{
+    return flecs_stack_alloc(stack, size * count, align);
+}
+
+void* flecs_stack_callocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count)
+{
+    void *ptr = flecs_stack_alloc(stack, size * count, align);
+    ecs_os_memset(ptr, 0, size * count);
+    return ptr;
+}
+
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size)
@@ -14402,6 +14713,22 @@ void flecs_stack_free(
     if (size > ECS_STACK_PAGE_SIZE) {
         ecs_os_free(ptr);
     }
+}
+
+ecs_stack_cursor_t flecs_stack_get_cursor(
+    ecs_stack_t *stack)
+{
+    return (ecs_stack_cursor_t){
+        .cur = stack->cur, .sp = stack->cur->sp
+    };
+}
+
+void flecs_stack_restore_cursor(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor)
+{
+    stack->cur = cursor->cur;
+    stack->cur->sp = cursor->sp;
 }
 
 void flecs_stack_reset(
@@ -15651,7 +15978,8 @@ static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
-    int32_t index = ecs_search(it->world, it->table, ecs_poly_id(EcsSystem), 0);
+    int32_t index = ecs_search(it->real_world, it->table, 
+        ecs_poly_id(EcsSystem), 0);
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
     EcsPoly *poly = ecs_table_get_column(it->table, index);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15678,7 +16006,8 @@ bool flecs_pipeline_build(
     pq->rebuild_count ++;
 
     write_state_t ws = {
-        .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
+        .components = ecs_map_new(int32_t, flecs_wallocator(world), 
+            ECS_HI_COMPONENT_ID),
         .wildcard = false
     };
 
@@ -15864,7 +16193,8 @@ void ecs_pipeline_reset_iter(
 
     /* Create new iterators */
     for (i = 0; i < iter_count; i ++) {
-        pq->iters[i] = ecs_query_iter(world, pq->query);
+        ecs_world_t *stage = ecs_get_stage(world, i);
+        pq->iters[i] = ecs_query_iter(stage, pq->query);
     }
 
     /* Move iterator to last ran system */
@@ -15927,7 +16257,8 @@ bool ecs_pipeline_update(
         /* Initialize iterators */
         int32_t i, count = pq->iter_count;
         for (i = 0; i < count; i ++) {
-            pq->iters[i] = ecs_query_iter(world, pq->query);
+            ecs_world_t *stage = ecs_get_stage(world, i);
+            pq->iters[i] = ecs_query_iter(stage, pq->query);
         }
         pq->cur_op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     } else if (rebuilt) {
@@ -21800,7 +22131,7 @@ ecs_iter_t ecs_rule_iter(
     ECS_BIT_COND(result.flags, EcsIterIsFilter, 
         ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsFilter));
 
-    flecs_iter_init(&result, 
+    flecs_iter_init(world, &result, 
         flecs_iter_cache_ids |
         /* flecs_iter_cache_columns | provided by rule iterator */
         flecs_iter_cache_sources |
@@ -23911,7 +24242,8 @@ ecs_vector_t* serialize_struct(
 
     ecs_hashmap_t *member_index = NULL;
     if (count) {        
-        op->members = member_index = flecs_name_index_new();
+        op->members = member_index = flecs_name_index_new(
+            flecs_wallocator(world));
     }
 
     for (i = 0; i < count; i ++) {
@@ -24581,7 +24913,8 @@ int add_constant_to_enum(
     }
 
     if (!ptr->constants) {
-        ptr->constants = ecs_map_new(ecs_enum_constant_t, 1);
+        ptr->constants = ecs_map_new(ecs_enum_constant_t,
+            flecs_wallocator(world), 1);
     }
 
     c = ecs_map_ensure(ptr->constants, ecs_enum_constant_t, value);
@@ -24648,7 +24981,8 @@ int add_constant_to_bitmask(
     }
 
     if (!ptr->constants) {
-        ptr->constants = ecs_map_new(ecs_bitmask_constant_t, 1);
+        ptr->constants = ecs_map_new(ecs_bitmask_constant_t, 
+            flecs_wallocator(world), 1);
     }
 
     c = ecs_map_ensure(ptr->constants, ecs_bitmask_constant_t, value);
@@ -27778,7 +28112,7 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, sys_count);
+    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, NULL, sys_count);
 
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
@@ -27851,7 +28185,7 @@ void ecs_pipeline_stats_reduce(
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
     ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        ecs_map_count(&src->system_stats));
+        NULL, ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -27870,7 +28204,7 @@ void ecs_pipeline_stats_reduce_last(
     int32_t count)
 {
     ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        ecs_map_count(&src->system_stats));
+        NULL, ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     ecs_system_stats_t *sys_src, *sys_dst;
@@ -27900,7 +28234,7 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
+    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t, NULL,
         ecs_map_count(&src->system_stats));
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
@@ -28996,7 +29330,8 @@ typedef struct ecs_table_leaf_t {
 } ecs_table_leaf_t;
 
 static
-ecs_data_t* duplicate_data(
+ecs_data_t* flecs_duplicate_data(
+    ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *main_data)
 {
@@ -29010,8 +29345,8 @@ ecs_data_t* duplicate_data(
         main_data->columns, ecs_column_t, column_count);
 
     /* Copy entities and records */
-    result->entities = ecs_storage_copy_t(&main_data->entities, ecs_entity_t);
-    result->records = ecs_storage_copy_t(&main_data->records, ecs_record_t*);
+    result->entities = ecs_storage_copy_t(world, &main_data->entities, ecs_entity_t);
+    result->records = ecs_storage_copy_t(world, &main_data->records, ecs_record_t*);
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
@@ -29020,7 +29355,7 @@ ecs_data_t* duplicate_data(
         int32_t size = ti->size;
         ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
-            ecs_column_t dst = ecs_storage_copy(column, size);
+            ecs_column_t dst = ecs_storage_copy(world, column, size);
             int32_t count = ecs_storage_count(column);
             void *dst_ptr = ecs_storage_first(&dst);
             void *src_ptr = ecs_storage_first(column);
@@ -29033,7 +29368,7 @@ ecs_data_t* duplicate_data(
             copy(dst_ptr, src_ptr, count, ti);
             *column = dst;
         } else {
-            *column = ecs_storage_copy(column, size);
+            *column = ecs_storage_copy(world, column, size);
         }
     }
 
@@ -29042,6 +29377,7 @@ ecs_data_t* duplicate_data(
 
 static
 void snapshot_table(
+    const ecs_world_t *world,
     ecs_snapshot_t *snapshot,
     ecs_table_t *table)
 {
@@ -29054,8 +29390,8 @@ void snapshot_table(
     ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
     
     l->table = table;
-    l->type = flecs_type_copy(&table->type);
-    l->data = duplicate_data(table, &table->data);
+    l->type = flecs_type_copy((ecs_world_t*)world, &table->type);
+    l->data = flecs_duplicate_data((ecs_world_t*)world, table, &table->data);
 }
 
 static
@@ -29096,13 +29432,13 @@ ecs_snapshot_t* snapshot_create(
     if (iter) {
         while (next(iter)) {
             ecs_table_t *table = iter->table;
-            snapshot_table(result, table);
+            snapshot_table(world, result, table);
         }
     } else {
         for (t = 0; t < table_count; t ++) {
             ecs_table_t *table = flecs_sparse_get(
                 &world->store.tables, ecs_table_t, t);
-            snapshot_table(result, table);
+            snapshot_table(world, result, table);
         }
     }
 
@@ -29193,7 +29529,7 @@ void restore_unfiltered(
             } else {
                 flecs_table_clear_data(
                     world, world_table, &world_table->data);
-                flecs_table_init_data(world_table);
+                flecs_table_init_data(world, world_table);
             }
         
         /* If the snapshot table doesn't exist, this table was created after the
@@ -29213,7 +29549,7 @@ void restore_unfiltered(
 
         if (snapshot_table) {
             ecs_os_free(snapshot_table->data);
-            flecs_type_free(&snapshot_table->type);
+            flecs_type_free(world, &snapshot_table->type);
         }
     }
 
@@ -29255,7 +29591,7 @@ void restore_filtered(
 
         ecs_data_t *data = snapshot_table->data;
         if (!data) {
-            flecs_type_free(&snapshot_table->type);
+            flecs_type_free(world, &snapshot_table->type);
             continue;
         }
 
@@ -29290,7 +29626,7 @@ void restore_filtered(
 
         ecs_os_free(snapshot_table->data->columns);
         ecs_os_free(snapshot_table->data);
-        flecs_type_free(&snapshot_table->type);
+        flecs_type_free(world, &snapshot_table->type);
     }
 }
 
@@ -29385,7 +29721,7 @@ void ecs_snapshot_free(
                 flecs_table_clear_data(snapshot->world, table, data);
                 ecs_os_free(data);
             }
-            flecs_type_free(&snapshot_table->type);
+            flecs_type_free(snapshot->world, &snapshot_table->type);
         }
     }    
 
@@ -36118,7 +36454,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     return NULL;    
 }
 
-ecs_stage_t *flecs_stage_from_world(
+ecs_stage_t* flecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
@@ -36280,7 +36616,7 @@ void flecs_monitor_register(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    ecs_map_init_if(monitors, ecs_monitor_t, 1);
+    ecs_map_init_if(monitors, ecs_monitor_t, flecs_wallocator(world), 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
@@ -36344,7 +36680,7 @@ void init_store(
     flecs_sparse_init(&world->store.tables, ecs_table_t);
 
     /* Initialize table map */
-    flecs_table_hashmap_init(&world->store.table_map);
+    flecs_table_hashmap_init(world, &world->store.table_map);
 
     /* Initialize one root table per stage */
     flecs_init_root_table(world);
@@ -36374,7 +36710,7 @@ void clean_tables(
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense(&world->store.tables, 
             ecs_table_t, i);
-        flecs_table_free_type(t);
+        flecs_table_free_type(world, t);
     }
 
     /* Clear the root table */
@@ -36435,12 +36771,6 @@ void fini_store(ecs_world_t *world) {
     flecs_hashmap_fini(&world->store.table_map);
     ecs_vector_free(world->store.records);
     ecs_vector_free(world->store.marked_ids);
-
-    ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
-    while ((cur = next)) {
-        next = cur->next;
-        ecs_os_free(cur);
-    }
 }
 
 /* Implementation for iterable mixin */
@@ -36481,6 +36811,37 @@ void world_iter_init(
             .next = world_iter_next
         };
     }
+}
+
+static 
+void flecs_world_allocators_init(
+    ecs_world_t *world)
+{
+    ecs_map_params_init(&world->allocators.ptr, void*);
+    ecs_map_params_init(&world->allocators.query_table_list, 
+        ecs_query_table_list_t);
+    flecs_ballocator_init(&world->allocators.query_table, 
+        ECS_SIZEOF(ecs_query_table_t));
+    flecs_ballocator_init(&world->allocators.query_table_match, 
+        ECS_SIZEOF(ecs_query_table_match_t));
+    flecs_ballocator_init(&world->allocators.graph_edge_lo, 
+        ECS_SIZEOF(ecs_graph_edge_t) * ECS_HI_COMPONENT_ID);
+    flecs_ballocator_init(&world->allocators.graph_edge, 
+        ECS_SIZEOF(ecs_graph_edge_t));
+    flecs_allocator_init(&world->allocators.dyn);
+}
+
+static 
+void flecs_world_allocators_fini(
+    ecs_world_t *world)
+{
+    ecs_map_params_fini(&world->allocators.ptr);
+    ecs_map_params_fini(&world->allocators.query_table_list);
+    flecs_ballocator_fini(&world->allocators.query_table);
+    flecs_ballocator_fini(&world->allocators.query_table_match);
+    flecs_ballocator_fini(&world->allocators.graph_edge_lo);
+    flecs_ballocator_fini(&world->allocators.graph_edge);
+    flecs_allocator_fini(&world->allocators.dyn);
 }
 
 static
@@ -36608,15 +36969,17 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
 
+    flecs_world_allocators_init(world);
+
     world->self = world;
     world->type_info = flecs_sparse_new(ecs_type_info_t);
-    ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
+    ecs_map_init_w_params(&world->id_index, &world->allocators.ptr);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
-    flecs_name_index_init(&world->aliases);
-    flecs_name_index_init(&world->symbols);
+    flecs_name_index_init(&world->aliases, flecs_wallocator(world));
+    flecs_name_index_init(&world->symbols, flecs_wallocator(world));
 
     world->info.time_scale = 1.0;
 
@@ -37118,6 +37481,8 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_log_pop_1();
+
+    flecs_world_allocators_fini(world);
 
     /* End of the world */
     ecs_poly_free(world, ecs_world_t);
@@ -37919,11 +38284,21 @@ void flecs_emit(
         count = ecs_table_count(table) - row;
     }
 
+    ecs_id_t ids_cache = 0;
+    void *ptrs_cache = NULL;
+    ecs_size_t sizes_cache = 0;
+    int32_t columns_cache = 0;
+    ecs_entity_t sources_cache = 0;
     ecs_iter_t it = {
         .world = stage,
         .real_world = world,
         .table = table,
         .field_count = 1,
+        .ids = &ids_cache,
+        .ptrs = &ptrs_cache,
+        .sizes = &sizes_cache,
+        .columns = &columns_cache,
+        .sources = &sources_cache,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,
@@ -39812,7 +40187,7 @@ ecs_iter_t ecs_term_iter(
      * is built on top of the term iterator. The private cache of the term
      * iterator keeps the filter iterator code simple, as it doesn't need to
      * worry about the term iter overwriting the iterator fields. */
-    flecs_iter_init(&it, 0);
+    flecs_iter_init(stage, &it, 0);
 
     term_iter_init(world, term, &it.priv.iter.term, false);
 
@@ -39844,7 +40219,7 @@ ecs_iter_t ecs_term_chain_iter(
         .next = ecs_term_next
     };
 
-    flecs_iter_init(&it, flecs_iter_cache_all);
+    flecs_iter_init(chain_it->world, &it, flecs_iter_cache_all);
 
     term_iter_init(world, term, &it.priv.iter.term, false);
 
@@ -40243,7 +40618,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
         it.variable_names = (char**)filter->variable_names;
     }
 
-    flecs_iter_init(&it, flecs_iter_cache_all);
+    flecs_iter_init(stage, &it, flecs_iter_cache_all);
 
     return it;
 error:
@@ -40270,7 +40645,7 @@ ecs_iter_t ecs_filter_chain_iter(
         .next = ecs_filter_next
     };
 
-    flecs_iter_init(&it, flecs_iter_cache_all);
+    flecs_iter_init(chain_it->world, &it, flecs_iter_cache_all);
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
     flecs_init_filter_iter(&it, filter);
 
@@ -40832,7 +41207,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
-    flecs_iter_init(&user_it, flecs_iter_cache_all);
+    flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
@@ -41041,7 +41416,7 @@ void flecs_register_observer_for_id(
             events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_init_if(&evt->event_ids, ecs_event_id_record_t*, 1);
+        ecs_map_init_w_params_if(&evt->event_ids, &world->allocators.ptr);
 
         /* Get observers for (component) id for event */
         ecs_event_id_record_t *idt = flecs_ensure_event_id_record(
@@ -41049,7 +41424,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        ecs_map_init_if(observers, ecs_observer_t*, 1);
+        ecs_map_init_w_params_if(observers, &world->allocators.ptr);
 
         ecs_map_ensure(observers, ecs_observer_t*, 
             observer->entity)[0] = observer;
@@ -41210,18 +41585,18 @@ void flecs_init_observer_iter(
         return;
     }
 
+    it->ids[0] = it->event_id;
+
     if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
-        it->ids = it->priv.cache.ids;
-        it->ids[0] = it->event_id;
         return;
     }
 
-    flecs_iter_init(it, flecs_iter_cache_all);
+    it->field_count = 1;
+    ecs_world_t *world = it->world;
+    flecs_iter_init(world, it, flecs_iter_cache_all);
     flecs_iter_validate(it);
 
     *iter_set = true;
-
-    it->ids[0] = it->event_id;
 
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!it->count || it->offset < ecs_table_count(it->table), 
@@ -41244,7 +41619,6 @@ void flecs_init_observer_iter(
         .id = it->event_id
     };
 
-    it->field_count = 1;
     it->terms = &term;
     flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
@@ -42225,10 +42599,11 @@ void table_cache_list_insert(
 }
 
 void ecs_table_cache_init(
+    ecs_world_t *world,
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 4);
+    ecs_map_init_w_params(&cache->index, &world->allocators.ptr);
 }
 
 void ecs_table_cache_fini(
@@ -42500,8 +42875,8 @@ void ecs_os_fini(void) {
 #if !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
-static
-void dump_backtrace(
+
+void flecs_dump_backtrace(
     FILE *stream) 
 {
     int nptrs;
@@ -42522,8 +42897,7 @@ void dump_backtrace(
     free(strings);
 }
 #else
-static
-void dump_backtrace(
+void flecs_dump_backtrace(
     FILE *stream)
 { 
     (void)stream;
@@ -42652,7 +43026,7 @@ void log_msg(
     fputs("\n", stream);
 
     if (level == -4) {
-        dump_backtrace(stream);
+        flecs_dump_backtrace(stream);
     }
 }
 
@@ -43254,9 +43628,11 @@ void flecs_query_insert_table_node(
 
 static
 ecs_query_table_match_t* flecs_query_cache_add(
+    ecs_world_t *world,
     ecs_query_table_t *elem)
 {
-    ecs_query_table_match_t *result = ecs_os_calloc_t(ecs_query_table_match_t);
+    ecs_query_table_match_t *result = 
+        flecs_bcalloc(&world->allocators.query_table_match);
     ecs_query_table_node_t *node = &result->node;
 
     node->match = result;
@@ -43300,7 +43676,7 @@ void flecs_query_get_dirty_state(
     } else {
         out->table = ecs_get_table(world, subject);
         int32_t ref_index = -match->columns[term] - 1;
-        ecs_ref_t *ref = &match->references[ref_index];
+        ecs_ref_t *ref = &match->refs[ref_index];
         if (ref->id != 0) {
             ecs_ref_get_id(world, ref, ref->id);
             out->column = ref->tr->column;
@@ -43323,7 +43699,7 @@ bool flecs_query_get_match_monitor(
         return false;
     }
 
-    int32_t *monitor = ecs_os_calloc_n(int32_t, query->filter.term_count + 1);
+    int32_t *monitor = flecs_balloc(&query->allocators.monitors);
 
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */
@@ -43590,17 +43966,15 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     ecs_query_table_t *qt,
     ecs_table_t *table)
 {
-    ecs_filter_t *filter = &query->filter;
-    int32_t term_count = filter->term_count;
-
     /* Add match for table. One table can have more than one match, if
      * the query contains wildcards. */
-    ecs_query_table_match_t *qm = flecs_query_cache_add(qt);
+    ecs_query_table_match_t *qm = flecs_query_cache_add(query->world, qt);
     qm->table = table;
-    qm->columns = ecs_os_malloc_n(int32_t, term_count);
-    qm->ids = ecs_os_malloc_n(ecs_id_t, term_count);
-    qm->sources = ecs_os_malloc_n(ecs_entity_t, term_count);
-    qm->sizes = ecs_os_malloc_n(ecs_size_t, term_count);
+
+    qm->columns = flecs_balloc(&query->allocators.columns);
+    qm->ids = flecs_balloc(&query->allocators.ids);
+    qm->sources = flecs_balloc(&query->allocators.sources);
+    qm->sizes = flecs_balloc(&query->allocators.sizes);
 
     /* Insert match to iteration list if table is not empty */
     if (!table || ecs_table_count(table) != 0) {
@@ -43632,9 +44006,9 @@ void flecs_query_set_table_match(
         ecs_vector_free(qm->bitset_columns);
         qm->bitset_columns = NULL;
     }
-    if (qm->references) {
-        ecs_os_free(qm->references);
-        qm->references = NULL;
+    if (qm->refs) {
+        flecs_wfree_n(world, ecs_ref_t, qm->refs_count, qm->refs);
+        qm->refs = NULL;
     }
 
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
@@ -43727,7 +44101,9 @@ void flecs_query_set_table_match(
     if (refs) {
         int32_t count = ecs_vector_count(refs);
         ecs_ref_t *ptr = ecs_vector_first(refs, ecs_ref_t);
-        qm->references = ecs_os_memdup_n(ptr, ecs_ref_t, count);
+        qm->refs = flecs_walloc_n(world, ecs_ref_t, count);
+        qm->refs_count = count;
+        ecs_os_memcpy_n(qm->refs, ptr, ecs_ref_t, count);
         ecs_vector_free(refs);
     }
 }
@@ -43749,7 +44125,7 @@ void flecs_query_match_tables(
     while (ecs_filter_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             /* New table matched, add record to cache */
-            qt = ecs_os_calloc_t(ecs_query_table_t);
+            qt = flecs_bcalloc(&world->allocators.query_table);
             ecs_table_cache_insert(&query->cache, it.table, &qt->hdr);
             table = it.table;
         }
@@ -43785,7 +44161,7 @@ bool flecs_query_match_table(
     while (ecs_filter_next(&it)) {
         ecs_assert(it.table == table, ECS_INTERNAL_ERROR, NULL);
         if (qt == NULL) {
-            qt = ecs_os_calloc_t(ecs_query_table_t);
+            qt = flecs_bcalloc(&world->allocators.query_table);
             ecs_table_cache_insert(&query->cache, it.table, &qt->hdr);
             table = it.table;
         }
@@ -44319,14 +44695,19 @@ void flecs_query_table_match_free(
     ecs_query_table_match_t *cur, *next;
 
     for (cur = first; cur != NULL; cur = next) {
-        ecs_os_free(cur->columns);
-        ecs_os_free(cur->ids);
-        ecs_os_free(cur->sources);
-        ecs_os_free(cur->sizes);
-        ecs_os_free(cur->references);
+        flecs_bfree(&query->allocators.columns, cur->columns);
+        flecs_bfree(&query->allocators.ids, cur->ids);
+        flecs_bfree(&query->allocators.sources, cur->sources);
+        flecs_bfree(&query->allocators.sizes, cur->sizes);
+        if (cur->monitor) {
+            flecs_bfree(&query->allocators.monitors, cur->monitor);
+        }
+        if (cur->refs) {
+            flecs_wfree_n(query->world, ecs_ref_t, cur->refs_count, cur->refs);
+        }
+
         ecs_os_free(cur->sparse_columns);
         ecs_os_free(cur->bitset_columns);
-        ecs_os_free(cur->monitor);
 
         if (!elem->hdr.empty) {
             flecs_query_remove_table_node(query, &cur->node);
@@ -44334,7 +44715,7 @@ void flecs_query_table_match_free(
 
         next = cur->next_match;
 
-        ecs_os_free(cur);
+        flecs_bfree(&query->world->allocators.query_table_match, cur);
     }
 }
 
@@ -44344,7 +44725,7 @@ void flecs_query_table_free(
     ecs_query_table_t *elem)
 {
     flecs_query_table_match_free(query, elem, elem->first);
-    ecs_os_free(elem);
+    flecs_bfree(&query->world->allocators.query_table, elem);
 }
 
 static
@@ -44395,7 +44776,7 @@ void flecs_query_rematch_tables(
 
             qt = ecs_table_cache_get(&query->cache, table);
             if (!qt) {
-                qt = ecs_os_calloc_t(ecs_query_table_t);
+                qt = flecs_bcalloc(&world->allocators.query_table);
                 ecs_table_cache_insert(&query->cache, table, &qt->hdr);
             }
 
@@ -44536,7 +44917,8 @@ void flecs_query_group_by(
 
     query->group_by_id = sort_component;
     query->group_by = group_by;
-    ecs_map_init(&query->groups, ecs_query_table_list_t, 16);
+    ecs_map_init_w_params(&query->groups, 
+        &query->world->allocators.query_table_list);
 error:
     return;
 }
@@ -44610,6 +44992,39 @@ void flecs_query_table_cache_free(
 }
 
 static
+void flecs_query_allocators_init(
+    ecs_query_t *query)
+{
+    int32_t field_count = query->filter.field_count;
+    if (field_count) {
+        flecs_ballocator_init(&query->allocators.columns, 
+            field_count * ECS_SIZEOF(int32_t));
+        flecs_ballocator_init(&query->allocators.ids, 
+            field_count * ECS_SIZEOF(ecs_id_t));
+        flecs_ballocator_init(&query->allocators.sources,
+            field_count * ECS_SIZEOF(ecs_entity_t));
+        flecs_ballocator_init(&query->allocators.sizes,
+            field_count * ECS_SIZEOF(ecs_size_t));
+        flecs_ballocator_init(&query->allocators.monitors,
+            (1 + field_count) * ECS_SIZEOF(int32_t));
+    }
+}
+
+static
+void flecs_query_allocators_fini(
+    ecs_query_t *query)
+{
+    int32_t field_count = query->filter.field_count;
+    if (field_count) {
+        flecs_ballocator_fini(&query->allocators.columns);
+        flecs_ballocator_fini(&query->allocators.ids);
+        flecs_ballocator_fini(&query->allocators.sources);
+        flecs_ballocator_fini(&query->allocators.sizes);
+        flecs_ballocator_fini(&query->allocators.monitors);
+    }
+}
+
+static
 void flecs_query_fini(
     ecs_query_t *query)
 {
@@ -44641,6 +45056,8 @@ void flecs_query_fini(
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
 
+    flecs_query_allocators_fini(query);
+
     ecs_poly_free(query, ecs_query_t);
 }
 
@@ -44667,6 +45084,8 @@ ecs_query_t* ecs_query_init(
     if (ecs_filter_init(world, &observer_desc.filter) == NULL) {
         goto error;
     }
+
+    flecs_query_allocators_init(result);
 
     if (result->filter.term_count) {
         observer_desc.entity = entity;
@@ -44753,7 +45172,7 @@ ecs_query_t* ecs_query_init(
      * change back to being in sync before processing pending events. */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
-    ecs_table_cache_init(&result->cache);
+    ecs_table_cache_init(world, &result->cache);
 
     if (!desc->parent) {
         flecs_query_match_tables(world, result);
@@ -44864,20 +45283,20 @@ ecs_iter_t ecs_query_iter(
     if (filter->flags & EcsFilterMatchOnlyThis) {
         /* When the query only matches This terms, we can reuse the storage from
          * the cache to populate the iterator */
-        flecs_iter_init(&result, flecs_iter_cache_ptrs);
+        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs);
     } else {
         /* Check if non-This terms (like singleton terms) still match */
         ecs_iter_t fit = flecs_filter_iter_w_flags(
-            world, &query->filter, EcsIterIgnoreThis);
+            (ecs_world_t*)stage, &query->filter, EcsIterIgnoreThis);
         if (!ecs_filter_next(&fit)) {
             /* No match, so return nothing */
-            ecs_iter_fini(&result);
+            ecs_iter_fini(&fit);
             goto noresults;
         }
 
         /* Initialize iterator with private storage for ids, ptrs, sizes and 
          * columns so we have a place to store the non-This data */
-        flecs_iter_init(&result, flecs_iter_cache_ptrs | flecs_iter_cache_ids |
+        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs | flecs_iter_cache_ids |
             flecs_iter_cache_columns | flecs_iter_cache_sizes);
 
         /* Copy the data */
@@ -45445,7 +45864,7 @@ bool ecs_query_next_instanced(
         }
 
         it->sources = match->sources;
-        it->references = match->references;
+        it->references = match->refs;
         it->instance_count = 0;
 
         flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, 
@@ -45623,9 +46042,12 @@ int flecs_type_compare(const void *ptr_1, const void *ptr_2) {
     return result;
 }
 
-void flecs_table_hashmap_init(ecs_hashmap_t *hm) {
+void flecs_table_hashmap_init(
+    ecs_world_t *world, 
+    ecs_hashmap_t *hm) 
+{
     flecs_hashmap_init(hm, ecs_type_t, ecs_table_t*, 
-        flecs_type_hash, flecs_type_compare);
+        flecs_type_hash, flecs_type_compare, flecs_wallocator(world));
 }
 
 /* Find location where to insert id into type */
@@ -45695,6 +46117,7 @@ int flecs_type_count_matches(
 /* Create type from source type with id */
 static
 int flecs_type_new_with(
+    ecs_world_t *world,
     ecs_type_t *dst,
     const ecs_type_t *src,
     ecs_id_t with)
@@ -45706,7 +46129,7 @@ int flecs_type_new_with(
     }
 
     int32_t dst_count = src->count + 1;
-    ecs_id_t *dst_array = ecs_os_malloc_n(ecs_id_t, dst_count);
+    ecs_id_t *dst_array = flecs_walloc_n(world, ecs_id_t, dst_count);
     dst->count = dst_count;
     dst->array = dst_array;
 
@@ -45727,12 +46150,13 @@ int flecs_type_new_with(
 /* Create type from source type without ids matching wildcard */
 static
 int flecs_type_new_filtered(
+    ecs_world_t *world,
     ecs_type_t *dst,
     const ecs_type_t *src,
     ecs_id_t wildcard,
     int32_t at)
 {
-    *dst = flecs_type_copy(src);
+    *dst = flecs_type_copy(world, src);
     ecs_id_t *dst_array = dst->array;
     ecs_id_t *src_array = src->array;
     if (at) {
@@ -45749,9 +46173,6 @@ int flecs_type_new_filtered(
     }
 
     dst->count = w;
-    if (w != count) {
-        dst->array = ecs_os_realloc_n(dst->array, ecs_id_t, w);
-    }
 
     return 0;
 }
@@ -45759,6 +46180,7 @@ int flecs_type_new_filtered(
 /* Create type from source type without id */
 static
 int flecs_type_new_without(
+    ecs_world_t *world,
     ecs_type_t *dst,
     const ecs_type_t *src,
     ecs_id_t without)
@@ -45781,7 +46203,7 @@ int flecs_type_new_without(
             ecs_entity_t r = ECS_PAIR_FIRST(without);
             ecs_entity_t o = ECS_PAIR_SECOND(without);
             if (r == EcsWildcard && o != EcsWildcard) {
-                return flecs_type_new_filtered(dst, src, without, at);
+                return flecs_type_new_filtered(world, dst, src, without, at);
             }
         }
         count += flecs_type_count_matches(src, without, at + 1);
@@ -45794,7 +46216,7 @@ int flecs_type_new_without(
         return 0;
     }
 
-    ecs_id_t *dst_array = ecs_os_malloc_n(ecs_id_t, dst_count);
+    ecs_id_t *dst_array = flecs_walloc_n(world, ecs_id_t, dst_count);
     dst->array = dst_array;
 
     if (at) {
@@ -45812,32 +46234,44 @@ int flecs_type_new_without(
 
 /* Copy type */
 ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
     const ecs_type_t *src)
 {
     int32_t src_count = src->count;
+    if (!src_count) {
+        return (ecs_type_t){ 0 };
+    }
+
+    ecs_id_t *ids = flecs_walloc_n(world, ecs_id_t, src_count);
+    ecs_os_memcpy_n(ids, src->array, ecs_id_t, src_count);
     return (ecs_type_t) {
-        .array = ecs_os_memdup_n(src->array, ecs_id_t, src_count),
+        .array = ids,
         .count = src_count
     };
 }
 
 /* Free type */
 void flecs_type_free(
+    ecs_world_t *world,
     ecs_type_t *type)
 {
-    ecs_os_free(type->array);
+    int32_t count = type->count;
+    if (count) {
+        flecs_wfree_n(world, ecs_id_t, type->count, type->array);
+    }
 }
 
 /* Add to type */
 static
 void flecs_type_add(
+    ecs_world_t *world,
     ecs_type_t *type,
     ecs_id_t add)
 {
     ecs_type_t new_type;
-    int res = flecs_type_new_with(&new_type, type, add);
+    int res = flecs_type_new_with(world, &new_type, type, add);
     if (res != -1) {
-        flecs_type_free(type);
+        flecs_type_free(world, type);
         type->array = new_type.array;
         type->count = new_type.count;
     }
@@ -45857,39 +46291,12 @@ void table_diff_free(
 }
 
 static
-ecs_graph_edge_t* graph_edge_new(
-    ecs_world_t *world)
-{
-    ecs_graph_edge_t *result = (ecs_graph_edge_t*)world->store.first_free;
-    if (result) {
-        world->store.first_free = result->hdr.next;
-        ecs_os_zeromem(result);
-    } else {
-        result = ecs_os_calloc_t(ecs_graph_edge_t);
-    }
-    return result;
-}
-
-static
-void graph_edge_free(
-    ecs_world_t *world,
-    ecs_graph_edge_t *edge)
-{
-    if (world->flags & EcsWorldFini) {
-        ecs_os_free(edge);
-    } else {
-        edge->hdr.next = world->store.first_free;
-        world->store.first_free = &edge->hdr;
-    }
-}
-
-static
 ecs_graph_edge_t* ensure_hi_edge(
     ecs_world_t *world,
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
+    ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
 
     ecs_graph_edge_t **ep = ecs_map_ensure(&edges->hi, ecs_graph_edge_t*, id);
     ecs_graph_edge_t *edge = ep[0];
@@ -45900,7 +46307,7 @@ ecs_graph_edge_t* ensure_hi_edge(
     if (id < ECS_HI_COMPONENT_ID) {
         edge = &edges->lo[id];
     } else {
-        edge = graph_edge_new(world);
+        edge = flecs_bcalloc(&world->allocators.graph_edge);
     }
 
     ep[0] = edge;
@@ -45917,11 +46324,11 @@ ecs_graph_edge_t* ensure_edge(
     
     if (id < ECS_HI_COMPONENT_ID) {
         if (!edges->lo) {
-            edges->lo = ecs_os_calloc_n(ecs_graph_edge_t, ECS_HI_COMPONENT_ID);
+            edges->lo = flecs_bcalloc(&world->allocators.graph_edge_lo);
         }
         edge = &edges->lo[id];
     } else {
-        ecs_map_init_if(&edges->hi, ecs_graph_edge_t*, 1);
+        ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
         edge = ensure_hi_edge(world, edges, id);
     }
 
@@ -45959,7 +46366,7 @@ void disconnect_edge(
     if (id < ECS_HI_COMPONENT_ID) {
         ecs_os_memset_t(edge, 0, ecs_graph_edge_t);
     } else {
-        graph_edge_free(world, edge);
+        flecs_bfree(&world->allocators.graph_edge, edge);
     }
 }
 
@@ -46099,7 +46506,7 @@ ecs_table_t* find_or_create(
         &world->store.table_map, type, ecs_table_t*);
     if ((table = *(ecs_table_t**)elem.value)) {
         if (own_type) {
-            flecs_type_free(type);
+            flecs_type_free(world, type);
         }
         return table;
     }
@@ -46113,7 +46520,7 @@ ecs_table_t* find_or_create(
         return create_table(world, type, elem, prev);
     }
 
-    ecs_type_t copy = flecs_type_copy(type);
+    ecs_type_t copy = flecs_type_copy(world, type);
     return create_table(world, &copy, elem, prev);
 }
 
@@ -46395,7 +46802,7 @@ void flecs_add_overrides_for_base(
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
             if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-                flecs_type_add(dst_type, id & ~ECS_OVERRIDE);
+                flecs_type_add(world, dst_type, id & ~ECS_OVERRIDE);
             }
         }
     }
@@ -46443,8 +46850,7 @@ void flecs_add_with_property(
                 a = ecs_pair(ra, o);
             }
 
-            flecs_type_add(dst_type, a);
-
+            flecs_type_add(world, dst_type, a);
             flecs_add_with_property(world, idr_with_wildcard, dst_type, ra, o);
         }
     }
@@ -46469,7 +46875,8 @@ ecs_table_t* flecs_find_table_with(
         if (idr->flags & EcsIdUnion) {
             ecs_type_t dst_type;
             ecs_id_t union_id = ecs_pair(EcsUnion, r);
-            int res = flecs_type_new_with(&dst_type, &node->type, union_id);
+            int res = flecs_type_new_with(
+                world, &dst_type, &node->type, union_id);
             if (res == -1) {
                 return node;
             }
@@ -46481,7 +46888,7 @@ ecs_table_t* flecs_find_table_with(
             if (tr) {
                 /* Table already has an instance of the relationship, create
                     * a new id sequence with the existing id replaced */
-                ecs_type_t dst_type = flecs_type_copy(&node->type);
+                ecs_type_t dst_type = flecs_type_copy(world, &node->type);
                 dst_type.array[tr->column] = with;
                 return find_or_create(world, &dst_type, true, node);
             }
@@ -46493,7 +46900,7 @@ ecs_table_t* flecs_find_table_with(
 
     /* Create sequence with new id */
     ecs_type_t dst_type;
-    int res = flecs_type_new_with(&dst_type, &node->type, with);
+    int res = flecs_type_new_with(world, &dst_type, &node->type, with);
     if (res == -1) {
         return node; /* Current table already has id */
     }
@@ -46531,7 +46938,7 @@ ecs_table_t* flecs_find_table_without(
 
     /* Create sequence with new id */
     ecs_type_t dst_type;
-    int res = flecs_type_new_without(&dst_type, &node->type, without);
+    int res = flecs_type_new_without(world, &dst_type, &node->type, without);
     if (res == -1) {
         return node; /* Current table does not have id */
     }
@@ -46821,8 +47228,12 @@ void flecs_table_clear_edges(
         } while ((cur = next));
     }
 
-    ecs_os_free(node_add->lo);
-    ecs_os_free(node_remove->lo);
+    if (node_add->lo) {
+        flecs_bfree(&world->allocators.graph_edge_lo, node_add->lo);
+    }
+    if (node_remove->lo) {
+        flecs_bfree(&world->allocators.graph_edge_lo, node_remove->lo);
+    }
     ecs_map_fini(add_hi);
     ecs_map_fini(remove_hi);
     table_node->add.lo = NULL;
@@ -46854,77 +47265,44 @@ ecs_table_t* ecs_table_remove_id(
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
-#define INIT_CACHE(it, fields, f, count, cache_size)\
+#define INIT_CACHE(it, stack, fields, f, T, count)\
     if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
-        if (count <= cache_size) {\
-            it->f = it->priv.cache.f;\
-            it->priv.cache.used |= flecs_iter_cache_##f;\
-        } else {\
-            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * count);\
-            it->priv.cache.allocated |= flecs_iter_cache_##f;\
-        }\
-    }
-
-/* If array is using the cache, make sure that its address is correct in case
- * the iterator got moved (typically happens when returned by a function) */
-#define VALIDATE_CACHE(it, f)\
-    if (it->f) {\
-        if (it->priv.cache.used & flecs_iter_cache_##f) {\
-            it->f = it->priv.cache.f;\
-        }\
-    }
-
-/* If array is allocated, free it when finalizing the iterator */
-#define FINI_CACHE(it, f)\
-    if (it->f) {\
-        if (it->priv.cache.allocated & flecs_iter_cache_##f) {\
-            ecs_os_free((void*)it->f);\
-        }\
+        it->f = flecs_stack_callocn(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T), count);\
+        it->priv.cache.used |= flecs_iter_cache_##f;\
     }
 
 void flecs_iter_init(
+    const ecs_world_t *world,
     ecs_iter_t *it,
     ecs_flags8_t fields)
 {
     ecs_assert(!ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INTERNAL_ERROR, NULL);
 
+    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+
     it->priv.cache.used = 0;
     it->priv.cache.allocated = 0;
+    it->priv.cache.stack_cursor = flecs_stack_get_cursor(stack);
 
-    INIT_CACHE(it, fields, ids, it->field_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, sources, it->field_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, match_indices, it->field_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, columns, it->field_count, ECS_TERM_CACHE_SIZE);
-    INIT_CACHE(it, fields, variables, it->variable_count, 
-        ECS_VARIABLE_CACHE_SIZE);
-    INIT_CACHE(it, fields, sizes, it->field_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
+    INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
+    INIT_CACHE(it, stack, fields, match_indices, int32_t, it->field_count);
+    INIT_CACHE(it, stack, fields, columns, int32_t, it->field_count);
+    INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
+    INIT_CACHE(it, stack, fields, sizes, ecs_size_t, it->field_count);
 
     if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, fields, ptrs, it->field_count, ECS_TERM_CACHE_SIZE);
+        INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
     } else {
         it->ptrs = NULL;
     }
 }
 
-static
-void iter_validate_cache(
-    ecs_iter_t *it)
-{
-    /* Make sure pointers to cache are up to date in case iter has moved */
-    VALIDATE_CACHE(it, ids);
-    VALIDATE_CACHE(it, sources);
-    VALIDATE_CACHE(it, match_indices);
-    VALIDATE_CACHE(it, columns);
-    VALIDATE_CACHE(it, variables);
-    VALIDATE_CACHE(it, sizes);
-    VALIDATE_CACHE(it, ptrs);
-}
-
 void flecs_iter_validate(
     ecs_iter_t *it)
 {
-    iter_validate_cache(it);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
 }
 
@@ -46937,13 +47315,13 @@ void ecs_iter_fini(
         it->fini(it);
     }
 
-    FINI_CACHE(it, ids);
-    FINI_CACHE(it, columns);
-    FINI_CACHE(it, sources);
-    FINI_CACHE(it, sizes);
-    FINI_CACHE(it, ptrs);
-    FINI_CACHE(it, match_indices);
-    FINI_CACHE(it, variables);
+    ecs_world_t *world = it->world;
+    if (!world) {
+        return;
+    }
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
+        &it->priv.cache.stack_cursor);
 }
 
 static
@@ -47689,8 +48067,6 @@ void ecs_iter_set_var(
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    iter_validate_cache(it);
-
     ecs_var_t *var = &it->variables[var_id];
     var->entity = entity;
 
@@ -47738,8 +48114,6 @@ void ecs_iter_set_var_as_range(
 
     /* Can't set variable while iterating */
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, NULL);
-
-    iter_validate_cache(it);
 
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;
@@ -48817,12 +49191,12 @@ ecs_table_t* bootstrap_component_table(
     ecs_data_t *data = &result->data;
 
     /* Preallocate enough memory for initial components */
-    ecs_storage_init_t(&data->entities, ecs_entity_t, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->records, ecs_record_t, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->records, ecs_record_t, EcsFirstUserComponentId);
 
-    ecs_storage_init_t(&data->columns[0], EcsComponent, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[0], EcsComponent, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
     
     return result;
 }
@@ -49902,7 +50276,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
-    ecs_table_cache_init(&idr->cache);
+    ecs_table_cache_init(world, &idr->cache);
 
     idr->id = id;
     idr->refcount = 1;
@@ -50264,7 +50638,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
 
     ecs_hashmap_t *map = idr->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new();
+        map = idr->name_index = flecs_name_index_new(flecs_wallocator(world));
     }
 
     return map;

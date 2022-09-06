@@ -1399,7 +1399,7 @@ void flecs_notify_on_set(
                 ecs_iter_t it = { .field_count = 1};
                 it.entities = entities;
                 
-                flecs_iter_init(&it, flecs_iter_cache_all);
+                flecs_iter_init(world, &it, flecs_iter_cache_all);
                 it.world = world;
                 it.real_world = world;
                 it.table = table;

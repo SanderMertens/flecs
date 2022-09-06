@@ -7,6 +7,7 @@
 #define FLECS_ITER_H
 
 void flecs_iter_init(
+    const ecs_world_t *world,
     ecs_iter_t *it,
     ecs_flags8_t fields);
 

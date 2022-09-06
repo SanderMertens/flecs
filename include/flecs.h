@@ -122,7 +122,9 @@
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"           /* Vector datatype */
+#include "flecs/private/block_allocator.h"  /* Block allocator */
 #include "flecs/private/map.h"              /* Map */
+#include "flecs/private/allocator.h"        /* Allocator */
 #include "flecs/private/strbuf.h"           /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 

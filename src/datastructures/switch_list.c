@@ -93,9 +93,10 @@ void remove_node(
 
 void flecs_switch_init(
     ecs_switch_t *sw,
+    ecs_allocator_t *allocator,
     int32_t elements)
 {
-    ecs_map_init(&sw->headers, ecs_switch_header_t, 1);
+    ecs_map_init(&sw->headers, ecs_switch_header_t, allocator, 1);
     sw->nodes = ecs_vector_new(ecs_switch_node_t, elements);
     sw->values = ecs_vector_new(uint64_t, elements);
 
@@ -110,16 +111,6 @@ void flecs_switch_init(
         nodes[i].next = -1;
         values[i] = 0;
     }
-}
-
-ecs_switch_t* flecs_switch_new(
-    int32_t elements)
-{
-    ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-
-    flecs_switch_init(result, elements);
-
-    return result;
 }
 
 void flecs_switch_clear(
@@ -139,13 +130,6 @@ void flecs_switch_fini(
     ecs_map_fini(&sw->headers);
     ecs_vector_free(sw->nodes);
     ecs_vector_free(sw->values);
-}
-
-void flecs_switch_free(
-    ecs_switch_t *sw)
-{
-    flecs_switch_fini(sw);
-    ecs_os_free(sw);
 }
 
 void flecs_switch_add(

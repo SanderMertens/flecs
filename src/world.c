@@ -174,7 +174,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     return NULL;    
 }
 
-ecs_stage_t *flecs_stage_from_world(
+ecs_stage_t* flecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
@@ -336,7 +336,7 @@ void flecs_monitor_register(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    ecs_map_init_if(monitors, ecs_monitor_t, 1);
+    ecs_map_init_if(monitors, ecs_monitor_t, flecs_wallocator(world), 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
@@ -400,7 +400,7 @@ void init_store(
     flecs_sparse_init(&world->store.tables, ecs_table_t);
 
     /* Initialize table map */
-    flecs_table_hashmap_init(&world->store.table_map);
+    flecs_table_hashmap_init(world, &world->store.table_map);
 
     /* Initialize one root table per stage */
     flecs_init_root_table(world);
@@ -430,7 +430,7 @@ void clean_tables(
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense(&world->store.tables, 
             ecs_table_t, i);
-        flecs_table_free_type(t);
+        flecs_table_free_type(world, t);
     }
 
     /* Clear the root table */
@@ -491,12 +491,6 @@ void fini_store(ecs_world_t *world) {
     flecs_hashmap_fini(&world->store.table_map);
     ecs_vector_free(world->store.records);
     ecs_vector_free(world->store.marked_ids);
-
-    ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
-    while ((cur = next)) {
-        next = cur->next;
-        ecs_os_free(cur);
-    }
 }
 
 /* Implementation for iterable mixin */
@@ -537,6 +531,37 @@ void world_iter_init(
             .next = world_iter_next
         };
     }
+}
+
+static 
+void flecs_world_allocators_init(
+    ecs_world_t *world)
+{
+    ecs_map_params_init(&world->allocators.ptr, void*);
+    ecs_map_params_init(&world->allocators.query_table_list, 
+        ecs_query_table_list_t);
+    flecs_ballocator_init(&world->allocators.query_table, 
+        ECS_SIZEOF(ecs_query_table_t));
+    flecs_ballocator_init(&world->allocators.query_table_match, 
+        ECS_SIZEOF(ecs_query_table_match_t));
+    flecs_ballocator_init(&world->allocators.graph_edge_lo, 
+        ECS_SIZEOF(ecs_graph_edge_t) * ECS_HI_COMPONENT_ID);
+    flecs_ballocator_init(&world->allocators.graph_edge, 
+        ECS_SIZEOF(ecs_graph_edge_t));
+    flecs_allocator_init(&world->allocators.dyn);
+}
+
+static 
+void flecs_world_allocators_fini(
+    ecs_world_t *world)
+{
+    ecs_map_params_fini(&world->allocators.ptr);
+    ecs_map_params_fini(&world->allocators.query_table_list);
+    flecs_ballocator_fini(&world->allocators.query_table);
+    flecs_ballocator_fini(&world->allocators.query_table_match);
+    flecs_ballocator_fini(&world->allocators.graph_edge_lo);
+    flecs_ballocator_fini(&world->allocators.graph_edge);
+    flecs_allocator_fini(&world->allocators.dyn);
 }
 
 static
@@ -664,15 +689,17 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
 
+    flecs_world_allocators_init(world);
+
     world->self = world;
     world->type_info = flecs_sparse_new(ecs_type_info_t);
-    ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
+    ecs_map_init_w_params(&world->id_index, &world->allocators.ptr);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
-    flecs_name_index_init(&world->aliases);
-    flecs_name_index_init(&world->symbols);
+    flecs_name_index_init(&world->aliases, flecs_wallocator(world));
+    flecs_name_index_init(&world->symbols, flecs_wallocator(world));
 
     world->info.time_scale = 1.0;
 
@@ -1174,6 +1201,8 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_log_pop_1();
+
+    flecs_world_allocators_fini(world);
 
     /* End of the world */
     ecs_poly_free(world, ecs_world_t);

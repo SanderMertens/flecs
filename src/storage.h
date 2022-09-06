@@ -7,15 +7,85 @@
 #define FLECS_STORAGE_H
 
 void ecs_storage_init(
+    ecs_world_t *world,
     ecs_column_t *storage,
     ecs_size_t size,
     int32_t elem_count);
 
-#define ecs_storage_init_t(storage, T, elem_count) \
-    ecs_storage_init(storage, ECS_SIZEOF(T), elem_count)
+#define ecs_storage_init_t(world, storage, T, elem_count) \
+    ecs_storage_init(world, storage, ECS_SIZEOF(T), elem_count)
 
 void ecs_storage_fini(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_fini_t(world, storage, T) \
+    ecs_storage_fini(world, storage, ECS_SIZEOF(T))
+
+void* ecs_storage_append(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_append_t(world, storage, T) \
+    ECS_CAST(T*, ecs_storage_append(world, storage, ECS_SIZEOF(T)))
+
+void ecs_storage_remove(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem);
+
+#define ecs_storage_remove_t(world, storage, T) \
+    ECS_CAST(world, T*, ecs_storage_remove(world, storage, ECS_SIZEOF(T)))
+
+void ecs_storage_remove_last(
+    ecs_world_t *world,
     ecs_column_t *storage);
+
+ecs_column_t ecs_storage_copy(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_copy_t(world, storage, T) \
+    ecs_storage_copy(world, storage, ECS_SIZEOF(T))
+
+void ecs_storage_reclaim(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size);
+
+#define ecs_storage_reclaim_t(world, storage, T) \
+    ecs_storage_reclaim(world, storage, ECS_SIZEOF(T))
+
+void ecs_storage_set_size(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_set_size_t(world, storage, T, elem_count) \
+    ecs_storage_set_size(world, storage, ECS_SIZEOF(T), elem_count)
+
+void ecs_storage_set_count(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_set_count_t(world, storage, T, elem_count) \
+    ecs_storage_set_count(world, storage, ECS_SIZEOF(T), elem_count)
+
+void* ecs_storage_grow(
+    ecs_world_t *world,
+    ecs_column_t *storage,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_storage_grow_t(world, storage, T, elem_count) \
+    ecs_storage_grow(world, storage, ECS_SIZEOF(T), elem_count)
 
 int32_t ecs_storage_count(
     ecs_column_t *storage);
@@ -43,61 +113,5 @@ void* ecs_storage_last(
 
 #define ecs_storage_last_t(storage, T) \
     ECS_CAST(T*, ecs_storage_last(storage, ECS_SIZEOF(T)))
-
-void* ecs_storage_append(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_append_t(storage, T) \
-    ECS_CAST(T*, ecs_storage_append(storage, ECS_SIZEOF(T)))
-
-void ecs_storage_remove(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem);
-
-#define ecs_storage_remove_t(storage, T) \
-    ECS_CAST(T*, ecs_storage_remove(storage, ECS_SIZEOF(T)))
-
-void ecs_storage_remove_last(
-    ecs_column_t *storage);
-
-ecs_column_t ecs_storage_copy(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_copy_t(storage, T) \
-    ecs_storage_copy(storage, ECS_SIZEOF(T))
-
-void ecs_storage_reclaim(
-    ecs_column_t *storage,
-    ecs_size_t size);
-
-#define ecs_storage_reclaim_t(storage, T) \
-    ecs_storage_reclaim(storage, ECS_SIZEOF(T))
-
-void ecs_storage_set_size(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_set_size_t(storage, T, elem_count) \
-    ecs_storage_set_size(storage, ECS_SIZEOF(T), elem_count)
-
-void ecs_storage_set_count(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_set_count_t(storage, T, elem_count) \
-    ecs_storage_set_count(storage, ECS_SIZEOF(T), elem_count)
-
-void* ecs_storage_grow(
-    ecs_column_t *storage,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_storage_grow_t(storage, T, elem_count) \
-    ecs_storage_grow(storage, ECS_SIZEOF(T), elem_count)
 
 #endif 
