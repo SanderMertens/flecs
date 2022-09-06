@@ -44,6 +44,26 @@ void* flecs_stack_alloc(
     return ECS_OFFSET(page->data, sp);
 }
 
+void* flecs_stack_allocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count)
+{
+    return flecs_stack_alloc(stack, size * count, align);
+}
+
+void* flecs_stack_callocn(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align,
+    int32_t count)
+{
+    void *ptr = flecs_stack_alloc(stack, size * count, align);
+    ecs_os_memset(ptr, 0, size * count);
+    return ptr;
+}
+
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size)
@@ -51,6 +71,22 @@ void flecs_stack_free(
     if (size > ECS_STACK_PAGE_SIZE) {
         ecs_os_free(ptr);
     }
+}
+
+ecs_stack_cursor_t flecs_stack_get_cursor(
+    ecs_stack_t *stack)
+{
+    return (ecs_stack_cursor_t){
+        .cur = stack->cur, .sp = stack->cur->sp
+    };
+}
+
+void flecs_stack_restore_cursor(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor)
+{
+    stack->cur = cursor->cur;
+    stack->cur->sp = cursor->sp;
 }
 
 void flecs_stack_reset(

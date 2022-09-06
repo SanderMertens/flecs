@@ -400,6 +400,7 @@ void flecs_stage_init(
     stage->async = false;
     
     flecs_stack_init(&stage->defer_stack);
+    flecs_stack_init(&stage->allocators.iter_stack);
 }
 
 void flecs_stage_deinit(
@@ -418,6 +419,7 @@ void flecs_stage_deinit(
 
     ecs_vector_free(stage->defer_queue);
     flecs_stack_fini(&stage->defer_stack);
+    flecs_stack_fini(&stage->allocators.iter_stack);
 }
 
 void ecs_set_stage_count(

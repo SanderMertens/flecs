@@ -204,7 +204,8 @@ static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
-    int32_t index = ecs_search(it->world, it->table, ecs_poly_id(EcsSystem), 0);
+    int32_t index = ecs_search(it->real_world, it->table, 
+        ecs_poly_id(EcsSystem), 0);
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
     EcsPoly *poly = ecs_table_get_column(it->table, index);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -231,7 +232,8 @@ bool flecs_pipeline_build(
     pq->rebuild_count ++;
 
     write_state_t ws = {
-        .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
+        .components = ecs_map_new(int32_t, flecs_wallocator(world), 
+            ECS_HI_COMPONENT_ID),
         .wildcard = false
     };
 
@@ -417,7 +419,8 @@ void ecs_pipeline_reset_iter(
 
     /* Create new iterators */
     for (i = 0; i < iter_count; i ++) {
-        pq->iters[i] = ecs_query_iter(world, pq->query);
+        ecs_world_t *stage = ecs_get_stage(world, i);
+        pq->iters[i] = ecs_query_iter(stage, pq->query);
     }
 
     /* Move iterator to last ran system */
@@ -480,7 +483,8 @@ bool ecs_pipeline_update(
         /* Initialize iterators */
         int32_t i, count = pq->iter_count;
         for (i = 0; i < count; i ++) {
-            pq->iters[i] = ecs_query_iter(world, pq->query);
+            ecs_world_t *stage = ecs_get_stage(world, i);
+            pq->iters[i] = ecs_query_iter(stage, pq->query);
         }
         pq->cur_op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     } else if (rebuilt) {

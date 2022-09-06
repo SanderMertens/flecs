@@ -1410,9 +1410,6 @@
                 "paged_iter_w_singleton_component",
                 "paged_iter_w_singleton_instanced",
                 "paged_iter_w_singleton_component_instanced",
-                "iter_1_term_no_alloc",
-                "iter_cache_size_terms_no_alloc",
-                "iter_lt_cache_size_terms_alloc",
                 "count"
             ]
         }, {

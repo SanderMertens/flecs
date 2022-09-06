@@ -118,7 +118,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
-    ecs_table_cache_init(&idr->cache);
+    ecs_table_cache_init(world, &idr->cache);
 
     idr->id = id;
     idr->refcount = 1;
@@ -480,7 +480,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
 
     ecs_hashmap_t *map = idr->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new();
+        map = idr->name_index = flecs_name_index_new(flecs_wallocator(world));
     }
 
     return map;

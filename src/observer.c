@@ -24,7 +24,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
-    flecs_iter_init(&user_it, flecs_iter_cache_all);
+    flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
@@ -233,7 +233,7 @@ void flecs_register_observer_for_id(
             events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_init_if(&evt->event_ids, ecs_event_id_record_t*, 1);
+        ecs_map_init_w_params_if(&evt->event_ids, &world->allocators.ptr);
 
         /* Get observers for (component) id for event */
         ecs_event_id_record_t *idt = flecs_ensure_event_id_record(
@@ -241,7 +241,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        ecs_map_init_if(observers, ecs_observer_t*, 1);
+        ecs_map_init_w_params_if(observers, &world->allocators.ptr);
 
         ecs_map_ensure(observers, ecs_observer_t*, 
             observer->entity)[0] = observer;
@@ -402,18 +402,18 @@ void flecs_init_observer_iter(
         return;
     }
 
+    it->ids[0] = it->event_id;
+
     if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
-        it->ids = it->priv.cache.ids;
-        it->ids[0] = it->event_id;
         return;
     }
 
-    flecs_iter_init(it, flecs_iter_cache_all);
+    it->field_count = 1;
+    ecs_world_t *world = it->world;
+    flecs_iter_init(world, it, flecs_iter_cache_all);
     flecs_iter_validate(it);
 
     *iter_set = true;
-
-    it->ids[0] = it->event_id;
 
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!it->count || it->offset < ecs_table_count(it->table), 
@@ -436,7 +436,6 @@ void flecs_init_observer_iter(
         .id = it->event_id
     };
 
-    it->field_count = 1;
     it->terms = &term;
     flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);

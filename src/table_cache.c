@@ -60,10 +60,11 @@ void table_cache_list_insert(
 }
 
 void ecs_table_cache_init(
+    ecs_world_t *world,
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 4);
+    ecs_map_init_w_params(&cache->index, &world->allocators.ptr);
 }
 
 void ecs_table_cache_fini(

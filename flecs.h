@@ -1160,6 +1160,78 @@ private:
 #endif
 
 /**
+ * @file block_allocator.h
+ * @brief Allocator that returns memory objects of the same (chunk) size. 
+ *        Multiple elements are stored in a single block.
+ */
+
+#ifndef FLECS_BLOCK_ALLOCATOR_H
+#define FLECS_BLOCK_ALLOCATOR_H
+
+
+typedef struct ecs_block_allocator_block_t {
+    void *memory;
+    struct ecs_block_allocator_block_t *next;
+} ecs_block_allocator_block_t;
+
+typedef struct ecs_block_allocator_chunk_header_t {
+    struct ecs_block_allocator_chunk_header_t *next;
+} ecs_block_allocator_chunk_header_t;
+
+typedef struct ecs_block_allocator_t {
+    ecs_block_allocator_chunk_header_t *head;
+    ecs_block_allocator_block_t *block_head;
+    ecs_block_allocator_block_t *block_tail;
+    int32_t chunk_size;
+    int32_t chunks_per_block;
+    int32_t block_size;
+    bool shared;
+} ecs_block_allocator_t;
+
+FLECS_DBG_API
+void flecs_ballocator_init(
+    ecs_block_allocator_t *ba,
+    ecs_size_t size);
+
+FLECS_DBG_API
+ecs_block_allocator_t* flecs_ballocator_new(
+    ecs_size_t size);
+
+FLECS_DBG_API
+void flecs_ballocator_fini(
+    ecs_block_allocator_t *ba);
+
+FLECS_DBG_API
+void flecs_ballocator_free(
+    ecs_block_allocator_t *ba);
+
+FLECS_DBG_API
+void* flecs_balloc(
+    ecs_block_allocator_t *allocator);
+
+FLECS_DBG_API
+void* flecs_bcalloc(
+    ecs_block_allocator_t *allocator);
+
+FLECS_DBG_API
+void flecs_bfree(
+    ecs_block_allocator_t *allocator, 
+    void *memory);
+
+FLECS_DBG_API
+void* flecs_brealloc(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory);
+
+FLECS_DBG_API
+void* flecs_bdup(
+    ecs_block_allocator_t *ba, 
+    void *memory);
+
+#endif
+
+/**
  * @file map.h
  * @brief Map datastructure.
  *
@@ -1202,24 +1274,6 @@ typedef struct ecs_bucket_entry_t {
     /* payload right after key. */
 } ecs_bucket_entry_t;
 
-typedef struct ecs_block_allocator_block_t {
-    void *memory;
-    struct ecs_block_allocator_block_t *next;
-} ecs_block_allocator_block_t;
-
-typedef struct ecs_block_allocator_chunk_header_t {
-    struct ecs_block_allocator_chunk_header_t *next;
-} ecs_block_allocator_chunk_header_t;
-
-typedef struct ecs_block_allocator_t {
-    ecs_block_allocator_chunk_header_t *head;
-    ecs_block_allocator_block_t *block_head;
-    ecs_block_allocator_block_t *block_tail;
-    int32_t chunk_size;
-    int32_t chunks_per_block;
-    int32_t block_size;
-} ecs_block_allocator_t;
-
 typedef struct ecs_bucket_t {
     ecs_bucket_entry_t *first;
 } ecs_bucket_t;
@@ -1231,7 +1285,8 @@ typedef struct ecs_map_t {
     uint8_t bucket_shift;
     int32_t bucket_count;
     int32_t count;
-    ecs_block_allocator_t allocator;
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t *entry_allocator;
 } ecs_map_t;
 
 typedef struct ecs_map_iter_t {
@@ -1240,27 +1295,65 @@ typedef struct ecs_map_iter_t {
     ecs_bucket_entry_t *entry;
 } ecs_map_iter_t;
 
+typedef struct ecs_map_params_t {
+    ecs_size_t size;
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t entry_allocator;
+    int32_t initial_count;
+} ecs_map_params_t;
+
 #define ECS_MAP_INIT(T) { .elem_size = ECS_SIZEOF(T) }
+
+FLECS_API
+void _ecs_map_params_init(
+    ecs_map_params_t *params,
+    ecs_size_t elem_size);
+
+#define ecs_map_params_init(params, T)\
+    _ecs_map_params_init(params, ECS_SIZEOF(T))
+
+FLECS_API
+void ecs_map_params_fini(
+    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API
 void _ecs_map_init(
     ecs_map_t *map,
     ecs_size_t elem_size,
-    int32_t elem_count);
+    struct ecs_allocator_t *allocator,
+    int32_t initial_count);
 
-#define ecs_map_init(map, T, elem_count)\
-    _ecs_map_init(map, sizeof(T), elem_count)
+#define ecs_map_init(map, T, allocator, initial_count)\
+    _ecs_map_init(map, ECS_SIZEOF(T), allocator, initial_count)
+
+/** Initialize new map. */
+FLECS_API
+void _ecs_map_init_w_params(
+    ecs_map_t *map,
+    ecs_map_params_t *params);
+
+#define ecs_map_init_w_params(map, param)\
+    _ecs_map_init_w_params(map, param)
 
 /** Initialize new map if uninitialized, leave as is otherwise */
 FLECS_API
 void _ecs_map_init_if(
     ecs_map_t *map,
     ecs_size_t elem_size,
+    struct ecs_allocator_t *allocator,
     int32_t elem_count);
 
-#define ecs_map_init_if(map, T, elem_count)\
-    _ecs_map_init_if(map, sizeof(T), elem_count)
+#define ecs_map_init_if(map, T, allocator, elem_count)\
+    _ecs_map_init_if(map, ECS_SIZEOF(T), allocator, elem_count)
+
+FLECS_API
+void _ecs_map_init_w_params_if(
+    ecs_map_t *result,
+    ecs_map_params_t *params);
+
+#define ecs_map_init_w_params_if(map, params)\
+    _ecs_map_init_w_params_if(map, params)
 
 /** Deinitialize map. */
 FLECS_API
@@ -1271,10 +1364,11 @@ void ecs_map_fini(
 FLECS_API
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
+    struct ecs_allocator_t *allocator,
     int32_t elem_count);
 
-#define ecs_map_new(T, elem_count)\
-    _ecs_map_new(sizeof(T), elem_count)
+#define ecs_map_new(T, allocator, elem_count)\
+    _ecs_map_new(ECS_SIZEOF(T), allocator, elem_count)
 
 /** Is map initialized */
 bool ecs_map_is_initialized(
@@ -1288,7 +1382,7 @@ void* _ecs_map_get(
     ecs_map_key_t key);
 
 #define ecs_map_get(map, T, key)\
-    (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
+    (T*)_ecs_map_get(map, ECS_SIZEOF(T), (ecs_map_key_t)key)
 
 /** Get pointer element. This dereferences the map element as a pointer. This
  * operation returns NULL when either the element does not exist or whether the
@@ -1316,7 +1410,7 @@ void* _ecs_map_ensure(
     ecs_map_key_t key);
 
 #define ecs_map_ensure(map, T, key)\
-    ((T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key))
+    ((T*)_ecs_map_ensure(map, ECS_SIZEOF(T), (ecs_map_key_t)key))
 
 /** Set element. */
 FLECS_API
@@ -1327,10 +1421,10 @@ void* _ecs_map_set(
     const void *payload);
 
 #define ecs_map_set(map, key, payload)\
-    _ecs_map_set(map, sizeof(*payload), (ecs_map_key_t)key, payload)
+    _ecs_map_set(map, ECS_SIZEOF(*payload), (ecs_map_key_t)key, payload)
 
 #define ecs_map_set_ptr(map, key, payload)\
-    _ecs_map_set(map, sizeof(payload), (ecs_map_key_t)key, &payload)
+    _ecs_map_set(map, ECS_SIZEOF(payload), (ecs_map_key_t)key, &payload)
 
 /** Free map. */
 FLECS_API
@@ -1373,7 +1467,7 @@ void* _ecs_map_next(
     ecs_map_key_t *key);
 
 #define ecs_map_next(iter, T, key) \
-    (T*)_ecs_map_next(iter, sizeof(T), key)
+    (T*)_ecs_map_next(iter, ECS_SIZEOF(T), key)
 
 /** Obtain next pointer element from iterator. See ecs_map_get_ptr. */
 FLECS_API
@@ -1425,6 +1519,50 @@ void ecs_map_memory(
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
+/**
+ * @file allocator.h
+ * @brief Allocator that returns memory objects of any size. 
+ */
+
+#ifndef FLECS_ALLOCATOR_H
+#define FLECS_ALLOCATOR_H
+
+
+typedef struct ecs_allocator_t {
+    struct ecs_map_t sizes; /* <size, block_allocator_t> */
+} ecs_allocator_t;
+
+void flecs_allocator_init(
+    ecs_allocator_t *a);
+
+void flecs_allocator_fini(
+    ecs_allocator_t *a);
+
+ecs_block_allocator_t* flecs_allocator_get(
+    ecs_allocator_t *a, 
+    size_t size);
+
+#define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
+#define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
+
+#define flecs_calloc(a, size) flecs_bcalloc(flecs_allocator_get(a, size))
+#define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
+
+#define flecs_free(a, size, ptr) flecs_bfree(flecs_allocator_get(a, size), ptr)
+#define flecs_free_n(a, T, count, ptr) flecs_free(a, ECS_SIZEOF(T) * (count), ptr)
+
+#define flecs_realloc(a, size_dst, size_src, ptr)\
+    flecs_brealloc(flecs_allocator_get(a, size_dst),\
+    flecs_allocator_get(a, size_src),\
+    ptr)
+#define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
+    flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
+
+#define flecs_dup(a, size, ptr) flecs_bdup(flecs_allocator_get(a, size), ptr)
+#define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)
 
 #endif
 
@@ -2643,6 +2781,9 @@ typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 /* Internal table storage record */
 struct ecs_table_record_t;
 
+/* Allocator type */
+struct ecs_allocator_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -2683,6 +2824,14 @@ struct ecs_ref_t {
     struct ecs_table_record_t *tr; /* Table record for component */
     ecs_record_t *record;   /* Entity index record */
 };
+
+/* Cursor to stack allocator (used internally) */
+struct ecs_stack_page_t;
+
+typedef struct ecs_stack_cursor_t {
+    struct ecs_stack_page_t *cur;
+    ecs_size_t sp;
+} ecs_stack_cursor_t;
 
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
@@ -2800,16 +2949,9 @@ typedef struct ecs_rule_iter_t {
 
 /* Inline iterator arrays to prevent allocations for small array sizes */
 typedef struct ecs_iter_cache_t {
-    ecs_id_t ids[ECS_TERM_CACHE_SIZE];
-    int32_t columns[ECS_TERM_CACHE_SIZE];
-    ecs_entity_t sources[ECS_TERM_CACHE_SIZE];
-    ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
-    void *ptrs[ECS_TERM_CACHE_SIZE];
-    int32_t match_indices[ECS_TERM_CACHE_SIZE];
-    ecs_var_t variables[ECS_VARIABLE_CACHE_SIZE];
-
+    ecs_stack_cursor_t stack_cursor; /* Stack cursor to restore to */
     ecs_flags8_t used;       /* For which fields is the cache used */
-    ecs_flags8_t allocated; /* Which fields are allocated */
+    ecs_flags8_t allocated;  /* Which fields are allocated */
 } ecs_iter_cache_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
@@ -3372,10 +3514,11 @@ void _flecs_hashmap_init(
     ecs_size_t key_size,
     ecs_size_t value_size,
     ecs_hash_value_action_t hash,
-    ecs_compare_action_t compare);
+    ecs_compare_action_t compare,
+    ecs_allocator_t *allocator);
 
-#define flecs_hashmap_init(hm, K, V, compare, hash)\
-    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
+#define flecs_hashmap_init(hm, K, V, compare, hash, allocator)\
+    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(

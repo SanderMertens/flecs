@@ -594,12 +594,12 @@ ecs_table_t* bootstrap_component_table(
     ecs_data_t *data = &result->data;
 
     /* Preallocate enough memory for initial components */
-    ecs_storage_init_t(&data->entities, ecs_entity_t, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->records, ecs_record_t, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->records, ecs_record_t, EcsFirstUserComponentId);
 
-    ecs_storage_init_t(&data->columns[0], EcsComponent, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
-    ecs_storage_init_t(&data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[0], EcsComponent, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_storage_init_t(world, &data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
     
     return result;
 }

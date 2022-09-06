@@ -42,24 +42,6 @@ typedef struct ecs_bucket_entry_t {
     /* payload right after key. */
 } ecs_bucket_entry_t;
 
-typedef struct ecs_block_allocator_block_t {
-    void *memory;
-    struct ecs_block_allocator_block_t *next;
-} ecs_block_allocator_block_t;
-
-typedef struct ecs_block_allocator_chunk_header_t {
-    struct ecs_block_allocator_chunk_header_t *next;
-} ecs_block_allocator_chunk_header_t;
-
-typedef struct ecs_block_allocator_t {
-    ecs_block_allocator_chunk_header_t *head;
-    ecs_block_allocator_block_t *block_head;
-    ecs_block_allocator_block_t *block_tail;
-    int32_t chunk_size;
-    int32_t chunks_per_block;
-    int32_t block_size;
-} ecs_block_allocator_t;
-
 typedef struct ecs_bucket_t {
     ecs_bucket_entry_t *first;
 } ecs_bucket_t;
@@ -71,7 +53,8 @@ typedef struct ecs_map_t {
     uint8_t bucket_shift;
     int32_t bucket_count;
     int32_t count;
-    ecs_block_allocator_t allocator;
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t *entry_allocator;
 } ecs_map_t;
 
 typedef struct ecs_map_iter_t {
@@ -80,27 +63,65 @@ typedef struct ecs_map_iter_t {
     ecs_bucket_entry_t *entry;
 } ecs_map_iter_t;
 
+typedef struct ecs_map_params_t {
+    ecs_size_t size;
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t entry_allocator;
+    int32_t initial_count;
+} ecs_map_params_t;
+
 #define ECS_MAP_INIT(T) { .elem_size = ECS_SIZEOF(T) }
+
+FLECS_API
+void _ecs_map_params_init(
+    ecs_map_params_t *params,
+    ecs_size_t elem_size);
+
+#define ecs_map_params_init(params, T)\
+    _ecs_map_params_init(params, ECS_SIZEOF(T))
+
+FLECS_API
+void ecs_map_params_fini(
+    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API
 void _ecs_map_init(
     ecs_map_t *map,
     ecs_size_t elem_size,
-    int32_t elem_count);
+    struct ecs_allocator_t *allocator,
+    int32_t initial_count);
 
-#define ecs_map_init(map, T, elem_count)\
-    _ecs_map_init(map, sizeof(T), elem_count)
+#define ecs_map_init(map, T, allocator, initial_count)\
+    _ecs_map_init(map, ECS_SIZEOF(T), allocator, initial_count)
+
+/** Initialize new map. */
+FLECS_API
+void _ecs_map_init_w_params(
+    ecs_map_t *map,
+    ecs_map_params_t *params);
+
+#define ecs_map_init_w_params(map, param)\
+    _ecs_map_init_w_params(map, param)
 
 /** Initialize new map if uninitialized, leave as is otherwise */
 FLECS_API
 void _ecs_map_init_if(
     ecs_map_t *map,
     ecs_size_t elem_size,
+    struct ecs_allocator_t *allocator,
     int32_t elem_count);
 
-#define ecs_map_init_if(map, T, elem_count)\
-    _ecs_map_init_if(map, sizeof(T), elem_count)
+#define ecs_map_init_if(map, T, allocator, elem_count)\
+    _ecs_map_init_if(map, ECS_SIZEOF(T), allocator, elem_count)
+
+FLECS_API
+void _ecs_map_init_w_params_if(
+    ecs_map_t *result,
+    ecs_map_params_t *params);
+
+#define ecs_map_init_w_params_if(map, params)\
+    _ecs_map_init_w_params_if(map, params)
 
 /** Deinitialize map. */
 FLECS_API
@@ -111,10 +132,11 @@ void ecs_map_fini(
 FLECS_API
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
+    struct ecs_allocator_t *allocator,
     int32_t elem_count);
 
-#define ecs_map_new(T, elem_count)\
-    _ecs_map_new(sizeof(T), elem_count)
+#define ecs_map_new(T, allocator, elem_count)\
+    _ecs_map_new(ECS_SIZEOF(T), allocator, elem_count)
 
 /** Is map initialized */
 bool ecs_map_is_initialized(
@@ -128,7 +150,7 @@ void* _ecs_map_get(
     ecs_map_key_t key);
 
 #define ecs_map_get(map, T, key)\
-    (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
+    (T*)_ecs_map_get(map, ECS_SIZEOF(T), (ecs_map_key_t)key)
 
 /** Get pointer element. This dereferences the map element as a pointer. This
  * operation returns NULL when either the element does not exist or whether the
@@ -156,7 +178,7 @@ void* _ecs_map_ensure(
     ecs_map_key_t key);
 
 #define ecs_map_ensure(map, T, key)\
-    ((T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key))
+    ((T*)_ecs_map_ensure(map, ECS_SIZEOF(T), (ecs_map_key_t)key))
 
 /** Set element. */
 FLECS_API
@@ -167,10 +189,10 @@ void* _ecs_map_set(
     const void *payload);
 
 #define ecs_map_set(map, key, payload)\
-    _ecs_map_set(map, sizeof(*payload), (ecs_map_key_t)key, payload)
+    _ecs_map_set(map, ECS_SIZEOF(*payload), (ecs_map_key_t)key, payload)
 
 #define ecs_map_set_ptr(map, key, payload)\
-    _ecs_map_set(map, sizeof(payload), (ecs_map_key_t)key, &payload)
+    _ecs_map_set(map, ECS_SIZEOF(payload), (ecs_map_key_t)key, &payload)
 
 /** Free map. */
 FLECS_API
@@ -213,7 +235,7 @@ void* _ecs_map_next(
     ecs_map_key_t *key);
 
 #define ecs_map_next(iter, T, key) \
-    (T*)_ecs_map_next(iter, sizeof(T), key)
+    (T*)_ecs_map_next(iter, ECS_SIZEOF(T), key)
 
 /** Obtain next pointer element from iterator. See ecs_map_get_ptr. */
 FLECS_API

@@ -251,7 +251,8 @@ struct ecs_query_table_match_t {
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
-    ecs_ref_t *references;    /* Cached components for non-this terms */
+    ecs_ref_t *refs;          /* Cached components for non-this terms */
+    int32_t refs_count;
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
@@ -293,6 +294,15 @@ typedef struct ecs_query_event_t {
     ecs_table_t *table;
     ecs_query_t *parent_query;
 } ecs_query_event_t;
+
+/* Query level block allocators have sizes that depend on query field count */
+typedef struct ecs_query_allocators_t {
+    ecs_block_allocator_t columns;
+    ecs_block_allocator_t ids;
+    ecs_block_allocator_t sources;
+    ecs_block_allocator_t sizes;
+    ecs_block_allocator_t monitors;
+} ecs_query_allocators_t;
 
 /** Query that is automatically matched against tables */
 struct ecs_query_t {
@@ -339,6 +349,9 @@ struct ecs_query_t {
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
     ecs_entity_t entity;
+
+    /* Query-level allocators */
+    ecs_query_allocators_t allocators;
 };
 
 /** All observers for a specific (component) id */
@@ -414,6 +427,22 @@ typedef struct ecs_stack_t {
     ecs_stack_page_t *cur;
 } ecs_stack_t;
 
+/* World level allocators are for operations that are not multithreaded */
+typedef struct ecs_world_allocators_t {
+    ecs_map_params_t ptr;
+    ecs_map_params_t query_table_list;
+    ecs_block_allocator_t query_table;
+    ecs_block_allocator_t query_table_match;
+    ecs_block_allocator_t graph_edge_lo;
+    ecs_block_allocator_t graph_edge;
+    ecs_allocator_t dyn; /* For dynamic allocation sizes */
+} ecs_world_allocators_t;
+
+/* Stage level allocators are for operations that can be multithreaded */
+typedef struct ecs_stage_allocators_t {
+    ecs_stack_t iter_stack;
+} ecs_stage_allocators_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -446,6 +475,9 @@ struct ecs_stage_t {
     /* Properties */
     bool auto_merge;             /* Should this stage automatically merge? */
     bool async;                  /* Is stage asynchronous? (write only) */
+
+    /* Allocators */
+    ecs_stage_allocators_t allocators;
 };
 
 /* Component monitor */
@@ -479,9 +511,6 @@ typedef struct ecs_store_t {
 
     /* Root table */
     ecs_table_t root;
-
-    /* Table edge cache */
-    ecs_graph_edge_hdr_t *first_free;
 
     /* Records cache */
     ecs_vector_t *records;
@@ -561,6 +590,9 @@ struct ecs_world_t {
 
     /* -- World flags -- */
     ecs_flags32_t flags;
+
+    /* -- Allocators -- */
+    ecs_world_allocators_t allocators;
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
