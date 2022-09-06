@@ -602,3 +602,62 @@ void New_w_Count_add_after_bulk_w_ctor() {
 
     ecs_fini(world);
 }
+
+void New_w_Count_recycle_1_of_2() {
+  ecs_world_t *world = ecs_init();
+
+  ecs_entity_t tag = ecs_new_id(world);
+
+  /* ecs_entity_t e0 = */ ecs_new_id(world);
+  ecs_entity_t e1 = ecs_new_id(world);
+  ecs_delete(world, e1);
+
+  const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 2);
+  test_assert(ids[0] != 0);
+  test_assert(ids[1] != 0);
+  test_assert(ids[0] != e1);
+  test_assert((uint32_t)ids[0] == e1);
+
+  ecs_fini(world);
+}
+
+void New_w_Count_recycle_1_of_3() {
+  ecs_world_t *world = ecs_init();
+
+  ecs_entity_t tag = ecs_new_id(world);
+
+  /* ecs_entity_t e0 = */ ecs_new_id(world);
+  ecs_entity_t e1 = ecs_new_id(world);
+  ecs_delete(world, e1);
+
+  const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 3);
+  test_assert(ids[0] != 0);
+  test_assert(ids[1] != 0);
+  test_assert(ids[2] != 0);
+  test_assert(ids[0] != e1);
+  test_assert((uint32_t)ids[0] == e1);
+
+  ecs_fini(world);
+}
+
+void New_w_Count_recycle_2_of_3() {
+  ecs_world_t *world = ecs_init();
+
+  ecs_entity_t tag = ecs_new_id(world);
+
+  ecs_entity_t e0 = ecs_new_id(world);
+  ecs_entity_t e1 = ecs_new_id(world);
+  ecs_delete(world, e1);
+  ecs_delete(world, e0);
+
+  const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 3);
+  test_assert(ids[0] != 0);
+  test_assert(ids[1] != 0);
+  test_assert(ids[2] != 0);
+  test_assert(ids[0] != e0);
+  test_assert(ids[1] != e1);
+  test_assert((uint32_t)ids[0] == e0);
+  test_assert((uint32_t)ids[1] == e1);
+
+  ecs_fini(world);
+}

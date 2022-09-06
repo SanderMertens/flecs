@@ -205,7 +205,10 @@
                 "bulk_init_2_components_tag_w_value",
                 "add_after_bulk",
                 "add_after_bulk_w_component",
-                "add_after_bulk_w_ctor"
+                "add_after_bulk_w_ctor",
+                "recycle_1_of_2",
+                "recycle_1_of_3",
+                "recycle_2_of_3"
             ]
         }, {
             "id": "Add",

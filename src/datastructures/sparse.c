@@ -384,13 +384,13 @@ const uint64_t* flecs_sparse_new_ids(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t dense_count = ecs_vector_count(sparse->dense);
     int32_t count = sparse->count;
-    int32_t remaining = dense_count - count;
-    int32_t i, to_create = new_count - remaining;
+    int32_t recyclable = dense_count - count;
+    int32_t i, to_create = new_count - recyclable;
 
     if (to_create > 0) {
         flecs_sparse_set_size(sparse, dense_count + to_create);
         for (i = 0; i < to_create; i ++) {
-            create_id(sparse, count + i);
+            create_id(sparse, count + recyclable + i);
         }
     }
 

@@ -191,6 +191,9 @@ void New_w_Count_bulk_init_2_components_tag_w_value(void);
 void New_w_Count_add_after_bulk(void);
 void New_w_Count_add_after_bulk_w_component(void);
 void New_w_Count_add_after_bulk_w_ctor(void);
+void New_w_Count_recycle_1_of_2(void);
+void New_w_Count_recycle_1_of_3(void);
+void New_w_Count_recycle_2_of_3(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -2876,6 +2879,18 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "add_after_bulk_w_ctor",
         New_w_Count_add_after_bulk_w_ctor
+    },
+    {
+        "recycle_1_of_2",
+        New_w_Count_recycle_1_of_2
+    },
+    {
+        "recycle_1_of_3",
+        New_w_Count_recycle_1_of_3
+    },
+    {
+        "recycle_2_of_3",
+        New_w_Count_recycle_2_of_3
     }
 };
 
@@ -10593,7 +10608,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        16,
+        19,
         New_w_Count_testcases
     },
     {
