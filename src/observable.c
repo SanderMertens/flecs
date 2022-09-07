@@ -73,8 +73,8 @@ void notify_subset(
                 continue;
             }
 
-            ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
-            ecs_record_t **records = ecs_storage_first(&table->data.records);
+            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+            ecs_record_t **records = ecs_vec_first(&table->data.records);
 
             for (e = 0; e < entity_count; e ++) {
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
@@ -152,7 +152,7 @@ void flecs_emit(
             return;
         }
 
-        ecs_record_t **recs = ecs_storage_get_t(
+        ecs_record_t **recs = ecs_vec_get_t(
             &table->data.records, ecs_record_t*, row);
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = recs[i];
@@ -164,7 +164,7 @@ void flecs_emit(
 
             uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
             if (flags & EcsEntityObservedAcyclic) {
-                notify_subset(world, &it, observable, ecs_storage_first_t(
+                notify_subset(world, &it, observable, ecs_vec_first_t(
                     &table->data.entities, ecs_entity_t)[row + i], event, ids);
             }
         }

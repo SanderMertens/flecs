@@ -119,26 +119,25 @@ void flecs_resume_readonly(
     ecs_suspend_readonly_state_t *state);
 
 /* Convenience macro's for world allocator */
-#define flecs_wallocator(world) (&world->allocators.dyn)
 #define flecs_walloc(world, size)\
-    flecs_alloc(flecs_wallocator(world), size)
+    flecs_alloc(&world->allocator, size)
 #define flecs_walloc_n(world, T, count)\
-    flecs_alloc_n(flecs_wallocator(world), T, count)
+    flecs_alloc_n(&world->allocator, T, count)
 #define flecs_wcalloc(world, size)\
-    flecs_calloc(flecs_wallocator(world), size)
+    flecs_calloc(&world->allocator, size)
 #define flecs_wcalloc_n(world, T, count)\
-    flecs_calloc_n(flecs_wallocator(world), T, count)
+    flecs_calloc_n(&world->allocator, T, count)
 #define flecs_wfree(world, size, ptr)\
-    flecs_free(flecs_wallocator(world), size, ptr)
+    flecs_free(&world->allocator, size, ptr)
 #define flecs_wfree_n(world, T, count, ptr)\
-    flecs_free_n(flecs_wallocator(world), T, count, ptr)
+    flecs_free_n(&world->allocator, T, count, ptr)
 #define flecs_wrealloc(world, size_dst, size_src, ptr)\
-    flecs_realloc(flecs_wallocator(world), size_dst, size_src, ptr)
+    flecs_realloc(&world->allocator, size_dst, size_src, ptr)
 #define flecs_wrealloc_n(world, T, count_dst, count_src, ptr)\
-    flecs_realloc_n(flecs_wallocator(world), T, count_dst, count_src, ptr)
+    flecs_realloc_n(&world->allocator, T, count_dst, count_src, ptr)
 #define flecs_wdup(world, size, ptr)\
-    flecs_dup(flecs_wallocator(world), size, ptr)
+    flecs_dup(&world->allocator, size, ptr)
 #define flecs_wdup_n(world, T, count, ptr)\
-    flecs_dup_n(flecs_wallocator(world), T, count, ptr)
+    flecs_dup_n(&world->allocator, T, count, ptr)
 
 #endif

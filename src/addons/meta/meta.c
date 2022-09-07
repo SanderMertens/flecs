@@ -542,7 +542,7 @@ int add_constant_to_enum(
 
     if (!ptr->constants) {
         ptr->constants = ecs_map_new(ecs_enum_constant_t,
-            flecs_wallocator(world), 1);
+            &world->allocator, 1);
     }
 
     c = ecs_map_ensure(ptr->constants, ecs_enum_constant_t, value);
@@ -610,7 +610,7 @@ int add_constant_to_bitmask(
 
     if (!ptr->constants) {
         ptr->constants = ecs_map_new(ecs_bitmask_constant_t, 
-            flecs_wallocator(world), 1);
+            &world->allocator, 1);
     }
 
     c = ecs_map_ensure(ptr->constants, ecs_bitmask_constant_t, value);

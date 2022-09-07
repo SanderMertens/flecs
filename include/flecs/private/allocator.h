@@ -22,6 +22,8 @@ ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     size_t size);
 
+#define flecs_allocator(obj) (&obj->allocators.dyn)
+
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
 #define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
 

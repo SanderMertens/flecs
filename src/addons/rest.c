@@ -494,7 +494,7 @@ void flecs_rest_reply_table_append_memory(
 
     int32_t i, storage_count = table->storage_count;
     ecs_type_info_t **ti = table->type_info;
-    ecs_column_t *storages = table->data.columns;
+    ecs_vec_t *storages = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {
         used += storages[i].count * ti[i]->size;

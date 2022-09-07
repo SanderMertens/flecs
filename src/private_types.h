@@ -102,18 +102,11 @@ typedef struct ecs_table_event_t {
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
 
-/** A component column. */
-struct ecs_column_t {
-    void *array;
-    int32_t count;
-    int32_t size;
-};
-
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_column_t entities;       /* Entity identifiers */
-    ecs_column_t records;    /* Ptrs to records in main entity index */
-    ecs_column_t *columns;       /* Component columns */
+    ecs_vec_t entities;       /* Entity identifiers */
+    ecs_vec_t records;    /* Ptrs to records in main entity index */
+    ecs_vec_t *columns;       /* Component columns */
     ecs_switch_t *sw_columns;    /* Switch columns */
     ecs_bitset_t *bs_columns;    /* Bitset columns */
 };
@@ -435,7 +428,6 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t query_table_match;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
-    ecs_allocator_t dyn; /* For dynamic allocation sizes */
 } ecs_world_allocators_t;
 
 /* Stage level allocators are for operations that can be multithreaded */
@@ -592,7 +584,8 @@ struct ecs_world_t {
     ecs_flags32_t flags;
 
     /* -- Allocators -- */
-    ecs_world_allocators_t allocators;
+    ecs_world_allocators_t allocators; /* Static allocation sizes */
+    ecs_allocator_t allocator;         /* Dynamic allocation sizes */
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */

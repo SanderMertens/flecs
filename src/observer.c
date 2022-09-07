@@ -683,10 +683,10 @@ void flecs_notify_set_base_observers(
             int32_t s_column = ecs_table_type_to_storage_index(
                 obj_table, column);
             if (s_column != -1) {
-                ecs_column_t *c = &obj_table->data.columns[s_column];
+                ecs_vec_t *c = &obj_table->data.columns[s_column];
                 int32_t row = ECS_RECORD_TO_ROW(obj_record->row);
                 ecs_type_info_t *ti = obj_table->type_info[s_column];
-                void *ptr = ecs_storage_get(c, ti->size, row);
+                void *ptr = ecs_vec_get(c, ti->size, row);
                 it->ptrs[0] = ptr;
                 it->sizes[0] = ti->size;
             }

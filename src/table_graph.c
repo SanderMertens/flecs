@@ -44,7 +44,7 @@ void flecs_table_hashmap_init(
     ecs_hashmap_t *hm) 
 {
     flecs_hashmap_init(hm, ecs_type_t, ecs_table_t*, 
-        flecs_type_hash, flecs_type_compare, flecs_wallocator(world));
+        flecs_type_hash, flecs_type_compare, &world->allocator);
 }
 
 /* Find location where to insert id into type */

@@ -480,7 +480,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
 
     ecs_hashmap_t *map = idr->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new(flecs_wallocator(world));
+        map = idr->name_index = flecs_name_index_new(&world->allocator);
     }
 
     return map;

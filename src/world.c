@@ -336,7 +336,7 @@ void flecs_monitor_register(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    ecs_map_init_if(monitors, ecs_monitor_t, flecs_wallocator(world), 1);
+    ecs_map_init_if(monitors, ecs_monitor_t, &world->allocator, 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
@@ -548,7 +548,7 @@ void flecs_world_allocators_init(
         ECS_SIZEOF(ecs_graph_edge_t) * ECS_HI_COMPONENT_ID);
     flecs_ballocator_init(&world->allocators.graph_edge, 
         ECS_SIZEOF(ecs_graph_edge_t));
-    flecs_allocator_init(&world->allocators.dyn);
+    flecs_allocator_init(&world->allocator);
 }
 
 static 
@@ -561,7 +561,7 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&world->allocators.query_table_match);
     flecs_ballocator_fini(&world->allocators.graph_edge_lo);
     flecs_ballocator_fini(&world->allocators.graph_edge);
-    flecs_allocator_fini(&world->allocators.dyn);
+    flecs_allocator_fini(&world->allocator);
 }
 
 static
@@ -698,8 +698,8 @@ ecs_world_t *ecs_mini(void) {
     world->iterable.init = world_iter_init;
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
-    flecs_name_index_init(&world->aliases, flecs_wallocator(world));
-    flecs_name_index_init(&world->symbols, flecs_wallocator(world));
+    flecs_name_index_init(&world->aliases, &world->allocator);
+    flecs_name_index_init(&world->symbols, &world->allocator);
 
     world->info.time_scale = 1.0;
 
