@@ -178,9 +178,9 @@ bool flecs_iter_populate_term_data(
              * which gives us the pointer and size */
             column = tr->column;
             ecs_type_info_t *ti = table->type_info[column];
-            ecs_column_t *s = &table->data.columns[column];
+            ecs_vec_t *s = &table->data.columns[column];
             size = ti->size;
-            data = ecs_storage_first(s);
+            data = ecs_vec_first(s);
             /* Fallthrough to has_data */
         }
     } else {
@@ -203,9 +203,9 @@ bool flecs_iter_populate_term_data(
         }
 
         ecs_type_info_t *ti = table->type_info[storage_column];
-        ecs_column_t *s = &table->data.columns[storage_column];
+        ecs_vec_t *s = &table->data.columns[storage_column];
         size = ti->size;
-        data = ecs_storage_first(s);
+        data = ecs_vec_first(s);
 
         if (!table || !ecs_table_count(table)) {
             goto no_data;
@@ -256,7 +256,7 @@ void flecs_iter_populate_data(
             count = it->count = ecs_table_count(table);
         }
         if (count) {
-            it->entities = ecs_storage_get_t(
+            it->entities = ecs_vec_get_t(
                 &table->data.entities, ecs_entity_t, offset);
         } else {
             it->entities = NULL;
@@ -535,8 +535,8 @@ void* ecs_iter_column_w_size(
         ECS_INVALID_PARAMETER, NULL);
     (void)ti;
 
-    ecs_column_t *column = &table->data.columns[storage_index];
-    return ecs_storage_get(column, flecs_uto(int32_t, size), it->offset);
+    ecs_vec_t *column = &table->data.columns[storage_index];
+    return ecs_vec_get(column, flecs_uto(int32_t, size), it->offset);
 error:
     return NULL;
 }
@@ -702,7 +702,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_storage_get_t(&table->data.entities, ecs_entity_t,
+                e = ecs_vec_get_t(&table->data.entities, ecs_entity_t,
                     var->range.offset)[0];
             }
         }
@@ -860,7 +860,7 @@ void ecs_iter_set_var_as_range(
 
     if (range->count == 1) {
         ecs_table_t *table = range->table;
-        var->entity = ecs_storage_get_t(
+        var->entity = ecs_vec_get_t(
             &table->data.entities, ecs_entity_t, range->offset)[0];
     } else {
         var->entity = 0;

@@ -232,7 +232,7 @@ bool flecs_pipeline_build(
     pq->rebuild_count ++;
 
     write_state_t ws = {
-        .components = ecs_map_new(int32_t, flecs_wallocator(world), 
+        .components = ecs_map_new(int32_t, &world->allocator, 
             ECS_HI_COMPONENT_ID),
         .wildcard = false
     };

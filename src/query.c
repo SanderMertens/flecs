@@ -877,7 +877,7 @@ void flecs_query_sort_table(
     ecs_sort_table_action_t sort)
 {
     ecs_data_t *data = &table->data;
-    if (!ecs_storage_count(&data->entities)) {
+    if (!ecs_vec_count(&data->entities)) {
         /* Nothing to sort */
         return;
     }
@@ -887,15 +887,15 @@ void flecs_query_sort_table(
         return;
     }
 
-    ecs_entity_t *entities = ecs_storage_first(&data->entities);
+    ecs_entity_t *entities = ecs_vec_first(&data->entities);
 
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
         ecs_type_info_t *ti = table->type_info[column_index];
-        ecs_column_t *column = &data->columns[column_index];
+        ecs_vec_t *column = &data->columns[column_index];
         size = ti->size;
-        ptr = ecs_storage_first(column);
+        ptr = ecs_vec_first(column);
     }
 
     if (sort) {
@@ -972,9 +972,9 @@ void flecs_query_build_sorted_table_range(
 
         if (index != -1) {
             ecs_type_info_t *ti = table->type_info[index];
-            ecs_column_t *column = &data->columns[index];
+            ecs_vec_t *column = &data->columns[index];
             int32_t size = ti->size;
-            helper[to_sort].ptr = ecs_storage_first(column);
+            helper[to_sort].ptr = ecs_vec_first(column);
             helper[to_sort].elem_size = size;
             helper[to_sort].shared = false;
         } else if (id) {
@@ -1000,7 +1000,7 @@ void flecs_query_build_sorted_table_range(
         }
 
         helper[to_sort].match = match;
-        helper[to_sort].entities = ecs_storage_first(&data->entities);
+        helper[to_sort].entities = ecs_vec_first(&data->entities);
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      

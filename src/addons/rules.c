@@ -630,9 +630,9 @@ ecs_entity_t reg_get_entity(
         ecs_assert(regs[r].range.count == 1, ECS_INTERNAL_ERROR, NULL);
         ecs_data_t *data = &table_reg_get(rule, regs, r).table->data;
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t *entities = ecs_storage_first(&data->entities);
+        ecs_entity_t *entities = ecs_vec_first(&data->entities);
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(offset < ecs_storage_count(&data->entities), 
+        ecs_assert(offset < ecs_vec_count(&data->entities), 
             ECS_INTERNAL_ERROR, NULL);
         ecs_check(ecs_is_valid(rule->world, entities[offset]), 
             ECS_INVALID_PARAMETER, NULL);            
@@ -721,7 +721,7 @@ void reg_set_range(
     if (rule->vars[r].kind == EcsRuleVarKindEntity) {
         ecs_check(range->count == 1, ECS_INTERNAL_ERROR, NULL);
         regs[r].range = *range;
-        regs[r].entity = ecs_storage_get_t(&range->table->data.entities,
+        regs[r].entity = ecs_vec_get_t(&range->table->data.entities,
             ecs_entity_t, range->offset)[0];
     } else {
         regs[r].range = *range;
@@ -3393,7 +3393,7 @@ bool eval_subset(
         /* Table must have at least row elements */
         ecs_assert(row_count > row, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
+        ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* The entity used to find the next table set */
@@ -3778,7 +3778,7 @@ bool eval_each(
             count += offset;
         }
 
-        ecs_entity_t *entities = ecs_storage_first(&table->data.entities);
+        ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If this is is not a redo, start from row 0, otherwise go to the
@@ -4153,7 +4153,7 @@ void populate_iterator(
                      * column can be correctly resolved */
                     ecs_table_t *t = regs[var->id].range.table;
                     if (t) {
-                        iter->sources[i] = ecs_storage_first_t(
+                        iter->sources[i] = ecs_vec_first_t(
                             &t->data.entities, ecs_entity_t)[0];
                     } else {
                         /* Can happen if term is optional */
