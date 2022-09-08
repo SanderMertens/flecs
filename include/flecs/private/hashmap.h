@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 typedef struct {
-    ecs_vector_t *keys;
-    ecs_vector_t *values;
+    ecs_vec_t keys;
+    ecs_vec_t values;
 } ecs_hm_bucket_t;
 
 typedef struct {

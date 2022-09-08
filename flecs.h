@@ -3148,6 +3148,9 @@ typedef struct ecs_vec_t {
     void *array;
     int32_t count;
     int32_t size;
+#ifdef FLECS_DEBUG
+    ecs_size_t elem_size;
+#endif
 } ecs_vec_t;
 
 ecs_vec_t* ecs_vec_init(
@@ -3606,8 +3609,8 @@ extern "C" {
 #endif
 
 typedef struct {
-    ecs_vector_t *keys;
-    ecs_vector_t *values;
+    ecs_vec_t keys;
+    ecs_vec_t values;
 } ecs_hm_bucket_t;
 
 typedef struct {

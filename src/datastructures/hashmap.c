@@ -1,14 +1,14 @@
 #include "../private_api.h"
 
 static
-int32_t find_key(
+int32_t flecs_hashmap_find_key(
     const ecs_hashmap_t *map,
-    ecs_vector_t *keys,
+    ecs_vec_t *keys,
     ecs_size_t key_size, 
     const void *key)
 {
-    int32_t i, count = ecs_vector_count(keys);
-    void *key_array = ecs_vector_first_t(keys, key_size, 8);
+    int32_t i, count = ecs_vec_count(keys);
+    void *key_array = ecs_vec_first(keys);
     for (i = 0; i < count; i ++) {
         void *key_ptr = ECS_OFFSET(key_array, key_size * i);
         if (map->compare(key_ptr, key) == 0) {
@@ -36,11 +36,13 @@ void _flecs_hashmap_init(
 void flecs_hashmap_fini(
     ecs_hashmap_t *map)
 {
+    ecs_allocator_t *a = map->impl.allocator;
     ecs_map_iter_t it = ecs_map_iter(&map->impl);
     ecs_hm_bucket_t *bucket;
-    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
-        ecs_vector_free(bucket->keys);
-        ecs_vector_free(bucket->values);
+    uint64_t key;
+    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, &key))) {
+        ecs_vec_fini(a, &bucket->keys, map->key_size);
+        ecs_vec_fini(a, &bucket->values, map->value_size);
     }
 
     ecs_map_fini(&map->impl);
@@ -55,14 +57,15 @@ void flecs_hashmap_copy(
     }
     
     ecs_map_t *impl = ecs_map_copy(&dst->impl);
+    ecs_allocator_t *a = impl->allocator;
     dst->impl = *impl;
     ecs_os_free(impl);
 
     ecs_map_iter_t it = ecs_map_iter(&dst->impl);
     ecs_hm_bucket_t *bucket;
     while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
-        bucket->keys = ecs_vector_copy_t(bucket->keys, dst->key_size, 8);
-        bucket->values = ecs_vector_copy_t(bucket->values, dst->value_size, 8);
+        bucket->keys = ecs_vec_copy(a, &bucket->keys, dst->key_size);
+        bucket->values = ecs_vec_copy(a, &bucket->values, dst->value_size);
     }
 }
 
@@ -81,12 +84,12 @@ void* _flecs_hashmap_get(
         return NULL;
     }
 
-    int32_t index = find_key(map, bucket->keys, key_size, key);
+    int32_t index = flecs_hashmap_find_key(map, &bucket->keys, key_size, key);
     if (index == -1) {
         return NULL;
     }
 
-    return ecs_vector_get_t(bucket->values, value_size, 8, index);
+    return ecs_vec_get(&bucket->values, value_size, index);
 }
 
 flecs_hashmap_result_t _flecs_hashmap_ensure(
@@ -102,34 +105,32 @@ flecs_hashmap_result_t _flecs_hashmap_ensure(
     ecs_hm_bucket_t *bucket = ecs_map_ensure(&map->impl, ecs_hm_bucket_t, hash);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_allocator_t *a = map->impl.allocator;
     void *value_ptr, *key_ptr;
-
-    ecs_vector_t *keys = bucket->keys;
-    if (!keys) {
-        bucket->keys = ecs_vector_new_t(key_size, 8, 1);
-        bucket->values = ecs_vector_new_t(value_size, 8, 1);
-        key_ptr = ecs_vector_add_t(&bucket->keys, key_size, 8);
+    ecs_vec_t *keys = &bucket->keys;
+    ecs_vec_t *values = &bucket->values;
+    if (!keys->array) {
+        keys = ecs_vec_init(a, &bucket->keys, key_size, 1);
+        values = ecs_vec_init(a, &bucket->values, value_size, 1);
+        key_ptr = ecs_vec_append(a, keys, key_size);        
+        value_ptr = ecs_vec_append(a, values, value_size);
         ecs_os_memcpy(key_ptr, key, key_size);
-        value_ptr = ecs_vector_add_t(&bucket->values, value_size, 8);
         ecs_os_memset(value_ptr, 0, value_size);
     } else {
-        int32_t index = find_key(map, keys, key_size, key);
+        int32_t index = flecs_hashmap_find_key(map, keys, key_size, key);
         if (index == -1) {
-            key_ptr = ecs_vector_add_t(&bucket->keys, key_size, 8);
+            key_ptr = ecs_vec_append(a, keys, key_size);        
+            value_ptr = ecs_vec_append(a, values, value_size);
             ecs_os_memcpy(key_ptr, key, key_size);
-            value_ptr = ecs_vector_add_t(&bucket->values, value_size, 8);
-            ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_os_memset(value_ptr, 0, value_size);
         } else {
-            key_ptr = ecs_vector_get_t(bucket->keys, key_size, 8, index);
-            value_ptr = ecs_vector_get_t(bucket->values, value_size, 8, index);
+            key_ptr = ecs_vec_get(keys, key_size, index);
+            value_ptr = ecs_vec_get(values, value_size, index);
         }
     }
 
     return (flecs_hashmap_result_t){
-        .key = key_ptr,
-        .value = value_ptr,
-        .hash = hash
+        .key = key_ptr, .value = value_ptr, .hash = hash
     };
 }
 
@@ -159,12 +160,13 @@ void flecs_hm_bucket_remove(
     uint64_t hash,
     int32_t index)
 {
-    ecs_vector_remove_t(bucket->keys, map->key_size, 8, index);
-    ecs_vector_remove_t(bucket->values, map->value_size, 8, index);
+    ecs_vec_remove(&bucket->keys, map->key_size, index);
+    ecs_vec_remove(&bucket->values, map->value_size, index);
 
-    if (!ecs_vector_count(bucket->keys)) {
-        ecs_vector_free(bucket->keys);
-        ecs_vector_free(bucket->values);
+    if (!ecs_vec_count(&bucket->keys)) {
+        ecs_allocator_t *a = map->impl.allocator;
+        ecs_vec_fini(a, &bucket->keys, map->key_size);
+        ecs_vec_fini(a, &bucket->values, map->value_size);
         ecs_map_remove(&map->impl, hash);
     }
 }
@@ -185,7 +187,7 @@ void _flecs_hashmap_remove_w_hash(
         return;
     }
 
-    int32_t index = find_key(map, bucket->keys, key_size, key);
+    int32_t index = flecs_hashmap_find_key(map, &bucket->keys, key_size, key);
     if (index == -1) {
         return;
     }
@@ -222,7 +224,7 @@ void* _flecs_hashmap_next(
 {
     int32_t index = ++ it->index;
     ecs_hm_bucket_t *bucket = it->bucket;
-    while (!bucket || it->index >= ecs_vector_count(bucket->keys)) {
+    while (!bucket || it->index >= ecs_vec_count(&bucket->keys)) {
         bucket = it->bucket = ecs_map_next(&it->it, ecs_hm_bucket_t, NULL);
         if (!bucket) {
             return NULL;
@@ -231,8 +233,8 @@ void* _flecs_hashmap_next(
     }
 
     if (key_out) {
-        *(void**)key_out = ecs_vector_get_t(bucket->keys, key_size, 8, index);
+        *(void**)key_out = ecs_vec_get(&bucket->keys, key_size, index);
     }
     
-    return ecs_vector_get_t(bucket->values, value_size, 8, index);
+    return ecs_vec_get(&bucket->values, value_size, index);
 }
