@@ -596,7 +596,7 @@ ecs_table_t* bootstrap_component_table(
     /* Preallocate enough memory for initial components */
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->records, ecs_record_t, EcsFirstUserComponentId);
+    ecs_vec_init_t(a, &data->records, ecs_record_t*, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[0], EcsComponent, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[2], EcsIdentifier, EcsFirstUserComponentId);

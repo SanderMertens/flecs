@@ -13,6 +13,9 @@ ecs_vec_t* ecs_vec_init(
         v->array = flecs_alloc(allocator, size * elem_count);
     }
     v->size = elem_count;
+#ifdef FLECS_DEBUG
+    v->elem_size = size;
+#endif
     return v;
 }
 
@@ -21,10 +24,13 @@ void ecs_vec_fini(
     ecs_vec_t *v,
     ecs_size_t size)
 {
-    flecs_free(allocator, size * v->size, v->array);
-    v->array = NULL;
-    v->count = 0;
-    v->size = 0;
+    if (v->array) {
+        ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        flecs_free(allocator, size * v->size, v->array);
+        v->array = NULL;
+        v->count = 0;
+        v->size = 0;
+    }
 }
 
 ecs_vec_t ecs_vec_copy(
@@ -32,10 +38,14 @@ ecs_vec_t ecs_vec_copy(
     ecs_vec_t *v,
     ecs_size_t size)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     return (ecs_vec_t) {
         .count = v->count,
         .size = v->size,
-        .array = flecs_dup(allocator, v->count * v->size, v->array)
+        .array = flecs_dup(allocator, size * v->size, v->array)
+#ifdef FLECS_DEBUG
+        , .elem_size = size
+#endif
     };
 }
 
@@ -44,6 +54,7 @@ void ecs_vec_reclaim(
     ecs_vec_t *v,
     ecs_size_t size)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
@@ -62,6 +73,7 @@ void ecs_vec_set_size(
     ecs_size_t size,
     int32_t elem_count)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     if (v->size != elem_count) {
         if (elem_count < v->count) {
             elem_count = v->count;
@@ -85,6 +97,7 @@ void ecs_vec_set_count(
     ecs_size_t size,
     int32_t elem_count)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     if (v->count != elem_count) {
         if (v->size < elem_count) {
             ecs_vec_set_size(allocator, v, size, elem_count);
@@ -100,6 +113,7 @@ void* ecs_vec_grow(
     ecs_size_t size,
     int32_t elem_count)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
     int32_t count = v->count;
     ecs_vec_set_count(allocator, v, size, count + elem_count);
@@ -111,6 +125,7 @@ void* ecs_vec_append(
     ecs_vec_t *v,
     ecs_size_t size)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     int32_t count = v->count;
     if (v->size == count) {
         ecs_vec_set_size(allocator, v, size, count + 1);
@@ -124,6 +139,7 @@ void ecs_vec_remove(
     ecs_size_t size,
     int32_t index)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
     if (index == --v->count) {
         return;
@@ -158,6 +174,7 @@ void* ecs_vec_get(
     ecs_size_t size,
     int32_t index)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
     return ECS_ELEM(v->array, size, index);
 }
@@ -166,6 +183,7 @@ void* ecs_vec_last(
     ecs_vec_t *v,
     ecs_size_t size)
 {
+    ecs_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     return ECS_ELEM(v->array, size, v->count - 1);
 }
 

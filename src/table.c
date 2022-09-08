@@ -268,8 +268,18 @@ void flecs_table_init_data(
         storage->columns = NULL;
     }
 
+    ecs_vec_init_t(NULL, &storage->entities, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &storage->records, ecs_record_t*, 0);
+
     if (count) {
-        storage->columns = flecs_wcalloc_n(world, ecs_vec_t, count);
+        ecs_vec_t *columns = flecs_wcalloc_n(world, ecs_vec_t, count);
+        storage->columns = columns;
+#ifdef FLECS_DEBUG
+        ecs_type_info_t **ti = table->type_info;
+        for (i = 0; i < count; i ++) {
+            ecs_vec_init(NULL, &columns[i], ti[i]->size, 0);
+        }
+#endif
     }
 
     if (sw_count) {
@@ -897,7 +907,7 @@ void dtor_all_components(
 }
 
 static
-void fini_data(
+void flecs_table_fini_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -935,7 +945,6 @@ void fini_data(
             /* Sanity check */
             ecs_assert(columns[c].count == data->entities.count,
                 ECS_INTERNAL_ERROR, NULL);
-
             ecs_vec_fini(&world->allocator, 
                 &columns[c], table->type_info[c]->size);
         }
@@ -979,7 +988,7 @@ void flecs_table_clear_data(
     ecs_table_t *table,
     ecs_data_t *data)
 {
-    fini_data(world, table, data, false, false, false, false);
+    flecs_table_fini_data(world, table, data, false, false, false, false);
 }
 
 /* Cleanup, no OnRemove, clear entity index, deactivate table */
@@ -987,7 +996,7 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    fini_data(world, table, &table->data, false, true, false, true);
+    flecs_table_fini_data(world, table, &table->data, false, true, false, true);
 }
 
 /* Cleanup, run OnRemove, clear entity index, deactivate table */
@@ -995,7 +1004,7 @@ void flecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    fini_data(world, table, &table->data, true, true, false, true);
+    flecs_table_fini_data(world, table, &table->data, true, true, false, true);
 }
 
 /* Cleanup, run OnRemove, delete from entity index, deactivate table */
@@ -1003,7 +1012,7 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    fini_data(world, table, &table->data, true, true, true, true);
+    flecs_table_fini_data(world, table, &table->data, true, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -1050,7 +1059,7 @@ void flecs_table_free(
     world->info.empty_table_count -= (ecs_table_count(table) == 0);
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
-    fini_data(world, table, &table->data, false, true, true, false);
+    flecs_table_fini_data(world, table, &table->data, false, true, true, false);
 
     flecs_table_clear_edges(world, table);
 
@@ -1491,7 +1500,7 @@ int32_t flecs_table_append(
     int32_t count = data->entities.count;
     int32_t column_count = table->storage_count;
     ecs_vec_t *columns = table->data.columns;
-    
+
     /* Grow buffer with entity ids, set new element to new entity */
     ecs_entity_t *e = ecs_vec_append_t(&world->allocator, 
         &data->entities, ecs_entity_t);
