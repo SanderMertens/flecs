@@ -185,7 +185,7 @@ ecs_stage_t* flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!(world->flags & EcsWorldReadonly) || (ecs_get_stage_count(world) <= 1), 
+        ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
             ECS_INVALID_OPERATION, NULL);
         return &world->stages[0];
 

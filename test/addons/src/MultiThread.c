@@ -1116,3 +1116,14 @@ void MultiThread_no_staging_w_multithread() {
 
     test_assert(true);
 }
+
+void MultiThread_multithread_w_monitor_addon() {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMonitor);
+    ecs_set_threads(world, 4);
+    ecs_progress(world, 0);
+    ecs_fini(world);
+
+    /* Make sure monitor could be run in multithreaded mode */
+    test_assert(true);
+}

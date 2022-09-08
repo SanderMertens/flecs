@@ -1733,3 +1733,33 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change() {
 
     ecs_fini(world);
 }
+
+static
+void Sys_w_MainWorldIter(ecs_iter_t *it) {
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_filter_t *f = ecs_filter(it->real_world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_iter_t fit = ecs_filter_iter(it->real_world, f);
+    test_bool(true, ecs_filter_next(&fit));
+    test_int(1, fit.count);
+    test_bool(false, ecs_filter_next(&fit));
+    ecs_filter_fini(f);
+}
+
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_new(world, Position);
+
+    ECS_SYSTEM(world, Sys_w_MainWorldIter, EcsOnUpdate, Position());
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    ecs_fini(world);
+}

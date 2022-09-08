@@ -15621,8 +15621,12 @@ void ecs_workers_progress(
 
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
+            bool is_threaded = world->flags & EcsWorldMultiThreaded;
             if (!op->no_staging) {
                 ecs_readonly_begin(world);
+            }
+            if (!op->multi_threaded) {
+                world->flags &= ~EcsWorldMultiThreaded;
             }
 
             /* Signal workers that they should start running systems */
@@ -15635,6 +15639,9 @@ void ecs_workers_progress(
             /* Merge */
             if (!op->no_staging) {
                 ecs_readonly_end(world);
+            }
+            if (is_threaded) {
+                world->flags |= EcsWorldMultiThreaded;
             }
 
             if (ecs_pipeline_update(world, pipeline, false)) {
@@ -36382,7 +36389,7 @@ ecs_stage_t* flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!(world->flags & EcsWorldReadonly) || (ecs_get_stage_count(world) <= 1), 
+        ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
             ECS_INVALID_OPERATION, NULL);
         return &world->stages[0];
 

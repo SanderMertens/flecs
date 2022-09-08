@@ -366,6 +366,7 @@ void Pipeline_custom_pipeline_w_system_macro(void);
 void Pipeline_pipeline_w_short_notation(void);
 void Pipeline_stack_allocator_after_progress(void);
 void Pipeline_stack_allocator_after_progress_w_pipeline_change(void);
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -834,6 +835,7 @@ void MultiThread_reactive_system(void);
 void MultiThread_fini_after_set_threads(void);
 void MultiThread_2_threads_single_threaded_system(void);
 void MultiThread_no_staging_w_multithread(void);
+void MultiThread_multithread_w_monitor_addon(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -2332,6 +2334,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "stack_allocator_after_progress_w_pipeline_change",
         Pipeline_stack_allocator_after_progress_w_pipeline_change
+    },
+    {
+        "iter_from_world_in_singlethread_system_multitead_app",
+        Pipeline_iter_from_world_in_singlethread_system_multitead_app
     }
 };
 
@@ -4113,6 +4119,10 @@ bake_test_case MultiThread_testcases[] = {
     {
         "no_staging_w_multithread",
         MultiThread_no_staging_w_multithread
+    },
+    {
+        "multithread_w_monitor_addon",
+        MultiThread_multithread_w_monitor_addon
     }
 };
 
@@ -4456,7 +4466,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        42,
+        43,
         Pipeline_testcases
     },
     {
@@ -4561,7 +4571,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        41,
+        42,
         MultiThread_testcases
     },
     {

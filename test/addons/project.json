@@ -376,7 +376,8 @@
                 "custom_pipeline_w_system_macro",
                 "pipeline_w_short_notation",
                 "stack_allocator_after_progress",
-                "stack_allocator_after_progress_w_pipeline_change"
+                "stack_allocator_after_progress_w_pipeline_change",
+                "iter_from_world_in_singlethread_system_multitead_app"
             ]
         }, {
             "id": "SystemMisc",
@@ -874,7 +875,8 @@
                 "reactive_system",
                 "fini_after_set_threads",
                 "2_threads_single_threaded_system",
-                "no_staging_w_multithread"
+                "no_staging_w_multithread",
+                "multithread_w_monitor_addon"
             ]
         }, {
             "id": "MultiThreadStaging",

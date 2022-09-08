@@ -308,8 +308,12 @@ void ecs_workers_progress(
 
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
+            bool is_threaded = world->flags & EcsWorldMultiThreaded;
             if (!op->no_staging) {
                 ecs_readonly_begin(world);
+            }
+            if (!op->multi_threaded) {
+                world->flags &= ~EcsWorldMultiThreaded;
             }
 
             /* Signal workers that they should start running systems */
@@ -322,6 +326,9 @@ void ecs_workers_progress(
             /* Merge */
             if (!op->no_staging) {
                 ecs_readonly_end(world);
+            }
+            if (is_threaded) {
+                world->flags |= EcsWorldMultiThreaded;
             }
 
             if (ecs_pipeline_update(world, pipeline, false)) {
