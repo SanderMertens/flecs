@@ -1687,5 +1687,30 @@ void Iter_interleaved_iter() {
     test_assert(it_1.priv.cache.stack_cursor.sp == cursor.sp);
     ecs_iter_fini(&it_1);
 
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_iter_restore_stack_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_stack_cursor_t cursor = it.priv.cache.stack_cursor;
+    ecs_iter_fini(&it);
+
+    it = ecs_filter_iter(world, f);
+    test_assert(it.priv.cache.stack_cursor.cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor.sp == cursor.sp);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(f);
+
     ecs_fini(world);
 }

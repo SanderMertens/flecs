@@ -2103,6 +2103,7 @@ bool ecs_term_next(
 
         do {
             if (!next(chain_it)) {
+                ecs_iter_fini(it);
                 goto done;
             }
 
@@ -2339,6 +2340,7 @@ bool ecs_filter_next_instanced(
         ecs_iter_next_action_t next = chain_it->next;
         do {
             if (!next(chain_it)) {
+                ecs_iter_fini(it);
                 goto done;
             }
 

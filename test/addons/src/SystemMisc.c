@@ -954,6 +954,7 @@ void SystemMisc_rw_in_implicit_any() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -974,6 +975,7 @@ void SystemMisc_rw_in_implicit_shared() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1032,6 +1034,7 @@ void SystemMisc_rw_out_explicit_any() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1052,6 +1055,7 @@ void SystemMisc_rw_out_explicit_shared() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1375,6 +1379,7 @@ static int run_2_invoked = 0;
 
 static void Run2(ecs_iter_t *it) {
     run_2_invoked ++;
+    ecs_iter_fini(it);
 }
 
 static void Run_call_callback(ecs_iter_t *it) {

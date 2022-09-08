@@ -1464,6 +1464,7 @@ void Sorting_sort_w_tags_only() {
     test_int(it.count, 2);
     test_int(it.entities[0], e1);
     test_int(it.entities[1], e2);
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -1487,7 +1488,8 @@ void Sorting_sort_childof_marked() {
     ecs_add(world, e1, Tag);
 
     // Trigger sorting
-    ecs_query_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_fini(&it);
 
     ecs_delete(world, root);
 
@@ -1518,9 +1520,9 @@ void Sorting_sort_isa_marked() {
     ecs_add(world, e1, Tag);
 
     // Trigger sorting
-    ecs_query_iter(world, q);
-
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_delete(world, root);
+    ecs_iter_fini(&it);
 
     test_assert(!ecs_is_alive(world, root));
     test_int(1, ecs_get_type(world, e1)->count);
@@ -1553,7 +1555,8 @@ void Sorting_sort_relation_marked() {
     ecs_add(world, e1, Tag);
 
     // Trigger sorting
-    ecs_query_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_fini(&it);
 
     ecs_delete(world, root);
 
@@ -1610,16 +1613,19 @@ void Sorting_dont_resort_after_set_unsorted_component() {
     // No changes, shouldn't sort
     it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // No change in sorted component, shouldn't sort
     ecs_modified(world, e2, Velocity);
     ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // Change in sorted component, should sort
     ecs_modified(world, e2, Position);
     ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, true);
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -1658,20 +1664,24 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag() {
     while (ecs_query_next(&it)) { }
     test_bool(dummy_compare_invoked, true);
     dummy_compare_invoked = false;
+    ecs_iter_fini(&it);
 
     // No changes, shouldn't sort
-    ecs_query_iter(world, q);
+    it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // No change in sorted component, shouldn't sort
     ecs_modified(world, e2, Velocity);
-    ecs_query_iter(world, q);
+    it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // Change in sorted component, should sort
     ecs_modified(world, e2, Position);
-    ecs_query_iter(world, q);
+    it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, true);
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -1716,13 +1726,15 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term() {
     dummy_compare_invoked = false;
 
     // No changes, shouldn't sort
-    ecs_query_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // No change in sorted component, shouldn't sort
     { ecs_iter_t it = ecs_query_iter(world, q_c); while (ecs_query_next(&it)); }
-    ecs_query_iter(world, q);
+    it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, false);
+    ecs_iter_fini(&it);
 
     // Change in sorted component (inout), should sort
     { ecs_iter_t it = ecs_query_iter(world, q_a); while (ecs_query_next(&it)); }
@@ -1733,9 +1745,10 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term() {
 
     // Change in sorted component (out), should sort
     { ecs_iter_t it = ecs_query_iter(world, q_b); while (ecs_query_next(&it)); }
-    ecs_query_iter(world, q);
+    it = ecs_query_iter(world, q);
     test_bool(dummy_compare_invoked, true);
     dummy_compare_invoked = false;
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }

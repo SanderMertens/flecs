@@ -291,6 +291,7 @@ void ecs_workers_progress(
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     if (!op) {
+        ecs_pipeline_fini_iter(pq);
         return;
     }
 

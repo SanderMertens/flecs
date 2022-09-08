@@ -2837,7 +2837,6 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
-
     test_int(it.count, 1);
     test_int(it.entities[0], child);
 
@@ -2845,6 +2844,7 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }
@@ -2885,6 +2885,7 @@ void Prefab_rematch_after_prefab_delete() {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+    test_assert(!ecs_query_next(&it));
 
     ecs_delete(world, base);
 
@@ -3191,8 +3192,8 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-
     test_assert(ecs_field_src(&it, 2) == base);
+    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }

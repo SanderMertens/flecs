@@ -364,6 +364,8 @@ void Pipeline_match_all_after_pipeline_rebuild(void);
 void Pipeline_empty_pipeline(void);
 void Pipeline_custom_pipeline_w_system_macro(void);
 void Pipeline_pipeline_w_short_notation(void);
+void Pipeline_stack_allocator_after_progress(void);
+void Pipeline_stack_allocator_after_progress_w_pipeline_change(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2322,6 +2324,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "pipeline_w_short_notation",
         Pipeline_pipeline_w_short_notation
+    },
+    {
+        "stack_allocator_after_progress",
+        Pipeline_stack_allocator_after_progress
+    },
+    {
+        "stack_allocator_after_progress_w_pipeline_change",
+        Pipeline_stack_allocator_after_progress_w_pipeline_change
     }
 };
 
@@ -4446,7 +4456,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        40,
+        42,
         Pipeline_testcases
     },
     {

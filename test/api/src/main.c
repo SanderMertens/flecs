@@ -1348,6 +1348,7 @@ void Iter_paged_iter_w_singleton_component(void);
 void Iter_paged_iter_w_singleton_instanced(void);
 void Iter_paged_iter_w_singleton_component_instanced(void);
 void Iter_count(void);
+void Iter_iter_restore_stack_iter(void);
 void Iter_interleaved_iter(void);
 
 // Testsuite 'Pairs'
@@ -7363,6 +7364,10 @@ bake_test_case Iter_testcases[] = {
         Iter_count
     },
     {
+        "iter_restore_stack_iter",
+        Iter_iter_restore_stack_iter
+    },
+    {
         "interleaved_iter",
         Iter_interleaved_iter
     }
@@ -10766,7 +10771,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        26,
+        27,
         Iter_testcases
     },
     {

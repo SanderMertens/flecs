@@ -900,6 +900,7 @@ void Switch_sort() {
     test_assert(it.entities[1] == e3);
     test_assert(it.entities[2] == e2);
     test_assert(it.entities[3] == e1);
+    test_assert(!ecs_query_next(&it));
 
     /* Entities will have shuffled around, ensure cases got shuffled too */
     test_uint(ecs_get_target(world, e1, Movement, 0), Walking);

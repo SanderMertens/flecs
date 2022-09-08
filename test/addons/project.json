@@ -374,7 +374,9 @@
                 "match_all_after_pipeline_rebuild",
                 "empty_pipeline",
                 "custom_pipeline_w_system_macro",
-                "pipeline_w_short_notation"
+                "pipeline_w_short_notation",
+                "stack_allocator_after_progress",
+                "stack_allocator_after_progress_w_pipeline_change"
             ]
         }, {
             "id": "SystemMisc",

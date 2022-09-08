@@ -491,7 +491,7 @@ void on_parent_change(ecs_iter_t *it) {
 /* -- Iterable mixins -- */
 
 static
-void on_event_iterable_init(
+void flecs_on_event_iterable_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly, /* Observable */
     ecs_iter_t *it,
@@ -696,8 +696,8 @@ void flecs_bootstrap(
     world->info.max_id = 0;
 
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
-    ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
-    ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
+    ecs_set(world, EcsOnAdd, EcsIterable, { .init = flecs_on_event_iterable_init });
+    ecs_set(world, EcsOnSet, EcsIterable, { .init = flecs_on_event_iterable_init });
     
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),

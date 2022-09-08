@@ -1413,6 +1413,7 @@ void flecs_notify_on_set(
                 it.count = count;
                 flecs_iter_validate(&it);
                 on_set(&it);
+                ecs_iter_fini(&it);
             }
         }
     }

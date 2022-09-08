@@ -688,7 +688,7 @@ void run_on_remove(
 /* -- Private functions -- */
 
 static
-void on_component_callback(
+void flecs_on_component_callback(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_iter_action_t callback,
@@ -721,10 +721,11 @@ void on_component_callback(
     it.count = count;
     flecs_iter_validate(&it);
     callback(&it);
+    ecs_iter_fini(&it);
 }
 
 static
-void ctor_component(
+void flecs_ctor_component(
     ecs_type_info_t *ti,
     ecs_vec_t *column,
     int32_t row,
@@ -740,7 +741,7 @@ void ctor_component(
 }
 
 static
-void add_component(
+void flecs_run_add_hooks(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_type_info_t *ti,
@@ -754,18 +755,18 @@ void add_component(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (construct) {
-        ctor_component(ti, column, row, count);
+        flecs_ctor_component(ti, column, row, count);
     }
 
     ecs_iter_action_t on_add = ti->hooks.on_add;
     if (on_add) {
-        on_component_callback(world, table, on_add, EcsOnAdd, column,
+        flecs_on_component_callback(world, table, on_add, EcsOnAdd, column,
             entities, id, row, count, ti);
     }
 }
 
 static
-void dtor_component(
+void flecs_dtor_component(
     ecs_type_info_t *ti,
     ecs_vec_t *column,
     int32_t row,
@@ -781,7 +782,7 @@ void dtor_component(
 }
 
 static
-void remove_component(
+void flecs_run_remove_hooks(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_type_info_t *ti,
@@ -795,15 +796,15 @@ void remove_component(
 
     ecs_iter_action_t on_remove = ti->hooks.on_remove;
     if (on_remove) {
-        on_component_callback(world, table, on_remove, EcsOnRemove, column,
+        flecs_on_component_callback(world, table, on_remove, EcsOnRemove, column,
             entities, id, row, count, ti);
     }
     
-    dtor_component(ti, column, row, count);
+    flecs_dtor_component(ti, column, row, count);
 }
 
 static
-void dtor_all_components(
+void flecs_dtor_all_components(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -834,14 +835,15 @@ void dtor_all_components(
             ecs_type_info_t *ti = table->type_info[c];
             ecs_iter_action_t on_remove = ti->hooks.on_remove;
             if (on_remove) {
-                on_component_callback(world, table, on_remove, EcsOnRemove, 
+                flecs_on_component_callback(world, table, on_remove, EcsOnRemove, 
                     column, &entities[row], ids[c], row, count, ti);
             }
         }
 
         /* Destruct components */
         for (c = 0; c < ids_count; c++) {
-            dtor_component(table->type_info[c], &data->columns[c], row, count);
+            flecs_dtor_component(table->type_info[c], &data->columns[c], 
+                row, count);
         }
 
         /* Iterate entities first, then components. This ensures that only one
@@ -930,7 +932,7 @@ void flecs_table_fini_data(
 
     int32_t count = flecs_table_data_count(data);
     if (count) {
-        dtor_all_components(world, table, data, 0, count, 
+        flecs_dtor_all_components(world, table, data, 0, count, 
             update_entity_index, is_delete);
     }
 
@@ -1548,7 +1550,7 @@ int32_t flecs_table_append(
 
         ecs_iter_action_t on_add_hook;
         if (on_add && (on_add_hook = ti->hooks.on_add)) {
-            on_component_callback(world, table, on_add_hook, EcsOnAdd, column,
+            flecs_on_component_callback(world, table, on_add_hook, EcsOnAdd, column,
                 &entities[count], table->storage_ids[i], count, 1, ti);
         }
 
@@ -1687,7 +1689,7 @@ void flecs_table_delete(
         /* If table has component destructors, invoke */
         if (destruct && (table->flags & EcsTableHasDtors)) {            
             for (i = 0; i < column_count; i ++) {
-                remove_component(world, table, type_info[i], &columns[i], 
+                flecs_run_remove_hooks(world, table, type_info[i], &columns[i], 
                     &entity_to_delete, ids[i], index, 1);
             }
         }
@@ -1707,7 +1709,7 @@ void flecs_table_delete(
                 
                 ecs_iter_action_t on_remove = ti->hooks.on_remove;
                 if (on_remove) {
-                    on_component_callback(world, table, on_remove, EcsOnRemove,
+                    flecs_on_component_callback(world, table, on_remove, EcsOnRemove,
                         column, &entity_to_delete, ids[i], index, 1, ti);
                 }
 
@@ -1854,11 +1856,11 @@ void flecs_table_move(
             }
         } else {
             if (dst_id < src_id) {
-                add_component(world, dst_table, dst_type_info[i_new],
+                flecs_run_add_hooks(world, dst_table, dst_type_info[i_new],
                     &dst_columns[i_new], &dst_entity, dst_id, 
                         dst_index, 1, construct);
             } else {
-                remove_component(world, src_table, src_type_info[i_old],
+                flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
                         src_index, 1);
             }
@@ -1869,13 +1871,13 @@ void flecs_table_move(
     }
 
     for (; (i_new < dst_column_count); i_new ++) {
-        add_component(world, dst_table, dst_type_info[i_new],
+        flecs_run_add_hooks(world, dst_table, dst_type_info[i_new],
             &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1,
                 construct);
     }
 
     for (; (i_old < src_column_count); i_old ++) {
-        remove_component(world, src_table, src_type_info[i_old],
+        flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
             &src_columns[i_old], &src_entity, src_ids[i_old], 
                 src_index, 1);
     }
@@ -2103,7 +2105,7 @@ void flecs_merge_column(
 
         /* Construct new values */
         if (ti) {
-            ctor_component(ti, dst, dst_count, src_count);
+            flecs_ctor_component(ti, dst, dst_count, src_count);
         }
         
         void *dst_ptr = ECS_ELEM(dst->array, size, dst_count);
@@ -2178,13 +2180,13 @@ void flecs_merge_table_data(
             /* New column, make sure vector is large enough. */
             ecs_vec_t *column = &dst[i_new];
             ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
-            ctor_component(dst_ti, column, 0, src_count + dst_count);
+            flecs_ctor_component(dst_ti, column, 0, src_count + dst_count);
             i_new ++;
         } else if (dst_id > src_id) {
             /* Old column does not occur in new table, destruct */
             ecs_vec_t *column = &src[i_old];
             ecs_type_info_t *ti = src_type_info[i_old];
-            dtor_component(ti, column, 0, src_count);
+            flecs_dtor_component(ti, column, 0, src_count);
             ecs_vec_fini(&world->allocator, column, ti->size);
             i_old ++;
         }
@@ -2200,14 +2202,14 @@ void flecs_merge_table_data(
         int32_t size = ti->size;        
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
-        ctor_component(ti, column, 0, src_count + dst_count);
+        flecs_ctor_component(ti, column, 0, src_count + dst_count);
     }
 
     /* Destruct remaining columns */
     for (; i_old < src_column_count; i_old ++) {
         ecs_vec_t *column = &src[i_old];
         ecs_type_info_t *ti = src_type_info[i_old];
-        dtor_component(ti, column, 0, src_count);
+        flecs_dtor_component(ti, column, 0, src_count);
         ecs_vec_fini(&world->allocator, column, ti->size);
     }    
 

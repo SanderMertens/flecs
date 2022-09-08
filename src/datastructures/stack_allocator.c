@@ -108,6 +108,8 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
+    ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
     do {
         next = cur->next;
         if (cur == &stack->first) {

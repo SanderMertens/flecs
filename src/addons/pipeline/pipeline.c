@@ -221,7 +221,8 @@ bool flecs_pipeline_build(
 {
     (void)pipeline;
 
-    ecs_query_iter(world, pq->query);
+    ecs_iter_t it = ecs_query_iter(world, pq->query);
+    ecs_iter_fini(&it);
 
     if (pq->match_count == pq->query->match_count) {
         /* No need to rebuild the pipeline */
@@ -250,7 +251,7 @@ bool flecs_pipeline_build(
     bool first = true;
 
     /* Iterate systems in pipeline, add ops for running / merging */
-    ecs_iter_t it = ecs_query_iter(world, query);
+    it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
         EcsPoly *poly = flecs_pipeline_term_system(&it);
 
@@ -396,6 +397,15 @@ bool flecs_pipeline_build(
     return true;
 }
 
+void ecs_pipeline_fini_iter(
+    EcsPipeline *pq)
+{
+    int32_t i, iter_count = pq->iter_count;
+    for (i = 0; i < iter_count; i ++) {
+        ecs_iter_fini(&pq->iters[i]);
+    }
+}
+
 void ecs_pipeline_reset_iter(
     ecs_world_t *world,
     EcsPipeline *pq)
@@ -403,10 +413,7 @@ void ecs_pipeline_reset_iter(
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t i, ran_since_merge = 0, op_index = 0, iter_count = pq->iter_count;
 
-    /* Free state of existing iterators */
-    for (i = 0; i < iter_count; i ++) {
-        ecs_iter_fini(&pq->iters[i]);
-    }
+    ecs_pipeline_fini_iter(pq);
 
     if (!pq->last_system) {
         /* It's possible that all systems that were ran were removed entirely

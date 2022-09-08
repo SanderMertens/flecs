@@ -1126,6 +1126,7 @@ void Hierarchies_delete_tree_count_tables() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
+    ecs_iter_fini(&it);
 
     ecs_delete(world, parent);
     
@@ -1135,6 +1136,7 @@ void Hierarchies_delete_tree_count_tables() {
 
     it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -1158,6 +1160,7 @@ void Hierarchies_delete_tree_staged() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
+    ecs_iter_fini(&it);
 
     ecs_defer_begin(world);
     ecs_delete(world, parent);
@@ -1169,6 +1172,7 @@ void Hierarchies_delete_tree_staged() {
 
     it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
+    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -1463,6 +1467,7 @@ void Hierarchies_rematch_after_add_to_recycled_parent() {
     test_int(p->y, 20);
 
     test_assert(ecs_field_src(&it, 2) == parent);
+    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }

@@ -1662,3 +1662,74 @@ void Pipeline_pipeline_w_short_notation() {
 
     ecs_fini(world);
 }
+
+void Pipeline_stack_allocator_after_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_stack_cursor_t cursor = it.priv.cache.stack_cursor;
+    ecs_iter_fini(&it);
+
+    ecs_progress(world, 1);
+    test_int(sys_a_invoked, 1);
+
+    it = ecs_filter_iter(world, f);
+    test_assert(it.priv.cache.stack_cursor.cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor.sp == cursor.sp);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Pipeline_stack_allocator_after_progress_w_pipeline_change() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_stack_cursor_t cursor = it.priv.cache.stack_cursor;
+    ecs_iter_fini(&it);
+
+    ecs_progress(world, 1);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+
+    it = ecs_filter_iter(world, f);
+    test_assert(it.priv.cache.stack_cursor.cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor.sp == cursor.sp);
+    ecs_iter_fini(&it);
+
+    ecs_enable(world, SysB, false);
+
+    ecs_progress(world, 1);
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 1);
+
+    it = ecs_filter_iter(world, f);
+    test_assert(it.priv.cache.stack_cursor.cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor.sp == cursor.sp);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}

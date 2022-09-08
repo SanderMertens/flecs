@@ -4037,13 +4037,13 @@ void Filter_filter_iter_in_stage() {
     }));
 
     ecs_iter_t it = ecs_filter_iter(stage, &f);
-
     test_assert(it.real_world == world);
     test_assert(it.world == stage);
     test_bool(ecs_filter_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], Tag);
+    ecs_iter_fini(&it);
 
     ecs_readonly_end(world);
 
@@ -5196,6 +5196,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     test_str(result, expect);
     ecs_os_free(result);
 
+    test_bool(ecs_filter_next(&it), false);
+
     ecs_filter_fini(&f);
 
     ecs_fini(world);
@@ -6271,7 +6273,6 @@ void Filter_chain_term_iter_w_term_iter() {
     test_int(ecs_field_src(&it, 1), 0);
     test_assert(it.table != NULL);
     test_assert(it.chain_it != NULL);
-
     test_assert(!ecs_term_next(&it));
 
     ecs_fini(world);
@@ -6441,6 +6442,7 @@ void Filter_filter_w_recycled_first() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel2, obj));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6471,6 +6473,7 @@ void Filter_filter_w_recycled_second() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel, obj2));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6501,6 +6504,7 @@ void Filter_filter_w_recycled_first_and_id() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel2, obj));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6531,6 +6535,7 @@ void Filter_filter_w_recycled_second_and_id() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel, obj2));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6562,6 +6567,7 @@ void Filter_filter_w_recycled_first_by_name_and_id() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel2, obj));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6593,6 +6599,7 @@ void Filter_filter_w_recycled_second_by_name_and_id() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel, obj2));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6626,6 +6633,7 @@ void Filter_filter_w_recycled_first_by_expr() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel2, obj));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6659,6 +6667,7 @@ void Filter_filter_w_recycled_second_by_expr() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], ecs_pair(rel, obj2));
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -6690,6 +6699,7 @@ void Filter_filter_w_recycled_first_only_by_expr() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.ids[0], rel2);
+    test_bool(ecs_filter_next(&it), false);
 
     ecs_filter_fini(&f);
 
@@ -7764,6 +7774,7 @@ void Filter_filter_iter_entities_optional_flag() {
     test_uint(ecs_field_id(&it, 2), TagB);
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_filter_next(&it));
 
     ecs_filter_fini(&f);
 

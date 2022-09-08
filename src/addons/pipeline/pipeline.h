@@ -57,6 +57,9 @@ bool ecs_pipeline_update(
     ecs_entity_t pipeline,
     bool start_of_frame); 
 
+void ecs_pipeline_fini_iter(
+    EcsPipeline *pq);
+
 void ecs_pipeline_reset_iter(
     ecs_world_t *world,
     EcsPipeline *q);

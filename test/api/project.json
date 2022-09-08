@@ -1411,6 +1411,7 @@
                 "paged_iter_w_singleton_instanced",
                 "paged_iter_w_singleton_component_instanced",
                 "count",
+                "iter_restore_stack_iter",
                 "interleaved_iter"
             ]
         }, {

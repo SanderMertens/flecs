@@ -1379,6 +1379,7 @@ void EnabledComponents_sort() {
     test_int(it.count, 2);
     test_assert(it.entities[0] == e2);
     test_assert(it.entities[1] == e1);
+    test_assert(!ecs_query_next(&it));
 
     /* Entities will have shuffled around, ensure bits got shuffled too */
     test_bool(ecs_is_enabled_component(world, e1, Position), true);
