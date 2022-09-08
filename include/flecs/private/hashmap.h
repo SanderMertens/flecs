@@ -25,6 +25,7 @@ typedef struct {
     ecs_compare_action_t compare;
     ecs_size_t key_size;
     ecs_size_t value_size;
+    ecs_block_allocator_t *hashmap_allocator;
     ecs_map_t impl;
 } ecs_hashmap_t;
 

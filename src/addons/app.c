@@ -3,7 +3,7 @@
 #ifdef FLECS_APP
 
 static
-int default_run_action(
+int flecs_default_run_action(
     ecs_world_t *world,
     ecs_app_desc_t *desc)
 {
@@ -22,15 +22,15 @@ int default_run_action(
 }
 
 static
-int default_frame_action(
+int flecs_default_frame_action(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {
     return !ecs_progress(world, desc->delta_time);
 }
 
-static ecs_app_run_action_t run_action = default_run_action;
-static ecs_app_frame_action_t frame_action = default_frame_action;
+static ecs_app_run_action_t run_action = flecs_default_run_action;
+static ecs_app_frame_action_t frame_action = flecs_default_frame_action;
 static ecs_app_desc_t ecs_app_desc;
 
 int ecs_app_run(
@@ -41,7 +41,7 @@ int ecs_app_run(
 
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
-    if (run_action == default_run_action) {
+    if (run_action == flecs_default_run_action) {
         if (ecs_app_desc.target_fps != 0) {
             ecs_set_target_fps(world, ecs_app_desc.target_fps);
         }
@@ -81,7 +81,7 @@ int ecs_app_run_frame(
 int ecs_app_set_run_action(
     ecs_app_run_action_t callback)
 {
-    if (run_action != default_run_action) {
+    if (run_action != flecs_default_run_action) {
         ecs_err("run action already set");
         return -1;
     }
@@ -94,7 +94,7 @@ int ecs_app_set_run_action(
 int ecs_app_set_frame_action(
     ecs_app_frame_action_t callback)
 {
-    if (frame_action != default_frame_action) {
+    if (frame_action != flecs_default_frame_action) {
         ecs_err("frame action already set");
         return -1;
     }

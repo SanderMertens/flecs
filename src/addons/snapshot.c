@@ -30,10 +30,10 @@ ecs_data_t* flecs_duplicate_data(
         return NULL;
     }
 
-    ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
+    ecs_data_t *result = ecs_os_calloc_t(ecs_data_t);
     int32_t i, column_count = table->storage_count;
-    result->columns = ecs_os_memdup_n(
-        main_data->columns, ecs_vec_t, column_count);
+    result->columns = flecs_wdup_n(world, ecs_vec_t, column_count, 
+        main_data->columns);
 
     /* Copy entities and records */
     ecs_allocator_t *a = &world->allocator;
@@ -316,7 +316,8 @@ void restore_filtered(
                 world, table, old_count, new_count, NULL, true);
         }
 
-        ecs_os_free(snapshot_table->data->columns);
+        flecs_wfree_n(world, ecs_vec_t, table->storage_count,
+            snapshot_table->data->columns);
         ecs_os_free(snapshot_table->data);
         flecs_type_free(world, &snapshot_table->type);
     }

@@ -51,20 +51,20 @@ void Map_setup() {
 }
 
 void Map_count() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     test_int(ecs_map_count(map), 4);
     ecs_map_free(map);
 }
 
 void Map_count_empty() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_set_overwrite() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     char *value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value != NULL);
@@ -78,7 +78,7 @@ void Map_set_overwrite() {
 }
 
 void Map_set_rehash() {
-    ecs_map_t *map = ecs_map_new(char*, 8);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 8);
     fill_map(map);
 
     test_int(ecs_map_bucket_count(map), 16);
@@ -114,7 +114,7 @@ void Map_set_rehash() {
 }
 
 void Map_set_size() {
-    ecs_map_t *map = ecs_map_new(char*, 8);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 8);
     fill_map(map);
 
     test_int(ecs_map_bucket_count(map), 16);
@@ -128,14 +128,14 @@ void Map_set_size() {
 }
 
 void Map_set_zero_buckets() {
-    ecs_map_t *map = ecs_map_new(char*, 0);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 0);
     ecs_map_set(map, 1, &(char*){"hello"});
     test_int(ecs_map_count(map), 1);
     ecs_map_free(map);
 }
 
 void Map_get() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     char *value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value != NULL);
@@ -144,7 +144,7 @@ void Map_get() {
 }
 
 void Map_get_all() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
 
     char *value = ecs_map_get_ptr(map, char*, 1);
@@ -167,14 +167,14 @@ void Map_get_all() {
 }
 
 void Map_get_empty() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     char *value = ecs_map_get_ptr(map, char*, 1);
     test_assert(value == NULL);
     ecs_map_free(map);
 }
 
 void Map_get_unknown() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     char *value = ecs_map_get_ptr(map, char*, 5);
     test_assert(value == NULL);
@@ -182,7 +182,7 @@ void Map_get_unknown() {
 }
 
 void Map_iter() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     
     int32_t str_world_count = 0;
@@ -218,14 +218,14 @@ void Map_iter() {
 }
 
 void Map_iter_empty() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     ecs_map_iter_t it = ecs_map_iter(map);
     test_assert(!ecs_map_next(&it, char*, NULL));
     ecs_map_free(map);
 }
 
 void Map_iter_zero_buckets() {
-    ecs_map_t *map = ecs_map_new(char*, 0);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 0);
     ecs_map_iter_t it = ecs_map_iter(map);
     test_assert(!ecs_map_next(&it, char*, NULL));
     ecs_map_free(map);
@@ -238,7 +238,7 @@ void Map_iter_null() {
 
 
 void Map_remove() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     ecs_map_remove(map, 3);
     test_assert(ecs_map_get(map, char*, 3) == NULL);
@@ -247,21 +247,21 @@ void Map_remove() {
 }
 
 void Map_remove_empty() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     ecs_map_remove(map, 3);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_remove_empty_no_buckets() {
-    ecs_map_t *map = ecs_map_new(char*, 0);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 0);
     ecs_map_remove(map, 3);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_remove_unknown() {
-    ecs_map_t *map = ecs_map_new(char*, 16);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 16);
     fill_map(map);
     ecs_map_remove(map, 5);
     test_str(ecs_map_get_ptr(map, char*, 1), "hello");
@@ -273,7 +273,7 @@ void Map_remove_unknown() {
 }
 
 void Map_remove_1_from_n_in_bucket() {
-    ecs_map_t *map = ecs_map_new(char*, 8);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 8);
 
     ecs_map_set(map, 0, &(char*){"hello"});
     ecs_map_set(map, 16, &(char*){"world"});
@@ -286,7 +286,7 @@ void Map_remove_1_from_n_in_bucket() {
 }
 
 void Map_remove_from_empty_bucket() {
-    ecs_map_t *map = ecs_map_new(char*, 8);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 8);
 
     ecs_map_set(map, 0, &(char*){"hello"});
     ecs_map_remove(map, 0);
@@ -296,7 +296,7 @@ void Map_remove_from_empty_bucket() {
 }
 
 void Map_grow() {
-    ecs_map_t *map = ecs_map_new(char*, 1);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 1);
     
     ecs_map_grow(map, 10);
 
@@ -314,7 +314,7 @@ void Map_grow() {
 }
 
 void Map_set_size_0() {
-    ecs_map_t *map = ecs_map_new(char*, 1);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 1);
     
     ecs_map_set_size(map, 0);
 
@@ -324,7 +324,7 @@ void Map_set_size_0() {
 }
 
 void Map_ensure() {
-    ecs_map_t *map = ecs_map_new(char*, 1);
+    ecs_map_t *map = ecs_map_new(char*, NULL, 1);
 
     char **ptr = ecs_map_ensure(map, char*, 2);
     test_assert(ptr != NULL);

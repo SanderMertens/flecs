@@ -8,7 +8,7 @@ ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
 }
 
 static
-void merge_stages(
+void flecs_stages_merge(
     ecs_world_t *world,
     bool force_merge)
 {
@@ -62,17 +62,17 @@ void merge_stages(
 }
 
 static
-void do_auto_merge(
+void flecs_stage_auto_merge(
     ecs_world_t *world)
 {
-    merge_stages(world, false);
+    flecs_stages_merge(world, false);
 }
 
 static
-void do_manual_merge(
+void flecs_stage_manual_merge(
     ecs_world_t *world)
 {
-    merge_stages(world, true);
+    flecs_stages_merge(world, true);
 }
 
 bool flecs_defer_begin(
@@ -576,7 +576,7 @@ void ecs_readonly_end(
 
     ecs_log_pop_3();
 
-    do_auto_merge(world);
+    flecs_stage_auto_merge(world);
 error:
     return;
 }
@@ -587,7 +587,7 @@ void ecs_merge(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_poly_is(world, ecs_world_t) || 
                ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
-    do_manual_merge(world);
+    flecs_stage_manual_merge(world);
 error:
     return;
 }

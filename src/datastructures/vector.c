@@ -482,27 +482,6 @@ void _ecs_vector_sort(
     }
 }
 
-void _ecs_vector_memory(
-    const ecs_vector_t *vector,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t *allocd,
-    int32_t *used)
-{
-    if (!vector) {
-        return;
-    }
-
-    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
-
-    if (allocd) {
-        *allocd += vector->size * elem_size + offset;
-    }
-    if (used) {
-        *used += vector->count * elem_size;
-    }
-}
-
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
     ecs_size_t elem_size,
