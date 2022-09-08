@@ -42,6 +42,9 @@
 extern "C" {
 #endif
 
+/** The number of elements in a single chunk */
+#define FLECS_SPARSE_CHUNK_SIZE (4096)
+
 struct ecs_sparse_t {
     ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
                                  * dense array stores both alive and not alive
@@ -53,24 +56,30 @@ struct ecs_sparse_t {
     int32_t count;              /* Number of alive entries */
     uint64_t max_id_local;      /* Local max index (if no global is set) */
     uint64_t *max_id;           /* Maximum issued sparse index */
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t *chunk_allocator;
 };
 
 /** Initialize sparse set */
 FLECS_DBG_API
 void _flecs_sparse_init(
     ecs_sparse_t *sparse,
+    struct ecs_allocator_t *allocator,
+    ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
-#define flecs_sparse_init(sparse, T)\
-    _flecs_sparse_init(sparse, ECS_SIZEOF(T))
+#define flecs_sparse_init(sparse, allocator, chunk_allocator, T)\
+    _flecs_sparse_init(sparse, allocator, chunk_allocator, ECS_SIZEOF(T))
 
 /** Create new sparse set */
 FLECS_DBG_API
 ecs_sparse_t* _flecs_sparse_new(
+    struct ecs_allocator_t *allocator,
+    ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
-#define flecs_sparse_new(T)\
-    _flecs_sparse_new(ECS_SIZEOF(T))
+#define flecs_sparse_new(allocator, chunk_allocator, T)\
+    _flecs_sparse_new(allocator, chunk_allocator, ECS_SIZEOF(T))
 
 FLECS_DBG_API
 void _flecs_sparse_fini(
@@ -246,13 +255,6 @@ FLECS_DBG_API
 void flecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
-
-/** Get memory usage of sparse set. */
-FLECS_DBG_API
-void flecs_sparse_memory(
-    ecs_sparse_t *sparse,
-    int32_t *allocd,
-    int32_t *used);
 
 FLECS_DBG_API
 ecs_sparse_iter_t _flecs_sparse_iter(

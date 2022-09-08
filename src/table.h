@@ -111,10 +111,7 @@ bool flecs_table_shrink(
 
 /* Get dirty state for table columns */
 int32_t* flecs_table_get_dirty_state(
-    ecs_table_t *table);
-
-/* Get monitor for monitoring table changes */
-int32_t* flecs_table_get_monitor(
+    ecs_world_t *world,
     ecs_table_t *table);
 
 /* Initialize root table */

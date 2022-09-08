@@ -244,8 +244,7 @@ struct ecs_query_table_match_t {
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
-    ecs_ref_t *refs;          /* Cached components for non-this terms */
-    int32_t refs_count;
+    ecs_vec_t refs;           /* Cached components for non-this terms */
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
@@ -428,6 +427,10 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t query_table_match;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
+    ecs_block_allocator_t id_record;
+    ecs_block_allocator_t table_diff;
+    ecs_block_allocator_t sparse_chunk;
+    ecs_block_allocator_t hashmap;
 } ecs_world_allocators_t;
 
 /* Stage level allocators are for operations that can be multithreaded */

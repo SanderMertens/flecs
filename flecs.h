@@ -990,21 +990,6 @@ void _ecs_vector_sort(
 #define ecs_vector_sort(vector, T, compare_action) \
     _ecs_vector_sort(vector, ECS_VECTOR_T(T), compare_action)
 
-/** Return memory occupied by vector. */
-FLECS_API
-void _ecs_vector_memory(
-    const ecs_vector_t *vector,
-    ecs_size_t elem_size,
-    int16_t offset,
-    int32_t *allocd,
-    int32_t *used);
-
-#define ecs_vector_memory(vector, T, allocd, used) \
-    _ecs_vector_memory(vector, ECS_VECTOR_T(T), allocd, used)
-
-#define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
-    _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
-
 /** Copy vectors */
 FLECS_API
 ecs_vector_t* _ecs_vector_copy(
@@ -1183,9 +1168,9 @@ typedef struct ecs_block_allocator_t {
     ecs_block_allocator_block_t *block_head;
     ecs_block_allocator_block_t *block_tail;
     int32_t chunk_size;
+    int32_t data_size;
     int32_t chunks_per_block;
     int32_t block_size;
-    bool shared;
 } ecs_block_allocator_t;
 
 FLECS_DBG_API
@@ -1283,6 +1268,7 @@ typedef struct ecs_map_t {
     ecs_bucket_t *buckets_end;
     int16_t elem_size;
     uint8_t bucket_shift;
+    bool shared_allocator;
     int32_t bucket_count;
     int32_t count;
     struct ecs_allocator_t *allocator;
@@ -1307,10 +1293,11 @@ typedef struct ecs_map_params_t {
 FLECS_API
 void _ecs_map_params_init(
     ecs_map_params_t *params,
+    struct ecs_allocator_t *allocator,
     ecs_size_t elem_size);
 
-#define ecs_map_params_init(params, T)\
-    _ecs_map_params_init(params, ECS_SIZEOF(T))
+#define ecs_map_params_init(params, allocator, T)\
+    _ecs_map_params_init(params, allocator, ECS_SIZEOF(T))
 
 FLECS_API
 void ecs_map_params_fini(
@@ -1495,13 +1482,6 @@ FLECS_API
 ecs_map_t* ecs_map_copy(
     ecs_map_t *map);
 
-/** Return memory occupied by map. */
-FLECS_API
-void ecs_map_memory(
-    ecs_map_t *map,
-    int32_t *allocd,
-    int32_t *used);
-
 #ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\
     {\
@@ -1543,7 +1523,7 @@ void flecs_allocator_fini(
 
 ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
-    size_t size);
+    ecs_size_t size);
 
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
@@ -3304,6 +3284,9 @@ void* ecs_vec_last(
 extern "C" {
 #endif
 
+/** The number of elements in a single chunk */
+#define FLECS_SPARSE_CHUNK_SIZE (4096)
+
 struct ecs_sparse_t {
     ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
                                  * dense array stores both alive and not alive
@@ -3315,24 +3298,30 @@ struct ecs_sparse_t {
     int32_t count;              /* Number of alive entries */
     uint64_t max_id_local;      /* Local max index (if no global is set) */
     uint64_t *max_id;           /* Maximum issued sparse index */
+    struct ecs_allocator_t *allocator;
+    ecs_block_allocator_t *chunk_allocator;
 };
 
 /** Initialize sparse set */
 FLECS_DBG_API
 void _flecs_sparse_init(
     ecs_sparse_t *sparse,
+    struct ecs_allocator_t *allocator,
+    ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
-#define flecs_sparse_init(sparse, T)\
-    _flecs_sparse_init(sparse, ECS_SIZEOF(T))
+#define flecs_sparse_init(sparse, allocator, chunk_allocator, T)\
+    _flecs_sparse_init(sparse, allocator, chunk_allocator, ECS_SIZEOF(T))
 
 /** Create new sparse set */
 FLECS_DBG_API
 ecs_sparse_t* _flecs_sparse_new(
+    struct ecs_allocator_t *allocator,
+    ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
-#define flecs_sparse_new(T)\
-    _flecs_sparse_new(ECS_SIZEOF(T))
+#define flecs_sparse_new(allocator, chunk_allocator, T)\
+    _flecs_sparse_new(allocator, chunk_allocator, ECS_SIZEOF(T))
 
 FLECS_DBG_API
 void _flecs_sparse_fini(
@@ -3509,13 +3498,6 @@ void flecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
 
-/** Get memory usage of sparse set. */
-FLECS_DBG_API
-void flecs_sparse_memory(
-    ecs_sparse_t *sparse,
-    int32_t *allocd,
-    int32_t *used);
-
 FLECS_DBG_API
 ecs_sparse_iter_t _flecs_sparse_iter(
     ecs_sparse_t *sparse,
@@ -3618,6 +3600,7 @@ typedef struct {
     ecs_compare_action_t compare;
     ecs_size_t key_size;
     ecs_size_t value_size;
+    ecs_block_allocator_t *hashmap_allocator;
     ecs_map_t impl;
 } ecs_hashmap_t;
 

@@ -392,12 +392,16 @@ void init_store(
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
     
     /* Initialize entity index */
-    flecs_sparse_init(&world->store.entity_index, ecs_record_t);
+    flecs_sparse_init(&world->store.entity_index, 
+        &world->allocator, &world->allocators.sparse_chunk,
+        ecs_record_t);
     flecs_sparse_set_id_source(&world->store.entity_index, 
         &world->info.last_id);
 
     /* Initialize root table */
-    flecs_sparse_init(&world->store.tables, ecs_table_t);
+    flecs_sparse_init(&world->store.tables, 
+        &world->allocator, &world->allocators.sparse_chunk,
+        ecs_table_t);
 
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
@@ -495,7 +499,7 @@ void fini_store(ecs_world_t *world) {
 
 /* Implementation for iterable mixin */
 static
-bool world_iter_next(
+bool flecs_world_iter_next(
     ecs_iter_t *it)
 {
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsValid)) {
@@ -513,7 +517,7 @@ bool world_iter_next(
 }
 
 static
-void world_iter_init(
+void flecs_world_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
@@ -528,7 +532,7 @@ void world_iter_init(
         iter[0] = (ecs_iter_t){
             .world = (ecs_world_t*)world,
             .real_world = (ecs_world_t*)ecs_get_world(world),
-            .next = world_iter_next
+            .next = flecs_world_iter_next
         };
     }
 }
@@ -537,8 +541,9 @@ static
 void flecs_world_allocators_init(
     ecs_world_t *world)
 {
-    ecs_map_params_init(&world->allocators.ptr, void*);
-    ecs_map_params_init(&world->allocators.query_table_list, 
+    flecs_allocator_init(&world->allocator);
+    ecs_map_params_init(&world->allocators.ptr, &world->allocator, void*);
+    ecs_map_params_init(&world->allocators.query_table_list, &world->allocator,
         ecs_query_table_list_t);
     flecs_ballocator_init(&world->allocators.query_table, 
         ECS_SIZEOF(ecs_query_table_t));
@@ -548,7 +553,14 @@ void flecs_world_allocators_init(
         ECS_SIZEOF(ecs_graph_edge_t) * ECS_HI_COMPONENT_ID);
     flecs_ballocator_init(&world->allocators.graph_edge, 
         ECS_SIZEOF(ecs_graph_edge_t));
-    flecs_allocator_init(&world->allocator);
+    flecs_ballocator_init(&world->allocators.id_record, 
+        ECS_SIZEOF(ecs_id_record_t));
+    flecs_ballocator_init(&world->allocators.table_diff, 
+        ECS_SIZEOF(ecs_table_diff_t));
+    flecs_ballocator_init(&world->allocators.sparse_chunk, 
+        ECS_SIZEOF(int32_t) * FLECS_SPARSE_CHUNK_SIZE);
+    flecs_ballocator_init(&world->allocators.hashmap, 
+        ECS_SIZEOF(ecs_hashmap_t));
 }
 
 static 
@@ -561,6 +573,10 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&world->allocators.query_table_match);
     flecs_ballocator_fini(&world->allocators.graph_edge_lo);
     flecs_ballocator_fini(&world->allocators.graph_edge);
+    flecs_ballocator_fini(&world->allocators.id_record);
+    flecs_ballocator_fini(&world->allocators.table_diff);
+    flecs_ballocator_fini(&world->allocators.sparse_chunk);
+    flecs_ballocator_fini(&world->allocators.hashmap);
     flecs_allocator_fini(&world->allocator);
 }
 
@@ -692,12 +708,18 @@ ecs_world_t *ecs_mini(void) {
     flecs_world_allocators_init(world);
 
     world->self = world;
-    world->type_info = flecs_sparse_new(ecs_type_info_t);
+    world->type_info = flecs_sparse_new(
+        &world->allocator, &world->allocators.sparse_chunk, 
+        ecs_type_info_t);
     ecs_map_init_w_params(&world->id_index, &world->allocators.ptr);
     flecs_observable_init(&world->observable);
-    world->iterable.init = world_iter_init;
-    world->pending_tables = flecs_sparse_new(ecs_table_t*);
-    world->pending_buffer = flecs_sparse_new(ecs_table_t*);
+    world->iterable.init = flecs_world_iter_init;
+    world->pending_tables = flecs_sparse_new(
+        &world->allocator, &world->allocators.sparse_chunk,
+        ecs_table_t*);
+    world->pending_buffer = flecs_sparse_new(
+        &world->allocator, &world->allocators.sparse_chunk,
+        ecs_table_t*);
     flecs_name_index_init(&world->aliases, &world->allocator);
     flecs_name_index_init(&world->symbols, &world->allocator);
 

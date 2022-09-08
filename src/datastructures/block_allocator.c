@@ -1,11 +1,5 @@
 #include "../private_api.h"
 
-#ifdef FLECS_SANITIZE
-#define DATA_SIZE(allocator) (allocator->chunk_size - ECS_SIZEOF(int64_t))
-#else
-#define DATA_SIZE(allocator) (allocator->chunk_size)
-#endif
-
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -49,12 +43,11 @@ void flecs_ballocator_init(
 {
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    uint32_t alignment_mask = flecs_ito(uint32_t, 16) - 1u;
+    ba->data_size = size;
 #ifdef FLECS_SANITIZE
     size += ECS_SIZEOF(int64_t);
 #endif
-    ba->chunk_size = (int32_t)(((uint32_t)size + 
-        alignment_mask) & ~alignment_mask);
+    ba->chunk_size = ECS_ALIGN(size, 16);
     ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
     ba->head = NULL;
@@ -117,7 +110,7 @@ void* flecs_bcalloc(
 {
     if (!ba) return NULL;
     void *result = flecs_balloc(ba);
-    ecs_os_memset(result, 0, DATA_SIZE(ba));
+    ecs_os_memset(result, 0, ba->data_size);
     return result;
 }
 
@@ -159,9 +152,9 @@ void* flecs_brealloc(
 
     void *result = flecs_balloc(dst);
     if (result && src) {
-        ecs_size_t size = DATA_SIZE(src);
-        if (DATA_SIZE(dst) < size) {
-            size = DATA_SIZE(dst);
+        ecs_size_t size = src->data_size;
+        if (dst->data_size < size) {
+            size = dst->data_size;
         }
         ecs_os_memcpy(result, memory, size);
     }
@@ -175,7 +168,7 @@ void* flecs_bdup(
 {
     void *result = flecs_balloc(ba);
     if (result) {
-        ecs_os_memcpy(result, memory, DATA_SIZE(ba));
+        ecs_os_memcpy(result, memory, ba->data_size);
     }
     return result;
 }

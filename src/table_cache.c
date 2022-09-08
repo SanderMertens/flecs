@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 static
-void table_cache_list_remove(
+void flecs_table_cache_list_remove(
     ecs_table_cache_t *cache,
     ecs_table_cache_hdr_t *elem)
 {
@@ -32,7 +32,7 @@ void table_cache_list_remove(
 }
 
 static
-void table_cache_list_insert(
+void flecs_table_cache_list_insert(
     ecs_table_cache_t *cache,
     ecs_table_cache_hdr_t *elem)
 {
@@ -101,7 +101,7 @@ void ecs_table_cache_insert(
     result->table = (ecs_table_t*)table;
     result->empty = empty;
 
-    table_cache_list_insert(cache, result);
+    flecs_table_cache_list_insert(cache, result);
 
     if (table) {
         ecs_map_set_ptr(&cache->index, table->id, result);
@@ -191,7 +191,7 @@ void* ecs_table_cache_remove(
     ecs_assert(elem->cache == cache, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
 
-    table_cache_list_remove(cache, elem);
+    flecs_table_cache_list_remove(cache, elem);
 
     ecs_map_remove(&cache->index, table->id);
 
@@ -216,9 +216,9 @@ bool ecs_table_cache_set_empty(
         return false;
     }
 
-    table_cache_list_remove(cache, elem);
+    flecs_table_cache_list_remove(cache, elem);
     elem->empty = empty;
-    table_cache_list_insert(cache, elem);
+    flecs_table_cache_list_insert(cache, elem);
 
     return true;
 }

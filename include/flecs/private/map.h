@@ -51,6 +51,7 @@ typedef struct ecs_map_t {
     ecs_bucket_t *buckets_end;
     int16_t elem_size;
     uint8_t bucket_shift;
+    bool shared_allocator;
     int32_t bucket_count;
     int32_t count;
     struct ecs_allocator_t *allocator;
@@ -75,10 +76,11 @@ typedef struct ecs_map_params_t {
 FLECS_API
 void _ecs_map_params_init(
     ecs_map_params_t *params,
+    struct ecs_allocator_t *allocator,
     ecs_size_t elem_size);
 
-#define ecs_map_params_init(params, T)\
-    _ecs_map_params_init(params, ECS_SIZEOF(T))
+#define ecs_map_params_init(params, allocator, T)\
+    _ecs_map_params_init(params, allocator, ECS_SIZEOF(T))
 
 FLECS_API
 void ecs_map_params_fini(
@@ -262,13 +264,6 @@ void ecs_map_set_size(
 FLECS_API
 ecs_map_t* ecs_map_copy(
     ecs_map_t *map);
-
-/** Return memory occupied by map. */
-FLECS_API
-void ecs_map_memory(
-    ecs_map_t *map,
-    int32_t *allocd,
-    int32_t *used);
 
 #ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\

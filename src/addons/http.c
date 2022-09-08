@@ -967,8 +967,8 @@ ecs_http_server_t* ecs_http_server_init(
     srv->port = desc->port;
     srv->ipaddr = desc->ipaddr;
 
-    srv->connections = flecs_sparse_new(ecs_http_connection_impl_t);
-    srv->requests = flecs_sparse_new(ecs_http_request_impl_t);
+    srv->connections = flecs_sparse_new(NULL, NULL, ecs_http_connection_impl_t);
+    srv->requests = flecs_sparse_new(NULL, NULL, ecs_http_request_impl_t);
 
     /* Start at id 1 */
     flecs_sparse_new_id(srv->connections);

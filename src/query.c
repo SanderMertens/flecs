@@ -369,7 +369,7 @@ void flecs_query_get_dirty_state(
     } else {
         out->table = ecs_get_table(world, subject);
         int32_t ref_index = -match->columns[term] - 1;
-        ecs_ref_t *ref = &match->refs[ref_index];
+        ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
         if (ref->id != 0) {
             ecs_ref_get_id(world, ref, ref->id);
             out->column = ref->tr->column;
@@ -378,7 +378,7 @@ void flecs_query_get_dirty_state(
         }
     }
 
-    out->dirty_state = flecs_table_get_dirty_state(out->table);
+    out->dirty_state = flecs_table_get_dirty_state(query->world, out->table);
 }
 
 /* Get match monitor. Monitors are used to keep track of whether components 
@@ -453,7 +453,7 @@ void flecs_query_sync_match_monitor(
 
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    int32_t *dirty_state = flecs_table_get_dirty_state(query->world, table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
     table_dirty_state_t cur;
 
@@ -487,7 +487,7 @@ bool flecs_query_check_match_monitor_term(
     
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    int32_t *dirty_state = flecs_table_get_dirty_state(query->world, table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
     table_dirty_state_t cur;
 
@@ -520,7 +520,7 @@ bool flecs_query_check_match_monitor(
 
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    int32_t *dirty_state = flecs_table_get_dirty_state(query->world, table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
     table_dirty_state_t cur;
 
@@ -621,10 +621,10 @@ uint64_t flecs_query_group_by_cascade(
 }
 
 static
-ecs_vector_t* flecs_query_add_ref(
+void flecs_query_add_ref(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_vector_t *references,
+    ecs_query_table_match_t *qm,
     ecs_term_t *term,
     ecs_entity_t component,
     ecs_entity_t entity,
@@ -632,7 +632,10 @@ ecs_vector_t* flecs_query_add_ref(
 {
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
+    if (!qm->refs.array) {
+        ecs_vec_init_t(&world->allocator, &qm->refs, ecs_ref_t, 1);
+    }
+    ecs_ref_t *ref = ecs_vec_append_t(&world->allocator, &qm->refs, ecs_ref_t);
     ecs_term_id_t *src = &term->src;
 
     if (!(src->flags & EcsCascade)) {
@@ -649,8 +652,6 @@ ecs_vector_t* flecs_query_add_ref(
     }
 
     query->flags |= EcsQueryHasRefs;
-
-    return references;
 }
 
 static
@@ -699,9 +700,8 @@ void flecs_query_set_table_match(
         ecs_vector_free(qm->bitset_columns);
         qm->bitset_columns = NULL;
     }
-    if (qm->refs) {
-        flecs_wfree_n(world, ecs_ref_t, qm->refs_count, qm->refs);
-        qm->refs = NULL;
+    if (qm->refs.array) {
+        ecs_vec_fini_t(&world->allocator, &qm->refs, ecs_ref_t);
     }
 
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
@@ -763,7 +763,6 @@ void flecs_query_set_table_match(
     }
 
     /* Add references for substituted terms */
-    ecs_vector_t *refs = NULL;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         if (!ecs_term_match_this(term)) {
@@ -782,22 +781,14 @@ void flecs_query_set_table_match(
             ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
             if (id) {
-                refs = flecs_query_add_ref(world, query, refs, term, id, src, size);
+                flecs_query_add_ref(world, query, qm, term, id, src, size);
 
                 /* Use column index to bind term and ref */
                 if (qm->columns[actual_index] != 0) {
-                    qm->columns[actual_index] = -ecs_vector_count(refs);
+                    qm->columns[actual_index] = -ecs_vec_count(&qm->refs);
                 }
             }
         }
-    }
-    if (refs) {
-        int32_t count = ecs_vector_count(refs);
-        ecs_ref_t *ptr = ecs_vector_first(refs, ecs_ref_t);
-        qm->refs = flecs_walloc_n(world, ecs_ref_t, count);
-        qm->refs_count = count;
-        ecs_os_memcpy_n(qm->refs, ptr, ecs_ref_t, count);
-        ecs_vector_free(refs);
     }
 }
 
@@ -1395,8 +1386,9 @@ void flecs_query_table_match_free(
         if (cur->monitor) {
             flecs_bfree(&query->allocators.monitors, cur->monitor);
         }
-        if (cur->refs) {
-            flecs_wfree_n(query->world, ecs_ref_t, cur->refs_count, cur->refs);
+        if (cur->refs.array) {
+            ecs_allocator_t *a = &query->world->allocator;
+            ecs_vec_fini_t(a, &cur->refs, ecs_ref_t);
         }
 
         ecs_os_free(cur->sparse_columns);
@@ -2557,7 +2549,7 @@ bool ecs_query_next_instanced(
         }
 
         it->sources = match->sources;
-        it->references = match->refs;
+        it->references = ecs_vec_first(&match->refs);
         it->instance_count = 0;
 
         flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, 

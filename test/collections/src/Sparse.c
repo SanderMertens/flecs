@@ -19,7 +19,7 @@ void populate(ecs_sparse_t *sp, int count) {
 }
 
 void Sparse_add_1() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -35,7 +35,7 @@ void Sparse_add_1() {
 }
 
 void Sparse_add_1_to_empty() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -51,7 +51,7 @@ void Sparse_add_1_to_empty() {
 }
 
 void Sparse_add_1_chunk_size_1() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -67,7 +67,7 @@ void Sparse_add_1_chunk_size_1() {
 }
 
 void Sparse_add_n() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -91,7 +91,7 @@ void Sparse_add_n() {
 }
 
 void Sparse_add_n_chunk_size_1() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -115,7 +115,7 @@ void Sparse_add_n_chunk_size_1() {
 }
 
 void Sparse_remove() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -135,7 +135,7 @@ void Sparse_remove() {
 }
 
 void Sparse_remove_first() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -155,7 +155,7 @@ void Sparse_remove_first() {
 }
 
 void Sparse_remove_last() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -175,7 +175,7 @@ void Sparse_remove_last() {
 }
 
 void Sparse_remove_all() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -206,7 +206,7 @@ void Sparse_remove_all() {
 }
 
 void Sparse_remove_all_n_chunks() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -222,7 +222,7 @@ void Sparse_remove_all_n_chunks() {
 }
 
 void Sparse_clear_1() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -235,7 +235,7 @@ void Sparse_clear_1() {
 }
 
 void Sparse_clear_empty() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -246,7 +246,7 @@ void Sparse_clear_empty() {
 }
 
 void Sparse_clear_n() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -259,7 +259,7 @@ void Sparse_clear_n() {
 }
 
 void Sparse_clear_n_chunks() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -279,7 +279,7 @@ void Sparse_memory_null() {
 }
 
 void Sparse_copy() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -299,7 +299,7 @@ void Sparse_copy() {
 }
 
 void Sparse_restore() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -325,7 +325,7 @@ void Sparse_restore() {
 }
 
 void Sparse_add_after_clear() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -350,7 +350,7 @@ void Sparse_add_after_clear() {
 }
 
 void Sparse_create_delete() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 
@@ -365,7 +365,7 @@ void Sparse_create_delete() {
 }
 
 void Sparse_create_delete_2() {
-    ecs_sparse_t *sp = flecs_sparse_new(int);
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);
 

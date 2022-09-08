@@ -1072,7 +1072,7 @@ void flecs_table_free(
         flecs_hashmap_remove(&world->store.table_map, &ids, ecs_table_t*);
     }
 
-    ecs_os_free(table->dirty_state);
+    flecs_wfree_n(world, int32_t, table->storage_count + 1, table->dirty_state);
     flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, table->storage_map);
     flecs_table_records_unregister(world, table);
 
@@ -1585,7 +1585,6 @@ int32_t flecs_table_append(
 
 static
 void fast_delete_last(
-    ecs_world_t *world,
     ecs_vec_t *columns,
     int32_t column_count) 
 {
@@ -1597,7 +1596,6 @@ void fast_delete_last(
 
 static
 void fast_delete(
-    ecs_world_t *world,
     ecs_type_info_t **type_info,
     ecs_vec_t *columns,
     int32_t column_count,
@@ -1673,9 +1671,9 @@ void flecs_table_delete(
      * fast path that just remove an element from the array(s) */
     if (!(table->flags & EcsTableIsComplex)) {
         if (index == count) {
-            fast_delete_last(world, columns, column_count);
+            fast_delete_last(columns, column_count);
         } else {
-            fast_delete(world, type_info, columns, column_count, index);
+            fast_delete(type_info, columns, column_count, index);
         }
 
         check_table_sanity(table);
@@ -1694,7 +1692,7 @@ void flecs_table_delete(
             }
         }
 
-        fast_delete_last(world, columns, column_count);
+        fast_delete_last(columns, column_count);
 
     /* Not last element, move last element to deleted element & destruct */
     } else {
@@ -1723,7 +1721,7 @@ void flecs_table_delete(
                 ecs_vec_remove_last(column);
             }
         } else {
-            fast_delete(world, type_info, columns, column_count, index);
+            fast_delete(type_info, columns, column_count, index);
         }
     }
 
@@ -2336,28 +2334,19 @@ void flecs_table_replace_data(
 }
 
 int32_t* flecs_table_get_dirty_state(
+    ecs_world_t *world,
     ecs_table_t *table)
 {    
     if (!table->dirty_state) {
         int32_t column_count = table->storage_count;
-        table->dirty_state = ecs_os_malloc_n( int32_t, column_count + 1);
+        table->dirty_state = flecs_alloc_n(&world->allocator,
+             int32_t, column_count + 1);
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-        
         for (int i = 0; i < column_count + 1; i ++) {
             table->dirty_state[i] = 1;
         }
     }
     return table->dirty_state;
-}
-
-int32_t* flecs_table_get_monitor(
-    ecs_table_t *table)
-{
-    int32_t *dirty_state = flecs_table_get_dirty_state(table);
-    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t column_count = table->storage_count;
-    return ecs_os_memdup(dirty_state, (column_count + 1) * ECS_SIZEOF(int32_t));
 }
 
 void flecs_table_notify(

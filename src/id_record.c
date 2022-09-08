@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 static
-ecs_id_record_elem_t* id_record_elem(
+ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_t *head,
     ecs_id_record_elem_t *list,
     ecs_id_record_t *idr)
@@ -10,24 +10,24 @@ ecs_id_record_elem_t* id_record_elem(
 }
 
 static
-void id_record_elem_insert(
+void flecs_id_record_elem_insert(
     ecs_id_record_t *head,
     ecs_id_record_t *idr,
     ecs_id_record_elem_t *elem)
 {
-    ecs_id_record_elem_t *head_elem = id_record_elem(idr, elem, head);
+    ecs_id_record_elem_t *head_elem = flecs_id_record_elem(idr, elem, head);
     ecs_id_record_t *cur = head_elem->next;
     elem->next = cur;
     elem->prev = head;
     if (cur) {
-        ecs_id_record_elem_t *cur_elem = id_record_elem(idr, elem, cur);
+        ecs_id_record_elem_t *cur_elem = flecs_id_record_elem(idr, elem, cur);
         cur_elem->prev = idr;
     }
     head_elem->next = idr;
 }
 
 static
-void id_record_elem_remove(
+void flecs_id_record_elem_remove(
     ecs_id_record_t *idr,
     ecs_id_record_elem_t *elem)
 {
@@ -35,16 +35,16 @@ void id_record_elem_remove(
     ecs_id_record_t *next = elem->next;
     ecs_assert(prev != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_id_record_elem_t *prev_elem = id_record_elem(idr, elem, prev);
+    ecs_id_record_elem_t *prev_elem = flecs_id_record_elem(idr, elem, prev);
     prev_elem->next = next;
     if (next) {
-        ecs_id_record_elem_t *next_elem = id_record_elem(idr, elem, next);
+        ecs_id_record_elem_t *next_elem = flecs_id_record_elem(idr, elem, next);
         next_elem->prev = prev;
     }
 }
 
 static
-void insert_id_elem(
+void flecs_insert_id_elem(
     ecs_world_t *world,
     ecs_id_record_t *idr,
     ecs_id_t wildcard,
@@ -59,20 +59,20 @@ void insert_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_insert(widr, idr, &idr->first);
+        flecs_id_record_elem_insert(widr, idr, &idr->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_insert(widr, idr, &idr->second);
+        flecs_id_record_elem_insert(widr, idr, &idr->second);
 
         if (idr->flags & EcsIdAcyclic) {
-            id_record_elem_insert(widr, idr, &idr->acyclic);
+            flecs_id_record_elem_insert(widr, idr, &idr->acyclic);
         }
     }
 }
 
 static
-void remove_id_elem(
+void flecs_remove_id_elem(
     ecs_id_record_t *idr,
     ecs_id_t wildcard)
 {
@@ -81,14 +81,14 @@ void remove_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_remove(idr, &idr->first);
+        flecs_id_record_elem_remove(idr, &idr->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_remove(idr, &idr->second);
+        flecs_id_record_elem_remove(idr, &idr->second);
 
         if (idr->flags & EcsIdAcyclic) {
-            id_record_elem_remove(idr, &idr->acyclic);
+            flecs_id_record_elem_remove(idr, &idr->acyclic);
         }
     }
 }
@@ -117,7 +117,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
+    ecs_id_record_t *idr = flecs_bcalloc(&world->allocators.id_record);
     ecs_table_cache_init(world, &idr->cache);
 
     idr->id = id;
@@ -156,8 +156,8 @@ ecs_id_record_t* flecs_id_record_new(
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, or all 
              * objecs for a relationship. */
-            insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
-            insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
+            flecs_insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
+            flecs_insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
 
             if (rel == EcsUnion) {
                 idr->flags |= EcsIdUnion;
@@ -268,8 +268,8 @@ void flecs_id_record_free(
         if (!ecs_id_is_wildcard(id)) {
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
-                remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
-                remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+                flecs_remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
+                flecs_remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
             }
         } else {
             ecs_log_push_2();
@@ -325,7 +325,7 @@ void flecs_id_record_free(
     /* Free resources */
     ecs_table_cache_fini(&idr->cache);
     flecs_name_index_free(idr->name_index);
-    ecs_os_free(idr);
+    flecs_bfree(&world->allocators.id_record, idr);
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -480,7 +480,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
 
     ecs_hashmap_t *map = idr->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new(&world->allocator);
+        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
     }
 
     return map;
