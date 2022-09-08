@@ -17,7 +17,6 @@
 #include "world.h"
 #include "datastructures/qsort.h"
 #include "datastructures/name_index.h"
-#include "datastructures/stack_allocator.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

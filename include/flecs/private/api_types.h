@@ -94,7 +94,7 @@ struct ecs_stack_page_t;
 
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_page_t *cur;
-    ecs_size_t sp;
+    int16_t sp;
 } ecs_stack_cursor_t;
 
 /* Page-iterator specific data */

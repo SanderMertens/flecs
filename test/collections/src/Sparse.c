@@ -271,13 +271,6 @@ void Sparse_clear_n_chunks() {
     flecs_sparse_free(sp);
 }
 
-void Sparse_memory_null() {
-    int32_t allocd = 0, used = 0; 
-    flecs_sparse_memory(NULL, &allocd, &used);
-    test_int(allocd, 0);
-    test_int(used, 0);
-}
-
 void Sparse_copy() {
     ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);

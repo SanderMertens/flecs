@@ -158,19 +158,19 @@ void ecs_vec_remove_last(
 }
 
 int32_t ecs_vec_count(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->count;
 }
 
 int32_t ecs_vec_size(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->size;
 }
 
 void* ecs_vec_get(
-    ecs_vec_t *v,
+    const ecs_vec_t *v,
     ecs_size_t size,
     int32_t index)
 {
@@ -180,7 +180,7 @@ void* ecs_vec_get(
 }
 
 void* ecs_vec_last(
-    ecs_vec_t *v,
+    const ecs_vec_t *v,
     ecs_size_t size)
 {
     ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
@@ -188,7 +188,7 @@ void* ecs_vec_last(
 }
 
 void* ecs_vec_first(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->array;
 }
