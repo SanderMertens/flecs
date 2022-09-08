@@ -1648,3 +1648,44 @@ void Iter_count() {
 
     ecs_fini(world);
 }
+
+void Iter_interleaved_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagA }}
+    });
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+
+    /* Bit of whitebox testing, check whether the stack cursor is restored to
+     * its original position after the 2nd iterator is done */
+    ecs_iter_t it_1 = ecs_filter_iter(world, f);
+    ecs_stack_cursor_t cursor = it_1.priv.cache.stack_cursor;
+    ecs_iter_t it_2 = ecs_filter_iter(world, f);
+
+    test_bool(true, ecs_filter_next(&it_1));
+    test_bool(true, ecs_filter_next(&it_2));
+    test_int(e1, it_1.entities[0]);
+    test_int(e1, it_2.entities[0]);
+
+    test_bool(true, ecs_filter_next(&it_1));
+    test_bool(true, ecs_filter_next(&it_2));
+    test_int(e2, it_1.entities[0]);
+    test_int(e2, it_2.entities[0]);
+
+    test_bool(false, ecs_filter_next(&it_1));
+    test_bool(false, ecs_filter_next(&it_2));
+
+    it_1 = ecs_filter_iter(world, f);
+    test_assert(it_1.priv.cache.stack_cursor.cur == cursor.cur);
+    test_assert(it_1.priv.cache.stack_cursor.sp == cursor.sp);
+    ecs_iter_fini(&it_1);
+
+    ecs_fini(world);
+}

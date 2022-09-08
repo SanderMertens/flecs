@@ -59,6 +59,70 @@
 #endif
 
 /**
+ * @file stack_allocator.h
+ * @brief Data structure used for temporary small allocations.
+ */
+
+#ifndef FLECS_STACK_ALLOCATOR_H
+#define FLECS_STACK_ALLOCATOR_H
+
+/** Stack allocator for quick allocation of small temporary values */
+#define ECS_STACK_PAGE_SIZE (4096)
+
+typedef struct ecs_stack_page_t {
+    void *data;
+    struct ecs_stack_page_t *next;
+    int16_t sp;
+    uint32_t id;
+} ecs_stack_page_t;
+
+typedef struct ecs_stack_t {
+    ecs_stack_page_t first;
+    ecs_stack_page_t *cur;
+} ecs_stack_t;
+
+void flecs_stack_init(
+    ecs_stack_t *stack);
+
+void flecs_stack_fini(
+    ecs_stack_t *stack);
+
+void* flecs_stack_alloc(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align);
+
+#define flecs_stack_alloc_n(stack, T, count)\
+    flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+
+void* flecs_stack_calloc(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align);
+
+#define flecs_stack_calloc_n(stack, T, count)\
+    flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+
+void flecs_stack_free(
+    void *ptr,
+    ecs_size_t size);
+
+#define flecs_stack_free_n(ptr, T, count)\
+    flecs_stack_free(ptr, ECS_SIZEOF(T) * count)
+
+void flecs_stack_reset(
+    ecs_stack_t *stack);
+
+ecs_stack_cursor_t flecs_stack_get_cursor(
+    ecs_stack_t *stack);
+
+void flecs_stack_restore_cursor(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor);
+
+#endif
+
+/**
  * @file bitset.h
  * @brief Bitset datastructure.
  *
@@ -178,9 +242,9 @@ typedef struct ecs_switch_node_t {
 } ecs_switch_node_t;
 
 struct ecs_switch_t {    
-    ecs_map_t headers;
-    ecs_vector_t *nodes;    /* Vector with nodes, of type ecs_switch_node_t */
-    ecs_vector_t *values;   /* Vector with values, of type uint64_t */
+    ecs_map_t hdrs;     /* map<uint64_t, ecs_switch_header_t> */
+    ecs_vec_t nodes;    /* vec<ecs_switch_node_t> */
+    ecs_vec_t values;   /* vec<uint64_t> */
 };
 
 /** Init new switch. */
@@ -256,7 +320,7 @@ void flecs_switch_swap(
 
 /** Get vector with all values. Use together with count(). */
 FLECS_DBG_API
-ecs_vector_t* flecs_switch_values(
+ecs_vec_t* flecs_switch_values(
     const ecs_switch_t *sw);    
 
 /** Return number of different values. */
@@ -671,20 +735,6 @@ typedef struct ecs_defer_op_t {
         ecs_defer_op_n_t _n;
     } is;
 } ecs_defer_op_t;
-
-/** Stack allocator for quick allocation of small temporary values */
-#define ECS_STACK_PAGE_SIZE (4096)
-
-typedef struct ecs_stack_page_t {
-    void *data;
-    struct ecs_stack_page_t *next;
-    ecs_size_t sp;
-} ecs_stack_page_t;
-
-typedef struct ecs_stack_t {
-    ecs_stack_page_t first;
-    ecs_stack_page_t *cur;
-} ecs_stack_t;
 
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
@@ -1951,53 +2001,6 @@ void flecs_name_index_update_name(
 
 #endif
 
-/**
- * @file stack_allocator.h
- * @brief Data structure used for temporary small allocations.
- */
-
-#ifndef FLECS_STACK_ALLOCATOR_H
-#define FLECS_STACK_ALLOCATOR_H
-
-void flecs_stack_init(
-    ecs_stack_t *stack);
-
-void flecs_stack_fini(
-    ecs_stack_t *stack);
-
-void* flecs_stack_alloc(
-    ecs_stack_t *stack, 
-    ecs_size_t size,
-    ecs_size_t align);
-
-void* flecs_stack_allocn(
-    ecs_stack_t *stack, 
-    ecs_size_t size,
-    ecs_size_t align,
-    int32_t count);
-
-void* flecs_stack_callocn(
-    ecs_stack_t *stack, 
-    ecs_size_t size,
-    ecs_size_t align,
-    int32_t count);
-
-void flecs_stack_free(
-    void *ptr,
-    ecs_size_t size);
-
-void flecs_stack_reset(
-    ecs_stack_t *stack);
-
-ecs_stack_cursor_t flecs_stack_get_cursor(
-    ecs_stack_t *stack);
-
-void flecs_stack_restore_cursor(
-    ecs_stack_t *stack,
-    const ecs_stack_cursor_t *cursor);
-
-#endif
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2311,7 +2314,7 @@ void check_table_sanity(ecs_table_t *table) {
             ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < sw_count; i ++) {
             ecs_switch_t *sw = &table->data.sw_columns[i];
-            ecs_assert(ecs_vector_count(sw->values) == count, 
+            ecs_assert(ecs_vec_count(&sw->values) == count, 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(ECS_PAIR_FIRST(ids[i + sw_offset]) == EcsUnion,
                 ECS_INTERNAL_ERROR, NULL);
@@ -5568,10 +5571,10 @@ void flecs_instantiate_children(
             for (u = 0; u < u_count; u ++) {
                 ecs_switch_t *src_sw = &child_table->data.sw_columns[i];
                 ecs_switch_t *dst_sw = &i_table->data.sw_columns[i];
-                ecs_vector_t *v_src_values = flecs_switch_values(src_sw);
-                ecs_vector_t *v_dst_values = flecs_switch_values(dst_sw);
-                uint64_t *src_values = ecs_vector_first(v_src_values, uint64_t);
-                uint64_t *dst_values = ecs_vector_first(v_dst_values, uint64_t);
+                ecs_vec_t *v_src_values = flecs_switch_values(src_sw);
+                ecs_vec_t *v_dst_values = flecs_switch_values(dst_sw);
+                uint64_t *src_values = ecs_vec_first(v_src_values);
+                uint64_t *dst_values = ecs_vec_first(v_dst_values);
                 for (j = 0; j < child_count; j ++) {
                     dst_values[j] = src_values[j];
                 }
@@ -10792,10 +10795,14 @@ void flecs_sparse_chunk_free(
 {
     if (sparse->chunk_allocator) {
         flecs_bfree(sparse->chunk_allocator, chunk->sparse);
+    } else {
+        ecs_os_free(chunk->sparse);
     }
     if (sparse->allocator) {
         flecs_free(sparse->allocator, sparse->size * FLECS_SPARSE_CHUNK_SIZE,
             chunk->data);
+    } else {
+        ecs_os_free(chunk->data);
     }
 }
 
@@ -11585,7 +11592,7 @@ ecs_switch_header_t *get_header(
         return NULL;
     }
 
-    return ecs_map_get(&sw->headers, ecs_switch_header_t, value);
+    return ecs_map_get(&sw->hdrs, ecs_switch_header_t, value);
 }
 
 static
@@ -11599,7 +11606,7 @@ ecs_switch_header_t *ensure_header(
 
     ecs_switch_header_t *node = get_header(sw, value);
     if (!node) {
-        node = ecs_map_ensure(&sw->headers, ecs_switch_header_t, value);
+        node = ecs_map_ensure(&sw->hdrs, ecs_switch_header_t, value);
         node->element = -1;
     }
 
@@ -11648,14 +11655,12 @@ void flecs_switch_init(
     ecs_allocator_t *allocator,
     int32_t elements)
 {
-    ecs_map_init(&sw->headers, ecs_switch_header_t, allocator, 1);
-    sw->nodes = ecs_vector_new(ecs_switch_node_t, elements);
-    sw->values = ecs_vector_new(uint64_t, elements);
+    ecs_map_init(&sw->hdrs, ecs_switch_header_t, allocator, 1);
+    ecs_vec_init_t(allocator, &sw->nodes, ecs_switch_node_t, elements);
+    ecs_vec_init_t(allocator, &sw->values, uint64_t, elements);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
-    uint64_t *values = ecs_vector_first(
-        sw->values, uint64_t);
+    ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
+    uint64_t *values = ecs_vec_first(&sw->values);
 
     int i;
     for (i = 0; i < elements; i ++) {
@@ -11668,27 +11673,26 @@ void flecs_switch_init(
 void flecs_switch_clear(
     ecs_switch_t *sw)
 {
-    ecs_map_clear(&sw->headers);
-    ecs_vector_free(sw->nodes);
-    ecs_vector_free(sw->values);
-    sw->nodes = NULL;
-    sw->values = NULL;
+    ecs_map_clear(&sw->hdrs);
+    ecs_vec_fini_t(sw->hdrs.allocator, &sw->nodes, ecs_switch_node_t);
+    ecs_vec_fini_t(sw->hdrs.allocator, &sw->values, uint64_t);
 }
 
 void flecs_switch_fini(
     ecs_switch_t *sw)
 {
-    // ecs_os_free(sw->headers);
-    ecs_map_fini(&sw->headers);
-    ecs_vector_free(sw->nodes);
-    ecs_vector_free(sw->values);
+    ecs_map_fini(&sw->hdrs);
+    ecs_vec_fini_t(sw->hdrs.allocator, &sw->nodes, ecs_switch_node_t);
+    ecs_vec_fini_t(sw->hdrs.allocator, &sw->values, uint64_t);
 }
 
 void flecs_switch_add(
     ecs_switch_t *sw)
 {
-    ecs_switch_node_t *node = ecs_vector_add(&sw->nodes, ecs_switch_node_t);
-    uint64_t *value = ecs_vector_add(&sw->values, uint64_t);
+    ecs_switch_node_t *node = ecs_vec_append_t(sw->hdrs.allocator, 
+        &sw->nodes, ecs_switch_node_t);
+    uint64_t *value = ecs_vec_append_t(sw->hdrs.allocator, 
+        &sw->values, uint64_t);
     node->prev = -1;
     node->next = -1;
     *value = 0;
@@ -11698,16 +11702,16 @@ void flecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count)
 {
-    int32_t old_count = ecs_vector_count(sw->nodes);
+    int32_t old_count = ecs_vec_count(&sw->nodes);
     if (old_count == count) {
         return;
     }
 
-    ecs_vector_set_count(&sw->nodes, ecs_switch_node_t, count);
-    ecs_vector_set_count(&sw->values, uint64_t, count);
+    ecs_vec_set_count_t(sw->hdrs.allocator, &sw->nodes, ecs_switch_node_t, count);
+    ecs_vec_set_count_t(sw->hdrs.allocator, &sw->values, uint64_t, count);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
-    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
+    uint64_t *values = ecs_vec_first(&sw->values);
 
     int32_t i;
     for (i = old_count; i < count; i ++) {
@@ -11721,16 +11725,16 @@ void flecs_switch_set_count(
 int32_t flecs_switch_count(
     ecs_switch_t *sw)
 {
-    ecs_assert(ecs_vector_count(sw->values) == ecs_vector_count(sw->nodes),
+    ecs_assert(ecs_vec_count(&sw->values) == ecs_vec_count(&sw->nodes),
         ECS_INTERNAL_ERROR, NULL);
-    return ecs_vector_count(sw->values);
+    return ecs_vec_count(&sw->values);
 }
 
 void flecs_switch_ensure(
     ecs_switch_t *sw,
     int32_t count)
 {
-    int32_t old_count = ecs_vector_count(sw->nodes);
+    int32_t old_count = ecs_vec_count(&sw->nodes);
     if (old_count >= count) {
         return;
     }
@@ -11742,7 +11746,7 @@ void flecs_switch_addn(
     ecs_switch_t *sw,
     int32_t count)
 {
-    int32_t old_count = ecs_vector_count(sw->nodes);
+    int32_t old_count = ecs_vec_count(&sw->nodes);
     flecs_switch_set_count(sw, old_count + count);
 }
 
@@ -11752,11 +11756,11 @@ void flecs_switch_set(
     uint64_t value)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t *values = ecs_vec_first(&sw->values);
     uint64_t cur_value = values[element];
 
     /* If the node is already assigned to the value, nothing to be done */
@@ -11764,7 +11768,7 @@ void flecs_switch_set(
         return;
     }
 
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
     ecs_switch_node_t *node = &nodes[element];
 
     ecs_switch_header_t *dst_hdr = ensure_header(sw, value);
@@ -11803,16 +11807,16 @@ void flecs_switch_set(
 
 void flecs_switch_remove(
     ecs_switch_t *sw,
-    int32_t element)
+    int32_t elem)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(elem < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(elem >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
-    uint64_t value = values[element];
-    ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
-    ecs_switch_node_t *node = &nodes[element];
+    uint64_t *values = ecs_vec_first(&sw->values);
+    uint64_t value = values[elem];
+    ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
+    ecs_switch_node_t *node = &nodes[elem];
 
     /* If node is currently assigned to a case, remove it from the list */
     if (value != 0) {
@@ -11820,34 +11824,34 @@ void flecs_switch_remove(
         ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         verify_nodes(hdr, nodes);
-        remove_node(hdr, nodes, node, element);
+        remove_node(hdr, nodes, node, elem);
     }
 
-    int32_t last_elem = ecs_vector_count(sw->nodes) - 1;
-    if (last_elem != element) {
-        ecs_switch_node_t *last = ecs_vector_last(sw->nodes, ecs_switch_node_t);
+    int32_t last_elem = ecs_vec_count(&sw->nodes) - 1;
+    if (last_elem != elem) {
+        ecs_switch_node_t *last = ecs_vec_last_t(&sw->nodes, ecs_switch_node_t);
         int32_t next = last->next, prev = last->prev;
         if (next != -1) {
             ecs_switch_node_t *n = &nodes[next];
-            n->prev = element;
+            n->prev = elem;
         }
 
         if (prev != -1) {
             ecs_switch_node_t *n = &nodes[prev];
-            n->next = element;
+            n->next = elem;
         } else {
             ecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
             if (hdr && hdr->element != -1) {
                 ecs_assert(hdr->element == last_elem, 
                     ECS_INTERNAL_ERROR, NULL);
-                hdr->element = element;
+                hdr->element = elem;
             }
         }
     }
 
     /* Remove element from arrays */
-    ecs_vector_remove(sw->nodes, ecs_switch_node_t, element);
-    ecs_vector_remove(sw->values, uint64_t, element);
+    ecs_vec_remove_t(&sw->nodes, ecs_switch_node_t, elem);
+    ecs_vec_remove_t(&sw->values, uint64_t, elem);
 }
 
 uint64_t flecs_switch_get(
@@ -11855,18 +11859,18 @@ uint64_t flecs_switch_get(
     int32_t element)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t *values = ecs_vec_first(&sw->values);
     return values[element];
 }
 
-ecs_vector_t* flecs_switch_values(
+ecs_vec_t* flecs_switch_values(
     const ecs_switch_t *sw)
 {
-    return sw->values;
+    return (ecs_vec_t*)&sw->values;
 }
 
 int32_t flecs_switch_case_count(
@@ -11912,11 +11916,10 @@ int32_t flecs_switch_next(
     int32_t element)
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_switch_node_t *nodes = ecs_vector_first(
-        sw->nodes, ecs_switch_node_t);
+    ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
 
     return nodes[element].next;
 }
@@ -13481,19 +13484,19 @@ void ecs_vec_remove_last(
 }
 
 int32_t ecs_vec_count(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->count;
 }
 
 int32_t ecs_vec_size(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->size;
 }
 
 void* ecs_vec_get(
-    ecs_vec_t *v,
+    const ecs_vec_t *v,
     ecs_size_t size,
     int32_t index)
 {
@@ -13503,7 +13506,7 @@ void* ecs_vec_get(
 }
 
 void* ecs_vec_last(
-    ecs_vec_t *v,
+    const ecs_vec_t *v,
     ecs_size_t size)
 {
     ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
@@ -13511,7 +13514,7 @@ void* ecs_vec_last(
 }
 
 void* ecs_vec_first(
-    ecs_vec_t *v)
+    const ecs_vec_t *v)
 {
     return v->array;
 }
@@ -14542,11 +14545,12 @@ void* _flecs_hashmap_next(
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
 static
-ecs_stack_page_t* flecs_stack_page_new(void) {
+ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
         FLECS_STACK_PAGE_OFFSET + ECS_STACK_PAGE_SIZE);
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
+    result->id = page_id + 1;
     return result;
 }
 
@@ -14560,8 +14564,8 @@ void* flecs_stack_alloc(
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
     }
 
-    ecs_size_t sp = ECS_ALIGN(page->sp, align);
-    ecs_size_t next_sp = sp + size;
+    int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
+    int16_t next_sp = flecs_ito(int16_t, sp + size);
 
     if (next_sp > ECS_STACK_PAGE_SIZE) {
         if (size > ECS_STACK_PAGE_SIZE) {
@@ -14571,10 +14575,10 @@ void* flecs_stack_alloc(
         if (page->next) {
             page = page->next;
         } else {
-            page = page->next = flecs_stack_page_new();
+            page = page->next = flecs_stack_page_new(page->id);
         }
         sp = 0;
-        next_sp = size;
+        next_sp = flecs_ito(int16_t, size);
         stack->cur = page;
     }
 
@@ -14583,23 +14587,13 @@ void* flecs_stack_alloc(
     return ECS_OFFSET(page->data, sp);
 }
 
-void* flecs_stack_allocn(
+void* flecs_stack_calloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
-    ecs_size_t align,
-    int32_t count)
+    ecs_size_t align)
 {
-    return flecs_stack_alloc(stack, size * count, align);
-}
-
-void* flecs_stack_callocn(
-    ecs_stack_t *stack, 
-    ecs_size_t size,
-    ecs_size_t align,
-    int32_t count)
-{
-    void *ptr = flecs_stack_alloc(stack, size * count, align);
-    ecs_os_memset(ptr, 0, size * count);
+    void *ptr = flecs_stack_alloc(stack, size, align);
+    ecs_os_memset(ptr, 0, size);
     return ptr;
 }
 
@@ -14624,6 +14618,15 @@ void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
+    ecs_stack_page_t *cur = cursor->cur;
+    if (cur == stack->cur) {
+        if (cursor->sp > stack->cur->sp) {
+            return;
+        }
+    } else if (cur->id > stack->cur->id) {
+        return;
+    }
+
     stack->cur = cursor->cur;
     stack->cur->sp = cursor->sp;
 }
@@ -47183,8 +47186,14 @@ ecs_table_t* ecs_table_remove_id(
  * otherwise allocate. */
 #define INIT_CACHE(it, stack, fields, f, T, count)\
     if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
-        it->f = flecs_stack_callocn(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T), count);\
+        it->f = flecs_stack_calloc_n(stack, T, count);\
         it->priv.cache.used |= flecs_iter_cache_##f;\
+    }
+
+/* If array is allocated, free it when finalizing the iterator */
+#define FINI_CACHE(it, f, T, count)\
+    if (it->priv.cache.used & flecs_iter_cache_##f) {\
+        flecs_stack_free_n((void*)it->f, T, count);\
     }
 
 void flecs_iter_init(
@@ -47235,6 +47244,15 @@ void ecs_iter_fini(
     if (!world) {
         return;
     }
+
+    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
+    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
+    FINI_CACHE(it, match_indices, int32_t, it->field_count);
+    FINI_CACHE(it, columns, int32_t, it->field_count);
+    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
+    FINI_CACHE(it, sizes, ecs_size_t, it->field_count);
+    FINI_CACHE(it, ptrs, void*, it->field_count);
+
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
         &it->priv.cache.stack_cursor);
@@ -47399,7 +47417,7 @@ has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
         ecs_switch_t *sw = &table->data.sw_columns[u_index];
-        data = ecs_vector_first(flecs_switch_values(sw), ecs_entity_t);
+        data = ecs_vec_first(flecs_switch_values(sw));
         size = ECS_SIZEOF(ecs_entity_t);
         goto has_data;
     }

@@ -2809,7 +2809,7 @@ struct ecs_stack_page_t;
 
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_page_t *cur;
-    ecs_size_t sp;
+    int16_t sp;
 } ecs_stack_cursor_t;
 
 /* Page-iterator specific data */
@@ -3163,8 +3163,8 @@ void ecs_vec_remove(
     ecs_size_t size,
     int32_t elem);
 
-#define ecs_vec_remove_t(vec, T) \
-    ECS_CAST(T*, ecs_vec_remove(allocator, vec, ECS_SIZEOF(T)))
+#define ecs_vec_remove_t(vec, T, elem) \
+    ecs_vec_remove(vec, ECS_SIZEOF(T), elem)
 
 void ecs_vec_remove_last(
     ecs_vec_t *vec);
@@ -3213,13 +3213,13 @@ void* ecs_vec_grow(
     ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
 
 int32_t ecs_vec_count(
-    ecs_vec_t *vec);
+    const ecs_vec_t *vec);
 
 int32_t ecs_vec_size(
-    ecs_vec_t *vec);
+    const ecs_vec_t *vec);
 
 void* ecs_vec_get(
-    ecs_vec_t *vec,
+    const ecs_vec_t *vec,
     ecs_size_t size,
     int32_t index);
 
@@ -3227,13 +3227,13 @@ void* ecs_vec_get(
     ECS_CAST(T*, ecs_vec_get(vec, ECS_SIZEOF(T), index))
 
 void* ecs_vec_first(
-    ecs_vec_t *vec);
+    const ecs_vec_t *vec);
 
 #define ecs_vec_first_t(vec, T) \
     ECS_CAST(T*, ecs_vec_first(vec))
 
 void* ecs_vec_last(
-    ecs_vec_t *vec,
+    const ecs_vec_t *vec,
     ecs_size_t size);
 
 #define ecs_vec_last_t(vec, T) \

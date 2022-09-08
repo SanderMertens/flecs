@@ -1410,7 +1410,8 @@
                 "paged_iter_w_singleton_component",
                 "paged_iter_w_singleton_instanced",
                 "paged_iter_w_singleton_component_instanced",
-                "count"
+                "count",
+                "interleaved_iter"
             ]
         }, {
             "id": "Pairs",

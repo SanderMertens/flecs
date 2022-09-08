@@ -34,8 +34,6 @@ void Vector_reclaim(void);
 void Vector_grow(void);
 void Vector_copy(void);
 void Vector_copy_null(void);
-void Vector_memory(void);
-void Vector_memory_from_null(void);
 void Vector_addn_to_null(void);
 void Vector_addn_to_0_size(void);
 void Vector_set_min_count(void);
@@ -81,7 +79,6 @@ void Sparse_clear_empty(void);
 void Sparse_clear_n(void);
 void Sparse_clear_n_chunks(void);
 void Sparse_add_after_clear(void);
-void Sparse_memory_null(void);
 void Sparse_copy(void);
 void Sparse_restore(void);
 void Sparse_create_delete(void);
@@ -212,14 +209,6 @@ bake_test_case Vector_testcases[] = {
     {
         "copy_null",
         Vector_copy_null
-    },
-    {
-        "memory",
-        Vector_memory
-    },
-    {
-        "memory_from_null",
-        Vector_memory_from_null
     },
     {
         "addn_to_null",
@@ -384,10 +373,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_add_after_clear
     },
     {
-        "memory_null",
-        Sparse_memory_null
-    },
-    {
         "copy",
         Sparse_copy
     },
@@ -517,7 +502,7 @@ static bake_test_suite suites[] = {
         "Vector",
         Vector_setup,
         NULL,
-        31,
+        29,
         Vector_testcases
     },
     {
@@ -531,7 +516,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        23,
+        22,
         Sparse_testcases
     },
     {

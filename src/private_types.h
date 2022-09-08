@@ -18,6 +18,7 @@
 
 #include "flecs.h"
 #include "datastructures/entity_index.h"
+#include "datastructures/stack_allocator.h"
 #include "flecs/private/bitset.h"
 #include "flecs/private/switch_list.h"
 
@@ -404,20 +405,6 @@ typedef struct ecs_defer_op_t {
         ecs_defer_op_n_t _n;
     } is;
 } ecs_defer_op_t;
-
-/** Stack allocator for quick allocation of small temporary values */
-#define ECS_STACK_PAGE_SIZE (4096)
-
-typedef struct ecs_stack_page_t {
-    void *data;
-    struct ecs_stack_page_t *next;
-    ecs_size_t sp;
-} ecs_stack_page_t;
-
-typedef struct ecs_stack_t {
-    ecs_stack_page_t first;
-    ecs_stack_page_t *cur;
-} ecs_stack_t;
 
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {

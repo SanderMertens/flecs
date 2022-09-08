@@ -67,7 +67,7 @@ void check_table_sanity(ecs_table_t *table) {
             ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < sw_count; i ++) {
             ecs_switch_t *sw = &table->data.sw_columns[i];
-            ecs_assert(ecs_vector_count(sw->values) == count, 
+            ecs_assert(ecs_vec_count(&sw->values) == count, 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(ECS_PAIR_FIRST(ids[i + sw_offset]) == EcsUnion,
                 ECS_INTERNAL_ERROR, NULL);

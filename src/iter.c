@@ -7,8 +7,14 @@
  * otherwise allocate. */
 #define INIT_CACHE(it, stack, fields, f, T, count)\
     if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
-        it->f = flecs_stack_callocn(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T), count);\
+        it->f = flecs_stack_calloc_n(stack, T, count);\
         it->priv.cache.used |= flecs_iter_cache_##f;\
+    }
+
+/* If array is allocated, free it when finalizing the iterator */
+#define FINI_CACHE(it, f, T, count)\
+    if (it->priv.cache.used & flecs_iter_cache_##f) {\
+        flecs_stack_free_n((void*)it->f, T, count);\
     }
 
 void flecs_iter_init(
@@ -59,6 +65,15 @@ void ecs_iter_fini(
     if (!world) {
         return;
     }
+
+    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
+    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
+    FINI_CACHE(it, match_indices, int32_t, it->field_count);
+    FINI_CACHE(it, columns, int32_t, it->field_count);
+    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
+    FINI_CACHE(it, sizes, ecs_size_t, it->field_count);
+    FINI_CACHE(it, ptrs, void*, it->field_count);
+
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
         &it->priv.cache.stack_cursor);
@@ -223,7 +238,7 @@ has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
         ecs_switch_t *sw = &table->data.sw_columns[u_index];
-        data = ecs_vector_first(flecs_switch_values(sw), ecs_entity_t);
+        data = ecs_vec_first(flecs_switch_values(sw));
         size = ECS_SIZEOF(ecs_entity_t);
         goto has_data;
     }

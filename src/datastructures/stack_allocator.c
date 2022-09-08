@@ -3,11 +3,12 @@
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
 static
-ecs_stack_page_t* flecs_stack_page_new(void) {
+ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
         FLECS_STACK_PAGE_OFFSET + ECS_STACK_PAGE_SIZE);
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
+    result->id = page_id + 1;
     return result;
 }
 
@@ -21,8 +22,8 @@ void* flecs_stack_alloc(
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
     }
 
-    ecs_size_t sp = ECS_ALIGN(page->sp, align);
-    ecs_size_t next_sp = sp + size;
+    int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
+    int16_t next_sp = flecs_ito(int16_t, sp + size);
 
     if (next_sp > ECS_STACK_PAGE_SIZE) {
         if (size > ECS_STACK_PAGE_SIZE) {
@@ -32,10 +33,10 @@ void* flecs_stack_alloc(
         if (page->next) {
             page = page->next;
         } else {
-            page = page->next = flecs_stack_page_new();
+            page = page->next = flecs_stack_page_new(page->id);
         }
         sp = 0;
-        next_sp = size;
+        next_sp = flecs_ito(int16_t, size);
         stack->cur = page;
     }
 
@@ -44,23 +45,13 @@ void* flecs_stack_alloc(
     return ECS_OFFSET(page->data, sp);
 }
 
-void* flecs_stack_allocn(
+void* flecs_stack_calloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
-    ecs_size_t align,
-    int32_t count)
+    ecs_size_t align)
 {
-    return flecs_stack_alloc(stack, size * count, align);
-}
-
-void* flecs_stack_callocn(
-    ecs_stack_t *stack, 
-    ecs_size_t size,
-    ecs_size_t align,
-    int32_t count)
-{
-    void *ptr = flecs_stack_alloc(stack, size * count, align);
-    ecs_os_memset(ptr, 0, size * count);
+    void *ptr = flecs_stack_alloc(stack, size, align);
+    ecs_os_memset(ptr, 0, size);
     return ptr;
 }
 
@@ -85,6 +76,15 @@ void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
+    ecs_stack_page_t *cur = cursor->cur;
+    if (cur == stack->cur) {
+        if (cursor->sp > stack->cur->sp) {
+            return;
+        }
+    } else if (cur->id > stack->cur->id) {
+        return;
+    }
+
     stack->cur = cursor->cur;
     stack->cur->sp = cursor->sp;
 }

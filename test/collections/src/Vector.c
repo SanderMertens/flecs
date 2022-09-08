@@ -292,25 +292,6 @@ void Vector_copy_null() {
     test_assert( ecs_vector_copy(NULL, int) == NULL);
 }
 
-void Vector_memory() {
-    ecs_size_t allocd = 0, used = 0;
-    ecs_vector_t *array = ecs_vector_new(int, 0);
-    array = fill_array(array);
-
-    ecs_vector_memory(array, int, &allocd, &used);
-    test_int(allocd, 8 * sizeof(int));
-    test_int(used, 4 * sizeof(int));
-
-    ecs_vector_free(array);
-}
-
-void Vector_memory_from_null() {
-    ecs_size_t allocd = 0, used = 0;
-    ecs_vector_memory(NULL, int, &allocd, &used);
-    test_int(allocd, 0);
-    test_int(used, 0);
-}
-
 void Vector_addn_to_null() {
     ecs_vector_t *array = NULL;
     void *ptr = ecs_vector_addn(&array, int, 4);

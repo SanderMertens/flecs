@@ -70,10 +70,14 @@ void flecs_sparse_chunk_free(
 {
     if (sparse->chunk_allocator) {
         flecs_bfree(sparse->chunk_allocator, chunk->sparse);
+    } else {
+        ecs_os_free(chunk->sparse);
     }
     if (sparse->allocator) {
         flecs_free(sparse->allocator, sparse->size * FLECS_SPARSE_CHUNK_SIZE,
             chunk->data);
+    } else {
+        ecs_os_free(chunk->data);
     }
 }
 
