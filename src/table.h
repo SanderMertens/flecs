@@ -202,4 +202,32 @@ bool flecs_table_release(
     ecs_world_t *world, 
     ecs_table_t *table);
 
+/* Table diff builder, used to build id lists that indicate the difference in
+ * ids between two tables. */
+void flecs_table_diff_builder_init(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder);
+
+void flecs_table_diff_builder_fini(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder);
+
+void flecs_table_diff_build_append_table(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *dst,
+    ecs_table_diff_t *src);
+
+void flecs_table_diff_build(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder,
+    ecs_table_diff_t *diff,
+    int32_t added_offset,
+    int32_t removed_offset,
+    int32_t on_set_offset,
+    int32_t un_set_offset);
+
+void flecs_table_diff_build_noalloc(
+    ecs_table_diff_builder_t *builder,
+    ecs_table_diff_t *diff);
+
 #endif

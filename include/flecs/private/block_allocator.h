@@ -33,6 +33,11 @@ void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
     ecs_size_t size);
 
+#define flecs_ballocator_init_t(ba, T)\
+    flecs_ballocator_init(ba, ECS_SIZEOF(T))
+#define flecs_ballocator_init_n(ba, T, count)\
+    flecs_ballocator_init(ba, ECS_SIZEOF(T) * count)
+
 FLECS_DBG_API
 ecs_block_allocator_t* flecs_ballocator_new(
     ecs_size_t size);

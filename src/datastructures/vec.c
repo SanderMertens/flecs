@@ -33,6 +33,12 @@ void ecs_vec_fini(
     }
 }
 
+void ecs_vec_clear(
+    ecs_vec_t *vec)
+{
+    vec->count = 0;
+}
+
 ecs_vec_t ecs_vec_copy(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,

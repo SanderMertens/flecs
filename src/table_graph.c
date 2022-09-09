@@ -280,6 +280,105 @@ void flecs_type_add(
 
 /* Graph edge utilities */
 
+void flecs_table_diff_builder_init(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder)
+{
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_init_t(a, &builder->added, ecs_id_t, 256);
+    ecs_vec_init_t(a, &builder->removed, ecs_id_t, 256);
+    ecs_vec_init_t(a, &builder->on_set, ecs_id_t, 256);
+    ecs_vec_init_t(a, &builder->un_set, ecs_id_t, 256);
+}
+
+void flecs_table_diff_builder_fini(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder)
+{
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_fini_t(a, &builder->added, ecs_id_t);
+    ecs_vec_fini_t(a, &builder->removed, ecs_id_t);
+    ecs_vec_fini_t(a, &builder->on_set, ecs_id_t);
+    ecs_vec_fini_t(a, &builder->un_set, ecs_id_t);
+}
+
+static
+void flecs_table_diff_build_type(
+    ecs_world_t *world,
+    ecs_vec_t *vec,
+    ecs_type_t *type,
+    int32_t offset)
+{
+    int32_t count = vec->count - offset;
+    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
+    if (count) {
+        type->array = flecs_wdup_n(world, ecs_id_t, count, 
+            ECS_ELEM_T(vec->array, ecs_id_t, offset));
+        type->count = count;
+        ecs_vec_set_count_t(&world->allocator, vec, ecs_id_t, offset);
+    }
+}
+
+void flecs_table_diff_build(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *builder,
+    ecs_table_diff_t *diff,
+    int32_t added_offset,
+    int32_t removed_offset,
+    int32_t on_set_offset,
+    int32_t un_set_offset)
+{
+    flecs_table_diff_build_type(world, &builder->added, &diff->added, 
+        added_offset);
+    flecs_table_diff_build_type(world, &builder->removed, &diff->removed, 
+        removed_offset);
+    flecs_table_diff_build_type(world, &builder->on_set, &diff->on_set, 
+        on_set_offset);
+    flecs_table_diff_build_type(world, &builder->un_set, &diff->un_set, 
+        un_set_offset);
+}
+
+void flecs_table_diff_build_noalloc(
+    ecs_table_diff_builder_t *builder,
+    ecs_table_diff_t *diff)
+{
+    diff->added = (ecs_type_t){
+        .array = builder->added.array, .count = builder->added.count };
+    diff->removed = (ecs_type_t){
+        .array = builder->removed.array, .count = builder->removed.count };
+    diff->on_set = (ecs_type_t){
+        .array = builder->on_set.array, .count = builder->on_set.count };
+    diff->un_set = (ecs_type_t){
+        .array = builder->un_set.array, .count = builder->un_set.count };
+}
+
+static
+void flecs_table_diff_build_add_type_to_vec(
+    ecs_world_t *world,
+    ecs_vec_t *vec,
+    ecs_type_t *add)
+{
+    if (!add || !add->count) {
+        return;
+    }
+
+    int32_t offset = vec->count;
+    ecs_vec_grow_t(&world->allocator, vec, ecs_id_t, add->count);
+    ecs_os_memcpy_n(ecs_vec_get_t(vec, ecs_id_t, offset),
+        add->array, ecs_id_t, add->count);
+}
+
+void flecs_table_diff_build_append_table(
+    ecs_world_t *world,
+    ecs_table_diff_builder_t *dst,
+    ecs_table_diff_t *src)
+{
+    flecs_table_diff_build_add_type_to_vec(world, &dst->added, &src->added);
+    flecs_table_diff_build_add_type_to_vec(world, &dst->removed, &src->removed);
+    flecs_table_diff_build_add_type_to_vec(world, &dst->on_set, &src->on_set);
+    flecs_table_diff_build_add_type_to_vec(world, &dst->un_set, &src->un_set);
+}
+
 static
 void flecs_table_diff_free(
     ecs_world_t *world,
@@ -527,22 +626,11 @@ ecs_table_t* flecs_table_ensure(
 }
 
 static
-void flecs_diff_ids_append(
-    ecs_world_t *world,
-    ecs_type_t *ids,
-    ecs_id_t id)
-{
-    ids->array = flecs_wrealloc_n(world, ecs_id_t, ids->count + 1, 
-        ids->count, ids->array);
-    ids->array[ids->count ++] = id;   
-}
-
-static
 void flecs_diff_insert_isa(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_diff_t *base_diff,
-    ecs_type_t *append_to,
+    ecs_vec_t *append_to,
     ecs_type_t *append_from,
     ecs_id_t add)
 {
@@ -557,6 +645,7 @@ void flecs_diff_insert_isa(
 
     /* If the table does not have a component from the base, it should
      * emit an OnSet event */
+    ecs_allocator_t *a = &world->allocator;
     ecs_id_t *ids = base_type.array;
     int32_t j, i, count = base_type.count;
     for (i = 0; i < count; i ++) {
@@ -576,7 +665,7 @@ void flecs_diff_insert_isa(
                 /* We still have to make sure the id isn't overridden by the
                  * current table */
                 if (ecs_search(world, table, base_id, NULL) == -1) {
-                    flecs_diff_ids_append(world, append_to, base_id);
+                    ecs_vec_append_t(a, append_to, ecs_id_t)[0] = base_id;
                 }
             }
 
@@ -593,7 +682,7 @@ void flecs_diff_insert_isa(
         }
 
         if (ecs_search(world, table, id, NULL) == -1) {
-            flecs_diff_ids_append(world, append_to, id);
+            ecs_vec_append_t(a, append_to, ecs_id_t)[0] = id;
         }
     }
 }
@@ -602,7 +691,7 @@ static
 void flecs_diff_insert_added_isa(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_diff_t *diff,
+    ecs_table_diff_builder_t *diff,
     ecs_id_t id)
 {
     ecs_table_diff_t base_diff;
@@ -614,7 +703,7 @@ static
 void flecs_diff_insert_removed_isa(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_diff_t *diff,
+    ecs_table_diff_builder_t *diff,
     ecs_id_t id)
 {
     ecs_table_diff_t base_diff;
@@ -626,10 +715,10 @@ static
 void flecs_diff_insert_added(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_diff_t *diff,
+    ecs_table_diff_builder_t *diff,
     ecs_id_t id)
 {
-    diff->added.array[diff->added.count ++] = id;
+    ecs_vec_append_t(&world->allocator, &diff->added, ecs_id_t)[0] = id;
 
     if (ECS_HAS_RELATION(id, EcsIsA)) {
         flecs_diff_insert_added_isa(world, table, diff, id);
@@ -640,10 +729,11 @@ static
 void flecs_diff_insert_removed(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_diff_t *diff,
+    ecs_table_diff_builder_t *diff,
     ecs_id_t id)
 {
-    diff->removed.array[diff->removed.count ++] = id;
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_append_t(a, &diff->removed, ecs_id_t)[0] = id;
 
     if (ECS_HAS_RELATION(id, EcsIsA)) {
         /* Removing an IsA relationship also "removes" all components from the
@@ -664,13 +754,13 @@ void flecs_diff_insert_removed(
         if (ecs_search_relation(world, table, 0, id, EcsIsA,
             EcsUp, 0, 0, 0) != -1)
         {
-            flecs_diff_ids_append(world, &diff->on_set, id);
+            ecs_vec_append_t(a, &diff->on_set, ecs_id_t)[0] = id;
             return;
         }
     }
 
     if (ecs_get_typeid(world, id) != 0) {
-        flecs_diff_ids_append(world, &diff->un_set, id);
+        ecs_vec_append_t(a, &diff->un_set, ecs_id_t)[0] = id;
     }
 }
 
@@ -749,25 +839,20 @@ void flecs_compute_table_diff(
         return;
     }
 
-    ecs_table_diff_t *diff = flecs_bcalloc(&world->allocators.table_diff);
-    edge->diff = diff;
-    if (added_count) {
-        diff->added.array = flecs_walloc_n(world, ecs_id_t, added_count);
-        diff->added.count = 0;
-    }
-    if (removed_count) {
-        diff->removed.array = flecs_walloc_n(world, ecs_id_t, removed_count);
-        diff->removed.count = 0;
-    }
+    ecs_table_diff_builder_t *builder = &world->allocators.diff_builder;
+    int32_t added_offset = builder->added.count;
+    int32_t removed_offset = builder->removed.count;
+    int32_t on_set_offset = builder->on_set.count;
+    int32_t un_set_offset = builder->un_set.count;
 
     for (i_node = 0, i_next = 0; i_node < node_count && i_next < next_count; ) {
         ecs_id_t id_node = ids_node[i_node];
         ecs_id_t id_next = ids_next[i_next];
 
         if (id_next < id_node) {
-            flecs_diff_insert_added(world, node, diff, id_next);
+            flecs_diff_insert_added(world, node, builder, id_next);
         } else if (id_node < id_next) {
-            flecs_diff_insert_removed(world, next, diff, id_node);
+            flecs_diff_insert_removed(world, next, builder, id_node);
         }
 
         i_node += id_node <= id_next;
@@ -775,11 +860,16 @@ void flecs_compute_table_diff(
     }
 
     for (; i_next < next_count; i_next ++) {
-        flecs_diff_insert_added(world, node, diff, ids_next[i_next]);
+        flecs_diff_insert_added(world, node, builder, ids_next[i_next]);
     }
     for (; i_node < node_count; i_node ++) {
-        flecs_diff_insert_removed(world, next, diff, ids_node[i_node]);
+        flecs_diff_insert_removed(world, next, builder, ids_node[i_node]);
     }
+
+    ecs_table_diff_t *diff = flecs_bcalloc(&world->allocators.table_diff);
+    edge->diff = diff;
+    flecs_table_diff_build(world, builder, diff,
+        added_offset, removed_offset, on_set_offset, un_set_offset);
 
     ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, NULL);

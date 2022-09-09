@@ -33,6 +33,9 @@ void ecs_vec_fini(
 #define ecs_vec_fini_t(allocator, vec, T) \
     ecs_vec_fini(allocator, vec, ECS_SIZEOF(T))
 
+void ecs_vec_clear(
+    ecs_vec_t *vec);
+
 void* ecs_vec_append(
     ecs_allocator_t *allocator,
     ecs_vec_t *vec,
