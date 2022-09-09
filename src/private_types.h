@@ -120,6 +120,16 @@ typedef struct ecs_table_diff_t {
     ecs_type_t un_set;        /* UnSet from hiding/removing base components */
 } ecs_table_diff_t;
 
+/** Builder for table diff. The table diff type itself doesn't use ecs_vec_t to
+ * conserve memory on table edges (a type doesn't have the size field), whereas
+ * a vec for the builder is more convenient to use & has allocator support. */
+typedef struct ecs_table_diff_builder_t {
+    ecs_vec_t added;
+    ecs_vec_t removed;
+    ecs_vec_t on_set;
+    ecs_vec_t un_set;
+} ecs_table_diff_builder_t;
+
 /** Edge linked list (used to keep track of incoming edges) */
 typedef struct ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
@@ -418,6 +428,9 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
     ecs_block_allocator_t hashmap;
+
+    /* Temporary vectors used for creating table diff id sequences */
+    ecs_table_diff_builder_t diff_builder;
 } ecs_world_allocators_t;
 
 /* Stage level allocators are for operations that can be multithreaded */

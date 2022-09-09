@@ -541,42 +541,44 @@ static
 void flecs_world_allocators_init(
     ecs_world_t *world)
 {
+    ecs_world_allocators_t *a = &world->allocators;
+
     flecs_allocator_init(&world->allocator);
-    ecs_map_params_init(&world->allocators.ptr, &world->allocator, void*);
-    ecs_map_params_init(&world->allocators.query_table_list, &world->allocator,
+
+    ecs_map_params_init(&a->ptr, &world->allocator, void*);
+    ecs_map_params_init(&a->query_table_list, &world->allocator,
         ecs_query_table_list_t);
-    flecs_ballocator_init(&world->allocators.query_table, 
-        ECS_SIZEOF(ecs_query_table_t));
-    flecs_ballocator_init(&world->allocators.query_table_match, 
-        ECS_SIZEOF(ecs_query_table_match_t));
-    flecs_ballocator_init(&world->allocators.graph_edge_lo, 
-        ECS_SIZEOF(ecs_graph_edge_t) * ECS_HI_COMPONENT_ID);
-    flecs_ballocator_init(&world->allocators.graph_edge, 
-        ECS_SIZEOF(ecs_graph_edge_t));
-    flecs_ballocator_init(&world->allocators.id_record, 
-        ECS_SIZEOF(ecs_id_record_t));
-    flecs_ballocator_init(&world->allocators.table_diff, 
-        ECS_SIZEOF(ecs_table_diff_t));
-    flecs_ballocator_init(&world->allocators.sparse_chunk, 
-        ECS_SIZEOF(int32_t) * FLECS_SPARSE_CHUNK_SIZE);
-    flecs_ballocator_init(&world->allocators.hashmap, 
-        ECS_SIZEOF(ecs_hashmap_t));
+
+    flecs_ballocator_init_t(&a->query_table, ecs_query_table_t);
+    flecs_ballocator_init_t(&a->query_table_match, ecs_query_table_match_t);
+    flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, ECS_HI_COMPONENT_ID);
+    flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
+    flecs_ballocator_init_t(&a->id_record, ecs_id_record_t);
+    flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
+    flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_CHUNK_SIZE);
+    flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
+    flecs_table_diff_builder_init(world, &world->allocators.diff_builder);
 }
 
 static 
 void flecs_world_allocators_fini(
     ecs_world_t *world)
 {
-    ecs_map_params_fini(&world->allocators.ptr);
-    ecs_map_params_fini(&world->allocators.query_table_list);
-    flecs_ballocator_fini(&world->allocators.query_table);
-    flecs_ballocator_fini(&world->allocators.query_table_match);
-    flecs_ballocator_fini(&world->allocators.graph_edge_lo);
-    flecs_ballocator_fini(&world->allocators.graph_edge);
-    flecs_ballocator_fini(&world->allocators.id_record);
-    flecs_ballocator_fini(&world->allocators.table_diff);
-    flecs_ballocator_fini(&world->allocators.sparse_chunk);
-    flecs_ballocator_fini(&world->allocators.hashmap);
+    ecs_world_allocators_t *a = &world->allocators;
+
+    ecs_map_params_fini(&a->ptr);
+    ecs_map_params_fini(&a->query_table_list);
+
+    flecs_ballocator_fini(&a->query_table);
+    flecs_ballocator_fini(&a->query_table_match);
+    flecs_ballocator_fini(&a->graph_edge_lo);
+    flecs_ballocator_fini(&a->graph_edge);
+    flecs_ballocator_fini(&a->id_record);
+    flecs_ballocator_fini(&a->table_diff);
+    flecs_ballocator_fini(&a->sparse_chunk);
+    flecs_ballocator_fini(&a->hashmap);
+    flecs_table_diff_builder_fini(world, &world->allocators.diff_builder);
+
     flecs_allocator_fini(&world->allocator);
 }
 
