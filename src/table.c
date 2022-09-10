@@ -1155,7 +1155,7 @@ void flecs_table_reset(
 }
 
 static
-void mark_table_dirty(
+void flecs_table_mark_table_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t index)
@@ -1182,7 +1182,7 @@ void flecs_table_mark_dirty(
 }
 
 static
-void move_switch_columns(
+void flecs_table_move_switch_columns(
     ecs_table_t *dst_table, 
     int32_t dst_index,
     ecs_table_t *src_table, 
@@ -1251,7 +1251,7 @@ void move_switch_columns(
 }
 
 static
-void move_bitset_columns(
+void flecs_table_move_bitset_columns(
     ecs_table_t *dst_table, 
     int32_t dst_index,
     ecs_table_t *src_table, 
@@ -1320,7 +1320,7 @@ void move_bitset_columns(
 }
 
 static
-void* grow_column(
+void* flecs_table_grow_column(
     ecs_world_t *world,
     ecs_vec_t *column,
     ecs_type_info_t *ti,
@@ -1391,7 +1391,7 @@ void* grow_column(
 }
 
 static
-int32_t grow_data(
+int32_t flecs_table_grow_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -1440,7 +1440,7 @@ int32_t grow_data(
     for (i = 0; i < column_count; i ++) {
         ecs_vec_t *column = &columns[i];
         ecs_type_info_t *ti = type_info[i];
-        grow_column(world, column, ti, to_add, size, true);
+        flecs_table_grow_column(world, column, ti, to_add, size, true);
         ecs_assert(columns[i].size == size, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -1457,7 +1457,7 @@ int32_t grow_data(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(world, table, 0);
+    flecs_table_mark_table_dirty(world, table, 0);
 
     if (!(world->flags & EcsWorldReadonly) && !cur_count) {
         flecs_table_set_empty(world, table);
@@ -1468,7 +1468,7 @@ int32_t grow_data(
 }
 
 static
-void fast_append(
+void flecs_table_fast_append(
     ecs_world_t *world,
     ecs_type_info_t **type_info,
     ecs_vec_t *columns,
@@ -1516,14 +1516,14 @@ int32_t flecs_table_append(
     *r = record;
  
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(world, table, 0);
+    flecs_table_mark_table_dirty(world, table, 0);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_info_t **type_info = table->type_info;
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
-        fast_append(world, type_info, columns, column_count);
+        flecs_table_fast_append(world, type_info, columns, column_count);
         if (!count) {
             flecs_table_set_empty(world, table); /* See below */
         }
@@ -1546,7 +1546,7 @@ int32_t flecs_table_append(
     for (i = 0; i < column_count; i ++) {
         ecs_vec_t *column = &columns[i];
         ecs_type_info_t *ti = type_info[i];  
-        grow_column(world, column, ti, 1, size, construct);
+        flecs_table_grow_column(world, column, ti, 1, size, construct);
 
         ecs_iter_action_t on_add_hook;
         if (on_add && (on_add_hook = ti->hooks.on_add)) {
@@ -1586,7 +1586,7 @@ int32_t flecs_table_append(
 }
 
 static
-void fast_delete_last(
+void flecs_table_fast_delete_last(
     ecs_vec_t *columns,
     int32_t column_count) 
 {
@@ -1597,7 +1597,7 @@ void fast_delete_last(
 }
 
 static
-void fast_delete(
+void flecs_table_fast_delete(
     ecs_type_info_t **type_info,
     ecs_vec_t *columns,
     int32_t column_count,
@@ -1656,7 +1656,7 @@ void flecs_table_delete(
     }     
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(world, table, 0);    
+    flecs_table_mark_table_dirty(world, table, 0);    
 
     /* If table is empty, deactivate it */
     if (!count) {
@@ -1673,9 +1673,9 @@ void flecs_table_delete(
      * fast path that just remove an element from the array(s) */
     if (!(table->flags & EcsTableIsComplex)) {
         if (index == count) {
-            fast_delete_last(columns, column_count);
+            flecs_table_fast_delete_last(columns, column_count);
         } else {
-            fast_delete(type_info, columns, column_count, index);
+            flecs_table_fast_delete(type_info, columns, column_count, index);
         }
 
         check_table_sanity(table);
@@ -1694,7 +1694,7 @@ void flecs_table_delete(
             }
         }
 
-        fast_delete_last(columns, column_count);
+        flecs_table_fast_delete_last(columns, column_count);
 
     /* Not last element, move last element to deleted element & destruct */
     } else {
@@ -1723,7 +1723,7 @@ void flecs_table_delete(
                 ecs_vec_remove_last(column);
             }
         } else {
-            fast_delete(type_info, columns, column_count, index);
+            flecs_table_fast_delete(type_info, columns, column_count, index);
         }
     }
 
@@ -1745,7 +1745,7 @@ void flecs_table_delete(
 }
 
 static
-void fast_move(
+void flecs_table_fast_move(
     ecs_table_t *dst_table,
     int32_t dst_index,
     ecs_table_t *src_table,
@@ -1802,14 +1802,14 @@ void flecs_table_move(
     check_table_sanity(src_table);
 
     if (!((dst_table->flags | src_table->flags) & EcsTableIsComplex)) {
-        fast_move(dst_table, dst_index, src_table, src_index);
+        flecs_table_fast_move(dst_table, dst_index, src_table, src_index);
         check_table_sanity(dst_table);
         check_table_sanity(src_table);
         return;
     }
 
-    move_switch_columns(dst_table, dst_index, src_table, src_index, 1, false);
-    move_bitset_columns(dst_table, dst_index, src_table, src_index, 1, false);
+    flecs_table_move_switch_columns(dst_table, dst_index, src_table, src_index, 1, false);
+    flecs_table_move_bitset_columns(dst_table, dst_index, src_table, src_index, 1, false);
 
     bool same_entity = dst_entity == src_entity;
 
@@ -1898,7 +1898,7 @@ int32_t flecs_table_appendn(
     check_table_sanity(table);
 
     int32_t cur_count = flecs_table_data_count(data);
-    int32_t result = grow_data(
+    int32_t result = flecs_table_grow_data(
         world, table, data, to_add, cur_count + to_add, ids);
     check_table_sanity(table);
     return result;
@@ -1918,7 +1918,7 @@ void flecs_table_set_size(
     int32_t cur_count = flecs_table_data_count(data);
 
     if (cur_count < size) {
-        grow_data(world, table, data, 0, size, NULL);
+        flecs_table_grow_data(world, table, data, 0, size, NULL);
         check_table_sanity(table);
     }
 }
@@ -2014,7 +2014,7 @@ void flecs_table_swap(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(world, table, 0);    
+    flecs_table_mark_table_dirty(world, table, 0);    
 
     ecs_entity_t *entities = table->data.entities.array;
     ecs_entity_t e1 = entities[row_1];
@@ -2172,7 +2172,7 @@ void flecs_merge_table_data(
 
         if (dst_id == src_id) {
             flecs_merge_column(world, &dst[i_new], &src[i_old], size, dst_ti);
-            mark_table_dirty(world, dst_table, i_new + 1);
+            flecs_table_mark_table_dirty(world, dst_table, i_new + 1);
             
             i_new ++;
             i_old ++;
@@ -2192,8 +2192,8 @@ void flecs_merge_table_data(
         }
     }
 
-    move_switch_columns(dst_table, dst_count, src_table, 0, src_count, true);
-    move_bitset_columns(dst_table, dst_count, src_table, 0, src_count, true);
+    flecs_table_move_switch_columns(dst_table, dst_count, src_table, 0, src_count, true);
+    flecs_table_move_bitset_columns(dst_table, dst_count, src_table, 0, src_count, true);
 
     /* Initialize remaining columns */
     for (; i_new < dst_column_count; i_new ++) {
@@ -2214,7 +2214,7 @@ void flecs_merge_table_data(
     }    
 
     /* Mark entity column as dirty */
-    mark_table_dirty(world, dst_table, 0); 
+    flecs_table_mark_table_dirty(world, dst_table, 0); 
 }
 
 int32_t ecs_table_count(

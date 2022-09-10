@@ -462,7 +462,7 @@ struct ecs_stage_t {
 
     /* Deferred command queue */
     int32_t defer;
-    ecs_vector_t *commands;
+    ecs_vec_t commands;
     ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
     ecs_map_t cmd_entries;       /* <entity, op_entry_t> - command combining */
     bool defer_suspend;         /* Suspend deferring without flushing */

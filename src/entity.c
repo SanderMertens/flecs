@@ -760,7 +760,7 @@ void flecs_add_remove_union(
 }
 
 static
-ecs_record_t* new_entity(
+ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -797,7 +797,7 @@ ecs_record_t* new_entity(
 }
 
 static
-void move_entity(
+void flecs_move_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -850,7 +850,7 @@ error:
 }
 
 static
-void delete_entity(
+void flecs_delete_entity(
     ecs_world_t *world,
     ecs_record_t *record,
     ecs_table_diff_t *diff)
@@ -940,10 +940,10 @@ void flecs_commit(
         dst_table->observed_count += observed;
 
         if (dst_table->type.count) { 
-            move_entity(world, entity, record, dst_table, diff, 
+            flecs_move_entity(world, entity, record, dst_table, diff, 
                 construct, notify_on_set);
         } else {
-            delete_entity(world, record, diff);
+            flecs_delete_entity(world, record, diff);
             record->table = NULL;
         }
 
@@ -951,7 +951,7 @@ void flecs_commit(
     } else {        
         dst_table->observed_count += observed;
         if (dst_table->type.count) {
-            new_entity(world, entity, record, dst_table, diff, 
+            flecs_new_entity(world, entity, record, dst_table, diff, 
                 construct, notify_on_set);
         }
     }
@@ -993,7 +993,7 @@ void new(
 
     ecs_table_diff_t table_diff;
     flecs_table_diff_build_noalloc(&diff, &table_diff);
-    new_entity(world, entity, NULL, table, &table_diff, true, true);
+    flecs_new_entity(world, entity, NULL, table, &table_diff, true, true);
     flecs_table_diff_builder_fini(world, &diff);
 }
 
@@ -1690,7 +1690,7 @@ int traverse_add(
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
     ecs_id_t with,
-    bool new_entity,
+    bool flecs_new_entity,
     bool name_assigned)
 {
     const char *sep = desc->sep;
@@ -1701,7 +1701,7 @@ int traverse_add(
     /* Find existing table */
     ecs_table_t *src_table = NULL, *table = NULL;
     ecs_record_t *r = NULL;
-    if (!new_entity) {
+    if (!flecs_new_entity) {
         r = flecs_entities_get(world, result);
         if (r) {
             table = r->table;
@@ -1711,8 +1711,8 @@ int traverse_add(
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
+    if (flecs_new_entity) {
+        if (flecs_new_entity && scope && !name && !name_assigned) {
             table = flecs_find_table_add(
                 world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
@@ -1802,7 +1802,7 @@ void deferred_add_remove(
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
     ecs_id_t with,
-    bool new_entity,
+    bool flecs_new_entity,
     bool name_assigned)
 {
     const char *sep = desc->sep;
@@ -1810,8 +1810,8 @@ void deferred_add_remove(
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
+    if (flecs_new_entity) {
+        if (flecs_new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
         }
 
@@ -1909,7 +1909,7 @@ ecs_entity_t ecs_entity_init(
     }
 
     const char *root_sep = desc->root_sep;
-    bool new_entity = false;
+    bool flecs_new_entity = false;
     bool name_assigned = false;
 
     /* Remove optional prefix from name. Entity names can be derived from 
@@ -1962,7 +1962,7 @@ ecs_entity_t ecs_entity_init(
             } else {
                 result = ecs_new_id(world);
             }
-            new_entity = true;
+            flecs_new_entity = true;
             ecs_assert(ecs_get_type(world, result) == NULL,
                 ECS_INTERNAL_ERROR, NULL);
         }
@@ -2006,10 +2006,10 @@ ecs_entity_t ecs_entity_init(
 
     if (stage->defer) {
         deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
-            scope, with, new_entity, name_assigned);
+            scope, with, flecs_new_entity, name_assigned);
     } else {
         if (traverse_add(world, result, name, desc,
-            scope, with, new_entity, name_assigned)) 
+            scope, with, flecs_new_entity, name_assigned)) 
         {
             return 0;
         }
@@ -2209,7 +2209,7 @@ void ecs_clear(
             .un_set = { table->storage_ids, table->storage_count }
         };
 
-        delete_entity(world, r, &diff);
+        flecs_delete_entity(world, r, &diff);
         r->table = NULL;
     }    
 
@@ -2713,7 +2713,7 @@ void ecs_delete(
                 .un_set = { table->storage_ids, table->storage_count }
             };
 
-            delete_entity(world, r, &diff);
+            flecs_delete_entity(world, r, &diff);
 
             r->row = 0;
             r->table = NULL;
@@ -2793,7 +2793,7 @@ ecs_entity_t ecs_clone(
 
     ecs_type_t src_type = src_table->type;
     ecs_table_diff_t diff = { .added = src_type };
-    ecs_record_t *dst_r = new_entity(world, dst, NULL, src_table, &diff, true, true);
+    ecs_record_t *dst_r = flecs_new_entity(world, dst, NULL, src_table, &diff, true, true);
     int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
 
     if (copy_value) {
@@ -4242,15 +4242,21 @@ void flecs_cmd_batch_for_entity(
         id = cmd->id;
         next_for_entity = cmd->next_for_entity;
         if (next_for_entity < 0) {
+            /* First command for an entity has a negative index, flip sign */
             next_for_entity *= -1;
         }
 
+        /* Check if added id is still valid (like is the parent of a ChildOf 
+         * pair still alive), if not run cleanup actions for entity */
         if (flecs_remove_invalid(world, id, &id)) {
             if (!id) {
+                /* Entity should remain alive but id should not be added */
                 cmd->kind = EcsOpSkip;
                 continue;
             }
+            /* Entity should remain alive and id is still valid */
         } else {
+            /* Id was no longer valid and had a Delete policy) */
             cmd->kind = EcsOpSkip;
             ecs_delete(world, entity);
             flecs_table_diff_builder_clear(diff);
@@ -4312,7 +4318,6 @@ void flecs_cmd_batch_for_entity(
                 ecs_id_record_t *idr = cmd->idr;
                 if (!idr) {
                     idr = flecs_id_record_get(world, cmd->id);
-                    cmd->idr = idr; /* For later use, saves a lookup */
                 }
 
                 if (!flecs_id_record_get_table(idr, table)) {
@@ -4345,12 +4350,11 @@ bool flecs_defer_end(
          * commands to get enqueued (as result of reactive systems). Make sure
          * that the original array is not reallocated, as this would complicate
          * processing the queue. */
-        ecs_vector_t *commands = stage->commands;
-        stage->commands = NULL;
-
-        if (commands) {
-            ecs_cmd_t *cmds = ecs_vector_first(commands, ecs_cmd_t);
-            int32_t i, count = ecs_vector_count(commands);
+        ecs_vec_t commands = stage->commands;
+        if (ecs_vec_count(&commands)) {
+            ecs_cmd_t *cmds = ecs_vec_first(&commands);
+            int32_t i, count = ecs_vec_count(&commands);
+            ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
 
             ecs_stack_t stack = stage->defer_stack;
             flecs_stack_init(&stage->defer_stack);
@@ -4452,12 +4456,12 @@ bool flecs_defer_end(
                 }
             }
 
-            if (stage->commands) {
-                ecs_vector_free(stage->commands);
+            if (ecs_vec_count(&stage->commands)) {
+                ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
             }
 
             /* Restore defer queue */
-            ecs_vector_clear(commands);
+            ecs_vec_clear(&commands);
             stage->commands = commands;
 
             /* Restore stack */
@@ -4484,22 +4488,22 @@ bool flecs_defer_purge(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!--stage->defer) {
-        ecs_vector_t *commands = stage->commands;
-        stage->commands = NULL;
+        ecs_vec_t commands = stage->commands;
+        ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
 
-        if (commands) {
-            ecs_cmd_t *cmds = ecs_vector_first(commands, ecs_cmd_t);
-            int32_t i, count = ecs_vector_count(commands);
+        if (ecs_vec_count(&commands)) {
+            ecs_cmd_t *cmds = ecs_vec_first(&commands);
+            int32_t i, count = ecs_vec_count(&commands);
             for (i = 0; i < count; i ++) {
                 flecs_discard_cmd(world, &cmds[i]);
             }
 
-            if (stage->commands) {
-                ecs_vector_free(stage->commands);
+            if (ecs_vec_count(&stage->commands)) {
+                ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
             }
 
             /* Restore defer queue */
-            ecs_vector_clear(commands);
+            ecs_vec_clear(&commands);
             stage->commands = commands;
             flecs_stack_reset(&stage->defer_stack);
         }

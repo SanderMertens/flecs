@@ -4,7 +4,8 @@ static
 ecs_cmd_t* flecs_cmd_alloc(
     ecs_stage_t *stage)
 {
-    ecs_cmd_t *cmd = ecs_vector_add(&stage->commands, ecs_cmd_t);
+    ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->commands, 
+        ecs_cmd_t);
     ecs_os_zeromem(cmd);
     return cmd;
 }
@@ -17,10 +18,10 @@ ecs_cmd_t* flecs_cmd_new(
     bool can_batch) 
 {
     if (e) {
-        ecs_vector_t *cmds = stage->commands;
+        ecs_vec_t *cmds = &stage->commands;
         ecs_cmd_entry_t *entry = ecs_map_get(
             &stage->cmd_entries, ecs_cmd_entry_t, e);
-        int32_t cur = ecs_vector_count(cmds);
+        int32_t cur = ecs_vec_count(cmds);
         if (entry) {
             int32_t last = entry->last;
             if (entry->last == -1) {
@@ -29,7 +30,7 @@ ecs_cmd_t* flecs_cmd_new(
             }
 
             if (can_batch) {
-                ecs_cmd_t *arr = ecs_vector_first(cmds, ecs_cmd_t);
+                ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
                 ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
                 ecs_cmd_t *last_op = &arr[last];
                 last_op->next_for_entity = cur;
@@ -489,6 +490,7 @@ void flecs_stage_init(
     flecs_stack_init(&stage->allocators.iter_stack);
     flecs_allocator_init(&stage->allocator);
 
+    ecs_vec_init_t(&stage->allocator, &stage->commands, ecs_cmd_t, 0);
     ecs_map_init(&stage->cmd_entries, ecs_cmd_entry_t, &stage->allocator, 0);
 }
 
@@ -501,14 +503,12 @@ void flecs_stage_deinit(
     ecs_poly_assert(stage, ecs_stage_t);
 
     /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vector_count(stage->commands) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&stage->commands) == 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_poly_fini(stage, ecs_stage_t);
 
     ecs_map_fini(&stage->cmd_entries);
-
-    ecs_vector_free(stage->commands);
+    ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
     flecs_stack_fini(&stage->defer_stack);
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_allocator_fini(&stage->allocator);
