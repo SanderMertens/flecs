@@ -99,13 +99,13 @@ void flecs_process_pending_tables(
  * 
  * These operations also suspend deferred mode.
  */
-typedef struct {
+typedef struct ecs_suspend_readonly_state_t {
     bool is_readonly;
     bool is_deferred;
     int32_t defer_count;
     ecs_entity_t scope;
     ecs_entity_t with;
-    ecs_vector_t *commands;
+    ecs_vec_t commands;
     ecs_stack_t defer_stack;
     ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
