@@ -2040,6 +2040,14 @@ void DeferredActions_update_observer_while_deferred(void);
 void DeferredActions_defer_set_large_component(void);
 void DeferredActions_defer_while_suspend_readonly(void);
 void DeferredActions_defer_while_suspend_readonly_w_existing_commands(void);
+void DeferredActions_defer_add_union_relationship(void);
+void DeferredActions_defer_add_existing_union_relationship(void);
+void DeferredActions_defer_add_union_relationship_2_ops(void);
+void DeferredActions_defer_add_existing_union_relationship_2_ops(void);
+void DeferredActions_defer_remove_after_set(void);
+void DeferredActions_defer_remove_after_set_w_observer(void);
+void DeferredActions_defer_override_after_remove(void);
+void DeferredActions_defer_override_after_remove_3_ops(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10049,6 +10057,38 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_while_suspend_readonly_w_existing_commands",
         DeferredActions_defer_while_suspend_readonly_w_existing_commands
+    },
+    {
+        "defer_add_union_relationship",
+        DeferredActions_defer_add_union_relationship
+    },
+    {
+        "defer_add_existing_union_relationship",
+        DeferredActions_defer_add_existing_union_relationship
+    },
+    {
+        "defer_add_union_relationship_2_ops",
+        DeferredActions_defer_add_union_relationship_2_ops
+    },
+    {
+        "defer_add_existing_union_relationship_2_ops",
+        DeferredActions_defer_add_existing_union_relationship_2_ops
+    },
+    {
+        "defer_remove_after_set",
+        DeferredActions_defer_remove_after_set
+    },
+    {
+        "defer_remove_after_set_w_observer",
+        DeferredActions_defer_remove_after_set_w_observer
+    },
+    {
+        "defer_override_after_remove",
+        DeferredActions_defer_override_after_remove
+    },
+    {
+        "defer_override_after_remove_3_ops",
+        DeferredActions_defer_override_after_remove_3_ops
     }
 };
 
@@ -10862,7 +10902,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        72,
+        80,
         DeferredActions_testcases
     },
     {

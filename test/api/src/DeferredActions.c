@@ -2265,3 +2265,183 @@ void DeferredActions_defer_while_suspend_readonly_w_existing_commands() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_add_union_relationship() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_add_existing_union_relationship() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+    ecs_defer_end(world);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_add_union_relationship_2_ops() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    ecs_add(world, e, Tag);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_add_existing_union_relationship_2_ops() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, TgtB);
+    ecs_add(world, e, Tag);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_remove_after_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(!ecs_has(world, e, Position));
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+static int position_observer_invoked = 0;
+
+static
+void PositionObserver(ecs_iter_t *it) {
+    position_observer_invoked ++;
+}
+
+void DeferredActions_defer_remove_after_set_w_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, PositionObserver, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(!ecs_has(world, e, Position));
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    test_int(position_observer_invoked, 0);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_override_after_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_override_after_remove_3_ops() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
