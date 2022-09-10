@@ -2128,7 +2128,15 @@
                 "update_observer_while_deferred",
                 "defer_set_large_component",
                 "defer_while_suspend_readonly",
-                "defer_while_suspend_readonly_w_existing_commands"
+                "defer_while_suspend_readonly_w_existing_commands",
+                "defer_add_union_relationship",
+                "defer_add_existing_union_relationship",
+                "defer_add_union_relationship_2_ops",
+                "defer_add_existing_union_relationship_2_ops",
+                "defer_remove_after_set",
+                "defer_remove_after_set_w_observer",
+                "defer_override_after_remove",
+                "defer_override_after_remove_3_ops"
             ]
         }, {
             "id": "SingleThreadStaging",

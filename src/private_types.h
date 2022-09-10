@@ -377,45 +377,6 @@ typedef struct ecs_event_record_t {
     ecs_map_t event_ids;     /* map<id, ecs_event_id_record_t> */
 } ecs_event_record_t;
 
-/** Types for deferred operations */
-typedef enum ecs_defer_op_kind_t {
-    EcsOpNew,
-    EcsOpClone,
-    EcsOpBulkNew,
-    EcsOpAdd,
-    EcsOpRemove,   
-    EcsOpSet,
-    EcsOpEmplace,
-    EcsOpMut,
-    EcsOpModified,
-    EcsOpDelete,
-    EcsOpClear,
-    EcsOpOnDeleteAction,
-    EcsOpEnable,
-    EcsOpDisable
-} ecs_defer_op_kind_t;
-
-typedef struct ecs_defer_op_1_t {
-    ecs_entity_t entity;        /* Entity id */
-    void *value;                /* Component value (used by set / get_mut) */
-    ecs_size_t size;            /* Size of value */
-    bool clone_value;           /* Clone entity with value (used for clone) */ 
-} ecs_defer_op_1_t;
-
-typedef struct ecs_defer_op_n_t {
-    ecs_entity_t *entities;  
-    int32_t count;
-} ecs_defer_op_n_t;
-
-typedef struct ecs_defer_op_t {
-    ecs_defer_op_kind_t kind;         /* Operation kind */    
-    ecs_id_t id;                /* (Component) id */
-    union {
-        ecs_defer_op_1_t _1;
-        ecs_defer_op_n_t _n;
-    } is;
-} ecs_defer_op_t;
-
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
     ecs_map_params_t ptr;
@@ -438,22 +399,73 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
 } ecs_stage_allocators_t;
 
-/** A stage is a data structure in which delta's are stored until it is safe to
- * merge those delta's with the main world stage. A stage allows flecs systems
- * to arbitrarily add/remove/set components and create/delete entities while
- * iterating. Additionally, worker threads have their own stage that lets them
- * mutate the state of entities without requiring locks. */
+/** Types for deferred operations */
+typedef enum ecs_defer_op_kind_t {
+    EcsOpNew,
+    EcsOpClone,
+    EcsOpBulkNew,
+    EcsOpAdd,
+    EcsOpRemove,   
+    EcsOpSet,
+    EcsOpEmplace,
+    EcsOpMut,
+    EcsOpModified,
+    EcsOpDelete,
+    EcsOpClear,
+    EcsOpOnDeleteAction,
+    EcsOpEnable,
+    EcsOpDisable,
+    EcsOpSkip
+} ecs_defer_op_kind_t;
+
+typedef struct ecs_defer_op_1_t {
+    void *value;                /* Component value (used by set / get_mut) */
+    ecs_size_t size;            /* Size of value */
+    bool clone_value;           /* Clone entity with value (used for clone) */ 
+} ecs_defer_op_1_t;
+
+typedef struct ecs_defer_op_n_t {
+    ecs_entity_t *entities;  
+    int32_t count;
+} ecs_defer_op_n_t;
+
+typedef struct ecs_defer_op_t {
+    ecs_defer_op_kind_t kind;   /* Operation kind */
+    int32_t next_for_entity;    /* Next operation for entity */    
+    ecs_id_t id;                /* (Component) id */
+    ecs_id_record_t *idr;       /* Id record (only for set/mut/emplace) */
+    ecs_entity_t entity;        /* Entity id */
+
+    union {
+        ecs_defer_op_1_t _1;    /* Data for single entity operation */
+        ecs_defer_op_n_t _n;    /* Data for multi entity operation */
+    } is;
+} ecs_defer_op_t;
+
+/* Entity specific metadata for op in defer queue */
+typedef struct ecs_op_entry_t {
+    int32_t first;
+    int32_t last; /* If -1, a delete op was inserted */
+} ecs_op_entry_t;
+
+/** A stage is a context that allows for safely using the API from multiple 
+ * threads. Stage pointers can be passed to the world argument of API 
+ * operations, which causes the operation to be ran on the stage instead of the
+ * world. */
 struct ecs_stage_t {
     ecs_header_t hdr;
 
-    int32_t id;                  /* Unique id that identifies the stage */
+    /* Unique id that identifies the stage */
+    int32_t id;
 
     /* Deferred command queue */
     int32_t defer;
     ecs_vector_t *defer_queue;
-    ecs_stack_t defer_stack; /* Temp memory used by deferred commands */
-    bool defer_suspend;
+    ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
+    ecs_map_t op_entries;       /* <entity, op_entry_t> - command combining */
+    bool defer_suspend;         /* Suspend deferring without flushing */
 
+    /* Thread context */
     ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
     ecs_world_t *world;          /* Reference to world */
     ecs_os_thread_t thread;      /* Thread handle (0 if no threading is used) */
@@ -471,8 +483,9 @@ struct ecs_stage_t {
     bool auto_merge;             /* Should this stage automatically merge? */
     bool async;                  /* Is stage asynchronous? (write only) */
 
-    /* Allocators */
+    /* Thread specific allocators */
     ecs_stage_allocators_t allocators;
+    ecs_allocator_t allocator;
 };
 
 /* Component monitor */

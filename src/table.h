@@ -212,6 +212,9 @@ void flecs_table_diff_builder_fini(
     ecs_world_t *world,
     ecs_table_diff_builder_t *builder);
 
+void flecs_table_diff_builder_clear(
+    ecs_table_diff_builder_t *builder);
+
 void flecs_table_diff_build_append_table(
     ecs_world_t *world,
     ecs_table_diff_builder_t *dst,

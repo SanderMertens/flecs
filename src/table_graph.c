@@ -302,6 +302,15 @@ void flecs_table_diff_builder_fini(
     ecs_vec_fini_t(a, &builder->un_set, ecs_id_t);
 }
 
+void flecs_table_diff_builder_clear(
+    ecs_table_diff_builder_t *builder)
+{
+    ecs_vec_clear(&builder->added);
+    ecs_vec_clear(&builder->removed);
+    ecs_vec_clear(&builder->on_set);
+    ecs_vec_clear(&builder->un_set);
+}
+
 static
 void flecs_table_diff_build_type(
     ecs_world_t *world,
@@ -772,15 +781,20 @@ void flecs_compute_table_diff(
     ecs_graph_edge_t *edge,
     ecs_id_t id)
 {
-    if (node == next) {
-        return;
-    }
-
     if (ECS_IS_PAIR(id)) {
         ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
         if (idr->flags & EcsIdUnion) {
-            id = ecs_pair(EcsUnion, ECS_PAIR_FIRST(id));
+            if (node != next) {
+                id = ecs_pair(EcsUnion, ECS_PAIR_FIRST(id));
+            } else {
+                ecs_table_diff_t *diff = flecs_bcalloc(
+                    &world->allocators.table_diff);
+                diff->added.count = 1;
+                diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+                edge->diff = diff;
+                return;
+            }
         }
     }
 
@@ -1071,7 +1085,7 @@ void flecs_init_edge_for_add(
 
     flecs_table_ensure_hi_edge(world, &table->node.add, id);
 
-    if (table != to) {
+    if (table != to || table->flags & EcsTableHasUnion) {
         /* Add edges are appended to refs.next */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *next = to_refs->next;
@@ -1125,9 +1139,7 @@ ecs_table_t* flecs_create_edge_for_remove(
     ecs_id_t id)
 {
     ecs_table_t *to = flecs_find_table_without(world, node, id);
-    
     flecs_init_edge_for_remove(world, node, edge, id, to);
-
     return to;   
 }
 
@@ -1139,14 +1151,12 @@ ecs_table_t* flecs_create_edge_for_add(
     ecs_id_t id)
 {
     ecs_table_t *to = flecs_find_table_with(world, node, id);
-
     flecs_init_edge_for_add(world, node, edge, id, to);
-
     return to;
 }
 
 static
-void populate_diff( 
+void flecs_table_populate_diff( 
     ecs_graph_edge_t *edge,
     ecs_id_t *add_ptr,
     ecs_id_t *remove_ptr,
@@ -1208,7 +1218,9 @@ ecs_table_t* flecs_table_traverse_remove(
         ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    populate_diff(edge, NULL, id_ptr, diff);
+    if (node != to) {
+        flecs_table_populate_diff(edge, NULL, id_ptr, diff);
+    }
 
     return to;
 error:
@@ -1239,7 +1251,9 @@ ecs_table_t* flecs_table_traverse_add(
         ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    populate_diff(edge, id_ptr, NULL, diff);
+    if (node != to || edge->diff) {
+        flecs_table_populate_diff(edge, id_ptr, NULL, diff);
+    }
 
     return to;
 error:
