@@ -113,6 +113,8 @@ struct ecs_data_t {
 };
 
 /** Cache of added/removed components for non-trivial edges between tables */
+#define ECS_TABLE_DIFF_INIT { .added = {0}}
+
 typedef struct ecs_table_diff_t {
     ecs_type_t added;         /* Components added between tables */
     ecs_type_t removed;       /* Components removed between tables */
@@ -400,7 +402,7 @@ typedef struct ecs_stage_allocators_t {
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */
-typedef enum ecs_defer_op_kind_t {
+typedef enum ecs_cmd_kind_t {
     EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,
@@ -416,37 +418,37 @@ typedef enum ecs_defer_op_kind_t {
     EcsOpEnable,
     EcsOpDisable,
     EcsOpSkip
-} ecs_defer_op_kind_t;
+} ecs_cmd_kind_t;
 
-typedef struct ecs_defer_op_1_t {
+typedef struct ecs_cmd_1_t {
     void *value;                /* Component value (used by set / get_mut) */
     ecs_size_t size;            /* Size of value */
     bool clone_value;           /* Clone entity with value (used for clone) */ 
-} ecs_defer_op_1_t;
+} ecs_cmd_1_t;
 
-typedef struct ecs_defer_op_n_t {
+typedef struct ecs_cmd_n_t {
     ecs_entity_t *entities;  
     int32_t count;
-} ecs_defer_op_n_t;
+} ecs_cmd_n_t;
 
-typedef struct ecs_defer_op_t {
-    ecs_defer_op_kind_t kind;   /* Operation kind */
+typedef struct ecs_cmd_t {
+    ecs_cmd_kind_t kind;   /* Command kind */
     int32_t next_for_entity;    /* Next operation for entity */    
     ecs_id_t id;                /* (Component) id */
     ecs_id_record_t *idr;       /* Id record (only for set/mut/emplace) */
     ecs_entity_t entity;        /* Entity id */
 
     union {
-        ecs_defer_op_1_t _1;    /* Data for single entity operation */
-        ecs_defer_op_n_t _n;    /* Data for multi entity operation */
+        ecs_cmd_1_t _1;    /* Data for single entity operation */
+        ecs_cmd_n_t _n;    /* Data for multi entity operation */
     } is;
-} ecs_defer_op_t;
+} ecs_cmd_t;
 
-/* Entity specific metadata for op in defer queue */
-typedef struct ecs_op_entry_t {
+/* Entity specific metadata for command in defer queue */
+typedef struct ecs_cmd_entry_t {
     int32_t first;
-    int32_t last; /* If -1, a delete op was inserted */
-} ecs_op_entry_t;
+    int32_t last; /* If -1, a delete command was inserted */
+} ecs_cmd_entry_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
@@ -460,9 +462,9 @@ struct ecs_stage_t {
 
     /* Deferred command queue */
     int32_t defer;
-    ecs_vector_t *defer_queue;
+    ecs_vector_t *commands;
     ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
-    ecs_map_t op_entries;       /* <entity, op_entry_t> - command combining */
+    ecs_map_t cmd_entries;       /* <entity, op_entry_t> - command combining */
     bool defer_suspend;         /* Suspend deferring without flushing */
 
     /* Thread context */

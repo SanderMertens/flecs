@@ -443,6 +443,8 @@ struct ecs_data_t {
 };
 
 /** Cache of added/removed components for non-trivial edges between tables */
+#define ECS_TABLE_DIFF_INIT { .added = {0}}
+
 typedef struct ecs_table_diff_t {
     ecs_type_t added;         /* Components added between tables */
     ecs_type_t removed;       /* Components removed between tables */
@@ -730,7 +732,7 @@ typedef struct ecs_stage_allocators_t {
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */
-typedef enum ecs_defer_op_kind_t {
+typedef enum ecs_cmd_kind_t {
     EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,
@@ -746,37 +748,37 @@ typedef enum ecs_defer_op_kind_t {
     EcsOpEnable,
     EcsOpDisable,
     EcsOpSkip
-} ecs_defer_op_kind_t;
+} ecs_cmd_kind_t;
 
-typedef struct ecs_defer_op_1_t {
+typedef struct ecs_cmd_1_t {
     void *value;                /* Component value (used by set / get_mut) */
     ecs_size_t size;            /* Size of value */
     bool clone_value;           /* Clone entity with value (used for clone) */ 
-} ecs_defer_op_1_t;
+} ecs_cmd_1_t;
 
-typedef struct ecs_defer_op_n_t {
+typedef struct ecs_cmd_n_t {
     ecs_entity_t *entities;  
     int32_t count;
-} ecs_defer_op_n_t;
+} ecs_cmd_n_t;
 
-typedef struct ecs_defer_op_t {
-    ecs_defer_op_kind_t kind;   /* Operation kind */
+typedef struct ecs_cmd_t {
+    ecs_cmd_kind_t kind;   /* Command kind */
     int32_t next_for_entity;    /* Next operation for entity */    
     ecs_id_t id;                /* (Component) id */
     ecs_id_record_t *idr;       /* Id record (only for set/mut/emplace) */
     ecs_entity_t entity;        /* Entity id */
 
     union {
-        ecs_defer_op_1_t _1;    /* Data for single entity operation */
-        ecs_defer_op_n_t _n;    /* Data for multi entity operation */
+        ecs_cmd_1_t _1;    /* Data for single entity operation */
+        ecs_cmd_n_t _n;    /* Data for multi entity operation */
     } is;
-} ecs_defer_op_t;
+} ecs_cmd_t;
 
-/* Entity specific metadata for op in defer queue */
-typedef struct ecs_op_entry_t {
+/* Entity specific metadata for command in defer queue */
+typedef struct ecs_cmd_entry_t {
     int32_t first;
-    int32_t last; /* If -1, a delete op was inserted */
-} ecs_op_entry_t;
+    int32_t last; /* If -1, a delete command was inserted */
+} ecs_cmd_entry_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
@@ -790,9 +792,9 @@ struct ecs_stage_t {
 
     /* Deferred command queue */
     int32_t defer;
-    ecs_vector_t *defer_queue;
+    ecs_vector_t *commands;
     ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
-    ecs_map_t op_entries;       /* <entity, op_entry_t> - command combining */
+    ecs_map_t cmd_entries;       /* <entity, op_entry_t> - command combining */
     bool defer_suspend;         /* Suspend deferring without flushing */
 
     /* Thread context */
@@ -1635,7 +1637,7 @@ bool flecs_defer_remove(
 bool flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_defer_op_kind_t op_kind,
+    ecs_cmd_kind_t op_kind,
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
@@ -1760,7 +1762,7 @@ typedef struct {
     int32_t defer_count;
     ecs_entity_t scope;
     ecs_entity_t with;
-    ecs_vector_t *defer_queue;
+    ecs_vector_t *commands;
     ecs_stack_t defer_stack;
     ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
@@ -5377,7 +5379,7 @@ ecs_table_t* flecs_find_table_add(
     ecs_id_t id,
     ecs_table_diff_builder_t *diff)
 {
-    ecs_table_diff_t temp_diff = {0};
+    ecs_table_diff_t temp_diff = ECS_TABLE_DIFF_INIT;
     table = flecs_table_traverse_add(world, table, &id, &temp_diff);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_table_diff_build_append_table(world, diff, &temp_diff);
@@ -5393,7 +5395,7 @@ ecs_table_t* flecs_find_table_remove(
     ecs_id_t id,
     ecs_table_diff_builder_t *diff)
 {
-    ecs_table_diff_t temp_diff = {0};
+    ecs_table_diff_t temp_diff = ECS_TABLE_DIFF_INIT;
     table = flecs_table_traverse_remove(world, table, &id, &temp_diff);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_table_diff_build_append_table(world, diff, &temp_diff);
@@ -5510,7 +5512,7 @@ void flecs_instantiate_children(
 
     for (i = row; i < count + row; i ++) {
         ecs_entity_t instance = instances[i];
-        ecs_table_diff_builder_t diff = {0};
+        ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
         flecs_table_diff_builder_init(world, &diff);
         ecs_table_t *i_table = NULL;
  
@@ -6091,7 +6093,7 @@ void new(
     int32_t i, count = to_add->count;
     ecs_table_t *table = &world->store.root;
     
-    ecs_table_diff_builder_t diff = {0};
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
     for (i = 0; i < count; i ++) {
         table = flecs_find_table_add(
@@ -6221,7 +6223,7 @@ void add_id_w_record(
     ecs_id_t id,
     bool construct)
 {
-    ecs_table_diff_t diff = {0};
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
 
     ecs_table_t *src_table = NULL;
     if (record) {
@@ -6249,7 +6251,7 @@ void add_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    ecs_table_diff_t diff = {0};
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *src_table = r->table;
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
@@ -6277,7 +6279,7 @@ void remove_id(
         goto done; /* Nothing to remove */
     }
 
-    ecs_table_diff_t diff = {0};
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, &id, &diff);
 
@@ -6515,7 +6517,7 @@ bool ecs_commit(
         src_table = record->table;
     }
 
-    ecs_table_diff_t diff = {0};
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
 
     if (added) {
         diff.added = *added;
@@ -6802,7 +6804,7 @@ int traverse_add(
 {
     const char *sep = desc->sep;
     const char *root_sep = desc->root_sep;
-    ecs_table_diff_builder_t diff = {0};
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
 
     /* Find existing table */
@@ -7152,7 +7154,7 @@ const ecs_entity_t* ecs_bulk_init(
 
     ecs_type_t ids;
     ecs_table_t *table = desc->table;
-    ecs_table_diff_builder_t diff = {0};
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
     if (!table) {
         int32_t i = 0;
@@ -7270,7 +7272,7 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     }
 
     ecs_table_t *table = &world->store.root;
-    ecs_table_diff_builder_t diff = {0};
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
     
     if (id) {
@@ -7558,7 +7560,7 @@ void flecs_remove_from_table(
     ecs_table_t *table) 
 {
     ecs_table_diff_t temp_diff;
-    ecs_table_diff_builder_t diff = {0};
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
     ecs_table_t *dst_table = table; 
 
@@ -9210,14 +9212,14 @@ char* ecs_entity_str(
 static
 void flecs_flush_bulk_new(
     ecs_world_t *world,
-    ecs_defer_op_t *op)
+    ecs_cmd_t *cmd)
 {
-    ecs_entity_t *entities = op->is._n.entities;
+    ecs_entity_t *entities = cmd->is._n.entities;
 
-    if (op->id) {
-        int i, count = op->is._n.count;
+    if (cmd->id) {
+        int i, count = cmd->is._n.count;
         for (i = 0; i < count; i ++) {
-            add_id(world, entities[i], op->id);
+            add_id(world, entities[i], cmd->id);
         }
     }
 
@@ -9245,18 +9247,18 @@ void flecs_dtor_value(
 }
 
 static
-void flecs_discard_op(
+void flecs_discard_cmd(
     ecs_world_t *world,
-    ecs_defer_op_t *op)
+    ecs_cmd_t *cmd)
 {
-    if (op->kind != EcsOpBulkNew) {
-        void *value = op->is._1.value;
+    if (cmd->kind != EcsOpBulkNew) {
+        void *value = cmd->is._1.value;
         if (value) {
-            flecs_dtor_value(world, op->id, value, 1);
-            flecs_stack_free(value, op->is._1.size);
+            flecs_dtor_value(world, cmd->id, value, 1);
+            flecs_stack_free(value, cmd->is._1.size);
         }
     } else {
-        ecs_os_free(op->is._n.entities);
+        ecs_os_free(cmd->is._n.entities);
     }
 }
 
@@ -9324,11 +9326,11 @@ bool flecs_remove_invalid(
 }
 
 static
-void flecs_defer_end_for_entity(
+void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
     ecs_entity_t entity,
-    ecs_defer_op_t *ops,
+    ecs_cmd_t *cmds,
     int32_t start)
 {
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -9337,7 +9339,7 @@ void flecs_defer_end_for_entity(
         table = r->table;
     }
 
-    ecs_defer_op_t *op;
+    ecs_cmd_t *cmd;
     int32_t next_for_entity;
     ecs_table_diff_t table_diff; /* Keep track of diff for observers/hooks */
     int32_t cur = start;
@@ -9345,26 +9347,26 @@ void flecs_defer_end_for_entity(
     bool has_set = false;
 
     do {
-        op = &ops[cur];
-        id = op->id;
-        next_for_entity = op->next_for_entity;
+        cmd = &cmds[cur];
+        id = cmd->id;
+        next_for_entity = cmd->next_for_entity;
         if (next_for_entity < 0) {
             next_for_entity *= -1;
         }
 
         if (flecs_remove_invalid(world, id, &id)) {
             if (!id) {
-                op->kind = EcsOpSkip;
+                cmd->kind = EcsOpSkip;
                 continue;
             }
         } else {
-            op->kind = EcsOpSkip;
+            cmd->kind = EcsOpSkip;
             ecs_delete(world, entity);
             flecs_table_diff_builder_clear(diff);
             return;
         }
 
-        ecs_defer_op_kind_t kind = op->kind;
+        ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
         case EcsOpNew:
         case EcsOpAdd:
@@ -9392,7 +9394,7 @@ void flecs_defer_end_for_entity(
         /* Add, remove and clear operations can be skipped since they have no
          * side effects besides adding/removing components */
         if (kind == EcsOpAdd || kind == EcsOpRemove || kind == EcsOpClear) {
-            op->kind = EcsOpSkip;
+            cmd->kind = EcsOpSkip;
         }
     } while ((cur = next_for_entity));
 
@@ -9407,24 +9409,24 @@ void flecs_defer_end_for_entity(
     if (has_set && table_diff.removed.count) {
         cur = start;
         do {
-            op = &ops[cur];
-            next_for_entity = op->next_for_entity;
+            cmd = &cmds[cur];
+            next_for_entity = cmd->next_for_entity;
             if (next_for_entity < 0) {
                 next_for_entity *= -1;
             }
-            switch(op->kind) {
+            switch(cmd->kind) {
             case EcsOpSet:
             case EcsOpMut:
             case EcsOpEmplace: {
-                ecs_id_record_t *idr = op->idr;
+                ecs_id_record_t *idr = cmd->idr;
                 if (!idr) {
-                    idr = flecs_id_record_get(world, op->id);
-                    op->idr = idr; /* For later use, saves a lookup */
+                    idr = flecs_id_record_get(world, cmd->id);
+                    cmd->idr = idr; /* For later use, saves a lookup */
                 }
 
                 if (!flecs_id_record_get_table(idr, table)) {
                     /* Component was deleted */
-                    op->kind = EcsOpSkip;
+                    cmd->kind = EcsOpSkip;
                 }
                 break;
             }
@@ -9452,44 +9454,44 @@ bool flecs_defer_end(
          * commands to get enqueued (as result of reactive systems). Make sure
          * that the original array is not reallocated, as this would complicate
          * processing the queue. */
-        ecs_vector_t *defer_queue = stage->defer_queue;
-        stage->defer_queue = NULL;
+        ecs_vector_t *commands = stage->commands;
+        stage->commands = NULL;
 
-        if (defer_queue) {
-            ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
-            int32_t i, count = ecs_vector_count(defer_queue);
+        if (commands) {
+            ecs_cmd_t *cmds = ecs_vector_first(commands, ecs_cmd_t);
+            int32_t i, count = ecs_vector_count(commands);
 
             ecs_stack_t stack = stage->defer_stack;
             flecs_stack_init(&stage->defer_stack);
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-            ecs_map_clear(&stage->op_entries);
+            ecs_map_clear(&stage->cmd_entries);
 
             for (i = 0; i < count; i ++) {
-                ecs_defer_op_t *op = &ops[i];
-                ecs_entity_t e = op->entity;
+                ecs_cmd_t *cmd = &cmds[i];
+                ecs_entity_t e = cmd->entity;
 
                 /* A negative index indicates the first command for an entity */
-                if (op->next_for_entity < 0) {
+                if (cmd->next_for_entity < 0) {
                     /* Batch commands for entity to limit archetype moves */   
-                    flecs_defer_end_for_entity(world, &diff, e, ops, i);
+                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
                 }
 
                 /* If entity is no longer alive, this could be because the queue
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
-                ecs_defer_op_kind_t kind = op->kind;
+                ecs_cmd_kind_t kind = cmd->kind;
                 if ((kind == EcsOpSkip) || 
                     (e && !ecs_is_alive(world, e) && 
                         flecs_entities_exists(world, e))) 
                 {
                     world->info.discard_count ++;
-                    flecs_discard_op(world, op);
+                    flecs_discard_cmd(world, cmd);
                     continue;
                 }
 
-                ecs_id_t id = op->id;
+                ecs_id_t id = cmd->id;
 
                 switch(kind) {
                 case EcsOpNew:
@@ -9508,23 +9510,23 @@ bool flecs_defer_end(
                     remove_id(world, e, id);
                     break;
                 case EcsOpClone:
-                    ecs_clone(world, e, id, op->is._1.clone_value);
+                    ecs_clone(world, e, id, cmd->is._1.clone_value);
                     break;
                 case EcsOpSet:
                     flecs_move_ptr_w_id(world, stage, e, 
-                        op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, false, true);
+                        cmd->id, flecs_itosize(cmd->is._1.size), 
+                        cmd->is._1.value, false, true);
                     break;
                 case EcsOpEmplace:
                     ecs_emplace_id(world, e, id);
                     flecs_move_ptr_w_id(world, stage, e, 
-                        op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, true, false);
+                        cmd->id, flecs_itosize(cmd->is._1.size), 
+                        cmd->is._1.value, true, false);
                     break;
                 case EcsOpMut:
                     flecs_move_ptr_w_id(world, stage, e, 
-                        op->id, flecs_itosize(op->is._1.size), 
-                        op->is._1.value, false, false);
+                        cmd->id, flecs_itosize(cmd->is._1.size), 
+                        cmd->is._1.value, false, false);
                     break;
                 case EcsOpModified:
                     if (ecs_has_id(world, e, id)) {
@@ -9548,24 +9550,24 @@ bool flecs_defer_end(
                     ecs_enable_id(world, e, id, false);
                     break;
                 case EcsOpBulkNew:
-                    flecs_flush_bulk_new(world, op);
+                    flecs_flush_bulk_new(world, cmd);
                     continue;
                 case EcsOpSkip:
                     break;
                 }
 
-                if (op->is._1.value) {
-                    flecs_stack_free(op->is._1.value, op->is._1.size);
+                if (cmd->is._1.value) {
+                    flecs_stack_free(cmd->is._1.value, cmd->is._1.size);
                 }
             }
 
-            if (stage->defer_queue) {
-                ecs_vector_free(stage->defer_queue);
+            if (stage->commands) {
+                ecs_vector_free(stage->commands);
             }
 
             /* Restore defer queue */
-            ecs_vector_clear(defer_queue);
-            stage->defer_queue = defer_queue;
+            ecs_vector_clear(commands);
+            stage->commands = commands;
 
             /* Restore stack */
             flecs_stack_fini(&stage->defer_stack);
@@ -9591,27 +9593,27 @@ bool flecs_defer_purge(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!--stage->defer) {
-        ecs_vector_t *defer_queue = stage->defer_queue;
-        stage->defer_queue = NULL;
+        ecs_vector_t *commands = stage->commands;
+        stage->commands = NULL;
 
-        if (defer_queue) {
-            ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
-            int32_t i, count = ecs_vector_count(defer_queue);
+        if (commands) {
+            ecs_cmd_t *cmds = ecs_vector_first(commands, ecs_cmd_t);
+            int32_t i, count = ecs_vector_count(commands);
             for (i = 0; i < count; i ++) {
-                flecs_discard_op(world, &ops[i]);
+                flecs_discard_cmd(world, &cmds[i]);
             }
 
-            if (stage->defer_queue) {
-                ecs_vector_free(stage->defer_queue);
+            if (stage->commands) {
+                ecs_vector_free(stage->commands);
             }
 
             /* Restore defer queue */
-            ecs_vector_clear(defer_queue);
-            stage->defer_queue = defer_queue;
+            ecs_vector_clear(commands);
+            stage->commands = commands;
             flecs_stack_reset(&stage->defer_stack);
         }
 
-        ecs_map_clear(&stage->op_entries);
+        ecs_map_clear(&stage->cmd_entries);
 
         return true;
     }
@@ -9622,25 +9624,26 @@ error:
 
 
 static
-ecs_defer_op_t* flecs_defer_op_alloc(
+ecs_cmd_t* flecs_cmd_alloc(
     ecs_stage_t *stage)
 {
-    ecs_defer_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_defer_op_t);
-    ecs_os_zeromem(op);
-    return op;
+    ecs_cmd_t *cmd = ecs_vector_add(&stage->commands, ecs_cmd_t);
+    ecs_os_zeromem(cmd);
+    return cmd;
 }
 
 static
-ecs_defer_op_t* flecs_defer_op_new(
+ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage, 
     ecs_entity_t e, 
     bool is_delete,
     bool can_batch) 
 {
     if (e) {
-        ecs_vector_t *ops = stage->defer_queue;
-        ecs_op_entry_t *entry = ecs_map_get(&stage->op_entries, ecs_op_entry_t, e);
-        int32_t cur = ecs_vector_count(ops);
+        ecs_vector_t *cmds = stage->commands;
+        ecs_cmd_entry_t *entry = ecs_map_get(
+            &stage->cmd_entries, ecs_cmd_entry_t, e);
+        int32_t cur = ecs_vector_count(cmds);
         if (entry) {
             int32_t last = entry->last;
             if (entry->last == -1) {
@@ -9649,9 +9652,9 @@ ecs_defer_op_t* flecs_defer_op_new(
             }
 
             if (can_batch) {
-                ecs_defer_op_t *arr = ecs_vector_first(ops, ecs_defer_op_t);
+                ecs_cmd_t *arr = ecs_vector_first(cmds, ecs_cmd_t);
                 ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
-                ecs_defer_op_t *last_op = &arr[last];
+                ecs_cmd_t *last_op = &arr[last];
                 last_op->next_for_entity = cur;
                 if (last == entry->first) {
                     /* Flip sign bit so flush logic can tell which command
@@ -9660,7 +9663,7 @@ ecs_defer_op_t* flecs_defer_op_new(
                 }
             }
         } else {
-            entry = ecs_map_ensure(&stage->op_entries, ecs_op_entry_t, e);
+            entry = ecs_map_ensure(&stage->cmd_entries, ecs_cmd_entry_t, e);
             entry->first = cur;
         }
         if (can_batch) {
@@ -9672,7 +9675,7 @@ ecs_defer_op_t* flecs_defer_op_new(
         }
     }
 
-    return flecs_defer_op_alloc(stage);
+    return flecs_cmd_alloc(stage);
 }
 
 static
@@ -9753,7 +9756,7 @@ bool flecs_defer_begin(
 }
 
 static
-bool flecs_defer_op(
+bool flecs_defer_cmd(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -9776,26 +9779,26 @@ static
 bool flecs_defer_add_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_defer_op_kind_t op_kind,
+    ecs_cmd_kind_t cmd_kind,
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    if (flecs_defer_op(world, stage)) {
+    if (flecs_defer_cmd(world, stage)) {
         if (!id) {
             return true;
         }
 
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, true);
-        if (op) {
-            op->kind = op_kind;
-            op->id = id;
-            op->entity = entity;
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = cmd_kind;
+            cmd->id = id;
+            cmd->entity = entity;
 
-            if (op_kind == EcsOpNew) {
+            if (cmd_kind == EcsOpNew) {
                 world->info.new_count ++;
-            } else if (op_kind == EcsOpAdd) {
+            } else if (cmd_kind == EcsOpAdd) {
                 world->info.add_count ++;
-            } else if (op_kind == EcsOpRemove) {
+            } else if (cmd_kind == EcsOpRemove) {
                 world->info.remove_count ++;
             }
         }
@@ -9811,12 +9814,12 @@ bool flecs_defer_modified(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, false);
-        if (op) {
-            op->kind = EcsOpModified;
-            op->id = id;
-            op->entity = entity;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
+        if (cmd) {
+            cmd->kind = EcsOpModified;
+            cmd->id = id;
+            cmd->entity = entity;
         }
         return true;
     }
@@ -9830,13 +9833,13 @@ bool flecs_defer_clone(
     ecs_entity_t src,
     bool clone_value)
 {   
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, false);
-        if (op) {
-            op->kind = EcsOpClone;
-            op->id = src;
-            op->entity = entity;
-            op->is._1.clone_value = clone_value;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
+        if (cmd) {
+            cmd->kind = EcsOpClone;
+            cmd->id = src;
+            cmd->entity = entity;
+            cmd->is._1.clone_value = clone_value;
         }
         return true;
     }
@@ -9848,11 +9851,11 @@ bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, true, false);
-        if (op) {
-            op->kind = EcsOpDelete;
-            op->entity = entity;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, true, false);
+        if (cmd) {
+            cmd->kind = EcsOpDelete;
+            cmd->entity = entity;
             world->info.delete_count ++;
         }
         return true;
@@ -9865,11 +9868,11 @@ bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, true);
-        if (op) {
-            op->kind = EcsOpClear;
-            op->entity = entity;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpClear;
+            cmd->entity = entity;
             world->info.clear_count ++;
         }
         return true;
@@ -9883,11 +9886,11 @@ bool flecs_defer_on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_alloc(stage);
-        op->kind = EcsOpOnDeleteAction;
-        op->id = id;
-        op->entity = action;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
+        cmd->kind = EcsOpOnDeleteAction;
+        cmd->id = id;
+        cmd->entity = action;
         world->info.clear_count ++;
         return true;
     }
@@ -9901,12 +9904,12 @@ bool flecs_defer_enable(
     ecs_id_t id,
     bool enable)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, false);
-        if (op) {
-            op->kind = enable ? EcsOpEnable : EcsOpDisable;
-            op->entity = entity;
-            op->id = id;
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
+        if (cmd) {
+            cmd->kind = enable ? EcsOpEnable : EcsOpDisable;
+            cmd->entity = entity;
+            cmd->id = id;
         }
         return true;
     }
@@ -9920,7 +9923,7 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out)
 {
-    if (flecs_defer_op(world, stage)) {
+    if (flecs_defer_cmd(world, stage)) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
         world->info.bulk_new_count ++;
 
@@ -9933,12 +9936,12 @@ bool flecs_defer_bulk_new(
         *ids_out = ids;
 
         /* Store data in op */
-        ecs_defer_op_t *op = flecs_defer_op_alloc(stage);
-        if (op) {
-            op->kind = EcsOpBulkNew;
-            op->id = id;
-            op->is._n.entities = ids;
-            op->is._n.count = count;
+        ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
+        if (cmd) {
+            cmd->kind = EcsOpBulkNew;
+            cmd->id = id;
+            cmd->is._n.entities = ids;
+            cmd->is._n.count = count;
         }
 
         return true;
@@ -9976,7 +9979,7 @@ bool flecs_defer_remove(
 bool flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_defer_op_kind_t op_kind,
+    ecs_cmd_kind_t cmd_kind,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
@@ -9984,13 +9987,13 @@ bool flecs_defer_set(
     void **value_out,
     bool emplace)
 {
-    if (flecs_defer_op(world, stage)) {
-        ecs_defer_op_t *op = flecs_defer_op_new(stage, entity, false, true);
-        if (!op) {
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (!cmd) {
             if (value_out) {
                 /* Entity is deleted by a previous command, but we still need to 
                  * return a temporary storage to the application. */
-                op_kind = EcsOpSkip;
+                cmd_kind = EcsOpSkip;
             } else {
                 /* No value needs to be returned, we can drop the command */
                 return true;
@@ -10053,7 +10056,7 @@ bool flecs_defer_set(
             *value_out = op_value;
         }
 
-        if (!op) {
+        if (!cmd) {
             /* If op is NULL, entity was already deleted. Check if we need to
              * insert an operation into the queue */
             if (!ti->hooks.dtor) {
@@ -10063,15 +10066,15 @@ bool flecs_defer_set(
                  * already deleted. */
                 return true;
             }
-            op = flecs_defer_op_alloc(stage);
+            cmd = flecs_cmd_alloc(stage);
         }
 
-        op->kind = op_kind;
-        op->id = id;
-        op->idr = idr;
-        op->entity = entity;
-        op->is._1.size = size;
-        op->is._1.value = op_value;
+        cmd->kind = cmd_kind;
+        cmd->id = id;
+        cmd->idr = idr;
+        cmd->entity = entity;
+        cmd->is._1.size = size;
+        cmd->is._1.value = op_value;
     
         world->info.set_count ++;
         return true;
@@ -10109,7 +10112,7 @@ void flecs_stage_init(
     flecs_stack_init(&stage->allocators.iter_stack);
     flecs_allocator_init(&stage->allocator);
 
-    ecs_map_init(&stage->op_entries, ecs_op_entry_t, &stage->allocator, 0);
+    ecs_map_init(&stage->cmd_entries, ecs_cmd_entry_t, &stage->allocator, 0);
 }
 
 void flecs_stage_deinit(
@@ -10121,14 +10124,14 @@ void flecs_stage_deinit(
     ecs_poly_assert(stage, ecs_stage_t);
 
     /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
+    ecs_assert(ecs_vector_count(stage->commands) == 0, 
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_poly_fini(stage, ecs_stage_t);
 
-    ecs_map_fini(&stage->op_entries);
+    ecs_map_fini(&stage->cmd_entries);
 
-    ecs_vector_free(stage->defer_queue);
+    ecs_vector_free(stage->commands);
     flecs_stack_fini(&stage->defer_stack);
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_allocator_fini(&stage->allocator);
@@ -36655,13 +36658,13 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_world_t *temp_world = world;
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
-    state->defer_queue = stage->defer_queue;
+    state->commands = stage->commands;
     state->defer_stack = stage->defer_stack;
     flecs_stack_init(&stage->defer_stack);
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
-    stage->defer_queue = NULL;
+    stage->commands = NULL;
     
     return world;
 }
@@ -36684,12 +36687,12 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
-        if (stage->defer_queue) {
-            ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
+        if (stage->commands) {
+            ecs_assert(ecs_vector_count(stage->commands) == 0, 
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_vector_free(stage->defer_queue);
+            ecs_vector_free(stage->commands);
         }
-        stage->defer_queue = state->defer_queue;
+        stage->commands = state->commands;
         flecs_stack_fini(&stage->defer_stack);
         stage->defer_stack = state->defer_stack;
         stage->scope = state->scope;
