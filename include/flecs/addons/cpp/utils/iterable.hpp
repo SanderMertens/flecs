@@ -23,7 +23,24 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(FLECS_FWD(func), 
+        each(nullptr, FLECS_FWD(func));
+    }
+
+    template <typename Func>
+    void each(flecs::world_t *world, Func&& func) const {
+        iterate<_::each_invoker>(world, FLECS_FWD(func), 
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    void each(flecs::iter& it, Func&& func) const {
+        iterate<_::each_invoker>(it.world(), FLECS_FWD(func),
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    void each(flecs::entity e, Func&& func) const {
+        iterate<_::each_invoker>(e.world(), FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -40,13 +57,31 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(FLECS_FWD(func), this->next_action());
+        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), this->next_action());
+    }
+
+    template <typename Func>
+    void iter(flecs::world_t *world, Func&& func) const {
+        iterate<_::iter_invoker>(world, FLECS_FWD(func), 
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    void iter(flecs::iter& it, Func&& func) const {
+        iterate<_::iter_invoker>(it.world(), FLECS_FWD(func),
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    void iter(flecs::entity e, Func&& func) const {
+        iterate<_::iter_invoker>(e.world(), FLECS_FWD(func), 
+            this->next_each_action());
     }
 
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.
      */
-    iter_iterable<Components...> iter() const;
+    iter_iterable<Components...> iter(flecs::world_t *world = nullptr) const;
 
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
@@ -88,13 +123,13 @@ protected:
     friend page_iterable<Components...>;
     friend worker_iterable<Components...>;
 
-    virtual ecs_iter_t get_iter() const = 0;
+    virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
 
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = this->get_iter();
+    void iterate(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = this->get_iter(stage);
         if (Invoker<Func, Components...>::instanced()) {
             ECS_BIT_SET(it.flags, EcsIterIsInstanced);
         }
@@ -108,9 +143,9 @@ protected:
 template <typename ... Components>
 struct iter_iterable final : iterable<Components...> {
     template <typename Iterable>
-    iter_iterable(Iterable *it) 
+    iter_iterable(Iterable *it, flecs::world_t *world) 
     {
-        m_it = it->get_iter();
+        m_it = it->get_iter(world);
         m_next = it->next_action();
         m_next_each = it->next_action();
     }
@@ -164,7 +199,12 @@ struct iter_iterable final : iterable<Components...> {
     }
 
 protected:
-    ecs_iter_t get_iter() const {
+    ecs_iter_t get_iter(flecs::world_t *world) const {
+        if (world) {
+            ecs_iter_t result = m_it;
+            result.world = world;
+            return result;
+        }
         return m_it;
     }
 
@@ -183,9 +223,9 @@ private:
 };
 
 template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter() const
+iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world) const
 {
-    return iter_iterable<Components...>(this);
+    return iter_iterable<Components...>(this, world);
 }
 
 template <typename ... Components>
@@ -195,11 +235,11 @@ struct page_iterable final : iterable<Components...> {
         : m_offset(offset)
         , m_limit(limit)
     {
-        m_chain_it = it->get_iter();
+        m_chain_it = it->get_iter(nullptr);
     }
 
 protected:
-    ecs_iter_t get_iter() const {
+    ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_page_iter(&m_chain_it, m_offset, m_limit);
     }
 
@@ -231,11 +271,11 @@ struct worker_iterable final : iterable<Components...> {
         : m_offset(offset)
         , m_limit(limit)
     {
-        m_chain_it = it->get_iter();
+        m_chain_it = it->get_iter(nullptr);
     }
 
 protected:
-    ecs_iter_t get_iter() const {
+    ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_worker_iter(&m_chain_it, m_offset, m_limit);
     }
 

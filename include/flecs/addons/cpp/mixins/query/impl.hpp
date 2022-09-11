@@ -120,8 +120,11 @@ public:
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
-    ecs_iter_t get_iter() const override {
-        return ecs_query_iter(m_world, m_query);
+    ecs_iter_t get_iter(flecs::world_t *world) const override {
+        if (!world) {
+            world = m_world;
+        }
+        return ecs_query_iter(world, m_query);
     }
 
     ecs_iter_next_action_t next_action() const override {

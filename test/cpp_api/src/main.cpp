@@ -413,6 +413,12 @@ void System_system_w_type_kind_type_pipeline(void);
 void System_default_ctor(void);
 void System_entity_ctor(void);
 void System_ensure_instanced_w_each(void);
+void System_multithread_system_w_query_each(void);
+void System_multithread_system_w_query_each_w_iter(void);
+void System_multithread_system_w_query_each_w_world(void);
+void System_multithread_system_w_query_iter(void);
+void System_multithread_system_w_query_iter_w_iter(void);
+void System_multithread_system_w_query_iter_w_world(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -2600,6 +2606,30 @@ bake_test_case System_testcases[] = {
     {
         "ensure_instanced_w_each",
         System_ensure_instanced_w_each
+    },
+    {
+        "multithread_system_w_query_each",
+        System_multithread_system_w_query_each
+    },
+    {
+        "multithread_system_w_query_each_w_iter",
+        System_multithread_system_w_query_each_w_iter
+    },
+    {
+        "multithread_system_w_query_each_w_world",
+        System_multithread_system_w_query_each_w_world
+    },
+    {
+        "multithread_system_w_query_iter",
+        System_multithread_system_w_query_iter
+    },
+    {
+        "multithread_system_w_query_iter_w_iter",
+        System_multithread_system_w_query_iter_w_iter
+    },
+    {
+        "multithread_system_w_query_iter_w_world",
+        System_multithread_system_w_query_iter_w_world
     }
 };
 
@@ -4914,7 +4944,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        53,
+        59,
         System_testcases
     },
     {

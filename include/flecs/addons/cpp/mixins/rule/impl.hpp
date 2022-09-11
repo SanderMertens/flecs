@@ -61,7 +61,10 @@ struct rule final : rule_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
-    ecs_iter_t get_iter() const override {
+    ecs_iter_t get_iter(flecs::world_t *world) const override {
+        if (!world) {
+            world = m_world;
+        }
         return ecs_rule_iter(m_world, m_rule);
     }
 

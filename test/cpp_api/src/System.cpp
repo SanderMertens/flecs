@@ -1810,3 +1810,171 @@ void System_ensure_instanced_w_each() {
     sys.run();
     test_int(count, 1);
 }
+
+void System_multithread_system_w_query_each() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::entity e, Position& p) {
+            q.each(e, [&](Velocity& v) {
+                p.x += v.x;
+                p.y += v.y;
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void System_multithread_system_w_query_each_w_iter() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::iter& it, size_t, Position& p) {
+            q.each(it, [&](Velocity& v) {
+                p.x += v.x;
+                p.y += v.y;
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void System_multithread_system_w_query_each_w_world() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::iter& it, size_t, Position& p) {
+            q.each(it.world(), [&](Velocity& v) {
+                p.x += v.x;
+                p.y += v.y;
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void System_multithread_system_w_query_iter() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::entity e, Position& p) {
+            q.iter(e, [&](flecs::iter& it, Velocity* v) {
+                for (auto i : it) {
+                    p.x += v[i].x;
+                    p.y += v[i].y;
+                }
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void System_multithread_system_w_query_iter_w_iter() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::iter& it, size_t, Position& p) {
+            q.iter(it, [&](flecs::iter& it, Velocity* v) {
+                for (auto i : it) {
+                    p.x += v[i].x;
+                    p.y += v[i].y;
+                }
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void System_multithread_system_w_query_iter_w_world() {
+    flecs::world world;
+
+    world.set_threads(2);
+
+    flecs::entity e = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Velocity>();
+
+    world.system<Position>()
+        .multi_threaded()
+        .each([&](flecs::iter& it, size_t, Position& p) {
+            q.iter(it.world(), [&](flecs::iter& it, Velocity* v) {
+                for (auto i : it) {
+                    p.x += v[i].x;
+                    p.y += v[i].y;
+                }
+            });
+        });
+
+    world.progress();
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
