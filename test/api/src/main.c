@@ -773,6 +773,8 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void);
 void ComponentLifecycle_on_add_w_emplace(void);
 void ComponentLifecycle_on_add_w_emplace_existing(void);
 void ComponentLifecycle_on_add_w_emplace_defer(void);
+void ComponentLifecycle_merge_async_stage_w_emplace(void);
+void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
@@ -2048,6 +2050,7 @@ void DeferredActions_defer_remove_after_set(void);
 void DeferredActions_defer_remove_after_set_w_observer(void);
 void DeferredActions_defer_override_after_remove(void);
 void DeferredActions_defer_override_after_remove_3_ops(void);
+void DeferredActions_flush_stage_to_deferred_world(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -5100,6 +5103,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_add_w_emplace_defer",
         ComponentLifecycle_on_add_w_emplace_defer
+    },
+    {
+        "merge_async_stage_w_emplace",
+        ComponentLifecycle_merge_async_stage_w_emplace
+    },
+    {
+        "merge_async_stage_w_emplace_to_deferred_world",
+        ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world
     },
     {
         "dtor_on_fini",
@@ -10089,6 +10100,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_override_after_remove_3_ops",
         DeferredActions_defer_override_after_remove_3_ops
+    },
+    {
+        "flush_stage_to_deferred_world",
+        DeferredActions_flush_stage_to_deferred_world
     }
 };
 
@@ -10769,7 +10784,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        73,
+        75,
         ComponentLifecycle_testcases
     },
     {
@@ -10902,7 +10917,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        80,
+        81,
         DeferredActions_testcases
     },
     {

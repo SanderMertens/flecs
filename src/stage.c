@@ -361,7 +361,7 @@ bool flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    const void *value,
+    void *value,
     void **value_out,
     bool emplace)
 {
@@ -412,16 +412,27 @@ bool flecs_defer_set(
         ecs_stack_t *stack = &stage->defer_stack;
         void *op_value = flecs_stack_alloc(stack, size, ti->alignment);
 
-        if (!value) {
-            value = ecs_get_id(world, entity, id);
+        if (!value && !emplace) {
+            /* Const cast is safe, value will only be moved when this is an 
+             * emplace op */
+            value = (void*)ecs_get_id(world, entity, id);
         }
 
         if (value) {
-            ecs_copy_t copy;
-            if ((copy = ti->hooks.copy_ctor)) {
-                copy(op_value, value, 1, ti);
+            if (emplace) {
+                ecs_move_t move;
+                if ((move = ti->hooks.move_ctor)) {
+                    move(op_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(op_value, value, size);
+                }
             } else {
-                ecs_os_memcpy(op_value, value, size);
+                ecs_copy_t copy;
+                if ((copy = ti->hooks.copy_ctor)) {
+                    copy(op_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(op_value, value, size);
+                }
             }
         } else if (!emplace) {
             ecs_xtor_t ctor;

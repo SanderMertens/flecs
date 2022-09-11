@@ -1461,6 +1461,80 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor() {
     ecs_fini(world); 
 }
 
+void ComponentLifecycle_merge_async_stage_w_emplace() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy = ecs_copy(Position),
+        .move_ctor = position_move_ctor
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+
+    Position *p = ecs_emplace(async, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+    test_int(move_ctor_position, 0);
+    p->x = 10;
+    p->y = 20;
+
+    ecs_merge(async);
+    test_assert(ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+    test_int(move_ctor_position, 1);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy = ecs_copy(Position)
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+
+    Position *p = ecs_emplace(async, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+    p->x = 10;
+    p->y = 20;
+
+    ecs_defer_begin(world);
+    ecs_merge(async);
+    test_assert(!ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_int(ctor_position, 0);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_dtor_on_fini() {
     ecs_world_t *world = ecs_mini();
 

@@ -1641,7 +1641,7 @@ bool flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    const void *value,
+    void *value,
     void **value_out,
     bool emplace);
 
@@ -8269,11 +8269,10 @@ void flecs_move_ptr_w_id(
     ecs_id_t id,
     size_t size,
     void *ptr,
-    bool move_ctor,
-    bool flecs_notify)
+    ecs_cmd_kind_t cmd_kind)
 {
-    if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_utosize(size), ptr, NULL, false))
+    if (flecs_defer_set(world, stage, cmd_kind, entity, id, 
+        flecs_utosize(size), ptr, NULL, (cmd_kind == EcsOpEmplace)))
     {
         return;
     }
@@ -8285,7 +8284,7 @@ void flecs_move_ptr_w_id(
     const ecs_type_info_t *ti = dst.ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_move_t move;
-    if (move_ctor) {
+    if (cmd_kind == EcsOpEmplace) {
         move = ti->hooks.move_ctor;
     } else {
         move = ti->hooks.move;
@@ -8298,7 +8297,7 @@ void flecs_move_ptr_w_id(
 
     flecs_table_mark_dirty(world, r->table, id);
 
-    if (flecs_notify) {
+    if (cmd_kind == EcsOpSet) {
         ecs_table_t *table = r->table;
         if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
             ecs_type_t ids = { .array = &id, .count = 1 };
@@ -9451,10 +9450,21 @@ bool flecs_defer_end(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (stage->defer_suspend) {
+        /* Defer suspending makes it possible to do operations on the storage
+         * without flushing the commands in the queue */
         return false;
     }
 
     if (!--stage->defer) {
+        /* Test whether we're flushing to another queue or whether we're 
+         * flushing to the storage */
+        bool merge_to_world = false;
+        if (ecs_poly_is(world, ecs_world_t)) {
+            merge_to_world = world->stages[0].defer == 0;
+        }
+
+        ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
+
         /* Set to NULL. Processing deferred commands can cause additional
          * commands to get enqueued (as result of reactive systems). Make sure
          * that the original array is not reallocated, as this would complicate
@@ -9477,7 +9487,7 @@ bool flecs_defer_end(
                 ecs_entity_t e = cmd->entity;
 
                 /* A negative index indicates the first command for an entity */
-                if (cmd->next_for_entity < 0) {
+                if (merge_to_world && (cmd->next_for_entity < 0)) {
                     /* Batch commands for entity to limit archetype moves */   
                     flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
                 }
@@ -9517,20 +9527,22 @@ bool flecs_defer_end(
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
                     break;
                 case EcsOpSet:
-                    flecs_move_ptr_w_id(world, stage, e, 
+                    flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
-                        cmd->is._1.value, false, true);
+                        cmd->is._1.value, kind);
                     break;
                 case EcsOpEmplace:
-                    ecs_emplace_id(world, e, id);
-                    flecs_move_ptr_w_id(world, stage, e, 
+                    if (merge_to_world) {
+                        ecs_emplace_id(world, e, id);
+                    }
+                    flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
-                        cmd->is._1.value, true, false);
+                        cmd->is._1.value, kind);
                     break;
                 case EcsOpMut:
-                    flecs_move_ptr_w_id(world, stage, e, 
+                    flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
-                        cmd->is._1.value, false, false);
+                        cmd->is._1.value, kind);
                     break;
                 case EcsOpModified:
                     if (ecs_has_id(world, e, id)) {
@@ -9988,7 +10000,7 @@ bool flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    const void *value,
+    void *value,
     void **value_out,
     bool emplace)
 {
@@ -10039,16 +10051,27 @@ bool flecs_defer_set(
         ecs_stack_t *stack = &stage->defer_stack;
         void *op_value = flecs_stack_alloc(stack, size, ti->alignment);
 
-        if (!value) {
-            value = ecs_get_id(world, entity, id);
+        if (!value && !emplace) {
+            /* Const cast is safe, value will only be moved when this is an 
+             * emplace op */
+            value = (void*)ecs_get_id(world, entity, id);
         }
 
         if (value) {
-            ecs_copy_t copy;
-            if ((copy = ti->hooks.copy_ctor)) {
-                copy(op_value, value, 1, ti);
+            if (emplace) {
+                ecs_move_t move;
+                if ((move = ti->hooks.move_ctor)) {
+                    move(op_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(op_value, value, size);
+                }
             } else {
-                ecs_os_memcpy(op_value, value, size);
+                ecs_copy_t copy;
+                if ((copy = ti->hooks.copy_ctor)) {
+                    copy(op_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(op_value, value, size);
+                }
             }
         } else if (!emplace) {
             ecs_xtor_t ctor;

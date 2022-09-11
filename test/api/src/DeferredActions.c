@@ -2445,3 +2445,25 @@ void DeferredActions_defer_override_after_remove_3_ops() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_flush_stage_to_deferred_world() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_add(async, e, Tag);
+    test_assert(!ecs_has(world, e, Tag));
+
+    ecs_defer_begin(world);
+    ecs_merge(async);
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_async_stage_free(async);
+
+    ecs_fini(world);
+}

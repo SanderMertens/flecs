@@ -824,6 +824,8 @@
                 "on_add_w_emplace",
                 "on_add_w_emplace_existing",
                 "on_add_w_emplace_defer",
+                "merge_async_stage_w_emplace",
+                "merge_async_stage_w_emplace_to_deferred_world",
                 "dtor_on_fini",
                 "valid_type_in_dtor_on_fini",
                 "valid_other_type_of_entity_in_dtor_on_fini",
@@ -2136,7 +2138,8 @@
                 "defer_remove_after_set",
                 "defer_remove_after_set_w_observer",
                 "defer_override_after_remove",
-                "defer_override_after_remove_3_ops"
+                "defer_override_after_remove_3_ops",
+                "flush_stage_to_deferred_world"
             ]
         }, {
             "id": "SingleThreadStaging",
