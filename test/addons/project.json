@@ -377,7 +377,8 @@
                 "pipeline_w_short_notation",
                 "stack_allocator_after_progress",
                 "stack_allocator_after_progress_w_pipeline_change",
-                "iter_from_world_in_singlethread_system_multitead_app"
+                "iter_from_world_in_singlethread_system_multitead_app",
+                "no_staging_after_inactive_system"
             ]
         }, {
             "id": "SystemMisc",

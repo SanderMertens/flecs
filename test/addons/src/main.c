@@ -367,6 +367,7 @@ void Pipeline_pipeline_w_short_notation(void);
 void Pipeline_stack_allocator_after_progress(void);
 void Pipeline_stack_allocator_after_progress_w_pipeline_change(void);
 void Pipeline_iter_from_world_in_singlethread_system_multitead_app(void);
+void Pipeline_no_staging_after_inactive_system(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2338,6 +2339,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "iter_from_world_in_singlethread_system_multitead_app",
         Pipeline_iter_from_world_in_singlethread_system_multitead_app
+    },
+    {
+        "no_staging_after_inactive_system",
+        Pipeline_no_staging_after_inactive_system
     }
 };
 
@@ -4466,7 +4471,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        43,
+        44,
         Pipeline_testcases
     },
     {

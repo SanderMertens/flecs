@@ -4812,6 +4812,24 @@ error:
     return NULL;
 }
 
+int32_t ecs_table_get_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return -1;
+    }
+
+    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr) {
+        return -1;
+    }
+
+    return tr->column;
+}
+
 void* ecs_record_get_column(
     const ecs_record_t *r,
     int32_t column,
@@ -15960,7 +15978,7 @@ typedef struct write_state_t {
 } write_state_t;
 
 static
-int32_t get_write_state(
+int32_t flecs_pipeline_get_write_state(
     ecs_map_t *write_state,
     ecs_entity_t component)
 {
@@ -15973,7 +15991,7 @@ int32_t get_write_state(
 }
 
 static
-void set_write_state(
+void flecs_pipeline_set_write_state(
     write_state_t *write_state,
     ecs_entity_t component,
     int32_t value)
@@ -15987,7 +16005,7 @@ void set_write_state(
 }
 
 static
-void reset_write_state(
+void flecs_pipeline_reset_write_state(
     write_state_t *write_state)
 {
     ecs_map_clear(write_state->components);
@@ -15995,7 +16013,7 @@ void reset_write_state(
 }
 
 static
-int32_t get_any_write_state(
+int32_t flecs_pipeline_get_any_write_state(
     write_state_t *write_state)
 {
     if (write_state->wildcard) {
@@ -16014,13 +16032,13 @@ int32_t get_any_write_state(
 }
 
 static
-bool check_term_component(
+bool flecs_pipeline_check_term_component(
     ecs_term_t *term,
     bool is_active,
     ecs_entity_t component,
     write_state_t *write_state)    
 {
-    int32_t state = get_write_state(write_state->components, component);
+    int32_t state = flecs_pipeline_get_write_state(write_state->components, component);
 
     ecs_term_id_t *src = &term->src;
 
@@ -16038,7 +16056,7 @@ bool check_term_component(
             // fall through
         case EcsOut:
             if (is_active && term->inout != EcsIn) {
-                set_write_state(write_state, component, WriteToMain);
+                flecs_pipeline_set_write_state(write_state, component, WriteToMain);
             }
         };
     } else if (!src->id || term->oper == EcsNot) {
@@ -16052,7 +16070,7 @@ bool check_term_component(
                 needs_merge = true;
             }
             if (component == EcsWildcard) {
-                if (get_any_write_state(write_state) == WriteToStage) {
+                if (flecs_pipeline_get_any_write_state(write_state) == WriteToStage) {
                     needs_merge = true;
                 }
             }
@@ -16072,7 +16090,7 @@ bool check_term_component(
         case EcsInOut:
         case EcsOut:
             if (is_active) {
-                set_write_state(write_state, component, WriteToStage);
+                flecs_pipeline_set_write_state(write_state, component, WriteToStage);
             }
             break;
         default:
@@ -16088,13 +16106,13 @@ bool check_term_component(
 }
 
 static
-bool check_term(
+bool flecs_pipeline_check_term(
     ecs_term_t *term,
     bool is_active,
     write_state_t *write_state)
 {
     if (term->oper != EcsOr) {
-        return check_term_component(
+        return flecs_pipeline_check_term_component(
             term, is_active, term->id, write_state);
     }  
 
@@ -16102,7 +16120,7 @@ bool check_term(
 }
 
 static
-bool check_terms(
+bool flecs_pipeline_check_terms(
     ecs_filter_t *filter,
     bool is_active,
     write_state_t *ws)
@@ -16116,7 +16134,7 @@ bool check_terms(
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (ecs_term_match_this(term)) {
-            needs_merge |= check_term(term, is_active, ws);
+            needs_merge |= flecs_pipeline_check_term(term, is_active, ws);
         }
     }
 
@@ -16124,7 +16142,7 @@ bool check_terms(
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (!ecs_term_match_this(term)) {
-            needs_merge |= check_term(term, is_active, ws);
+            needs_merge |= flecs_pipeline_check_term(term, is_active, ws);
         }
     }
 
@@ -16193,6 +16211,7 @@ bool flecs_pipeline_build(
     it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
         EcsPoly *poly = flecs_pipeline_term_system(&it);
+        bool is_active = ecs_table_get_index(world, it.table, EcsEmpty) == -1;
 
         int i;
         for (i = 0; i < it.count; i ++) {
@@ -16203,9 +16222,7 @@ bool flecs_pipeline_build(
             }
 
             bool needs_merge = false;
-            bool is_active = !ecs_has_id(
-                world, it.entities[i], EcsEmpty);
-            needs_merge = check_terms(&q->filter, is_active, &ws);
+            needs_merge = flecs_pipeline_check_terms(&q->filter, is_active, &ws);
 
             if (is_active) {
                 if (first) {
@@ -16226,15 +16243,23 @@ bool flecs_pipeline_build(
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
-                reset_write_state(&ws);
-                op = NULL;
+                flecs_pipeline_reset_write_state(&ws);
+
+                /* An inactive system can insert a merge if one of its 
+                 * components got written, which could make the system 
+                 * active. If this is the only system in the pipeline operation,
+                 * it results in an empty operation when we get here. If that's
+                 * the case, reuse the empty operation for the next op. */
+                if (op && op->count) {
+                    op = NULL;
+                }
 
                 /* Re-evaluate columns to set write flags if system is active.
                  * If system is inactive, it can't write anything and so it
                  * should not insert unnecessary merges.  */
                 needs_merge = false;
                 if (is_active) {
-                    needs_merge = check_terms(&q->filter, true, &ws);
+                    needs_merge = flecs_pipeline_check_terms(&q->filter, true, &ws);
                 }
 
                 /* The component states were just reset, so if we conclude that

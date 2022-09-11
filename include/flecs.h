@@ -4599,9 +4599,24 @@ const ecs_type_t* ecs_table_get_type(
  * @param table The table.
  * @return The component array, or NULL if the index is not a component.
  */
+FLECS_API
 void* ecs_table_get_column(
     ecs_table_t *table,
     int32_t index);
+
+/** Get column index for id.
+ * This operation returns the index for an id in the table's type.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id The id.
+ * @return The index of the id in the table type, or -1 if not found.
+ */
+FLECS_API
+int32_t ecs_table_get_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
 
 /** Get storage type for table.
  *
@@ -4613,11 +4628,13 @@ ecs_table_t* ecs_table_get_storage_table(
     const ecs_table_t *table);
 
 /** Convert index in table type to index in table storage type. */
+FLECS_API
 int32_t ecs_table_type_to_storage_index(
     const ecs_table_t *table,
     int32_t index);
 
 /** Convert index in table storage type to index in table type. */
+FLECS_API
 int32_t ecs_table_storage_to_type_index(
     const ecs_table_t *table,
     int32_t index);

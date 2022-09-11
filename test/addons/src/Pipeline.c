@@ -1763,3 +1763,59 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
 
     ecs_fini(world);
 }
+
+static int staging_system_invoked = 0;
+static void StagingSystem(ecs_iter_t *it) {
+    test_assert( ecs_stage_is_readonly(it->real_world));
+    staging_system_invoked ++;
+}
+
+static int no_staging_system_invoked = 0;
+static void NoStagingSystem(ecs_iter_t *it) {
+    test_assert( !ecs_stage_is_readonly(it->real_world));
+    no_staging_system_invoked ++;
+}
+
+void Pipeline_no_staging_after_inactive_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ Tag, .oper = EcsNot }},
+        .callback = StagingSystem
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .callback = StagingSystem
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystem,
+        .no_staging = true
+    });
+
+    ecs_progress(world, 0);
+    test_assert(staging_system_invoked != 0);
+    test_int(no_staging_system_invoked, 1);
+
+    staging_system_invoked = 0;
+    no_staging_system_invoked = 0;
+
+    ecs_progress(world, 0);
+    test_assert(staging_system_invoked != 0);
+    test_int(no_staging_system_invoked, 1);
+
+    ecs_fini(world);
+}
