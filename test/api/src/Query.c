@@ -1,6 +1,41 @@
 #include <api.h>
 #include <stdlib.h>
 
+static
+int order_by_entity(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
+{
+    return (e1 > e2) - (e1 < e2);
+}
+
+static
+uint64_t group_by_first_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    void *ctx)
+{
+    const ecs_type_t *type = ecs_table_get_type(table);
+    ecs_id_t *first = type->array;
+    if (!first) {
+        return 0;
+    }
+
+    return first[0];
+}
+
+static
+uint64_t group_by_rel(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
+    ecs_id_t match;
+    if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
+        return ecs_pair_second(world, match);
+    }
+    return 0;
+}
+
 void Query_simple_query_existing_table() {
     ecs_world_t *world = ecs_mini();
 
@@ -4052,31 +4087,6 @@ void Query_get_filter() {
     ecs_fini(world);
 }
 
-static
-uint64_t group_by_first_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    void *ctx)
-{
-    const ecs_type_t *type = ecs_table_get_type(table);
-    ecs_id_t *first = type->array;
-    if (!first) {
-        return 0;
-    }
-
-    return first[0];
-}
-
-int order_by_entity(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2)
-{
-    return (e1 > e2) - (e1 < e2);
-}
-
 void Query_group_by() {
     ecs_world_t *world = ecs_mini();
 
@@ -4208,15 +4218,6 @@ void Query_group_by_w_sort_reverse_group_creation() {
     test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
-}
-
-static
-uint64_t group_by_rel(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
-    ecs_id_t match;
-    if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
-        return ECS_PAIR_SECOND(match);
-    }
-    return 0;
 }
 
 void Query_group_by_iter_one() {
@@ -4435,6 +4436,48 @@ void Query_group_by_iter_one_empty_table() {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_query_set_group(&it, TgtC);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_group_by_w_deleted_group_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) }
+        },
+        .group_by = group_by_rel,
+        .group_by_id = Rel
+    });
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_query_set_group(&it, tgt);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_delete(world, tgt);
+    ecs_delete(world, e);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    tgt = ecs_new_id(world);
+    e = ecs_new_w_pair(world, Rel, tgt);
+
+    it = ecs_query_iter(world, q);
+    ecs_query_set_group(&it, tgt);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);

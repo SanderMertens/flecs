@@ -35,7 +35,7 @@ uint64_t group_by_relation(flecs::world_t *ecs, flecs::table_t *table,
     // Use ecs_search to find the target for the relationship in the table
     flecs::id_t match;
     if (ecs_search(ecs, table, flecs::id(id, flecs::Wildcard), &match) != -1) {
-        return flecs::id(match).second(); // World cell is 2nd element of pair
+        return flecs::id(ecs, match).second(); // World cell is 2nd element of pair
     }
     return 0;
 }
