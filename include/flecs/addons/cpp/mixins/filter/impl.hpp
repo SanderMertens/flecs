@@ -150,7 +150,7 @@ private:
         if (!world) {
             world = m_world;
         }
-        return ecs_filter_iter(m_world, m_filter_ptr);
+        return ecs_filter_iter(world, m_filter_ptr);
     }
 
     ecs_iter_next_action_t next_action() const override {
