@@ -8,23 +8,28 @@
 using flecs.meta
 
 Struct Shader {
-    filename :- {string}
-    code :- {string}
+  filename :- {string}
+  code :- {string}
 }
 
 // Create component values with strings
 my_pipeline {
-    - (Shader, Vertex) {
-        filename: "vert.glsl", // Normal string
-        code: ` // Multiline string
-            void main() {
-                gl_Position = pos;
-            }`}
+  - (Shader, Vertex) {
+    // Normal string
+    filename: "vert.glsl",
 
-    - (Shader, Fragment) {
-        filename: "frag.glsl",
-        code: `
-            void main() {
-                frag_color = color;
-            }`}
+    // Multiline string
+    code: `
+      void main() {
+        gl_Position = pos;
+      }`
+    }
+
+  - (Shader, Fragment) {
+    filename: "frag.glsl",
+    code: `
+      void main() {
+        frag_color = color;
+      }`
+    }
 }
