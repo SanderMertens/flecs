@@ -315,7 +315,11 @@ void Plecs_multiple_annotations(void);
 void Plecs_annotation_w_trailing_space(void);
 void Plecs_multiline_string(void);
 void Plecs_unterminated_multiline_string(void);
+void Plecs_declaration_w_underscore_name(void);
 void Plecs_annotate_declaration(void);
+void Plecs_anonymous_entity(void);
+void Plecs_anonymous_entity_in_scope(void);
+void Plecs_anonymous_declaration(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2149,8 +2153,24 @@ bake_test_case Plecs_testcases[] = {
         Plecs_unterminated_multiline_string
     },
     {
+        "declaration_w_underscore_name",
+        Plecs_declaration_w_underscore_name
+    },
+    {
         "annotate_declaration",
         Plecs_annotate_declaration
+    },
+    {
+        "anonymous_entity",
+        Plecs_anonymous_entity
+    },
+    {
+        "anonymous_entity_in_scope",
+        Plecs_anonymous_entity_in_scope
+    },
+    {
+        "anonymous_declaration",
+        Plecs_anonymous_declaration
     }
 };
 
@@ -4467,7 +4487,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        135,
+        139,
         Plecs_testcases
     },
     {

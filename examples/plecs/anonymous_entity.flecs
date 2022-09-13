@@ -1,0 +1,12 @@
+// To see what the result of parsing this file looks like, copy the code and
+// paste it into the editor at https://flecs.dev/explorer
+//
+// To load this file yourself, call ecs_plecs_from_file("anonymous_entity.flecs");
+
+// To create an entity without a name, use the _ character
+_ :- SpaceShip
+
+// Anonymous entities can be used as parents and children
+SpaceShip _ {
+    _ :- Engine
+}

@@ -322,7 +322,11 @@
                 "annotation_w_trailing_space",
                 "multiline_string",
                 "unterminated_multiline_string",
-                "annotate_declaration"
+                "declaration_w_underscore_name",
+                "annotate_declaration",
+                "anonymous_entity",
+                "anonymous_entity_in_scope",
+                "anonymous_declaration"
             ]
         }, {
             "id": "Doc",
