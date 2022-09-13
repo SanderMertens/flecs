@@ -140,11 +140,17 @@ const char* ecs_parse_fluff(
 
 /* -- Private functions -- */
 
+bool flecs_isident(
+    char ch)
+{
+    return isalpha(ch) || (ch == '_');
+}
+
 static
 bool valid_identifier_start_char(
     char ch)
 {
-    if (ch && (isalpha(ch) || (ch == '_') || (ch == '*') ||
+    if (ch && (flecs_isident(ch) || (ch == '*') ||
         (ch == '0') || (ch == TOK_VARIABLE) || isdigit(ch))) 
     {
         return true;
@@ -171,9 +177,7 @@ static
 bool valid_token_char(
     char ch)
 {
-    if (ch && 
-        (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || ch == '"')) 
-    {
+    if (ch && (flecs_isident(ch) || isdigit(ch) || ch == '.' || ch == '"')) {
         return true;
     }
 
@@ -915,7 +919,7 @@ char* ecs_parse_term(
 
     /* Term must either end in end of expression, AND or OR token */
     if (!is_valid_end_of_term(ptr)) {
-        if (!isalpha(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
+        if (!flecs_isident(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected end of expression or next term");
             goto error;

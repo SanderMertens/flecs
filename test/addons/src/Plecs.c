@@ -3715,9 +3715,102 @@ void Plecs_annotate_declaration() {
     ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
     test_assert(bar != 0);
 
+    test_assert(ecs_has_id(world, bar, foo));
+
     test_assert(ecs_doc_get_brief(world, foo) == NULL);
     test_assert(ecs_doc_get_brief(world, bar) != NULL);
     test_str(ecs_doc_get_brief(world, bar), "A brief description");
+
+    ecs_fini(world);
+}
+
+void Plecs_declaration_w_underscore_name() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo _Bar";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "_Bar");
+    test_assert(bar != 0);
+
+    test_assert(!ecs_has_id(world, foo, bar));
+    test_assert(ecs_has_id(world, bar, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_anonymous_entity() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "_ :- Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t e = it.entities[0];
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), NULL);
+    test_assert(!ecs_term_next(&it));
+
+    ecs_fini(world);
+}
+
+void Plecs_anonymous_entity_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE "  _ :- Foo"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    test_assert(parent != 0);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t e = it.entities[0];
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), NULL);
+    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(!ecs_term_next(&it));
+
+    ecs_fini(world);
+}
+
+void Plecs_anonymous_declaration() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo _";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t e = it.entities[0];
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), NULL);
+    test_assert(!ecs_term_next(&it));
 
     ecs_fini(world);
 }

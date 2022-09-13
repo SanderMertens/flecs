@@ -2303,6 +2303,9 @@ void _assert_func(
 void flecs_dump_backtrace(
     FILE *stream);
 
+bool flecs_isident(
+    char ch);
+
 #endif
 
 
@@ -18408,7 +18411,17 @@ ecs_entity_t plecs_ensure_entity(
         return 0;
     }
 
-    ecs_entity_t e = plecs_lookup(world, path, state, rel, is_subject);
+    ecs_entity_t e = 0;
+    bool is_anonymous = !ecs_os_strcmp(path, "_");
+    if (is_anonymous) {
+        path = NULL;
+        e = ecs_new_id(world);
+    }
+
+    if (!e) {
+        e = plecs_lookup(world, path, state, rel, is_subject);
+    }
+
     if (!e) {
         if (rel && flecs_get_oneof(world, rel)) {
             /* If relationship has oneof and entity was not found, don't proceed
@@ -19025,7 +19038,7 @@ const char *plecs_parse_plecs_term(
         return NULL;
     }
 
-    if (isalpha(ptr[0])) {
+    if (flecs_isident(ptr[0])) {
         state->decl_type = true;
     }
 
@@ -19157,7 +19170,7 @@ term_expr:
     }
 
     const char *tptr = ecs_parse_whitespace(ptr);
-    if (isalpha(tptr[0])) {
+    if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected ' ' in declaration statement");
@@ -34737,11 +34750,17 @@ const char* ecs_parse_fluff(
 
 /* -- Private functions -- */
 
+bool flecs_isident(
+    char ch)
+{
+    return isalpha(ch) || (ch == '_');
+}
+
 static
 bool valid_identifier_start_char(
     char ch)
 {
-    if (ch && (isalpha(ch) || (ch == '_') || (ch == '*') ||
+    if (ch && (flecs_isident(ch) || (ch == '*') ||
         (ch == '0') || (ch == TOK_VARIABLE) || isdigit(ch))) 
     {
         return true;
@@ -34768,9 +34787,7 @@ static
 bool valid_token_char(
     char ch)
 {
-    if (ch && 
-        (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || ch == '"')) 
-    {
+    if (ch && (flecs_isident(ch) || isdigit(ch) || ch == '.' || ch == '"')) {
         return true;
     }
 
@@ -35512,7 +35529,7 @@ char* ecs_parse_term(
 
     /* Term must either end in end of expression, AND or OR token */
     if (!is_valid_end_of_term(ptr)) {
-        if (!isalpha(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
+        if (!flecs_isident(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected end of expression or next term");
             goto error;

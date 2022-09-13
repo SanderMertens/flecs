@@ -260,4 +260,7 @@ void _assert_func(
 void flecs_dump_backtrace(
     FILE *stream);
 
+bool flecs_isident(
+    char ch);
+
 #endif
