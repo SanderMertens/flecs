@@ -190,7 +190,6 @@ void Plecs_three_empty_newlines(void);
 void Plecs_newline_trailing_space(void);
 void Plecs_newline_trailing_spaces(void);
 void Plecs_multiple_trailing_newlines(void);
-void Plecs_invalid_2_identifiers_separated_by_space(void);
 void Plecs_entity(void);
 void Plecs_entity_w_entity(void);
 void Plecs_entity_w_pair(void);
@@ -1645,10 +1644,6 @@ bake_test_case Plecs_testcases[] = {
     {
         "multiple_trailing_newlines",
         Plecs_multiple_trailing_newlines
-    },
-    {
-        "invalid_2_identifiers_separated_by_space",
-        Plecs_invalid_2_identifiers_separated_by_space
     },
     {
         "entity",
@@ -4457,7 +4452,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        133,
+        132,
         Plecs_testcases
     },
     {

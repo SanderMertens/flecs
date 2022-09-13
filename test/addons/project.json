@@ -197,7 +197,6 @@
                 "newline_trailing_space",
                 "newline_trailing_spaces",
                 "multiple_trailing_newlines",
-                "invalid_2_identifiers_separated_by_space",
                 "entity",
                 "entity_w_entity",
                 "entity_w_pair",

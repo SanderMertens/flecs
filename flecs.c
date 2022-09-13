@@ -18338,6 +18338,8 @@ typedef struct {
     bool using_stmt;
     bool assign_stmt;
     bool isa_stmt;
+    bool decl_stmt;
+    bool decl_type;
 
     int32_t errors;
 } plecs_state_t;
@@ -18470,6 +18472,9 @@ bool plecs_pred_is_subj(
     if (state->using_stmt) {
         return false;
     }
+    if (state->decl_type) {
+        return false;
+    }
 
     return true;
 }
@@ -18576,7 +18581,6 @@ int plecs_create_term(
     }
 
     bool pred_as_subj = plecs_pred_is_subj(term, state);
-
     ecs_entity_t pred = plecs_ensure_entity(world, state, pred_name, 0, pred_as_subj); 
     ecs_entity_t subj = plecs_ensure_entity(world, state, subj_name, pred, true);
     ecs_entity_t obj = 0;
@@ -18796,10 +18800,13 @@ const char* plecs_parse_assign_stmt(
     state->isa_stmt = false;
 
     /* Component scope (add components to entity) */
-    if (!state->last_subject) {
-        ecs_parser_error(name, expr, ptr - expr, 
-            "missing entity to assign to");
-        return NULL;
+    if (!state->assign_to) {
+        if (!state->last_subject) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "missing entity to assign to");
+            return NULL;
+        }
+        state->assign_to = state->last_subject;
     }
 
     if (state->assign_stmt) {
@@ -18808,20 +18815,11 @@ const char* plecs_parse_assign_stmt(
         return NULL;
     }
 
-    if (!state->scope_assign_stmt) {
-        state->assign_to = state->last_subject;
-    }
-
     state->assign_stmt = true;
     
     /* Assignment without a preceding component */
     if (ptr[0] == '{') {
         ecs_entity_t type = 0;
-
-        if (state->scope_assign_stmt) {
-            ecs_assert(state->assign_to == ecs_get_scope(world), 
-                ECS_INTERNAL_ERROR, NULL);
-        }
 
         /* If we're in a scope & last_subject is a type, assign to scope */
         if (ecs_get_scope(world) != 0) {
@@ -19017,18 +19015,18 @@ const char *plecs_parse_plecs_term(
     plecs_state_t *state)
 {
     ecs_term_t term = {0};
-    ecs_entity_t scope = ecs_get_scope(world);
-
-    /* If first character is a (, this should be interpreted as an id assigned
-     * to the current scope if:
-     * - this is not already an assignment: "Foo = (Hello, World)" 
-     * - this is in a scope
-     */
-    bool scope_assignment = (ptr[0] == '(') && !state->assign_stmt && scope != 0;
+    ecs_entity_t decl_id = 0;
+    if (state->decl_stmt) {
+        decl_id = state->last_predicate;
+    }
 
     ptr = ecs_parse_term(world, name, expr, ptr, &term);
     if (!ptr) {
         return NULL;
+    }
+
+    if (isalpha(ptr[0])) {
+        state->decl_type = true;
     }
 
     if (!ecs_term_is_initialized(&term)) {
@@ -19036,41 +19034,16 @@ const char *plecs_parse_plecs_term(
         return NULL; /* No term found */
     }
 
-    /* Lookahead to check if this is an implicit scope assignment (no parens) */
-    if (ptr[0] == '=') {
-        const char *tptr = ecs_parse_fluff(ptr + 1, NULL);
-        if (tptr[0] == '{') {
-            ecs_entity_t pred = plecs_lookup(
-                world, term.first.name, state, 0, false);
-            ecs_entity_t obj = plecs_lookup(
-                world, term.second.name, state, pred, false);
-            ecs_id_t id = 0;
-            if (pred && obj) {
-                id = ecs_pair(pred, obj);
-            } else if (pred) {
-                id = pred;
-            }
-
-            if (id && (ecs_get_typeid(world, id) != 0)) {
-                scope_assignment = true;
-            }
-        } 
-    }
-
-    bool prev = state->assign_stmt;
-    if (scope_assignment) {
-        state->assign_stmt = true;
-        state->assign_to = scope;
-    }
     if (plecs_create_term(world, &term, name, expr, (ptr - expr), state)) {
         ecs_term_fini(&term);
         return NULL; /* Failed to create term */
     }
-    if (scope_assignment) {
-        state->last_subject = state->last_assign_id;
-        state->scope_assign_stmt = true;
+
+    if (decl_id && state->last_subject) {
+        ecs_add_id(world, state->last_subject, decl_id);
     }
-    state->assign_stmt = prev;
+
+    state->decl_type = false;
 
     ecs_term_fini(&term);
 
@@ -19133,9 +19106,11 @@ const char* plecs_parse_stmt(
     state->isa_stmt = false;
     state->with_stmt = false;
     state->using_stmt = false;
+    state->decl_stmt = false;
     state->last_subject = 0;
     state->last_predicate = 0;
     state->last_object = 0;
+    state->assign_to = 0;
 
     plecs_clear_annotations(state);
 
@@ -19151,8 +19126,11 @@ const char* plecs_parse_stmt(
     } else if (ch == '}') {
         ptr = ecs_parse_fluff(ptr + 1, NULL);
         goto scope_close;
-    } else if (ch == '(') {
-        goto term_expr;
+    } else if (ch == '-') {
+        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        state->assign_to = ecs_get_scope(world);
+        state->scope_assign_stmt = true;
+        goto assign_stmt;
     } else if (ch == '@') {
         ptr = plecs_parse_annotation(name, expr, ptr, state);
         if (!ptr) goto error;
@@ -19178,32 +19156,44 @@ term_expr:
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr, NULL);
-
-    if (ptr[0] == '{' && !isspace(ptr[-1])) {
-        /* A '{' directly after an identifier (no whitespace) is a literal */
-        goto assign_expr;
+    const char *tptr = ecs_parse_whitespace(ptr);
+    if (isalpha(tptr[0])) {
+        if (state->decl_stmt) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected ' ' in declaration statement");
+        }
+        ptr = tptr;
+        goto decl_stmt;
     }
 
+    ptr = ecs_parse_fluff(ptr, NULL);
+
     if (!state->using_stmt) {
-        if (ptr[0] == ':') {
+        if (ptr[0] == ':' && ptr[1] == '-') {
+            ptr = ecs_parse_fluff(ptr + 2, NULL);
+            goto assign_stmt;
+        } else if (ptr[0] == ':') {
             ptr = ecs_parse_fluff(ptr + 1, NULL);
             goto inherit_stmt;
-        } else if (ptr[0] == '=') {
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
-            goto assign_stmt;
         } else if (ptr[0] == ',') {
             ptr = ecs_parse_fluff(ptr + 1, NULL);
             goto term_expr;
         } else if (ptr[0] == '{') {
-            state->assign_stmt = false;
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
-            goto scope_open;
+            if (state->assign_stmt) {
+                goto assign_expr;
+            } else {
+                ptr = ecs_parse_fluff(ptr + 1, NULL);
+                goto scope_open;
+            }
         }
     }
 
     state->assign_stmt = false;
     goto done;
+
+decl_stmt:
+    state->decl_stmt = true;
+    goto term_expr;
 
 inherit_stmt:
     ptr = plecs_parse_inherit_stmt(name, expr, ptr, state);
@@ -19235,13 +19225,15 @@ assign_expr:
         ptr ++;
         goto term_expr;
     } else if (ptr[0] == '{') {
-        state->assign_stmt = false;
-        ptr ++;
-        goto scope_open;
-    } else {
-        state->assign_stmt = false;
-        goto done;
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected '{' after assignment");
+        goto error;
     }
+
+    state->assign_stmt = false;
+    state->assign_to = 0;
+
+    goto done;
 
 scope_open:
     ptr = plecs_parse_scope_open(world, name, expr, ptr, state);
@@ -35479,9 +35471,11 @@ char* ecs_parse_term(
 
     /* Term must either end in end of expression, AND or OR token */
     if (!is_valid_end_of_term(ptr)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected end of expression or next term");
-        goto error;
+        if (!isalpha(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected end of expression or next term");
+            goto error;
+        }
     }
 
     /* If the term just contained a 0, the expression has nothing. Ensure

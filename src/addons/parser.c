@@ -914,9 +914,11 @@ char* ecs_parse_term(
 
     /* Term must either end in end of expression, AND or OR token */
     if (!is_valid_end_of_term(ptr)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected end of expression or next term");
-        goto error;
+        if (!isalpha(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected end of expression or next term");
+            goto error;
+        }
     }
 
     /* If the term just contained a 0, the expression has nothing. Ensure
