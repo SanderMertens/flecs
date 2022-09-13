@@ -27640,6 +27640,40 @@ const char *ecs_parse_expr_token(
     return ptr;
 }
 
+const char* ecs_parse_multiline_string(
+    ecs_meta_cursor_t *cur,
+    const char *name,
+    const char *expr,
+    const char *ptr)
+{
+    /* Multiline string */
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+    char ch;
+    while ((ch = ptr[0]) && (ch != '`')) {
+        if (ch == '\\' && ptr[1] == '`') {
+            ch = '`';
+            ptr ++;
+        }
+        ecs_strbuf_appendch(&str, ch);
+        ptr ++;
+    }
+    
+    if (ch != '`') {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing '`' to close multiline string");
+        goto error;
+    }
+    char *strval = ecs_strbuf_get(&str);
+    if (ecs_meta_set_string(cur, strval) != 0) {
+        goto error;
+    }
+    ecs_os_free(strval);
+    
+    return ptr + 1;
+error:
+    return NULL;
+}
+
 const char* ecs_parse_expr(
     const ecs_world_t *world,
     const char *ptr,
@@ -27669,7 +27703,6 @@ const char* ecs_parse_expr(
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
-
         if (!ecs_os_strcmp(token, "{")) {
             ecs_entity_t scope_type = ecs_meta_get_type(&cur);
             depth ++;
@@ -27738,6 +27771,12 @@ const char* ecs_parse_expr(
 
         else if (token[0] == '\"') {
             if (ecs_meta_set_string_literal(&cur, token) != 0) {
+                goto error;
+            }
+        }
+
+        else if (!ecs_os_strcmp(token, "`")) {
+            if (!(ptr = ecs_parse_multiline_string(&cur, name, expr, ptr))) {
                 goto error;
             }
         }
@@ -34715,7 +34754,8 @@ bool valid_token_start_char(
     char ch)
 {
     if ((ch == '"') || (ch == '{') || (ch == '}') || (ch == ',') || (ch == '-')
-        || (ch == '[') || (ch == ']') || valid_identifier_start_char(ch))
+        || (ch == '[') || (ch == ']') || (ch == '`') || 
+        valid_identifier_start_char(ch))
     {
         return true;
     }
@@ -34773,7 +34813,7 @@ const char* ecs_parse_token(
     tptr ++;
     ptr ++;
 
-    if (ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == ',') {
+    if (ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == ',' || ch == '`') {
         tptr[0] = 0;
         return ptr;
     }

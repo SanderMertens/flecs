@@ -158,7 +158,8 @@ bool valid_token_start_char(
     char ch)
 {
     if ((ch == '"') || (ch == '{') || (ch == '}') || (ch == ',') || (ch == '-')
-        || (ch == '[') || (ch == ']') || valid_identifier_start_char(ch))
+        || (ch == '[') || (ch == ']') || (ch == '`') || 
+        valid_identifier_start_char(ch))
     {
         return true;
     }
@@ -216,7 +217,7 @@ const char* ecs_parse_token(
     tptr ++;
     ptr ++;
 
-    if (ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == ',') {
+    if (ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == ',' || ch == '`') {
         tptr[0] = 0;
         return ptr;
     }

@@ -3634,3 +3634,68 @@ void Plecs_annotation_w_trailing_space() {
 
     ecs_fini(world);
 }
+
+typedef struct String {
+    char *value;
+} String;
+
+void Plecs_multiline_string() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(String) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "String"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo :- String{value: `start"
+    LINE "Hello World"
+    LINE "Foo Bar"
+    LINE "Special characters }{\"\"'',"
+    LINE "`}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has(world, foo, String));
+
+    const String *ptr = ecs_get(world, foo, String);
+    test_assert(ptr != NULL);
+    test_assert(ptr->value != NULL);
+    test_str(ptr->value,
+        "start\n"
+        "Hello World\n"
+        "Foo Bar\n"
+        "Special characters }{\"\"'',\n"
+    );
+
+    ecs_os_free(ptr->value);
+
+    ecs_fini(world);
+}
+
+void Plecs_unterminated_multiline_string() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "String"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo :- String{value: `start"
+    LINE "Hello World"
+    LINE "Foo Bar"
+    LINE "Special characters }{\"\"'',"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

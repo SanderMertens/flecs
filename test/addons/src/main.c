@@ -313,6 +313,8 @@ void Plecs_link_annotation(void);
 void Plecs_color_annotation(void);
 void Plecs_multiple_annotations(void);
 void Plecs_annotation_w_trailing_space(void);
+void Plecs_multiline_string(void);
+void Plecs_unterminated_multiline_string(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2136,6 +2138,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "annotation_w_trailing_space",
         Plecs_annotation_w_trailing_space
+    },
+    {
+        "multiline_string",
+        Plecs_multiline_string
+    },
+    {
+        "unterminated_multiline_string",
+        Plecs_unterminated_multiline_string
     }
 };
 
@@ -4452,7 +4462,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        132,
+        134,
         Plecs_testcases
     },
     {
