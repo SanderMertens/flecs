@@ -1,0 +1,43 @@
+// Plecs is a simple language for loading entities into flecs. It has as 
+// advantage that it natively integrates with Flecs features such as the
+// reflection addon (meta), prefabs, hierarchies and relationships.
+//
+// The syntax has been designed to make it convenient for use cases like:
+// - configuration files
+// - asset descriptions (such as prefabs)
+// - entity hierarchies/scene graphs
+//
+// To see what the result of parsing this file looks like, copy the code and
+// paste it into the editor at https://flecs.dev/explorer
+//
+// To load this file yourself, call ecs_plecs_from_file("hello_world.flecs");
+
+// This creates an entity my_spaceship with the SpaceShip tag. Note how neither
+// the entity nor tag need to be defined in advance, if an entity did not yet
+// exist, it will be created on the spot.
+my_spaceship :- SpaceShip
+
+// An entity can be declared in advance, which can be useful to ensure it is
+// placed in a specific scope. To do this just specify the name:
+Engine
+
+// By opening a scope multiple components/tags can be added to the same entity
+// without having to repeat the entity name.
+my_spaceship {
+  - Freighter
+  - (Faction, Earth) // Relationships use the same syntax as the query DSL
+}
+
+// A scope can also be used to add child entities. Child entities and components
+// can be added in the same scope.
+my_spaceship {
+  - FasterThanLight
+
+  // This creates an engine entity with my_spaceship as parent
+  engine {
+    - Engine // The Engine tag is added to my_spaceship.engine
+  }
+}
+
+// The dot notation can be used to refer to nested entities
+my_spaceship.engine :- Ftl

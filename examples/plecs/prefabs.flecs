@@ -1,0 +1,35 @@
+// To see what the result of parsing this file looks like, copy the code and
+// paste it into the editor at https://flecs.dev/explorer
+//
+// To load this file yourself, call ecs_plecs_from_file("prefabs.flecs");
+
+// Create a component types (see reflection.flecs example)
+using flecs.meta
+
+Struct Attack {
+  value :- {f32}
+}
+
+Struct Defense {
+  value :- {f32}
+}
+
+// To create a prefab, you can create an entity with the Prefab tag:
+SpaceShip :- Prefab
+
+// Alternatively you can use the shorthand declaration syntax which has the same
+// result, and allows you to open a scope after the statement:
+Prefab SpaceShip {
+  - Attack{50}
+  - Defense{50}
+}
+
+// To create a prefab that inherits from SpaceShip, we can use the : operator
+Prefab Freighter : SpaceShip {
+  - Defense{100}
+}
+
+// We can create a prefab instance with the same : operator.
+my_spaceship : Freighter {
+  - Attack{75} // Override component from SpaceShip
+}
