@@ -321,7 +321,8 @@
                 "multiple_annotations",
                 "annotation_w_trailing_space",
                 "multiline_string",
-                "unterminated_multiline_string"
+                "unterminated_multiline_string",
+                "annotate_declaration"
             ]
         }, {
             "id": "Doc",

@@ -28,7 +28,8 @@ const char *ecs_parse_expr_token(
     return ptr;
 }
 
-const char* ecs_parse_multiline_string(
+static
+const char* flecs_parse_multiline_string(
     ecs_meta_cursor_t *cur,
     const char *name,
     const char *expr,
@@ -164,7 +165,7 @@ const char* ecs_parse_expr(
         }
 
         else if (!ecs_os_strcmp(token, "`")) {
-            if (!(ptr = ecs_parse_multiline_string(&cur, name, expr, ptr))) {
+            if (!(ptr = flecs_parse_multiline_string(&cur, name, expr, ptr))) {
                 goto error;
             }
         }

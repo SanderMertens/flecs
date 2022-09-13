@@ -3699,3 +3699,25 @@ void Plecs_unterminated_multiline_string() {
 
     ecs_fini(world);
 }
+
+void Plecs_annotate_declaration() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@brief A brief description"
+    LINE "Foo Bar";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    test_assert(bar != 0);
+
+    test_assert(ecs_doc_get_brief(world, foo) == NULL);
+    test_assert(ecs_doc_get_brief(world, bar) != NULL);
+    test_str(ecs_doc_get_brief(world, bar), "A brief description");
+
+    ecs_fini(world);
+}

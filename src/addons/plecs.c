@@ -384,7 +384,7 @@ int plecs_create_term(
     }
 
     /* If annotations preceded the statement, append */
-    if (state->annot_count) {
+    if (!state->decl_type && state->annot_count) {
         if (!subj) {
             ecs_parser_error(name, expr, column, 
                 "missing subject for annotations");

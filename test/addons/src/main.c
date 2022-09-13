@@ -315,6 +315,7 @@ void Plecs_multiple_annotations(void);
 void Plecs_annotation_w_trailing_space(void);
 void Plecs_multiline_string(void);
 void Plecs_unterminated_multiline_string(void);
+void Plecs_annotate_declaration(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2146,6 +2147,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "unterminated_multiline_string",
         Plecs_unterminated_multiline_string
+    },
+    {
+        "annotate_declaration",
+        Plecs_annotate_declaration
     }
 };
 
@@ -4462,7 +4467,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        134,
+        135,
         Plecs_testcases
     },
     {
