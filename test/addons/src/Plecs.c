@@ -3814,3 +3814,247 @@ void Plecs_anonymous_declaration() {
 
     ecs_fini(world);
 }
+
+void Plecs_const_var_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x = 10"
+    LINE "const var_y = 20"
+    LINE ""
+    LINE "e :- Position{$var_x, $var_y}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_const_var_float() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x = 10.5"
+    LINE "const var_y = 20.5"
+    LINE ""
+    LINE "e :- Position{$var_x, $var_y}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_flt(p->x, 10.5);
+    test_flt(p->y, 20.5);
+
+    ecs_fini(world);
+}
+
+void Plecs_const_var_bool() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct Bools {
+        bool x;
+        bool y;
+    } Bools;
+
+    ecs_entity_t ecs_id(Bools) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Bools"}),
+        .members = {
+            {"x", ecs_id(ecs_bool_t)},
+            {"y", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x = true"
+    LINE "const var_y = false"
+    LINE ""
+    LINE "e :- Bools{$var_x, $var_y}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Bools));
+
+    const Bools *p = ecs_get(world, e, Bools);
+    test_assert(p != NULL);
+    test_bool(p->x, true);
+    test_bool(p->y, false);
+
+    ecs_fini(world);
+}
+
+void Plecs_const_var_string() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x = \"10.5\""
+    LINE "const var_y = \"20.5\""
+    LINE ""
+    LINE "e :- Position{$var_x, $var_y}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_flt(p->x, 10.5);
+    test_flt(p->y, 20.5);
+
+    ecs_fini(world);
+}
+
+typedef struct Line {
+    Position start;
+    Position stop;
+} Line;
+
+void Plecs_const_var_struct() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Line"}),
+        .members = {
+            {"start", ecs_id(Position)},
+            {"stop", ecs_id(Position)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_start = Position{10.5, 20.5}"
+    LINE "const var_stop = Position{30.5, 40.5}"
+    LINE ""
+    LINE "e :- Line{start: $var_start, stop: $var_stop}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Line));
+
+    const Line *l = ecs_get(world, e, Line);
+    test_assert(l != NULL);
+    test_flt(l->start.x, 10.5);
+    test_flt(l->start.y, 20.5);
+    test_flt(l->stop.x, 30.5);
+    test_flt(l->stop.y, 40.5);
+
+    ecs_fini(world);
+}
+
+void Plecs_const_var_redeclare() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const var_x = 10"
+    LINE "const var_x = 20";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_const_var_scoped() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x = 10"
+    LINE "a :- Position{$var_x, $var_x}"
+    LINE "a {"
+    LINE "  const var_x = 20"
+    LINE "  const var_y = 30"
+    LINE "  b :- Position{$var_x, $var_y}"
+    LINE "}"
+    LINE "a {"
+    LINE "  const var_y = 20"
+    LINE "  c :- Position{$var_x, $var_y}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+    ecs_entity_t b = ecs_lookup_fullpath(world, "a.b");
+    test_assert(b != 0);
+    ecs_entity_t c = ecs_lookup_fullpath(world, "a.c");
+    test_assert(c != 0);
+
+    test_assert(ecs_has(world, a, Position));
+    test_assert(ecs_has(world, b, Position));
+    test_assert(ecs_has(world, c, Position));
+    const Position *p;
+
+    p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 10);
+
+    p = ecs_get(world, b, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    p = ecs_get(world, c, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

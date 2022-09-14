@@ -507,6 +507,15 @@
 /** @} */
 
 /**
+ * @defgroup values Utility macro's for values
+ * @{
+ */
+
+#define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+
+/** @} */
+
+/**
  * @defgroup temporary_macros Temp macros for easing the transition to v3
  * @{
  */

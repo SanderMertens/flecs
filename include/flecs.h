@@ -4784,6 +4784,104 @@ void* ecs_record_get_column(
 
 /** @} */
 
+/**
+ * @defgroup values Dynamic construction and destruction of values.
+ * @brief Construct and destruct values with registered ctor/dtor hooks.
+ * @{
+ */
+
+/** Construct a value in existing storage 
+ *
+ * @param world The world.
+ * @param type The type of the value to create.
+ * @param ptr Pointer to a value of type 'type'
+ * @return Zero if success, nonzero if failed.
+ */
+FLECS_API
+int ecs_value_init(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void *ptr);
+
+/** Construct a value in existing storage 
+ *
+ * @param world The world.
+ * @param ti The type info of the type to create.
+ * @param ptr Pointer to a value of type 'type'
+ * @return Zero if success, nonzero if failed.
+ */
+FLECS_API
+int ecs_value_init_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void *ptr);
+
+/** Construct a value in new storage 
+ * 
+ * @param world The world.
+ * @param type The type of the value to create.
+ * @return Pointer to type if success, NULL if failed.
+ */
+FLECS_API
+void* ecs_value_new(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
+/** Destruct a value 
+ * 
+ * @param world The world.
+ * @param type The type of the value to destruct.
+ * @param ptr Pointer to constructed value of type 'type'.
+ * @return Zero if success, nonzero if failed. 
+ */
+FLECS_API
+int ecs_value_fini(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* ptr);
+
+/** Destruct a value, free storage
+ * 
+ * @param world The world.
+ * @param type The type of the value to destruct.
+ * @return Zero if success, nonzero if failed. 
+ */
+FLECS_API
+int ecs_value_free(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    void* ptr);
+
+/** Copy value.
+ * 
+ * @param world The world.
+ * @param ti Type info of the value to copy.
+ * @param dst Pointer to the storage to copy to.
+ * @param src Pointer to the value to copy.
+ * @return Zero if success, nonzero if failed. 
+ */
+FLECS_API
+int ecs_value_copy_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    const void *src);
+
+/** Copy value.
+ * 
+ * @param world The world.
+ * @param type The type of the value to copy.
+ * @param dst Pointer to the storage to copy to.
+ * @param src Pointer to the value to copy.
+ * @return Zero if success, nonzero if failed. 
+ */
+FLECS_API
+int ecs_value_copy(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    const void *src);
+
 #include "flecs/addons/flecs_c.h"
 #include "flecs/private/addons.h"
 

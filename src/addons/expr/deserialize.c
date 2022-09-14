@@ -1,5 +1,6 @@
 
 #include "../../private_api.h"
+#include <ctype.h>
 
 #ifdef FLECS_EXPR
 
@@ -63,21 +64,152 @@ error:
     return NULL;
 }
 
-const char* ecs_parse_expr(
-    const ecs_world_t *world,
+static
+bool flecs_parse_is_float(
+    const char *ptr)
+{
+    ecs_assert(isdigit(ptr[0]), ECS_INTERNAL_ERROR, NULL);
+    char ch;
+    while ((ch = (++ptr)[0])) {
+        if (ch == '.' || ch == 'e') {
+            return true;
+        }
+        if (!isdigit(ch)) {
+            return false;
+        }
+    }
+    return false;
+}
+
+static
+int flecs_parse_discover_type(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
     const char *ptr,
-    ecs_entity_t type,
-    void *data_out,
+    ecs_value_t *value,
     const ecs_parse_expr_desc_t *desc)
 {
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* String literal */
+    if (ptr[0] == '"' || ptr[0] == '`') {
+        value->type = ecs_id(ecs_string_t);
+        value->ptr = ecs_value_new_t(world, ecs_string_t);
+        return 0;
+    }
+    
+    /* Negative number literal */
+    if (ptr[0] == '-') {
+        if (!isdigit(ptr[1])) {
+            ecs_parser_error(name, expr, ptr - expr, "invalid literal");
+            return -1;
+        }
+        if (flecs_parse_is_float(ptr + 1)) {
+            value->type = ecs_id(ecs_f64_t);
+            value->ptr = ecs_value_new_t(world, ecs_f64_t);
+            return 0;
+        } else {
+            value->type = ecs_id(ecs_i64_t);
+            value->ptr = ecs_value_new_t(world, ecs_i64_t);
+            return 0;
+        }
+    }
+
+    /* Positive number literal */
+    if (isdigit(ptr[0])) {
+        if (flecs_parse_is_float(ptr)) {
+            value->type = ecs_id(ecs_f64_t);
+            value->ptr = ecs_value_new_t(world, ecs_f64_t);
+            return 0;
+        } else {
+            value->type = ecs_id(ecs_u64_t);
+            value->ptr = ecs_value_new_t(world, ecs_u64_t);
+            return 0;
+        }
+    }
+
+    /* Variable */
+    if (ptr[0] == '$') {
+        const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &ptr[1]);
+        if (!var) {
+            ecs_parser_error(name, expr, ptr - expr, "unresolved variable");
+            return -1;
+        }
+        value->type = var->value.type;
+        value->ptr = ecs_value_new(world, value->type);
+        return 0;
+    }
+
+    /* Boolean */
+    if (ptr[0] == 't' && !ecs_os_strncmp(ptr, "true", 4)) {
+        if (!isalpha(ptr[4]) && ptr[4] != '_') {
+            value->type = ecs_id(ecs_bool_t);
+            value->ptr = ecs_value_new_t(world, ecs_bool_t);
+            return 0;
+        }
+    }
+    if (ptr[0] == 'f' && !ecs_os_strncmp(ptr, "false", 5)) {
+        if (!isalpha(ptr[5]) && ptr[5] != '_') {
+            value->type = ecs_id(ecs_bool_t);
+            value->ptr = ecs_value_new_t(world, ecs_bool_t);
+            return 0;
+        }
+    }
+
+    /* Entity identifier */
+    if (isalpha(ptr[0])) {
+        value->type = ecs_id(ecs_entity_t);
+        value->ptr = ecs_value_new_t(world, ecs_entity_t);
+        return 0;
+    }
+
+    if (ptr[0] == '{') {
+        ecs_parser_error(name, expr, ptr - expr,
+            "unknown type for composite literal");
+        return -1;
+    }
+
+    if (ptr[0] == '[') {
+        ecs_parser_error(name, expr, ptr - expr,
+            "unknown type for collection literal");
+        return -1;
+    }
+
+    ecs_parser_error(name, expr, ptr - expr, "invalid literal");
+    return -1;
+}
+
+const char* ecs_parse_expr(
+    ecs_world_t *world,
+    const char *ptr,
+    ecs_value_t *value,
+    const ecs_parse_expr_desc_t *desc)
+{
+    ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
 
     const char *name = NULL;
     const char *expr = NULL;
 
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
+    }
+    if (!expr) {
+        expr = ptr;
+    }
+
     ptr = ecs_parse_fluff(ptr, NULL);
+
+    ecs_entity_t type = value->type;
+    if (!type) {
+        ecs_assert(value->ptr == NULL, ECS_INVALID_PARAMETER, NULL);
+        if (flecs_parse_discover_type(world, name, expr, ptr, value, desc)) {
+            return NULL;
+        }
+        type = value->type;
+    }
+    void *data_out = value->ptr;
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
@@ -85,8 +217,6 @@ const char* ecs_parse_expr(
     }
 
     if (desc) {
-        name = desc->name;
-        expr = desc->expr;
         cur.lookup_action = desc->lookup_action;
         cur.lookup_ctx = desc->lookup_ctx;
     }
@@ -162,6 +292,23 @@ const char* ecs_parse_expr(
             if (ecs_meta_set_string_literal(&cur, token) != 0) {
                 goto error;
             }
+        }
+
+        else if (token[0] == '$') {
+            if (!desc || !desc->vars) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "unresolved variable '%s' (no variables provided)", token);
+                return NULL;
+            }
+
+            const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &token[1]);
+            if (!var) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "unresolved variable '%s'", token);
+                return NULL;
+            }
+
+            ecs_meta_set_value(&cur, &var->value);
         }
 
         else if (!ecs_os_strcmp(token, "`")) {

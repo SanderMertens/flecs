@@ -327,6 +327,14 @@ typedef struct EcsMetaTypeSerialized {
 
 /** Deserializer utilities */
 
+/* Utility to hold a value of a dynamic type */
+typedef struct ecs_value_t {
+    ecs_entity_t type;
+    void *ptr;
+} ecs_value_t;
+
+#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+
 #define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
 
 typedef struct ecs_meta_scope_t {
@@ -471,6 +479,11 @@ FLECS_API
 int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor);
 
+/** Set field with dynamic value */
+FLECS_API
+int ecs_meta_set_value(
+    ecs_meta_cursor_t *cursor,
+    const ecs_value_t *value);
 
 /** Functions for getting members. */
 
@@ -512,7 +525,6 @@ const char* ecs_meta_get_string(
 FLECS_API
 ecs_entity_t ecs_meta_get_entity(
     const ecs_meta_cursor_t *cursor);
-
 
 /** API functions for creating meta types */
 

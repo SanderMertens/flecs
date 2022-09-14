@@ -326,7 +326,14 @@
                 "annotate_declaration",
                 "anonymous_entity",
                 "anonymous_entity_in_scope",
-                "anonymous_declaration"
+                "anonymous_declaration",
+                "const_var_int",
+                "const_var_float",
+                "const_var_bool",
+                "const_var_string",
+                "const_var_struct",
+                "const_var_redeclare",
+                "const_var_scoped"
             ]
         }, {
             "id": "Doc",
