@@ -16,6 +16,7 @@ flecs_src = files(
     'src/addons/expr/deserialize.c',
     'src/addons/expr/serialize.c',
     'src/addons/expr/strutil.c',
+    'src/addons/expr/vars.c',
     'src/addons/http.c',
     'src/addons/json/deserialize.c',
     'src/addons/json/serialize.c',
@@ -72,6 +73,7 @@ flecs_src = files(
     'src/table_graph.c',
     'src/table.c',
     'src/search.c',
+    'src/value.c',
     'src/world.c',
 )
 

@@ -102,6 +102,69 @@ char* ecs_astresc(
     char delimiter, 
     const char *in);
 
+/** Storage for parser variables. Variables make it possible to parameterize
+ * expression strings, and are referenced with the $ operator (e.g. $var). */
+typedef struct ecs_expr_var_t {
+    char *name;
+    ecs_value_t value;
+} ecs_expr_var_t;
+
+typedef struct ecs_expr_var_scope_t {
+    ecs_hashmap_t var_index;
+    ecs_vec_t vars;
+    struct ecs_expr_var_scope_t *parent;
+} ecs_expr_var_scope_t;
+
+typedef struct ecs_vars_t {
+    ecs_world_t *world;
+    ecs_expr_var_scope_t root;
+    ecs_expr_var_scope_t *cur;
+} ecs_vars_t;
+
+/** Init variable storage */
+FLECS_API
+void ecs_vars_init(
+    ecs_world_t *world,
+    ecs_vars_t *vars);
+
+/** Cleanup variable storage */
+FLECS_API
+void ecs_vars_fini(
+    ecs_vars_t *vars);
+
+/** Push variable scope */
+FLECS_API
+void ecs_vars_push(
+    ecs_vars_t *vars);
+
+/** Pop variable scope */
+FLECS_API
+int ecs_vars_pop(
+    ecs_vars_t *vars);
+
+/** Declare variable in current scope */
+FLECS_API
+ecs_expr_var_t* ecs_vars_declare(
+    ecs_vars_t *vars,
+    const char *name,
+    ecs_entity_t type);
+
+/** Declare variable in current scope from value.
+ * This operation takes ownership of the value. The value pointer must be 
+ * allocated with ecs_value_new.
+ */
+FLECS_API
+ecs_expr_var_t* ecs_vars_declare_w_value(
+    ecs_vars_t *vars,
+    const char *name,
+    ecs_value_t *value);
+
+/** Lookup variable in scope and parent scopes */
+FLECS_API
+ecs_expr_var_t* ecs_vars_lookup(
+    ecs_vars_t *vars,
+    const char *name);
+
 /** Used with ecs_parse_expr. */
 typedef struct ecs_parse_expr_desc_t {
     const char *name;
@@ -111,6 +174,7 @@ typedef struct ecs_parse_expr_desc_t {
         const char *value, 
         void *ctx);
     void *lookup_ctx;
+    ecs_vars_t *vars;
 } ecs_parse_expr_desc_t;
 
 /** Parse expression into value.
@@ -126,10 +190,9 @@ typedef struct ecs_parse_expr_desc_t {
  */
 FLECS_API
 const char* ecs_parse_expr(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     const char *ptr,
-    ecs_entity_t type,
-    void *data_out,
+    ecs_value_t *value,
     const ecs_parse_expr_desc_t *desc);
 
 /** Serialize value into expression string.

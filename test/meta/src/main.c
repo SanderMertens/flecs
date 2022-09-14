@@ -366,6 +366,16 @@ void DeserializeFromExpr_struct_w_array_type_i32_i32(void);
 void DeserializeFromExpr_struct_w_array_type_struct(void);
 void DeserializeFromExpr_struct_w_2_array_type_i32_i32(void);
 void DeserializeFromExpr_struct_w_2_array_type_struct(void);
+void DeserializeFromExpr_discover_type_int(void);
+void DeserializeFromExpr_discover_type_negative_int(void);
+void DeserializeFromExpr_discover_type_float(void);
+void DeserializeFromExpr_discover_type_negative_float(void);
+void DeserializeFromExpr_discover_type_string(void);
+void DeserializeFromExpr_discover_type_multiline_string(void);
+void DeserializeFromExpr_discover_type_entity(void);
+void DeserializeFromExpr_discover_type_bool(void);
+void DeserializeFromExpr_discover_type_unknown(void);
+void DeserializeFromExpr_discover_type_invalid(void);
 
 // Testsuite 'SerializeToExpr'
 void SerializeToExpr_bool(void);
@@ -608,6 +618,22 @@ void MetaUtils_struct_w_2_array_3_i32(void);
 void MetaUtils_struct_w_nested(void);
 void MetaUtils_enum_nospace(void);
 void MetaUtils_struct_nospace(void);
+
+// Testsuite 'Vars'
+void Vars_declare_1_var(void);
+void Vars_declare_2_vars(void);
+void Vars_declare_vars_nested_scope(void);
+void Vars_declare_vars_2_scopes(void);
+void Vars_redeclare_var(void);
+void Vars_i32_expr_w_i32_var(void);
+void Vars_i32_expr_w_f32_var(void);
+void Vars_i32_expr_w_string_var(void);
+void Vars_string_expr_w_string_var(void);
+void Vars_struct_expr_w_i32_vars(void);
+void Vars_struct_expr_w_struct_var(void);
+void Vars_nested_struct_expr_w_struct_var(void);
+void Vars_declare_w_value(void);
+void Vars_redeclare_in_scope(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1987,6 +2013,46 @@ bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "struct_w_2_array_type_struct",
         DeserializeFromExpr_struct_w_2_array_type_struct
+    },
+    {
+        "discover_type_int",
+        DeserializeFromExpr_discover_type_int
+    },
+    {
+        "discover_type_negative_int",
+        DeserializeFromExpr_discover_type_negative_int
+    },
+    {
+        "discover_type_float",
+        DeserializeFromExpr_discover_type_float
+    },
+    {
+        "discover_type_negative_float",
+        DeserializeFromExpr_discover_type_negative_float
+    },
+    {
+        "discover_type_string",
+        DeserializeFromExpr_discover_type_string
+    },
+    {
+        "discover_type_multiline_string",
+        DeserializeFromExpr_discover_type_multiline_string
+    },
+    {
+        "discover_type_entity",
+        DeserializeFromExpr_discover_type_entity
+    },
+    {
+        "discover_type_bool",
+        DeserializeFromExpr_discover_type_bool
+    },
+    {
+        "discover_type_unknown",
+        DeserializeFromExpr_discover_type_unknown
+    },
+    {
+        "discover_type_invalid",
+        DeserializeFromExpr_discover_type_invalid
     }
 };
 
@@ -2933,6 +2999,65 @@ bake_test_case MetaUtils_testcases[] = {
     }
 };
 
+bake_test_case Vars_testcases[] = {
+    {
+        "declare_1_var",
+        Vars_declare_1_var
+    },
+    {
+        "declare_2_vars",
+        Vars_declare_2_vars
+    },
+    {
+        "declare_vars_nested_scope",
+        Vars_declare_vars_nested_scope
+    },
+    {
+        "declare_vars_2_scopes",
+        Vars_declare_vars_2_scopes
+    },
+    {
+        "redeclare_var",
+        Vars_redeclare_var
+    },
+    {
+        "i32_expr_w_i32_var",
+        Vars_i32_expr_w_i32_var
+    },
+    {
+        "i32_expr_w_f32_var",
+        Vars_i32_expr_w_f32_var
+    },
+    {
+        "i32_expr_w_string_var",
+        Vars_i32_expr_w_string_var
+    },
+    {
+        "string_expr_w_string_var",
+        Vars_string_expr_w_string_var
+    },
+    {
+        "struct_expr_w_i32_vars",
+        Vars_struct_expr_w_i32_vars
+    },
+    {
+        "struct_expr_w_struct_var",
+        Vars_struct_expr_w_struct_var
+    },
+    {
+        "nested_struct_expr_w_struct_var",
+        Vars_nested_struct_expr_w_struct_var
+    },
+    {
+        "declare_w_value",
+        Vars_declare_w_value
+    },
+    {
+        "redeclare_in_scope",
+        Vars_redeclare_in_scope
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -3008,7 +3133,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        43,
+        53,
         DeserializeFromExpr_testcases
     },
     {
@@ -3045,9 +3170,16 @@ static bake_test_suite suites[] = {
         NULL,
         15,
         MetaUtils_testcases
+    },
+    {
+        "Vars",
+        NULL,
+        NULL,
+        14,
+        Vars_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 16);
+    return bake_test_run("meta", argc, argv, suites, 17);
 }

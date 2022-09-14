@@ -390,7 +390,17 @@
                 "struct_w_array_type_i32_i32",
                 "struct_w_array_type_struct",
                 "struct_w_2_array_type_i32_i32",
-                "struct_w_2_array_type_struct"
+                "struct_w_2_array_type_struct",
+                "discover_type_int",
+                "discover_type_negative_int",
+                "discover_type_float",
+                "discover_type_negative_float",
+                "discover_type_string",
+                "discover_type_multiline_string",
+                "discover_type_entity",
+                "discover_type_bool",
+                "discover_type_unknown",
+                "discover_type_invalid"
             ]
         }, {
             "id": "SerializeToExpr",
@@ -643,6 +653,24 @@
                 "struct_w_nested",
                 "enum_nospace",
                 "struct_nospace"
+            ]
+        }, {
+            "id": "Vars",
+            "testcases": [
+                "declare_1_var",
+                "declare_2_vars",
+                "declare_vars_nested_scope",
+                "declare_vars_2_scopes",
+                "redeclare_var",
+                "i32_expr_w_i32_var",
+                "i32_expr_w_f32_var",
+                "i32_expr_w_string_var",
+                "string_expr_w_string_var",
+                "struct_expr_w_i32_vars",
+                "struct_expr_w_struct_var",
+                "nested_struct_expr_w_struct_var",
+                "declare_w_value",
+                "redeclare_in_scope"
             ]
         }]
     }

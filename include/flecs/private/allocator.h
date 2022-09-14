@@ -22,15 +22,26 @@ ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     ecs_size_t size);
 
+char* flecs_strdup(
+    ecs_allocator_t *a, 
+    const char* str);
+
+void flecs_strfree(
+    ecs_allocator_t *a, 
+    char* str);
+
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
+#define flecs_alloc_t(a, T) flecs_alloc(a, ECS_SIZEOF(T))
 #define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
 
 #define flecs_calloc(a, size) flecs_bcalloc(flecs_allocator_get(a, size))
+#define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
 #define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
 
 #define flecs_free(a, size, ptr) flecs_bfree(flecs_allocator_get(a, size), ptr)
+#define flecs_free_t(a, T, ptr) flecs_free(a, ECS_SIZEOF(T), ptr)
 #define flecs_free_n(a, T, count, ptr) flecs_free(a, ECS_SIZEOF(T) * (count), ptr)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\

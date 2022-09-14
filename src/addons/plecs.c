@@ -8,6 +8,7 @@
 #define TOK_NEWLINE '\n'
 #define TOK_WITH "with"
 #define TOK_USING "using"
+#define TOK_CONST "const"
 
 #define STACK_MAX_SIZE (64)
 
@@ -35,6 +36,9 @@ typedef struct {
     char *annot[STACK_MAX_SIZE];
     int32_t annot_count;
 
+    ecs_vars_t vars;
+    char var_name[256];
+
     bool with_stmt;
     bool scope_assign_stmt;
     bool using_stmt;
@@ -42,6 +46,7 @@ typedef struct {
     bool isa_stmt;
     bool decl_stmt;
     bool decl_type;
+    bool const_stmt;
 
     int32_t errors;
 } plecs_state_t;
@@ -433,6 +438,51 @@ const char* plecs_parse_inherit_stmt(
 }
 
 static
+const char* plecs_parse_assign_var_expr(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    ecs_value_t value = {0};
+    ecs_expr_var_t *var = NULL;
+    if (state->last_assign_id) {
+        value.type = state->last_assign_id;
+        value.ptr = ecs_value_new(world, state->last_assign_id);
+        var = ecs_vars_lookup(&state->vars, state->var_name);
+    }
+
+    ptr = ecs_parse_expr(world, ptr, &value, 
+        &(ecs_parse_expr_desc_t){
+            .name = name,
+            .expr = expr,
+            .lookup_action = plecs_lookup_action,
+            .lookup_ctx = state,
+            .vars = &state->vars
+        });
+    if (!ptr) {
+        return NULL;
+    }
+
+    if (var) {
+        if (var->value.ptr) {
+            ecs_value_free(world, var->value.type, var->value.ptr);
+            var->value.ptr = value.ptr;
+            var->value.type = value.type;
+        }
+    } else {
+        var = ecs_vars_declare_w_value(
+            &state->vars, state->var_name, &value);
+        if (!var) {
+            return NULL;
+        }
+    }
+
+    return ptr;
+}
+
+static
 const char* plecs_parse_assign_expr(
     ecs_world_t *world,
     const char *name,
@@ -442,6 +492,10 @@ const char* plecs_parse_assign_expr(
 {
     (void)world;
     
+    if (state->const_stmt) {
+        return plecs_parse_assign_var_expr(world, name, expr, ptr, state);
+    }
+
     if (!state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr,
             "unexpected value outside of assignment statement");
@@ -482,12 +536,13 @@ const char* plecs_parse_assign_expr(
 
     void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
 
-    ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
+    ptr = ecs_parse_expr(world, ptr, &(ecs_value_t){type, value_ptr}, 
         &(ecs_parse_expr_desc_t){
             .name = name,
             .expr = expr,
             .lookup_action = plecs_lookup_action,
-            .lookup_ctx = state
+            .lookup_ctx = state,
+            .vars = &state->vars
         });
     if (!ptr) {
         return NULL;
@@ -610,6 +665,21 @@ const char* plecs_parse_with_stmt(
 }
 
 static
+const char* plecs_parse_const_stmt(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name);
+    if (!ptr || ptr[0] != '=') {
+        return NULL;
+    }
+    state->const_stmt = true;
+    return ptr + 1;
+}
+
+static
 const char* plecs_parse_scope_open(
     ecs_world_t *world,
     const char *name,
@@ -668,6 +738,8 @@ const char* plecs_parse_scope_open(
     state->with_frames[state->sp] = state->with_frame;
     state->with_stmt = false;
 
+    ecs_vars_push(&state->vars);
+
     return ptr;
 }
 
@@ -714,6 +786,8 @@ const char* plecs_parse_scope_close(
     state->using_frame = state->using_frames[state->sp];
     state->last_subject = 0;
     state->assign_stmt = false;
+
+    ecs_vars_pop(&state->vars);
 
     return ptr;
 }
@@ -819,10 +893,12 @@ const char* plecs_parse_stmt(
     state->with_stmt = false;
     state->using_stmt = false;
     state->decl_stmt = false;
+    state->const_stmt = false;
     state->last_subject = 0;
     state->last_predicate = 0;
     state->last_object = 0;
     state->assign_to = 0;
+    state->last_assign_id = 0;
 
     plecs_clear_annotations(state);
 
@@ -855,6 +931,11 @@ const char* plecs_parse_stmt(
         ptr = plecs_parse_with_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
         goto term_expr;
+    } else if (!ecs_os_strncmp(ptr, TOK_CONST " ", 6)) {
+        ptr = plecs_parse_const_stmt(name, expr, ptr, state);
+        if (!ptr) goto error;
+
+        goto assign_expr;
     } else {
         goto term_expr;
     }
@@ -937,6 +1018,18 @@ assign_expr:
         ptr ++;
         goto term_expr;
     } else if (ptr[0] == '{') {
+        if (state->const_stmt) {
+            const ecs_expr_var_t *var = ecs_vars_lookup(
+                &state->vars, state->var_name);
+            if (var && var->value.type == ecs_id(ecs_entity_t)) {
+                ecs_assert(var->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                /* The code contained an entity{...} variable assignment, use
+                 * the assigned entity id as type for parsing the expression */
+                state->last_assign_id = *(ecs_entity_t*)var->value.ptr;
+                ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
+                goto done;
+            }
+        }
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected '{' after assignment");
         goto error;
@@ -979,6 +1072,7 @@ int ecs_plecs_from_str(
     state.scope[0] = 0;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
+    ecs_vars_init(world, &state.vars);
 
     do {
         expr = ptr = plecs_parse_stmt(world, name, expr, ptr, &state);
@@ -993,6 +1087,7 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
+    ecs_vars_fini(&state.vars);
 
     plecs_clear_annotations(&state);
 
@@ -1012,6 +1107,7 @@ int ecs_plecs_from_str(
 
     return 0;
 error:
+    ecs_vars_fini(&state.vars);
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
     ecs_term_fini(&term);

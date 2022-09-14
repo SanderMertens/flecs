@@ -34,3 +34,21 @@ ecs_block_allocator_t* flecs_allocator_get(
 
     return result;
 }
+
+char* flecs_strdup(
+    ecs_allocator_t *a, 
+    const char* str)
+{
+    ecs_size_t len = ecs_os_strlen(str);
+    char *result = flecs_alloc_n(a, char, len + 1);
+    ecs_os_memcpy(result, str, len + 1);
+    return result;
+}
+
+void flecs_strfree(
+    ecs_allocator_t *a, 
+    char* str)
+{
+    ecs_size_t len = ecs_os_strlen(str);
+    flecs_free_n(a, char, len + 1, str);
+}

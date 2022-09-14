@@ -662,6 +662,66 @@ int ecs_meta_set_float(
     return 0;
 }
 
+int ecs_meta_set_value(
+    ecs_meta_cursor_t *cursor,
+    const ecs_value_t *value)
+{
+    ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_entity_t type = value->type;
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    const EcsMetaType *mt = ecs_get(cursor->world, type, EcsMetaType);
+    if (!mt) {
+        ecs_err("type of value does not have reflection data");
+        return -1;
+    }
+
+    if (mt->kind == EcsPrimitiveType) {
+        const EcsPrimitive *prim = ecs_get(cursor->world, type, EcsPrimitive);
+        ecs_check(prim != NULL, ECS_INTERNAL_ERROR, NULL);
+        switch(prim->kind) {
+        case EcsBool: return ecs_meta_set_bool(cursor, *(bool*)value->ptr);
+        case EcsChar: return ecs_meta_set_char(cursor, *(char*)value->ptr);
+        case EcsByte: return ecs_meta_set_uint(cursor, *(uint8_t*)value->ptr);
+        case EcsU8:   return ecs_meta_set_uint(cursor, *(uint8_t*)value->ptr);
+        case EcsU16:  return ecs_meta_set_uint(cursor, *(uint16_t*)value->ptr);
+        case EcsU32:  return ecs_meta_set_uint(cursor, *(uint32_t*)value->ptr);
+        case EcsU64:  return ecs_meta_set_uint(cursor, *(uint64_t*)value->ptr);
+        case EcsI8:   return ecs_meta_set_int(cursor, *(int8_t*)value->ptr);
+        case EcsI16:  return ecs_meta_set_int(cursor, *(int16_t*)value->ptr);
+        case EcsI32:  return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
+        case EcsI64:  return ecs_meta_set_int(cursor, *(int64_t*)value->ptr);
+        case EcsF32:  return ecs_meta_set_float(cursor, *(float*)value->ptr);
+        case EcsF64:  return ecs_meta_set_float(cursor, *(double*)value->ptr);
+        case EcsUPtr: return ecs_meta_set_uint(cursor, *(uintptr_t*)value->ptr);
+        case EcsIPtr: return ecs_meta_set_int(cursor, *(intptr_t*)value->ptr);
+        case EcsString: return ecs_meta_set_string(cursor, *(char**)value->ptr);
+        case EcsEntity: return ecs_meta_set_entity(cursor, 
+            *(ecs_entity_t*)value->ptr);
+        default:
+            ecs_throw(ECS_INTERNAL_ERROR, "invalid type kind");
+            goto error;
+        }
+    } else if (mt->kind == EcsEnumType) {
+        return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
+    } else if (mt->kind == EcsBitmaskType) {
+        return ecs_meta_set_int(cursor, *(uint32_t*)value->ptr);
+    } else {
+        ecs_meta_scope_t *scope = get_scope(cursor);
+        ecs_meta_type_op_t *op = get_op(scope);
+        void *ptr = get_ptr(cursor->world, scope);
+        if (op->type != value->type) {
+            char *type_str = ecs_get_fullpath(cursor->world, value->type);
+            conversion_error(cursor, op, type_str);
+            ecs_os_free(type_str);
+            goto error;
+        }
+        return ecs_value_copy(cursor->world, value->type, ptr, value->ptr);
+    }
+
+error:
+    return -1;
+}
+
 static
 int add_bitmask_constant(
     ecs_meta_cursor_t *cursor,

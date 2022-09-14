@@ -320,6 +320,13 @@ void Plecs_annotate_declaration(void);
 void Plecs_anonymous_entity(void);
 void Plecs_anonymous_entity_in_scope(void);
 void Plecs_anonymous_declaration(void);
+void Plecs_const_var_int(void);
+void Plecs_const_var_float(void);
+void Plecs_const_var_bool(void);
+void Plecs_const_var_string(void);
+void Plecs_const_var_struct(void);
+void Plecs_const_var_redeclare(void);
+void Plecs_const_var_scoped(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2171,6 +2178,34 @@ bake_test_case Plecs_testcases[] = {
     {
         "anonymous_declaration",
         Plecs_anonymous_declaration
+    },
+    {
+        "const_var_int",
+        Plecs_const_var_int
+    },
+    {
+        "const_var_float",
+        Plecs_const_var_float
+    },
+    {
+        "const_var_bool",
+        Plecs_const_var_bool
+    },
+    {
+        "const_var_string",
+        Plecs_const_var_string
+    },
+    {
+        "const_var_struct",
+        Plecs_const_var_struct
+    },
+    {
+        "const_var_redeclare",
+        Plecs_const_var_redeclare
+    },
+    {
+        "const_var_scoped",
+        Plecs_const_var_scoped
     }
 };
 
@@ -4487,7 +4522,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        139,
+        146,
         Plecs_testcases
     },
     {
