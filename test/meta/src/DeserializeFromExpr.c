@@ -530,6 +530,31 @@ void DeserializeFromExpr_struct_i32() {
     ecs_fini(world);
 }
 
+void DeserializeFromExpr_struct_i32_neg() {
+    typedef struct {
+        int32_t x;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_parse_expr(world, "{-10}", &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.x, -10);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromExpr_struct_i32_i32() {
     typedef struct {
         int32_t x;
@@ -722,6 +747,31 @@ void DeserializeFromExpr_struct_member_i32() {
     test_assert(ptr[0] == '\0');
 
     test_int(value.x, 10);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromExpr_struct_member_i32_neg() {
+    typedef struct {
+        int32_t x;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_parse_expr(world, "{x: -10}", &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.x, -10);
 
     ecs_fini(world);
 }

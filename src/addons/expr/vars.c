@@ -100,8 +100,8 @@ ecs_expr_var_t* ecs_vars_declare(
     var->value.type = type;
     var->name = flecs_strdup(&vars->world->allocator, name);
 
-    flecs_name_index_ensure(var_index, ecs_vec_count(&scope->vars), 
-        var->name, 0, 0);
+    flecs_name_index_ensure(var_index, 
+        flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
     return var;
 error:
     return NULL;
@@ -129,8 +129,8 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
     var->name = flecs_strdup(&vars->world->allocator, name);
     value->ptr = NULL; /* Take ownership, prevent double free */
 
-    flecs_name_index_ensure(var_index, ecs_vec_count(&scope->vars), 
-        var->name, 0, 0);
+    flecs_name_index_ensure(var_index, 
+        flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
     return var;
 error:
     return NULL;
