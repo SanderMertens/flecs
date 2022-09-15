@@ -43104,6 +43104,10 @@ void ecs_os_set_api(
     }
 }
 
+ecs_os_api_t ecs_os_get_api(void) {
+    return ecs_os_api;
+}
+
 void ecs_os_init(void)
 {
     if (!ecs_os_api_initialized) {
