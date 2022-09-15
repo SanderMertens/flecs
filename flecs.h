@@ -12175,10 +12175,13 @@ typedef struct ecs_parse_expr_desc_t {
  * This operation parses a flecs expression into the provided pointer. The
  * memory pointed to must be large enough to contain a value of the used type.
  * 
+ * If no type and pointer are provided for the value argument, the operation 
+ * will discover the type from the expression and allocate storage for the 
+ * value. The allocated value must be freed with ecs_value_free.
+ * 
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
- * @param type The type of the expression to parse.
- * @param data_out Pointer to the memory to write to.
+ * @param value The value containing type & pointer to write to.
  * @param desc Configuration parameters for deserializer.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */

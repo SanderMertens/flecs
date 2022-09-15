@@ -348,12 +348,14 @@ void DeserializeFromExpr_bitmask(void);
 void DeserializeFromExpr_struct_enum(void);
 void DeserializeFromExpr_struct_bitmask(void);
 void DeserializeFromExpr_struct_i32(void);
+void DeserializeFromExpr_struct_i32_neg(void);
 void DeserializeFromExpr_struct_i32_i32(void);
 void DeserializeFromExpr_struct_entity(void);
 void DeserializeFromExpr_struct_nested_i32(void);
 void DeserializeFromExpr_struct_nested_i32_i32(void);
 void DeserializeFromExpr_struct_2_nested_i32_i32(void);
 void DeserializeFromExpr_struct_member_i32(void);
+void DeserializeFromExpr_struct_member_i32_neg(void);
 void DeserializeFromExpr_struct_member_i32_i32(void);
 void DeserializeFromExpr_struct_member_nested_i32(void);
 void DeserializeFromExpr_struct_member_nested_i32_i32(void);
@@ -634,6 +636,82 @@ void Vars_struct_expr_w_struct_var(void);
 void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_declare_w_value(void);
 void Vars_redeclare_in_scope(void);
+
+// Testsuite 'DeserExprOperators'
+void DeserExprOperators_add_2_int_literals(void);
+void DeserExprOperators_add_2_int_literals_twice(void);
+void DeserExprOperators_sub_2_int_literals(void);
+void DeserExprOperators_mul_2_int_literals(void);
+void DeserExprOperators_div_2_int_literals(void);
+void DeserExprOperators_add_3_int_literals(void);
+void DeserExprOperators_add_3_int_literals_twice(void);
+void DeserExprOperators_sub_3_int_literals(void);
+void DeserExprOperators_mul_3_int_literals(void);
+void DeserExprOperators_div_3_int_literals(void);
+void DeserExprOperators_int_to_bool(void);
+void DeserExprOperators_add_mul_3_int_literals(void);
+void DeserExprOperators_sub_mul_3_int_literals(void);
+void DeserExprOperators_div_mul_3_int_literals(void);
+void DeserExprOperators_add_div_3_int_literals(void);
+void DeserExprOperators_sub_div_3_int_literals(void);
+void DeserExprOperators_mul_div_3_int_literals(void);
+void DeserExprOperators_mul_add_mul_add_int_literals(void);
+void DeserExprOperators_mul_sub_mul_sub_int_literals(void);
+void DeserExprOperators_mul_div_mul_div_int_literals(void);
+void DeserExprOperators_div_add_div_add_int_literals(void);
+void DeserExprOperators_div_sub_div_sub_int_literals(void);
+void DeserExprOperators_div_sub_div_mul_int_literals(void);
+void DeserExprOperators_div_mul_div_mul_int_literals(void);
+void DeserExprOperators_add_2_flt_literals(void);
+void DeserExprOperators_sub_2_flt_literals(void);
+void DeserExprOperators_mul_2_flt_literals(void);
+void DeserExprOperators_div_2_flt_literals(void);
+void DeserExprOperators_add_2_int_neg_literals(void);
+void DeserExprOperators_sub_2_int_neg_literals(void);
+void DeserExprOperators_mul_2_int_neg_literals(void);
+void DeserExprOperators_div_2_int_neg_literals(void);
+void DeserExprOperators_mul_lparen_add_add_rparen_int_literals(void);
+void DeserExprOperators_mul_lparen_add_add_add_rparen_int_literals(void);
+void DeserExprOperators_mul_lparen_add_add_rparen_add_int_literals(void);
+void DeserExprOperators_lparen_add_add_rparen_mul_int_literals(void);
+void DeserExprOperators_lparen_add_add_add_rparen_mul_int_literals(void);
+void DeserExprOperators_double_paren_add_add(void);
+void DeserExprOperators_double_paren_literal(void);
+void DeserExprOperators_lparen_add_add_rparen_mul_lparen_add_add_rparen(void);
+void DeserExprOperators_float_result_add_2_int_literals(void);
+void DeserExprOperators_struct_result_add_2_int_literals(void);
+void DeserExprOperators_struct_result_add_2_2_fields_int_literals(void);
+void DeserExprOperators_struct_result_add_3_int_literals(void);
+void DeserExprOperators_add_to_var(void);
+void DeserExprOperators_add_var_to(void);
+void DeserExprOperators_bool_cond_and_bool(void);
+void DeserExprOperators_bool_cond_or_bool(void);
+void DeserExprOperators_int_cond_and_int(void);
+void DeserExprOperators_int_cond_or_int(void);
+void DeserExprOperators_bool_cond_and_int(void);
+void DeserExprOperators_int_cond_and_bool(void);
+void DeserExprOperators_bool_cond_or_int(void);
+void DeserExprOperators_int_cond_or_bool(void);
+void DeserExprOperators_cond_eq_bool(void);
+void DeserExprOperators_cond_eq_int(void);
+void DeserExprOperators_cond_neq_bool(void);
+void DeserExprOperators_cond_neq_int(void);
+void DeserExprOperators_cond_eq_bool_int(void);
+void DeserExprOperators_cond_eq_int_flt(void);
+void DeserExprOperators_cond_eq_cond_and(void);
+void DeserExprOperators_cond_eq_cond_or(void);
+void DeserExprOperators_cond_gt_bool(void);
+void DeserExprOperators_cond_gt_int(void);
+void DeserExprOperators_cond_gt_flt(void);
+void DeserExprOperators_cond_gteq_bool(void);
+void DeserExprOperators_cond_gteq_int(void);
+void DeserExprOperators_cond_gteq_flt(void);
+void DeserExprOperators_cond_lt_bool(void);
+void DeserExprOperators_cond_lt_int(void);
+void DeserExprOperators_cond_lt_flt(void);
+void DeserExprOperators_cond_lteq_bool(void);
+void DeserExprOperators_cond_lteq_int(void);
+void DeserExprOperators_cond_lteq_flt(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1943,6 +2021,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
         DeserializeFromExpr_struct_i32
     },
     {
+        "struct_i32_neg",
+        DeserializeFromExpr_struct_i32_neg
+    },
+    {
         "struct_i32_i32",
         DeserializeFromExpr_struct_i32_i32
     },
@@ -1965,6 +2047,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "struct_member_i32",
         DeserializeFromExpr_struct_member_i32
+    },
+    {
+        "struct_member_i32_neg",
+        DeserializeFromExpr_struct_member_i32_neg
     },
     {
         "struct_member_i32_i32",
@@ -3058,6 +3144,305 @@ bake_test_case Vars_testcases[] = {
     }
 };
 
+bake_test_case DeserExprOperators_testcases[] = {
+    {
+        "add_2_int_literals",
+        DeserExprOperators_add_2_int_literals
+    },
+    {
+        "add_2_int_literals_twice",
+        DeserExprOperators_add_2_int_literals_twice
+    },
+    {
+        "sub_2_int_literals",
+        DeserExprOperators_sub_2_int_literals
+    },
+    {
+        "mul_2_int_literals",
+        DeserExprOperators_mul_2_int_literals
+    },
+    {
+        "div_2_int_literals",
+        DeserExprOperators_div_2_int_literals
+    },
+    {
+        "add_3_int_literals",
+        DeserExprOperators_add_3_int_literals
+    },
+    {
+        "add_3_int_literals_twice",
+        DeserExprOperators_add_3_int_literals_twice
+    },
+    {
+        "sub_3_int_literals",
+        DeserExprOperators_sub_3_int_literals
+    },
+    {
+        "mul_3_int_literals",
+        DeserExprOperators_mul_3_int_literals
+    },
+    {
+        "div_3_int_literals",
+        DeserExprOperators_div_3_int_literals
+    },
+    {
+        "int_to_bool",
+        DeserExprOperators_int_to_bool
+    },
+    {
+        "add_mul_3_int_literals",
+        DeserExprOperators_add_mul_3_int_literals
+    },
+    {
+        "sub_mul_3_int_literals",
+        DeserExprOperators_sub_mul_3_int_literals
+    },
+    {
+        "div_mul_3_int_literals",
+        DeserExprOperators_div_mul_3_int_literals
+    },
+    {
+        "add_div_3_int_literals",
+        DeserExprOperators_add_div_3_int_literals
+    },
+    {
+        "sub_div_3_int_literals",
+        DeserExprOperators_sub_div_3_int_literals
+    },
+    {
+        "mul_div_3_int_literals",
+        DeserExprOperators_mul_div_3_int_literals
+    },
+    {
+        "mul_add_mul_add_int_literals",
+        DeserExprOperators_mul_add_mul_add_int_literals
+    },
+    {
+        "mul_sub_mul_sub_int_literals",
+        DeserExprOperators_mul_sub_mul_sub_int_literals
+    },
+    {
+        "mul_div_mul_div_int_literals",
+        DeserExprOperators_mul_div_mul_div_int_literals
+    },
+    {
+        "div_add_div_add_int_literals",
+        DeserExprOperators_div_add_div_add_int_literals
+    },
+    {
+        "div_sub_div_sub_int_literals",
+        DeserExprOperators_div_sub_div_sub_int_literals
+    },
+    {
+        "div_sub_div_mul_int_literals",
+        DeserExprOperators_div_sub_div_mul_int_literals
+    },
+    {
+        "div_mul_div_mul_int_literals",
+        DeserExprOperators_div_mul_div_mul_int_literals
+    },
+    {
+        "add_2_flt_literals",
+        DeserExprOperators_add_2_flt_literals
+    },
+    {
+        "sub_2_flt_literals",
+        DeserExprOperators_sub_2_flt_literals
+    },
+    {
+        "mul_2_flt_literals",
+        DeserExprOperators_mul_2_flt_literals
+    },
+    {
+        "div_2_flt_literals",
+        DeserExprOperators_div_2_flt_literals
+    },
+    {
+        "add_2_int_neg_literals",
+        DeserExprOperators_add_2_int_neg_literals
+    },
+    {
+        "sub_2_int_neg_literals",
+        DeserExprOperators_sub_2_int_neg_literals
+    },
+    {
+        "mul_2_int_neg_literals",
+        DeserExprOperators_mul_2_int_neg_literals
+    },
+    {
+        "div_2_int_neg_literals",
+        DeserExprOperators_div_2_int_neg_literals
+    },
+    {
+        "mul_lparen_add_add_rparen_int_literals",
+        DeserExprOperators_mul_lparen_add_add_rparen_int_literals
+    },
+    {
+        "mul_lparen_add_add_add_rparen_int_literals",
+        DeserExprOperators_mul_lparen_add_add_add_rparen_int_literals
+    },
+    {
+        "mul_lparen_add_add_rparen_add_int_literals",
+        DeserExprOperators_mul_lparen_add_add_rparen_add_int_literals
+    },
+    {
+        "lparen_add_add_rparen_mul_int_literals",
+        DeserExprOperators_lparen_add_add_rparen_mul_int_literals
+    },
+    {
+        "lparen_add_add_add_rparen_mul_int_literals",
+        DeserExprOperators_lparen_add_add_add_rparen_mul_int_literals
+    },
+    {
+        "double_paren_add_add",
+        DeserExprOperators_double_paren_add_add
+    },
+    {
+        "double_paren_literal",
+        DeserExprOperators_double_paren_literal
+    },
+    {
+        "lparen_add_add_rparen_mul_lparen_add_add_rparen",
+        DeserExprOperators_lparen_add_add_rparen_mul_lparen_add_add_rparen
+    },
+    {
+        "float_result_add_2_int_literals",
+        DeserExprOperators_float_result_add_2_int_literals
+    },
+    {
+        "struct_result_add_2_int_literals",
+        DeserExprOperators_struct_result_add_2_int_literals
+    },
+    {
+        "struct_result_add_2_2_fields_int_literals",
+        DeserExprOperators_struct_result_add_2_2_fields_int_literals
+    },
+    {
+        "struct_result_add_3_int_literals",
+        DeserExprOperators_struct_result_add_3_int_literals
+    },
+    {
+        "add_to_var",
+        DeserExprOperators_add_to_var
+    },
+    {
+        "add_var_to",
+        DeserExprOperators_add_var_to
+    },
+    {
+        "bool_cond_and_bool",
+        DeserExprOperators_bool_cond_and_bool
+    },
+    {
+        "bool_cond_or_bool",
+        DeserExprOperators_bool_cond_or_bool
+    },
+    {
+        "int_cond_and_int",
+        DeserExprOperators_int_cond_and_int
+    },
+    {
+        "int_cond_or_int",
+        DeserExprOperators_int_cond_or_int
+    },
+    {
+        "bool_cond_and_int",
+        DeserExprOperators_bool_cond_and_int
+    },
+    {
+        "int_cond_and_bool",
+        DeserExprOperators_int_cond_and_bool
+    },
+    {
+        "bool_cond_or_int",
+        DeserExprOperators_bool_cond_or_int
+    },
+    {
+        "int_cond_or_bool",
+        DeserExprOperators_int_cond_or_bool
+    },
+    {
+        "cond_eq_bool",
+        DeserExprOperators_cond_eq_bool
+    },
+    {
+        "cond_eq_int",
+        DeserExprOperators_cond_eq_int
+    },
+    {
+        "cond_neq_bool",
+        DeserExprOperators_cond_neq_bool
+    },
+    {
+        "cond_neq_int",
+        DeserExprOperators_cond_neq_int
+    },
+    {
+        "cond_eq_bool_int",
+        DeserExprOperators_cond_eq_bool_int
+    },
+    {
+        "cond_eq_int_flt",
+        DeserExprOperators_cond_eq_int_flt
+    },
+    {
+        "cond_eq_cond_and",
+        DeserExprOperators_cond_eq_cond_and
+    },
+    {
+        "cond_eq_cond_or",
+        DeserExprOperators_cond_eq_cond_or
+    },
+    {
+        "cond_gt_bool",
+        DeserExprOperators_cond_gt_bool
+    },
+    {
+        "cond_gt_int",
+        DeserExprOperators_cond_gt_int
+    },
+    {
+        "cond_gt_flt",
+        DeserExprOperators_cond_gt_flt
+    },
+    {
+        "cond_gteq_bool",
+        DeserExprOperators_cond_gteq_bool
+    },
+    {
+        "cond_gteq_int",
+        DeserExprOperators_cond_gteq_int
+    },
+    {
+        "cond_gteq_flt",
+        DeserExprOperators_cond_gteq_flt
+    },
+    {
+        "cond_lt_bool",
+        DeserExprOperators_cond_lt_bool
+    },
+    {
+        "cond_lt_int",
+        DeserExprOperators_cond_lt_int
+    },
+    {
+        "cond_lt_flt",
+        DeserExprOperators_cond_lt_flt
+    },
+    {
+        "cond_lteq_bool",
+        DeserExprOperators_cond_lteq_bool
+    },
+    {
+        "cond_lteq_int",
+        DeserExprOperators_cond_lteq_int
+    },
+    {
+        "cond_lteq_flt",
+        DeserExprOperators_cond_lteq_flt
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -3133,7 +3518,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        53,
+        55,
         DeserializeFromExpr_testcases
     },
     {
@@ -3177,9 +3562,16 @@ static bake_test_suite suites[] = {
         NULL,
         14,
         Vars_testcases
+    },
+    {
+        "DeserExprOperators",
+        NULL,
+        NULL,
+        74,
+        DeserExprOperators_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 17);
+    return bake_test_run("meta", argc, argv, suites, 18);
 }

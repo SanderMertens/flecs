@@ -1,4 +1,5 @@
 #include "meta.h"
+#include <ctype.h>
 
 #ifdef FLECS_META
 
@@ -690,7 +691,7 @@ int ecs_meta_set_value(
         case EcsI16:  return ecs_meta_set_int(cursor, *(int16_t*)value->ptr);
         case EcsI32:  return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
         case EcsI64:  return ecs_meta_set_int(cursor, *(int64_t*)value->ptr);
-        case EcsF32:  return ecs_meta_set_float(cursor, *(float*)value->ptr);
+        case EcsF32:  return ecs_meta_set_float(cursor, (double)*(float*)value->ptr);
         case EcsF64:  return ecs_meta_set_float(cursor, *(double*)value->ptr);
         case EcsUPtr: return ecs_meta_set_uint(cursor, *(uintptr_t*)value->ptr);
         case EcsIPtr: return ecs_meta_set_int(cursor, *(intptr_t*)value->ptr);
@@ -802,6 +803,12 @@ int ecs_meta_set_string(
             set_T(ecs_bool_t, ptr, true);
         } else if (!ecs_os_strcmp(value, "false")) {
             set_T(ecs_bool_t, ptr, false);
+        } else if (isdigit(value[0])) {
+            if (!ecs_os_strcmp(value, "0")) {
+                set_T(ecs_bool_t, ptr, false);
+            } else {
+                set_T(ecs_bool_t, ptr, true);
+            }
         } else {
             ecs_err("invalid value for boolean '%s'", value);
             return -1;
