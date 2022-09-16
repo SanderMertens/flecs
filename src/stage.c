@@ -499,13 +499,14 @@ void flecs_stage_init(
 
     flecs_stack_init(&stage->defer_stack);
     flecs_stack_init(&stage->allocators.iter_stack);
+    flecs_stack_init(&stage->allocators.deser_stack);
     flecs_allocator_init(&stage->allocator);
 
     ecs_vec_init_t(&stage->allocator, &stage->commands, ecs_cmd_t, 0);
     ecs_map_init(&stage->cmd_entries, ecs_cmd_entry_t, &stage->allocator, 0);
 }
 
-void flecs_stage_deinit(
+void flecs_stage_fini(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
@@ -519,9 +520,11 @@ void flecs_stage_deinit(
     ecs_poly_fini(stage, ecs_stage_t);
 
     ecs_map_fini(&stage->cmd_entries);
+
     ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
     flecs_stack_fini(&stage->defer_stack);
     flecs_stack_fini(&stage->allocators.iter_stack);
+    flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_allocator_fini(&stage->allocator);
 }
 
@@ -556,7 +559,7 @@ void ecs_set_stage_count(
              * be mixed. */
             ecs_poly_assert(&stages[i], ecs_stage_t);
             ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
-            flecs_stage_deinit(world, &stages[i]);
+            flecs_stage_fini(world, &stages[i]);
         }
 
         ecs_os_free(world->stages);
@@ -767,7 +770,7 @@ void ecs_async_stage_free(
     ecs_poly_assert(world, ecs_stage_t);
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_check(stage->async == true, ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_deinit(stage->world, stage);
+    flecs_stage_fini(stage->world, stage);
     ecs_os_free(stage);
 error:
     return;

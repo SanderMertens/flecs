@@ -23,13 +23,64 @@ typedef enum ecs_expr_oper_t {
     EcsDiv,
 } ecs_expr_oper_t;
 
+/* Used to track temporary values */
+#define EXPR_MAX_STACK_SIZE (256)
+
+typedef struct ecs_expr_value_t {
+    const ecs_type_info_t *ti;
+    void *ptr;
+} ecs_expr_value_t;
+
+typedef struct ecs_value_stack_t {
+    ecs_expr_value_t values[EXPR_MAX_STACK_SIZE];
+    ecs_stack_cursor_t cursor;
+    ecs_stack_t *stack;
+    ecs_stage_t *stage;
+    int32_t count;
+} ecs_value_stack_t;
+
 static
 const char* flecs_parse_expr(
     ecs_world_t *world,
+    ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t op,
     const ecs_parse_expr_desc_t *desc);
+
+static
+void* flecs_expr_value_new(
+    ecs_value_stack_t *stack,
+    ecs_entity_t type)
+{
+    ecs_stage_t *stage = stack->stage;
+    ecs_world_t *world = stage->world;
+    ecs_id_record_t *idr = flecs_id_record_get(world, type);
+    if (!idr) {
+        return NULL;
+    }
+
+    const ecs_type_info_t *ti = idr->type_info;
+    if (!ti) {
+        return NULL;
+    }
+
+    ecs_assert(ti->size != 0, ECS_INTERNAL_ERROR, NULL);
+    void *result = flecs_stack_alloc(stack->stack, ti->size, ti->alignment);
+    if (ti->hooks.ctor) {
+        ti->hooks.ctor(result, 1, ti);
+    } else {
+        ecs_os_memset(result, 0, ti->size);
+    }
+    if (ti->hooks.dtor) {
+        /* Track values that have destructors */
+        stack->values[stack->count].ti = ti;
+        stack->values[stack->count].ptr = result;
+        stack->count ++;
+    }
+
+    return result;
+}
 
 static
 const char* flecs_str_to_expr_oper(
@@ -145,7 +196,7 @@ const char* flecs_parse_multiline_string(
         goto error;
     }
     ecs_os_free(strval);
-    
+
     return ptr + 1;
 error:
     return NULL;
@@ -374,6 +425,7 @@ int flecs_oper_precedence(
 static
 void flecs_value_cast(
     ecs_world_t *world,
+    ecs_value_stack_t *stack,
     ecs_value_t *value,
     ecs_entity_t type)
 {
@@ -383,12 +435,11 @@ void flecs_value_cast(
 
     ecs_value_t result;
     result.type = type;
-    result.ptr = ecs_value_new(world, type);
+    result.ptr = flecs_expr_value_new(stack, type);
 
     if (value->ptr) {
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, result.ptr);
         ecs_meta_set_value(&cur, value);
-        ecs_value_free(world, value->type, value->ptr);
     }
 
     *value = result;
@@ -506,12 +557,6 @@ done:
         ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
     } else if (left->type == ecs_id(ecs_f64_t)) { \
         ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else if (left->type == ecs_id(ecs_u8_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u8_t, ecs_u8_t);\
-    } else if (left->type == ecs_id(ecs_char_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_char_t, ecs_char_t);\
-    } else if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
     } else {\
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
     }
@@ -543,6 +588,7 @@ done:
 static
 int flecs_binary_expr_do(
     ecs_world_t *world,
+    ecs_value_stack_t *stack,
     const char *name,
     const char *expr,
     const char *ptr,
@@ -563,17 +609,15 @@ int flecs_binary_expr_do(
         return -1;
     }
 
-    flecs_value_cast(world, lvalue, operand_type);
-    flecs_value_cast(world, rvalue, operand_type);
+    flecs_value_cast(world, stack, lvalue, operand_type);
+    flecs_value_cast(world, stack, rvalue, operand_type);
 
     ecs_value_t *storage = result;
     ecs_value_t tmp_storage = {0};
-    if (result->type && (result->type != type)) {
+    if (result->type != type) {
         storage = &tmp_storage;
-    }
-    if (storage->type != type) {
         storage->type = type;
-        storage->ptr = ecs_value_new(world, type);
+        storage->ptr = flecs_expr_value_new(stack, type);
     }
 
     switch(op) {
@@ -618,11 +662,14 @@ int flecs_binary_expr_do(
         return -1;
     }
 
-    if (storage != result) {
-        ecs_meta_cursor_t cur = ecs_meta_cursor(world, 
-            result->type, result->ptr);
-        ecs_meta_set_value(&cur, storage);
-        ecs_value_free(world, storage->type, storage->ptr);
+    if (storage->ptr != result->ptr) {
+        if (!result->ptr) {
+            *result = *storage;
+        } else {
+            ecs_meta_cursor_t cur = ecs_meta_cursor(world, 
+                result->type, result->ptr);
+            ecs_meta_set_value(&cur, storage);
+        }
     }
 
     return 0;
@@ -631,6 +678,7 @@ int flecs_binary_expr_do(
 static
 const char* flecs_binary_expr_parse(
     ecs_world_t *world,
+    ecs_value_stack_t *stack,
     const char *name,
     const char *expr,
     const char *ptr,
@@ -651,19 +699,16 @@ const char* flecs_binary_expr_parse(
         ptr = ecs_parse_fluff(ptr, NULL);
 
         ecs_value_t rvalue = {0};
-        const char *rptr = flecs_parse_expr(world, ptr, &rvalue, op, desc);
+        const char *rptr = flecs_parse_expr(world, stack, ptr, &rvalue, op, desc);
         if (!rptr) {
             return NULL;
         }
 
-        if (flecs_binary_expr_do(world, name, expr, ptr, 
+        if (flecs_binary_expr_do(world, stack, name, expr, ptr, 
             lvalue, &rvalue, result, op)) 
         {
             return NULL;
         }
-
-        ecs_value_free(world, lvalue->type, lvalue->ptr);
-        ecs_value_free(world, rvalue.type, rvalue.ptr);
 
         ptr = rptr;
 
@@ -673,7 +718,7 @@ const char* flecs_binary_expr_parse(
             if (result_type) {
                 /* If result was initialized, preserve its value */
                 lvalue->type = result->type;
-                lvalue->ptr = ecs_value_new(world, lvalue->type);
+                lvalue->ptr = flecs_expr_value_new(stack, lvalue->type);
                 ecs_value_copy(world, lvalue->type, lvalue->ptr, result->ptr);
                 continue;
             } else {
@@ -693,6 +738,7 @@ const char* flecs_binary_expr_parse(
 static
 const char* flecs_parse_expr(
     ecs_world_t *world,
+    ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t left_op,
@@ -720,14 +766,13 @@ const char* flecs_parse_expr(
 
         result.type = type;
         if (type != value->type) {
-            result.ptr = ecs_value_new(world, type);   
+            result.ptr = flecs_expr_value_new(stack, type);
         } else {
             result.ptr = value->ptr;
         }
 
         cur = ecs_meta_cursor(world, result.type, result.ptr);
         if (!cur.valid) {
-            ecs_value_free(world, result.type, result.ptr);
             return NULL;
         }
 
@@ -743,7 +788,7 @@ const char* flecs_parse_expr(
 
         if (!ecs_os_strcmp(token, "(")) {
             /* Parenthesis, parse nested expression */
-            ptr = flecs_parse_expr(world, ptr, &result, EcsLeftParen, desc);
+            ptr = flecs_parse_expr(world, stack, ptr, &result, EcsLeftParen, desc);
             if (ptr[0] != ')') {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "missing closing parenthesis");
@@ -873,6 +918,7 @@ const char* flecs_parse_expr(
                     goto error;
                 }
             }
+
             is_lvalue = true;
         }
 
@@ -898,7 +944,7 @@ const char* flecs_parse_expr(
                         ecs_entity_t cur_type = ecs_meta_get_type(&cur);
                         void *cur_ptr = ecs_meta_get_ptr(&cur);
                         lvalue.type = cur_type;
-                        lvalue.ptr = ecs_value_new(world, cur_type);
+                        lvalue.ptr = flecs_expr_value_new(stack, cur_type);
                         ecs_value_copy(world, cur_type, lvalue.ptr, cur_ptr);
                         temp_storage.type = cur_type;
                         temp_storage.ptr = cur_ptr;
@@ -906,7 +952,7 @@ const char* flecs_parse_expr(
                     }
 
                     /* Do the binary expression */
-                    ptr = flecs_binary_expr_parse(world, name, expr, ptr, 
+                    ptr = flecs_binary_expr_parse(world, stack, name, expr, ptr, 
                         &lvalue, op_result, left_op, desc);
                     if (!ptr) {
                         return NULL;
@@ -924,14 +970,13 @@ const char* flecs_parse_expr(
     }
 
     if (!value->ptr) {
-        /* Move result to output  */
-        *value = result;
-    } else if (result.ptr != value->ptr) {
-        /* Result and value differ, copy value to result. Use cursor API so 
-         * value is casted if necessary */
+        value->type = result.type;
+        value->ptr = flecs_expr_value_new(stack, result.type);
+    }
+
+    if (value->ptr != result.ptr) {
         cur = ecs_meta_cursor(world, value->type, value->ptr);
         ecs_meta_set_value(&cur, &result);
-        ecs_value_free(world, result.type, result.ptr);
     }
 
     ecs_assert(value->type != 0, ECS_INTERNAL_ERROR, NULL);
@@ -948,7 +993,37 @@ const char* ecs_parse_expr(
     ecs_value_t *value,
     const ecs_parse_expr_desc_t *desc)
 {
-    return flecs_parse_expr(world, ptr, value, EcsExprOperUnknown, desc);
+    /* Prepare storage for temporary values */
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_value_stack_t stack;
+    stack.count = 0;
+    stack.stage = stage;
+    stack.stack = &stage->allocators.deser_stack;
+    stack.cursor = flecs_stack_get_cursor(stack.stack);
+
+    /* Parse expression */
+    bool storage_provided = value->ptr != NULL;
+    ptr = flecs_parse_expr(world, &stack, ptr, value, EcsExprOperUnknown, desc);
+
+    /* If no result value was provided, allocate one as we can't return a 
+     * pointer to a temporary storage */
+    if (!storage_provided && value->ptr) {
+        ecs_assert(value->type != 0, ECS_INTERNAL_ERROR, NULL);
+        void *temp_storage = value->ptr;
+        value->ptr = ecs_value_new(world, value->type);
+        ecs_value_move_ctor(world, value->type, value->ptr, temp_storage);
+    }
+    
+    /* Cleanup temporary values */
+    int i;
+    for (i = 0; i < stack.count; i ++) {
+        const ecs_type_info_t *ti = stack.values[i].ti;
+        ecs_assert(ti->hooks.dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        ti->hooks.dtor(stack.values[i].ptr, 1, ti);
+    }
+    flecs_stack_restore_cursor(stack.stack, &stack.cursor);
+
+    return ptr;
 }
 
 #endif

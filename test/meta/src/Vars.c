@@ -160,8 +160,9 @@ void Vars_i32_expr_w_i32_var() {
         world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
-
     test_int(v, 10);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
@@ -182,8 +183,9 @@ void Vars_i32_expr_w_f32_var() {
         world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
-
     test_int(v, 10);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
@@ -203,8 +205,10 @@ void Vars_i32_expr_w_string_var() {
         world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
-
     test_int(v, 10);
+
+    *(char**)foo->value.ptr = NULL;
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
@@ -224,10 +228,12 @@ void Vars_string_expr_w_string_var() {
         world, "$foo", &ecs_value(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
-
     test_str(v, "Hello World");
-
+    
     ecs_os_free(v);
+
+    *(char**)foo->value.ptr = NULL;
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
@@ -259,6 +265,8 @@ void Vars_struct_expr_w_i32_vars() {
     test_int(v.x, 10);
     test_int(v.y, 20);
 
+    ecs_vars_fini(&vars);
+
     ecs_fini(world);
 }
 
@@ -286,6 +294,8 @@ void Vars_struct_expr_w_struct_var() {
 
     test_int(v.x, 10);
     test_int(v.y, 20);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
@@ -331,6 +341,8 @@ void Vars_nested_struct_expr_w_struct_var() {
     test_int(v.start.y, 20);
     test_int(v.stop.x, 30);
     test_int(v.stop.y, 40);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }

@@ -331,6 +331,21 @@ void ecs_map_fini(
     ecs_map_t *map)
 {
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
+#ifdef FLECS_SANITIZE
+    /* Free buckets in sanirized mode, so we can replace the allocator with
+        * regular malloc/free and use asan/valgrind to find memory errors. */
+    ecs_bucket_t *bucket = map->buckets;
+    while ((bucket != map->buckets_end)) {
+        ecs_bucket_entry_t *entry = bucket->first;
+        while (entry) {
+            ecs_bucket_entry_t *next = entry->next;
+            flecs_bfree(map->entry_allocator, entry);
+            entry = next;
+        }
+        bucket ++;
+    }
+#endif
+
     if (map->entry_allocator && !map->shared_allocator) {
         flecs_ballocator_free(map->entry_allocator);
         map->entry_allocator = NULL;

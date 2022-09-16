@@ -1494,6 +1494,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace() {
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 
+    ecs_async_stage_free(async);
+
     ecs_fini(world);
 }
 

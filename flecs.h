@@ -1171,6 +1171,7 @@ typedef struct ecs_block_allocator_t {
     int32_t data_size;
     int32_t chunks_per_block;
     int32_t block_size;
+    int32_t alloc_count;
 } ecs_block_allocator_t;
 
 FLECS_DBG_API
@@ -3998,6 +3999,12 @@ typedef ecs_iterable_t EcsIterable;
  * @defgroup misc_types Miscalleneous types
  * @{
  */
+
+/* Utility to hold a value of a dynamic type */
+typedef struct ecs_value_t {
+    ecs_entity_t type;
+    void *ptr;
+} ecs_value_t;
 
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
@@ -7953,8 +7960,8 @@ void* ecs_record_get_column(
 /** @} */
 
 /**
- * @defgroup values Dynamic construction and destruction of values.
- * @brief Construct and destruct values with registered ctor/dtor hooks.
+ * @defgroup values API for dynamic values.
+ * @brief Construct, destruct, copy and move dynamically created values.
  * @{
  */
 
@@ -7994,6 +8001,18 @@ FLECS_API
 void* ecs_value_new(
     ecs_world_t *world,
     ecs_entity_t type);
+
+/** Destruct a value 
+ * 
+ * @param world The world.
+ * @param ti Type info of the value to destruct.
+ * @param ptr Pointer to constructed value of type 'type'.
+ * @return Zero if success, nonzero if failed. 
+ */
+int ecs_value_fini_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void *ptr);
 
 /** Destruct a value 
  * 
@@ -8049,6 +8068,62 @@ int ecs_value_copy(
     ecs_entity_t type,
     void* dst,
     const void *src);
+
+/** Move value.
+ * 
+ * @param world The world.
+ * @param ti Type info of the value to move.
+ * @param dst Pointer to the storage to move to.
+ * @param src Pointer to the value to move.
+ * @return Zero if success, nonzero if failed. 
+ */
+int ecs_value_move_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    void *src);
+
+/** Move value.
+ * 
+ * @param world The world.
+ * @param type The type of the value to move.
+ * @param dst Pointer to the storage to move to.
+ * @param src Pointer to the value to move.
+ * @return Zero if success, nonzero if failed. 
+ */
+int ecs_value_move(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    void *src);
+
+/** Move construct value.
+ * 
+ * @param world The world.
+ * @param ti Type info of the value to move.
+ * @param dst Pointer to the storage to move to.
+ * @param src Pointer to the value to move.
+ * @return Zero if success, nonzero if failed. 
+ */
+int ecs_value_move_ctor_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    void *src);
+
+/** Move construct value.
+ * 
+ * @param world The world.
+ * @param type The type of the value to move.
+ * @param dst Pointer to the storage to move to.
+ * @param src Pointer to the value to move.
+ * @return Zero if success, nonzero if failed. 
+ */
+int ecs_value_move_ctor(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    void *src);
 
 /**
  * @file flecs_c.h
@@ -8563,6 +8638,7 @@ int ecs_value_copy(
  * @{
  */
 
+#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
 
 /** @} */
@@ -11601,14 +11677,6 @@ typedef struct EcsMetaTypeSerialized {
 
 
 /** Deserializer utilities */
-
-/* Utility to hold a value of a dynamic type */
-typedef struct ecs_value_t {
-    ecs_entity_t type;
-    void *ptr;
-} ecs_value_t;
-
-#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
 
 #define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
 
