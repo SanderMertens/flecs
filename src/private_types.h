@@ -399,6 +399,7 @@ typedef struct ecs_world_allocators_t {
 /* Stage level allocators are for operations that can be multithreaded */
 typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
+    ecs_stack_t deser_stack;
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */

@@ -511,6 +511,7 @@
  * @{
  */
 
+#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
 
 /** @} */

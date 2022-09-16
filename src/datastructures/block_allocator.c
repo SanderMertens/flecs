@@ -1,5 +1,9 @@
 #include "../private_api.h"
 
+#ifdef FLECS_SANITIZE
+// #define FLECS_USE_OS_ALLOC
+#endif
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -68,6 +72,10 @@ void flecs_ballocator_fini(
 {
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
 
+#ifdef FLECS_SANITIZE
+    ecs_assert(ba->alloc_count == 0, ECS_LEAK_DETECTED, NULL);
+#endif
+
     ecs_block_allocator_block_t *block;
     for (block = ba->block_head; block;) {
         ecs_block_allocator_block_t *next = block->next;
@@ -87,6 +95,10 @@ void flecs_ballocator_free(
 void* flecs_balloc(
     ecs_block_allocator_t *ba) 
 {
+#ifdef FLECS_USE_OS_ALLOC
+    return ecs_os_malloc(ba->data_size);
+#endif
+
     if (!ba) return NULL;
 
     if (!ba->head) {
@@ -96,8 +108,9 @@ void* flecs_balloc(
     void *result = ba->head;
     ba->head = ba->head->next;
 
-
 #ifdef FLECS_SANITIZE
+    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
+    ba->alloc_count ++;
     *(int64_t*)result = ba->chunk_size;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t));
 #endif
@@ -108,6 +121,10 @@ void* flecs_balloc(
 void* flecs_bcalloc(
     ecs_block_allocator_t *ba) 
 {
+#ifdef FLECS_USE_OS_ALLOC
+    return ecs_os_calloc(ba->data_size);
+#endif
+
     if (!ba) return NULL;
     void *result = flecs_balloc(ba);
     ecs_os_memset(result, 0, ba->data_size);
@@ -118,6 +135,11 @@ void flecs_bfree(
     ecs_block_allocator_t *ba, 
     void *memory) 
 {
+#ifdef FLECS_USE_OS_ALLOC
+    ecs_os_free(memory);
+    return;
+#endif
+
     if (!ba) {
         ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
         return;
@@ -134,11 +156,14 @@ void flecs_bfree(
                 memory, *(int64_t*)memory, ba->chunk_size);
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+
+    ba->alloc_count --;
 #endif
 
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = ba->head;
     ba->head = chunk;
+    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
 }
 
 void* flecs_brealloc(
@@ -146,6 +171,10 @@ void* flecs_brealloc(
     ecs_block_allocator_t *src, 
     void *memory)
 {
+#ifdef FLECS_USE_OS_ALLOC
+    return ecs_os_realloc(memory, dst->data_size);
+#endif
+
     if (dst == src) {
         return memory;
     }
@@ -166,6 +195,14 @@ void* flecs_bdup(
     ecs_block_allocator_t *ba, 
     void *memory)
 {
+#ifdef FLECS_USE_OS_ALLOC
+    if (memory && ba->chunk_size) {
+        return ecs_os_memdup(memory, ba->data_size);
+    } else {
+        return NULL;
+    }
+#endif
+
     void *result = flecs_balloc(ba);
     if (result) {
         ecs_os_memcpy(result, memory, ba->data_size);

@@ -69,6 +69,7 @@ int ecs_vars_pop(
     ecs_check(scope != &vars->root, ECS_INVALID_OPERATION, NULL);
     vars->cur = scope->parent;
     flecs_expr_var_scope_fini(vars->world, scope);
+    flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, scope);
     return 0;
 error:
     return 1;

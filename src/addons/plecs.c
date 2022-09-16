@@ -36,8 +36,10 @@ typedef struct {
     char *annot[STACK_MAX_SIZE];
     int32_t annot_count;
 
+#ifdef FLECS_EXPR
     ecs_vars_t vars;
     char var_name[256];
+#endif
 
     bool with_stmt;
     bool scope_assign_stmt;
@@ -437,6 +439,7 @@ const char* plecs_parse_inherit_stmt(
     return ptr;
 }
 
+#ifdef FLECS_EXPR
 static
 const char* plecs_parse_assign_var_expr(
     ecs_world_t *world,
@@ -481,6 +484,7 @@ const char* plecs_parse_assign_var_expr(
 
     return ptr;
 }
+#endif
 
 static
 const char* plecs_parse_assign_expr(
@@ -493,7 +497,12 @@ const char* plecs_parse_assign_expr(
     (void)world;
     
     if (state->const_stmt) {
+#ifdef FLECS_EXPR
         return plecs_parse_assign_var_expr(world, name, expr, ptr, state);
+#else
+    ecs_parser_error(name, expr, ptr - expr,
+        "variables not supported, missing FLECS_EXPR addon");
+#endif
     }
 
     if (!state->assign_stmt) {
@@ -664,6 +673,7 @@ const char* plecs_parse_with_stmt(
     return ptr + 5;
 }
 
+#ifdef FLECS_EXPR
 static
 const char* plecs_parse_const_stmt(
     const char *name,
@@ -678,6 +688,7 @@ const char* plecs_parse_const_stmt(
     state->const_stmt = true;
     return ptr + 1;
 }
+#endif
 
 static
 const char* plecs_parse_scope_open(
@@ -738,7 +749,9 @@ const char* plecs_parse_scope_open(
     state->with_frames[state->sp] = state->with_frame;
     state->with_stmt = false;
 
+#ifdef FLECS_EXPR
     ecs_vars_push(&state->vars);
+#endif
 
     return ptr;
 }
@@ -787,7 +800,9 @@ const char* plecs_parse_scope_close(
     state->last_subject = 0;
     state->assign_stmt = false;
 
+#ifdef FLECS_EXPR
     ecs_vars_pop(&state->vars);
+#endif
 
     return ptr;
 }
@@ -931,11 +946,13 @@ const char* plecs_parse_stmt(
         ptr = plecs_parse_with_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
         goto term_expr;
+#ifdef FLECS_EXPR
     } else if (!ecs_os_strncmp(ptr, TOK_CONST " ", 6)) {
         ptr = plecs_parse_const_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
 
         goto assign_expr;
+#endif
     } else {
         goto term_expr;
     }
@@ -1019,6 +1036,7 @@ assign_expr:
         goto term_expr;
     } else if (ptr[0] == '{') {
         if (state->const_stmt) {
+#ifdef FLECS_EXPR
             const ecs_expr_var_t *var = ecs_vars_lookup(
                 &state->vars, state->var_name);
             if (var && var->value.type == ecs_id(ecs_entity_t)) {
@@ -1029,6 +1047,10 @@ assign_expr:
                 ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
                 goto done;
             }
+#else
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "variables not supported, missing FLECS_EXPR addon");
+#endif
         }
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected '{' after assignment");
@@ -1072,7 +1094,10 @@ int ecs_plecs_from_str(
     state.scope[0] = 0;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
+
+#ifdef FLECS_EXPR
     ecs_vars_init(world, &state.vars);
+#endif
 
     do {
         expr = ptr = plecs_parse_stmt(world, name, expr, ptr, &state);
@@ -1087,7 +1112,9 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
+#ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
+#endif
 
     plecs_clear_annotations(&state);
 
@@ -1107,7 +1134,9 @@ int ecs_plecs_from_str(
 
     return 0;
 error:
+#ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
+#endif
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
     ecs_term_fini(&term);

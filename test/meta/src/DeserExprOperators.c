@@ -8,6 +8,7 @@ void DeserExprOperators_add_2_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -25,6 +26,7 @@ void DeserExprOperators_add_2_int_literals_twice() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -37,6 +39,7 @@ void DeserExprOperators_sub_2_int_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 20 - 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -49,6 +52,7 @@ void DeserExprOperators_mul_2_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 20 * 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -61,6 +65,7 @@ void DeserExprOperators_div_2_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -73,6 +78,7 @@ void DeserExprOperators_add_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -90,6 +96,7 @@ void DeserExprOperators_add_3_int_literals_twice() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -102,6 +109,7 @@ void DeserExprOperators_sub_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 30 - 10 - 5);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -114,6 +122,7 @@ void DeserExprOperators_mul_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 2 * 5 * 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -126,6 +135,7 @@ void DeserExprOperators_div_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 40 / 5 / 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -162,6 +172,7 @@ void DeserExprOperators_add_mul_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 * 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -174,6 +185,7 @@ void DeserExprOperators_sub_mul_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 50 - 10 * 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -186,6 +198,7 @@ void DeserExprOperators_div_mul_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 5 * 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -198,6 +211,7 @@ void DeserExprOperators_add_div_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 10 + 30 / 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -210,6 +224,7 @@ void DeserExprOperators_sub_div_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 30 - 10 / 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -222,6 +237,7 @@ void DeserExprOperators_mul_div_3_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 20 * 10 / 2);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -234,6 +250,7 @@ void DeserExprOperators_mul_add_mul_add_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 2 * 4 + 6 * 8 + 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -246,6 +263,7 @@ void DeserExprOperators_mul_sub_mul_sub_int_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 2 * 4 - 6 * 8 - 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -258,6 +276,7 @@ void DeserExprOperators_mul_div_mul_div_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 * 4.0 / 6.0 * 8.0 / 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -270,6 +289,7 @@ void DeserExprOperators_div_add_div_add_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 + 6.0 / 8.0 + 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -282,6 +302,7 @@ void DeserExprOperators_div_sub_div_sub_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 - 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -294,6 +315,7 @@ void DeserExprOperators_div_mul_div_mul_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 * 6.0 / 8.0 * 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -306,6 +328,7 @@ void DeserExprOperators_div_sub_div_mul_int_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 * 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -318,6 +341,7 @@ void DeserExprOperators_add_2_flt_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 + 20.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -330,6 +354,7 @@ void DeserExprOperators_sub_2_flt_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 - 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -342,6 +367,7 @@ void DeserExprOperators_mul_2_flt_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 * 10.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -354,6 +380,7 @@ void DeserExprOperators_div_2_flt_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 / 2.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -366,6 +393,7 @@ void DeserExprOperators_add_2_int_neg_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 + -20);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -378,6 +406,7 @@ void DeserExprOperators_sub_2_int_neg_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 - -20);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -390,6 +419,7 @@ void DeserExprOperators_mul_2_int_neg_literals() {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 * -20);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -402,6 +432,7 @@ void DeserExprOperators_div_2_int_neg_literals() {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, -10.0 / -20.0);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -414,6 +445,7 @@ void DeserExprOperators_mul_lparen_add_add_rparen_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30));
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -426,6 +458,7 @@ void DeserExprOperators_mul_lparen_add_add_add_rparen_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30 + 40));
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -438,6 +471,7 @@ void DeserExprOperators_mul_lparen_add_add_rparen_add_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30) + 40);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -450,6 +484,7 @@ void DeserExprOperators_lparen_add_add_rparen_mul_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, (20 + 30) * 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -462,6 +497,7 @@ void DeserExprOperators_lparen_add_add_add_rparen_mul_int_literals() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, (20 + 30 + 40) * 10);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -474,6 +510,7 @@ void DeserExprOperators_double_paren_add_add() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, ((20 + 30)));
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -486,6 +523,7 @@ void DeserExprOperators_double_paren_literal() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, ((20)));
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -498,6 +536,7 @@ void DeserExprOperators_lparen_add_add_rparen_mul_lparen_add_add_rparen() {
     test_assert(v.type == ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, (10 + 20) * (20 + 30));
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -612,8 +651,8 @@ void DeserExprOperators_add_to_var() {
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 10 + 20);
-
     ecs_value_free(world, v.type, v.ptr);
+
     ecs_vars_fini(&vars);
     ecs_fini(world);
 }
@@ -634,8 +673,8 @@ void DeserExprOperators_add_var_to() {
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 20 + 10);
-
     ecs_value_free(world, v.type, v.ptr);
+
     ecs_vars_fini(&vars);
     ecs_fini(world);
 }
@@ -663,6 +702,7 @@ void DeserExprOperators_bool_cond_and_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -690,6 +730,7 @@ void DeserExprOperators_bool_cond_or_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -717,6 +758,7 @@ void DeserExprOperators_int_cond_and_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -744,6 +786,7 @@ void DeserExprOperators_int_cond_or_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -771,6 +814,7 @@ void DeserExprOperators_bool_cond_and_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -798,6 +842,7 @@ void DeserExprOperators_int_cond_and_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -825,6 +870,7 @@ void DeserExprOperators_bool_cond_or_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -852,6 +898,7 @@ void DeserExprOperators_int_cond_or_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -879,6 +926,7 @@ void DeserExprOperators_cond_eq_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -906,6 +954,7 @@ void DeserExprOperators_cond_eq_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -933,6 +982,7 @@ void DeserExprOperators_cond_neq_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -960,6 +1010,7 @@ void DeserExprOperators_cond_neq_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1008,6 +1059,7 @@ void DeserExprOperators_cond_eq_cond_and() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true && true == true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1025,6 +1077,7 @@ void DeserExprOperators_cond_eq_cond_or() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true || false == false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1052,6 +1105,7 @@ void DeserExprOperators_cond_gt_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1079,6 +1133,7 @@ void DeserExprOperators_cond_gt_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1106,6 +1161,7 @@ void DeserExprOperators_cond_gt_flt() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1133,6 +1189,7 @@ void DeserExprOperators_cond_gteq_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1160,6 +1217,7 @@ void DeserExprOperators_cond_gteq_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1187,6 +1245,7 @@ void DeserExprOperators_cond_gteq_flt() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1214,6 +1273,7 @@ void DeserExprOperators_cond_lt_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1241,6 +1301,7 @@ void DeserExprOperators_cond_lt_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1268,6 +1329,7 @@ void DeserExprOperators_cond_lt_flt() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1295,6 +1357,7 @@ void DeserExprOperators_cond_lteq_bool() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1322,6 +1385,7 @@ void DeserExprOperators_cond_lteq_int() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1349,6 +1413,7 @@ void DeserExprOperators_cond_lteq_flt() {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }

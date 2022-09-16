@@ -1755,6 +1755,7 @@ int traverse_add(
         table = traverse_from_expr(
             world, table, name, desc->add_expr, &diff, true, &error);
         if (error) {
+            flecs_table_diff_builder_fini(world, &diff);
             return -1;
         }
 #else
@@ -1789,6 +1790,7 @@ int traverse_add(
         }
     }
 
+    flecs_table_diff_builder_fini(world, &diff);
     return 0;
 }
 
@@ -2067,9 +2069,7 @@ const ecs_entity_t* ecs_bulk_init(
     flecs_table_diff_build_noalloc(&diff, &table_diff);
     flecs_bulk_new(world, table, entities, &ids, count, desc->data, true, NULL, 
         &table_diff);
-    if (!table) {
-        flecs_table_diff_builder_fini(world, &diff);
-    }
+    flecs_table_diff_builder_fini(world, &diff);
 
     if (!sparse_count) {
         return entities;
@@ -2498,13 +2498,14 @@ void flecs_remove_from_table(
                 flecs_table_diff_build_noalloc(&diff, &td);
                 flecs_notify_on_remove(world, table, NULL, 
                     0, ecs_table_count(table), &td);
-                flecs_table_diff_builder_fini(world, &diff);
                 ecs_log_pop_3();
             }
             flecs_table_merge(world, dst_table, table, 
                 &dst_table->data, &table->data);
         }
     }
+
+    flecs_table_diff_builder_fini(world, &diff);
 }
 
 static
@@ -4355,13 +4356,12 @@ bool flecs_defer_end(
         }
 
         ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
+        if (ecs_vec_count(&stage->commands)) {
+            ecs_vec_t commands = stage->commands;
+            stage->commands.array = NULL;
+            stage->commands.count = 0;
+            stage->commands.size = 0;
 
-        /* Set to NULL. Processing deferred commands can cause additional
-         * commands to get enqueued (as result of reactive systems). Make sure
-         * that the original array is not reallocated, as this would complicate
-         * processing the queue. */
-        ecs_vec_t commands = stage->commands;
-        if (ecs_vec_count(&commands)) {
             ecs_cmd_t *cmds = ecs_vec_first(&commands);
             int32_t i, count = ecs_vec_count(&commands);
             ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
@@ -4468,9 +4468,7 @@ bool flecs_defer_end(
                 }
             }
 
-            if (ecs_vec_count(&stage->commands)) {
-                ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-            }
+            ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
 
             /* Restore defer queue */
             ecs_vec_clear(&commands);
@@ -4501,7 +4499,6 @@ bool flecs_defer_purge(
 
     if (!--stage->defer) {
         ecs_vec_t commands = stage->commands;
-        ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
 
         if (ecs_vec_count(&commands)) {
             ecs_cmd_t *cmds = ecs_vec_first(&commands);
@@ -4510,13 +4507,9 @@ bool flecs_defer_purge(
                 flecs_discard_cmd(world, &cmds[i]);
             }
 
-            if (ecs_vec_count(&stage->commands)) {
-                ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-            }
+            ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
 
-            /* Restore defer queue */
             ecs_vec_clear(&commands);
-            stage->commands = commands;
             flecs_stack_reset(&stage->defer_stack);
         }
 

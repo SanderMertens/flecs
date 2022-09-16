@@ -26,6 +26,7 @@ typedef struct ecs_block_allocator_t {
     int32_t data_size;
     int32_t chunks_per_block;
     int32_t block_size;
+    int32_t alloc_count;
 } ecs_block_allocator_t;
 
 FLECS_DBG_API

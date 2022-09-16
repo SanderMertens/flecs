@@ -12,7 +12,7 @@ void flecs_stage_init(
     ecs_stage_t *stage);
 
 /* Deinitialize stage */
-void flecs_stage_deinit(
+void flecs_stage_fini(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
