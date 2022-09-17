@@ -721,6 +721,7 @@
                 "struct_result_add_2_int_literals",
                 "struct_result_add_2_2_fields_int_literals",
                 "struct_result_add_3_int_literals",
+                "struct_result_lparen_int_rparen",
                 "add_to_var",
                 "add_var_to",
                 "bool_cond_and_bool",
@@ -750,7 +751,15 @@
                 "cond_lt_flt",
                 "cond_lteq_bool",
                 "cond_lteq_int",
-                "cond_lteq_flt"
+                "cond_lteq_flt",
+                "min_lparen_int_rparen",
+                "min_lparen_int_add_int_rparen",
+                "min_var",
+                "min_lparen_int_rparen_to_i64",
+                "min_lparen_int_rparen_to_i32",
+                "struct_w_min_var",
+                "struct_w_min_lparen_int_rparen",
+                "struct_w_min_lparen_var_rparen"
             ]
         }]
     }

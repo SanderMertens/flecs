@@ -65,6 +65,7 @@ static
 ecs_meta_type_op_t* get_op(
     ecs_meta_scope_t *scope)
 {
+    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
     return &scope->ops[scope->op_cur];
 }
 

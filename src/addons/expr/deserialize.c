@@ -21,6 +21,7 @@ typedef enum ecs_expr_oper_t {
     EcsSub,
     EcsMul,
     EcsDiv,
+    EcsMin
 } ecs_expr_oper_t;
 
 /* Used to track temporary values */
@@ -755,6 +756,13 @@ const char* flecs_parse_expr(
 
     ptr = ecs_parse_fluff(ptr, NULL);
 
+    /* Check for postfix operators */
+    ecs_expr_oper_t unary_op = EcsExprOperUnknown;
+    if (ptr[0] == '-' && !isdigit(ptr[1])) {
+        unary_op = EcsMin;
+        ptr = ecs_parse_fluff(ptr + 1, NULL);
+    }
+
     /* Initialize storage and cursor. If expression starts with a '(' storage
      * will be initialized by a nested expression */
     if (ptr[0] != '(') {
@@ -787,8 +795,17 @@ const char* flecs_parse_expr(
         bool is_lvalue = false;
 
         if (!ecs_os_strcmp(token, "(")) {
+            ecs_value_t temp_result, *out;
+            if (!depth) {
+                out = &result;
+            } else {
+                temp_result.type = ecs_meta_get_type(&cur);
+                temp_result.ptr = ecs_meta_get_ptr(&cur);
+                out = &temp_result;
+            }
+
             /* Parenthesis, parse nested expression */
-            ptr = flecs_parse_expr(world, stack, ptr, &result, EcsLeftParen, desc);
+            ptr = flecs_parse_expr(world, stack, ptr, out, EcsLeftParen, desc);
             if (ptr[0] != ')') {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "missing closing parenthesis");
@@ -852,6 +869,15 @@ const char* flecs_parse_expr(
             if (ecs_meta_pop(&cur) != 0) {
                 goto error;
             }
+        }
+
+        else if (!ecs_os_strcmp(token, "-")) {
+            if (unary_op != EcsExprOperUnknown) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "unexpected unary operator");
+                return NULL;
+            }
+            unary_op = EcsMin;
         }
 
         else if (!ecs_os_strcmp(token, ",")) {
@@ -922,8 +948,34 @@ const char* flecs_parse_expr(
             is_lvalue = true;
         }
 
-        /* If lvalue was parsed, test if this is a binary expression */
+        /* If lvalue was parsed, apply operators */
         if (is_lvalue) {
+            if (unary_op != EcsExprOperUnknown) {
+                if (unary_op == EcsMin) {
+                    int64_t v = -1;
+                    ecs_value_t lvalue = {.type = ecs_id(ecs_i64_t), .ptr = &v};
+                    ecs_value_t *out, rvalue, temp_out = {0};
+
+                    if (!depth) {
+                        rvalue = result;
+                        ecs_os_zeromem(&result);
+                        out = &result;
+                    } else {
+                        ecs_entity_t cur_type = ecs_meta_get_type(&cur);
+                        void *cur_ptr = ecs_meta_get_ptr(&cur);
+                        rvalue.type = cur_type;
+                        rvalue.ptr = cur_ptr;
+                        temp_out.type = cur_type;
+                        temp_out.ptr = cur_ptr;
+                        out = &temp_out;
+                    }
+
+                    flecs_binary_expr_do(world, stack, name, expr, ptr, &lvalue,
+                        &rvalue, out, EcsMul);
+                }
+                unary_op = 0;
+            }
+
             ecs_expr_oper_t right_op;
             flecs_str_to_expr_oper(ptr, &right_op);
             if (right_op) {
