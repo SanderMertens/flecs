@@ -1610,3 +1610,107 @@ void DeserExprOperators_struct_w_min_lparen_var_rparen() {
 
     ecs_fini(world);
 }
+
+void DeserExprOperators_shift_left_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "1 << 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 1 << 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_shift_right_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "4 >> 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 4 >> 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_shift_left_int_add_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "1 << 2 + 10", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 1 << (2 + 10));
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_shift_left_int_mul_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "1 << 2 * 10", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 1 << 2 * 10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_add_int_shift_left_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "10 + 1 << 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, (10 + 1) << 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_mul_int_shift_left_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "10 * 1 << 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 10 * 1 << 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_add_int_shift_left_int_add_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "10 + 1 << 2 + 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, (10 + 1) << (2 + 2));
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_mul_int_shift_left_int_mul_int() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "10 * 1 << 2 * 2", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 10 * 1 << 2 * 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
