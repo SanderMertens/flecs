@@ -635,6 +635,31 @@ void DeserExprOperators_struct_result_add_3_int_literals() {
     ecs_fini(world);
 }
 
+void DeserExprOperators_struct_result_lparen_int_rparen() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t value;
+    } Mass;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Mass v = {0};
+    const char *ptr = ecs_parse_expr(world, "{(10)}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.value, 10);
+
+    ecs_fini(world);
+}
+
 void DeserExprOperators_add_to_var() {
     ecs_world_t *world = ecs_init();
 
@@ -1414,6 +1439,174 @@ void DeserExprOperators_cond_lteq_flt() {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_min_lparen_int_rparen() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "-(10)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(ecs_i64_t*)v.ptr, -10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_min_lparen_int_add_int_rparen() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "-(10 + 20)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(ecs_i64_t*)v.ptr, -30);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_min_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_u64_t));
+    *(ecs_u64_t*)var->value.ptr = 10;
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    test_assert(ecs_parse_expr(world, "-$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(ecs_i64_t*)v.ptr, -10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_min_lparen_int_rparen_to_i64() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i64_t vi = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_i64_t), .ptr = &vi };
+    test_assert(ecs_parse_expr(world, "-(10)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(vi, -10);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_min_lparen_int_rparen_to_i32() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t vi = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_i32_t), .ptr = &vi };
+    test_assert(ecs_parse_expr(world, "-(10)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_int(vi, -10);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_struct_w_min_var() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t value;
+    } Mass;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_u64_t));
+    *(ecs_u64_t*)var->value.ptr = 10;
+
+    Mass v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    const char *ptr = ecs_parse_expr(world, "{-$foo}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.value, -10);
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_struct_w_min_lparen_int_rparen() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t value;
+    } Mass;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Mass v = {0};
+    const char *ptr = ecs_parse_expr(world, "{-(10)}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.value, -10);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_struct_w_min_lparen_var_rparen() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t value;
+    } Mass;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_u64_t));
+    *(ecs_u64_t*)var->value.ptr = 10;
+
+    Mass v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    const char *ptr = ecs_parse_expr(world, "{-($foo)}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.value, -10);
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }

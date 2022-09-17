@@ -682,6 +682,7 @@ void DeserExprOperators_float_result_add_2_int_literals(void);
 void DeserExprOperators_struct_result_add_2_int_literals(void);
 void DeserExprOperators_struct_result_add_2_2_fields_int_literals(void);
 void DeserExprOperators_struct_result_add_3_int_literals(void);
+void DeserExprOperators_struct_result_lparen_int_rparen(void);
 void DeserExprOperators_add_to_var(void);
 void DeserExprOperators_add_var_to(void);
 void DeserExprOperators_bool_cond_and_bool(void);
@@ -712,6 +713,14 @@ void DeserExprOperators_cond_lt_flt(void);
 void DeserExprOperators_cond_lteq_bool(void);
 void DeserExprOperators_cond_lteq_int(void);
 void DeserExprOperators_cond_lteq_flt(void);
+void DeserExprOperators_min_lparen_int_rparen(void);
+void DeserExprOperators_min_lparen_int_add_int_rparen(void);
+void DeserExprOperators_min_var(void);
+void DeserExprOperators_min_lparen_int_rparen_to_i64(void);
+void DeserExprOperators_min_lparen_int_rparen_to_i32(void);
+void DeserExprOperators_struct_w_min_var(void);
+void DeserExprOperators_struct_w_min_lparen_int_rparen(void);
+void DeserExprOperators_struct_w_min_lparen_var_rparen(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -3322,6 +3331,10 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_struct_result_add_3_int_literals
     },
     {
+        "struct_result_lparen_int_rparen",
+        DeserExprOperators_struct_result_lparen_int_rparen
+    },
+    {
         "add_to_var",
         DeserExprOperators_add_to_var
     },
@@ -3440,6 +3453,38 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "cond_lteq_flt",
         DeserExprOperators_cond_lteq_flt
+    },
+    {
+        "min_lparen_int_rparen",
+        DeserExprOperators_min_lparen_int_rparen
+    },
+    {
+        "min_lparen_int_add_int_rparen",
+        DeserExprOperators_min_lparen_int_add_int_rparen
+    },
+    {
+        "min_var",
+        DeserExprOperators_min_var
+    },
+    {
+        "min_lparen_int_rparen_to_i64",
+        DeserExprOperators_min_lparen_int_rparen_to_i64
+    },
+    {
+        "min_lparen_int_rparen_to_i32",
+        DeserExprOperators_min_lparen_int_rparen_to_i32
+    },
+    {
+        "struct_w_min_var",
+        DeserExprOperators_struct_w_min_var
+    },
+    {
+        "struct_w_min_lparen_int_rparen",
+        DeserExprOperators_struct_w_min_lparen_int_rparen
+    },
+    {
+        "struct_w_min_lparen_var_rparen",
+        DeserExprOperators_struct_w_min_lparen_var_rparen
     }
 };
 
@@ -3567,7 +3612,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        74,
+        83,
         DeserExprOperators_testcases
     }
 };
