@@ -721,6 +721,14 @@ void DeserExprOperators_min_lparen_int_rparen_to_i32(void);
 void DeserExprOperators_struct_w_min_var(void);
 void DeserExprOperators_struct_w_min_lparen_int_rparen(void);
 void DeserExprOperators_struct_w_min_lparen_var_rparen(void);
+void DeserExprOperators_shift_left_int(void);
+void DeserExprOperators_shift_right_int(void);
+void DeserExprOperators_shift_left_int_add_int(void);
+void DeserExprOperators_shift_left_int_mul_int(void);
+void DeserExprOperators_add_int_shift_left_int(void);
+void DeserExprOperators_mul_int_shift_left_int(void);
+void DeserExprOperators_add_int_shift_left_int_add_int(void);
+void DeserExprOperators_mul_int_shift_left_int_mul_int(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -3485,6 +3493,38 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "struct_w_min_lparen_var_rparen",
         DeserExprOperators_struct_w_min_lparen_var_rparen
+    },
+    {
+        "shift_left_int",
+        DeserExprOperators_shift_left_int
+    },
+    {
+        "shift_right_int",
+        DeserExprOperators_shift_right_int
+    },
+    {
+        "shift_left_int_add_int",
+        DeserExprOperators_shift_left_int_add_int
+    },
+    {
+        "shift_left_int_mul_int",
+        DeserExprOperators_shift_left_int_mul_int
+    },
+    {
+        "add_int_shift_left_int",
+        DeserExprOperators_add_int_shift_left_int
+    },
+    {
+        "mul_int_shift_left_int",
+        DeserExprOperators_mul_int_shift_left_int
+    },
+    {
+        "add_int_shift_left_int_add_int",
+        DeserExprOperators_add_int_shift_left_int_add_int
+    },
+    {
+        "mul_int_shift_left_int_mul_int",
+        DeserExprOperators_mul_int_shift_left_int_mul_int
     }
 };
 
@@ -3612,7 +3652,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        83,
+        91,
         DeserExprOperators_testcases
     }
 };

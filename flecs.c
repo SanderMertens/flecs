@@ -28093,6 +28093,8 @@ typedef enum ecs_expr_oper_t {
     EcsCondGtEq,
     EcsCondLt,
     EcsCondLtEq,
+    EcsShiftLeft,
+    EcsShiftRight,
     EcsAdd,
     EcsSub,
     EcsMul,
@@ -28193,6 +28195,12 @@ const char* flecs_str_to_expr_oper(
         return str + 2;
     } else if (!ecs_os_strncmp(str, "<=", 2)) {
         *op = EcsCondLtEq;
+        return str + 2;
+    } else if (!ecs_os_strncmp(str, ">>", 2)) {
+        *op = EcsShiftRight;
+        return str + 2;
+    } else if (!ecs_os_strncmp(str, "<<", 2)) {
+        *op = EcsShiftLeft;
         return str + 2;
     } else if (!ecs_os_strncmp(str, ">", 1)) {
         *op = EcsCondGt;
@@ -28465,6 +28473,9 @@ bool flecs_oper_valid_for_type(
             (type == ecs_id(ecs_bool_t)) ||
             (type == ecs_id(ecs_char_t)) ||
             (type == ecs_id(ecs_entity_t));
+    case EcsShiftLeft:
+    case EcsShiftRight:
+        return (type == ecs_id(ecs_u64_t));
     default: 
         return false;
     }
@@ -28662,6 +28673,13 @@ done:
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
     }
 
+#define ECS_BINARY_UINT_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
 static
 int flecs_binary_expr_do(
     ecs_world_t *world,
@@ -28733,6 +28751,12 @@ int flecs_binary_expr_do(
         break;
     case EcsCondOr:
         ECS_BINARY_BOOL_OP(lvalue, rvalue, storage, ||);
+        break;
+    case EcsShiftLeft:
+        ECS_BINARY_UINT_OP(lvalue, rvalue, storage, <<);
+        break;
+    case EcsShiftRight:
+        ECS_BINARY_UINT_OP(lvalue, rvalue, storage, >>);
         break;
     default:
         ecs_parser_error(name, expr, ptr - expr, "unsupported operator");
