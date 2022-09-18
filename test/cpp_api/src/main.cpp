@@ -515,6 +515,9 @@ void Query_each_w_no_this(void);
 void Query_each_w_iter_no_this(void);
 void Query_invalid_each_w_no_this(void);
 void Query_named_query(void);
+void Query_instanced_nested_query_w_iter(void);
+void Query_instanced_nested_query_w_entity(void);
+void Query_instanced_nested_query_w_world(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -2999,6 +3002,18 @@ bake_test_case Query_testcases[] = {
     {
         "named_query",
         Query_named_query
+    },
+    {
+        "instanced_nested_query_w_iter",
+        Query_instanced_nested_query_w_iter
+    },
+    {
+        "instanced_nested_query_w_entity",
+        Query_instanced_nested_query_w_entity
+    },
+    {
+        "instanced_nested_query_w_world",
+        Query_instanced_nested_query_w_world
     }
 };
 
@@ -4965,7 +4980,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        71,
+        74,
         Query_testcases
     },
     {

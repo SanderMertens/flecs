@@ -2063,3 +2063,90 @@ void Query_named_query() {
     test_assert(qe != 0);
     test_str(qe.name(), "my_query");
 }
+
+void Query_instanced_nested_query_w_iter() {
+    auto ecs = flecs::world();
+
+    flecs::query<> q1 = ecs.query_builder()
+        .term<Position>()
+        .term<Mass>().singleton()
+        .build();
+
+    flecs::query<> q2 = ecs.query_builder()
+        .term<Velocity>()
+        .build();
+
+    ecs.add<Mass>();
+    ecs.entity().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+
+    q2.iter([&](flecs::iter& it_2) {
+        q1.iter(it_2, [&](flecs::iter& it_1) {
+            test_int(it_1.count(), 1);
+            count += it_1.count();
+        });
+    });
+
+    test_int(count, 2);
+}
+
+void Query_instanced_nested_query_w_entity() {
+    auto ecs = flecs::world();
+
+    flecs::query<> q1 = ecs.query_builder()
+        .term<Position>()
+        .term<Mass>().singleton()
+        .build();
+
+    flecs::query<> q2 = ecs.query_builder()
+        .term<Velocity>()
+        .build();
+
+    ecs.add<Mass>();
+    ecs.entity().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+
+    q2.each([&](flecs::entity e_2) {
+        q1.iter(e_2, [&](flecs::iter& it_1) {
+            test_int(it_1.count(), 1);
+            count += it_1.count();
+        });
+    });
+
+    test_int(count, 2);
+}
+
+void Query_instanced_nested_query_w_world() {
+    auto ecs = flecs::world();
+
+    flecs::query<> q1 = ecs.query_builder()
+        .term<Position>()
+        .term<Mass>().singleton()
+        .build();
+
+    flecs::query<> q2 = ecs.query_builder()
+        .term<Velocity>()
+        .build();
+
+    ecs.add<Mass>();
+    ecs.entity().add<Velocity>();
+    ecs.entity().add<Position>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+
+    q2.iter([&](flecs::iter& it_2) {
+        q1.iter(it_2.world(), [&](flecs::iter& it_1) {
+            test_int(it_1.count(), 1);
+            count += it_1.count();
+        });
+    });
+
+    test_int(count, 2);
+}

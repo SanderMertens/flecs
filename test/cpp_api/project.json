@@ -536,7 +536,10 @@
                 "each_w_no_this",
                 "each_w_iter_no_this",
                 "invalid_each_w_no_this",
-                "named_query"
+                "named_query",
+                "instanced_nested_query_w_iter",
+                "instanced_nested_query_w_entity",
+                "instanced_nested_query_w_world"
             ]
         }, {
             "id": "QueryBuilder",

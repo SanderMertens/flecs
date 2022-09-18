@@ -12,6 +12,7 @@ struct worker_iterable;
 
 template <typename ... Components>
 struct iterable {
+
     /** Each iterator.
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
@@ -57,25 +58,26 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), this->next_action());
+        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), 
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::world_t *world, Func&& func) const {
         iterate<_::iter_invoker>(world, FLECS_FWD(func), 
-            this->next_each_action());
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::iter& it, Func&& func) const {
         iterate<_::iter_invoker>(it.world(), FLECS_FWD(func),
-            this->next_each_action());
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::entity e, Func&& func) const {
         iterate<_::iter_invoker>(e.world(), FLECS_FWD(func), 
-            this->next_each_action());
+            this->next_action());
     }
 
     /** Create iterator.
