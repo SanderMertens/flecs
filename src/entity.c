@@ -3033,13 +3033,17 @@ void* ecs_ref_get_id(
 
     ecs_table_record_t *tr = ref->tr;
     if (!tr || tr->hdr.table != table) {
-        tr = ref->tr = flecs_table_record_get(world, table->storage_table, id);
+        tr = ref->tr = flecs_table_record_get(world, table, id);
         if (!tr) {
             return NULL;
         }
+
+        ecs_assert(tr->hdr.table == r->table, ECS_INTERNAL_ERROR, NULL);
     }
 
-    return get_component_w_index(table, tr->column, row).ptr;
+    int32_t column = ecs_table_type_to_storage_index(table, tr->column);
+    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
+    return get_component_w_index(table, column, row).ptr;
 error:
     return NULL;
 }

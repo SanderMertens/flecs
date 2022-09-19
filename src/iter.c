@@ -80,7 +80,7 @@ void ecs_iter_fini(
 }
 
 static
-ecs_size_t iter_get_size_for_id(
+ecs_size_t flecs_iter_get_size_for_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -127,7 +127,7 @@ bool flecs_iter_populate_term_data(
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutNone) {
         if (size_out) {
-            size = iter_get_size_for_id(world, it->ids[t]);
+            size = flecs_iter_get_size_for_id(world, it->ids[t]);
         }
         goto no_data;
     }
@@ -258,18 +258,17 @@ void flecs_iter_populate_data(
     void **ptrs,
     ecs_size_t *sizes)
 {
-    if (it->table) {
-        it->frame_offset += ecs_table_count(it->table);
+    ecs_table_t *prev_table = it->table;
+    if (prev_table) {
+        it->frame_offset += ecs_table_count(prev_table);
     }
 
     it->table = table;
     it->offset = offset;
     it->count = count;
-
     if (table) {
-        if (!count) {
-            count = it->count = ecs_table_count(table);
-        }
+        ecs_assert(count != 0 || !ecs_table_count(table), 
+            ECS_INTERNAL_ERROR, NULL);
         if (count) {
             it->entities = ecs_vec_get_t(
                 &table->data.entities, ecs_entity_t, offset);
@@ -279,7 +278,6 @@ void flecs_iter_populate_data(
     }
 
     int t, field_count = it->field_count;
-
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
 
@@ -289,7 +287,7 @@ void flecs_iter_populate_data(
 
         /* Fetch sizes, skip fetching data */
         for (t = 0; t < field_count; t ++) {
-            sizes[t] = iter_get_size_for_id(world, it->ids[t]);
+            sizes[t] = flecs_iter_get_size_for_id(world, it->ids[t]);
         }
         return;
     }

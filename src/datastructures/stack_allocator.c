@@ -77,6 +77,10 @@ void flecs_stack_restore_cursor(
     const ecs_stack_cursor_t *cursor)
 {
     ecs_stack_page_t *cur = cursor->cur;
+    if (!cur) {
+        return;
+    }
+
     if (cur == stack->cur) {
         if (cursor->sp > stack->cur->sp) {
             return;

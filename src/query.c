@@ -409,7 +409,9 @@ void flecs_query_get_dirty_state(
         ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
         if (ref->id != 0) {
             ecs_ref_get_id(world, ref, ref->id);
-            out->column = ref->tr->column;
+            int32_t column = ref->tr->column;
+            out->column = ecs_table_type_to_storage_index(
+                out->table, column);
         } else {
             out->column = -1;
         }
@@ -759,8 +761,8 @@ void flecs_query_set_table_match(
                     continue;
                 }
                 
-                int32_t actual_index = terms[i].field_index;
-                int32_t column = it->columns[actual_index];
+                int32_t field = terms[i].field_index;
+                int32_t column = it->columns[field];
                 if (column <= 0) {
                     continue;
                 }
@@ -772,10 +774,10 @@ void flecs_query_set_table_match(
 
                 flecs_switch_term_t *sc = ecs_vector_add(
                      &qm->sparse_columns, flecs_switch_term_t);
-                sc->signature_column_index = actual_index;
+                sc->signature_column_index = field;
                 sc->sw_case = ECS_PAIR_SECOND(id);
                 sc->sw_column = NULL;
-                qm->ids[actual_index] = id;
+                qm->ids[field] = id;
             }
         }
         if (table->flags & EcsTableHasToggle) {
@@ -784,8 +786,8 @@ void flecs_query_set_table_match(
                     continue;
                 }
 
-                int32_t actual_index = terms[i].field_index;
-                ecs_id_t id = it->ids[actual_index];
+                int32_t field = terms[i].field_index;
+                ecs_id_t id = it->ids[field];
                 ecs_id_t bs_id = ECS_TOGGLE | id;
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
 
@@ -807,22 +809,22 @@ void flecs_query_set_table_match(
             continue;
         }
 
-        int32_t actual_index = terms[i].field_index;
-        ecs_entity_t src = it->sources[actual_index];
+        int32_t field = terms[i].field_index;
+        ecs_entity_t src = it->sources[field];
         ecs_size_t size = 0;
         if (it->sizes) {
-            size = it->sizes[actual_index];
+            size = it->sizes[field];
         }
         if (src) {
-            ecs_id_t id = it->ids[actual_index];
+            ecs_id_t id = it->ids[field];
             ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
             if (id) {
                 flecs_query_add_ref(world, query, qm, term, id, src, size);
 
                 /* Use column index to bind term and ref */
-                if (qm->columns[actual_index] != 0) {
-                    qm->columns[actual_index] = -ecs_vec_count(&qm->refs);
+                if (qm->columns[field] != 0) {
+                    qm->columns[field] = -ecs_vec_count(&qm->refs);
                 }
             }
         }
@@ -2063,10 +2065,8 @@ ecs_iter_t ecs_query_iter(
     return result;
 error:
 noresults:
-    return (ecs_iter_t) {
-        .flags = EcsIterNoResults,
-        .next = ecs_query_next
-    };
+    result.priv.iter.query.node = NULL;
+    return result;
 }
 
 void ecs_query_set_group(
@@ -2497,12 +2497,6 @@ bool ecs_query_next_instanced(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
-    if (ECS_BIT_IS_SET(it->flags, EcsIterNoResults)) {
-        goto done;
-    }
-
-    ECS_BIT_SET(it->flags, EcsIterIsValid);
-
     ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
@@ -2548,7 +2542,6 @@ bool ecs_query_next_instanced(
 
             ecs_vector_t *bitset_columns = match->bitset_columns;
             ecs_vector_t *sparse_columns = match->sparse_columns;
-
             if (bitset_columns || sparse_columns) {
                 bool found = false;
 
@@ -2615,10 +2608,10 @@ bool ecs_query_next_instanced(
                     continue;
                 }
 
-                int32_t actual_index = term->field_index;
-                it->ids[actual_index] = match->ids[actual_index];
-                it->columns[actual_index] = match->columns[actual_index];
-                it->sizes[actual_index] = match->sizes[actual_index];
+                int32_t field = term->field_index;
+                it->ids[field] = match->ids[field];
+                it->columns[field] = match->columns[field];
+                it->sizes[field] = match->sizes[field];
             }
         }
 
@@ -2634,11 +2627,10 @@ bool ecs_query_next_instanced(
         goto yield;
     }
 
-done:
 error:
     ecs_iter_fini(it);
     return false;
-    
+
 yield:
     return true;  
 }

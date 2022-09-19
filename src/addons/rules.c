@@ -4113,6 +4113,9 @@ void populate_iterator(
             table = slice.table;
             count = slice.count;
             offset = slice.offset;
+            if (!count) {
+                count = ecs_table_count(table);
+            }
         } else {
             /* If a single entity is returned, simply return the
              * iterator with count 1 and a pointer to the entity id */
