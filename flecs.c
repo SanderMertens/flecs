@@ -43876,6 +43876,7 @@ int flecs_multi_observer_init(
     child_desc.run = NULL;
     child_desc.callback = flecs_multi_observer_builtin_run;
     child_desc.ctx = observer;
+    child_desc.ctx_free = NULL;
     child_desc.filter.expr = NULL;
     child_desc.filter.terms_buffer = NULL;
     child_desc.filter.terms_buffer_count = 0;

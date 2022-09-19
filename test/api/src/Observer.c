@@ -3071,3 +3071,55 @@ void Observer_observer_w_filter_term() {
 
     ecs_fini(world);
 }
+
+static int free_ctx_invoked = 0;
+
+static
+void free_ctx(void *ctx) {
+    free_ctx_invoked ++;
+    ecs_os_free(ctx);
+}
+
+static int observer_w_ctx_invoked = 0;
+
+static void Observer_w_ctx(ecs_iter_t *it) {
+    test_assert(it->ctx != NULL);
+    test_int(*(int*)it->ctx, 10);
+    observer_w_ctx_invoked ++;
+}
+
+void Observer_multi_observer_w_ctx_free() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    int *ctx = ecs_os_malloc_t(int);
+    *ctx = 10;
+
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {{ .id = TagA }, { .id = TagB }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_ctx,
+        .ctx = ctx,
+        .ctx_free = free_ctx
+    });
+    
+    test_int(observer_w_ctx_invoked, 0);
+    test_int(free_ctx_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_int(observer_w_ctx_invoked, 0);
+    test_int(free_ctx_invoked, 0);
+    ecs_add(world, e, TagB);
+    test_int(observer_w_ctx_invoked, 1);
+    test_int(free_ctx_invoked, 0);
+
+    ecs_delete(world, o);
+
+    test_int(free_ctx_invoked, 1);
+
+    ecs_fini(world);
+
+    test_int(free_ctx_invoked, 1);
+}

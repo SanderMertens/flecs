@@ -1712,7 +1712,8 @@
                 "custom_run_action_w_iter_next_2_terms",
                 "read_in_on_remove_after_add_other_w_not",
                 "observer_w_short_notation",
-                "observer_w_filter_term"
+                "observer_w_filter_term",
+                "multi_observer_w_ctx_free"
             ]                
         }, {
             "id": "ObserverOnSet",
