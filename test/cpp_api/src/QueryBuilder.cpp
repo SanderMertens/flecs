@@ -1535,6 +1535,197 @@ void QueryBuilder_group_by_iter_one_all_groups() {
     test_int(1, e6_found);
 }
 
+void QueryBuilder_group_by_default_func_w_id() {
+    flecs::world ecs;
+
+    auto Rel = ecs.entity();
+    auto TgtA = ecs.entity();
+    auto TgtB = ecs.entity();
+    auto TgtC = ecs.entity();
+
+    auto e1 = ecs.entity().add(Rel, TgtC);
+    auto e2 = ecs.entity().add(Rel, TgtB);
+    auto e3 = ecs.entity().add(Rel, TgtA);
+
+    auto q = ecs.query_builder()
+        .term(Rel, flecs::Wildcard)
+        .group_by(Rel)
+        .build();
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        if (e == e1) {
+            test_assert(it.group_id() == TgtC);
+            test_assert(!e1_found);
+            test_assert(e2_found);
+            test_assert(e3_found);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_assert(it.group_id() == TgtB);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(e3_found);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_assert(it.group_id() == TgtA);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(!e3_found);
+            e3_found = true;
+        }
+        count ++;
+    });
+
+    test_int(3, count);
+    test_bool(true, e1_found);
+    test_bool(true, e2_found);
+    test_bool(true, e3_found);
+}
+
+void QueryBuilder_group_by_default_func_w_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+    auto TgtA = ecs.entity();
+    auto TgtB = ecs.entity();
+    auto TgtC = ecs.entity();
+
+    auto e1 = ecs.entity().add<Rel>(TgtC);
+    auto e2 = ecs.entity().add<Rel>(TgtB);
+    auto e3 = ecs.entity().add<Rel>(TgtA);
+
+    auto q = ecs.query_builder()
+        .term<Rel>(flecs::Wildcard)
+        .group_by<Rel>()
+        .build();
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        if (e == e1) {
+            test_assert(it.group_id() == TgtC);
+            test_assert(!e1_found);
+            test_assert(e2_found);
+            test_assert(e3_found);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_assert(it.group_id() == TgtB);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(e3_found);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_assert(it.group_id() == TgtA);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(!e3_found);
+            e3_found = true;
+        }
+        count ++;
+    });
+
+    test_int(3, count);
+    test_bool(true, e1_found);
+    test_bool(true, e2_found);
+    test_bool(true, e3_found);
+}
+
+static int group_by_ctx = 0;
+
+void QueryBuilder_group_by_callbacks() {
+    flecs::world ecs;
+
+    struct Rel { };
+    auto TgtA = ecs.entity();
+    auto TgtB = ecs.entity();
+    auto TgtC = ecs.entity();
+
+    auto e1 = ecs.entity().add<Rel>(TgtC);
+    auto e2 = ecs.entity().add<Rel>(TgtB);
+    auto e3 = ecs.entity().add<Rel>(TgtA);
+
+    auto q = ecs.query_builder()
+        .term<Rel>(flecs::Wildcard)
+        .group_by<Rel>()
+        .group_by_ctx(&group_by_ctx)
+        .on_group_create(
+            [](flecs::world_t *world, uint64_t id, void *group_by_arg) {
+                test_assert(world != nullptr);
+                test_assert(id != 0);
+                test_assert(group_by_arg != nullptr);
+                test_assert(group_by_arg == &group_by_ctx);
+                uint64_t *ctx = ecs_os_malloc_t(uint64_t);
+                *ctx = id;
+                return (void*)ctx;
+            })
+        .on_group_delete(
+            [](flecs::world_t *world, uint64_t id, void *ctx, void *group_by_arg) {
+                test_assert(world != nullptr);
+                test_assert(id != 0);
+                test_assert(group_by_arg != nullptr);
+                test_assert(group_by_arg == &group_by_ctx);
+                test_assert(ctx != NULL);
+                test_uint(*(uint64_t*)ctx, id);
+                ecs_os_free(ctx);
+            })
+        .build();
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        if (e == e1) {
+            test_assert(it.group_id() == TgtC);
+            test_assert(!e1_found);
+            test_assert(e2_found);
+            test_assert(e3_found);
+            e1_found = true;
+            uint64_t *ctx = (uint64_t*)q.group_ctx(it.group_id());
+            test_uint(*ctx, it.group_id());
+        }
+        if (e == e2) {
+            test_assert(it.group_id() == TgtB);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(e3_found);
+            e2_found = true;
+            uint64_t *ctx = (uint64_t*)q.group_ctx(it.group_id());
+            test_uint(*ctx, it.group_id());
+        }
+        if (e == e3) {
+            test_assert(it.group_id() == TgtA);
+            test_assert(!e1_found);
+            test_assert(!e2_found);
+            test_assert(!e3_found);
+            e3_found = true;
+            uint64_t *ctx = (uint64_t*)q.group_ctx(it.group_id());
+            test_uint(*ctx, it.group_id());
+        }
+        count ++;
+    });
+
+    test_int(3, count);
+    test_bool(true, e1_found);
+    test_bool(true, e2_found);
+    test_bool(true, e3_found);
+}
+
 void QueryBuilder_create_w_no_template_args() {
     flecs::world ecs;
 

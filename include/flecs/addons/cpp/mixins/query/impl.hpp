@@ -59,6 +59,15 @@ struct query_base {
         return ecs_query_orphaned(m_query);
     }
 
+    /** Get context for group. 
+     * 
+     * @param group_id The group id for which to retrieve the context.
+     * @return The group context.
+     */
+    void* group_ctx(uint64_t group_id) {
+        return ecs_query_get_group_ctx(m_query, group_id);
+    }
+
     /** Free the query.
      */
     void destruct() {

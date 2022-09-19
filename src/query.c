@@ -31,7 +31,52 @@ ecs_query_table_list_t* flecs_query_ensure_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
-    return ecs_map_ensure(&query->groups, ecs_query_table_list_t, group_id);
+    bool created = false;
+    if (query->on_group_create) {
+        created = !ecs_map_has(&query->groups, group_id);
+    }
+
+    ecs_query_table_list_t *group = ecs_map_ensure(
+        &query->groups, ecs_query_table_list_t, group_id);
+    if (created) {
+        group->ctx = query->on_group_create(
+            query->world, group_id, query->group_by_ctx);
+    }
+
+    return group;
+}
+
+static
+void flecs_query_remove_group(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    if (query->on_group_delete) {
+        ecs_query_table_list_t *group = ecs_map_get(
+            &query->groups, ecs_query_table_list_t, group_id);
+        if (group) {
+            query->on_group_delete(
+                query->world, group_id, group->ctx, query->group_by_ctx);
+        }
+    }
+
+    ecs_map_remove(&query->groups, group_id);
+}
+
+static
+uint64_t flecs_query_default_group_by(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_id_t id, 
+    void *ctx) 
+{
+    (void)ctx;
+
+    ecs_id_t match;
+    if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
+        return ecs_pair_second(world, match);
+    }
+    return 0;
 }
 
 /* Find the last node of the group after which this group should be inserted */
@@ -118,14 +163,6 @@ void flecs_query_create_group(
             query->list.last = node;
         }
     }
-}
-
-static
-void flecs_query_remove_group(
-    ecs_query_t *query,
-    uint64_t group_id)
-{
-    ecs_map_remove(&query->groups, group_id);
 }
 
 /* Find the list the node should be part of */
@@ -1600,8 +1637,14 @@ void flecs_query_group_by(
     ecs_check(query->group_by_id == 0, ECS_INVALID_OPERATION, NULL);
     ecs_check(query->group_by == 0, ECS_INVALID_OPERATION, NULL);
 
+    if (!group_by) {
+        /* Builtin function that groups by relationship */
+        group_by = flecs_query_default_group_by;   
+    }
+
     query->group_by_id = sort_component;
     query->group_by = group_by;
+
     ecs_map_init_w_params(&query->groups, 
         &query->world->allocators.query_table_list);
 error:
@@ -1715,6 +1758,17 @@ void flecs_query_fini(
 {
     ecs_world_t *world = query->world;
 
+    ecs_group_delete_action_t on_group_delete = query->on_group_delete;
+    if (on_group_delete) {
+        ecs_map_iter_t it = ecs_map_iter(&query->groups);
+        ecs_query_table_list_t *group;
+        uint64_t group_id;
+        while ((group = ecs_map_next(&it, ecs_query_table_list_t, &group_id))) {
+            on_group_delete(world, group_id, group->ctx, query->group_by_ctx);
+        }
+        query->on_group_delete = NULL;
+    }
+
     if (query->group_by_ctx_free) {
         if (query->group_by_ctx) {
             query->group_by_ctx_free(query->group_by_ctx);
@@ -1816,12 +1870,14 @@ ecs_query_t* ecs_query_init(
         result->group_by_ctx = &result->filter.terms[cascade_by - 1];
     }
 
-    if (desc->group_by) {
+    if (desc->group_by || desc->group_by_id) {
         /* Can't have a cascade term and group by at the same time, as cascade
          * uses the group_by mechanism */
         ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
         flecs_query_group_by(result, desc->group_by_id, desc->group_by);
         result->group_by_ctx = desc->group_by_ctx;
+        result->on_group_create = desc->on_group_create;
+        result->on_group_delete = desc->on_group_delete;
         result->group_by_ctx_free = desc->group_by_ctx_free;
     }
 
@@ -2036,6 +2092,18 @@ void ecs_query_set_group(
     
 error:
     return;
+}
+
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    ecs_query_table_list_t *node = flecs_query_get_group(query, group_id);
+    if (!node) {
+        return NULL;
+    }
+    
+    return node->ctx;
 }
 
 static
