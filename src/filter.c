@@ -2128,7 +2128,8 @@ bool ecs_term_next(
     }
 
 yield:
-    flecs_iter_populate_data(world, it, table, 0, 0, it->ptrs, it->sizes);
+    flecs_iter_populate_data(world, it, table, 0, ecs_table_count(table), 
+        it->ptrs, it->sizes);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;
 done:
@@ -2532,7 +2533,8 @@ error:
 
 yield:
     it->offset = 0;
-    flecs_iter_populate_data(world, it, table, 0, 0, it->ptrs, it->sizes);
+    flecs_iter_populate_data(world, it, table, 0, 
+        table ? ecs_table_count(table) : 0, it->ptrs, it->sizes);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;    
 }
