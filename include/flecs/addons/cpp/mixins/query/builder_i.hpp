@@ -70,25 +70,69 @@ public:
      * sorted within each set of tables that are assigned the same rank.
      *
      * @tparam T The component used to determine the group rank.
-     * @param rank The rank action.
+     * @param group_by_action Callback that determines group id for table.
      */
     template <typename T>
-    Base& group_by(uint64_t(*rank)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
-        return this->group_by(_::cpp_type<T>::id(this->world_v()), rnk);
+    Base& group_by(uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
+        ecs_group_by_action_t action = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
+        return this->group_by(_::cpp_type<T>::id(this->world_v()), action);
     }
 
     /** Group and sort matched tables.
      * Same as group_by<T>, but with component identifier.
      *
      * @param component The component used to determine the group rank.
-     * @param rank The rank action.
+     * @param group_by_action Callback that determines group id for table.
      */
-    Base& group_by(flecs::entity_t component, uint64_t(*rank)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
+    Base& group_by(flecs::entity_t component, uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
+        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
         m_desc->group_by_id = component;
         return *this;
-    } 
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by<T>, but with default group_by action.
+     *
+     * @tparam T The component used to determine the group rank.
+     */
+    template <typename T>
+    Base& group_by() {
+        return this->group_by(_::cpp_type<T>::id(this->world_v()), nullptr);
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by, but with default group_by action.
+     *
+     * @param component The component used to determine the group rank.
+     */
+    Base& group_by(flecs::entity_t component) {
+        return this->group_by(component, nullptr);
+    }
+
+    /** Specify context to be passed to group_by function.
+     *
+     * @param ctx Context to pass to group_by function.
+     * @param ctx_free Function to cleanup context (called when query is deleted).
+     */
+    Base& group_by_ctx(void *ctx, ecs_ctx_free_t ctx_free = nullptr) {
+        m_desc->group_by_ctx = ctx;
+        m_desc->group_by_ctx_free = ctx_free;
+        return *this;
+    }
+
+    /** Specify on_group_create action.
+     */
+    Base& on_group_create(ecs_group_create_action_t action) {
+        m_desc->on_group_create = action;
+        return *this;
+    }
+
+    /** Specify on_group_delete action.
+     */
+    Base& on_group_delete(ecs_group_delete_action_t action) {
+        m_desc->on_group_delete = action;
+        return *this;
+    }
 
     /** Specify parent query (creates subquery) */
     Base& observable(const query_base& parent);

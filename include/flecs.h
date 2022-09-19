@@ -321,12 +321,25 @@ typedef void (*ecs_sort_table_action_t)(
     int32_t hi,
     ecs_order_by_action_t order_by);
 
-/** Callback used for ranking types */
+/** Callback used for grouping tables in a query */
 typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t group_id,
     void *ctx);
+
+/* Callback invoked when a query creates a new group. */
+typedef void* (*ecs_group_create_action_t)(
+    ecs_world_t *world,
+    uint64_t group_id,
+    void *group_by_ctx); /* from ecs_query_desc_t */
+
+/* Callback invoked when a query deletes an existing group. */
+typedef void (*ecs_group_delete_action_t)(
+    ecs_world_t *world,
+    uint64_t group_id,
+    void *group_ctx,     /* return value from ecs_group_create_action_t */
+    void *group_by_ctx); /* from ecs_query_desc_t */
 
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
@@ -742,6 +755,14 @@ typedef struct ecs_query_desc_t {
      * used to sort entities (tables), so that entities (tables) of the same
      * rank are "grouped" together when iterated. */
     ecs_group_by_action_t group_by;
+
+    /* Callback that is invoked when a new group is created. The return value of
+     * the callback is stored as context for a group. */
+    ecs_group_create_action_t on_group_create;
+
+    /* Callback that is invoked when an existing group is deleted. The return 
+     * value of the on_group_create callback is passed as context parameter. */
+    ecs_group_delete_action_t on_group_delete;
 
     /* Context to pass to group_by */
     void *group_by_ctx;
@@ -3480,6 +3501,19 @@ void ecs_query_skip(
 FLECS_API
 void ecs_query_set_group(
     ecs_iter_t *it,
+    uint64_t group_id);
+
+/** Get context associated with group.
+ * This operation returns the group ctx value as returned by the on_group_create
+ * callback.
+ * 
+ * @param query The query.
+ * @param group_id The group for which to obtain the context.
+ * @return The context for the group, or NULL if the group was not found.
+ */
+FLECS_API
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
     uint64_t group_id);
 
 /** Returns whether query is orphaned.

@@ -575,6 +575,9 @@ void QueryBuilder_group_by_template(void);
 void QueryBuilder_group_by_iter_one(void);
 void QueryBuilder_group_by_iter_one_template(void);
 void QueryBuilder_group_by_iter_one_all_groups(void);
+void QueryBuilder_group_by_default_func_w_id(void);
+void QueryBuilder_group_by_default_func_w_type(void);
+void QueryBuilder_group_by_callbacks(void);
 void QueryBuilder_create_w_no_template_args(void);
 void QueryBuilder_any_wildcard(void);
 void QueryBuilder_cascade(void);
@@ -3239,6 +3242,18 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_group_by_iter_one_all_groups
     },
     {
+        "group_by_default_func_w_id",
+        QueryBuilder_group_by_default_func_w_id
+    },
+    {
+        "group_by_default_func_w_type",
+        QueryBuilder_group_by_default_func_w_type
+    },
+    {
+        "group_by_callbacks",
+        QueryBuilder_group_by_callbacks
+    },
+    {
         "create_w_no_template_args",
         QueryBuilder_create_w_no_template_args
     },
@@ -4987,7 +5002,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        64,
+        67,
         QueryBuilder_testcases
     },
     {

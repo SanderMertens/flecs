@@ -2461,12 +2461,25 @@ typedef void (*ecs_sort_table_action_t)(
     int32_t hi,
     ecs_order_by_action_t order_by);
 
-/** Callback used for ranking types */
+/** Callback used for grouping tables in a query */
 typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t group_id,
     void *ctx);
+
+/* Callback invoked when a query creates a new group. */
+typedef void* (*ecs_group_create_action_t)(
+    ecs_world_t *world,
+    uint64_t group_id,
+    void *group_by_ctx); /* from ecs_query_desc_t */
+
+/* Callback invoked when a query deletes an existing group. */
+typedef void (*ecs_group_delete_action_t)(
+    ecs_world_t *world,
+    uint64_t group_id,
+    void *group_ctx,     /* return value from ecs_group_create_action_t */
+    void *group_by_ctx); /* from ecs_query_desc_t */
 
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
@@ -3890,6 +3903,14 @@ typedef struct ecs_query_desc_t {
      * used to sort entities (tables), so that entities (tables) of the same
      * rank are "grouped" together when iterated. */
     ecs_group_by_action_t group_by;
+
+    /* Callback that is invoked when a new group is created. The return value of
+     * the callback is stored as context for a group. */
+    ecs_group_create_action_t on_group_create;
+
+    /* Callback that is invoked when an existing group is deleted. The return 
+     * value of the on_group_create callback is passed as context parameter. */
+    ecs_group_delete_action_t on_group_delete;
 
     /* Context to pass to group_by */
     void *group_by_ctx;
@@ -6649,6 +6670,19 @@ void ecs_query_skip(
 FLECS_API
 void ecs_query_set_group(
     ecs_iter_t *it,
+    uint64_t group_id);
+
+/** Get context associated with group.
+ * This operation returns the group ctx value as returned by the on_group_create
+ * callback.
+ * 
+ * @param query The query.
+ * @param group_id The group for which to obtain the context.
+ * @return The context for the group, or NULL if the group was not found.
+ */
+FLECS_API
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
     uint64_t group_id);
 
 /** Returns whether query is orphaned.
@@ -20253,6 +20287,7 @@ struct worker_iterable;
 
 template <typename ... Components>
 struct iterable {
+
     /** Each iterator.
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
@@ -20298,25 +20333,26 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), this->next_action());
+        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), 
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::world_t *world, Func&& func) const {
         iterate<_::iter_invoker>(world, FLECS_FWD(func), 
-            this->next_each_action());
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::iter& it, Func&& func) const {
         iterate<_::iter_invoker>(it.world(), FLECS_FWD(func),
-            this->next_each_action());
+            this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::entity e, Func&& func) const {
         iterate<_::iter_invoker>(e.world(), FLECS_FWD(func), 
-            this->next_each_action());
+            this->next_action());
     }
 
     /** Create iterator.
@@ -22835,25 +22871,69 @@ public:
      * sorted within each set of tables that are assigned the same rank.
      *
      * @tparam T The component used to determine the group rank.
-     * @param rank The rank action.
+     * @param group_by_action Callback that determines group id for table.
      */
     template <typename T>
-    Base& group_by(uint64_t(*rank)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
-        return this->group_by(_::cpp_type<T>::id(this->world_v()), rnk);
+    Base& group_by(uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
+        ecs_group_by_action_t action = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
+        return this->group_by(_::cpp_type<T>::id(this->world_v()), action);
     }
 
     /** Group and sort matched tables.
      * Same as group_by<T>, but with component identifier.
      *
      * @param component The component used to determine the group rank.
-     * @param rank The rank action.
+     * @param group_by_action Callback that determines group id for table.
      */
-    Base& group_by(flecs::entity_t component, uint64_t(*rank)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
+    Base& group_by(flecs::entity_t component, uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
+        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
         m_desc->group_by_id = component;
         return *this;
-    } 
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by<T>, but with default group_by action.
+     *
+     * @tparam T The component used to determine the group rank.
+     */
+    template <typename T>
+    Base& group_by() {
+        return this->group_by(_::cpp_type<T>::id(this->world_v()), nullptr);
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by, but with default group_by action.
+     *
+     * @param component The component used to determine the group rank.
+     */
+    Base& group_by(flecs::entity_t component) {
+        return this->group_by(component, nullptr);
+    }
+
+    /** Specify context to be passed to group_by function.
+     *
+     * @param ctx Context to pass to group_by function.
+     * @param ctx_free Function to cleanup context (called when query is deleted).
+     */
+    Base& group_by_ctx(void *ctx, ecs_ctx_free_t ctx_free = nullptr) {
+        m_desc->group_by_ctx = ctx;
+        m_desc->group_by_ctx_free = ctx_free;
+        return *this;
+    }
+
+    /** Specify on_group_create action.
+     */
+    Base& on_group_create(ecs_group_create_action_t action) {
+        m_desc->on_group_create = action;
+        return *this;
+    }
+
+    /** Specify on_group_delete action.
+     */
+    Base& on_group_delete(ecs_group_delete_action_t action) {
+        m_desc->on_group_delete = action;
+        return *this;
+    }
 
     /** Specify parent query (creates subquery) */
     Base& observable(const query_base& parent);
@@ -22953,6 +23033,15 @@ struct query_base {
      */
     bool orphaned() {
         return ecs_query_orphaned(m_query);
+    }
+
+    /** Get context for group. 
+     * 
+     * @param group_id The group id for which to retrieve the context.
+     * @return The group context.
+     */
+    void* group_ctx(uint64_t group_id) {
+        return ecs_query_get_group_ctx(m_query, group_id);
     }
 
     /** Free the query.

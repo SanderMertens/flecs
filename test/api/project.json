@@ -1318,6 +1318,8 @@
                 "group_by_iter_one_empty_query",
                 "group_by_iter_one_empty_table",
                 "group_by_w_deleted_group_id",
+                "group_by_callbacks",
+                "group_by_default_action",
                 "iter_valid",
                 "query_optional_tag",
                 "query_optional_shared_tag",

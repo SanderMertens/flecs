@@ -1,27 +1,27 @@
-#include <group_by.h>
+#include <group_by_custom.h>
 #include <stdio.h>
 
-// Group by is a feature of cached queries that allows applications to assign a
-// group id to each matched table. Tables that are assigned the same group id
-// are stored together in "groups". This ensures that when a query is iterated,
-// tables that share a group are iterated together.
-//
-// Groups in the cache are ordered by group id, which ensures that tables with
-// lower ids are iterated before table with higher ids. This is the same 
-// mechanism that is used by the cascade feature, which groups tables by depth
-// in a relationship hierarchy.
-//
-// This makes groups a more efficient, though less granular mechanism for 
-// ordering entities. Order is maintained at the group level, which means that
-// once a group is created, tables can get added and removed to the group
-// with is an O(1) operation.
-//
-// Groups can also be used as an efficient filtering mechanism. See the 
-// group_iter example for more details.
+// This example does the same as the group_by example, but with a custom
+// group_by function. A custom function makes it possible to customize how a
+// group id is calculated for a table.
 
 typedef struct {
     double x, y;
 } Position;
+
+uint64_t group_by_relation(ecs_world_t *ecs, ecs_table_t *table, 
+    ecs_entity_t id, void *ctx) 
+{
+    (void)ctx; // marks ctx as unused, avoids compiler warnings
+
+    // Use ecs_search to find the target for the relationship in the table
+    ecs_id_t match;
+    if (ecs_search(ecs, table, ecs_pair(id, EcsWildcard), &match) != -1) {
+        return ecs_pair_second(ecs, match); // First, Second or Third
+    }
+
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
@@ -43,10 +43,8 @@ int main(int argc, char *argv[]) {
         .filter.terms = {
             { .id = ecs_id(Position) }
         },
-        // Group tables by the relationship target of the "Group" relationship.
-        // A custom group_by function can be provided to derive a group id from
-        // a table, see the group_by_custom example for more details.
-        .group_by_id = Group
+        .group_by = group_by_relation,
+        .group_by_id = Group // Passed to id argument of group_by function
     });
 
     // Create entities in 6 different tables with 3 group ids

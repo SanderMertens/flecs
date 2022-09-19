@@ -4483,6 +4483,146 @@ void Query_group_by_w_deleted_group_id() {
     ecs_fini(world);
 }
 
+static int group_by_ctx;
+static int on_group_create_invoked;
+static int on_group_delete_invoked;
+
+static
+void* on_group_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg) {
+    test_assert(world != NULL);
+    test_assert(group_id != 0);
+    test_assert(group_by_arg != NULL);
+    test_assert(group_by_arg == &group_by_ctx);
+    uint64_t *group_ctx = ecs_os_malloc_t(uint64_t);
+    *group_ctx = group_id;
+    on_group_create_invoked ++;
+    return group_ctx;
+}
+
+static
+void on_group_delete(ecs_world_t *world, uint64_t group_id, void *group_ctx, void *group_by_arg) {
+    test_assert(world != NULL);
+    test_assert(group_id != 0);
+    test_assert(group_ctx != NULL);
+    test_assert(group_by_arg != NULL);
+    test_assert(group_by_arg == &group_by_ctx);
+    test_assert(*(uint64_t*)group_ctx == group_id);
+    ecs_os_free(group_ctx);
+    on_group_delete_invoked ++;
+}
+
+void Query_group_by_callbacks() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) }
+        },
+        .group_by = group_by_rel,
+        .group_by_id = Rel,
+        .on_group_create = on_group_create,
+        .on_group_delete = on_group_delete,
+        .group_by_ctx = &group_by_ctx
+    });
+
+    ecs_entity_t tgt_a = ecs_new_id(world);
+    ecs_entity_t tgt_b = ecs_new_id(world);
+
+    test_int(on_group_create_invoked, 0);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, tgt_a);
+    ecs_run_aperiodic(world, 0);
+    test_int(on_group_create_invoked, 1);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, tgt_a);
+    ecs_run_aperiodic(world, 0);
+    test_int(on_group_create_invoked, 1);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, tgt_b);
+    ecs_run_aperiodic(world, 0);
+    test_int(on_group_create_invoked, 2);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(tgt_a, it.group_id);
+    uint64_t *group_ctx = ecs_query_get_group_ctx(q, it.group_id);
+    test_assert(group_ctx != NULL);
+    test_uint(tgt_a, *group_ctx);
+
+    test_assert(ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(tgt_b, it.group_id);
+    group_ctx = ecs_query_get_group_ctx(q, it.group_id);
+    test_assert(group_ctx != NULL);
+    test_uint(tgt_b, *group_ctx);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_delete_with(world, ecs_pair(Rel, tgt_a));
+    ecs_run_aperiodic(world, 0);
+    test_int(on_group_create_invoked, 2);
+    test_int(on_group_delete_invoked, 1);
+
+    ecs_query_fini(q);
+
+    test_int(on_group_create_invoked, 2);
+    test_int(on_group_delete_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Query_group_by_default_action() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtC);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) }
+        },
+        // .group_by = group_by_rel, default action groups by relationship
+        .group_by_id = Rel
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(TgtA, it.group_id);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(TgtB, it.group_id);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(TgtC, it.group_id);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_iter_valid() {
     ecs_world_t *world = ecs_mini();
 

@@ -284,6 +284,7 @@ typedef struct ecs_query_table_list_t {
     ecs_query_table_node_t *first;
     ecs_query_table_node_t *last;
     int32_t count;
+    void *ctx; /* group context */
 } ecs_query_table_list_t;
 
 /* Query event type for notifying queries of world events */
@@ -325,15 +326,17 @@ struct ecs_query_t {
     /* Contains head/tail to nodes of query groups (if group_by is used) */
     ecs_map_t groups;
 
-    /* Used for sorting */
+    /* Table sorting */
     ecs_entity_t order_by_component;
     ecs_order_by_action_t order_by;
     ecs_sort_table_action_t sort_table;
     ecs_vector_t *table_slices;
 
-    /* Used for grouping */
+    /* Table grouping */
     ecs_entity_t group_by_id;
     ecs_group_by_action_t group_by;
+    ecs_group_create_action_t on_group_create;
+    ecs_group_delete_action_t on_group_delete;
     void *group_by_ctx;
     ecs_ctx_free_t group_by_ctx_free;
 
