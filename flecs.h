@@ -6619,6 +6619,23 @@ FLECS_API
 bool ecs_query_next_table(
     ecs_iter_t *iter);
 
+/** Populate iterator fields.
+ * This operation can be combined with ecs_query_next_table to populate the
+ * iterator fields for the current table.
+ * 
+ * Populating fields conditionally can save time when a query uses change 
+ * detection, and only needs iterator data when the table has changed.
+ * 
+ * This operation does not work for queries that match disabled components,
+ * union relationships, or queries that use order_by.
+ * 
+ * @param iter The iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_API
+void ecs_query_populate(
+    ecs_iter_t *iter);
+
 /** Returns whether the query data changed since the last iteration.
  * The operation will return true after:
  * - new entities have been matched with

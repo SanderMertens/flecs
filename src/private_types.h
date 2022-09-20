@@ -254,7 +254,8 @@ struct ecs_query_table_node_t {
 struct ecs_query_table_match_t {
     ecs_query_table_node_t node; /* Embedded list node */
 
-    int32_t *columns;         /* Mapping from query terms to table columns */
+    int32_t *columns;         /* Mapping from query fields to table columns */
+    int32_t *storage_columns; /* Mapping from query fields to storage columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
