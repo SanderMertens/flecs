@@ -14,7 +14,8 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // tag, as this would prevent calling emplace()
     auto m_c = component<T>(world, nullptr, false);
     ecs_add_id(world, m_c, EcsModule);
-
+    
+    world.module<T>();
     world.emplace<T>(world);
 
     ecs_set_scope(world, scope);
