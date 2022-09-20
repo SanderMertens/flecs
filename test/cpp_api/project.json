@@ -861,7 +861,8 @@
                 "nested_type_module",
                 "component_redefinition_outside_module",
                 "module_tag_on_namespace",
-                "dtor_on_fini"
+                "dtor_on_fini",
+                "implicit_module"
             ]
         }, {
             "id": "ImplicitComponents",

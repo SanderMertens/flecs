@@ -7,16 +7,15 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace("import %s", _::type_name<T>());
     ecs_log_push();
 
-    ecs_entity_t scope = ecs_get_scope(world);
-    ecs_set_scope(world, 0);
+    ecs_entity_t scope = ecs_set_scope(world, 0);
 
     // Initialize module component type & don't allow it to be registered as a
     // tag, as this would prevent calling emplace()
     auto m_c = component<T>(world, nullptr, false);
     ecs_add_id(world, m_c, EcsModule);
 
+    ecs_set_scope(world, m_c);
     world.emplace<T>(world);
-
     ecs_set_scope(world, scope);
 
     // It should now be possible to lookup the module

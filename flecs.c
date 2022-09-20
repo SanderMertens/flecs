@@ -24154,6 +24154,8 @@ ecs_entity_t ecs_module_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(world, ecs_world_t);
 
+    ecs_entity_t old_scope = ecs_set_scope(world, 0);
+
     ecs_entity_t e = desc->entity;
     if (!e) {
         char *module_path = ecs_module_path_from_c(c_name);
@@ -24173,6 +24175,8 @@ ecs_entity_t ecs_module_init(
         ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
         (void)result;
     }
+
+    ecs_set_scope(world, old_scope);
 
     return e;
 error:

@@ -39,6 +39,13 @@ public:
     }
 };
 
+class ImplicitModule {
+public:
+    ImplicitModule(flecs::world& world) {
+        world.component<Position>();
+    }
+};
+
 }
 
 void Module_import() {
@@ -191,4 +198,18 @@ void Module_register_w_root_name() {
     test_assert(m == m_lookup);
 
     test_assert(ecs.lookup("::ns::NamedModule") == 0);
+}
+
+void Module_implicit_module() {
+    flecs::world ecs;
+
+    auto m = ecs.import<ns::ImplicitModule>();
+    auto m_lookup = ecs.lookup("::ns::ImplicitModule");
+    test_assert(m != 0);
+    test_assert(m == m_lookup);
+
+    auto p = ecs.component<Position>();
+    auto p_lookup = ecs.lookup("::ns::ImplicitModule::Position");
+    test_assert(p != 0);
+    test_assert(p == p_lookup);
 }

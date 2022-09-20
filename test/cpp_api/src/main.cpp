@@ -822,6 +822,7 @@ void Module_nested_type_module(void);
 void Module_component_redefinition_outside_module(void);
 void Module_module_tag_on_namespace(void);
 void Module_dtor_on_fini(void);
+void Module_implicit_module(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -4188,6 +4189,10 @@ bake_test_case Module_testcases[] = {
     {
         "dtor_on_fini",
         Module_dtor_on_fini
+    },
+    {
+        "implicit_module",
+        Module_implicit_module
     }
 };
 
@@ -5058,7 +5063,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        7,
+        8,
         Module_testcases
     },
     {
