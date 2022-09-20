@@ -1961,6 +1961,18 @@ void* ecs_ref_get_id(
     ecs_ref_t *ref,
     ecs_id_t id);
 
+/** Update ref.
+ * Ensures contents of ref are up to date. Same as ecs_ref_get_id, but does not
+ * return pointer to component id. 
+ * 
+ * @param world The world.
+ * @param ref The ref.
+ */
+FLECS_API
+void ecs_ref_update(
+    const ecs_world_t *world,
+    ecs_ref_t *ref);
+
 /** @} */
 
 
@@ -3406,7 +3418,7 @@ const ecs_filter_t* ecs_query_get_filter(
 FLECS_API
 ecs_iter_t ecs_query_iter(
     const ecs_world_t *world,
-    ecs_query_t *query);  
+    ecs_query_t *query);
 
 /** Progress the query iterator.
  * This operation progresses the query iterator to the next table. The 
@@ -3426,6 +3438,16 @@ bool ecs_query_next(
  */
 FLECS_API
 bool ecs_query_next_instanced(
+    ecs_iter_t *iter);
+
+/** Fast alternative to ecs_query_next that only returns matched tables.
+ * This operation only populates the ecs_iter_t::table field.
+ * 
+ * @param iter The iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_API
+bool ecs_query_next_table(
     ecs_iter_t *iter);
 
 /** Returns whether the query data changed since the last iteration.

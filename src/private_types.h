@@ -241,10 +241,12 @@ typedef struct ecs_query_table_match_t ecs_query_table_match_t;
  * query. A single node may refer to the table multiple times with different
  * offset/count parameters, which enables features such as sorting. */
 struct ecs_query_table_node_t {
-    ecs_query_table_match_t *match;  /* Reference to the match */
+    ecs_query_table_node_t *next, *prev;
+    ecs_table_t *table;              /* The current table. */
+    uint64_t group_id;        /* Value used to organize tables in groups */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
-    ecs_query_table_node_t *next, *prev;
+    ecs_query_table_match_t *match;  /* Reference to the match */
 };
 
 /** Type containing data for a table matched with a query. 
@@ -252,7 +254,6 @@ struct ecs_query_table_node_t {
 struct ecs_query_table_match_t {
     ecs_query_table_node_t node; /* Embedded list node */
 
-    ecs_table_t *table;       /* The current table. */
     int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
@@ -261,8 +262,6 @@ struct ecs_query_table_match_t {
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
-
-    uint64_t group_id;        /* Value used to organize tables in groups */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;

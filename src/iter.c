@@ -120,10 +120,6 @@ bool flecs_iter_populate_term_data(
         goto no_data;
     }
 
-    if (!it->terms) {
-        goto no_data;
-    }
-
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutNone) {
         if (size_out) {
@@ -201,9 +197,7 @@ bool flecs_iter_populate_term_data(
     } else {
         /* Data is from This, use table from iterator */
         table = it->table;
-        if (!table) {
-            goto no_data;
-        }
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         row = it->offset;
 
@@ -218,13 +212,13 @@ bool flecs_iter_populate_term_data(
         }
 
         ecs_type_info_t *ti = table->type_info[storage_column];
-        ecs_vec_t *s = &table->data.columns[storage_column];
         size = ti->size;
-        data = ecs_vec_first(s);
-
-        if (!table || !ecs_table_count(table)) {
+        if (!it->count) {
             goto no_data;
         }
+
+        ecs_vec_t *s = &table->data.columns[storage_column];
+        data = ecs_vec_first(s);
 
         /* Fallthrough to has_data */
     }
@@ -301,7 +295,7 @@ void flecs_iter_populate_data(
                 &ptrs[t], 
                 &sizes[t]);
         }
-    } else {
+    } else if (ptrs || sizes) {
         for (t = 0; t < field_count; t ++) {
             ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
