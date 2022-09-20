@@ -46220,7 +46220,7 @@ bool flecs_query_is_term_id_supported(
 }
 
 static
-void flecs_query_process_signature(
+int flecs_query_process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -46249,6 +46249,8 @@ void flecs_query_process_signature(
             ECS_UNSUPPORTED, NULL);
         ecs_check(is_first_ok, ECS_UNSUPPORTED, NULL);
         ecs_check(is_second_ok,  ECS_UNSUPPORTED, NULL);
+        ecs_check(!(src->flags & EcsFilter), ECS_INVALID_PARAMETER,
+            "invalid usage of Filter for query");
 
         if (inout != EcsIn) {
             query->flags |= EcsQueryHasOutColumns;
@@ -46272,8 +46274,10 @@ void flecs_query_process_signature(
     if (!(query->flags & EcsQueryIsSubquery)) {
         flecs_query_for_each_component_monitor(world, query, flecs_monitor_register);
     }
+
+    return 0;
 error:
-    return;
+    return -1;
 }
 
 /** When a table becomes empty remove it from the query list, or vice versa. */
@@ -46804,7 +46808,9 @@ ecs_query_t* ecs_query_init(
 
     ecs_log_push_1();
 
-    flecs_query_process_signature(world, result);
+    if (flecs_query_process_signature(world, result)) {
+        goto error;
+    }
 
     /* Group before matching so we won't have to move tables around later */
     int32_t cascade_by = result->cascade_by;

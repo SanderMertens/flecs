@@ -7632,3 +7632,18 @@ void Query_query_w_short_notation() {
 
     ecs_fini(world);
 }
+
+void Query_query_w_invalid_filter_flag() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+    ecs_query(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .src.flags = EcsFilter }
+        }
+    });
+}

@@ -1386,7 +1386,8 @@
                 "rematch_after_delete_rel_of_inherited_pair",
                 "rematch_after_delete_obj_of_inherited_pair",
                 "rematch_empty_table_w_superset",
-                "query_w_short_notation"
+                "query_w_short_notation",
+                "query_w_invalid_filter_flag"
             ]
         }, {
             "id": "Iter",

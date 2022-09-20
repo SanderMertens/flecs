@@ -1326,6 +1326,7 @@ void Query_rematch_after_delete_rel_of_inherited_pair(void);
 void Query_rematch_after_delete_obj_of_inherited_pair(void);
 void Query_rematch_empty_table_w_superset(void);
 void Query_query_w_short_notation(void);
+void Query_query_w_invalid_filter_flag(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -7294,6 +7295,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_w_short_notation",
         Query_query_w_short_notation
+    },
+    {
+        "query_w_invalid_filter_flag",
+        Query_query_w_invalid_filter_flag
     }
 };
 
@@ -10839,7 +10844,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        188,
+        189,
         Query_testcases
     },
     {
