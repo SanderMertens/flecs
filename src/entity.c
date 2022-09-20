@@ -3002,12 +3002,41 @@ ecs_ref_t ecs_ref_init_id(
 
     ecs_table_t *table = record->table;
     if (table) {
-        result.tr = flecs_table_record_get(world, table->storage_table, id);
+        result.tr = flecs_table_record_get(world, table, id);
     }
 
     return result;
 error:
     return (ecs_ref_t){0};
+}
+
+void ecs_ref_update(
+    const ecs_world_t *world,
+    ecs_ref_t *ref)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_record_t *r = ref->record;
+    ecs_table_t *table = r->table;
+    if (!table) {
+        return;
+    }
+
+    ecs_table_record_t *tr = ref->tr;
+    if (!tr || tr->hdr.table != table) {
+        tr = ref->tr = flecs_table_record_get(world, table, ref->id);
+        if (!tr) {
+            return;
+        }
+
+        ecs_assert(tr->hdr.table == r->table, ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return;
 }
 
 void* ecs_ref_get_id(

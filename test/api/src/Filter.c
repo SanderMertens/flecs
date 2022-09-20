@@ -16,8 +16,38 @@ void Filter_filter_1_term() {
     test_assert(f.terms != NULL);
     test_int(f.terms[0].id, TagA);
     test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].inout, EcsInOutDefault);
     test_int(f.terms[0].field_index, 0);
     test_int(f.terms[0].first.id, TagA);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_id(Position));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].inout, EcsInOutDefault);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, ecs_id(Position));
     test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
     test_int(f.terms[0].src.id, EcsThis);
     test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
@@ -4672,16 +4702,16 @@ void Filter_term_iter_w_readonly_term() {
 void Filter_filter_iter_w_readonly_term() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_add_id(world, e_1, TagB);
+    ecs_entity_t e_1 = ecs_new(world, Position);
+    ecs_add(world, e_1, Velocity);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{ TagA, .inout = EcsIn }, { TagB }}
+        .terms = {{ ecs_id(Position), .inout = EcsIn }, { ecs_id(Velocity) }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -4689,7 +4719,7 @@ void Filter_filter_iter_w_readonly_term() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
-    test_int(ecs_field_id(&it, 1), TagA);
+    test_int(ecs_field_id(&it, 1), ecs_id(Position));
     test_int(ecs_field_src(&it, 1), 0);
     test_bool(ecs_field_is_readonly(&it, 1), true);
     test_bool(ecs_field_is_readonly(&it, 2), false);

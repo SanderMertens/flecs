@@ -940,6 +940,7 @@
             "id": "Filter",
             "testcases": [
                 "filter_1_term",
+                "filter_1_term_component",
                 "filter_2_terms",
                 "filter_3_terms",
                 "filter_3_terms_w_or",

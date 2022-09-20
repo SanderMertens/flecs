@@ -883,6 +883,7 @@ void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
 
 // Testsuite 'Filter'
 void Filter_filter_1_term(void);
+void Filter_filter_1_term_component(void);
 void Filter_filter_2_terms(void);
 void Filter_filter_3_terms(void);
 void Filter_filter_3_terms_w_or(void);
@@ -5533,6 +5534,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_1_term",
         Filter_filter_1_term
+    },
+    {
+        "filter_1_term_component",
+        Filter_filter_1_term_component
     },
     {
         "filter_2_terms",
@@ -10830,7 +10835,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        233,
+        234,
         Filter_testcases
     },
     {
