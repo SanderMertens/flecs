@@ -398,9 +398,7 @@ void flecs_query_get_dirty_state(
 
     if (!subject) {
         table = match->node.table;
-        column = match->columns[term] - 1;
-        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-        column = ecs_table_type_to_storage_index(table, column);
+        column = match->storage_columns[term];
     } else {
         table = ecs_get_table(world, subject);
         int32_t ref_index = -match->columns[term] - 1;
@@ -558,26 +556,54 @@ bool flecs_query_check_match_monitor(
     ecs_table_t *table = match->node.table;
     int32_t *dirty_state = flecs_table_get_dirty_state(query->world, table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-    table_dirty_state_t cur;
 
     if (monitor[0] != dirty_state[0]) {
         return true;
     }
 
-    ecs_filter_t *f = &query->filter;
-    int32_t i, term_count = f->term_count;
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &f->terms[i];
-        int32_t t = term->field_index;
-        if (monitor[t + 1] == -1) {
+    ecs_world_t *world = query->world;
+    int32_t i, field_count = query->filter.field_count;
+    int32_t *storage_columns = match->storage_columns;
+    int32_t *columns = match->columns;
+    ecs_vec_t *refs = &match->refs;
+    for (i = 0; i < field_count; i ++) {
+        int32_t mon = monitor[i + 1];
+        if (mon == -1) {
             continue;
         }
 
-        flecs_query_get_dirty_state(query, match, t, &cur);
-        ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+        int32_t column = storage_columns[i];
+        if (column >= 0) {
+            /* owned component */
+            if (mon != dirty_state[column + 1]) {
+                return true;
+            }
+            continue;
+        } else if (column == -1) {
+            continue; /* owned but not a component */
+        }
 
-        if (monitor[t + 1] != cur.dirty_state[cur.column + 1]) {
-            return true;
+        column = columns[i];
+        if (!column) {
+            /* Not matched */
+            continue;
+        }
+
+        ecs_assert(column < 0, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t ref_index = -column - 1;
+        ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
+        if (ref->id != 0) {
+            ecs_ref_update(world, ref);
+            ecs_table_record_t *tr = ref->tr;
+            ecs_table_t *src_table = tr->hdr.table;
+            column = tr->column;
+            column = ecs_table_type_to_storage_index(src_table, column);
+            int32_t *src_dirty_state = flecs_table_get_dirty_state(
+                world, src_table);
+            if (mon != src_dirty_state[column + 1]) {
+                return true;
+            }
         }
     }
 
@@ -702,6 +728,7 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     qm->node.table = table;
 
     qm->columns = flecs_balloc(&query->allocators.columns);
+    qm->storage_columns = flecs_balloc(&query->allocators.columns);
     qm->ids = flecs_balloc(&query->allocators.ids);
     qm->sources = flecs_balloc(&query->allocators.sources);
     qm->sizes = flecs_balloc(&query->allocators.sizes);
@@ -745,8 +772,20 @@ void flecs_query_set_table_match(
     ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
     ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, field_count);
 
-    /* Look for union & disabled terms */
     if (table) {
+        /* Initialize storage columns for faster access to component storage */
+        for (i = 0; i < field_count; i ++) {
+            int32_t column = qm->columns[i];
+            if (column > 0) {
+                qm->storage_columns[i] = ecs_table_type_to_storage_index(table,
+                    qm->columns[i] - 1);
+            } else {
+                /* Shared field (not from table) */
+                qm->storage_columns[i] = -2;
+            }
+        }
+
+        /* Look for union fields */
         if (table->flags & EcsTableHasUnion) {
             for (i = 0; i < term_count; i ++) {
                 if (ecs_term_match_0(&terms[i])) {
@@ -777,6 +816,8 @@ void flecs_query_set_table_match(
                 qm->ids[field] = id;
             }
         }
+
+        /* Look for disabled fields */
         if (table->flags & EcsTableHasToggle) {
             for (i = 0; i < term_count; i ++) {
                 if (ecs_term_match_0(&terms[i])) {
@@ -2439,36 +2480,31 @@ void flecs_query_mark_columns_dirty(
     ecs_query_table_match_t *qm)
 {
     ecs_table_t *table = qm->node.table;
+    if (!table) {
+        return;
+    }
 
-    if (table && table->dirty_state) {
-        ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count;
+    int32_t *dirty_state = table->dirty_state;
+    if (dirty_state) {
+        int32_t *storage_columns = qm->storage_columns;
+        ecs_filter_t *filter = &query->filter;
+        ecs_term_t *terms = filter->terms;
+        int32_t i, count = filter->term_count;
+
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            int32_t ti = term->field_index;
-
             if (term->inout == EcsIn || term->inout == EcsInOutNone) {
                 /* Don't mark readonly terms dirty */
                 continue;
             }
 
-            if (qm->sources[ti] != 0) {
-                /* Don't mark table dirty if term is not from the table */
+            int32_t field = term->field_index;
+            int32_t column = storage_columns[field];
+            if (column < 0) {
                 continue;
             }
 
-            int32_t index = qm->columns[ti];
-            if (index <= 0) {
-                /* If term is not set, there's nothing to mark dirty */
-                continue;
-            }
-
-            /* Potential candidate for marking table dirty, if a component */
-            int32_t storage_index = ecs_table_type_to_storage_index(
-                table, index - 1);
-            if (storage_index >= 0) {
-                table->dirty_state[storage_index + 1] ++;
-            }
+            dirty_state[column + 1] ++;
         }
     }
 }
@@ -2493,6 +2529,64 @@ bool ecs_query_next_table(
 
 error:
     return false;
+}
+
+void ecs_query_populate(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    ecs_query_iter_t *iter = &it->priv.iter.query;
+    ecs_query_table_node_t *node = iter->prev;
+    ecs_assert(node != NULL, ECS_INVALID_OPERATION, NULL);
+
+    ecs_table_t *table = node->table;
+    ecs_query_table_match_t *match = node->match;
+    ecs_query_t *query = iter->query;
+    ecs_world_t *world = query->world;
+    const ecs_filter_t *filter = &query->filter;
+    bool only_this = filter->flags & EcsFilterMatchOnlyThis;
+
+    /* Match has been iterated, update monitor for change tracking */
+    if (query->flags & EcsQueryHasMonitor) {
+        flecs_query_sync_match_monitor(query, match);
+    }
+    if (query->flags & EcsQueryHasOutColumns) {
+        flecs_query_mark_columns_dirty(query, match);
+    }
+
+    if (only_this) {
+        /* If query has only This terms, reuse cache storage */
+        it->ids = match->ids;
+        it->columns = match->columns;
+        it->sizes = match->sizes;
+    } else {
+        /* If query has non-This terms make sure not to overwrite them */
+        int32_t t, term_count = filter->term_count;
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &filter->terms[t];
+            if (!ecs_term_match_this(term)) {
+                continue;
+            }
+
+            int32_t field = term->field_index;
+            it->ids[field] = match->ids[field];
+            it->columns[field] = match->columns[field];
+            it->sizes[field] = match->sizes[field];
+        }
+    }
+
+    it->sources = match->sources;
+    it->references = ecs_vec_first(&match->refs);
+    it->instance_count = 0;
+
+    flecs_iter_populate_data(world, it, table, 0, ecs_table_count(table),
+        it->ptrs, NULL);
+error:
+    return;
 }
 
 bool ecs_query_next(
