@@ -1284,6 +1284,7 @@
                 "query_change_skip_non_instanced",
                 "query_changed_w_or",
                 "query_changed_or",
+                "query_changed_w_singleton",
                 "subquery_match_existing",
                 "subquery_match_new",
                 "subquery_inactive",
