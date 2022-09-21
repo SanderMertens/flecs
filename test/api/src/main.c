@@ -1329,6 +1329,14 @@ void Query_rematch_after_delete_obj_of_inherited_pair(void);
 void Query_rematch_empty_table_w_superset(void);
 void Query_query_w_short_notation(void);
 void Query_query_w_invalid_filter_flag(void);
+void Query_query_next_table(void);
+void Query_query_next_table_w_changed(void);
+void Query_query_next_table_w_populate(void);
+void Query_query_next_table_w_skip(void);
+void Query_query_next_table_w_populate_first_changed(void);
+void Query_query_next_table_w_populate_last_changed(void);
+void Query_query_next_table_w_populate_skip_first(void);
+void Query_query_next_table_w_populate_skip_last(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -7309,6 +7317,38 @@ bake_test_case Query_testcases[] = {
     {
         "query_w_invalid_filter_flag",
         Query_query_w_invalid_filter_flag
+    },
+    {
+        "query_next_table",
+        Query_query_next_table
+    },
+    {
+        "query_next_table_w_changed",
+        Query_query_next_table_w_changed
+    },
+    {
+        "query_next_table_w_populate",
+        Query_query_next_table_w_populate
+    },
+    {
+        "query_next_table_w_skip",
+        Query_query_next_table_w_skip
+    },
+    {
+        "query_next_table_w_populate_first_changed",
+        Query_query_next_table_w_populate_first_changed
+    },
+    {
+        "query_next_table_w_populate_last_changed",
+        Query_query_next_table_w_populate_last_changed
+    },
+    {
+        "query_next_table_w_populate_skip_first",
+        Query_query_next_table_w_populate_skip_first
+    },
+    {
+        "query_next_table_w_populate_skip_last",
+        Query_query_next_table_w_populate_skip_last
     }
 };
 
@@ -10854,7 +10894,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        190,
+        198,
         Query_testcases
     },
     {

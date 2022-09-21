@@ -6630,7 +6630,6 @@ bool ecs_query_next_table(
  * union relationships, or queries that use order_by.
  * 
  * @param iter The iterator.
- * @returns True if more data is available, false if not.
  */
 FLECS_API
 void ecs_query_populate(

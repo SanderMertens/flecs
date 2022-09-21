@@ -2523,16 +2523,27 @@ bool ecs_query_next_table(
     flecs_iter_validate(it);
 
     ecs_query_iter_t *iter = &it->priv.iter.query;
-    ecs_query_table_node_t *node = iter->node;
+    ecs_query_table_node_t *node = iter->node; 
+    ecs_query_t *query = iter->query;
+    
+    if ((query->flags & EcsQueryHasOutColumns)) {
+        ecs_query_table_node_t *prev = iter->prev;
+        if (prev && it->count) {
+            flecs_query_mark_columns_dirty(query, prev->match);
+        }
+    }
+
     if (node != iter->last) {
         it->table = node->table;
         it->group_id = node->group_id;
+        it->count = 0;
         iter->node = node->next;
         iter->prev = node;
         return true;
     }
 
 error:
+    ecs_iter_fini(it);
     return false;
 }
 
@@ -2558,9 +2569,6 @@ void ecs_query_populate(
     /* Match has been iterated, update monitor for change tracking */
     if (query->flags & EcsQueryHasMonitor) {
         flecs_query_sync_match_monitor(query, match);
-    }
-    if (query->flags & EcsQueryHasOutColumns) {
-        flecs_query_mark_columns_dirty(query, match);
     }
 
     if (only_this) {
