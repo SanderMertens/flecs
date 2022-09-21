@@ -2978,6 +2978,40 @@ void Query_query_changed_or() {
     ecs_fini(world);
 }
 
+void Query_query_changed_w_singleton() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }, {
+            .id = ecs_id(Velocity),
+            .src.id = ecs_id(Velocity)
+        }}
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_changed(NULL, &it));
+    test_uint(e, it.entities[0]);
+    Position *p = ecs_field(&it, Position, 1);
+    Velocity *v = ecs_field(&it, Velocity, 2);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_subquery_match_existing() {
     ecs_world_t *world = ecs_mini();
 
@@ -7647,3 +7681,4 @@ void Query_query_w_invalid_filter_flag() {
         }
     });
 }
+

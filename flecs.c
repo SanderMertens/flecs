@@ -45436,6 +45436,11 @@ bool flecs_query_get_match_monitor(
             continue; /* If term isn't read, don't monitor */
         }
 
+        /* If term is not matched on this, don't track */
+        if (!ecs_term_match_this(&f->terms[i])) {
+            continue;
+        }
+
         int32_t column = match->columns[t];
         if (column == 0) {
             continue; /* Don't track terms that aren't matched */
