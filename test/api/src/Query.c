@@ -7682,3 +7682,384 @@ void Query_query_w_invalid_filter_flag() {
     });
 }
 
+
+void Query_query_next_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    test_bool(false, ecs_query_next_table(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_populate() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+    test_uint(it.entities[0], e1);
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    test_uint(it.entities[0], e2);
+    test_bool(false, ecs_query_next_table(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_skip() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    ecs_query_skip(&it);
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_populate_first_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_populate_last_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_populate_skip_first() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+    ecs_query_populate(&it);
+    ecs_query_skip(&it);
+    test_int(1, it.count);
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_next_table_w_populate_skip_last() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position)
+        }}
+    });
+
+    ecs_query_t *qr = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .inout = EcsIn
+        }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Tag);
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+    ecs_iter_t it = ecs_query_iter(world, qr);
+    while (ecs_query_next(&it)) { }
+    test_bool(false, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e1));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+
+    test_bool(true, ecs_query_next_table(&it));
+    test_int(0, it.count);
+    test_assert(it.table == ecs_get_table(world, e2));
+    ecs_query_populate(&it);
+    test_int(1, it.count);
+    ecs_query_skip(&it);
+    test_bool(false, ecs_query_next_table(&it));
+
+    test_bool(true, ecs_query_changed(qr, NULL));
+
+    it = ecs_query_iter(world, qr);
+    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_changed(NULL, &it));
+    test_bool(true, ecs_query_next(&it));
+    test_bool(false, ecs_query_changed(NULL, &it));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

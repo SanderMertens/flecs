@@ -1389,7 +1389,15 @@
                 "rematch_after_delete_obj_of_inherited_pair",
                 "rematch_empty_table_w_superset",
                 "query_w_short_notation",
-                "query_w_invalid_filter_flag"
+                "query_w_invalid_filter_flag",
+                "query_next_table",
+                "query_next_table_w_changed",
+                "query_next_table_w_populate",
+                "query_next_table_w_skip",
+                "query_next_table_w_populate_first_changed",
+                "query_next_table_w_populate_last_changed",
+                "query_next_table_w_populate_skip_first",
+                "query_next_table_w_populate_skip_last"
             ]
         }, {
             "id": "Iter",
