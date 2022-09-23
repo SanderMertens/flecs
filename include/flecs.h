@@ -3441,7 +3441,11 @@ bool ecs_query_next_instanced(
     ecs_iter_t *iter);
 
 /** Fast alternative to ecs_query_next that only returns matched tables.
- * This operation only populates the ecs_iter_t::table field.
+ * This operation only populates the ecs_iter_t::table field. To access the
+ * matched components, call ecs_query_populate.
+ * 
+ * If this operation is used with a query that has inout/out terms, those terms
+ * will not be marked dirty unless ecs_query_populate is called. 
  * 
  * @param iter The iterator.
  * @returns True if more data is available, false if not.
@@ -3455,10 +3459,15 @@ bool ecs_query_next_table(
  * iterator fields for the current table.
  * 
  * Populating fields conditionally can save time when a query uses change 
- * detection, and only needs iterator data when the table has changed.
+ * detection, and only needs iterator data when the table has changed. When this
+ * operation is called, inout/out terms will be marked dirty.
  * 
- * This operation does not work for queries that match disabled components,
- * union relationships, or queries that use order_by.
+ * In cases where inout/out terms are conditionally written and no changes
+ * were made after calling ecs_query_populate, the ecs_query_skip function can
+ * be called to prevent the matched table components from being marked dirty.
+ * 
+ * This operation does should not be used with queries that match disabled 
+ * components, union relationships, or with queries that use order_by.
  * 
  * @param iter The iterator.
  */

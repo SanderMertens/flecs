@@ -1485,7 +1485,7 @@ ecs_ftime_t flecs_insert_sleep(
 {
     ecs_poly_assert(world, ecs_world_t);  
 
-    ecs_time_t start = *stop;
+    ecs_time_t start = *stop, now = start;
     ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
 
     if (world->info.target_fps == (ecs_ftime_t)0.0) {
@@ -1510,11 +1510,12 @@ ecs_ftime_t flecs_insert_sleep(
             ecs_sleepf((double)sleep_time);
         }
 
-        ecs_time_t now = start;
+        now = start;
         delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } while ((target_delta_time - delta_time) > 
         (sleep_time / (ecs_ftime_t)2.0));
 
+    *stop = now;
     return delta_time;
 }
 
@@ -1532,8 +1533,6 @@ ecs_ftime_t flecs_start_measure_frame(
         do {
             if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
                 delta_time = flecs_insert_sleep(world, &t);
-
-                ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
                 if (world->info.target_fps != 0) {

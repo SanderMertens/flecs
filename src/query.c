@@ -1466,6 +1466,7 @@ void flecs_query_table_match_free(
 
     for (cur = first; cur != NULL; cur = next) {
         flecs_bfree(&query->allocators.columns, cur->columns);
+        flecs_bfree(&query->allocators.columns, cur->storage_columns);
         flecs_bfree(&query->allocators.ids, cur->ids);
         flecs_bfree(&query->allocators.sources, cur->sources);
         flecs_bfree(&query->allocators.sizes, cur->sizes);
