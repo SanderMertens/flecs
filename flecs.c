@@ -28940,6 +28940,7 @@ const char* flecs_parse_expr(
         /* Used to track of the result of the parsed token can be used as the
          * lvalue for a binary expression */
         bool is_lvalue = false;
+        bool newline = false;
 
         if (!ecs_os_strcmp(token, "(")) {
             ecs_value_t temp_result, *out;
@@ -29078,7 +29079,12 @@ const char* flecs_parse_expr(
             is_lvalue = true;
 
         } else {
-            ptr = ecs_parse_fluff(ptr, NULL);
+            const char *tptr = ecs_parse_fluff(ptr, NULL);
+            for (; ptr != tptr; ptr ++) {
+                if (ptr[0] == '\n') {
+                    newline = true;
+                }
+            }
 
             if (ptr[0] == ':') {
                 /* Member assignment */
@@ -29095,8 +29101,9 @@ const char* flecs_parse_expr(
             is_lvalue = true;
         }
 
-        /* If lvalue was parsed, apply operators */
-        if (is_lvalue) {
+        /* If lvalue was parsed, apply operators. Expressions cannot start
+         * directly after a newline character. */
+        if (is_lvalue && !newline) {
             if (unary_op != EcsExprOperUnknown) {
                 if (unary_op == EcsMin) {
                     int64_t v = -1;

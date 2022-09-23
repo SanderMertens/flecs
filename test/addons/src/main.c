@@ -327,6 +327,7 @@ void Plecs_const_var_string(void);
 void Plecs_const_var_struct(void);
 void Plecs_const_var_redeclare(void);
 void Plecs_const_var_scoped(void);
+void Plecs_scope_w_component_after_const_var(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2206,6 +2207,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "const_var_scoped",
         Plecs_const_var_scoped
+    },
+    {
+        "scope_w_component_after_const_var",
+        Plecs_scope_w_component_after_const_var
     }
 };
 
@@ -4522,7 +4527,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        146,
+        147,
         Plecs_testcases
     },
     {

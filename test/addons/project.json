@@ -333,7 +333,8 @@
                 "const_var_string",
                 "const_var_struct",
                 "const_var_redeclare",
-                "const_var_scoped"
+                "const_var_scoped",
+                "scope_w_component_after_const_var"
             ]
         }, {
             "id": "Doc",
