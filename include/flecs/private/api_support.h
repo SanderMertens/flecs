@@ -21,7 +21,9 @@ extern "C" {
  * lower than this constant are looked up in an array, whereas constants higher
  * than this id are looked up in a map. Increasing this value can improve
  * performance at the cost of (significantly) higher memory usage. */
+#ifndef ECS_HI_COMPONENT_ID
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
+#endif
 
 /** The maximum number of nested function calls before the core will throw a
  * cycle detected error */
