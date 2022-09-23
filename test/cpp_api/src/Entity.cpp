@@ -3716,6 +3716,7 @@ struct Turret {
 };
 
 struct Railgun {
+    struct Base { };
     struct Head { };
     struct Beam { };
 };
@@ -3782,6 +3783,30 @@ void Entity_prefab_hierarchy_w_root_types() {
 
     auto inst_base = inst.lookup("Base");
     test_assert(inst_base != 0);
+}
+
+void Entity_prefab_hierarchy_w_child_override() {
+    flecs::world ecs;
+
+    struct Foo {};
+    struct Bar {};
+
+    auto t = ecs.prefab<Turret>();
+    auto tb = ecs.prefab<Turret::Base>().add<Foo>();
+    test_assert(t != 0);
+    test_assert(tb != 0);
+
+    auto r = ecs.prefab<Railgun>().is_a<Turret>();
+    auto rb = ecs.prefab<Railgun::Base>().add<Bar>();
+    test_assert(r != 0);
+    test_assert(rb != 0);
+
+    auto i = ecs.entity().is_a<Railgun>();
+    test_assert(i != 0);
+    auto ib = i.lookup("Base");
+    test_assert(ib != 0);
+    test_assert(ib.has<Foo>());
+    test_assert(ib.has<Bar>());
 }
 
 struct Parent {

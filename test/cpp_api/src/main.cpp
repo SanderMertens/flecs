@@ -215,6 +215,7 @@ void Entity_entity_w_nested_type(void);
 void Entity_entity_w_type_defer(void);
 void Entity_prefab_hierarchy_w_types(void);
 void Entity_prefab_hierarchy_w_root_types(void);
+void Entity_prefab_hierarchy_w_child_override(void);
 void Entity_entity_array(void);
 void Entity_add_if_true_T(void);
 void Entity_add_if_false_T(void);
@@ -1846,6 +1847,10 @@ bake_test_case Entity_testcases[] = {
     {
         "prefab_hierarchy_w_root_types",
         Entity_prefab_hierarchy_w_root_types
+    },
+    {
+        "prefab_hierarchy_w_child_override",
+        Entity_prefab_hierarchy_w_child_override
     },
     {
         "entity_array",
@@ -4944,7 +4949,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        222,
+        223,
         Entity_testcases
     },
     {

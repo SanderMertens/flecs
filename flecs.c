@@ -17717,9 +17717,6 @@ ecs_entity_t ecs_cpp_component_register(
         const EcsComponent *component = ecs_get(world, ent, EcsComponent);
         if (component != NULL) {
             const char *sym = ecs_get_symbol(world, ent);
-            ecs_assert(!existing || (sym != NULL), ECS_MISSING_SYMBOL, 
-                ecs_get_name(world, ent));
-
             if (sym && ecs_os_strcmp(sym, symbol)) {
                 /* Application is trying to register a type with an entity that
                  * was already associated with another type. In most cases this
@@ -17749,6 +17746,8 @@ ecs_entity_t ecs_cpp_component_register(
                     ecs_abort(ECS_NAME_IN_USE, NULL);
                 }
                 ecs_os_free(type_path);
+            } else if (!sym) {
+                ecs_set_symbol(world, ent, symbol);
             }
         }
 
