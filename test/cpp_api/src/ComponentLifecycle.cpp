@@ -887,9 +887,10 @@ void ComponentLifecycle_grow_no_default_ctor_move() {
         test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 
+        CountNoDefaultCtor::reset();
         auto e3 = world.entity().emplace<CountNoDefaultCtor>(3);
 
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
+        test_int(CountNoDefaultCtor::ctor_invoked, 1);
         test_int(CountNoDefaultCtor::dtor_invoked, 2);
         test_int(CountNoDefaultCtor::copy_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
@@ -904,40 +905,45 @@ void ComponentLifecycle_grow_no_default_ctor_move() {
         test_int(e2.get<CountNoDefaultCtor>()->value, 2);
         test_int(e3.get<CountNoDefaultCtor>()->value, 3);
 
+        CountNoDefaultCtor::reset();
         e1.add<Tag>();
 
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::copy_invoked, 0);
+        test_int(CountNoDefaultCtor::move_invoked, 1);
+        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        CountNoDefaultCtor::reset();
+        e2.add<Tag>();
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::copy_invoked, 0);
+        test_int(CountNoDefaultCtor::move_invoked, 0);
+        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        CountNoDefaultCtor::reset();
+        e3.add<Tag>();
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
         test_int(CountNoDefaultCtor::dtor_invoked, 3);
         test_int(CountNoDefaultCtor::copy_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 3);
 
-        e2.add<Tag>();
-
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
-        test_int(CountNoDefaultCtor::dtor_invoked, 4);
-        test_int(CountNoDefaultCtor::copy_invoked, 0);
-        test_int(CountNoDefaultCtor::move_invoked, 0);
-        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-        test_int(CountNoDefaultCtor::move_ctor_invoked, 4);
-
-        e3.add<Tag>();
-
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
-        test_int(CountNoDefaultCtor::dtor_invoked, 7);
-        test_int(CountNoDefaultCtor::copy_invoked, 0);
-        test_int(CountNoDefaultCtor::move_invoked, 0);
-        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-        test_int(CountNoDefaultCtor::move_ctor_invoked, 7); /* resize */
+        CountNoDefaultCtor::reset();
     }
 
-    test_int(CountNoDefaultCtor::ctor_invoked, 3);
-    test_int(CountNoDefaultCtor::dtor_invoked, 10);
+    test_int(CountNoDefaultCtor::ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::dtor_invoked, 3);
     test_int(CountNoDefaultCtor::copy_invoked, 0);
     test_int(CountNoDefaultCtor::move_invoked, 0);
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-    test_int(CountNoDefaultCtor::move_ctor_invoked, 7);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 }
 
 void ComponentLifecycle_grow_no_default_ctor_move_w_component() {
@@ -957,9 +963,10 @@ void ComponentLifecycle_grow_no_default_ctor_move_w_component() {
         test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 
+        CountNoDefaultCtor::reset();
         auto e3 = world.entity().emplace<CountNoDefaultCtor>(3);
 
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
+        test_int(CountNoDefaultCtor::ctor_invoked, 1);
         test_int(CountNoDefaultCtor::dtor_invoked, 2);
         test_int(CountNoDefaultCtor::copy_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
@@ -974,40 +981,45 @@ void ComponentLifecycle_grow_no_default_ctor_move_w_component() {
         test_int(e2.get<CountNoDefaultCtor>()->value, 2);
         test_int(e3.get<CountNoDefaultCtor>()->value, 3);
 
+        CountNoDefaultCtor::reset();
         e1.add<Position>();
 
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
-        test_int(CountNoDefaultCtor::dtor_invoked, 3);
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::copy_invoked, 0);
+        test_int(CountNoDefaultCtor::move_invoked, 1);
+        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        CountNoDefaultCtor::reset();
+        e2.add<Position>(); // e2 is last element, e3 got moved to e1's location
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
         test_int(CountNoDefaultCtor::copy_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-        test_int(CountNoDefaultCtor::move_ctor_invoked, 3);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
 
-        e2.add<Position>();
-
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
-        test_int(CountNoDefaultCtor::dtor_invoked, 4);
-        test_int(CountNoDefaultCtor::copy_invoked, 0);
-        test_int(CountNoDefaultCtor::move_invoked, 0);
-        test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-        test_int(CountNoDefaultCtor::move_ctor_invoked, 4);
-
+        CountNoDefaultCtor::reset();
         e3.add<Position>();
 
-        test_int(CountNoDefaultCtor::ctor_invoked, 3);
-        test_int(CountNoDefaultCtor::dtor_invoked, 7);
+        test_int(CountNoDefaultCtor::ctor_invoked, 0);
+        test_int(CountNoDefaultCtor::dtor_invoked, 3); /* 2 (e1,e2) for resize, 1 (e3) for moved away storage */
         test_int(CountNoDefaultCtor::copy_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-        test_int(CountNoDefaultCtor::move_ctor_invoked, 7); /* resize */
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 3); /* resize */
+
+        CountNoDefaultCtor::reset();
     }
 
-    test_int(CountNoDefaultCtor::ctor_invoked, 3);
-    test_int(CountNoDefaultCtor::dtor_invoked, 10);
+    test_int(CountNoDefaultCtor::ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::dtor_invoked, 3);
     test_int(CountNoDefaultCtor::copy_invoked, 0);
     test_int(CountNoDefaultCtor::move_invoked, 0);
     test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
-    test_int(CountNoDefaultCtor::move_ctor_invoked, 7);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 }
 
 void ComponentLifecycle_delete_no_default_ctor() {

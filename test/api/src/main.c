@@ -780,7 +780,6 @@ void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_fini(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent(void);
-void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
 void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
 void ComponentLifecycle_on_set_after_set(void);
@@ -810,6 +809,7 @@ void ComponentLifecycle_component_init_set_hooks(void);
 void ComponentLifecycle_on_add_after_ctor_w_add(void);
 void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 void ComponentLifecycle_with_before_hooks(void);
+void ComponentLifecycle_move_ctor_on_move(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -5148,10 +5148,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent
     },
     {
-        "delete_in_dtor_same_type_on_delete",
-        ComponentLifecycle_delete_in_dtor_same_type_on_delete
-    },
-    {
         "delete_in_dtor_other_type_on_delete",
         ComponentLifecycle_delete_in_dtor_other_type_on_delete
     },
@@ -5266,6 +5262,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "with_before_hooks",
         ComponentLifecycle_with_before_hooks
+    },
+    {
+        "move_ctor_on_move",
+        ComponentLifecycle_move_ctor_on_move
     }
 };
 

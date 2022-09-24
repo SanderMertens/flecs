@@ -322,7 +322,16 @@ public:
         move_invoked ++;
         this->value = obj.value;
         return *this;
-    }   
+    }
+
+    static void reset() {
+        ctor_invoked = 0;
+        dtor_invoked = 0;
+        copy_invoked = 0;
+        move_invoked = 0;
+        copy_ctor_invoked = 0;
+        move_ctor_invoked = 0;
+    }
 
     int value;
 

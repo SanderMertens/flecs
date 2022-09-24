@@ -1657,6 +1657,16 @@ void other_comp_dtor(
     other_dtor_invoked ++;
 }
 
+ECS_MOVE(Entity, dst, src, {
+    dst->world = src->world;
+    dst->e = src->e;
+    dst->other = src->other;
+
+    src->world = NULL;
+    src->e = 0;
+    src->other = 0;
+})
+
 static
 void other_delete_dtor(
     void *ptr,
@@ -1853,48 +1863,6 @@ void ComponentLifecycle_delete_in_dtor_other_type_on_delete_parent() {
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(!ecs_is_alive(world, e2));    
-
-    ecs_fini(world);
-}
-
-void ComponentLifecycle_delete_in_dtor_same_type_on_delete() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT_DEFINE(world, String);
-    ECS_COMPONENT_DEFINE(world, Entity);
-
-    ecs_set_hooks(world, String, {
-        .dtor = string_dtor
-    });
-
-    ecs_set_hooks(world, Entity, {
-        .dtor = other_delete_dtor
-    });
-
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-
-    ecs_set(world, e1, Entity, {world, e1, e2});
-    ecs_set(world, e2, Entity, {world, e2, e3});
-    ecs_set(world, e3, Entity, {world, e3, e1});
-
-    ecs_set(world, e1, String, {world, e1, ecs_os_strdup("Foo")});
-    ecs_set(world, e2, String, {world, e2, ecs_os_strdup("Foo")});
-    ecs_set(world, e3, String, {world, e3, ecs_os_strdup("Foo")});
-
-    test_int(other_dtor_invoked, 0);
-
-    ecs_delete(world, e3);
-    test_assert(!ecs_is_alive(world, e1));
-    test_assert(!ecs_is_alive(world, e2));
-    test_assert(!ecs_is_alive(world, e3));
-
-    ecs_delete(world, e2);
-    ecs_delete(world, e1);
-    
-    test_int(other_dtor_invoked, 3);
-    test_int(other_dtor_valid_entity, 2);
 
     ecs_fini(world);
 }
@@ -2715,6 +2683,40 @@ void ComponentLifecycle_with_before_hooks() {
     const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
     test_assert(ti != NULL);
     test_assert(ti->hooks.ctor == ecs_ctor(Position));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_ctor_on_move() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .move = ecs_move(Position),
+        .move_ctor = position_move_ctor,
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t p = ecs_new_id(world);
+
+    Position *p1 = ecs_emplace(world, e1, Position);
+    test_assert(p1 != NULL);
+    Position *p2 = ecs_emplace(world, e2, Position);
+    test_assert(p2 != NULL);
+
+    test_int(ctor_position, 0);
+
+    ecs_add_pair(world, e1, EcsChildOf, p);
+    test_int(ctor_position, 0);
+    test_int(move_ctor_position, 1); // move e1 to other table
+    test_int(move_position, 1); // move e2 to old position of e1
+    test_int(dtor_position, 1); // dtor old position for e2
+
+    ecs_add_pair(world, e2, EcsChildOf, p);
 
     ecs_fini(world);
 }
