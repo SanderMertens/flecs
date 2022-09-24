@@ -25,6 +25,11 @@ extern "C" {
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 #endif
 
+/** This is the largest possible component id. Components for the most part
+ * occupy the same id range as entities, however they are not allowed to overlap
+ * with (8) bits reserved for id flags. */
+#define ECS_MAX_COMPONENT_ID (~((uint32_t)(ECS_ID_FLAGS_MASK >> 32)))
+
 /** The maximum number of nested function calls before the core will throw a
  * cycle detected error */
 #define ECS_MAX_RECURSION (512)
