@@ -1972,13 +1972,9 @@ void Type_entity_instanceof_str(void);
 void Type_entity_childof_str(void);
 void Type_entity_pair_str(void);
 void Type_entity_and_str(void);
-void Type_entity_or_str(void);
-void Type_entity_not_str(void);
 void Type_entity_str_small_buffer(void);
 void Type_role_pair_str(void);
 void Type_role_and_str(void);
-void Type_role_or_str(void);
-void Type_role_not_str(void);
 void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
@@ -9810,14 +9806,6 @@ bake_test_case Type_testcases[] = {
         Type_entity_and_str
     },
     {
-        "entity_or_str",
-        Type_entity_or_str
-    },
-    {
-        "entity_not_str",
-        Type_entity_not_str
-    },
-    {
         "entity_str_small_buffer",
         Type_entity_str_small_buffer
     },
@@ -9828,14 +9816,6 @@ bake_test_case Type_testcases[] = {
     {
         "role_and_str",
         Type_role_and_str
-    },
-    {
-        "role_or_str",
-        Type_role_or_str
-    },
-    {
-        "role_not_str",
-        Type_role_not_str
     },
     {
         "role_owned_str",
@@ -10985,7 +10965,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        29,
+        25,
         Type_testcases
     },
     {

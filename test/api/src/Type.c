@@ -289,34 +289,6 @@ void Type_entity_and_str() {
     ecs_fini(world);
 }
 
-void Type_entity_or_str() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Foo, 0);
-
-    ecs_entity_t e = ECS_OR | Foo;
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "OR|Foo");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Type_entity_not_str() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Foo, 0);
-
-    ecs_entity_t e = ECS_NOT | Foo;
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "NOT|Foo");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void Type_entity_str_small_buffer() {
     ecs_world_t *world = ecs_mini();
 
@@ -339,16 +311,6 @@ void Type_role_pair_str() {
 void Type_role_and_str() {
     ecs_entity_t e = ECS_AND;
     test_str(ecs_id_flag_str(e), "AND");
-}
-
-void Type_role_or_str() {
-    ecs_entity_t e = ECS_OR;
-    test_str(ecs_id_flag_str(e), "OR");
-}
-
-void Type_role_not_str() {
-    ecs_entity_t e = ECS_NOT;
-    test_str(ecs_id_flag_str(e), "NOT");
 }
 
 void Type_role_owned_str() {

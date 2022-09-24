@@ -2199,7 +2199,7 @@ void Observer_or_from() {
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
-            { ECS_OR | Type}
+            { Type, .oper = EcsOrFrom }
         },
         .events = {EcsOnAdd},
         .callback = Observer,

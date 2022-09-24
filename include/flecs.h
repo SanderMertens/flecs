@@ -968,12 +968,6 @@ FLECS_API extern const ecs_id_t ECS_TOGGLE;
 /** Include all components from entity to which AND is applied */
 FLECS_API extern const ecs_id_t ECS_AND;
 
-/** Include at least one component from entity to which OR is applied */
-FLECS_API extern const ecs_id_t ECS_OR;
-
-/** Exclude all components from entity to which NOT is applied */
-FLECS_API extern const ecs_id_t ECS_NOT;
-
 /** @} */
 
 
