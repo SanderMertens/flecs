@@ -613,31 +613,18 @@ int flecs_term_finalize(
         return -1;
     }
 
-    if (ECS_HAS_ID_FLAG(term->id_flags, AND) || 
-        ECS_HAS_ID_FLAG(term->id_flags, OR) || 
-        ECS_HAS_ID_FLAG(term->id_flags, NOT))
-    {
-        if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
-            flecs_filter_error(ctx, "AND/OR terms must be filters");
-            return -1;
-        }
-
-        term->inout = EcsInOutNone;
-
-        /* Translate role to operator */
-        if (ECS_HAS_ID_FLAG(term->id_flags, AND)) {
-            term->oper = EcsAndFrom;
-        } else
-        if (ECS_HAS_ID_FLAG(term->id_flags, OR)) {
-            term->oper = EcsOrFrom;
-        } else
-        if (ECS_HAS_ID_FLAG(term->id_flags, NOT)) {
-            term->oper = EcsNotFrom;
-        }
-
-        /* Zero out role & strip from id */
+    if (term->id_flags & ECS_AND) {
+        term->oper = EcsAndFrom;
         term->id &= ECS_COMPONENT_MASK;
         term->id_flags = 0;
+    }
+
+    if (term->oper == EcsAndFrom || term->oper == EcsOrFrom || term->oper == EcsNotFrom) {
+        if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
+            flecs_filter_error(ctx, 
+                "invalid inout value for AndFrom/OrFrom/NotFrom term");
+            return -1;
+        }
     }
 
     if (flecs_term_verify(world, term, ctx)) {
@@ -1466,10 +1453,8 @@ bool flecs_n_term_match_table(
             continue;
         }
         bool result;
-        if (ECS_HAS_ID_FLAG(id, AND) || ECS_HAS_ID_FLAG(id, OR)) {
-            ecs_oper_kind_t id_oper = ECS_HAS_ID_FLAG(id, AND)
-                ? EcsAndFrom : ECS_HAS_ID_FLAG(id, OR)
-                    ? EcsOrFrom : 0;
+        if (ECS_HAS_ID_FLAG(id, AND)) {
+            ecs_oper_kind_t id_oper = EcsAndFrom;
             result = flecs_n_term_match_table(world, term, table, 
                 id & ECS_COMPONENT_MASK, id_oper, id_out, column_out, 
                 subject_out, match_index_out, first, iter_flags);

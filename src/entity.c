@@ -3981,15 +3981,9 @@ const char* ecs_id_flag_str(
     } else
     if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
         return "TOGGLE";
-    } else    
-    if (ECS_HAS_ID_FLAG(entity, OR)) {
-        return "OR";
     } else
     if (ECS_HAS_ID_FLAG(entity, AND)) {
         return "AND";
-    } else
-    if (ECS_HAS_ID_FLAG(entity, NOT)) {
-        return "NOT";
     } else
     if (ECS_HAS_ID_FLAG(entity, OVERRIDE)) {
         return "OVERRIDE";
@@ -4019,16 +4013,6 @@ void ecs_id_str_buf(
 
     if (ECS_HAS_ID_FLAG(id, AND)) {
         ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AND));
-        ecs_strbuf_appendch(buf, '|');
-    }
-
-    if (ECS_HAS_ID_FLAG(id, OR)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_OR));
-        ecs_strbuf_appendch(buf, '|');
-    }
-
-    if (ECS_HAS_ID_FLAG(id, NOT)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_NOT));
         ecs_strbuf_appendch(buf, '|');
     }
 

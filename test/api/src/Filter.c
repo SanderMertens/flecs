@@ -1875,7 +1875,7 @@ void Filter_filter_w_or_flag() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            {ECS_OR | TagA}
+            { TagA, .oper = EcsOrFrom }
         }
     }));
 
@@ -2057,7 +2057,7 @@ void Filter_filter_w_not_flag() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            {ECS_NOT | TagA}
+            { TagA, .oper = EcsNotFrom }
         }
     }));
 
@@ -8318,7 +8318,7 @@ void Filter_or_term() {
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
-            { ECS_OR | TypeX }
+            { TypeX, .oper = EcsOrFrom }
         }
     }));
 

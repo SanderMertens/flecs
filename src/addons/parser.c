@@ -39,6 +39,12 @@
 #define TOK_INOUT "inout"
 #define TOK_INOUT_NONE "none"
 
+static
+const ecs_id_t ECS_OR =                                            (1ull << 59);
+
+static
+const ecs_id_t ECS_NOT =                                           (1ull << 58);
+
 #define ECS_MAX_TOKEN_SIZE (256)
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
@@ -95,7 +101,7 @@ const char* ecs_parse_digit(
 }
 
 static
-bool is_newline_comment(
+bool flecs_is_newline_comment(
     const char *ptr)
 {
     if (ptr[0] == '/' && ptr[1] == '/') {
@@ -115,7 +121,7 @@ const char* ecs_parse_fluff(
         ptr = ecs_parse_whitespace(ptr);
 
         /* Newline comment, skip until newline character */
-        if (is_newline_comment(ptr)) {
+        if (flecs_is_newline_comment(ptr)) {
             ptr += 2;
             last_comment_start = ptr;
 
@@ -129,7 +135,7 @@ const char* ecs_parse_fluff(
             ptr ++;
         }
 
-    } while (isspace(ptr[0]) || is_newline_comment(ptr));
+    } while (isspace(ptr[0]) || flecs_is_newline_comment(ptr));
 
     if (last_comment) {
         *last_comment = (char*)last_comment_start;
@@ -147,7 +153,7 @@ bool flecs_isident(
 }
 
 static
-bool valid_identifier_start_char(
+bool flecs_valid_identifier_start_char(
     char ch)
 {
     if (ch && (flecs_isident(ch) || (ch == '*') ||
@@ -160,12 +166,12 @@ bool valid_identifier_start_char(
 }
 
 static
-bool valid_token_start_char(
+bool flecs_valid_token_start_char(
     char ch)
 {
     if ((ch == '"') || (ch == '{') || (ch == '}') || (ch == ',') || (ch == '-')
         || (ch == '[') || (ch == ']') || (ch == '`') || 
-        valid_identifier_start_char(ch))
+        flecs_valid_identifier_start_char(ch))
     {
         return true;
     }
@@ -174,7 +180,7 @@ bool valid_token_start_char(
 }
 
 static
-bool valid_token_char(
+bool flecs_valid_token_char(
     char ch)
 {
     if (ch && (flecs_isident(ch) || isdigit(ch) || ch == '.' || ch == '"')) {
@@ -185,7 +191,7 @@ bool valid_token_char(
 }
 
 static
-bool valid_operator_char(
+bool flecs_valid_operator_char(
     char ch)
 {
     if (ch == TOK_OPTIONAL || ch == TOK_NOT) {
@@ -206,7 +212,7 @@ const char* ecs_parse_token(
     ptr = ecs_parse_whitespace(ptr);
     char *tptr = token_out, ch = ptr[0];
 
-    if (!valid_token_start_char(ch)) {
+    if (!flecs_valid_token_start_char(ch)) {
         if (ch == '\0' || ch == '\n') {
             ecs_parser_error(name, expr, column, 
                 "unexpected end of expression");
@@ -240,7 +246,7 @@ const char* ecs_parse_token(
         } else if (ch == '"') {
             in_str = !in_str;
         } else
-        if (!valid_token_char(ch) && !in_str) {
+        if (!flecs_valid_token_char(ch) && !in_str) {
             break;
         }
 
@@ -274,7 +280,7 @@ const char* ecs_parse_identifier(
     const char *ptr,
     char *token_out)
 {
-    if (!valid_identifier_start_char(ptr[0])) {
+    if (!flecs_valid_identifier_start_char(ptr[0])) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected start of identifier");
         return NULL;
@@ -286,7 +292,7 @@ const char* ecs_parse_identifier(
 }
 
 static
-int parse_identifier(
+int flecs_parse_identifier(
     const char *token,
     ecs_term_id_t *out)
 {
@@ -302,7 +308,7 @@ int parse_identifier(
 }
 
 static
-ecs_entity_t parse_role(
+ecs_entity_t flecs_parse_role(
     const char *name,
     const char *sig,
     int64_t column,
@@ -325,7 +331,7 @@ ecs_entity_t parse_role(
 }
 
 static
-ecs_oper_kind_t parse_operator(
+ecs_oper_kind_t flecs_parse_operator(
     char ch)
 {
     if (ch == TOK_OPTIONAL) {
@@ -338,7 +344,7 @@ ecs_oper_kind_t parse_operator(
 }
 
 static
-const char* parse_annotation(
+const char* flecs_parse_annotation(
     const char *name,
     const char *sig,
     int64_t column,
@@ -375,7 +381,7 @@ const char* parse_annotation(
 }
 
 static
-uint8_t parse_set_token(
+uint8_t flecs_parse_set_token(
     const char *token)
 {
     if (!ecs_os_strcmp(token, TOK_SELF)) {
@@ -394,7 +400,7 @@ uint8_t parse_set_token(
 }
 
 static
-const char* parse_term_flags(
+const char* flecs_parse_term_flags(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -414,7 +420,7 @@ const char* parse_term_flags(
     }
 
     do {
-        uint8_t tok = parse_set_token(token);
+        uint8_t tok = flecs_parse_set_token(token);
         if (!tok) {
             ecs_parser_error(name, expr, column, 
                 "invalid set token '%s'", token);
@@ -433,7 +439,7 @@ const char* parse_term_flags(
             ptr ++;
 
             /* Relationship (overrides IsA default) */
-            if (!isdigit(ptr[0]) && valid_token_start_char(ptr[0])) {
+            if (!isdigit(ptr[0]) && flecs_valid_token_start_char(ptr[0])) {
                 ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
                     return NULL;
@@ -472,7 +478,7 @@ const char* parse_term_flags(
         /* Next token in set expression */
         if (ptr[0] == TOK_BITWISE_OR) {
             ptr ++;
-            if (valid_token_start_char(ptr[0])) {
+            if (flecs_valid_token_start_char(ptr[0])) {
                 ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
                     return NULL;
@@ -489,7 +495,7 @@ const char* parse_term_flags(
 }
 
 static
-const char* parse_arguments(
+const char* flecs_parse_arguments(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -503,7 +509,7 @@ const char* parse_arguments(
     int32_t arg = 0;
 
     do {
-        if (valid_token_start_char(ptr[0])) {
+        if (flecs_valid_token_start_char(ptr[0])) {
             if (arg == 2) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "too many arguments in term");
@@ -526,14 +532,14 @@ const char* parse_arguments(
             /* If token is a colon, the token is an identifier followed by a
              * set expression. */
             if (ptr[0] == TOK_COLON) {
-                if (parse_identifier(token, term_id)) {
+                if (flecs_parse_identifier(token, term_id)) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "invalid identifier '%s'", token);
                     return NULL;
                 }
 
                 ptr = ecs_parse_whitespace(ptr + 1);
-                ptr = parse_term_flags(world, name, expr, (ptr - expr), ptr,
+                ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                     NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
@@ -546,14 +552,14 @@ const char* parse_arguments(
                 !ecs_os_strcmp(token, TOK_DOWN) || 
                 !(ecs_os_strcmp(token, TOK_PARENT)))
             {
-                ptr = parse_term_flags(world, name, expr, (ptr - expr), ptr, 
+                ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, 
                     token, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
                 }
 
             /* Regular identifier */
-            } else if (parse_identifier(token, term_id)) {
+            } else if (flecs_parse_identifier(token, term_id)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid identifier '%s'", token);
                 return NULL;
@@ -588,7 +594,7 @@ const char* parse_arguments(
 }
 
 static
-void parser_unexpected_char(
+void flecs_parser_unexpected_char(
     const char *name,
     const char *expr,
     const char *ptr,
@@ -604,7 +610,7 @@ void parser_unexpected_char(
 }
 
 static
-const char* parse_term(
+const char* flecs_parse_term(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -618,21 +624,21 @@ const char* parse_term(
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_BRACKET_OPEN) {
-        ptr = parse_annotation(name, expr, (ptr - expr), ptr + 1, &term.inout);
+        ptr = flecs_parse_annotation(name, expr, (ptr - expr), ptr + 1, &term.inout);
         if (!ptr) {
             goto error;
         }
         ptr = ecs_parse_whitespace(ptr);
     }
 
-    if (valid_operator_char(ptr[0])) {
-        term.oper = parse_operator(ptr[0]);
+    if (flecs_valid_operator_char(ptr[0])) {
+        term.oper = flecs_parse_operator(ptr[0]);
         ptr = ecs_parse_whitespace(ptr + 1);
     }
 
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
-    if (valid_token_start_char(ptr[0])) {
+    if (flecs_valid_token_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
@@ -641,7 +647,7 @@ const char* parse_term(
         /* Is token a type role? */
         if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
             ptr ++;
-            goto parse_role;
+            goto flecs_parse_role;
         }
 
         /* Is token a predicate? */
@@ -658,12 +664,12 @@ const char* parse_term(
 
     /* Nothing else expected here */
     } else {
-        parser_unexpected_char(name, expr, ptr, ptr[0]);
+        flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
-parse_role:
-    term.id_flags = parse_role(name, expr, (ptr - expr), token);
+flecs_parse_role:
+    term.id_flags = flecs_parse_role(name, expr, (ptr - expr), token);
     if (!term.id_flags) {
         goto error;
     }
@@ -671,7 +677,7 @@ parse_role:
     ptr = ecs_parse_whitespace(ptr);
 
     /* If next token is the source token, this is an empty source */
-    if (valid_token_start_char(ptr[0])) {
+    if (flecs_valid_token_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
@@ -689,7 +695,7 @@ parse_role:
     }
 
 parse_predicate:
-    if (parse_identifier(token, &term.first)) {
+    if (flecs_parse_identifier(token, &term.first)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid identifier '%s'", token); 
         goto error;
@@ -698,7 +704,7 @@ parse_predicate:
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
         ptr = ecs_parse_whitespace(ptr + 1);
-        ptr = parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
+        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
             &term.first, TOK_COLON);
         if (!ptr) {
             goto error;
@@ -729,7 +735,7 @@ parse_predicate:
             ptr ++;
             ptr = ecs_parse_whitespace(ptr);
         } else {
-            ptr = parse_arguments(
+            ptr = flecs_parse_arguments(
                 world, name, expr, (ptr - expr), ptr, token, &term);
         }
 
@@ -754,19 +760,19 @@ parse_pair:
         term.src.flags |= EcsIsVariable;
         goto parse_pair_predicate;
     } else {
-        parser_unexpected_char(name, expr, ptr, ptr[0]);
+        flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
 parse_pair_predicate:
-    if (parse_identifier(token, &term.first)) {
+    if (flecs_parse_identifier(token, &term.first)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid identifier '%s'", token); 
         goto error;
     }
 
     ptr = ecs_parse_whitespace(ptr);
-    if (valid_token_start_char(ptr[0])) {
+    if (flecs_valid_token_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
@@ -776,7 +782,7 @@ parse_pair_predicate:
             ptr ++;
             goto parse_pair_object;
         } else {
-            parser_unexpected_char(name, expr, ptr, ptr[0]);
+            flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
             goto error;
         }
     } else if (ptr[0] == TOK_PAREN_CLOSE) {
@@ -790,7 +796,7 @@ parse_pair_predicate:
     }
 
 parse_pair_object:
-    if (parse_identifier(token, &term.second)) {
+    if (flecs_parse_identifier(token, &term.second)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid identifier '%s'", token); 
         goto error;
@@ -821,7 +827,7 @@ error:
 }
 
 static
-bool is_valid_end_of_term(
+bool flecs_is_valid_end_of_term(
     const char *ptr)
 {
     if ((ptr[0] == TOK_AND) ||    /* another term with And operator */
@@ -878,7 +884,7 @@ char* ecs_parse_term(
     }
 
     /* Parse next element */
-    ptr = parse_term(world, name, ptr, term);
+    ptr = flecs_parse_term(world, name, ptr, term);
     if (!ptr) {
         goto error;
     }
@@ -918,7 +924,7 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (!is_valid_end_of_term(ptr)) {
+    if (!flecs_is_valid_end_of_term(ptr)) {
         if (!flecs_isident(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected end of expression or next term");
