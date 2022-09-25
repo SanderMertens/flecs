@@ -3067,7 +3067,9 @@ extern "C" {
  * lower than this constant are looked up in an array, whereas constants higher
  * than this id are looked up in a map. Increasing this value can improve
  * performance at the cost of (significantly) higher memory usage. */
+#ifndef ECS_HI_COMPONENT_ID
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
+#endif
 
 /** This is the largest possible component id. Components for the most part
  * occupy the same id range as entities, however they are not allowed to overlap
@@ -4077,6 +4079,13 @@ typedef struct ecs_world_info_t {
                                        * names (such as Ecs, ecs_) when 
                                        * registering them as names. */
 } ecs_world_info_t;
+
+/** Type that contains information about a query group. */
+typedef struct ecs_query_group_info_t {
+    int32_t match_count;  /* How often tables have been matched/unmatched */
+    int32_t table_count;  /* Number of tables in group */
+    void *ctx;            /* Group context, returned by on_group_create */
+} ecs_query_group_info_t;
 
 /** @} */
 
@@ -6708,16 +6717,16 @@ void ecs_query_set_group(
     ecs_iter_t *it,
     uint64_t group_id);
 
-/** Get context associated with group.
- * This operation returns the group ctx value as returned by the on_group_create
- * callback.
+/** Get information about query group.
+ * This operation returns information about a query group, including the group
+ * context returned by the on_group_create callback.
  * 
  * @param query The query.
  * @param group_id The group for which to obtain the context.
- * @return The context for the group, or NULL if the group was not found.
+ * @return The group info, NULL if the group doesn't exist.
  */
 FLECS_API
-void* ecs_query_get_group_ctx(
+const ecs_query_group_info_t* ecs_query_get_group_info(
     ecs_query_t *query,
     uint64_t group_id);
 
@@ -13595,6 +13604,8 @@ struct each_invoker;
 namespace flecs {
 
 using world_t = ecs_world_t;
+using world_info_t = ecs_world_info_t;
+using query_group_info_t = ecs_query_group_info_t;
 using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
@@ -23071,13 +23082,27 @@ struct query_base {
         return ecs_query_orphaned(m_query);
     }
 
+    /** Get info for group. 
+     * 
+     * @param group_id The group id for which to retrieve the info.
+     * @return The group info.
+     */
+    const flecs::query_group_info_t* group_info(uint64_t group_id) {
+        return ecs_query_get_group_info(m_query, group_id);
+    }
+
     /** Get context for group. 
      * 
      * @param group_id The group id for which to retrieve the context.
      * @return The group context.
      */
     void* group_ctx(uint64_t group_id) {
-        return ecs_query_get_group_ctx(m_query, group_id);
+        const flecs::query_group_info_t *gi = group_info(group_id);
+        if (gi) {
+            return gi->ctx;
+        } else {
+            return NULL;
+        }
     }
 
     /** Free the query.

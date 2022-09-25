@@ -613,8 +613,7 @@ typedef struct ecs_query_table_t {
 typedef struct ecs_query_table_list_t {
     ecs_query_table_node_t *first;
     ecs_query_table_node_t *last;
-    int32_t count;
-    void *ctx; /* group context */
+    ecs_query_group_info_t info;
 } ecs_query_table_list_t;
 
 /* Query event type for notifying queries of world events */
@@ -44982,6 +44981,19 @@ const char* ecs_os_strerror(int err) {
 
 
 static
+uint64_t flecs_query_get_group_id(
+    ecs_query_t *query,
+    ecs_table_t *table)
+{
+    if (query->group_by) {
+        return query->group_by(query->world, table, 
+            query->group_by_id, query->group_by_ctx);
+    } else {
+        return 0;
+    }
+}
+
+static
 void flecs_query_compute_group_id(
     ecs_query_t *query,
     ecs_query_table_match_t *match)
@@ -44992,8 +45004,7 @@ void flecs_query_compute_group_id(
         ecs_table_t *table = match->node.table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        match->node.group_id = query->group_by(query->world, table, 
-            query->group_by_id, query->group_by_ctx);
+        match->node.group_id = flecs_query_get_group_id(query, table);
     } else {
         match->node.group_id = 0;
     }
@@ -45020,7 +45031,7 @@ ecs_query_table_list_t* flecs_query_ensure_group(
     ecs_query_table_list_t *group = ecs_map_ensure(
         &query->groups, ecs_query_table_list_t, group_id);
     if (created) {
-        group->ctx = query->on_group_create(
+        group->info.ctx = query->on_group_create(
             query->world, group_id, query->group_by_ctx);
     }
 
@@ -45037,7 +45048,7 @@ void flecs_query_remove_group(
             &query->groups, ecs_query_table_list_t, group_id);
         if (group) {
             query->on_group_delete(
-                query->world, group_id, group->ctx, query->group_by_ctx);
+                query->world, group_id, group->info.ctx, query->group_by_ctx);
         }
     }
 
@@ -45209,8 +45220,8 @@ void flecs_query_remove_table_node(
         next->prev = prev;
     }
 
-    ecs_assert(list->count > 0, ECS_INTERNAL_ERROR, NULL);
-    list->count --;
+    ecs_assert(list->info.table_count > 0, ECS_INTERNAL_ERROR, NULL);
+    list->info.table_count --;
 
     if (query->group_by) {
         ecs_query_table_match_t *match = node->match;
@@ -45228,8 +45239,9 @@ void flecs_query_remove_table_node(
             next = prev;
         }
 
-        ecs_assert(query->list.count > 0, ECS_INTERNAL_ERROR, NULL);
-        query->list.count --;
+        ecs_assert(query->list.info.table_count > 0, ECS_INTERNAL_ERROR, NULL);
+        query->list.info.table_count --;
+        list->info.match_count ++;
 
         /* Make sure group list only contains nodes that belong to the group */
         if (prev && prev->match->node.group_id != group_id) {
@@ -45242,7 +45254,7 @@ void flecs_query_remove_table_node(
         }
 
         /* Do check again, in case both prev & next belonged to another group */
-        if (prev && prev->match->node.group_id != group_id) {
+        if ((!prev && !next) || (prev && prev->match->node.group_id != group_id)) {
             /* There are no more matches left in this group */
             flecs_query_remove_group(query, group_id);
             list = NULL;
@@ -45319,10 +45331,11 @@ void flecs_query_insert_table_node(
     }
 
     if (query->group_by) {
-        query->list.count ++;
+        list->info.table_count ++;
+        list->info.match_count ++;
     }
 
-    list->count ++;
+    query->list.info.table_count ++;
     query->match_count ++;
 
     ecs_assert(node->prev != node, ECS_INTERNAL_ERROR, NULL);
@@ -46003,14 +46016,14 @@ void flecs_query_build_sorted_table_range(
     ecs_world_t *world = query->world;
     ecs_entity_t id = query->order_by_component;
     ecs_order_by_action_t compare = query->order_by;
-    
-    if (!list->count) {
+    int32_t table_count = list->info.table_count;
+    if (!table_count) {
         return;
     }
 
     int to_sort = 0;
 
-    sort_helper_t *helper = ecs_os_malloc_n(sort_helper_t, list->count);
+    sort_helper_t *helper = ecs_os_malloc_n(sort_helper_t, table_count);
     ecs_query_table_node_t *cur, *end = list->last->next;
     for (cur = list->first; cur != end; cur = cur->next) {
         ecs_query_table_match_t *match = cur->match;
@@ -46549,9 +46562,11 @@ void flecs_query_rematch_tables(
         flecs_query_set_table_match(world, query, qm, table, &it);
 
         if (table && ecs_table_count(table) && query->group_by) {
-            /* If grouping is enabled, make sure match is in the right place */
-            flecs_query_remove_table_node(query, &qm->node);
-            flecs_query_insert_table_node(query, &qm->node);
+            if (flecs_query_get_group_id(query, table) != qm->node.group_id) {
+                /* Update table group */
+                flecs_query_remove_table_node(query, &qm->node);
+                flecs_query_insert_table_node(query, &qm->node);
+            }
         }
     }
 
@@ -46789,13 +46804,13 @@ void flecs_query_fini(
 {
     ecs_world_t *world = query->world;
 
-    ecs_group_delete_action_t on_group_delete = query->on_group_delete;
-    if (on_group_delete) {
+    ecs_group_delete_action_t on_delete = query->on_group_delete;
+    if (on_delete) {
         ecs_map_iter_t it = ecs_map_iter(&query->groups);
         ecs_query_table_list_t *group;
         uint64_t group_id;
         while ((group = ecs_map_next(&it, ecs_query_table_list_t, &group_id))) {
-            on_group_delete(world, group_id, group->ctx, query->group_by_ctx);
+            on_delete(world, group_id, group->info.ctx, query->group_by_ctx);
         }
         query->on_group_delete = NULL;
     }
@@ -47032,7 +47047,7 @@ ecs_iter_t ecs_query_iter(
         .last = NULL
     };
 
-    if (query->order_by && query->list.count) {
+    if (query->order_by && query->list.info.table_count) {
         it.node = ecs_vector_first(query->table_slices, ecs_query_table_node_t);
     }
 
@@ -47125,7 +47140,7 @@ error:
     return;
 }
 
-void* ecs_query_get_group_ctx(
+const ecs_query_group_info_t* ecs_query_get_group_info(
     ecs_query_t *query,
     uint64_t group_id)
 {
@@ -47134,7 +47149,7 @@ void* ecs_query_get_group_ctx(
         return NULL;
     }
     
-    return node->ctx;
+    return &node->info;
 }
 
 static

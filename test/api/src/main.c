@@ -1261,6 +1261,7 @@ void Query_group_by_iter_one_empty_table(void);
 void Query_group_by_w_deleted_group_id(void);
 void Query_group_by_callbacks(void);
 void Query_group_by_default_action(void);
+void Query_group_table_count(void);
 void Query_iter_valid(void);
 void Query_query_optional_tag(void);
 void Query_query_optional_shared_tag(void);
@@ -7043,6 +7044,10 @@ bake_test_case Query_testcases[] = {
         Query_group_by_default_action
     },
     {
+        "group_table_count",
+        Query_group_table_count
+    },
+    {
         "iter_valid",
         Query_iter_valid
     },
@@ -10874,7 +10879,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        198,
+        199,
         Query_testcases
     },
     {

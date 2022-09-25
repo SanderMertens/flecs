@@ -4588,17 +4588,19 @@ void Query_group_by_callbacks() {
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
     test_uint(tgt_a, it.group_id);
-    uint64_t *group_ctx = ecs_query_get_group_ctx(q, it.group_id);
-    test_assert(group_ctx != NULL);
-    test_uint(tgt_a, *group_ctx);
+    const ecs_query_group_info_t *gi = ecs_query_get_group_info(q, it.group_id);
+    test_assert(gi != NULL);
+    test_assert(gi->ctx != NULL);
+    test_uint(tgt_a, *(uint64_t*)gi->ctx);
 
     test_assert(ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
     test_uint(tgt_b, it.group_id);
-    group_ctx = ecs_query_get_group_ctx(q, it.group_id);
-    test_assert(group_ctx != NULL);
-    test_uint(tgt_b, *group_ctx);
+    gi = ecs_query_get_group_info(q, it.group_id);
+    test_assert(gi != NULL);
+    test_assert(gi->ctx != NULL);
+    test_uint(tgt_b, *(uint64_t*)gi->ctx);
     test_assert(!ecs_query_next(&it));
 
     ecs_delete_with(world, ecs_pair(Rel, tgt_a));
@@ -4653,6 +4655,103 @@ void Query_group_by_default_action() {
     test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
     test_uint(TgtC, it.group_id);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_group_table_count() {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Foo);
+
+    ecs_new_w_pair(world, Rel, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) }
+        },
+        .group_by_id = Rel
+    });
+
+    ecs_run_aperiodic(world, 0);
+
+    const ecs_query_group_info_t *gi_a;
+    const ecs_query_group_info_t *gi_b;
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a != NULL);
+    test_assert(gi_b == NULL);
+    test_int(gi_a->table_count, 1);
+    test_int(gi_a->match_count, 1);
+
+    ecs_new_w_pair(world, Rel, TgtB);
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a != NULL);
+    test_assert(gi_b != NULL);
+    test_int(gi_a->table_count, 1);
+    test_int(gi_a->match_count, 1);
+    test_int(gi_b->table_count, 1);
+    test_int(gi_b->match_count, 1);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a != NULL);
+    test_assert(gi_b != NULL);
+    test_int(gi_a->table_count, 1);
+    test_int(gi_a->match_count, 1);
+    test_int(gi_b->table_count, 1);
+    test_int(gi_b->match_count, 1);
+
+    ecs_add(world, e3, Foo);
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a != NULL);
+    test_assert(gi_b != NULL);
+    test_int(gi_a->table_count, 2);
+    test_int(gi_a->match_count, 2);
+    test_int(gi_b->table_count, 1);
+    test_int(gi_b->match_count, 1);
+
+    ecs_delete_with(world, Foo);
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a != NULL);
+    test_assert(gi_b != NULL);
+    test_int(gi_a->table_count, 1);
+    test_int(gi_a->match_count, 3);
+    test_int(gi_b->table_count, 1);
+    test_int(gi_b->match_count, 1);
+
+    ecs_delete_with(world, ecs_pair(Rel, TgtA));
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a == NULL);
+    test_assert(gi_b != NULL);
+    test_int(gi_b->table_count, 1);
+    test_int(gi_b->match_count, 1);
+
+    ecs_delete_with(world, ecs_pair(Rel, TgtB));
+    ecs_run_aperiodic(world, 0);
+
+    gi_a = ecs_query_get_group_info(q, TgtA);
+    gi_b = ecs_query_get_group_info(q, TgtB);
+    test_assert(gi_a == NULL);
+    test_assert(gi_b == NULL);
 
     ecs_fini(world);
 }

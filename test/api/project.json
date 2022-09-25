@@ -1322,6 +1322,7 @@
                 "group_by_w_deleted_group_id",
                 "group_by_callbacks",
                 "group_by_default_action",
+                "group_table_count",
                 "iter_valid",
                 "query_optional_tag",
                 "query_optional_shared_tag",

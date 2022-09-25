@@ -935,6 +935,13 @@ typedef struct ecs_world_info_t {
                                        * registering them as names. */
 } ecs_world_info_t;
 
+/** Type that contains information about a query group. */
+typedef struct ecs_query_group_info_t {
+    int32_t match_count;  /* How often tables have been matched/unmatched */
+    int32_t table_count;  /* Number of tables in group */
+    void *ctx;            /* Group context, returned by on_group_create */
+} ecs_query_group_info_t;
+
 /** @} */
 
 /* Only include deprecated definitions if deprecated addon is required */
@@ -3544,16 +3551,16 @@ void ecs_query_set_group(
     ecs_iter_t *it,
     uint64_t group_id);
 
-/** Get context associated with group.
- * This operation returns the group ctx value as returned by the on_group_create
- * callback.
+/** Get information about query group.
+ * This operation returns information about a query group, including the group
+ * context returned by the on_group_create callback.
  * 
  * @param query The query.
  * @param group_id The group for which to obtain the context.
- * @return The context for the group, or NULL if the group was not found.
+ * @return The group info, NULL if the group doesn't exist.
  */
 FLECS_API
-void* ecs_query_get_group_ctx(
+const ecs_query_group_info_t* ecs_query_get_group_info(
     ecs_query_t *query,
     uint64_t group_id);
 
