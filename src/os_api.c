@@ -60,7 +60,15 @@ void ecs_os_fini(void) {
     }
 }
 
-#if !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
+/* Assume every non-glibc Linux target has no execinfo.
+   This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
+#if defined(__linux__) && !defined(__GLIBC__)
+#define HAVE_EXECINFO_H 0
+#else
+#define HAVE_EXECINFO_H 1
+#endif
+
+#if !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID) && HAVE_EXECINFO_H
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 
@@ -91,6 +99,7 @@ void flecs_dump_backtrace(
     (void)stream;
 }
 #endif
+#undef HAVE_EXECINFO_H
 
 static
 void log_msg(
