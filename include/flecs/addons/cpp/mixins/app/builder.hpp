@@ -30,6 +30,11 @@ struct app_builder {
         return *this;
     }
 
+    app_builder& frames(int32_t value) {
+        m_desc.frames = value;
+        return *this;
+    }
+
     app_builder& enable_rest(bool value = true) {
         m_desc.enable_rest = value;
         return *this;

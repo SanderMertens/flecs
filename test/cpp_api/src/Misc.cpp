@@ -230,3 +230,16 @@ void Misc_app_run_target_fps() {
 
     test_int(count, 1);
 }
+
+void Misc_app_run_set_frames() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.system().iter([&](flecs::iter& it) {
+        count ++;
+    });
+
+    ecs.app().frames(100).run();
+
+    test_int(count, 100);
+}

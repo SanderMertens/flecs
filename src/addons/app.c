@@ -11,8 +11,17 @@ int flecs_default_run_action(
         desc->init(world);
     }
 
-    int result;
-    while ((result = ecs_app_run_frame(world, desc)) == 0) { }
+    int result = 0;
+    if (desc->frames) {
+        int32_t i;
+        for (i = 0; i < desc->frames; i ++) {
+            if ((result = ecs_app_run_frame(world, desc)) != 0) {
+                break;
+            }
+        }
+    } else {
+        while ((result = ecs_app_run_frame(world, desc)) == 0) { }
+    }
 
     if (result == 1) {
         return 0; /* Normal exit */

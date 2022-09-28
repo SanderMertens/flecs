@@ -1053,7 +1053,8 @@
                 "nullptr_string_compare_nullptr",
                 "c_macros",
                 "app_run",
-                "app_run_target_fps"
+                "app_run_target_fps",
+                "app_run_set_frames"
             ]
         }, {
             "id": "Meta",

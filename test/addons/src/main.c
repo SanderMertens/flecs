@@ -925,6 +925,7 @@ void App_app_w_frame_action(void);
 void App_app_w_default_frame_action(void);
 void App_app_w_set_threads(void);
 void App_app_w_set_target_fps(void);
+void App_app_w_set_frames(void);
 
 // Testsuite 'Http'
 void Http_teardown(void);
@@ -4466,6 +4467,10 @@ bake_test_case App_testcases[] = {
     {
         "app_w_set_target_fps",
         App_app_w_set_target_fps
+    },
+    {
+        "app_w_set_frames",
+        App_app_w_set_frames
     }
 };
 
@@ -4674,7 +4679,7 @@ static bake_test_suite suites[] = {
         "App",
         NULL,
         NULL,
-        4,
+        5,
         App_testcases
     },
     {
