@@ -758,10 +758,22 @@ void ComponentLifecycle_move_on_add(void);
 void ComponentLifecycle_move_on_remove(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
-void ComponentLifecycle_non_pod_add(void);
-void ComponentLifecycle_non_pod_remove(void);
-void ComponentLifecycle_non_pod_set(void);
-void ComponentLifecycle_non_pod_override(void);
+void ComponentLifecycle_struct_w_string_add(void);
+void ComponentLifecycle_struct_w_string_remove(void);
+void ComponentLifecycle_struct_w_string_set(void);
+void ComponentLifecycle_struct_w_string_override(void);
+void ComponentLifecycle_struct_w_string_add_2_remove(void);
+void ComponentLifecycle_struct_w_string_set_2_remove(void);
+void ComponentLifecycle_struct_w_string_add_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_string_set_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_vector_add(void);
+void ComponentLifecycle_struct_w_vector_remove(void);
+void ComponentLifecycle_struct_w_vector_set(void);
+void ComponentLifecycle_struct_w_vector_override(void);
+void ComponentLifecycle_struct_w_vector_add_2_remove(void);
+void ComponentLifecycle_struct_w_vector_set_2_remove(void);
+void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void);
 void ComponentLifecycle_get_mut_new(void);
 void ComponentLifecycle_get_mut_existing(void);
 void ComponentLifecycle_implicit_component(void);
@@ -3946,20 +3958,68 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_override
     },
     {
-        "non_pod_add",
-        ComponentLifecycle_non_pod_add
+        "struct_w_string_add",
+        ComponentLifecycle_struct_w_string_add
     },
     {
-        "non_pod_remove",
-        ComponentLifecycle_non_pod_remove
+        "struct_w_string_remove",
+        ComponentLifecycle_struct_w_string_remove
     },
     {
-        "non_pod_set",
-        ComponentLifecycle_non_pod_set
+        "struct_w_string_set",
+        ComponentLifecycle_struct_w_string_set
     },
     {
-        "non_pod_override",
-        ComponentLifecycle_non_pod_override
+        "struct_w_string_override",
+        ComponentLifecycle_struct_w_string_override
+    },
+    {
+        "struct_w_string_add_2_remove",
+        ComponentLifecycle_struct_w_string_add_2_remove
+    },
+    {
+        "struct_w_string_set_2_remove",
+        ComponentLifecycle_struct_w_string_set_2_remove
+    },
+    {
+        "struct_w_string_add_2_remove_w_tag",
+        ComponentLifecycle_struct_w_string_add_2_remove_w_tag
+    },
+    {
+        "struct_w_string_set_2_remove_w_tag",
+        ComponentLifecycle_struct_w_string_set_2_remove_w_tag
+    },
+    {
+        "struct_w_vector_add",
+        ComponentLifecycle_struct_w_vector_add
+    },
+    {
+        "struct_w_vector_remove",
+        ComponentLifecycle_struct_w_vector_remove
+    },
+    {
+        "struct_w_vector_set",
+        ComponentLifecycle_struct_w_vector_set
+    },
+    {
+        "struct_w_vector_override",
+        ComponentLifecycle_struct_w_vector_override
+    },
+    {
+        "struct_w_vector_add_2_remove",
+        ComponentLifecycle_struct_w_vector_add_2_remove
+    },
+    {
+        "struct_w_vector_set_2_remove",
+        ComponentLifecycle_struct_w_vector_set_2_remove
+    },
+    {
+        "struct_w_vector_add_2_remove_w_tag",
+        ComponentLifecycle_struct_w_vector_add_2_remove_w_tag
+    },
+    {
+        "struct_w_vector_set_2_remove_w_tag",
+        ComponentLifecycle_struct_w_vector_set_2_remove_w_tag
     },
     {
         "get_mut_new",
@@ -5054,7 +5114,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        53,
+        65,
         ComponentLifecycle_testcases
     },
     {

@@ -3551,12 +3551,25 @@ void ecs_query_set_group(
     ecs_iter_t *it,
     uint64_t group_id);
 
+/** Get context of query group.
+ * This operation returns the context of a query group as returned by the 
+ * on_group_create callback.
+ * 
+ * @param query The query.
+ * @param group_id The group for which to obtain the context.
+ * @return The group context, NULL if the group doesn't exist.
+ */
+FLECS_API
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
+    uint64_t group_id);
+
 /** Get information about query group.
  * This operation returns information about a query group, including the group
  * context returned by the on_group_create callback.
  * 
  * @param query The query.
- * @param group_id The group for which to obtain the context.
+ * @param group_id The group for which to obtain the group info.
  * @return The group info, NULL if the group doesn't exist.
  */
 FLECS_API

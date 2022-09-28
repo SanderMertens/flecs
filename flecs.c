@@ -3102,7 +3102,8 @@ void flecs_run_remove_hooks(
     ecs_entity_t *entities,
     ecs_id_t id,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool dtor)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -3112,7 +3113,9 @@ void flecs_run_remove_hooks(
             entities, id, row, count, ti);
     }
     
-    flecs_dtor_component(ti, column, row, count);
+    if (dtor) {
+        flecs_dtor_component(ti, column, row, count);
+    }
 }
 
 static
@@ -4002,7 +4005,7 @@ void flecs_table_delete(
         if (destruct && (table->flags & EcsTableHasDtors)) {            
             for (i = 0; i < column_count; i ++) {
                 flecs_run_remove_hooks(world, table, type_info[i], &columns[i], 
-                    &entity_to_delete, ids[i], index, 1);
+                    &entity_to_delete, ids[i], index, 1, true);
             }
         }
 
@@ -4169,7 +4172,6 @@ void flecs_table_move(
                 }
 
                 if (move) {
-                    /* ctor + move + dtor */
                     move(dst, src, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, src, size);
@@ -4190,7 +4192,7 @@ void flecs_table_move(
             } else {
                 flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
-                        src_index, 1);
+                        src_index, 1, use_move_dtor);
             }
         }
 
@@ -4207,7 +4209,7 @@ void flecs_table_move(
     for (; (i_old < src_column_count); i_old ++) {
         flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
             &src_columns[i_old], &src_entity, src_ids[i_old], 
-                src_index, 1);
+                src_index, 1, use_move_dtor);
     }
 
     flecs_table_check_sanity(dst_table);
@@ -47150,6 +47152,19 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     }
     
     return &node->info;
+}
+
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    const ecs_query_group_info_t *info = 
+        ecs_query_get_group_info(query, group_id);
+    if (!info) {
+        return NULL;
+    } else {
+        return info->ctx;
+    }
 }
 
 static

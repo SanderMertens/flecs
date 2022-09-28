@@ -2172,6 +2172,19 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     return &node->info;
 }
 
+void* ecs_query_get_group_ctx(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    const ecs_query_group_info_t *info = 
+        ecs_query_get_group_info(query, group_id);
+    if (!info) {
+        return NULL;
+    } else {
+        return info->ctx;
+    }
+}
+
 static
 int find_smallest_column(
     ecs_table_t *table,

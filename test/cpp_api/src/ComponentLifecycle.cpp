@@ -4,8 +4,6 @@
 
 #include <cpp_api.h>
 
-#include <string>
-
 int Pod::ctor_invoked = 0;
 int Pod::dtor_invoked = 0;
 int Pod::copy_invoked = 0;
@@ -20,17 +18,12 @@ int CountNoDefaultCtor::move_invoked = 0;
 int CountNoDefaultCtor::copy_ctor_invoked = 0;
 int CountNoDefaultCtor::move_ctor_invoked = 0;
 
-class Str {
-public:
-    std::string value;
-};
-
 void ComponentLifecycle_ctor_on_add() {
     flecs::world world;
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world).add<Pod>();
+    auto e = world.entity().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
@@ -49,7 +42,7 @@ void ComponentLifecycle_dtor_on_remove() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world).add<Pod>();
+    auto e = world.entity().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
     test_int(Pod::ctor_invoked, 1);
@@ -67,7 +60,7 @@ void ComponentLifecycle_move_on_add() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world).add<Pod>();
+    auto e = world.entity().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
@@ -97,7 +90,7 @@ void ComponentLifecycle_move_on_remove() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world).add<Position>().add<Pod>();
+    auto e = world.entity().add<Position>().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
@@ -127,7 +120,7 @@ void ComponentLifecycle_copy_on_set() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(e.id() != 0);
 
     e.set<Pod>({20});
@@ -143,7 +136,7 @@ void ComponentLifecycle_copy_on_override() {
 
     world.component<Pod>();
 
-    auto base = flecs::entity(world);
+    auto base = world.entity();
     test_assert(base.id() != 0);
 
     base.set<Pod>({10});
@@ -155,7 +148,7 @@ void ComponentLifecycle_copy_on_override() {
     Pod::copy_invoked = 0;
     Pod::move_invoked = 0;
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(e.id() != 0);
     
     e.add(flecs::IsA, base);
@@ -172,68 +165,336 @@ void ComponentLifecycle_copy_on_override() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_non_pod_add() {
+void ComponentLifecycle_struct_w_string_add() {
     flecs::world world;
 
-    flecs::component<Str>(world, "Str");
-
-    auto e = flecs::entity(world).add<Str>();
+    auto e = world.entity().add<Struct_w_string>();
     test_assert(e.id() != 0);
-    test_assert(e.has<Str>());
+    test_assert(e.has<Struct_w_string>());
 
-    const Str *str = e.get<Str>();
+    const Struct_w_string *str = e.get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "");
 }
 
-void ComponentLifecycle_non_pod_remove() {
+void ComponentLifecycle_struct_w_string_remove() {
     flecs::world world;
 
-    flecs::component<Str>(world, "Str");
-
-    auto e = flecs::entity(world).add<Str>();
+    auto e = world.entity().add<Struct_w_string>();
     test_assert(e.id() != 0);
-    test_assert(e.has<Str>());
+    test_assert(e.has<Struct_w_string>());
 
-    e.remove<Str>();
-    test_assert(!e.has<Str>());
+    e.remove<Struct_w_string>();
+    test_assert(!e.has<Struct_w_string>());
 }
 
-void ComponentLifecycle_non_pod_set() {
+void ComponentLifecycle_struct_w_string_set() {
     flecs::world world;
 
-    flecs::component<Str>(world, "Str");
-
-    auto e = flecs::entity(world)
-        .set<Str>({"Hello World"});
+    auto e = world.entity()
+        .set<Struct_w_string>({"Hello World"});
     test_assert(e.id() != 0);
-    test_assert(e.has<Str>());
+    test_assert(e.has<Struct_w_string>());
 
-    const Str *str = e.get<Str>();
+    const Struct_w_string *str = e.get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
 }
 
-void ComponentLifecycle_non_pod_override() {
+void ComponentLifecycle_struct_w_string_override() {
     flecs::world world;
 
-    flecs::component<Str>(world, "Str");
-
-    auto base = flecs::entity(world);
+    auto base = world.entity();
     test_assert(base.id() != 0);
 
-    base.set<Str>({"Hello World"});
+    base.set<Struct_w_string>({"Hello World"});
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(e.id() != 0);
     
     e.add(flecs::IsA, base);
 
-    e.add<Str>();
+    e.add<Struct_w_string>();
 
-    const Str *str = e.get<Str>();
+    const Struct_w_string *str = e.get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
+}
+
+void ComponentLifecycle_struct_w_string_add_2_remove() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Struct_w_string>();
+    auto e2 = world.entity().add<Struct_w_string>();
+
+    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    test_assert(str1 != NULL);
+    test_assert(str1->value == "");
+    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "");
+
+    e1.remove<Struct_w_string>();
+    str1 = e1.get<Struct_w_string>();
+    test_assert(str1 == NULL);
+
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "");
+
+    e2.remove<Struct_w_string>();
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_string_set_2_remove() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Struct_w_string>({"hello"});
+    auto e2 = world.entity().set<Struct_w_string>({"world"});
+
+    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    test_assert(str1 != NULL);
+    test_assert(str1->value == "hello");
+    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "world");
+
+    e1.remove<Struct_w_string>();
+    str1 = e1.get<Struct_w_string>();
+    test_assert(str1 == NULL);
+
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "world");
+
+    e2.remove<Struct_w_string>();
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_string_add_2_remove_w_tag() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Tag>().add<Struct_w_string>();
+    auto e2 = world.entity().add<Tag>().add<Struct_w_string>();
+
+    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    test_assert(str1 != NULL);
+    test_assert(str1->value == "");
+    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "");
+
+    e1.remove<Struct_w_string>();
+    str1 = e1.get<Struct_w_string>();
+    test_assert(str1 == NULL);
+
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "");
+
+    e2.remove<Struct_w_string>();
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_string_set_2_remove_w_tag() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Tag>().set<Struct_w_string>({"hello"});
+    auto e2 = world.entity().add<Tag>().set<Struct_w_string>({"world"});
+
+    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    test_assert(str1 != NULL);
+    test_assert(str1->value == "hello");
+    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "world");
+
+    e1.remove<Struct_w_string>();
+    str1 = e1.get<Struct_w_string>();
+    test_assert(str1 == NULL);
+
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 != NULL);
+    test_assert(str2->value == "world");
+
+    e2.remove<Struct_w_string>();
+    str2 = e2.get<Struct_w_string>();
+    test_assert(str2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_vector_add() {
+    flecs::world world;
+
+    auto e = world.entity().add<Struct_w_vector>();
+    test_assert(e.has<Struct_w_vector>());
+
+    const Struct_w_vector *ptr = e.get<Struct_w_vector>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value.size(), 0);
+}
+
+void ComponentLifecycle_struct_w_vector_remove() {
+    flecs::world world;
+
+    auto e = world.entity().add<Struct_w_vector>();
+    test_assert(e.has<Struct_w_vector>());
+
+    e.remove<Struct_w_vector>();
+    test_assert(!e.has<Struct_w_vector>());
+}
+
+void ComponentLifecycle_struct_w_vector_set() {
+    flecs::world world;
+
+    auto e = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
+    test_assert(e.has<Struct_w_vector>());
+
+    const Struct_w_vector *ptr = e.get<Struct_w_vector>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value.size(), 2);
+    test_int(ptr->value.at(0), 1);
+    test_int(ptr->value.at(1), 2);
+}
+
+void ComponentLifecycle_struct_w_vector_override() {
+    flecs::world world;
+
+    auto base = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
+    test_assert(base.has<Struct_w_vector>());
+
+    auto e = world.entity().is_a(base).add<Struct_w_vector>();
+    test_assert(e.has<Struct_w_vector>());
+
+    const Struct_w_vector *ptr = base.get<Struct_w_vector>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value.size(), 2);
+    test_int(ptr->value.at(0), 1);
+    test_int(ptr->value.at(1), 2);
+
+    ptr = e.get<Struct_w_vector>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value.size(), 2);
+    test_int(ptr->value.at(0), 1);
+    test_int(ptr->value.at(1), 2);
+}
+
+void ComponentLifecycle_struct_w_vector_add_2_remove() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Struct_w_vector>();
+    auto e2 = world.entity().add<Struct_w_vector>();
+
+    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 != NULL);
+    test_int(ptr1->value.size(), 0);
+    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 0);
+
+    e1.remove<Struct_w_vector>();
+    ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 == NULL);
+
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 0);
+
+    e2.remove<Struct_w_vector>();
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_vector_set_2_remove() {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
+    auto e2 = world.entity().set<Struct_w_vector>({std::vector<int>{3, 4}});
+
+    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 != NULL);
+    test_int(ptr1->value.size(), 2);
+    test_int(ptr1->value.at(0), 1);
+    test_int(ptr1->value.at(1), 2);
+    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 2);
+    test_int(ptr2->value.at(0), 3);
+    test_int(ptr2->value.at(1), 4);
+
+    e1.remove<Struct_w_vector>();
+    ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 == NULL);
+
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 2);
+    test_int(ptr2->value.at(0), 3);
+    test_int(ptr2->value.at(1), 4);
+
+    e2.remove<Struct_w_vector>();
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Tag>().add<Struct_w_vector>();
+    auto e2 = world.entity().add<Tag>().add<Struct_w_vector>();
+
+    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 != NULL);
+    test_int(ptr1->value.size(), 0);
+    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 0);
+
+    e1.remove<Struct_w_vector>();
+    ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 == NULL);
+
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 0);
+
+    e2.remove<Struct_w_vector>();
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 == NULL);
+}
+
+void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag() {
+    flecs::world world;
+
+    auto e1 = world.entity().add<Tag>().set<Struct_w_vector>({std::vector<int>{1, 2}});
+    auto e2 = world.entity().add<Tag>().set<Struct_w_vector>({std::vector<int>{3, 4}});
+
+    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 != NULL);
+    test_int(ptr1->value.size(), 2);
+    test_int(ptr1->value.at(0), 1);
+    test_int(ptr1->value.at(1), 2);
+    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 2);
+    test_int(ptr2->value.at(0), 3);
+    test_int(ptr2->value.at(1), 4);
+
+    e1.remove<Struct_w_vector>();
+    ptr1 = e1.get<Struct_w_vector>();
+    test_assert(ptr1 == NULL);
+
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 != NULL);
+    test_int(ptr2->value.size(), 2);
+    test_int(ptr2->value.at(0), 3);
+    test_int(ptr2->value.at(1), 4);
+
+    e2.remove<Struct_w_vector>();
+    ptr2 = e2.get<Struct_w_vector>();
+    test_assert(ptr2 == NULL);
 }
 
 void ComponentLifecycle_get_mut_new() {
@@ -241,7 +502,7 @@ void ComponentLifecycle_get_mut_new() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(e.id() != 0);
 
     Pod* value = e.get_mut<Pod>();
@@ -265,7 +526,7 @@ void ComponentLifecycle_get_mut_existing() {
 
     world.component<Pod>();
 
-    auto e = flecs::entity(world);
+    auto e = world.entity();
     test_assert(e.id() != 0);
 
     Pod* value = e.get_mut<Pod>();
@@ -289,7 +550,7 @@ void ComponentLifecycle_get_mut_existing() {
 void ComponentLifecycle_implicit_component() {
     flecs::world world;
 
-    auto e = flecs::entity(world).add<Pod>();
+    auto e = world.entity().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
     test_int(Pod::ctor_invoked, 1);
@@ -310,7 +571,7 @@ void ComponentLifecycle_implicit_component() {
     test_int(Pod::move_ctor_invoked, 0);
     test_int(Pod::move_invoked, 0);
 
-    flecs::entity(world).add<Pod>();
+    world.entity().add<Pod>();
 
     test_int(Pod::ctor_invoked, 3);
     test_int(Pod::move_ctor_invoked, 2);
@@ -322,7 +583,7 @@ void ComponentLifecycle_implicit_after_query() {
 
     world.query<Pod>();
 
-    auto e = flecs::entity(world).add<Pod>();
+    auto e = world.entity().add<Pod>();
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
     test_int(Pod::ctor_invoked, 1);
