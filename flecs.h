@@ -15425,7 +15425,9 @@ struct app_builder {
     }
 
     int run() {
-        return ecs_app_run(m_world, &m_desc);
+        int result = ecs_app_run(m_world, &m_desc);
+        ecs_fini(m_world); // app takes ownership of world
+        return result;
     }
 
 private:
