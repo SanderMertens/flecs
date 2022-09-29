@@ -2069,6 +2069,7 @@ void DeferredActions_add_2_in_observer_while_on_remove_for_delete(void);
 void DeferredActions_add_2_in_observer_while_on_remove_for_delete_child(void);
 void DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
 void DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
+void DeferredActions_defer_add_after_clear(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10194,6 +10195,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
         DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
+    },
+    {
+        "defer_add_after_clear",
+        DeferredActions_defer_add_after_clear
     }
 };
 
@@ -11007,7 +11012,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        87,
+        88,
         DeferredActions_testcases
     },
     {

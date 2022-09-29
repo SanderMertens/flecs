@@ -4268,19 +4268,21 @@ void flecs_cmd_batch_for_entity(
 
         /* Check if added id is still valid (like is the parent of a ChildOf 
          * pair still alive), if not run cleanup actions for entity */
-        if (flecs_remove_invalid(world, id, &id)) {
-            if (!id) {
-                /* Entity should remain alive but id should not be added */
+        if (id) {
+            if (flecs_remove_invalid(world, id, &id)) {
+                if (!id) {
+                    /* Entity should remain alive but id should not be added */
+                    cmd->kind = EcsOpSkip;
+                    continue;
+                }
+                /* Entity should remain alive and id is still valid */
+            } else {
+                /* Id was no longer valid and had a Delete policy) */
                 cmd->kind = EcsOpSkip;
-                continue;
+                ecs_delete(world, entity);
+                flecs_table_diff_builder_clear(diff);
+                return;
             }
-            /* Entity should remain alive and id is still valid */
-        } else {
-            /* Id was no longer valid and had a Delete policy) */
-            cmd->kind = EcsOpSkip;
-            ecs_delete(world, entity);
-            flecs_table_diff_builder_clear(diff);
-            return;
         }
 
         ecs_cmd_kind_t kind = cmd->kind;
