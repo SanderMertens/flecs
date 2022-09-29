@@ -305,10 +305,19 @@ void ecs_world_stats_get(
         ecs_os_api_calloc_count);
     ECS_COUNTER_RECORD(&s->realloc_count, t, ecs_os_api_realloc_count);
     ECS_COUNTER_RECORD(&s->free_count, t, ecs_os_api_free_count);
-
     int64_t outstanding_allocs = ecs_os_api_malloc_count + 
         ecs_os_api_calloc_count - ecs_os_api_free_count;
     ECS_GAUGE_RECORD(&s->outstanding_alloc_count, t, outstanding_allocs);
+
+    ECS_COUNTER_RECORD(&s->block_alloc_count, t, ecs_block_allocator_alloc_count);
+    ECS_COUNTER_RECORD(&s->block_free_count, t, ecs_block_allocator_free_count);
+    outstanding_allocs = ecs_block_allocator_alloc_count - ecs_block_allocator_free_count;
+    ECS_GAUGE_RECORD(&s->block_outstanding_alloc_count, t, outstanding_allocs);
+
+    ECS_COUNTER_RECORD(&s->stack_alloc_count, t, ecs_stack_allocator_alloc_count);
+    ECS_COUNTER_RECORD(&s->stack_free_count, t, ecs_stack_allocator_free_count);
+    outstanding_allocs = ecs_stack_allocator_alloc_count - ecs_stack_allocator_free_count;
+    ECS_GAUGE_RECORD(&s->stack_outstanding_alloc_count, t, outstanding_allocs);
 
 error:
     return;

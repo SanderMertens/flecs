@@ -51,7 +51,35 @@ static
 int32_t posix_adec(
     int32_t *count) 
 {
-    int value;
+    int32_t value;
+#ifdef __GNUC__
+    value = __sync_sub_and_fetch (count, 1);
+    return value;
+#else
+    /* Unsupported */
+    abort();
+#endif
+}
+
+static
+int64_t posix_lainc(
+    int64_t *count)
+{
+    int64_t value;
+#ifdef __GNUC__
+    value = __sync_add_and_fetch (count, 1);
+    return value;
+#else
+    /* Unsupported */
+    abort();
+#endif
+}
+
+static
+int64_t posix_ladec(
+    int64_t *count) 
+{
+    int64_t value;
 #ifdef __GNUC__
     value = __sync_sub_and_fetch (count, 1);
     return value;
@@ -237,6 +265,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_join_ = posix_thread_join;
     api.ainc_ = posix_ainc;
     api.adec_ = posix_adec;
+    api.lainc_ = posix_lainc;
+    api.ladec_ = posix_ladec;
     api.mutex_new_ = posix_mutex_new;
     api.mutex_free_ = posix_mutex_free;
     api.mutex_lock_ = posix_mutex_lock;

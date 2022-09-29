@@ -31,6 +31,11 @@
 /* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
+/* FLECS_ACCURATE_COUNTERS ensures that global counters used for statistics 
+ * (such as the allocation counters in the OS API) are accurate in multithreaded
+ * applications, at the cost of increased overhead. */
+// #define FLECS_ACCURATE_COUNTERS
+
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
 #error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
@@ -1507,6 +1512,11 @@ ecs_map_t* ecs_map_copy(
 #define FLECS_ALLOCATOR_H
 
 
+extern int64_t ecs_block_allocator_alloc_count;
+extern int64_t ecs_block_allocator_free_count;
+extern int64_t ecs_stack_allocator_alloc_count;
+extern int64_t ecs_stack_allocator_free_count;
+
 typedef struct ecs_allocator_t {
     struct ecs_map_t sizes; /* <size, block_allocator_t> */
 } ecs_allocator_t;
@@ -1794,7 +1804,7 @@ typedef struct ecs_time_t {
     uint32_t nanosec;
 } ecs_time_t;
 
-/* Allocation counters (not thread safe) */
+/* Allocation counters */
 extern int64_t ecs_os_api_malloc_count;
 extern int64_t ecs_os_api_realloc_count;
 extern int64_t ecs_os_api_calloc_count;
@@ -1856,9 +1866,12 @@ void* (*ecs_os_api_thread_join_t)(
 
 /* Atomic increment / decrement */
 typedef
-int (*ecs_os_api_ainc_t)(
+int32_t (*ecs_os_api_ainc_t)(
     int32_t *value);
 
+typedef
+int64_t (*ecs_os_api_lainc_t)(
+    int64_t *value);
 
 /* Mutex */
 typedef
@@ -1970,6 +1983,8 @@ typedef struct ecs_os_api_t {
     /* Atomic incremenet / decrement */
     ecs_os_api_ainc_t ainc_;
     ecs_os_api_ainc_t adec_;
+    ecs_os_api_lainc_t lainc_;
+    ecs_os_api_lainc_t ladec_;
 
     /* Mutex */
     ecs_os_api_mutex_new_t mutex_new_;
@@ -2151,6 +2166,8 @@ void ecs_os_set_api_defaults(void);
 /* Atomic increment / decrement */
 #define ecs_os_ainc(value) ecs_os_api.ainc_(value)
 #define ecs_os_adec(value) ecs_os_api.adec_(value)
+#define ecs_os_lainc(value) ecs_os_api.lainc_(value)
+#define ecs_os_ladec(value) ecs_os_api.ladec_(value)
 
 /* Mutex */
 #define ecs_os_mutex_new() ecs_os_api.mutex_new_()
@@ -2188,6 +2205,18 @@ void ecs_os_fatal(const char *file, int32_t line, const char *msg);
 
 FLECS_API
 const char* ecs_os_strerror(int err);
+
+#ifdef FLECS_ACCURATE_COUNTERS
+#define ecs_os_inc(v)  (ecs_os_ainc(v))
+#define ecs_os_linc(v) (ecs_os_lainc(v))
+#define ecs_os_dec(v)  (ecs_os_adec(v))
+#define ecs_os_ldec(v) (ecs_os_ladec(v))
+#else
+#define ecs_os_inc(v)  (++(*v))
+#define ecs_os_linc(v) (++(*v))
+#define ecs_os_dec(v)  (--(*v))
+#define ecs_os_ldec(v) (--(*v))
+#endif
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()
@@ -10431,11 +10460,19 @@ typedef struct ecs_world_stats_t {
     ecs_metric_t pipeline_build_count_total; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
     ecs_metric_t systems_ran_frame;          /* Number of systems ran in the last frame. */
 
-    /* OS API data */
+    /* Memory allocation data */
     ecs_metric_t alloc_count;                /* Allocs per frame */
     ecs_metric_t realloc_count;              /* Reallocs per frame */
     ecs_metric_t free_count;                 /* Frees per frame */
     ecs_metric_t outstanding_alloc_count;    /* Difference between allocs & frees */
+
+    /* Memory allocator data */
+    ecs_metric_t block_alloc_count;           /* Block allocations per frame */
+    ecs_metric_t block_free_count;            /* Block frees per frame */
+    ecs_metric_t block_outstanding_alloc_count; /* Difference between allocs & frees */
+    ecs_metric_t stack_alloc_count;           /* Page allocations per frame */
+    ecs_metric_t stack_free_count;            /* Page frees per frame */
+    ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
 
     int32_t last_;
 

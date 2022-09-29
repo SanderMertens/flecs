@@ -14485,6 +14485,9 @@ ecs_map_t* ecs_map_copy(
 // #define FLECS_USE_OS_ALLOC
 #endif
 
+int64_t ecs_block_allocator_alloc_count = 0;
+int64_t ecs_block_allocator_free_count = 0;
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -14517,6 +14520,8 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
         chunk->next = ECS_OFFSET(chunk, allocator->chunk_size);
         chunk = chunk->next;
     }
+
+    ecs_os_linc(&ecs_block_allocator_alloc_count);
 
     chunk->next = NULL;
     return first_chunk;
@@ -14561,6 +14566,7 @@ void flecs_ballocator_fini(
     for (block = ba->block_head; block;) {
         ecs_block_allocator_block_t *next = block->next;
         ecs_os_free(block);
+        ecs_os_linc(&ecs_block_allocator_free_count);
         block = next;
     }
     ba->block_head = NULL;
@@ -14935,6 +14941,9 @@ void* _flecs_hashmap_next(
 
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
+int64_t ecs_stack_allocator_alloc_count = 0;
+int64_t ecs_stack_allocator_free_count = 0;
+
 static
 ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
@@ -14942,6 +14951,7 @@ ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
     result->id = page_id + 1;
+    ecs_os_linc(&ecs_stack_allocator_alloc_count);
     return result;
 }
 
@@ -14953,6 +14963,7 @@ void* flecs_stack_alloc(
     ecs_stack_page_t *page = stack->cur;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
+        ecs_os_linc(&ecs_stack_allocator_alloc_count);
     }
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
@@ -15057,8 +15068,12 @@ void flecs_stack_fini(
     do {
         next = cur->next;
         if (cur == &stack->first) {
+            if (cur->data) {
+                ecs_os_linc(&ecs_stack_allocator_free_count);
+            }
             ecs_os_free(cur->data);
         } else {
+            ecs_os_linc(&ecs_stack_allocator_free_count);
             ecs_os_free(cur);
         }
     } while ((cur = next));
@@ -17980,6 +17995,20 @@ int32_t win_adec(
 }
 
 static
+int64_t win_lainc(
+    int64_t *count) 
+{
+    return InterlockedIncrement64(count);
+}
+
+static
+int64_t win_ladec(
+    int64_t *count) 
+{
+    return InterlockedDecrement64(count);
+}
+
+static
 ecs_os_mutex_t win_mutex_new(void) {
     CRITICAL_SECTION *mutex = ecs_os_malloc_t(CRITICAL_SECTION);
     InitializeCriticalSection(mutex);
@@ -18160,6 +18189,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_join_ = win_thread_join;
     api.ainc_ = win_ainc;
     api.adec_ = win_adec;
+    api.lainc_ = win_lainc;
+    api.ladec_ = win_ladec;
     api.mutex_new_ = win_mutex_new;
     api.mutex_free_ = win_mutex_free;
     api.mutex_lock_ = win_mutex_lock;
@@ -18236,7 +18267,35 @@ static
 int32_t posix_adec(
     int32_t *count) 
 {
-    int value;
+    int32_t value;
+#ifdef __GNUC__
+    value = __sync_sub_and_fetch (count, 1);
+    return value;
+#else
+    /* Unsupported */
+    abort();
+#endif
+}
+
+static
+int64_t posix_lainc(
+    int64_t *count)
+{
+    int64_t value;
+#ifdef __GNUC__
+    value = __sync_add_and_fetch (count, 1);
+    return value;
+#else
+    /* Unsupported */
+    abort();
+#endif
+}
+
+static
+int64_t posix_ladec(
+    int64_t *count) 
+{
+    int64_t value;
 #ifdef __GNUC__
     value = __sync_sub_and_fetch (count, 1);
     return value;
@@ -18422,6 +18481,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_join_ = posix_thread_join;
     api.ainc_ = posix_ainc;
     api.adec_ = posix_adec;
+    api.lainc_ = posix_lainc;
+    api.ladec_ = posix_ladec;
     api.mutex_new_ = posix_mutex_new;
     api.mutex_free_ = posix_mutex_free;
     api.mutex_lock_ = posix_mutex_lock;
@@ -29572,10 +29633,19 @@ void ecs_world_stats_get(
         ecs_os_api_calloc_count);
     ECS_COUNTER_RECORD(&s->realloc_count, t, ecs_os_api_realloc_count);
     ECS_COUNTER_RECORD(&s->free_count, t, ecs_os_api_free_count);
-
     int64_t outstanding_allocs = ecs_os_api_malloc_count + 
         ecs_os_api_calloc_count - ecs_os_api_free_count;
     ECS_GAUGE_RECORD(&s->outstanding_alloc_count, t, outstanding_allocs);
+
+    ECS_COUNTER_RECORD(&s->block_alloc_count, t, ecs_block_allocator_alloc_count);
+    ECS_COUNTER_RECORD(&s->block_free_count, t, ecs_block_allocator_free_count);
+    outstanding_allocs = ecs_block_allocator_alloc_count - ecs_block_allocator_free_count;
+    ECS_GAUGE_RECORD(&s->block_outstanding_alloc_count, t, outstanding_allocs);
+
+    ECS_COUNTER_RECORD(&s->stack_alloc_count, t, ecs_stack_allocator_alloc_count);
+    ECS_COUNTER_RECORD(&s->stack_free_count, t, ecs_stack_allocator_free_count);
+    outstanding_allocs = ecs_stack_allocator_alloc_count - ecs_stack_allocator_free_count;
+    ECS_GAUGE_RECORD(&s->stack_outstanding_alloc_count, t, outstanding_allocs);
 
 error:
     return;
@@ -34281,6 +34351,12 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, realloc_count);
     ECS_COUNTER_APPEND(reply, stats, free_count);
     ECS_GAUGE_APPEND(reply, stats, outstanding_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, block_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, block_free_count);
+    ECS_GAUGE_APPEND(reply, stats, block_outstanding_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, stack_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, stack_free_count);
+    ECS_GAUGE_APPEND(reply, stats, stack_outstanding_alloc_count);
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -44841,14 +44917,14 @@ void ecs_os_gettime(ecs_time_t *time) {
 
 static
 void* ecs_os_api_malloc(ecs_size_t size) {
-    ecs_os_api_malloc_count ++;
+    ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return malloc((size_t)size);
 }
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
-    ecs_os_api_calloc_count ++;
+    ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
 }
@@ -44858,10 +44934,10 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
-        ecs_os_api_realloc_count ++;
+        ecs_os_linc(&ecs_os_api_realloc_count);
     } else {
         /* If not actually reallocing, treat as malloc */
-        ecs_os_api_malloc_count ++; 
+        ecs_os_linc(&ecs_os_api_malloc_count);
     }
     
     return realloc(ptr, (size_t)size);
@@ -44870,7 +44946,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
 static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
-        ecs_os_api_free_count ++;
+        ecs_os_linc(&ecs_os_api_free_count);
     }
     free(ptr);
 }

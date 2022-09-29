@@ -33,7 +33,7 @@ typedef struct ecs_time_t {
     uint32_t nanosec;
 } ecs_time_t;
 
-/* Allocation counters (not thread safe) */
+/* Allocation counters */
 extern int64_t ecs_os_api_malloc_count;
 extern int64_t ecs_os_api_realloc_count;
 extern int64_t ecs_os_api_calloc_count;
@@ -95,9 +95,12 @@ void* (*ecs_os_api_thread_join_t)(
 
 /* Atomic increment / decrement */
 typedef
-int (*ecs_os_api_ainc_t)(
+int32_t (*ecs_os_api_ainc_t)(
     int32_t *value);
 
+typedef
+int64_t (*ecs_os_api_lainc_t)(
+    int64_t *value);
 
 /* Mutex */
 typedef
@@ -209,6 +212,8 @@ typedef struct ecs_os_api_t {
     /* Atomic incremenet / decrement */
     ecs_os_api_ainc_t ainc_;
     ecs_os_api_ainc_t adec_;
+    ecs_os_api_lainc_t lainc_;
+    ecs_os_api_lainc_t ladec_;
 
     /* Mutex */
     ecs_os_api_mutex_new_t mutex_new_;
@@ -390,6 +395,8 @@ void ecs_os_set_api_defaults(void);
 /* Atomic increment / decrement */
 #define ecs_os_ainc(value) ecs_os_api.ainc_(value)
 #define ecs_os_adec(value) ecs_os_api.adec_(value)
+#define ecs_os_lainc(value) ecs_os_api.lainc_(value)
+#define ecs_os_ladec(value) ecs_os_api.ladec_(value)
 
 /* Mutex */
 #define ecs_os_mutex_new() ecs_os_api.mutex_new_()
@@ -427,6 +434,18 @@ void ecs_os_fatal(const char *file, int32_t line, const char *msg);
 
 FLECS_API
 const char* ecs_os_strerror(int err);
+
+#ifdef FLECS_ACCURATE_COUNTERS
+#define ecs_os_inc(v)  (ecs_os_ainc(v))
+#define ecs_os_linc(v) (ecs_os_lainc(v))
+#define ecs_os_dec(v)  (ecs_os_adec(v))
+#define ecs_os_ldec(v) (ecs_os_ladec(v))
+#else
+#define ecs_os_inc(v)  (++(*v))
+#define ecs_os_linc(v) (++(*v))
+#define ecs_os_dec(v)  (--(*v))
+#define ecs_os_ldec(v) (--(*v))
+#endif
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()

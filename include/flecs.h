@@ -29,6 +29,11 @@
 /* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
+/* FLECS_ACCURATE_COUNTERS ensures that global counters used for statistics 
+ * (such as the allocation counters in the OS API) are accurate in multithreaded
+ * applications, at the cost of increased overhead. */
+// #define FLECS_ACCURATE_COUNTERS
+
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
 #error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"

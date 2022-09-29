@@ -4,6 +4,9 @@
 // #define FLECS_USE_OS_ALLOC
 #endif
 
+int64_t ecs_block_allocator_alloc_count = 0;
+int64_t ecs_block_allocator_free_count = 0;
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -36,6 +39,8 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
         chunk->next = ECS_OFFSET(chunk, allocator->chunk_size);
         chunk = chunk->next;
     }
+
+    ecs_os_linc(&ecs_block_allocator_alloc_count);
 
     chunk->next = NULL;
     return first_chunk;
@@ -80,6 +85,7 @@ void flecs_ballocator_fini(
     for (block = ba->block_head; block;) {
         ecs_block_allocator_block_t *next = block->next;
         ecs_os_free(block);
+        ecs_os_linc(&ecs_block_allocator_free_count);
         block = next;
     }
     ba->block_head = NULL;
