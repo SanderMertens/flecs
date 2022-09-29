@@ -1112,10 +1112,6 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
-#ifdef FLECS_EXPR
-    ecs_vars_fini(&state.vars);
-#endif
-
     plecs_clear_annotations(&state);
 
     if (state.sp != 0) {
@@ -1132,6 +1128,9 @@ int ecs_plecs_from_str(
         goto error;
     }
 
+#ifdef FLECS_EXPR
+    ecs_vars_fini(&state.vars);
+#endif
     return 0;
 error:
 #ifdef FLECS_EXPR

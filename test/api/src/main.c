@@ -1261,6 +1261,7 @@ void Query_group_by_iter_one_empty_table(void);
 void Query_group_by_w_deleted_group_id(void);
 void Query_group_by_callbacks(void);
 void Query_group_by_default_action(void);
+void Query_group_table_count(void);
 void Query_iter_valid(void);
 void Query_query_optional_tag(void);
 void Query_query_optional_shared_tag(void);
@@ -2062,6 +2063,12 @@ void DeferredActions_defer_remove_after_set_w_observer(void);
 void DeferredActions_defer_override_after_remove(void);
 void DeferredActions_defer_override_after_remove_3_ops(void);
 void DeferredActions_flush_stage_to_deferred_world(void);
+void DeferredActions_add_in_observer_during_merge(void);
+void DeferredActions_add_in_observer_during_merge_2_commands(void);
+void DeferredActions_add_2_in_observer_while_on_remove_for_delete(void);
+void DeferredActions_add_2_in_observer_while_on_remove_for_delete_child(void);
+void DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
+void DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -7043,6 +7050,10 @@ bake_test_case Query_testcases[] = {
         Query_group_by_default_action
     },
     {
+        "group_table_count",
+        Query_group_table_count
+    },
+    {
         "iter_valid",
         Query_iter_valid
     },
@@ -10159,6 +10170,30 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "flush_stage_to_deferred_world",
         DeferredActions_flush_stage_to_deferred_world
+    },
+    {
+        "add_in_observer_during_merge",
+        DeferredActions_add_in_observer_during_merge
+    },
+    {
+        "add_in_observer_during_merge_2_commands",
+        DeferredActions_add_in_observer_during_merge_2_commands
+    },
+    {
+        "add_2_in_observer_while_on_remove_for_delete",
+        DeferredActions_add_2_in_observer_while_on_remove_for_delete
+    },
+    {
+        "add_2_in_observer_while_on_remove_for_delete_child",
+        DeferredActions_add_2_in_observer_while_on_remove_for_delete_child
+    },
+    {
+        "add_2_in_observer_while_on_remove_for_delete_recycled_id",
+        DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id
+    },
+    {
+        "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
+        DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
     }
 };
 
@@ -10874,7 +10909,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        198,
+        199,
         Query_testcases
     },
     {
@@ -10972,7 +11007,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        81,
+        87,
         DeferredActions_testcases
     },
     {

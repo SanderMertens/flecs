@@ -1107,7 +1107,7 @@ const ecs_entity_t* flecs_bulk_new(
 }
 
 static
-void add_id_w_record(
+void flecs_add_id_w_record(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -1130,7 +1130,7 @@ void add_id_w_record(
 }
 
 static
-void add_id(
+void flecs_add_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -1153,7 +1153,7 @@ void add_id(
 }
 
 static
-void remove_id(
+void flecs_remove_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -1201,7 +1201,7 @@ flecs_component_ptr_t flecs_get_mut(
 
     if (!dst.ptr) {
         /* If entity didn't have component yet, add it */
-        add_id_w_record(world, entity, r, id, true);
+        flecs_add_id_w_record(world, entity, r, id, true);
 
         /* Flush commands so the pointer we're fetching is stable */
         ecs_defer_end(world);
@@ -1574,7 +1574,7 @@ error:
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
 static
-ecs_table_t *traverse_from_expr(
+ecs_table_t *flecs_traverse_from_expr(
     ecs_world_t *world,
     ecs_table_t *table,
     const char *name,
@@ -1636,9 +1636,9 @@ ecs_table_t *traverse_from_expr(
 }
 
 /* Add/remove components based on the parsed expression. This operation is 
- * slower than traverse_from_expr, but safe to use from a deferred context. */
+ * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
 static
-void defer_from_expr(
+void flecs_defer_from_expr(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -1683,7 +1683,7 @@ void defer_from_expr(
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static 
-int traverse_add(
+int flecs_traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
     const char *name,
@@ -1752,7 +1752,7 @@ int traverse_add(
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
 #ifdef FLECS_PARSER
         bool error = false;
-        table = traverse_from_expr(
+        table = flecs_traverse_from_expr(
             world, table, name, desc->add_expr, &diff, true, &error);
         if (error) {
             flecs_table_diff_builder_fini(world, &diff);
@@ -1797,7 +1797,7 @@ int traverse_add(
 /* When in deferred mode, we need to add/remove components one by one using
  * the regular operations. */
 static 
-void deferred_add_remove(
+void flecs_deferred_add_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -1844,7 +1844,7 @@ void deferred_add_remove(
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
-        defer_from_expr(world, entity, name, desc->add_expr, true, true);
+        flecs_defer_from_expr(world, entity, name, desc->add_expr, true, true);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -2007,10 +2007,10 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
-        deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
+        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
             scope, with, flecs_new_entity, name_assigned);
     } else {
-        if (traverse_add(world, result, name, desc,
+        if (flecs_traverse_add(world, result, name, desc,
             scope, with, flecs_new_entity, name_assigned)) 
         {
             return 0;
@@ -2736,7 +2736,7 @@ void ecs_add_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    add_id(world, entity, id);
+    flecs_add_id(world, entity, id);
 error:
     return;
 }
@@ -2750,7 +2750,7 @@ void ecs_remove_id(
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id) || ecs_id_is_wildcard(id), 
         ECS_INVALID_PARAMETER, NULL);
-    remove_id(world, entity, id);
+    flecs_remove_id(world, entity, id);
 error:
     return;
 }
@@ -3098,7 +3098,7 @@ void* ecs_emplace_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    add_id_w_record(world, entity, r, id, false /* Add without ctor */);
+    flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
 
     void *ptr = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -4128,7 +4128,7 @@ void flecs_flush_bulk_new(
     if (cmd->id) {
         int i, count = cmd->is._n.count;
         for (i = 0; i < count; i ++) {
-            add_id(world, entities[i], cmd->id);
+            flecs_add_id(world, entities[i], cmd->id);
         }
     }
 
@@ -4315,7 +4315,9 @@ void flecs_cmd_batch_for_entity(
 
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
+    ecs_defer_begin(world);
     flecs_commit(world, entity, r, table, &table_diff, true, true);
+    ecs_defer_end(world);
     flecs_table_diff_builder_clear(diff);
 
     /* If ids were both removed and set, check if there are ids that were both
@@ -4397,8 +4399,10 @@ bool flecs_defer_end(
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
-                    /* Batch commands for entity to limit archetype moves */   
-                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    /* Batch commands for entity to limit archetype moves */
+                    if (ecs_is_alive(world, e)) {
+                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    }
                 }
 
                 /* If entity is no longer alive, this could be because the queue
@@ -4423,14 +4427,14 @@ bool flecs_defer_end(
                     if (flecs_remove_invalid(world, id, &id)) {
                         if (id) {
                             world->info.add_count ++;
-                            add_id(world, e, id);
+                            flecs_add_id(world, e, id);
                         }
                     } else {
                         ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
-                    remove_id(world, e, id);
+                    flecs_remove_id(world, e, id);
                     break;
                 case EcsOpClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);

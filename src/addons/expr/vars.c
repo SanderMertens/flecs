@@ -87,7 +87,7 @@ ecs_expr_var_t* ecs_vars_declare(
     ecs_hashmap_t *var_index = &scope->var_index;
 
     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
-        ecs_err("variable %s already exists", name);
+        ecs_err("variable %s redeclared", name);
         goto error;
     }
 
@@ -121,6 +121,7 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
 
     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
         ecs_err("variable %s redeclared", name);
+        ecs_value_free(vars->world, value->type, value->ptr);
         goto error;
     }
 

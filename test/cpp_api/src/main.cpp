@@ -758,10 +758,22 @@ void ComponentLifecycle_move_on_add(void);
 void ComponentLifecycle_move_on_remove(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
-void ComponentLifecycle_non_pod_add(void);
-void ComponentLifecycle_non_pod_remove(void);
-void ComponentLifecycle_non_pod_set(void);
-void ComponentLifecycle_non_pod_override(void);
+void ComponentLifecycle_struct_w_string_add(void);
+void ComponentLifecycle_struct_w_string_remove(void);
+void ComponentLifecycle_struct_w_string_set(void);
+void ComponentLifecycle_struct_w_string_override(void);
+void ComponentLifecycle_struct_w_string_add_2_remove(void);
+void ComponentLifecycle_struct_w_string_set_2_remove(void);
+void ComponentLifecycle_struct_w_string_add_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_string_set_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_vector_add(void);
+void ComponentLifecycle_struct_w_vector_remove(void);
+void ComponentLifecycle_struct_w_vector_set(void);
+void ComponentLifecycle_struct_w_vector_override(void);
+void ComponentLifecycle_struct_w_vector_add_2_remove(void);
+void ComponentLifecycle_struct_w_vector_set_2_remove(void);
+void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag(void);
+void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void);
 void ComponentLifecycle_get_mut_new(void);
 void ComponentLifecycle_get_mut_existing(void);
 void ComponentLifecycle_implicit_component(void);
@@ -844,6 +856,7 @@ void ImplicitComponents_reinit_scoped(void);
 void ImplicitComponents_reinit_w_lifecycle(void);
 void ImplicitComponents_first_use_in_system(void);
 void ImplicitComponents_first_use_tag_in_system(void);
+void ImplicitComponents_first_use_enum_in_system(void);
 void ImplicitComponents_use_const(void);
 void ImplicitComponents_use_const_w_stage(void);
 void ImplicitComponents_use_const_w_threads(void);
@@ -990,6 +1003,7 @@ void Misc_nullptr_string_compare_nullptr(void);
 void Misc_c_macros(void);
 void Misc_app_run(void);
 void Misc_app_run_target_fps(void);
+void Misc_app_run_set_frames(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -3946,20 +3960,68 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_override
     },
     {
-        "non_pod_add",
-        ComponentLifecycle_non_pod_add
+        "struct_w_string_add",
+        ComponentLifecycle_struct_w_string_add
     },
     {
-        "non_pod_remove",
-        ComponentLifecycle_non_pod_remove
+        "struct_w_string_remove",
+        ComponentLifecycle_struct_w_string_remove
     },
     {
-        "non_pod_set",
-        ComponentLifecycle_non_pod_set
+        "struct_w_string_set",
+        ComponentLifecycle_struct_w_string_set
     },
     {
-        "non_pod_override",
-        ComponentLifecycle_non_pod_override
+        "struct_w_string_override",
+        ComponentLifecycle_struct_w_string_override
+    },
+    {
+        "struct_w_string_add_2_remove",
+        ComponentLifecycle_struct_w_string_add_2_remove
+    },
+    {
+        "struct_w_string_set_2_remove",
+        ComponentLifecycle_struct_w_string_set_2_remove
+    },
+    {
+        "struct_w_string_add_2_remove_w_tag",
+        ComponentLifecycle_struct_w_string_add_2_remove_w_tag
+    },
+    {
+        "struct_w_string_set_2_remove_w_tag",
+        ComponentLifecycle_struct_w_string_set_2_remove_w_tag
+    },
+    {
+        "struct_w_vector_add",
+        ComponentLifecycle_struct_w_vector_add
+    },
+    {
+        "struct_w_vector_remove",
+        ComponentLifecycle_struct_w_vector_remove
+    },
+    {
+        "struct_w_vector_set",
+        ComponentLifecycle_struct_w_vector_set
+    },
+    {
+        "struct_w_vector_override",
+        ComponentLifecycle_struct_w_vector_override
+    },
+    {
+        "struct_w_vector_add_2_remove",
+        ComponentLifecycle_struct_w_vector_add_2_remove
+    },
+    {
+        "struct_w_vector_set_2_remove",
+        ComponentLifecycle_struct_w_vector_set_2_remove
+    },
+    {
+        "struct_w_vector_add_2_remove_w_tag",
+        ComponentLifecycle_struct_w_vector_add_2_remove_w_tag
+    },
+    {
+        "struct_w_vector_set_2_remove_w_tag",
+        ComponentLifecycle_struct_w_vector_set_2_remove_w_tag
     },
     {
         "get_mut_new",
@@ -4273,6 +4335,10 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "first_use_tag_in_system",
         ImplicitComponents_first_use_tag_in_system
+    },
+    {
+        "first_use_enum_in_system",
+        ImplicitComponents_first_use_enum_in_system
     },
     {
         "use_const",
@@ -4828,6 +4894,10 @@ bake_test_case Misc_testcases[] = {
     {
         "app_run_target_fps",
         Misc_app_run_target_fps
+    },
+    {
+        "app_run_set_frames",
+        Misc_app_run_set_frames
     }
 };
 
@@ -5054,7 +5124,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        53,
+        65,
         ComponentLifecycle_testcases
     },
     {
@@ -5075,7 +5145,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        26,
+        27,
         ImplicitComponents_testcases
     },
     {
@@ -5110,7 +5180,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        11,
+        12,
         Misc_testcases
     },
     {

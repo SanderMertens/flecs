@@ -3,6 +3,8 @@
 
 /* This generated file contains includes for project dependencies */
 #include <cpp_api/bake_config.h>
+#include <string>
+#include <vector>
 
 struct Position {
     float x;
@@ -341,6 +343,14 @@ public:
     static int move_invoked;
     static int copy_ctor_invoked;
     static int move_ctor_invoked;
+};
+
+struct Struct_w_string {
+    std::string value;
+};
+
+struct Struct_w_vector {
+    std::vector<int> value;
 };
 
 void install_test_abort();

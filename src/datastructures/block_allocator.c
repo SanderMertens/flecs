@@ -113,6 +113,7 @@ void* flecs_balloc(
     ba->alloc_count ++;
     *(int64_t*)result = ba->chunk_size;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t));
+    ecs_os_memset(result, 0xAA, ba->data_size);
 #endif
 
     return result;

@@ -398,6 +398,18 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     return entity;
 }
 
+void ecs_cpp_enum_init(
+    ecs_world_t *world,
+    ecs_entity_t id)
+{
+    ecs_suspend_readonly_state_t readonly_state;
+    world = flecs_suspend_readonly(world, &readonly_state);
+    ecs_add_id(world, id, EcsExclusive);
+    ecs_add_id(world, id, EcsOneOf);
+    ecs_add_id(world, id, EcsTag);
+    flecs_resume_readonly(world, &readonly_state);
+}
+
 ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,

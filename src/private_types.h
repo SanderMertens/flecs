@@ -283,8 +283,7 @@ typedef struct ecs_query_table_t {
 typedef struct ecs_query_table_list_t {
     ecs_query_table_node_t *first;
     ecs_query_table_node_t *last;
-    int32_t count;
-    void *ctx; /* group context */
+    ecs_query_group_info_t info;
 } ecs_query_table_list_t;
 
 /* Query event type for notifying queries of world events */

@@ -92,6 +92,11 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     bool *existing_out);
 
 FLECS_API
+void ecs_cpp_enum_init(
+    ecs_world_t *world,
+    ecs_entity_t id);
+
+FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,

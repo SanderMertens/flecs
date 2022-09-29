@@ -59,13 +59,27 @@ struct query_base {
         return ecs_query_orphaned(m_query);
     }
 
+    /** Get info for group. 
+     * 
+     * @param group_id The group id for which to retrieve the info.
+     * @return The group info.
+     */
+    const flecs::query_group_info_t* group_info(uint64_t group_id) {
+        return ecs_query_get_group_info(m_query, group_id);
+    }
+
     /** Get context for group. 
      * 
      * @param group_id The group id for which to retrieve the context.
      * @return The group context.
      */
     void* group_ctx(uint64_t group_id) {
-        return ecs_query_get_group_ctx(m_query, group_id);
+        const flecs::query_group_info_t *gi = group_info(group_id);
+        if (gi) {
+            return gi->ctx;
+        } else {
+            return NULL;
+        }
     }
 
     /** Free the query.

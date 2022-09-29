@@ -30,6 +30,11 @@ struct app_builder {
         return *this;
     }
 
+    app_builder& frames(int32_t value) {
+        m_desc.frames = value;
+        return *this;
+    }
+
     app_builder& enable_rest(bool value = true) {
         m_desc.enable_rest = value;
         return *this;
@@ -51,7 +56,9 @@ struct app_builder {
     }
 
     int run() {
-        return ecs_app_run(m_world, &m_desc);
+        int result = ecs_app_run(m_world, &m_desc);
+        ecs_fini(m_world); // app takes ownership of world
+        return result;
     }
 
 private:

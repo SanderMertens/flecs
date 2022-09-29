@@ -75,3 +75,23 @@ void App_app_w_set_target_fps() {
 
     ecs_fini(world);
 }
+
+static int sys_invoked = 0;
+
+static void SysCount(ecs_iter_t *it) {
+    sys_invoked ++;
+}
+
+void App_app_w_set_frames() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, SysCount, EcsOnUpdate, 0);
+
+    ecs_app_run(world, &(ecs_app_desc_t) {
+        .frames = 100
+    });
+
+    test_int(sys_invoked, 100);
+
+    ecs_fini(world);
+}

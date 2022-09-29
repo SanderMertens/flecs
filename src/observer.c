@@ -2,6 +2,21 @@
 #include <stddef.h>
 
 static
+void flecs_observer_invoke(ecs_iter_t *it) {
+    ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_table_lock(it->world, it->table);
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(it->world, it->system);
+        ecs_dbg_3("observer %s", path);
+        ecs_os_free(path);
+        ecs_log_push_3();
+    }
+    it->callback(it);
+    ecs_table_unlock(it->world, it->table);
+    ecs_log_pop_3();
+}
+
+static
 bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->real_world;
@@ -84,13 +99,13 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
         user_it.field_count = o->filter.field_count;
+        user_it.callback = o->callback;
+        
         flecs_iter_validate(&user_it);
-
-        ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-        o->callback(&user_it);
-
+        flecs_observer_invoke(&user_it);
         ecs_iter_fini(&user_it);
 
+        ecs_log_pop_3();
         return true;
     }
 
@@ -476,7 +491,7 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
     if (observer->is_multi) {
         return flecs_multi_observer_invoke(it);
     } else {
-        it->callback(it);
+        flecs_observer_invoke(it);
         return true;
     }
 }
@@ -491,7 +506,17 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *observer = it->ctx;
     it->ctx = observer->ctx;
     it->callback = observer->callback;
-    it->callback(it);
+
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(it->world, it->system);
+        ecs_dbg_3("observer %s", path);
+        ecs_os_free(path);
+        ecs_log_push_3();
+    }
+
+    flecs_observer_invoke(it);
+
+    ecs_log_pop_3();
 }
 
 /* For convenience, so applications can (in theory) use a single run callback 
@@ -552,7 +577,8 @@ void flecs_uni_observer_builtin_run(
         it->ctx = observer;
         observer->run(it);
     } else {
-        observer->callback(it);
+        it->callback = observer->callback;
+        flecs_observer_invoke(it);
     }
 
     it->event = event;

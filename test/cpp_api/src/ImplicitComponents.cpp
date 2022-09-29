@@ -329,6 +329,32 @@ void ImplicitComponents_first_use_tag_in_system() {
     test_assert(e.has<Tag>());
 }
 
+enum Color {
+    Red,
+    Green,
+    Blue
+};
+
+void ImplicitComponents_first_use_enum_in_system() {
+    flecs::world world;
+
+    world.system<Position>()
+        .each([](flecs::entity e, Position& p) {
+            e.add<Tag>();
+            e.add(Color::Green);
+        });
+
+    auto e = world.entity().add<Position>();
+
+    world.progress();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Tag>());
+    test_assert(e.has(Color::Green));
+
+    test_assert(world.component<Color>().has(flecs::Exclusive));
+}
+
 void ImplicitComponents_use_const() {
     flecs::world world;
 
@@ -444,3 +470,4 @@ void ImplicitComponents_implicit_const_ref() {
     test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
+
