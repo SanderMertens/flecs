@@ -2617,3 +2617,21 @@ void DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recyc
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_add_after_clear() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_clear(world, e);
+    ecs_add(world, e, Position);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

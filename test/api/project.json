@@ -2157,7 +2157,8 @@
                 "add_2_in_observer_while_on_remove_for_delete",
                 "add_2_in_observer_while_on_remove_for_delete_child",
                 "add_2_in_observer_while_on_remove_for_delete_recycled_id",
-                "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id"
+                "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
+                "defer_add_after_clear"
             ]
         }, {
             "id": "SingleThreadStaging",
