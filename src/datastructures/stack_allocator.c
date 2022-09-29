@@ -24,10 +24,12 @@ void* flecs_stack_alloc(
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
+    void *result = NULL;
 
     if (next_sp > ECS_STACK_PAGE_SIZE) {
         if (size > ECS_STACK_PAGE_SIZE) {
-            return ecs_os_malloc(size); /* Too large for page */
+            result = ecs_os_malloc(size); /* Too large for page */
+            goto done;
         }
 
         if (page->next) {
@@ -41,8 +43,13 @@ void* flecs_stack_alloc(
     }
 
     page->sp = next_sp;
+    result = ECS_OFFSET(page->data, sp);
 
-    return ECS_OFFSET(page->data, sp);
+done:
+#ifdef FLECS_SANITIZE
+    ecs_os_memset(result, 0xAA, size);
+#endif
+    return result;
 }
 
 void* flecs_stack_calloc(

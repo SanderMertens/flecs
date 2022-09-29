@@ -1131,7 +1131,6 @@ int ecs_plecs_from_str(
 #ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
 #endif
-
     return 0;
 error:
 #ifdef FLECS_EXPR

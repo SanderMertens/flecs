@@ -441,6 +441,7 @@ bool flecs_query_get_match_monitor(
     }
 
     int32_t *monitor = flecs_balloc(&query->allocators.monitors);
+    monitor[0] = 0;
 
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */

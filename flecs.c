@@ -14944,10 +14944,12 @@ void* flecs_stack_alloc(
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
+    void *result = NULL;
 
     if (next_sp > ECS_STACK_PAGE_SIZE) {
         if (size > ECS_STACK_PAGE_SIZE) {
-            return ecs_os_malloc(size); /* Too large for page */
+            result = ecs_os_malloc(size); /* Too large for page */
+            goto done;
         }
 
         if (page->next) {
@@ -14961,8 +14963,13 @@ void* flecs_stack_alloc(
     }
 
     page->sp = next_sp;
+    result = ECS_OFFSET(page->data, sp);
 
-    return ECS_OFFSET(page->data, sp);
+done:
+#ifdef FLECS_SANITIZE
+    ecs_os_memset(result, 0xAA, size);
+#endif
+    return result;
 }
 
 void* flecs_stack_calloc(
@@ -19541,7 +19548,6 @@ int ecs_plecs_from_str(
 #ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
 #endif
-
     return 0;
 error:
 #ifdef FLECS_EXPR
@@ -27875,7 +27881,7 @@ ecs_expr_var_t* ecs_vars_declare(
     ecs_hashmap_t *var_index = &scope->var_index;
 
     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
-        ecs_err("variable %s already exists", name);
+        ecs_err("variable %s redeclared", name);
         goto error;
     }
 
@@ -27909,6 +27915,7 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
 
     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
         ecs_err("variable %s redeclared", name);
+        ecs_value_free(vars->world, value->type, value->ptr);
         goto error;
     }
 
@@ -45433,6 +45440,7 @@ bool flecs_query_get_match_monitor(
     }
 
     int32_t *monitor = flecs_balloc(&query->allocators.monitors);
+    monitor[0] = 0;
 
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */
