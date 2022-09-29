@@ -42957,11 +42957,19 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.field_count = o->filter.field_count;
         flecs_iter_validate(&user_it);
 
+        if (ecs_should_log_3()) {
+            char *path = ecs_get_fullpath(world, user_it.system);
+            ecs_dbg_3("observer %s", path);
+            ecs_os_free(path);
+            ecs_log_push_3();
+        }
+
         ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
         o->callback(&user_it);
 
         ecs_iter_fini(&user_it);
 
+        ecs_log_pop_3();
         return true;
     }
 
@@ -43362,7 +43370,17 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *observer = it->ctx;
     it->ctx = observer->ctx;
     it->callback = observer->callback;
+
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(it->world, it->system);
+        ecs_dbg_3("observer %s", path);
+        ecs_os_free(path);
+        ecs_log_push_3();
+    }
+
     it->callback(it);
+
+    ecs_log_pop_3();
 }
 
 /* For convenience, so applications can (in theory) use a single run callback 
