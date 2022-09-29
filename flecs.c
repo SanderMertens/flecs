@@ -14581,6 +14581,7 @@ void* flecs_balloc(
     ba->alloc_count ++;
     *(int64_t*)result = ba->chunk_size;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t));
+    ecs_os_memset(result, 0xAA, ba->data_size);
 #endif
 
     return result;
@@ -19521,10 +19522,6 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
-#ifdef FLECS_EXPR
-    ecs_vars_fini(&state.vars);
-#endif
-
     plecs_clear_annotations(&state);
 
     if (state.sp != 0) {
@@ -19540,6 +19537,10 @@ int ecs_plecs_from_str(
     if (state.errors) {
         goto error;
     }
+
+#ifdef FLECS_EXPR
+    ecs_vars_fini(&state.vars);
+#endif
 
     return 0;
 error:
