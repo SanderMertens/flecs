@@ -293,14 +293,14 @@ void ecs_os_gettime(ecs_time_t *time) {
 
 static
 void* ecs_os_api_malloc(ecs_size_t size) {
-    ecs_os_api_malloc_count ++;
+    ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return malloc((size_t)size);
 }
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
-    ecs_os_api_calloc_count ++;
+    ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
 }
@@ -310,10 +310,10 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
-        ecs_os_api_realloc_count ++;
+        ecs_os_linc(&ecs_os_api_realloc_count);
     } else {
         /* If not actually reallocing, treat as malloc */
-        ecs_os_api_malloc_count ++; 
+        ecs_os_linc(&ecs_os_api_malloc_count);
     }
     
     return realloc(ptr, (size_t)size);
@@ -322,7 +322,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
 static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
-        ecs_os_api_free_count ++;
+        ecs_os_linc(&ecs_os_api_free_count);
     }
     free(ptr);
 }

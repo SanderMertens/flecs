@@ -2,6 +2,9 @@
 
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
+int64_t ecs_stack_allocator_alloc_count = 0;
+int64_t ecs_stack_allocator_free_count = 0;
+
 static
 ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
@@ -9,6 +12,7 @@ ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
     result->id = page_id + 1;
+    ecs_os_linc(&ecs_stack_allocator_alloc_count);
     return result;
 }
 
@@ -20,6 +24,7 @@ void* flecs_stack_alloc(
     ecs_stack_page_t *page = stack->cur;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
+        ecs_os_linc(&ecs_stack_allocator_alloc_count);
     }
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
@@ -124,8 +129,12 @@ void flecs_stack_fini(
     do {
         next = cur->next;
         if (cur == &stack->first) {
+            if (cur->data) {
+                ecs_os_linc(&ecs_stack_allocator_free_count);
+            }
             ecs_os_free(cur->data);
         } else {
+            ecs_os_linc(&ecs_stack_allocator_free_count);
             ecs_os_free(cur);
         }
     } while ((cur = next));

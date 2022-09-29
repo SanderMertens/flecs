@@ -43,6 +43,20 @@ int32_t win_adec(
 }
 
 static
+int64_t win_lainc(
+    int64_t *count) 
+{
+    return InterlockedIncrement64(count);
+}
+
+static
+int64_t win_ladec(
+    int64_t *count) 
+{
+    return InterlockedDecrement64(count);
+}
+
+static
 ecs_os_mutex_t win_mutex_new(void) {
     CRITICAL_SECTION *mutex = ecs_os_malloc_t(CRITICAL_SECTION);
     InitializeCriticalSection(mutex);
@@ -223,6 +237,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_join_ = win_thread_join;
     api.ainc_ = win_ainc;
     api.adec_ = win_adec;
+    api.lainc_ = win_lainc;
+    api.ladec_ = win_ladec;
     api.mutex_new_ = win_mutex_new;
     api.mutex_free_ = win_mutex_free;
     api.mutex_lock_ = win_mutex_lock;

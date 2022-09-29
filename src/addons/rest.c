@@ -352,6 +352,12 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, realloc_count);
     ECS_COUNTER_APPEND(reply, stats, free_count);
     ECS_GAUGE_APPEND(reply, stats, outstanding_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, block_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, block_free_count);
+    ECS_GAUGE_APPEND(reply, stats, block_outstanding_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, stack_alloc_count);
+    ECS_COUNTER_APPEND(reply, stats, stack_free_count);
+    ECS_GAUGE_APPEND(reply, stats, stack_outstanding_alloc_count);
     ecs_strbuf_list_pop(reply, "}");
 }
 
