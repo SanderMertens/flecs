@@ -2153,7 +2153,11 @@
                 "defer_override_after_remove_3_ops",
                 "flush_stage_to_deferred_world",
                 "add_in_observer_during_merge",
-                "add_in_observer_during_merge_2_commands"
+                "add_in_observer_during_merge_2_commands",
+                "add_2_in_observer_while_on_remove_for_delete",
+                "add_2_in_observer_while_on_remove_for_delete_child",
+                "add_2_in_observer_while_on_remove_for_delete_recycled_id",
+                "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id"
             ]
         }, {
             "id": "SingleThreadStaging",

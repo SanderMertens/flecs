@@ -274,7 +274,7 @@ void flecs_resume_readonly(
  * themselves with component monitors to determine whether they need to rematch
  * with tables. */
 static
-void eval_component_monitor(
+void flecs_eval_component_monitor(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -380,7 +380,7 @@ void flecs_monitor_unregister(
 }
 
 static
-void init_store(
+void flecs_init_store(
     ecs_world_t *world) 
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
@@ -405,7 +405,7 @@ void init_store(
 }
 
 static
-void clean_tables(
+void flecs_clean_tables(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(&world->store.tables);
@@ -438,7 +438,7 @@ void clean_tables(
 }
 
 static
-void fini_roots(ecs_world_t *world) {
+void flecs_fini_roots(ecs_world_t *world) {
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
@@ -468,6 +468,8 @@ void fini_roots(ecs_world_t *world) {
          * table which reduces moving components around */
         for (i = count - 1; i >= 0; i --) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
             if (!(flags & EcsEntityObservedTarget)) {
                 continue; /* Filter out entities that aren't objects */
@@ -481,8 +483,8 @@ void fini_roots(ecs_world_t *world) {
 }
 
 static
-void fini_store(ecs_world_t *world) {
-    clean_tables(world);
+void flecs_fini_store(ecs_world_t *world) {
+    flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
     flecs_table_release(world, &world->store.root);
     flecs_sparse_clear(&world->store.entity_index);
@@ -577,7 +579,7 @@ void flecs_world_allocators_fini(
 }
 
 static
-void log_addons(void) {
+void flecs_log_addons(void) {
     ecs_trace("addons included in build:");
     ecs_log_push();
     #ifdef FLECS_CPP
@@ -677,7 +679,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_trace("time management not available");
     }
 
-    log_addons();
+    flecs_log_addons();
 
 #ifdef FLECS_SANITIZE
     ecs_trace("sanitize build, rebuild without FLECS_SANITIZE for (much) "
@@ -728,7 +730,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
-    init_store(world);
+    flecs_init_store(world);
 
     flecs_bootstrap(world);
 
@@ -880,7 +882,7 @@ void ecs_default_ctor(
 }
 
 static
-void default_copy_ctor(void *dst_ptr, const void *src_ptr,
+void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -889,7 +891,7 @@ void default_copy_ctor(void *dst_ptr, const void *src_ptr,
 }
 
 static
-void default_move_ctor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -898,7 +900,7 @@ void default_move_ctor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -908,7 +910,7 @@ void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -917,7 +919,7 @@ void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move(void *dst_ptr, void *src_ptr,
+void flecs_default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -925,7 +927,7 @@ void default_move(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* When there is no move, destruct the destination component & memcpy the
@@ -937,7 +939,7 @@ void default_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* If a component has a move, the move will take care of memcpying the data
@@ -1010,11 +1012,11 @@ void ecs_set_hooks_id(
 
     /* Set default copy ctor, move ctor and merge */
     if (h->copy && !h->copy_ctor) {
-        ti->hooks.copy_ctor = default_copy_ctor;
+        ti->hooks.copy_ctor = flecs_default_copy_ctor;
     }
 
     if (h->move && !h->move_ctor) {
-        ti->hooks.move_ctor = default_move_ctor;
+        ti->hooks.move_ctor = flecs_default_move_ctor;
     }
 
     if (!h->ctor_move_dtor) {
@@ -1023,11 +1025,11 @@ void ecs_set_hooks_id(
                 if (h->move_ctor) {
                     /* If an explicit move ctor has been set, use callback 
                      * that uses the move ctor vs. using a ctor+move */
-                    ti->hooks.ctor_move_dtor = default_move_ctor_w_dtor;
+                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
                 } else {
                     /* If no explicit move_ctor has been set, use
                      * combination of ctor + move + dtor */
-                    ti->hooks.ctor_move_dtor = default_ctor_w_move_w_dtor;
+                    ti->hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
                 }
             } else {
                 /* If no dtor has been set, this is just a move ctor */
@@ -1039,13 +1041,13 @@ void ecs_set_hooks_id(
     if (!h->move_dtor) {
         if (h->move) {
             if (h->dtor) {
-                ti->hooks.move_dtor = default_move_w_dtor;
+                ti->hooks.move_dtor = flecs_default_move_w_dtor;
             } else {
-                ti->hooks.move_dtor = default_move;
+                ti->hooks.move_dtor = flecs_default_move;
             }
         } else {
             if (h->dtor) {
-                ti->hooks.move_dtor = default_dtor;
+                ti->hooks.move_dtor = flecs_default_dtor;
             }
         }
     }
@@ -1104,7 +1106,7 @@ error:
 
 /* Unset data in tables */
 static
-void fini_unset_tables(
+void flecs_fini_unset_tables(
     ecs_world_t *world)
 {
     ecs_sparse_t *tables = &world->store.tables;
@@ -1118,7 +1120,7 @@ void fini_unset_tables(
 
 /* Invoke fini actions */
 static
-void fini_actions(
+void flecs_fini_actions(
     ecs_world_t *world)
 {
     ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
@@ -1130,7 +1132,7 @@ void fini_actions(
 
 /* Cleanup remaining type info elements */
 static
-void fini_type_info(
+void flecs_fini_type_info(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(world->type_info);
@@ -1173,7 +1175,7 @@ int ecs_fini(
      * policies get a chance to execute. */
     ecs_dbg_1("#[bold]cleanup root entities");
     ecs_log_push_1();
-    fini_roots(world);
+    flecs_fini_roots(world);
     ecs_log_pop_1();
 
     world->flags |= EcsWorldFini;
@@ -1182,7 +1184,7 @@ int ecs_fini(
      * destroying the storage */
     ecs_dbg_1("#[bold]run fini actions");
     ecs_log_push_1();
-    fini_actions(world);
+    flecs_fini_actions(world);
     ecs_log_pop_1();
 
     ecs_dbg_1("#[bold]cleanup remaining entities");
@@ -1194,11 +1196,11 @@ int ecs_fini(
 
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
-    fini_unset_tables(world);
+    flecs_fini_unset_tables(world);
 
     /* This will destroy all entities and components. After this point no more
      * user code is executed. */
-    fini_store(world);
+    flecs_fini_store(world);
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
@@ -1213,7 +1215,7 @@ int ecs_fini(
     ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
     flecs_fini_id_records(world);
-    fini_type_info(world);
+    flecs_fini_type_info(world);
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
@@ -1253,7 +1255,7 @@ void flecs_eval_component_monitors(
 {
     ecs_poly_assert(world, ecs_world_t);  
     flecs_process_pending_tables(world);  
-    eval_component_monitor(world);
+    flecs_eval_component_monitor(world);
 }
 
 void ecs_measure_frame_time(

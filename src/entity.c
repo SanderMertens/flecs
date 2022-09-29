@@ -4399,8 +4399,10 @@ bool flecs_defer_end(
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
-                    /* Batch commands for entity to limit archetype moves */   
-                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    /* Batch commands for entity to limit archetype moves */
+                    if (ecs_is_alive(world, e)) {
+                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    }
                 }
 
                 /* If entity is no longer alive, this could be because the queue

@@ -9550,8 +9550,10 @@ bool flecs_defer_end(
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
-                    /* Batch commands for entity to limit archetype moves */   
-                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    /* Batch commands for entity to limit archetype moves */
+                    if (ecs_is_alive(world, e)) {
+                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    }
                 }
 
                 /* If entity is no longer alive, this could be because the queue
@@ -34882,7 +34884,7 @@ struct ecs_http_server_t {
     ecs_ftime_t request_time_total; /* total time spent on requests */
     int32_t requests_processed; /* requests processed in last stats interval */
     int32_t requests_processed_total; /* total requests processed */
-    int32_t dequeue_count; /* number of dequeues in last stats interval */
+    int32_t dequeue_count; /* number of dequeues in last stats interval */ 
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -35053,13 +35055,13 @@ ecs_http_socket_t http_accept(
 }
 
 static 
-void reply_free(ecs_http_reply_t* response) {
+void http_reply_free(ecs_http_reply_t* response) {
     ecs_assert(response != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(response->body.content);
 }
 
 static
-void request_free(ecs_http_request_impl_t *req) {
+void http_request_free(ecs_http_request_impl_t *req) {
     ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -35070,7 +35072,7 @@ void request_free(ecs_http_request_impl_t *req) {
 }
 
 static
-void connection_free(ecs_http_connection_impl_t *conn) {
+void http_connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t conn_id = conn->pub.id;
@@ -35084,20 +35086,20 @@ void connection_free(ecs_http_connection_impl_t *conn) {
 
 // https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
 static
-char hex_2_int(char a, char b){
+char http_hex_2_int(char a, char b){
     a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
     b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
     return (char)((a << 4) + b);
 }
 
 static
-void decode_url_str(
+void http_decode_url_str(
     char *str) 
 {
     char ch, *ptr, *dst = str;
     for (ptr = str; (ch = *ptr); ptr++) {
         if (ch == '%') {
-            dst[0] = hex_2_int(ptr[1], ptr[2]);
+            dst[0] = http_hex_2_int(ptr[1], ptr[2]);
             dst ++;
             ptr += 2;
         } else {
@@ -35109,7 +35111,7 @@ void decode_url_str(
 }
 
 static
-void parse_method(
+void http_parse_method(
     ecs_http_fragment_t *frag)
 {
     char *method = ecs_strbuf_get_small(&frag->buf);
@@ -35126,14 +35128,14 @@ void parse_method(
 }
 
 static
-bool header_writable(
+bool http_header_writable(
     ecs_http_fragment_t *frag)
 {
     return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
 }
 
 static
-void header_buf_reset(
+void http_header_buf_reset(
     ecs_http_fragment_t *frag)
 {
     frag->header_buf[0] = '\0';
@@ -35141,7 +35143,7 @@ void header_buf_reset(
 }
 
 static
-void header_buf_append(
+void http_header_buf_append(
     ecs_http_fragment_t *frag,
     char ch)
 {
@@ -35156,7 +35158,7 @@ void header_buf_append(
 }
 
 static
-void enqueue_request(
+void http_enqueue_request(
     ecs_http_connection_impl_t *conn)
 {
     ecs_http_server_t *srv = conn->pub.server;
@@ -35188,7 +35190,7 @@ void enqueue_request(
             for (i = 0; i < count; i ++) {
                 req->pub.params[i].key = &res[frag->param_offsets[i]];
                 req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-                decode_url_str((char*)req->pub.params[i].value);
+                http_decode_url_str((char*)req->pub.params[i].value);
             }
 
             req->pub.header_count = frag->header_count;
@@ -35200,7 +35202,7 @@ void enqueue_request(
 }
 
 static
-bool parse_request(
+bool http_parse_request(
     ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
     const char* req_frag, 
@@ -35220,7 +35222,7 @@ bool parse_request(
             /* fallthrough */
         case HttpFragStateMethod:
             if (c == ' ') {
-                parse_method(frag);
+                http_parse_method(frag);
                 frag->state = HttpFragStatePath;
                 frag->buf.max = ECS_HTTP_REQUEST_LEN_MAX;
             } else {
@@ -35252,21 +35254,21 @@ bool parse_request(
             } /* version is not stored */
             break;
         case HttpFragStateHeaderStart:
-            if (header_writable(frag)) {
+            if (http_header_writable(frag)) {
                 frag->header_offsets[frag->header_count] = 
                     ecs_strbuf_written(&frag->buf);
             }
-            header_buf_reset(frag);
+            http_header_buf_reset(frag);
             frag->state = HttpFragStateHeaderName;
             /* fallthrough */
         case HttpFragStateHeaderName:
             if (c == ':') {
                 frag->state = HttpFragStateHeaderValueStart;
-                header_buf_append(frag, '\0');
+                http_header_buf_append(frag, '\0');
                 frag->parse_content_length = !ecs_os_strcmp(
                     frag->header_buf, "Content-Length");
 
-                if (header_writable(frag)) {
+                if (http_header_writable(frag)) {
                     ecs_strbuf_appendch(&frag->buf, '\0');
                     frag->header_value_offsets[frag->header_count] =
                         ecs_strbuf_written(&frag->buf);
@@ -35274,14 +35276,14 @@ bool parse_request(
             } else if (c == '\r') {
                 frag->state = HttpFragStateCR;
             } else  {
-                header_buf_append(frag, c);
-                if (header_writable(frag)) {
+                http_header_buf_append(frag, c);
+                if (http_header_writable(frag)) {
                     ecs_strbuf_appendch(&frag->buf, c);
                 }
             }
             break;
         case HttpFragStateHeaderValueStart:
-            header_buf_reset(frag);
+            http_header_buf_reset(frag);
             frag->state = HttpFragStateHeaderValue;
             if (c == ' ') { /* skip first space */
                 break;
@@ -35290,7 +35292,7 @@ bool parse_request(
         case HttpFragStateHeaderValue:
             if (c == '\r') {
                 if (frag->parse_content_length) {
-                    header_buf_append(frag, '\0');
+                    http_header_buf_append(frag, '\0');
                     int32_t len = atoi(frag->header_buf);
                     if (len < 0) {
                         frag->invalid = true;
@@ -35299,7 +35301,7 @@ bool parse_request(
                     }
                     frag->parse_content_length = false;
                 }
-                if (header_writable(frag)) {
+                if (http_header_writable(frag)) {
                     int32_t cur = ecs_strbuf_written(&frag->buf);
                     if (frag->header_offsets[frag->header_count] < cur &&
                         frag->header_value_offsets[frag->header_count] < cur)
@@ -35311,9 +35313,9 @@ bool parse_request(
                 frag->state = HttpFragStateCR;
             } else {
                 if (frag->parse_content_length) {
-                    header_buf_append(frag, c);
+                    http_header_buf_append(frag, c);
                 }
-                if (header_writable(frag)) {
+                if (http_header_writable(frag)) {
                     ecs_strbuf_appendch(&frag->buf, c);
                 }
             }
@@ -35362,7 +35364,7 @@ bool parse_request(
     if (frag->state == HttpFragStateDone) {
         frag->state = HttpFragStateBegin;
         if (conn->pub.id == conn_id) {
-            enqueue_request(conn);
+            http_enqueue_request(conn);
         }
         return true;
     } else {
@@ -35371,7 +35373,7 @@ bool parse_request(
 }
 
 static
-void append_send_headers(
+void http_append_send_headers(
     ecs_strbuf_t *hdrs,
     int code, 
     const char* status, 
@@ -35400,7 +35402,7 @@ void append_send_headers(
 }
 
 static
-void send_reply(
+void http_send_reply(
     ecs_http_connection_impl_t* conn, 
     ecs_http_reply_t* reply) 
 {
@@ -35414,7 +35416,7 @@ void send_reply(
     int32_t content_length = reply->body.length - 1;
 
     /* First, send the response HTTP headers */
-    append_send_headers(&hdr_buf, reply->code, reply->status, 
+    http_append_send_headers(&hdr_buf, reply->code, reply->status, 
         reply->content_type, &reply->headers, content_length);
 
     ecs_size_t hdrs_len = ecs_strbuf_written(&hdr_buf);
@@ -35438,7 +35440,7 @@ void send_reply(
 }
 
 static
-void recv_request(
+void http_recv_request(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -35459,7 +35461,7 @@ void recv_request(
         ecs_os_mutex_unlock(srv->lock);
 
         if (is_alive) {
-            if (parse_request(conn, conn_id, recv_buf, bytes_read)) {
+            if (http_parse_request(conn, conn_id, recv_buf, bytes_read)) {
                 return;
             }
         } else {
@@ -35469,7 +35471,7 @@ void recv_request(
 }
 
 static
-void init_connection(
+void http_init_connection(
     ecs_http_server_t *srv, 
     ecs_http_socket_t sock_conn,
     struct sockaddr_storage *remote_addr, 
@@ -35500,14 +35502,14 @@ void init_connection(
     ecs_dbg_2("http: connection established from '%s:%s'", 
         remote_host, remote_port);
 
-    recv_request(srv, conn, conn_id, sock_conn);
+    http_recv_request(srv, conn, conn_id, sock_conn);
 
     ecs_dbg_2("http: request received from '%s:%s'", 
         remote_host, remote_port);
 }
 
 static
-void accept_connections(
+void http_accept_connections(
     ecs_http_server_t* srv, 
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
@@ -35611,7 +35613,7 @@ void accept_connections(
             continue;
         }
 
-        init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
     }
 
 done:
@@ -35640,12 +35642,12 @@ void* http_server_thread(void* arg) {
         inet_pton(AF_INET, srv->ipaddr, &(addr.sin_addr));
     }
 
-    accept_connections(srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr));
+    http_accept_connections(srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr));
     return NULL;
 }
 
 static
-void handle_request(
+void http_handle_request(
     ecs_http_server_t *srv,
     ecs_http_request_impl_t *req)
 {
@@ -35658,16 +35660,16 @@ void handle_request(
         reply.status = "Resource not found";
     }
 
-    send_reply(conn, &reply);
+    http_send_reply(conn, &reply);
     ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
 
-    reply_free(&reply);
-    request_free(req);
-    connection_free(conn);
+    http_reply_free(&reply);
+    http_request_free(req);
+    http_connection_free(conn);
 }
 
 static
-int32_t dequeue_requests(
+int32_t http_dequeue_requests(
     ecs_http_server_t *srv,
     ecs_ftime_t delta_time)
 {
@@ -35677,7 +35679,7 @@ int32_t dequeue_requests(
     for (i = request_count - 1; i >= 1; i --) {
         ecs_http_request_impl_t *req = flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i);
-        handle_request(srv, req);
+        http_handle_request(srv, req);
     }
 
     int32_t connections_count = flecs_sparse_count(srv->connections);
@@ -35694,7 +35696,7 @@ int32_t dequeue_requests(
         {
             ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
                 conn->pub.host, conn->pub.port, conn->sock);
-            connection_free(conn);
+            http_connection_free(conn);
         }
     }
 
@@ -35820,14 +35822,14 @@ void ecs_http_server_stop(
     /* Cleanup all outstanding requests */
     int i, count = flecs_sparse_count(srv->requests);
     for (i = count - 1; i >= 1; i --) {
-        request_free(flecs_sparse_get_dense(
+        http_request_free(flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i));
     }
 
     /* Close all connections */
     count = flecs_sparse_count(srv->connections);
     for (i = count - 1; i >= 1; i --) {
-        connection_free(flecs_sparse_get_dense(
+        http_connection_free(flecs_sparse_get_dense(
             srv->connections, ecs_http_connection_impl_t, i));
     }
 
@@ -35859,7 +35861,7 @@ void ecs_http_server_dequeue(
 
         ecs_time_t t = {0};
         ecs_time_measure(&t);
-        int32_t request_count = dequeue_requests(srv, srv->dequeue_timeout);
+        int32_t request_count = http_dequeue_requests(srv, srv->dequeue_timeout);
         srv->requests_processed += request_count;
         srv->requests_processed_total += request_count;
         ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&t);
@@ -38253,7 +38255,7 @@ void flecs_resume_readonly(
  * themselves with component monitors to determine whether they need to rematch
  * with tables. */
 static
-void eval_component_monitor(
+void flecs_eval_component_monitor(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -38359,7 +38361,7 @@ void flecs_monitor_unregister(
 }
 
 static
-void init_store(
+void flecs_init_store(
     ecs_world_t *world) 
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
@@ -38384,7 +38386,7 @@ void init_store(
 }
 
 static
-void clean_tables(
+void flecs_clean_tables(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(&world->store.tables);
@@ -38417,7 +38419,7 @@ void clean_tables(
 }
 
 static
-void fini_roots(ecs_world_t *world) {
+void flecs_fini_roots(ecs_world_t *world) {
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
@@ -38447,6 +38449,8 @@ void fini_roots(ecs_world_t *world) {
          * table which reduces moving components around */
         for (i = count - 1; i >= 0; i --) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
             if (!(flags & EcsEntityObservedTarget)) {
                 continue; /* Filter out entities that aren't objects */
@@ -38460,8 +38464,8 @@ void fini_roots(ecs_world_t *world) {
 }
 
 static
-void fini_store(ecs_world_t *world) {
-    clean_tables(world);
+void flecs_fini_store(ecs_world_t *world) {
+    flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
     flecs_table_release(world, &world->store.root);
     flecs_sparse_clear(&world->store.entity_index);
@@ -38556,7 +38560,7 @@ void flecs_world_allocators_fini(
 }
 
 static
-void log_addons(void) {
+void flecs_log_addons(void) {
     ecs_trace("addons included in build:");
     ecs_log_push();
     #ifdef FLECS_CPP
@@ -38656,7 +38660,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_trace("time management not available");
     }
 
-    log_addons();
+    flecs_log_addons();
 
 #ifdef FLECS_SANITIZE
     ecs_trace("sanitize build, rebuild without FLECS_SANITIZE for (much) "
@@ -38707,7 +38711,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
-    init_store(world);
+    flecs_init_store(world);
 
     flecs_bootstrap(world);
 
@@ -38859,7 +38863,7 @@ void ecs_default_ctor(
 }
 
 static
-void default_copy_ctor(void *dst_ptr, const void *src_ptr,
+void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -38868,7 +38872,7 @@ void default_copy_ctor(void *dst_ptr, const void *src_ptr,
 }
 
 static
-void default_move_ctor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -38877,7 +38881,7 @@ void default_move_ctor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -38887,7 +38891,7 @@ void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -38896,7 +38900,7 @@ void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move(void *dst_ptr, void *src_ptr,
+void flecs_default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -38904,7 +38908,7 @@ void default_move(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* When there is no move, destruct the destination component & memcpy the
@@ -38916,7 +38920,7 @@ void default_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void default_move_w_dtor(void *dst_ptr, void *src_ptr,
+void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* If a component has a move, the move will take care of memcpying the data
@@ -38989,11 +38993,11 @@ void ecs_set_hooks_id(
 
     /* Set default copy ctor, move ctor and merge */
     if (h->copy && !h->copy_ctor) {
-        ti->hooks.copy_ctor = default_copy_ctor;
+        ti->hooks.copy_ctor = flecs_default_copy_ctor;
     }
 
     if (h->move && !h->move_ctor) {
-        ti->hooks.move_ctor = default_move_ctor;
+        ti->hooks.move_ctor = flecs_default_move_ctor;
     }
 
     if (!h->ctor_move_dtor) {
@@ -39002,11 +39006,11 @@ void ecs_set_hooks_id(
                 if (h->move_ctor) {
                     /* If an explicit move ctor has been set, use callback 
                      * that uses the move ctor vs. using a ctor+move */
-                    ti->hooks.ctor_move_dtor = default_move_ctor_w_dtor;
+                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
                 } else {
                     /* If no explicit move_ctor has been set, use
                      * combination of ctor + move + dtor */
-                    ti->hooks.ctor_move_dtor = default_ctor_w_move_w_dtor;
+                    ti->hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
                 }
             } else {
                 /* If no dtor has been set, this is just a move ctor */
@@ -39018,13 +39022,13 @@ void ecs_set_hooks_id(
     if (!h->move_dtor) {
         if (h->move) {
             if (h->dtor) {
-                ti->hooks.move_dtor = default_move_w_dtor;
+                ti->hooks.move_dtor = flecs_default_move_w_dtor;
             } else {
-                ti->hooks.move_dtor = default_move;
+                ti->hooks.move_dtor = flecs_default_move;
             }
         } else {
             if (h->dtor) {
-                ti->hooks.move_dtor = default_dtor;
+                ti->hooks.move_dtor = flecs_default_dtor;
             }
         }
     }
@@ -39083,7 +39087,7 @@ error:
 
 /* Unset data in tables */
 static
-void fini_unset_tables(
+void flecs_fini_unset_tables(
     ecs_world_t *world)
 {
     ecs_sparse_t *tables = &world->store.tables;
@@ -39097,7 +39101,7 @@ void fini_unset_tables(
 
 /* Invoke fini actions */
 static
-void fini_actions(
+void flecs_fini_actions(
     ecs_world_t *world)
 {
     ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
@@ -39109,7 +39113,7 @@ void fini_actions(
 
 /* Cleanup remaining type info elements */
 static
-void fini_type_info(
+void flecs_fini_type_info(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(world->type_info);
@@ -39152,7 +39156,7 @@ int ecs_fini(
      * policies get a chance to execute. */
     ecs_dbg_1("#[bold]cleanup root entities");
     ecs_log_push_1();
-    fini_roots(world);
+    flecs_fini_roots(world);
     ecs_log_pop_1();
 
     world->flags |= EcsWorldFini;
@@ -39161,7 +39165,7 @@ int ecs_fini(
      * destroying the storage */
     ecs_dbg_1("#[bold]run fini actions");
     ecs_log_push_1();
-    fini_actions(world);
+    flecs_fini_actions(world);
     ecs_log_pop_1();
 
     ecs_dbg_1("#[bold]cleanup remaining entities");
@@ -39173,11 +39177,11 @@ int ecs_fini(
 
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
-    fini_unset_tables(world);
+    flecs_fini_unset_tables(world);
 
     /* This will destroy all entities and components. After this point no more
      * user code is executed. */
-    fini_store(world);
+    flecs_fini_store(world);
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
@@ -39192,7 +39196,7 @@ int ecs_fini(
     ecs_log_push_1();
     flecs_sparse_fini(&world->store.entity_index);
     flecs_fini_id_records(world);
-    fini_type_info(world);
+    flecs_fini_type_info(world);
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
@@ -39232,7 +39236,7 @@ void flecs_eval_component_monitors(
 {
     ecs_poly_assert(world, ecs_world_t);  
     flecs_process_pending_tables(world);  
-    eval_component_monitor(world);
+    flecs_eval_component_monitor(world);
 }
 
 void ecs_measure_frame_time(
