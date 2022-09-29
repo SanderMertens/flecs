@@ -44613,13 +44613,13 @@ void ecs_os_fini(void) {
 
 /* Assume every non-glibc Linux target has no execinfo.
    This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
-#if defined(__linux__) && !defined(__GLIBC__)
-#define HAVE_EXECINFO_H 0
-#else
-#define HAVE_EXECINFO_H 1
+#if defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)
+#define HAVE_EXECINFO 0
+#elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
+#define HAVE_EXECINFO 1
 #endif
 
-#if !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID) && HAVE_EXECINFO_H
+#if HAVE_EXECINFO
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 
