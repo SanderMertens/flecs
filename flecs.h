@@ -13546,6 +13546,11 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     bool *existing_out);
 
 FLECS_API
+void ecs_cpp_enum_init(
+    ecs_world_t *world,
+    ecs_entity_t id);
+
+FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -14269,9 +14274,7 @@ struct enum_type {
 #endif
 
         ecs_log_push();
-        ecs_add_id(world, id, flecs::Exclusive);
-        ecs_add_id(world, id, flecs::OneOf);
-        ecs_add_id(world, id, flecs::Tag);
+        ecs_cpp_enum_init(world, id);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
         init< enum_last<E>::value >(world);

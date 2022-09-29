@@ -898,6 +898,7 @@
                 "reinit_w_lifecycle",
                 "first_use_in_system",
                 "first_use_tag_in_system",
+                "first_use_enum_in_system",
                 "use_const",
                 "use_const_w_stage",
                 "use_const_w_threads",

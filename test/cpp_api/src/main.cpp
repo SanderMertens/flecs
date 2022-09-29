@@ -856,6 +856,7 @@ void ImplicitComponents_reinit_scoped(void);
 void ImplicitComponents_reinit_w_lifecycle(void);
 void ImplicitComponents_first_use_in_system(void);
 void ImplicitComponents_first_use_tag_in_system(void);
+void ImplicitComponents_first_use_enum_in_system(void);
 void ImplicitComponents_use_const(void);
 void ImplicitComponents_use_const_w_stage(void);
 void ImplicitComponents_use_const_w_threads(void);
@@ -4336,6 +4337,10 @@ bake_test_case ImplicitComponents_testcases[] = {
         ImplicitComponents_first_use_tag_in_system
     },
     {
+        "first_use_enum_in_system",
+        ImplicitComponents_first_use_enum_in_system
+    },
+    {
         "use_const",
         ImplicitComponents_use_const
     },
@@ -5140,7 +5145,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        26,
+        27,
         ImplicitComponents_testcases
     },
     {
