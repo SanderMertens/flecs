@@ -402,6 +402,7 @@ typedef struct ecs_world_allocators_t {
 typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_stack_t deser_stack;
+    ecs_block_allocator_t cmd_entry_chunk;
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */
@@ -467,7 +468,7 @@ struct ecs_stage_t {
     int32_t defer;
     ecs_vec_t commands;
     ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
-    ecs_map_t cmd_entries;       /* <entity, op_entry_t> - command combining */
+    ecs_sparse_t cmd_entries;   /* <entity, op_entry_t> - command combining */
     bool defer_suspend;         /* Suspend deferring without flushing */
 
     /* Thread context */

@@ -4246,6 +4246,8 @@ void flecs_cmd_batch_for_entity(
     ecs_table_t *table = NULL;
     if (r) {
         table = r->table;
+    } else if (!flecs_entities_is_alive(world, entity)) {
+        return;
     }
 
     ecs_cmd_t *cmd;
@@ -4391,7 +4393,7 @@ bool flecs_defer_end(
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-            ecs_map_clear(&stage->cmd_entries);
+            flecs_sparse_clear(&stage->cmd_entries);
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
@@ -4400,9 +4402,7 @@ bool flecs_defer_end(
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
                     /* Batch commands for entity to limit archetype moves */
-                    if (ecs_is_alive(world, e)) {
-                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
-                    }
+                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
                 }
 
                 /* If entity is no longer alive, this could be because the queue
@@ -4535,7 +4535,7 @@ bool flecs_defer_purge(
             flecs_stack_reset(&stage->defer_stack);
         }
 
-        ecs_map_clear(&stage->cmd_entries);
+        flecs_sparse_clear(&stage->cmd_entries);
 
         return true;
     }
