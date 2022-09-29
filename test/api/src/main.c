@@ -2063,6 +2063,8 @@ void DeferredActions_defer_remove_after_set_w_observer(void);
 void DeferredActions_defer_override_after_remove(void);
 void DeferredActions_defer_override_after_remove_3_ops(void);
 void DeferredActions_flush_stage_to_deferred_world(void);
+void DeferredActions_add_in_observer_during_merge(void);
+void DeferredActions_add_in_observer_during_merge_2_commands(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10164,6 +10166,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "flush_stage_to_deferred_world",
         DeferredActions_flush_stage_to_deferred_world
+    },
+    {
+        "add_in_observer_during_merge",
+        DeferredActions_add_in_observer_during_merge
+    },
+    {
+        "add_in_observer_during_merge_2_commands",
+        DeferredActions_add_in_observer_during_merge_2_commands
     }
 };
 
@@ -10977,7 +10987,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        81,
+        83,
         DeferredActions_testcases
     },
     {

@@ -2467,3 +2467,67 @@ void DeferredActions_flush_stage_to_deferred_world() {
 
     ecs_fini(world);
 }
+
+static
+void AddPosition(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_set(it->world, it->entities[0], Position, {10, 20});
+}
+
+void DeferredActions_add_in_observer_during_merge() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, TagA);
+
+    ECS_OBSERVER(world, AddPosition, EcsOnAdd, TagA);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagA);
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_add_in_observer_during_merge_2_commands() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ECS_OBSERVER(world, AddPosition, EcsOnAdd, TagB);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}

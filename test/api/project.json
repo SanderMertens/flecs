@@ -2151,7 +2151,9 @@
                 "defer_remove_after_set_w_observer",
                 "defer_override_after_remove",
                 "defer_override_after_remove_3_ops",
-                "flush_stage_to_deferred_world"
+                "flush_stage_to_deferred_world",
+                "add_in_observer_during_merge",
+                "add_in_observer_during_merge_2_commands"
             ]
         }, {
             "id": "SingleThreadStaging",

@@ -6258,7 +6258,7 @@ const ecs_entity_t* flecs_bulk_new(
 }
 
 static
-void add_id_w_record(
+void flecs_add_id_w_record(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -6281,7 +6281,7 @@ void add_id_w_record(
 }
 
 static
-void add_id(
+void flecs_add_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -6304,7 +6304,7 @@ void add_id(
 }
 
 static
-void remove_id(
+void flecs_remove_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -6352,7 +6352,7 @@ flecs_component_ptr_t flecs_get_mut(
 
     if (!dst.ptr) {
         /* If entity didn't have component yet, add it */
-        add_id_w_record(world, entity, r, id, true);
+        flecs_add_id_w_record(world, entity, r, id, true);
 
         /* Flush commands so the pointer we're fetching is stable */
         ecs_defer_end(world);
@@ -6725,7 +6725,7 @@ error:
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
 static
-ecs_table_t *traverse_from_expr(
+ecs_table_t *flecs_traverse_from_expr(
     ecs_world_t *world,
     ecs_table_t *table,
     const char *name,
@@ -6787,9 +6787,9 @@ ecs_table_t *traverse_from_expr(
 }
 
 /* Add/remove components based on the parsed expression. This operation is 
- * slower than traverse_from_expr, but safe to use from a deferred context. */
+ * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
 static
-void defer_from_expr(
+void flecs_defer_from_expr(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -6834,7 +6834,7 @@ void defer_from_expr(
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static 
-int traverse_add(
+int flecs_traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
     const char *name,
@@ -6903,7 +6903,7 @@ int traverse_add(
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
 #ifdef FLECS_PARSER
         bool error = false;
-        table = traverse_from_expr(
+        table = flecs_traverse_from_expr(
             world, table, name, desc->add_expr, &diff, true, &error);
         if (error) {
             flecs_table_diff_builder_fini(world, &diff);
@@ -6948,7 +6948,7 @@ int traverse_add(
 /* When in deferred mode, we need to add/remove components one by one using
  * the regular operations. */
 static 
-void deferred_add_remove(
+void flecs_deferred_add_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -6995,7 +6995,7 @@ void deferred_add_remove(
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
-        defer_from_expr(world, entity, name, desc->add_expr, true, true);
+        flecs_defer_from_expr(world, entity, name, desc->add_expr, true, true);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -7158,10 +7158,10 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
-        deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
+        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
             scope, with, flecs_new_entity, name_assigned);
     } else {
-        if (traverse_add(world, result, name, desc,
+        if (flecs_traverse_add(world, result, name, desc,
             scope, with, flecs_new_entity, name_assigned)) 
         {
             return 0;
@@ -7887,7 +7887,7 @@ void ecs_add_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    add_id(world, entity, id);
+    flecs_add_id(world, entity, id);
 error:
     return;
 }
@@ -7901,7 +7901,7 @@ void ecs_remove_id(
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id) || ecs_id_is_wildcard(id), 
         ECS_INVALID_PARAMETER, NULL);
-    remove_id(world, entity, id);
+    flecs_remove_id(world, entity, id);
 error:
     return;
 }
@@ -8249,7 +8249,7 @@ void* ecs_emplace_id(
     }
 
     ecs_record_t *r = flecs_entities_ensure(world, entity);
-    add_id_w_record(world, entity, r, id, false /* Add without ctor */);
+    flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
 
     void *ptr = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -9279,7 +9279,7 @@ void flecs_flush_bulk_new(
     if (cmd->id) {
         int i, count = cmd->is._n.count;
         for (i = 0; i < count; i ++) {
-            add_id(world, entities[i], cmd->id);
+            flecs_add_id(world, entities[i], cmd->id);
         }
     }
 
@@ -9466,7 +9466,9 @@ void flecs_cmd_batch_for_entity(
 
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
+    ecs_defer_begin(world);
     flecs_commit(world, entity, r, table, &table_diff, true, true);
+    ecs_defer_end(world);
     flecs_table_diff_builder_clear(diff);
 
     /* If ids were both removed and set, check if there are ids that were both
@@ -9574,14 +9576,14 @@ bool flecs_defer_end(
                     if (flecs_remove_invalid(world, id, &id)) {
                         if (id) {
                             world->info.add_count ++;
-                            add_id(world, e, id);
+                            flecs_add_id(world, e, id);
                         }
                     } else {
                         ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
-                    remove_id(world, e, id);
+                    flecs_remove_id(world, e, id);
                     break;
                 case EcsOpClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
@@ -42876,6 +42878,21 @@ int32_t flecs_relation_depth(
 #include <stddef.h>
 
 static
+void flecs_observer_invoke(ecs_iter_t *it) {
+    ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_table_lock(it->world, it->table);
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(it->world, it->system);
+        ecs_dbg_3("observer %s", path);
+        ecs_os_free(path);
+        ecs_log_push_3();
+    }
+    it->callback(it);
+    ecs_table_unlock(it->world, it->table);
+    ecs_log_pop_3();
+}
+
+static
 bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->real_world;
@@ -42958,18 +42975,10 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
         user_it.field_count = o->filter.field_count;
+        user_it.callback = o->callback;
+        
         flecs_iter_validate(&user_it);
-
-        if (ecs_should_log_3()) {
-            char *path = ecs_get_fullpath(world, user_it.system);
-            ecs_dbg_3("observer %s", path);
-            ecs_os_free(path);
-            ecs_log_push_3();
-        }
-
-        ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-        o->callback(&user_it);
-
+        flecs_observer_invoke(&user_it);
         ecs_iter_fini(&user_it);
 
         ecs_log_pop_3();
@@ -43358,7 +43367,7 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
     if (observer->is_multi) {
         return flecs_multi_observer_invoke(it);
     } else {
-        it->callback(it);
+        flecs_observer_invoke(it);
         return true;
     }
 }
@@ -43381,7 +43390,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
         ecs_log_push_3();
     }
 
-    it->callback(it);
+    flecs_observer_invoke(it);
 
     ecs_log_pop_3();
 }
@@ -43444,7 +43453,8 @@ void flecs_uni_observer_builtin_run(
         it->ctx = observer;
         observer->run(it);
     } else {
-        observer->callback(it);
+        it->callback = observer->callback;
+        flecs_observer_invoke(it);
     }
 
     it->event = event;
