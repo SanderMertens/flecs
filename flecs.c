@@ -9765,6 +9765,7 @@ void flecs_stages_merge(
     }
 
     ecs_dbg_3("#[magenta]merge");
+    ecs_log_push_3();
 
     if (is_stage) {
         /* Check for consistency if force_merge is enabled. In practice this
@@ -9800,6 +9801,8 @@ void flecs_stages_merge(
     if (stage->async) {
         ecs_defer_begin((ecs_world_t*)stage);
     }
+    
+    ecs_log_pop_3();
 }
 
 static
