@@ -543,6 +543,26 @@ void Lookup_set_same_name() {
     ecs_fini(world);
 }
 
+void Lookup_set_same_name_after_reparenting() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    test_assert(e != 0);
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "MyName"));
+
+    ecs_add_pair(world, e, EcsChildOf, parent);
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup_fullpath(world, "parent.MyName"));
+
+    ecs_set_name(world, e, "MyName");
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup_fullpath(world, "parent.MyName"));
+    
+    ecs_fini(world);
+}
+
 void Lookup_defer_set_name() {
     ecs_world_t *world = ecs_mini();
 
@@ -578,3 +598,4 @@ void Lookup_defer_set_same_name() {
     
     ecs_fini(world);
 }
+

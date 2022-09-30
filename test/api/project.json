@@ -754,6 +754,7 @@
                 "lookup_custom_search_path_from_stage",
                 "lookup_custom_search_path_n_elems",
                 "set_same_name",
+                "set_same_name_after_reparenting",
                 "defer_set_name",
                 "defer_set_same_name"
             ]

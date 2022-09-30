@@ -709,6 +709,7 @@ void Lookup_lookup_custom_search_path(void);
 void Lookup_lookup_custom_search_path_from_stage(void);
 void Lookup_lookup_custom_search_path_n_elems(void);
 void Lookup_set_same_name(void);
+void Lookup_set_same_name_after_reparenting(void);
 void Lookup_defer_set_name(void);
 void Lookup_defer_set_same_name(void);
 
@@ -4888,6 +4889,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "set_same_name",
         Lookup_set_same_name
+    },
+    {
+        "set_same_name_after_reparenting",
+        Lookup_set_same_name_after_reparenting
     },
     {
         "defer_set_name",
@@ -10873,7 +10878,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        39,
+        40,
         Lookup_testcases
     },
     {

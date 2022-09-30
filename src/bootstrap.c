@@ -464,7 +464,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     }
 
     /* Get the table column with names */
-    const EcsIdentifier *names = ecs_iter_column(it, EcsIdentifier, col);
+    EcsIdentifier *names = ecs_iter_column(it, EcsIdentifier, col);
 
     ecs_hashmap_t *from_index = 0;
     if (from_has_name) {
@@ -478,7 +478,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        const EcsIdentifier *name = &names[i];
+        EcsIdentifier *name = &names[i];
 
         uint64_t index_hash = name->index_hash;
         if (from_index && index_hash) {
@@ -489,6 +489,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
             ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
             flecs_name_index_ensure(
                 to_index, e, name_str, name->length, name->hash);
+            name->index = to_index;
         }
     }
 }
