@@ -972,6 +972,38 @@ void Hierarchies_add_path_from_scope_new_entity() {
     ecs_fini(world);
 }
 
+void Hierarchies_add_root_path_to_child() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(ecs_get_target(world, child, EcsChildOf, 0) == parent);
+    test_str(ecs_get_name(world, child), "child");
+
+    ecs_add_path_w_sep(world, child, 0, "::child", ".", "::");
+    test_assert(ecs_get_target(world, child, EcsChildOf, 0) == 0);
+    test_str(ecs_get_name(world, child), "child");
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_parent_path_from_root_to_child() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t gparent = ecs_new_entity(world, "gparent");
+    ecs_entity_t parent = ecs_new_entity(world, "gparent.parent");
+    test_assert(ecs_get_target(world, parent, EcsChildOf, 0) == gparent);
+    ecs_entity_t child = ecs_new_entity(world, "gparent.parent.child");
+    test_assert(ecs_get_target(world, child, EcsChildOf, 0) == parent);
+    test_str(ecs_get_name(world, child), "child");
+
+    ecs_add_path_w_sep(world, child, 0, "::gparent.child", ".", "::");
+    test_assert(ecs_get_target(world, child, EcsChildOf, 0) == gparent);
+    test_str(ecs_get_name(world, child), "child");
+
+    ecs_fini(world);
+}
+
 void Hierarchies_new_w_child_in_root() {
     ecs_world_t *world = ecs_mini();
 

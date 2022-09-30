@@ -46,6 +46,14 @@ public:
     }
 };
 
+class NamedModuleInRoot {
+public:
+    NamedModuleInRoot(flecs::world& world) {
+        world.module<NamedModuleInRoot>("::NamedModuleInRoot");
+        world.component<Position>();
+    }
+};
+
 }
 
 void Module_import() {
@@ -210,6 +218,21 @@ void Module_implicit_module() {
 
     auto p = ecs.component<Position>();
     auto p_lookup = ecs.lookup("::ns::ImplicitModule::Position");
+    test_assert(p != 0);
+    test_assert(p == p_lookup);
+}
+
+void Module_module_in_namespace_w_root_name() {
+    flecs::world ecs;
+
+    auto m = ecs.import<ns::NamedModuleInRoot>();
+    auto m_lookup = ecs.lookup("::NamedModuleInRoot");
+    test_assert(m != 0);
+    test_assert(m == m_lookup);
+    test_str(m.path(), "::NamedModuleInRoot");
+
+    auto p = ecs.component<Position>();
+    auto p_lookup = ecs.lookup("::NamedModuleInRoot::Position");
     test_assert(p != 0);
     test_assert(p == p_lookup);
 }

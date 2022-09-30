@@ -875,7 +875,8 @@
                 "component_redefinition_outside_module",
                 "module_tag_on_namespace",
                 "dtor_on_fini",
-                "implicit_module"
+                "implicit_module",
+                "module_in_namespace_w_root_name"
             ]
         }, {
             "id": "ImplicitComponents",

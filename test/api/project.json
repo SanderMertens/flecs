@@ -432,6 +432,8 @@
                 "add_path_existing_depth_2",
                 "add_path_from_scope",
                 "add_path_from_scope_new_entity",
+                "add_root_path_to_child",
+                "add_parent_path_from_root_to_child",
                 "new_w_child_in_root",
                 "delete_child",
                 "delete_2_children",

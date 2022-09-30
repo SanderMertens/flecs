@@ -360,7 +360,7 @@ ecs_entity_t flecs_largest_type(
 
 /** Test if a normalized type can promote to another type in an expression */
 static
-bool flecs_is_number(
+bool flecs_is_type_number(
     ecs_entity_t type)
 {
     if      (type == ecs_id(ecs_bool_t)) return false;
@@ -384,7 +384,7 @@ bool flecs_oper_valid_for_type(
     case EcsSub:
     case EcsMul:
     case EcsDiv:
-        return flecs_is_number(type);
+        return flecs_is_type_number(type);
     case EcsCondEq:
     case EcsCondNeq:
     case EcsCondAnd:
@@ -393,7 +393,7 @@ bool flecs_oper_valid_for_type(
     case EcsCondGtEq:
     case EcsCondLt:
     case EcsCondLtEq:
-        return flecs_is_number(type) ||
+        return flecs_is_type_number(type) ||
             (type == ecs_id(ecs_bool_t)) ||
             (type == ecs_id(ecs_char_t)) ||
             (type == ecs_id(ecs_entity_t));
@@ -533,7 +533,7 @@ ecs_entity_t flecs_binary_expr_type(
         return 0;
     }
 
-    if (!flecs_is_number(ltype) || !flecs_is_number(rtype)) {
+    if (!flecs_is_type_number(ltype) || !flecs_is_type_number(rtype)) {
         ecs_parser_error(name, expr, ptr - expr, 
             "incompatible types in binary expression");
         return 0;

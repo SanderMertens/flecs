@@ -405,6 +405,8 @@ void Hierarchies_add_path_existing_depth_1(void);
 void Hierarchies_add_path_existing_depth_2(void);
 void Hierarchies_add_path_from_scope(void);
 void Hierarchies_add_path_from_scope_new_entity(void);
+void Hierarchies_add_root_path_to_child(void);
+void Hierarchies_add_parent_path_from_root_to_child(void);
 void Hierarchies_new_w_child_in_root(void);
 void Hierarchies_delete_child(void);
 void Hierarchies_delete_2_children(void);
@@ -3731,6 +3733,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "add_path_from_scope_new_entity",
         Hierarchies_add_path_from_scope_new_entity
+    },
+    {
+        "add_root_path_to_child",
+        Hierarchies_add_root_path_to_child
+    },
+    {
+        "add_parent_path_from_root_to_child",
+        Hierarchies_add_parent_path_from_root_to_child
     },
     {
         "new_w_child_in_root",
@@ -10800,7 +10810,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        96,
+        98,
         Hierarchies_testcases
     },
     {
