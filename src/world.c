@@ -1378,6 +1378,10 @@ ecs_type_info_t* flecs_type_info_ensure(
             world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+        const char *sym = ecs_get_symbol(world, component);
+        if (sym) {
+            ti_mut->name = ecs_os_strdup(sym);
+        }
     } else {
         ti_mut = (ecs_type_info_t*)ti;
     }
@@ -1457,6 +1461,11 @@ void flecs_type_info_fini(
     }
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
+    }
+    if (ti->name) {
+        /* Safe to cast away const, world has ownership over string */
+        ecs_os_free((char*)ti->name);
+        ti->name = NULL;
     }
 }
 
