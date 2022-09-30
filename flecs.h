@@ -25,15 +25,21 @@
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/* FLECS_LEGACY should be defined when building for C89 */
+/** FLECS_LEGACY
+ * Define when building for C89 
+ */
 // #define FLECS_LEGACY
 
-/* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
+/** FLECS_NO_DEPRECATED_WARNINGS
+ * disables deprecated warnings 
+ */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
-/* FLECS_ACCURATE_COUNTERS ensures that global counters used for statistics 
- * (such as the allocation counters in the OS API) are accurate in multithreaded
- * applications, at the cost of increased overhead. */
+/** FLECS_ACCURATE_COUNTERS
+ * Define to ensure that global counters used for statistics (such as the 
+ * allocation counters in the OS API) are accurate in multithreaded
+ * applications, at the cost of increased overhead. 
+ */
 // #define FLECS_ACCURATE_COUNTERS
 
 /* Make sure provided configuration is valid */
@@ -44,9 +50,10 @@
 #error "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
 #endif
 
-/* Flecs debugging enables asserts, which are used for input parameter checking
- * and cheap (constant time) sanity checks. There are lots of asserts in every
- * part of the code, so this will slow down code. */
+/** Flecs debugging enables asserts.
+ * Used for input parameter checking and cheap sanity checks. There are lots of 
+ * asserts in every part of the code, so this will slow down applications. 
+ */
 #if !defined(FLECS_DEBUG) && !defined(FLECS_NDEBUG) 
 #if defined(NDEBUG)
 #define FLECS_NDEBUG
@@ -55,8 +62,10 @@
 #endif
 #endif
 
-/* FLECS_SANITIZE enables expensive checks that can detect issues early. This
- * will severely slow down code. */
+/** FLECS_SANITIZE
+ * Enables expensive checks that can detect issues early. Recommended for
+ * running tests or when debugging issues. This will severely slow down code.
+ */
 // #define FLECS_SANITIZE
 #ifdef FLECS_SANITIZE
 #define FLECS_DEBUG /* If sanitized mode is enabled, so is debug mode */
@@ -66,13 +75,30 @@
  * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
  * chance that this gives you more information about the issue! */
 
-/* FLECS_SOFT_ASSERT disables aborting for recoverable errors */
+/** FLECS_SOFT_ASSERT 
+ * Define to not abort for recoverable errors, like invalid parameters. An error
+ * is still thrown to the console. This is recommended for when running inside a
+ * third party runtime, such as the Unreal editor.
+ * 
+ * Note that internal sanity checks (ECS_INTERNAL_ERROR) will still abort a
+ * process, as this gives more information than a (likely) subsequent crash.
+ * 
+ * When a soft assert occurs, the code will attempt to minimize the number of 
+ * side effects of the failed operation, but this may not always be possible.
+ * Even though an application may still be able to continue running after a soft 
+ * assert, it should be treated as if in an undefined state. 
+ */
 // #define FLECS_SOFT_ASSERT
 
-/* FLECS_KEEP_ASSERT keeps asserts in release mode. */
+/** FLECS_KEEP_ASSERT
+ * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
+ * NDEBUG is defined. Defining FLECS_KEEP_ASSERT ensures that asserts are not
+ * disabled. This define can be combined with FLECS_SOFT_ASSERT. 
+ */
 // #define FLECS_KEEP_ASSERT
 
-/* The following macros let you customize with which addons Flecs is built.
+/** Custom builds. 
+ * The following macros let you customize with which addons Flecs is built.
  * Without any addons Flecs is just a minimal ECS storage, but addons add 
  * features such as systems, scheduling and reflection. If an addon is disabled,
  * it is excluded from the build, so that it consumes no resources. By default
@@ -94,8 +120,6 @@
  *   ecs_log_set_level(0);
  * which outputs the full list of addons Flecs was compiled with.
  */
-
-/* Define if you want to create a custom build by whitelisting addons */
 // #define FLECS_CUSTOM_BUILD
 
 #ifndef FLECS_CUSTOM_BUILD
@@ -2383,9 +2407,6 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 /* Maximum number of components to add/remove in a single operation */
 #define ECS_ID_CACHE_SIZE (32)
 
-/* Maximum number of terms cached in static arrays */
-#define ECS_TERM_CACHE_SIZE (4)
-
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
 
@@ -2394,9 +2415,6 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /* Maximum number of query variables per query */
 #define ECS_VARIABLE_COUNT_MAX (64)
-
-/* Number of query variables in iterator cache */
-#define ECS_VARIABLE_CACHE_SIZE (4)
 
 /** @} */
 
@@ -2690,7 +2708,7 @@ struct ecs_observer_t {
     ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 
-    ecs_observable_t *observable;  /* Observable for observer */
+    ecs_observable_t *observable; /* Observable for observer */
 
     int32_t *last_event_id;     /* Last handled event id */
 
@@ -2761,7 +2779,7 @@ struct ecs_type_info_t {
     ecs_size_t alignment;    /* Alignment of type */
     ecs_type_hooks_t hooks;  /* Type hooks */
     ecs_entity_t component;  /* Handle to component (do not set) */
-    const char *name;        /* Type name */
+    const char *name;        /* Type name. */
 };
 
 /** @} */
@@ -3871,7 +3889,7 @@ typedef struct ecs_filter_desc_t {
     int32_t _canary;
 
     /* Terms of the filter. If a filter has more terms than 
-     * ECS_TERM_CACHE_SIZE use terms_buffer */
+     * ECS_TERM_DESC_CACHE_SIZE use terms_buffer */
     ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
 
     /* For filters with lots of terms an outside array can be provided. */
@@ -7006,10 +7024,7 @@ bool ecs_iter_next(
     ecs_iter_t *it);
 
 /** Cleanup iterator resources.
- * This operation cleans up any resources associated with the iterator. 
- * Iterators may contain allocated resources when the number of matched terms
- * exceeds ECS_TERM_CACHE_SIZE and/or when the source for the iterator requires
- * to keep state while iterating.
+ * This operation cleans up any resources associated with the iterator.
  * 
  * This operation should only be used when an iterator is not iterated until
  * completion (next has not yet returned false). When an iterator is iterated

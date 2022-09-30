@@ -7895,8 +7895,6 @@ void Filter_filter_1_term_no_alloc() {
 void Filter_filter_cache_size_terms_no_alloc() {
     ecs_world_t *world = ecs_mini();
 
-    test_int(ECS_TERM_CACHE_SIZE, 4);
-
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
@@ -7921,8 +7919,6 @@ void Filter_filter_cache_size_terms_no_alloc() {
 
 void Filter_filter_lt_cache_size_terms_no_alloc() {
     ecs_world_t *world = ecs_mini();
-
-    test_int(ECS_TERM_CACHE_SIZE, 4);
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);

@@ -923,8 +923,6 @@ void Query_query_only_from_entity_no_match_iter_alloc() {
     ECS_TAG(world, D);
     ECS_TAG(world, E);
 
-    test_assert(ECS_TERM_CACHE_SIZE <= 4); /* make sure to test iter alloc */
-
     ecs_new_entity(world, "e");
 
     ecs_query_t *q = ecs_query_new(world, "A(e), B(e), C(e), D(e), E(e)");
