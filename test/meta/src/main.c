@@ -534,6 +534,9 @@ void SerializeToJson_serialize_entity_w_meta_ids(void);
 void SerializeToJson_serialize_entity_color(void);
 void SerializeToJson_serialize_entity_union_relationship(void);
 void SerializeToJson_serialize_entity_union_relationship_w_labels(void);
+void SerializeToJson_serialize_entity_union_relationship_invalid_entity(void);
+void SerializeToJson_serialize_entity_union_relationship_invalid_entity_w_labels(void);
+void SerializeToJson_serialize_entity_w_union_property(void);
 void SerializeToJson_serialize_entity_w_union_property(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
 void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
@@ -2767,6 +2770,18 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_union_relationship_w_labels
     },
     {
+        "serialize_entity_union_relationship_invalid_entity",
+        SerializeToJson_serialize_entity_union_relationship_invalid_entity
+    },
+    {
+        "serialize_entity_union_relationship_invalid_entity_w_labels",
+        SerializeToJson_serialize_entity_union_relationship_invalid_entity_w_labels
+    },
+    {
+        "serialize_entity_w_union_property",
+        SerializeToJson_serialize_entity_w_union_property
+    },
+    {
         "serialize_entity_w_union_property",
         SerializeToJson_serialize_entity_w_union_property
     },
@@ -3624,7 +3639,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        114,
+        117,
         SerializeToJson_testcases
     },
     {
