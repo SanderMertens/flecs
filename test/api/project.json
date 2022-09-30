@@ -2289,7 +2289,8 @@
                 "table_observed_after_clear",
                 "table_observed_after_delete",
                 "table_observed_after_on_remove",
-                "table_observed_after_entity_flag"
+                "table_observed_after_entity_flag",
+                "table_create_leak_check"
             ]
         }, {
             "id": "Error",

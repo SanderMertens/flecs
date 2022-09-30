@@ -492,3 +492,26 @@ void Internals_table_observed_after_entity_flag() {
     ecs_fini(world);
 
 }
+
+void Internals_table_create_leak_check() {
+    ecs_world_t *world = ecs_mini();
+
+    int64_t max_block_count;
+
+    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+    max_block_count = ecs_block_allocator_alloc_count - 
+        ecs_block_allocator_free_count;
+    ecs_delete(world, tag);
+
+    for (int i = 0; i < 25000; i ++) {
+        tag = ecs_new_id(world);
+        ecs_add_id(world, e, tag);
+        ecs_delete(world, tag);
+    }
+
+    test_int(max_block_count, ecs_block_allocator_alloc_count - 
+        ecs_block_allocator_free_count);
+
+    ecs_fini(world);
+}

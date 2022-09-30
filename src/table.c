@@ -1078,7 +1078,8 @@ void flecs_table_free(
     }
 
     flecs_wfree_n(world, int32_t, table->storage_count + 1, table->dirty_state);
-    flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, table->storage_map);
+    flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, 
+        table->storage_map);
     flecs_table_records_unregister(world, table);
 
     ecs_table_t *storage_table = table->storage_table;

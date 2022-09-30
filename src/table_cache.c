@@ -192,7 +192,6 @@ void* ecs_table_cache_remove(
     ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
 
     flecs_table_cache_list_remove(cache, elem);
-
     ecs_map_remove(&cache->index, table->id);
 
     return elem;

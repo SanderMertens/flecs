@@ -3391,7 +3391,8 @@ void flecs_table_free(
     }
 
     flecs_wfree_n(world, int32_t, table->storage_count + 1, table->dirty_state);
-    flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, table->storage_map);
+    flecs_wfree_n(world, int32_t, table->storage_count + table->type.count, 
+        table->storage_map);
     flecs_table_records_unregister(world, table);
 
     ecs_table_t *storage_table = table->storage_table;
@@ -14192,19 +14193,25 @@ void ecs_map_fini(
 {
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
 #ifdef FLECS_SANITIZE
-    /* Free buckets in sanirized mode, so we can replace the allocator with
-        * regular malloc/free and use asan/valgrind to find memory errors. */
-    ecs_bucket_t *bucket = map->buckets;
-    while ((bucket != map->buckets_end)) {
-        ecs_bucket_entry_t *entry = bucket->first;
-        while (entry) {
-            ecs_bucket_entry_t *next = entry->next;
-            flecs_bfree(map->entry_allocator, entry);
-            entry = next;
-        }
-        bucket ++;
-    }
+    bool sanitize = true;
+#else
+    bool sanitize = false;
 #endif
+
+    /* Free buckets in sanirized mode, so we can replace the allocator with
+     * regular malloc/free and use asan/valgrind to find memory errors. */
+    if (map->shared_allocator || sanitize) {
+        ecs_bucket_t *bucket = map->buckets;
+        while ((bucket != map->buckets_end)) {
+            ecs_bucket_entry_t *entry = bucket->first;
+            while (entry) {
+                ecs_bucket_entry_t *next = entry->next;
+                flecs_bfree(map->entry_allocator, entry);
+                entry = next;
+            }
+            bucket ++;
+        }
+    }
 
     if (map->entry_allocator && !map->shared_allocator) {
         flecs_ballocator_free(map->entry_allocator);
@@ -44550,7 +44557,6 @@ void* ecs_table_cache_remove(
     ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
 
     flecs_table_cache_list_remove(cache, elem);
-
     ecs_map_remove(&cache->index, table->id);
 
     return elem;
