@@ -1512,10 +1512,10 @@ ecs_map_t* ecs_map_copy(
 #define FLECS_ALLOCATOR_H
 
 
-extern int64_t ecs_block_allocator_alloc_count;
-extern int64_t ecs_block_allocator_free_count;
-extern int64_t ecs_stack_allocator_alloc_count;
-extern int64_t ecs_stack_allocator_free_count;
+FLECS_DBG_API extern int64_t ecs_block_allocator_alloc_count;
+FLECS_DBG_API extern int64_t ecs_block_allocator_free_count;
+FLECS_DBG_API extern int64_t ecs_stack_allocator_alloc_count;
+FLECS_DBG_API extern int64_t ecs_stack_allocator_free_count;
 
 typedef struct ecs_allocator_t {
     struct ecs_map_t sizes; /* <size, block_allocator_t> */
