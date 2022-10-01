@@ -21,6 +21,10 @@ void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);  
 
+bool flecs_defer_cmd(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
 bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
@@ -30,12 +34,6 @@ bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t component);
-
-bool flecs_defer_new(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id);
 
 bool flecs_defer_clone(
     ecs_world_t *world,

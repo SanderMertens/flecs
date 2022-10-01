@@ -976,28 +976,6 @@ error:
 }
 
 static
-void new(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t *to_add)
-{
-    int32_t i, count = to_add->count;
-    ecs_table_t *table = &world->store.root;
-    
-    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
-    flecs_table_diff_builder_init(world, &diff);
-    for (i = 0; i < count; i ++) {
-        table = flecs_find_table_add(
-            world, table, to_add->array[i], &diff);
-    }
-
-    ecs_table_diff_t table_diff;
-    flecs_table_diff_build_noalloc(&diff, &table_diff);
-    flecs_new_entity(world, entity, NULL, table, &table_diff, true, true);
-    flecs_table_diff_builder_fini(world, &diff);
-}
-
-static
 const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1546,7 +1524,7 @@ ecs_entity_t ecs_new_w_id(
         }
     }
     if (to_add.count) {
-        if (flecs_defer_new(world, stage, entity, to_add.array[0])) {
+        if (flecs_defer_add(world, stage, entity, to_add.array[0])) {
             int i;
             for (i = 1; i < to_add.count; i ++) {
                 flecs_defer_add(world, stage, entity, to_add.array[i]);
@@ -1554,9 +1532,22 @@ ecs_entity_t ecs_new_w_id(
             return entity;
         }
 
-        new(world, entity, &to_add);
+        int32_t i, count = to_add.count;
+        ecs_table_t *table = &world->store.root;
+        
+        ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+        flecs_table_diff_builder_init(world, &diff);
+        for (i = 0; i < count; i ++) {
+            table = flecs_find_table_add(
+                world, table, to_add.array[i], &diff);
+        }
+
+        ecs_table_diff_t table_diff;
+        flecs_table_diff_build_noalloc(&diff, &table_diff);
+        flecs_new_entity(world, entity, NULL, table, &table_diff, true, true);
+        flecs_table_diff_builder_fini(world, &diff);
     } else {
-        if (flecs_defer_new(world, stage, entity, 0)) {
+        if (flecs_defer_cmd(world, stage)) {
             return entity;
         }
 
@@ -4247,8 +4238,11 @@ void flecs_cmd_batch_for_entity(
     if (r) {
         table = r->table;
     } else if (!flecs_entities_is_alive(world, entity)) {
+        world->info.cmd.discard_count ++;
         return;
     }
+
+    world->info.cmd.batched_entity_count ++;
 
     ecs_cmd_t *cmd;
     int32_t next_for_entity;
@@ -4287,9 +4281,9 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
-        case EcsOpNew:
         case EcsOpAdd:
             table = flecs_find_table_add(world, table, id, diff);
+            world->info.cmd.batched_command_count ++;
             break;
         case EcsOpSet:
         case EcsOpMut:
@@ -4299,12 +4293,15 @@ void flecs_cmd_batch_for_entity(
             /* Don't add for emplace, as this requires a special call to ensure
              * the constructor is not invoked for the component */
             has_set = true;
+            world->info.cmd.batched_command_count ++;
             break;
         case EcsOpRemove:
             table = flecs_find_table_remove(world, table, id, diff);
+            world->info.cmd.batched_command_count ++;
             break;
         case EcsOpClear:
             table = NULL;
+            world->info.cmd.batched_command_count ++;
             break;
         default:
             break;
@@ -4347,6 +4344,8 @@ void flecs_cmd_batch_for_entity(
                 if (!flecs_id_record_get_table(idr, table)) {
                     /* Component was deleted */
                     cmd->kind = EcsOpSkip;
+                    world->info.cmd.batched_command_count --;
+                    world->info.cmd.discard_count ++;
                 }
                 break;
             }
@@ -4415,7 +4414,7 @@ bool flecs_defer_end(
                     (e && !ecs_is_alive(world, e) && 
                         flecs_entities_exists(world, e))) 
                 {
-                    world->info.discard_count ++;
+                    world->info.cmd.discard_count ++;
                     flecs_discard_cmd(world, cmd);
                     continue;
                 }
@@ -4423,20 +4422,23 @@ bool flecs_defer_end(
                 ecs_id_t id = cmd->id;
 
                 switch(kind) {
-                case EcsOpNew:
                 case EcsOpAdd:
                     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (flecs_remove_invalid(world, id, &id)) {
                         if (id) {
-                            world->info.add_count ++;
+                            world->info.cmd.add_count ++;
                             flecs_add_id(world, e, id);
+                        } else {
+                            world->info.cmd.discard_count ++;
                         }
                     } else {
+                        world->info.cmd.discard_count ++;
                         ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
                     flecs_remove_id(world, e, id);
+                    world->info.cmd.remove_count ++;
                     break;
                 case EcsOpClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
@@ -4445,6 +4447,7 @@ bool flecs_defer_end(
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
+                    world->info.cmd.set_count ++;
                     break;
                 case EcsOpEmplace:
                     if (merge_to_world) {
@@ -4453,35 +4456,44 @@ bool flecs_defer_end(
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
+                    world->info.cmd.get_mut_count ++;
                     break;
                 case EcsOpMut:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
+                    world->info.cmd.get_mut_count ++;
                     break;
                 case EcsOpModified:
                     if (ecs_has_id(world, e, id)) {
                         ecs_modified_id(world, e, id);
                     }
+                    world->info.cmd.modified_count ++;
                     break;
                 case EcsOpDelete: {
                     ecs_delete(world, e);
+                    world->info.cmd.delete_count ++;
                     break;
                 }
                 case EcsOpClear:
                     ecs_clear(world, e);
+                    world->info.cmd.clear_count ++;
                     break;
                 case EcsOpOnDeleteAction:
                     flecs_on_delete(world, id, e);
+                    world->info.cmd.other_count ++;
                     break;
                 case EcsOpEnable:
                     ecs_enable_id(world, e, id, true);
+                    world->info.cmd.other_count ++;
                     break;
                 case EcsOpDisable:
                     ecs_enable_id(world, e, id, false);
+                    world->info.cmd.other_count ++;
                     break;
                 case EcsOpBulkNew:
                     flecs_flush_bulk_new(world, cmd);
+                    world->info.cmd.other_count ++;
                     continue;
                 case EcsOpSkip:
                     break;

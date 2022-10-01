@@ -407,7 +407,6 @@ typedef struct ecs_stage_allocators_t {
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
-    EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,
     EcsOpAdd,

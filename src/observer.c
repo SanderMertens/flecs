@@ -11,6 +11,7 @@ void flecs_observer_invoke(ecs_iter_t *it) {
         ecs_os_free(path);
         ecs_log_push_3();
     }
+    it->real_world->info.observers_ran_frame ++;
     it->callback(it);
     ecs_table_unlock(it->world, it->table);
     ecs_log_pop_3();

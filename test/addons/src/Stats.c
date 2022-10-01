@@ -249,20 +249,20 @@ void Stats_get_entity_count() {
     ecs_world_stats_get(world, &stats);
 
     float count;
-    float prev = count = stats.entity_count.gauge.avg[stats.t];
+    float prev = count = stats.entities.count.gauge.avg[stats.t];
     test_assert(count != 0);
 
     ecs_entity_t e = ecs_new_id(world);
 
     ecs_world_stats_get(world, &stats);
-    count = stats.entity_count.gauge.avg[stats.t];
+    count = stats.entities.count.gauge.avg[stats.t];
     test_int(count - prev, 1);
 
     ecs_delete(world, e);
 
     prev = count;
     ecs_world_stats_get(world, &stats);
-    count = stats.entity_count.gauge.avg[stats.t];
+    count = stats.entities.count.gauge.avg[stats.t];
     test_int(count - prev, -1);
 
     ecs_fini(world);
@@ -275,21 +275,21 @@ void Stats_get_not_alive_entity_count() {
     ecs_world_stats_get(world, &stats);
 
     float count;
-    float prev = count = stats.entity_not_alive_count.gauge.avg[stats.t];
+    float prev = count = stats.entities.not_alive_count.gauge.avg[stats.t];
     test_assert(count == 0);
 
     ecs_entity_t e = ecs_new_id(world);
 
     prev = count;
     ecs_world_stats_get(world, &stats);
-    count = stats.entity_not_alive_count.gauge.avg[stats.t];
+    count = stats.entities.not_alive_count.gauge.avg[stats.t];
     test_int(count - prev, 0);
 
     ecs_delete(world, e);
 
     prev = count;
     ecs_world_stats_get(world, &stats);
-    count = stats.entity_not_alive_count.gauge.avg[stats.t];
+    count = stats.entities.not_alive_count.gauge.avg[stats.t];
     test_int(count - prev, 1);
 
     ecs_fini(world);

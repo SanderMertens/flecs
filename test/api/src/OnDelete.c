@@ -1292,7 +1292,7 @@ void OnDelete_stresstest_many_objects() {
     ecs_world_stats_t s = {0};
     ecs_world_stats_get(world, &s); 
 
-    float table_count = s.table_count.gauge.avg[s.t];
+    float table_count = s.tables.count.gauge.avg[s.t];
 
     /* Precreate relationships so we get different relationship ids */
     ecs_entity_t relationships[100];
@@ -1313,7 +1313,7 @@ void OnDelete_stresstest_many_objects() {
     
     ecs_world_stats_get(world, &s);
 
-    test_int(s.table_count.gauge.avg[s.t] - table_count, 1);
+    test_int(s.tables.count.gauge.avg[s.t] - table_count, 1);
 
     ecs_fini(world);
 }
@@ -1328,7 +1328,7 @@ void OnDelete_stresstest_many_relations() {
     ecs_world_stats_t s = {0};
     ecs_world_stats_get(world, &s); 
 
-    float table_count = s.table_count.gauge.avg[s.t];
+    float table_count = s.tables.count.gauge.avg[s.t];
 
     /* Precreate objects so we get different relationship ids */
     ecs_entity_t objects[100];
@@ -1349,7 +1349,7 @@ void OnDelete_stresstest_many_relations() {
     
     ecs_world_stats_get(world, &s);
 
-    test_int(s.table_count.gauge.avg[s.t] - table_count, 1);
+    test_int(s.tables.count.gauge.avg[s.t] - table_count, 1);
 
     ecs_fini(world);
 }
@@ -1370,7 +1370,7 @@ void OnDelete_stresstest_many_objects_on_delete() {
 
     ecs_world_stats_t s = {0};
     ecs_world_stats_get(world, &s); 
-    float table_count = s.table_count.gauge.avg[s.t];
+    float table_count = s.tables.count.gauge.avg[s.t];
 
     for (ri = 0; ri < 100; ri ++) {    
         for (i = 0; i < 100; i ++) {
@@ -1384,7 +1384,7 @@ void OnDelete_stresstest_many_objects_on_delete() {
     }
     
     ecs_world_stats_get(world, &s);
-    test_int(s.table_count.gauge.avg[s.t] - table_count, 0);
+    test_int(s.tables.count.gauge.avg[s.t] - table_count, 0);
 
     ecs_fini(world);
 }
@@ -1410,7 +1410,7 @@ void OnDelete_stresstest_many_relations_on_delete() {
 
     ecs_world_stats_t s = {0};
     ecs_world_stats_get(world, &s); 
-    float table_count = s.table_count.gauge.avg[s.t];    
+    float table_count = s.tables.count.gauge.avg[s.t];    
 
     for (oi = 0; oi < COUNT; oi ++) {    
         for (i = 0; i < COUNT; i ++) {
@@ -1427,7 +1427,7 @@ void OnDelete_stresstest_many_relations_on_delete() {
     
     ecs_world_stats_get(world, &s);
 
-    test_int(s.table_count.gauge.avg[s.t] - table_count, 0);
+    test_int(s.tables.count.gauge.avg[s.t] - table_count, 0);
 
     #undef COUNT
 

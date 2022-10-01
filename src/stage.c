@@ -68,7 +68,7 @@ void flecs_stages_merge(
     bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
         EcsWorldMeasureFrameTime);
 
-    ecs_time_t t_start;
+    ecs_time_t t_start = {0};
     if (measure_frame_time) {
         ecs_os_get_time(&t_start);
     }
@@ -137,7 +137,6 @@ bool flecs_defer_begin(
     return (++ stage->defer) == 1;
 }
 
-static
 bool flecs_defer_cmd(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -154,39 +153,6 @@ bool flecs_defer_cmd(
 
     /* Deferring is disabled, defer while operation is executed */
     stage->defer ++;
-    return false;
-}
-
-static
-bool flecs_defer_add_remove(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_cmd_kind_t cmd_kind,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    if (flecs_defer_cmd(world, stage)) {
-        if (!id) {
-            return true;
-        }
-
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
-        if (cmd) {
-            cmd->kind = cmd_kind;
-            cmd->id = id;
-            cmd->entity = entity;
-
-            if (cmd_kind == EcsOpNew) {
-                world->info.new_count ++;
-            } else if (cmd_kind == EcsOpAdd) {
-                world->info.add_count ++;
-            } else if (cmd_kind == EcsOpRemove) {
-                world->info.remove_count ++;
-            }
-        }
-
-        return true;
-    }
     return false;
 }
 
@@ -238,7 +204,6 @@ bool flecs_defer_delete(
         if (cmd) {
             cmd->kind = EcsOpDelete;
             cmd->entity = entity;
-            world->info.delete_count ++;
         }
         return true;
     }
@@ -255,7 +220,6 @@ bool flecs_defer_clear(
         if (cmd) {
             cmd->kind = EcsOpClear;
             cmd->entity = entity;
-            world->info.clear_count ++;
         }
         return true;
     }
@@ -273,7 +237,6 @@ bool flecs_defer_on_delete_action(
         cmd->kind = EcsOpOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
-        world->info.clear_count ++;
         return true;
     }
     return false;
@@ -307,7 +270,6 @@ bool flecs_defer_bulk_new(
 {
     if (flecs_defer_cmd(world, stage)) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
-        world->info.bulk_new_count ++;
 
         /* Use ecs_new_id as this is thread safe */
         int i;
@@ -331,22 +293,23 @@ bool flecs_defer_bulk_new(
     return false;
 }
 
-bool flecs_defer_new(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{   
-    return flecs_defer_add_remove(world, stage, EcsOpNew, entity, id);
-}
-
 bool flecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id)
-{   
-    return flecs_defer_add_remove(world, stage, EcsOpAdd, entity, id);
+{
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpAdd;
+            cmd->id = id;
+            cmd->entity = entity;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool flecs_defer_remove(
@@ -355,7 +318,17 @@ bool flecs_defer_remove(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return flecs_defer_add_remove(world, stage, EcsOpRemove, entity, id);
+    if (flecs_defer_cmd(world, stage)) {
+        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpRemove;
+            cmd->id = id;
+            cmd->entity = entity;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool flecs_defer_set(
@@ -468,8 +441,7 @@ bool flecs_defer_set(
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = op_value;
-    
-        world->info.set_count ++;
+
         return true;
     }
 error:

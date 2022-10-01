@@ -915,8 +915,9 @@ typedef struct ecs_world_info_t {
     ecs_ftime_t time_scale;           /* Time scale applied to delta_time */
     ecs_ftime_t target_fps;           /* Target fps */
     ecs_ftime_t frame_time_total;     /* Total time spent processing a frame */
-    float system_time_total;          /* Total time spent in systems */
-    float merge_time_total;           /* Total time spent in merges */
+    ecs_ftime_t system_time_total;    /* Total time spent in systems */
+    ecs_ftime_t emit_time_total;      /* Total time spent notifying observers */
+    ecs_ftime_t merge_time_total;     /* Total time spent in merges */
     ecs_ftime_t world_time_total;     /* Time elapsed in simulation */
     ecs_ftime_t world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
@@ -928,7 +929,8 @@ typedef struct ecs_world_info_t {
     int32_t table_create_total;       /* Total number of times a table was created */
     int32_t table_delete_total;       /* Total number of times a table was deleted */
     int32_t pipeline_build_count_total; /* Total number of pipeline builds */
-    int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
+    int32_t systems_ran_frame;        /* Total number of systems ran in last frame */
+    int32_t observers_ran_frame;      /* Total number of times observer was invoked */
 
     int32_t id_count;                 /* Number of ids in the world (excluding wildcards) */
     int32_t tag_id_count;             /* Number of tag (no data) ids in the world */
@@ -943,15 +945,20 @@ typedef struct ecs_world_info_t {
     int32_t table_record_count;       /* Total number of table records (entries in table caches) */
     int32_t table_storage_count;      /* Total number of table storages */
 
-    /* -- Defered operation counts -- */
-    int32_t new_count;
-    int32_t bulk_new_count;
-    int32_t delete_count;
-    int32_t clear_count;
-    int32_t add_count;
-    int32_t remove_count;
-    int32_t set_count;
-    int32_t discard_count;
+    /* -- Command counts -- */
+    struct {
+        int32_t add_count;             /* add commands processed */
+        int32_t remove_count;          /* remove commands processed */
+        int32_t delete_count;          /* delete commands processed */
+        int32_t clear_count;           /* clear commands processed */
+        int32_t set_count;             /* set commands processed */
+        int32_t get_mut_count;         /* get_mut/emplace commands processed */
+        int32_t modified_count;        /* modified commands processed */
+        int32_t other_count;           /* other commands processed */
+        int32_t discard_count;         /* commands discarded, happens when entity is no longer alive when running the command */
+        int32_t batched_entity_count;  /* entities for which commands were batched */
+        int32_t batched_command_count; /* commands batched */
+    } cmd;
 
     const char *name_prefix;          /* Value set by ecs_set_name_prefix. Used
                                        * to remove library prefixes of symbol

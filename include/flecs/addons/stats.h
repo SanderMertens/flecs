@@ -39,72 +39,95 @@ typedef union ecs_metric_t {
 typedef struct ecs_world_stats_t {
     int32_t first_;
 
-    ecs_metric_t entity_count;               /* Number of entities */
-    ecs_metric_t entity_not_alive_count;     /* Number of not alive (recyclable) entity ids */
+    /* Entities */
+    struct {
+        ecs_metric_t count;               /* Number of entities */
+        ecs_metric_t not_alive_count;     /* Number of not alive (recyclable) entity ids */
+    } entities;
 
     /* Components and ids */
-    ecs_metric_t id_count;                   /* Number of ids (excluding wildcards) */
-    ecs_metric_t tag_id_count;               /* Number of tag ids (ids without data) */
-    ecs_metric_t component_id_count;         /* Number of components ids (ids with data) */
-    ecs_metric_t pair_id_count;              /* Number of pair ids */
-    ecs_metric_t wildcard_id_count;          /* Number of wildcard ids */
-    ecs_metric_t component_count;            /* Number of components  (non-zero sized types) */
-    ecs_metric_t id_create_count;            /* Number of times id has been created */
-    ecs_metric_t id_delete_count;            /* Number of times id has been deleted */
+    struct {
+        ecs_metric_t count;               /* Number of ids (excluding wildcards) */
+        ecs_metric_t tag_count;           /* Number of tag ids (ids without data) */
+        ecs_metric_t component_count;     /* Number of components ids (ids with data) */
+        ecs_metric_t pair_count;          /* Number of pair ids */
+        ecs_metric_t wildcard_count;      /* Number of wildcard ids */
+        ecs_metric_t type_count;          /* Number of registered types */
+        ecs_metric_t create_count;        /* Number of times id has been created */
+        ecs_metric_t delete_count;        /* Number of times id has been deleted */
+    } ids;
 
     /* Tables */
-    ecs_metric_t table_count;                /* Number of tables */
-    ecs_metric_t empty_table_count;          /* Number of empty tables */
-    ecs_metric_t tag_table_count;            /* Number of tables with only tags */
-    ecs_metric_t trivial_table_count;        /* Number of tables with only trivial components */
-    ecs_metric_t table_record_count;         /* Number of table cache records */
-    ecs_metric_t table_storage_count;        /* Number of table storages */
-    ecs_metric_t table_create_count;         /* Number of times table has been created */
-    ecs_metric_t table_delete_count;         /* Number of times table has been deleted */
+    struct {
+        ecs_metric_t count;                /* Number of tables */
+        ecs_metric_t empty_count;          /* Number of empty tables */
+        ecs_metric_t tag_only_count;       /* Number of tables with only tags */
+        ecs_metric_t trivial_only_count;   /* Number of tables with only trivial components */
+        ecs_metric_t record_count;         /* Number of table cache records */
+        ecs_metric_t storage_count;        /* Number of table storages */
+        ecs_metric_t create_count;         /* Number of times table has been created */
+        ecs_metric_t delete_count;         /* Number of times table has been deleted */
+    } tables;
 
     /* Queries & events */
-    ecs_metric_t query_count;                /* Number of queries */
-    ecs_metric_t observer_count;             /* Number of observers */
-    ecs_metric_t system_count;               /* Number of systems */
+    struct {
+        ecs_metric_t query_count;          /* Number of queries */
+        ecs_metric_t observer_count;       /* Number of observers */
+        ecs_metric_t system_count;         /* Number of systems */
+    } queries;
 
-    /* Deferred operations */
-    ecs_metric_t new_count;
-    ecs_metric_t bulk_new_count;
-    ecs_metric_t delete_count;
-    ecs_metric_t clear_count;
-    ecs_metric_t add_count;
-    ecs_metric_t remove_count;
-    ecs_metric_t set_count;
-    ecs_metric_t discard_count;
+    /* Commands */
+    struct {
+        ecs_metric_t add_count;
+        ecs_metric_t remove_count;
+        ecs_metric_t delete_count;
+        ecs_metric_t clear_count;
+        ecs_metric_t set_count;
+        ecs_metric_t get_mut_count;
+        ecs_metric_t modified_count;
+        ecs_metric_t other_count;
+        ecs_metric_t discard_count;
+        ecs_metric_t batched_entity_count;
+        ecs_metric_t batched_count;
+    } commands;
 
-    /* Timing */
-    ecs_metric_t world_time_total_raw;       /* Actual time passed since simulation start (first time progress() is called) */
-    ecs_metric_t world_time_total;           /* Simulation time passed since simulation start. Takes into account time scaling */
-    ecs_metric_t frame_time_total;           /* Time spent processing a frame. Smaller than world_time_total when load is not 100% */
-    ecs_metric_t system_time_total;          /* Time spent on processing systems. */
-    ecs_metric_t merge_time_total;           /* Time spent on merging deferred actions. */
-    ecs_metric_t fps;                        /* Frames per second. */
-    ecs_metric_t delta_time;                 /* Delta_time. */
-    
-    /* Frame data */
-    ecs_metric_t frame_count_total;          /* Number of frames processed. */
-    ecs_metric_t merge_count_total;          /* Number of merges executed. */
-    ecs_metric_t pipeline_build_count_total; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
-    ecs_metric_t systems_ran_frame;          /* Number of systems ran in the last frame. */
+    struct {
+        /* Frame data */
+        ecs_metric_t frame_count;          /* Number of frames processed. */
+        ecs_metric_t merge_count;          /* Number of merges executed. */
+        ecs_metric_t pipeline_build_count; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
+        ecs_metric_t systems_ran;          /* Number of systems ran. */
+        ecs_metric_t observers_ran;        /* Number of times an observer was invoked. */
+        ecs_metric_t event_emit_count;     /* Number of events emitted */
+    } frame;
 
-    /* Memory allocation data */
-    ecs_metric_t alloc_count;                /* Allocs per frame */
-    ecs_metric_t realloc_count;              /* Reallocs per frame */
-    ecs_metric_t free_count;                 /* Frees per frame */
-    ecs_metric_t outstanding_alloc_count;    /* Difference between allocs & frees */
+    struct {
+        /* Timing */
+        ecs_metric_t world_time_raw;       /* Actual time passed since simulation start (first time progress() is called) */
+        ecs_metric_t world_time;           /* Simulation time passed since simulation start. Takes into account time scaling */
+        ecs_metric_t frame_time;           /* Time spent processing a frame. Smaller than world_time_total when load is not 100% */
+        ecs_metric_t system_time;          /* Time spent on running systems. */
+        ecs_metric_t emit_time;            /* Time spent on notifying observers. */
+        ecs_metric_t merge_time;           /* Time spent on merging commands. */
+        ecs_metric_t fps;                  /* Frames per second. */
+        ecs_metric_t delta_time;           /* Delta_time. */
+    } performance;
 
-    /* Memory allocator data */
-    ecs_metric_t block_alloc_count;           /* Block allocations per frame */
-    ecs_metric_t block_free_count;            /* Block frees per frame */
-    ecs_metric_t block_outstanding_alloc_count; /* Difference between allocs & frees */
-    ecs_metric_t stack_alloc_count;           /* Page allocations per frame */
-    ecs_metric_t stack_free_count;            /* Page frees per frame */
-    ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
+    struct {
+        /* Memory allocation data */
+        ecs_metric_t alloc_count;          /* Allocs per frame */
+        ecs_metric_t realloc_count;        /* Reallocs per frame */
+        ecs_metric_t free_count;           /* Frees per frame */
+        ecs_metric_t outstanding_alloc_count;    /* Difference between allocs & frees */
+
+        /* Memory allocator data */
+        ecs_metric_t block_alloc_count;    /* Block allocations per frame */
+        ecs_metric_t block_free_count;     /* Block frees per frame */
+        ecs_metric_t block_outstanding_alloc_count; /* Difference between allocs & frees */
+        ecs_metric_t stack_alloc_count;    /* Page allocations per frame */
+        ecs_metric_t stack_free_count;     /* Page frees per frame */
+        ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
+    } memory;
 
     int32_t last_;
 

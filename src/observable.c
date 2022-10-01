@@ -108,6 +108,11 @@ void flecs_emit(
     int32_t row = desc->offset;
     int32_t i, count = desc->count;
     ecs_entity_t relationship = desc->relationship;
+    ecs_time_t t = {0};
+    bool measure_time = world->flags & EcsWorldMeasureSystemTime;
+    if (measure_time) {
+        ecs_time_measure(&t);
+    }
 
     if (!count) {
         count = ecs_table_count(table) - row;
@@ -149,7 +154,7 @@ void flecs_emit(
 
     if (count && !desc->table_event) {
         if (!table->observed_count) {
-            return;
+            goto done;
         }
 
         ecs_record_t **recs = ecs_vec_get_t(
@@ -169,8 +174,12 @@ void flecs_emit(
             }
         }
     }
-    
+
+done:
 error:
+    if (measure_time) {
+        world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
+    }
     return;
 }
 
