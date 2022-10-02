@@ -251,7 +251,9 @@ typedef struct ecs_mixins_t ecs_mixins_t;
  */
 
 /* Maximum number of components to add/remove in a single operation */
+#ifndef ECS_ID_CACHE_SIZE
 #define ECS_ID_CACHE_SIZE (32)
+#endif
 
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
