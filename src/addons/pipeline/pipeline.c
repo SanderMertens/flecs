@@ -588,7 +588,12 @@ void ecs_run_pipeline(
             ran_since_merge ++;
             world->info.systems_ran_frame ++;
 
-            if (op != op_last && ran_since_merge == op->count) {
+            if (ran_since_merge == op->count) {
+                if (op == op_last) {
+                    ecs_iter_fini(it);
+                    goto done;
+                }
+
                 ran_since_merge = 0;
 
                 /* If the set of matched systems changed as a result of the
@@ -610,6 +615,7 @@ void ecs_run_pipeline(
         }
     }
 
+done:
     ecs_worker_end(stage->thread_ctx);
 }
 

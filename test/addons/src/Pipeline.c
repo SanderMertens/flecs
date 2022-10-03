@@ -1819,3 +1819,72 @@ void Pipeline_no_staging_after_inactive_system() {
 
     ecs_fini(world);
 }
+
+ECS_COMPONENT_DECLARE(Position);
+
+static ecs_entity_t create_position_e = 0;
+
+static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
+    ecs_defer_end(it->world);
+    
+    create_position_e = ecs_new_id(it->world);
+    ecs_set(it->world, create_position_e, Position, {0, 0});
+    
+    ecs_filter_t *f = ecs_filter(it->world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_iter_t fit = ecs_filter_iter(it->world, f);
+    test_bool(true, ecs_filter_next(&fit));
+    test_int(fit.count, 1);
+    test_uint(fit.entities[0], create_position_e);
+    test_bool(false, ecs_filter_next(&fit));
+
+    ecs_filter_fini(f);
+
+    ecs_defer_begin(it->world);
+    no_staging_system_invoked ++;
+}
+
+static int set_position_invoked = 0;
+
+static void SetPosition(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 1);
+    set_position_invoked ++;
+}
+
+void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreatePosition,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = SetPosition
+    });
+
+    ecs_progress(world, 0);
+    test_int(no_staging_system_invoked, 1);
+    test_int(set_position_invoked, 0);
+
+    test_assert(create_position_e != 0);
+    test_assert(ecs_has(world, create_position_e, Position));
+    ecs_delete(world, create_position_e);
+    
+    ecs_progress(world, 0);
+    test_int(no_staging_system_invoked, 2);
+    test_int(set_position_invoked, 1);
+
+    ecs_fini(world);
+}

@@ -9421,7 +9421,7 @@ void flecs_cmd_batch_for_entity(
                 }
                 /* Entity should remain alive and id is still valid */
             } else {
-                /* Id was no longer valid and had a Delete policy) */
+                /* Id was no longer valid and had a Delete policy */
                 cmd->kind = EcsOpSkip;
                 ecs_delete(world, entity);
                 flecs_table_diff_builder_clear(diff);
@@ -16683,7 +16683,12 @@ void ecs_run_pipeline(
             ran_since_merge ++;
             world->info.systems_ran_frame ++;
 
-            if (op != op_last && ran_since_merge == op->count) {
+            if (ran_since_merge == op->count) {
+                if (op == op_last) {
+                    ecs_iter_fini(it);
+                    goto done;
+                }
+
                 ran_since_merge = 0;
 
                 /* If the set of matched systems changed as a result of the
@@ -16705,6 +16710,7 @@ void ecs_run_pipeline(
         }
     }
 
+done:
     ecs_worker_end(stage->thread_ctx);
 }
 

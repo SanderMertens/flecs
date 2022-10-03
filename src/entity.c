@@ -4271,7 +4271,7 @@ void flecs_cmd_batch_for_entity(
                 }
                 /* Entity should remain alive and id is still valid */
             } else {
-                /* Id was no longer valid and had a Delete policy) */
+                /* Id was no longer valid and had a Delete policy */
                 cmd->kind = EcsOpSkip;
                 ecs_delete(world, entity);
                 flecs_table_diff_builder_clear(diff);
