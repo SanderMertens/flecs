@@ -459,7 +459,7 @@ void Pipeline_merge_after_not_out() {
 
     ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] !Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -517,8 +517,8 @@ void Pipeline_merge_after_staged_in_out() {
 
     /* Requires merge, because getting value in 2nd system cannot access data
      * written to stage from first system */
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, Velocity());
-    ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity());
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] Velocity());
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, [in] Velocity());
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -543,23 +543,17 @@ void Pipeline_merge_after_staged_inout_main_implicit_inout() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, E, Position, Velocity);
+    ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, Velocity());
-    ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity);
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position, Velocity());
+    ECS_SYSTEM(world, SysB, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_frame, 2);
-    test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 1);
-
-    test_int(sys_out_invoked, 1);
-    test_int(sys_in_invoked, 1);
-
-    ecs_progress(world, 1);
+    test_int(stats->systems_ran_frame, 1);
+    test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
     ecs_fini(world);
@@ -1055,7 +1049,7 @@ void Pipeline_stage_write_before_read() {
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position(), Position",
+        .query.filter.expr = "[out] Position(), Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
@@ -1821,8 +1815,13 @@ void Pipeline_no_staging_after_inactive_system() {
 }
 
 ECS_COMPONENT_DECLARE(Position);
+ECS_COMPONENT_DECLARE(Velocity);
 
 static ecs_entity_t create_position_e = 0;
+static ecs_entity_t create_velocity_e = 0;
+
+static int no_staging_create_position_invoked = 0;
+static int no_staging_create_velocity_invoked = 0;
 
 static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
     ecs_defer_end(it->world);
@@ -1843,13 +1842,39 @@ static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
     ecs_filter_fini(f);
 
     ecs_defer_begin(it->world);
-    no_staging_system_invoked ++;
+    no_staging_create_position_invoked ++;
 }
 
-static int set_position_invoked = 0;
+static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
+    ecs_defer_end(it->world);
+    
+    create_velocity_e = ecs_new_id(it->world);
+    ecs_set(it->world, create_velocity_e, Velocity, {0, 0});
+    
+    ecs_filter_t *f = ecs_filter(it->world, {
+        .terms = {{ ecs_id(Velocity) }}
+    });
 
+    ecs_iter_t fit = ecs_filter_iter(it->world, f);
+    test_bool(true, ecs_filter_next(&fit));
+    test_int(fit.count, 1);
+    test_uint(fit.entities[0], create_velocity_e);
+    test_bool(false, ecs_filter_next(&fit));
+
+    ecs_filter_fini(f);
+
+    ecs_defer_begin(it->world);
+    no_staging_create_velocity_invoked ++;
+}
+
+static int read_position_invoked = 0;
 static void ReadPosition(ecs_iter_t *it) {
-    set_position_invoked ++;
+    read_position_invoked ++;
+}
+
+static int read_velocity_invoked = 0;
+static void ReadVelocity(ecs_iter_t *it) {
+    read_velocity_invoked ++;
 }
 
 void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
@@ -1874,24 +1899,85 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
     });
 
     ecs_progress(world, 0);
-    test_int(no_staging_system_invoked, 1);
-    test_int(set_position_invoked, 0);
+    test_int(no_staging_create_position_invoked, 1);
+    test_int(read_position_invoked, 0);
 
     test_assert(create_position_e != 0);
     test_assert(ecs_has(world, create_position_e, Position));
     ecs_delete(world, create_position_e);
     
     ecs_progress(world, 0);
-    test_int(no_staging_system_invoked, 2);
-    test_int(set_position_invoked, 1);
+    test_int(no_staging_create_position_invoked, 2);
+    test_int(read_position_invoked, 1);
 
     ecs_fini(world);
 }
 
-static int add_position_invoked = 0;
+void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreatePosition,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreateVelocity,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = ReadPosition
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Velocity) }},
+        .callback = ReadVelocity
+    });
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 1);
+    test_int(no_staging_create_velocity_invoked, 1);
+    test_int(read_position_invoked, 0);
+    test_int(read_velocity_invoked, 0);
+
+    test_assert(create_position_e != 0);
+    test_assert(ecs_has(world, create_position_e, Position));
+    ecs_delete(world, create_position_e);
+    
+    test_assert(create_velocity_e != 0);
+    test_assert(ecs_has(world, create_velocity_e, Velocity));
+    ecs_delete(world, create_velocity_e);
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 2);
+    test_int(no_staging_create_velocity_invoked, 2);
+    test_int(read_position_invoked, 1);
+    test_int(read_velocity_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static int add_id_invoked = 0;
 static int foo_system_invoked = 0;
 
-static void AddPosition(ecs_iter_t *it) {
+static void AddId(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_t id = ecs_field_id(it, 1);
 
@@ -1900,7 +1986,7 @@ static void AddPosition(ecs_iter_t *it) {
         ecs_add_id(world, it->entities[i], id);
     }
 
-    add_position_invoked ++;
+    add_id_invoked ++;
 }
 
 static void FooSystem(ecs_iter_t *it) {
@@ -1913,8 +1999,8 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, FooSystem,    EcsOnUpdate, Position);
-    ECS_SYSTEM(world, AddPosition, EcsOnUpdate, !Position, Tag);
+    ECS_SYSTEM(world, FooSystem,   EcsOnUpdate, Position);
+    ECS_SYSTEM(world, AddId,       EcsOnUpdate, !Position, Tag);
 
     ecs_set_threads(world, 2);
 
@@ -1924,7 +2010,154 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
 
     test_assert(ecs_has(world, e, Position));
     test_int(foo_system_invoked, 0);
-    test_int(add_position_invoked, 1);
+    test_int(add_id_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static void SetPosition(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 1);
+
+    for (int i = 0; i < it->count; i ++) {
+        p[i].x = 10;
+        p[i].y = 20;
+    }
+}
+
+void Pipeline_sync_after_not_out_for_out() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, AddId,       EcsOnUpdate, [out] !Position, Tag);
+    ECS_SYSTEM(world, SetPosition, EcsOnUpdate, [out] Position);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+
+    test_int(wi->merge_count_total, 2);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Pipeline_pair_wildcard_read_after_staged_write() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, AddId, EcsOnUpdate, [out] !(Rel, Position), Tag);
+    ECS_SYSTEM(world, SysA,  EcsOnUpdate, [in]  (Rel, *));
+
+    ecs_new(world, Tag);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+
+    test_int(wi->merge_count_total, 2);
+
+    test_int(add_id_invoked, 1);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static int add_pair_invoked = 0;
+
+static void AddPair(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_id_t id = ecs_field_id(it, 1);
+
+    int i;
+    for (i = 0; i < it->count; i++) {
+        ecs_add_pair(world, it->entities[i], 
+            ECS_PAIR_FIRST(id), ecs_id(Position));
+    }
+
+    add_pair_invoked ++;
+}
+
+void Pipeline_pair_read_after_staged_wildcard_write() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel, *), Tag);
+    ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in]  (Rel, Position));
+
+    ecs_new(world, Tag);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+
+    test_int(wi->merge_count_total, 2);
+
+    test_int(add_pair_invoked, 1);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Rel2);
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel2, Position), Tag);
+    ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in] (Rel, *));
+
+    ecs_new(world, Tag);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+
+    test_int(wi->merge_count_total, 1);
+
+    test_int(add_pair_invoked, 1);
+    test_int(sys_a_invoked, 0);
+
+    test_int(1, ecs_count_id(world, ecs_pair(Rel2, ecs_id(Position))));
+
+    ecs_fini(world);
+}
+
+void Pipeline_no_merge_after_from_nothing_w_default_inout() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Tag, Position());
+    ECS_SYSTEM(world, SysB, EcsOnUpdate, Tag, Position);
+
+    ecs_new(world, Tag);
+    
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+
+    test_int(wi->merge_count_total, 1);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 0);
 
     ecs_fini(world);
 }

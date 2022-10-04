@@ -9,164 +9,194 @@ static ECS_DTOR(EcsPipeline, ptr, {
     ecs_os_free(ptr->iters);
 })
 
-typedef enum ComponentWriteState {
-    NotWritten = 0,
-    WriteToMain,
-    WriteToStage
-} ComponentWriteState;
+typedef enum ecs_write_kind_t {
+    WriteStateNone = 0,
+    WriteStateToStage,
+} ecs_write_kind_t;
 
-typedef struct write_state_t {
-    ecs_map_t *components;
-    bool wildcard;
-} write_state_t;
+typedef struct ecs_write_state_t {
+    ecs_map_t *ids;
+    ecs_map_t *wildcard_ids;
+    bool write_barrier;
+} ecs_write_state_t;
 
 static
-int32_t flecs_pipeline_get_write_state(
+ecs_write_kind_t flecs_pipeline_find_wildcard_write_state(
     ecs_map_t *write_state,
-    ecs_entity_t component)
+    ecs_id_t id)
 {
-    int32_t *ptr = ecs_map_get(write_state, int32_t, component);
-    if (ptr) {
-        return *ptr;
-    } else {
-        return 0;
+
+    return WriteStateNone;
+}
+
+static
+ecs_write_kind_t flecs_pipeline_get_write_state(
+    ecs_write_state_t *write_state,
+    ecs_id_t id)
+{
+    ecs_write_kind_t result = WriteStateNone;
+
+    if (write_state->write_barrier) {
+        /* Any component could have been written */
+        return WriteStateToStage;
     }
+
+    if (id == EcsWildcard) {
+        /* Using a wildcard for id indicates read barrier. Return true if any
+         * components could have been staged */
+        if (ecs_map_count(write_state->ids) || 
+            ecs_map_count(write_state->wildcard_ids)) 
+        {
+            return WriteStateToStage;
+        }
+    }
+
+    if (!ecs_id_is_wildcard(id)) {
+        if (ecs_map_get(write_state->ids, bool, id)) {
+            result = WriteStateToStage;
+        }
+    } else {
+        ecs_map_iter_t it = ecs_map_iter(write_state->ids);
+        ecs_id_t write_id;
+        while (ecs_map_next(&it, bool, &write_id)) {
+            if (ecs_id_match(write_id, id)) {
+                return WriteStateToStage;
+            }
+        }
+    }
+
+    if (write_state->wildcard_ids) {
+        ecs_map_iter_t it = ecs_map_iter(write_state->wildcard_ids);
+        ecs_id_t write_id;
+        while (ecs_map_next(&it, bool, &write_id)) {
+            if (ecs_id_match(id, write_id)) {
+                return WriteStateToStage;
+            }
+        }
+    }
+
+    return result;
 }
 
 static
 void flecs_pipeline_set_write_state(
-    write_state_t *write_state,
-    ecs_entity_t component,
-    int32_t value)
+    ecs_write_state_t *write_state,
+    ecs_id_t id,
+    ecs_write_kind_t kind)
 {
-    if (component == EcsWildcard) {
-        ecs_assert(value == WriteToStage, ECS_INTERNAL_ERROR, NULL);
-        write_state->wildcard = true;
-    } else {
-        ecs_map_set(write_state->components, component, &value);
+    if (id == EcsWildcard) {
+        /* If writing to wildcard, flag all components as written */
+        write_state->write_barrier = true;
+        return;
     }
+
+    ecs_map_t *ids;
+    if (ecs_id_is_wildcard(id)) {
+        ids = write_state->wildcard_ids;
+    } else {
+        ids = write_state->ids;
+    }
+
+    bool value = true;
+    ecs_map_set(ids, id, &value);
 }
 
 static
 void flecs_pipeline_reset_write_state(
-    write_state_t *write_state)
+    ecs_write_state_t *write_state)
 {
-    ecs_map_clear(write_state->components);
-    write_state->wildcard = false;
-}
-
-static
-int32_t flecs_pipeline_get_any_write_state(
-    write_state_t *write_state)
-{
-    if (write_state->wildcard) {
-        return WriteToStage;
-    }
-
-    ecs_map_iter_t it = ecs_map_iter(write_state->components);
-    int32_t *elem;
-    while ((elem = ecs_map_next(&it, int32_t, NULL))) {
-        if (*elem == WriteToStage) {
-            return WriteToStage;
-        }
-    }
-
-    return 0;
-}
-
-static
-bool flecs_pipeline_check_term_component(
-    ecs_term_t *term,
-    bool is_active,
-    ecs_entity_t component,
-    write_state_t *write_state)    
-{
-    int32_t state = flecs_pipeline_get_write_state(write_state->components, component);
-
-    ecs_term_id_t *src = &term->src;
-
-    if ((src->flags & EcsSelf) && ecs_term_match_this(term) && term->oper != EcsNot) {
-        switch(term->inout) {
-        case EcsInOutNone:
-            /* Ignore terms that aren't read/written */
-            break;
-        case EcsInOutDefault:
-        case EcsInOut:
-        case EcsIn:
-            if (state == WriteToStage || write_state->wildcard) {
-                return true;
-            }
-            // fall through
-        case EcsOut:
-            if (is_active && term->inout != EcsIn) {
-                flecs_pipeline_set_write_state(write_state, component, WriteToMain);
-            }
-        };
-    } else if (!src->id || term->oper == EcsNot) {
-        bool needs_merge = false;
-
-        switch(term->inout) {
-        case EcsInOutDefault:
-        case EcsIn:
-        case EcsInOut:
-            if (state == WriteToStage) {
-                needs_merge = true;
-            }
-            if (component == EcsWildcard) {
-                if (flecs_pipeline_get_any_write_state(write_state) == WriteToStage) {
-                    needs_merge = true;
-                }
-            }
-            break;
-        default:
-            break;
-        };
-
-        switch(term->inout) {
-        case EcsInOutDefault:
-            if ((!(src->flags & EcsSelf) || (!ecs_term_match_this(term))) && (!ecs_term_match_0(term))) {
-                /* Default inout behavior is [inout] for This terms, and [in]
-                 * for terms that match other entities */
-                break;
-            }
-            // fall through
-        case EcsInOut:
-        case EcsOut:
-            if (is_active) {
-                flecs_pipeline_set_write_state(write_state, component, WriteToStage);
-            }
-            break;
-        default:
-            break;
-        };   
-
-        if (needs_merge) {
-            return true;
-        }
-    }
-
-    return false;
+    ecs_map_clear(write_state->ids);
+    ecs_map_clear(write_state->wildcard_ids);
+    write_state->write_barrier = false;
 }
 
 static
 bool flecs_pipeline_check_term(
+    ecs_world_t *world,
     ecs_term_t *term,
     bool is_active,
-    write_state_t *write_state)
+    ecs_write_state_t *write_state)    
 {
-    if (term->oper != EcsOr) {
-        return flecs_pipeline_check_term_component(
-            term, is_active, term->id, write_state);
-    }  
+    (void)world;
+
+    ecs_term_id_t *src = &term->src;
+    if (src->flags & EcsInOutNone) {
+        return false;
+    }
+
+    ecs_id_t id = term->id;
+    ecs_oper_kind_t oper = term->oper;
+    ecs_inout_kind_t inout = term->inout;
+    bool from_any = ecs_term_match_0(term);
+    bool from_this = ecs_term_match_this(term);
+    bool is_shared = !from_any && (!from_this || !(src->flags & EcsSelf));
+
+    ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
+
+    if (from_this && ws >= WriteStateToStage) {
+        /* A staged write could have happened for an id that's matched on the
+         * main storage. Even if the id isn't read, still insert a merge so that
+         * a write to the main storage after the staged write doesn't get 
+         * overwritten. */
+        return true;
+    }
+
+    if (inout == EcsInOutDefault) {
+        if (from_any) {
+            /* If no inout kind is specified for terms without a source, this is
+             * not interpreted as a read/write annotation but just a (component)
+             * id that's passed to a system. */
+            return false;
+        } else if (is_shared) {
+            inout = EcsIn;
+        } else {
+            /* Default for owned terms is InOut */
+            inout = EcsInOut;
+        }
+    }
+
+    if (oper == EcsNot && inout == EcsOut) {
+        /* If a Not term is combined with Out, it signals that the system 
+         * intends to add a component that the entity doesn't yet have */
+        from_any = true;
+    }
+
+    if (from_any) {
+        switch(inout) {
+        case EcsOut:
+        case EcsInOut:
+            if (is_active) {
+                /* Only flag component as written if system is active */
+                flecs_pipeline_set_write_state(
+                    write_state, id, WriteStateToStage);
+            }
+            break;
+        default:
+            break;
+        }
+
+        switch(inout) {
+        case EcsIn:
+        case EcsInOut:
+            if (ws >= WriteStateToStage) {
+                /* If a system does a get/get_mut, the component is fetched from
+                 * the main store so it must be merged first */
+                return true;
+            }
+        default:
+            break;
+        }
+    }
 
     return false;
 }
 
 static
 bool flecs_pipeline_check_terms(
+    ecs_world_t *world,
     ecs_filter_t *filter,
     bool is_active,
-    write_state_t *ws)
+    ecs_write_state_t *ws)
 {
     bool needs_merge = false;
     ecs_term_t *terms = filter->terms;
@@ -177,7 +207,7 @@ bool flecs_pipeline_check_terms(
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (ecs_term_match_this(term)) {
-            needs_merge |= flecs_pipeline_check_term(term, is_active, ws);
+            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
         }
     }
 
@@ -185,7 +215,7 @@ bool flecs_pipeline_check_terms(
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (!ecs_term_match_this(term)) {
-            needs_merge |= flecs_pipeline_check_term(term, is_active, ws);
+            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
         }
     }
 
@@ -232,10 +262,9 @@ bool flecs_pipeline_build(
     world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
 
-    write_state_t ws = {
-        .components = ecs_map_new(int32_t, &world->allocator, 
-            ECS_HI_COMPONENT_ID),
-        .wildcard = false
+    ecs_write_state_t ws = {
+        .ids = ecs_map_new(bool, &world->allocator, ECS_HI_COMPONENT_ID),
+        .wildcard_ids = ecs_map_new(bool, &world->allocator, ECS_HI_COMPONENT_ID)
     };
 
     ecs_pipeline_op_t *op = NULL;
@@ -265,7 +294,8 @@ bool flecs_pipeline_build(
             }
 
             bool needs_merge = false;
-            needs_merge = flecs_pipeline_check_terms(&q->filter, is_active, &ws);
+            needs_merge = flecs_pipeline_check_terms(
+                world, &q->filter, is_active, &ws);
 
             if (is_active) {
                 if (first) {
@@ -302,7 +332,8 @@ bool flecs_pipeline_build(
                  * should not insert unnecessary merges.  */
                 needs_merge = false;
                 if (is_active) {
-                    needs_merge = flecs_pipeline_check_terms(&q->filter, true, &ws);
+                    needs_merge = flecs_pipeline_check_terms(
+                        world, &q->filter, true, &ws);
                 }
 
                 /* The component states were just reset, so if we conclude that
@@ -329,7 +360,8 @@ bool flecs_pipeline_build(
         }
     }
 
-    ecs_map_free(ws.components);
+    ecs_map_free(ws.ids);
+    ecs_map_free(ws.wildcard_ids);
 
     /* Find the system ran last this frame (helps workers reset iter) */
     ecs_entity_t last_system = 0;

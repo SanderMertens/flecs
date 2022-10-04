@@ -1986,7 +1986,7 @@ void SingleThreadStaging_match_table_created_in_progress() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position, [out] !Velocity);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_id(Velocity)};
@@ -2361,7 +2361,7 @@ void SingleThreadStaging_merge_once() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, [out] !Velocity);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});

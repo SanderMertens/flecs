@@ -198,7 +198,7 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
     
     ecs_new(world, Position); // Make sure systems are active
 
-    ECS_SYSTEM(world, FooSys, EcsOnUpdate, Position());
+    ECS_SYSTEM(world, FooSys, EcsOnUpdate, [out] Position());
     ECS_SYSTEM(world, BarSys, EcsOnUpdate, Position);
 
     ecs_entity_t pipeline = ecs_get_pipeline(world);

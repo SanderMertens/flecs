@@ -456,7 +456,7 @@ void SystemMisc_ensure_single_merge() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, EcsOnLoad, Position, !Velocity);
+    ECS_SYSTEM(world, SysA, EcsOnLoad, Position, [out] !Velocity);
     ECS_SYSTEM(world, SysB, EcsPostLoad, Velocity);
 
     ECS_ENTITY(world, MyEntity, Position);

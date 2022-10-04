@@ -895,7 +895,7 @@ void Prefab_match_table_created_in_progress() {
 
     ECS_ENTITY(world, e, (IsA, Prefab), Position);
 
-    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, [out] !Velocity);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, Mass(self|up));
 
     ecs_set(world, e, Position, {0, 0});

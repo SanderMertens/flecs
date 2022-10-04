@@ -383,7 +383,13 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void);
 void Pipeline_iter_from_world_in_singlethread_system_multitead_app(void);
 void Pipeline_no_staging_after_inactive_system(void);
 void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter(void);
+void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void);
 void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded(void);
+void Pipeline_sync_after_not_out_for_out(void);
+void Pipeline_pair_wildcard_read_after_staged_write(void);
+void Pipeline_pair_read_after_staged_wildcard_write(void);
+void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(void);
+void Pipeline_no_merge_after_from_nothing_w_default_inout(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2422,8 +2428,32 @@ bake_test_case Pipeline_testcases[] = {
         Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter
     },
     {
+        "inactive_system_after_2_no_staging_system_no_defer_w_filter",
+        Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter
+    },
+    {
         "multi_threaded_pipeline_change_w_only_singlethreaded",
         Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded
+    },
+    {
+        "sync_after_not_out_for_out",
+        Pipeline_sync_after_not_out_for_out
+    },
+    {
+        "pair_wildcard_read_after_staged_write",
+        Pipeline_pair_wildcard_read_after_staged_write
+    },
+    {
+        "pair_read_after_staged_wildcard_write",
+        Pipeline_pair_read_after_staged_wildcard_write
+    },
+    {
+        "no_sync_after_pair_wildcard_read_after_unmatching_staged_write",
+        Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write
+    },
+    {
+        "no_merge_after_from_nothing_w_default_inout",
+        Pipeline_no_merge_after_from_nothing_w_default_inout
     }
 };
 
@@ -4556,7 +4586,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        46,
+        52,
         Pipeline_testcases
     },
     {
