@@ -1848,8 +1848,7 @@ static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
 
 static int set_position_invoked = 0;
 
-static void SetPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+static void ReadPosition(ecs_iter_t *it) {
     set_position_invoked ++;
 }
 
@@ -1871,7 +1870,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .query.filter.terms = {{ ecs_id(Position) }},
-        .callback = SetPosition
+        .callback = ReadPosition
     });
 
     ecs_progress(world, 0);
@@ -1885,6 +1884,47 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
     ecs_progress(world, 0);
     test_int(no_staging_system_invoked, 2);
     test_int(set_position_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static int add_position_invoked = 0;
+static int foo_system_invoked = 0;
+
+static void AddPosition(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_id_t id = ecs_field_id(it, 1);
+
+    int i;
+    for (i = 0; i < it->count; i++) {
+        ecs_add_id(world, it->entities[i], id);
+    }
+
+    add_position_invoked ++;
+}
+
+static void FooSystem(ecs_iter_t *it) {
+    foo_system_invoked ++;
+}
+
+void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, FooSystem,    EcsOnUpdate, Position);
+    ECS_SYSTEM(world, AddPosition, EcsOnUpdate, !Position, Tag);
+
+    ecs_set_threads(world, 2);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_int(foo_system_invoked, 0);
+    test_int(add_position_invoked, 1);
 
     ecs_fini(world);
 }

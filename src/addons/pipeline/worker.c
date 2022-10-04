@@ -338,6 +338,10 @@ void ecs_workers_progress(
                 op = pq->cur_op - 1;
                 op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                 ecs_assert(op <= op_last, ECS_INTERNAL_ERROR, NULL);
+
+                if (op == op_last) {
+                    ecs_pipeline_fini_iter(pq);
+                }
             }
         }
     }

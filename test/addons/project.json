@@ -393,7 +393,8 @@
                 "stack_allocator_after_progress_w_pipeline_change",
                 "iter_from_world_in_singlethread_system_multitead_app",
                 "no_staging_after_inactive_system",
-                "inactive_system_after_no_staging_system_no_defer_w_filter"
+                "inactive_system_after_no_staging_system_no_defer_w_filter",
+                "multi_threaded_pipeline_change_w_only_singlethreaded"
             ]
         }, {
             "id": "SystemMisc",
