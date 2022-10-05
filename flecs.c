@@ -35618,10 +35618,6 @@ void http_recv_request(
     {
         ecs_os_mutex_lock(srv->lock);
         bool is_alive = conn->pub.id == conn_id;
-        if (is_alive) {
-            conn->dequeue_timeout = 0;
-            conn->dequeue_retries = 0;
-        }
         ecs_os_mutex_unlock(srv->lock);
 
         if (is_alive) {
