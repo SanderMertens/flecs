@@ -35093,6 +35093,23 @@ typedef int ecs_http_socket_t;
 /* Max length of request (path + query + headers + body) */
 #define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
 
+/* Total number of outstanding send requests */
+#define ECS_HTTP_SEND_QUEUE_MAX (256)
+
+/* Send request queue */
+typedef struct ecs_http_send_request_t {
+    ecs_http_socket_t sock;
+    char *content;
+    int32_t content_length;
+} ecs_http_send_request_t;
+
+typedef struct ecs_http_send_queue_t {
+    ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
+    int32_t cur;
+    int32_t count;
+    ecs_os_thread_t thread;
+} ecs_http_send_queue_t;
+
 /* HTTP server struct */
 struct ecs_http_server_t {
     bool should_run;
@@ -35121,6 +35138,8 @@ struct ecs_http_server_t {
     int32_t requests_processed; /* requests processed in last stats interval */
     int32_t requests_processed_total; /* total requests processed */
     int32_t dequeue_count; /* number of dequeues in last stats interval */ 
+
+    ecs_http_send_queue_t send_queue;
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -35639,6 +35658,73 @@ bool http_parse_request(
 }
 
 static
+ecs_http_send_request_t* http_send_queue_post(
+    ecs_http_server_t *srv)
+{
+    /* This function should only be called while the server is locked. Before 
+     * the lock is released, the returned element should be populated. */
+    ecs_http_send_queue_t *sq = &srv->send_queue;
+    ecs_assert(sq->count <= ECS_HTTP_SEND_QUEUE_MAX, ECS_INTERNAL_ERROR, NULL);
+    if (sq->count == ECS_HTTP_SEND_QUEUE_MAX) {
+        return NULL;
+    }
+
+    /* Don't enqueue new requests if server is shutting down */
+    if (!srv->should_run) {
+        return NULL;
+    }
+
+    /* Return element at end of the queue */
+    return &sq->requests[(sq->cur + sq->count ++) % ECS_HTTP_SEND_QUEUE_MAX];
+}
+
+static
+ecs_http_send_request_t* http_send_queue_get(
+    ecs_http_server_t *srv)
+{
+    ecs_http_send_request_t *result = NULL;
+    ecs_os_mutex_lock(srv->lock);
+    ecs_http_send_queue_t *sq = &srv->send_queue;
+    if (sq->count) {
+        result = &sq->requests[sq->cur];
+        sq->cur = (sq->cur + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+        sq->count --;
+    }
+    return result;
+}
+
+static
+void* http_server_send_queue(void* arg) {
+    ecs_http_server_t *srv = arg;
+
+    /* Run for as long as the server is running or there are messages. When the
+     * server is stopping, no new messages will be enqueued */
+    while (srv->should_run || srv->send_queue.count) {
+        ecs_http_send_request_t* r = http_send_queue_get(srv);
+        if (!r) {
+            ecs_os_mutex_unlock(srv->lock);
+            /* If the queue is empty, wait so we don't run too fast */
+            if (srv->should_run) {
+                ecs_os_sleep(0, 1000 * 1000);
+            }
+        } else {
+            ecs_size_t written = http_send(
+                r->sock, r->content, r->content_length, 0);
+            if (written != r->content_length) {
+                ecs_err("http: failed to write HTTP response body: %s",
+                    ecs_os_strerror(errno));
+            }
+            ecs_os_free(r->content);
+            if (http_socket_is_valid(r->sock)) {
+                http_close(&r->sock);
+            }
+            ecs_os_mutex_unlock(srv->lock);
+        }
+    }
+    return NULL;
+}
+
+static
 void http_append_send_headers(
     ecs_strbuf_t *hdrs,
     int code, 
@@ -35682,6 +35768,16 @@ void http_send_reply(
     char *content = ecs_strbuf_get(&reply->body);
     int32_t content_length = reply->body.length - 1;
 
+    /* Use asynchronous send queue for outgoing data so send operations won't
+     * hold up main thread */
+    ecs_http_send_request_t *req = NULL;
+    if (content_length) {
+        req = http_send_queue_post(conn->pub.server);
+        if (!req) {
+            reply->code = 503; /* queue full, server is busy */
+        }
+    }
+
     /* First, send the response HTTP headers */
     http_append_send_headers(&hdr_buf, reply->code, reply->status, 
         reply->content_type, &reply->headers, content_length);
@@ -35696,13 +35792,15 @@ void http_send_reply(
         return;
     }
 
-    /* Second, send response body */
-    if (content_length > 0) {
-        written = http_send(conn->sock, content, content_length, 0);
-        if (written != content_length) {
-            ecs_err("http: failed to write HTTP response body to '%s:%s': %s",
-                conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
-        }
+    /* Second, enqueue send request for response body */
+    if (req) {
+        req->sock = conn->sock;
+        req->content = content;
+        req->content_length = content_length;
+
+        /* Take ownership of values */
+        reply->body.content = NULL;
+        conn->sock = HTTP_SOCKET_INVALID;
     }
 }
 
@@ -36073,6 +36171,11 @@ int ecs_http_server_start(
         goto error;
     }
 
+    srv->send_queue.thread = ecs_os_thread_new(http_server_send_queue, srv);
+    if (!srv->send_queue.thread) {
+        goto error;
+    }
+
     return 0;
 error:
     return -1;
@@ -36096,7 +36199,8 @@ void ecs_http_server_stop(
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_os_thread_join(srv->thread);
-    ecs_trace("http: server thread shut down");
+    ecs_os_thread_join(srv->send_queue.thread);
+    ecs_trace("http: server threads shut down");
 
     /* Cleanup all outstanding requests */
     int i, count = flecs_sparse_count(srv->requests);
