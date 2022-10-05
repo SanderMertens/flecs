@@ -35319,7 +35319,8 @@ void http_header_buf_append(
 
 static
 void http_enqueue_request(
-    ecs_http_connection_impl_t *conn)
+    ecs_http_connection_impl_t *conn,
+    uint64_t conn_id)
 {
     ecs_http_server_t *srv = conn->pub.server;
     ecs_http_fragment_t *frag = &conn->frag;
@@ -35330,32 +35331,37 @@ void http_enqueue_request(
         char *res = ecs_strbuf_get(&frag->buf);
         if (res) {
             ecs_os_mutex_lock(srv->lock);
-            ecs_http_request_impl_t *req = flecs_sparse_add(
-                srv->requests, ecs_http_request_impl_t);
-            req->pub.id = flecs_sparse_last_id(srv->requests);
-            req->conn_id = conn->pub.id;
+            if (conn->pub.id == conn_id) {
+                /* Only enqueue for alive connections */
+                ecs_http_request_impl_t *req = flecs_sparse_add(
+                    srv->requests, ecs_http_request_impl_t);
+                req->pub.id = flecs_sparse_last_id(srv->requests);
+                req->conn_id = conn->pub.id;
 
-            req->pub.conn = (ecs_http_connection_t*)conn;
-            req->pub.method = frag->method;
-            req->pub.path = res + 1;
-            if (frag->body_offset) {
-                req->pub.body = &res[frag->body_offset];
-            }
-            int32_t i, count = frag->header_count;
-            for (i = 0; i < count; i ++) {
-                req->pub.headers[i].key = &res[frag->header_offsets[i]];
-                req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
-            }
-            count = frag->param_count;
-            for (i = 0; i < count; i ++) {
-                req->pub.params[i].key = &res[frag->param_offsets[i]];
-                req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-                http_decode_url_str((char*)req->pub.params[i].value);
-            }
+                req->pub.conn = (ecs_http_connection_t*)conn;
+                req->pub.method = frag->method;
+                req->pub.path = res + 1;
+                if (frag->body_offset) {
+                    req->pub.body = &res[frag->body_offset];
+                }
+                int32_t i, count = frag->header_count;
+                for (i = 0; i < count; i ++) {
+                    req->pub.headers[i].key = &res[frag->header_offsets[i]];
+                    req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+                }
+                count = frag->param_count;
+                for (i = 0; i < count; i ++) {
+                    req->pub.params[i].key = &res[frag->param_offsets[i]];
+                    req->pub.params[i].value = &res[frag->param_value_offsets[i]];
+                    http_decode_url_str((char*)req->pub.params[i].value);
+                }
 
-            req->pub.header_count = frag->header_count;
-            req->pub.param_count = frag->param_count;
-            req->res = res;
+                req->pub.header_count = frag->header_count;
+                req->pub.param_count = frag->param_count;
+                req->res = res;
+            } else {
+                ecs_os_free(res);
+            }
             ecs_os_mutex_unlock(srv->lock);
         }
     }
@@ -35523,9 +35529,7 @@ bool http_parse_request(
 
     if (frag->state == HttpFragStateDone) {
         frag->state = HttpFragStateBegin;
-        if (conn->pub.id == conn_id) {
-            http_enqueue_request(conn);
-        }
+        http_enqueue_request(conn, conn_id);
         return true;
     } else {
         return false;
