@@ -35065,6 +35065,10 @@ typedef SOCKET ecs_http_socket_t;
 typedef int ecs_http_socket_t;
 #endif
 
+#if !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL (0)
+#endif
+
 /* Max length of request method */
 #define ECS_HTTP_METHOD_LEN_MAX (8) 
 
@@ -35182,7 +35186,8 @@ ecs_size_t http_send(
     int flags)
 {
 #ifdef ECS_TARGET_POSIX
-    ssize_t send_bytes = send(sock, buf, flecs_itosize(size), flags);
+    ssize_t send_bytes = send(sock, buf, flecs_itosize(size), 
+        flags | MSG_NOSIGNAL);
     return flecs_itoi32(send_bytes);
 #else
     int send_bytes = send(sock, buf, size, flags);
@@ -35231,6 +35236,17 @@ void http_sock_set_timeout(
 #endif
     if (r) {
         ecs_warn("http: failed to set socket timeout: %s", 
+            ecs_os_strerror(errno));
+    }
+}
+
+static
+void http_sock_keep_alive(
+    ecs_http_socket_t sock)
+{
+    int v = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&v, sizeof v)) {
+        ecs_warn("http: failed to set socket KEEPALIVE: %s",
             ecs_os_strerror(errno));
     }
 }
@@ -35737,6 +35753,7 @@ void http_init_connection(
     ecs_size_t remote_addr_len) 
 {
     http_sock_set_timeout(sock_conn, 100);
+    http_sock_keep_alive(sock_conn);
 
     /* Create new connection */
     ecs_os_mutex_lock(srv->lock);
