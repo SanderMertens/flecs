@@ -154,18 +154,18 @@ int json_typeinfo_ser_unit(
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
 {
-    flecs_json_member(str, "unit");
+    flecs_json_memberl(str, "unit");
     flecs_json_path(str, world, unit);
 
     const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
     if (uptr) {
         if (uptr->symbol) {
-            flecs_json_member(str, "symbol");
+            flecs_json_memberl(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
         ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
-            flecs_json_member(str, "quantity");
+            flecs_json_memberl(str, "quantity");
             flecs_json_path(str, world, quantity);
         }
     }
@@ -282,14 +282,14 @@ int json_typeinfo_ser_type(
 {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
         return 0;
     }
 
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
     if (!ser) {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
         return 0;
     }
 

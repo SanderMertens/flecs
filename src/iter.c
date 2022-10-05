@@ -625,13 +625,13 @@ char* ecs_iter_str(
     }
 
     if (it->count) {
-        ecs_strbuf_appendstr(&buf, "this:\n");
+        ecs_strbuf_appendlit(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
             char *str = ecs_get_fullpath(world, e);
-            ecs_strbuf_appendstr(&buf, "    - ");
+            ecs_strbuf_appendlit(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
-            ecs_strbuf_appendstr(&buf, "\n");
+            ecs_strbuf_appendch(&buf, '\n');
             ecs_os_free(str);
         }
     }

@@ -67,9 +67,9 @@ void flecs_reply_verror(
     const char *fmt,
     va_list args)
 {
-    ecs_strbuf_appendstr(&reply->body, "{\"error\":\"");
+    ecs_strbuf_appendlit(&reply->body, "{\"error\":\"");
     ecs_strbuf_vappend(&reply->body, fmt, args);
-    ecs_strbuf_appendstr(&reply->body, "\"}");
+    ecs_strbuf_appendlit(&reply->body, "\"}");
 }
 
 static
@@ -195,7 +195,7 @@ bool flecs_rest_reply_query(
 {
     const char *q = ecs_http_get_param(req, "q");
     if (!q) {
-        ecs_strbuf_appendstr(&reply->body, "Missing parameter 'q'");
+        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
         return true;
     }
@@ -240,14 +240,16 @@ bool flecs_rest_reply_query(
 #ifdef FLECS_MONITOR
 
 static
-void flecs_rest_array_append(
+void _flecs_rest_array_append(
     ecs_strbuf_t *reply,
     const char *field,
+    int32_t field_len,
     const ecs_float_t *values,
     int32_t t)
 {
-    ecs_strbuf_list_append(reply, "\"%s\"", field);
-    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_appendch(reply, '"');
+    ecs_strbuf_appendstrn(reply, field, field_len);
+    ecs_strbuf_appendlit(reply, "\":");
     ecs_strbuf_list_push(reply, "[", ",");
 
     int32_t i;
@@ -260,16 +262,22 @@ void flecs_rest_array_append(
     ecs_strbuf_list_pop(reply, "]");
 }
 
+#define flecs_rest_array_append(reply, field, values, t)\
+    _flecs_rest_array_append(reply, field, sizeof(field) - 1, values, t)
+
 static
 void flecs_rest_gauge_append(
     ecs_strbuf_t *reply,
     const ecs_metric_t *m,
     const char *field,
+    int32_t field_len,
     int32_t t,
-    const char *brief)
+    const char *brief,
+    int32_t brief_len)
 {
-    ecs_strbuf_list_append(reply, "\"%s\"", field);
-    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_appendch(reply, '"');
+    ecs_strbuf_appendstrn(reply, field, field_len);
+    ecs_strbuf_appendlit(reply, "\":");
     ecs_strbuf_list_push(reply, "{", ",");
 
     flecs_rest_array_append(reply, "avg", m->gauge.avg, t);
@@ -277,9 +285,9 @@ void flecs_rest_gauge_append(
     flecs_rest_array_append(reply, "max", m->gauge.max, t);
 
     if (brief) {
-        ecs_strbuf_list_append(reply, "\"brief\":\"");
-        ecs_strbuf_appendstr(reply, brief);
-        ecs_strbuf_appendstr(reply, "\"");
+        ecs_strbuf_list_appendlit(reply, "\"brief\":\"");
+        ecs_strbuf_appendstrn(reply, brief, brief_len);
+        ecs_strbuf_appendch(reply, '"');
     }
 
     ecs_strbuf_list_pop(reply, "}");
@@ -290,17 +298,19 @@ void flecs_rest_counter_append(
     ecs_strbuf_t *reply,
     const ecs_metric_t *m,
     const char *field,
+    int32_t field_len,
     int32_t t,
-    const char *brief)
+    const char *brief,
+    int32_t brief_len)
 {
-    flecs_rest_gauge_append(reply, m, field, t, brief);
+    flecs_rest_gauge_append(reply, m, field, field_len, t, brief, brief_len);
 }
 
 #define ECS_GAUGE_APPEND_T(reply, s, field, t, brief)\
-    flecs_rest_gauge_append(reply, &(s)->field, #field, t, brief)
+    flecs_rest_gauge_append(reply, &(s)->field, #field, sizeof(#field) - 1, t, brief, sizeof(brief) - 1)
 
 #define ECS_COUNTER_APPEND_T(reply, s, field, t, brief)\
-    flecs_rest_counter_append(reply, &(s)->field, #field, t, brief)
+    flecs_rest_counter_append(reply, &(s)->field, #field, sizeof(#field) - 1, t, brief, sizeof(brief) - 1)
 
 #define ECS_GAUGE_APPEND(reply, s, field, brief)\
     ECS_GAUGE_APPEND_T(reply, s, field, (s)->t, brief)
@@ -386,17 +396,16 @@ void flecs_system_stats_to_json(
     const ecs_system_stats_t *stats)
 {
     ecs_strbuf_list_push(reply, "{", ",");
-
-    char *path = ecs_get_fullpath(world, system);
-    ecs_strbuf_list_append(reply, "\"name\":\"%s\"", path);
-    ecs_os_free(path);
+    ecs_strbuf_list_appendlit(reply, "\"name\":\"");
+    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
+    ecs_strbuf_appendch(reply, '"');
 
     if (!stats->task) {
-        ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count, "Tables matched by system");
-        ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count, "Entities matched by system");
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count, "");
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count, "");
     }
 
-    ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t, "Time spent by system");
+    ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t, "");
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -636,7 +645,7 @@ bool flecs_rest_reply(
         return false;
     }
 
-    ecs_strbuf_appendstr(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
+    ecs_strbuf_appendlit(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
 
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */

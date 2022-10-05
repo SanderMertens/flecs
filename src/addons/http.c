@@ -620,24 +620,25 @@ void http_append_send_headers(
     ecs_strbuf_t *extra_headers,
     ecs_size_t content_len) 
 {
-    ecs_strbuf_appendstr(hdrs, "HTTP/1.1 ");
-    ecs_strbuf_append(hdrs, "%d ", code);
+    ecs_strbuf_appendlit(hdrs, "HTTP/1.1 ");
+    ecs_strbuf_appendint(hdrs, code);
+    ecs_strbuf_appendch(hdrs, ' ');
     ecs_strbuf_appendstr(hdrs, status);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Content-Type: ");
+    ecs_strbuf_appendlit(hdrs, "Content-Type: ");
     ecs_strbuf_appendstr(hdrs, content_type);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Content-Length: ");
+    ecs_strbuf_appendlit(hdrs, "Content-Length: ");
     ecs_strbuf_append(hdrs, "%d", content_len);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Server: flecs\r\n");
+    ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
 
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 }
 
 static

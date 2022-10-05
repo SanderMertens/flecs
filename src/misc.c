@@ -2,11 +2,11 @@
 #include <time.h>
 
 #ifndef FLECS_NDEBUG
-static int64_t s_min[] = { 
+static int64_t flecs_s_min[] = { 
     [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
-static int64_t s_max[] = { 
+static int64_t flecs_s_max[] = { 
     [1] = INT8_MAX, [2] = INT16_MAX, [4] = INT32_MAX, [8] = INT64_MAX };
-static uint64_t u_max[] = { 
+static uint64_t flecs_u_max[] = { 
     [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
 
 uint64_t _flecs_ito(
@@ -24,11 +24,11 @@ uint64_t _flecs_ito(
     v.u = u;
 
     if (is_signed) {
-        ecs_assert(v.s >= s_min[size], ECS_INVALID_CONVERSION, err);
-        ecs_assert(v.s <= s_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, err);
     } else {
         ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, err);
-        ecs_assert(u <= u_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, err);
     }
 
     return u;

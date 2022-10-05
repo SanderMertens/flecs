@@ -102,7 +102,7 @@ void flecs_dump_backtrace(
 #undef HAVE_EXECINFO_H
 
 static
-void log_msg(
+void flecs_log_msg(
     int32_t level,
     const char *file, 
     int32_t line,  
@@ -362,16 +362,16 @@ char* ecs_os_api_module_to_dl(const char *module) {
     char *file_base = module_file_base(module, '_');
 
 #   if defined(ECS_TARGET_LINUX) || defined(ECS_TARGET_FREEBSD)
-    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendlit(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".so");
+    ecs_strbuf_appendlit(&lib, ".so");
 #   elif defined(ECS_TARGET_DARWIN)
-    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendlit(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".dylib");
+    ecs_strbuf_appendlit(&lib, ".dylib");
 #   elif defined(ECS_TARGET_WINDOWS)
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".dll");
+    ecs_strbuf_appendlit(&lib, ".dll");
 #   endif
 
     ecs_os_free(file_base);
@@ -387,7 +387,7 @@ char* ecs_os_api_module_to_etc(const char *module) {
     char *file_base = module_file_base(module, '-');
 
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, "/etc");
+    ecs_strbuf_appendlit(&lib, "/etc");
 
     ecs_os_free(file_base);
 
@@ -420,7 +420,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */
-    ecs_os_api.log_ = log_msg;
+    ecs_os_api.log_ = flecs_log_msg;
 
     /* Modules */
     if (!ecs_os_api.module_to_dl_) {

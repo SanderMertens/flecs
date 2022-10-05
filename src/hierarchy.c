@@ -13,10 +13,11 @@ bool flecs_path_append(
     ecs_strbuf_t *buf)
 {
     ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t cur = 0;
-    char buff[22];
-    const char *name;
+    const char *name = NULL;
+    ecs_size_t name_len = 0;
 
     if (ecs_is_valid(world, child)) {
         cur = ecs_get_target(world, child, EcsChildOf, 0);
@@ -24,23 +25,33 @@ bool flecs_path_append(
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
             if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
                 flecs_path_append(world, parent, cur, sep, prefix, buf);
-                ecs_strbuf_appendstr(buf, sep);
+                if (!sep[1]) {
+                    ecs_strbuf_appendch(buf, sep[0]);
+                } else {
+                    ecs_strbuf_appendstr(buf, sep);
+                }
             }
-        } else if (prefix) {
-            ecs_strbuf_appendstr(buf, prefix);
+        } else if (prefix && prefix[0]) {
+            if (!prefix[1]) {
+                ecs_strbuf_appendch(buf, prefix[0]);
+            } else {
+                ecs_strbuf_appendstr(buf, prefix);
+            }
         }
 
-        name = ecs_get_name(world, child);
-        if (!name || !ecs_os_strlen(name)) {
-            ecs_os_sprintf(buff, "%u", (uint32_t)child);
-            name = buff;
-        }        
-    } else {
-        ecs_os_sprintf(buff, "%u", (uint32_t)child);
-        name = buff;
+        const EcsIdentifier *id = ecs_get_pair(
+            world, child, EcsIdentifier, EcsName);
+        if (id) {
+            name = id->value;
+            name_len = id->length;
+        }      
     }
 
-    ecs_strbuf_appendstr(buf, name);
+    if (name) {
+        ecs_strbuf_appendstrn(buf, name, name_len);
+    } else {
+        ecs_strbuf_appendint(buf, flecs_uto(int64_t, (uint32_t)child));
+    }
 
     return cur != 0;
 }
@@ -233,11 +244,11 @@ void ecs_get_path_w_sep_buf(
     world = ecs_get_world(world);
 
     if (child == EcsWildcard) {
-        ecs_strbuf_appendstr(buf, "*");
+        ecs_strbuf_appendch(buf, '*');
         return;
     }
     if (child == EcsAny) {
-        ecs_strbuf_appendstr(buf, "_");
+        ecs_strbuf_appendch(buf, '_');
         return;
     }
 
@@ -248,7 +259,7 @@ void ecs_get_path_w_sep_buf(
     if (!child || parent != child) {
         flecs_path_append(world, parent, child, sep, prefix, buf);
     } else {
-        ecs_strbuf_appendstr(buf, "");
+        ecs_strbuf_appendstrn(buf, "", 0);
     }
 
 error:

@@ -110,6 +110,13 @@ bool ecs_strbuf_appendch(
     ecs_strbuf_t *buffer,
     char ch);
 
+/* Append int to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendint(
+    ecs_strbuf_t *buffer,
+    int64_t v);
+
 /* Append float to buffer.
  * Returns false when max is reached, true when there is still space */
 FLECS_API
@@ -180,6 +187,12 @@ FLECS_API
 void ecs_strbuf_list_next(
     ecs_strbuf_t *buffer);
 
+/* Append character to as new element in list. */
+FLECS_API
+bool ecs_strbuf_list_appendch(
+    ecs_strbuf_t *buffer,
+    char ch);
+
 /* Append formatted string as a new element in list */
 FLECS_API
 bool ecs_strbuf_list_append(
@@ -193,9 +206,22 @@ bool ecs_strbuf_list_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
 
+/* Append string as a new element in list */
+FLECS_API
+bool ecs_strbuf_list_appendstrn(
+    ecs_strbuf_t *buffer,
+    const char *str,
+    int32_t n);
+
 FLECS_API
 int32_t ecs_strbuf_written(
     const ecs_strbuf_t *buffer);
+
+#define ecs_strbuf_appendlit(buf, str)\
+    ecs_strbuf_appendstrn(buf, str, (int32_t)(sizeof(str) - 1))
+
+#define ecs_strbuf_list_appendlit(buf, str)\
+    ecs_strbuf_list_appendstrn(buf, str, (int32_t)(sizeof(str) - 1))
 
 #ifdef __cplusplus
 }

@@ -39,51 +39,53 @@ int expr_ser_primitive(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    const char *bool_str[] = { "false", "true" };
-
     switch(kind) {
     case EcsBool:
-        ecs_strbuf_appendstr(str, bool_str[(int)*(bool*)base]);
+        if (*(bool*)base) {
+            ecs_strbuf_appendlit(str, "true");
+        } else {
+            ecs_strbuf_appendlit(str, "false");
+        }
         break;
     case EcsChar: {
         char chbuf[3];
         char ch = *(char*)base;
         if (ch) {
             ecs_chresc(chbuf, *(char*)base, '"');
-            ecs_strbuf_appendstrn(str, "\"", 1);
+            ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
-            ecs_strbuf_appendstrn(str, "\"", 1);
+            ecs_strbuf_appendch(str, '"');
         } else {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         }
         break;
     }
     case EcsByte:
-        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
         break;
     case EcsU8:
-        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
         break;
     case EcsU16:
-        ecs_strbuf_append(str, "%u", *(uint16_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint16_t*)base));
         break;
     case EcsU32:
-        ecs_strbuf_append(str, "%u", *(uint32_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint32_t*)base));
         break;
     case EcsU64:
         ecs_strbuf_append(str, "%llu", *(uint64_t*)base);
         break;
     case EcsI8:
-        ecs_strbuf_append(str, "%d", *(int8_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int8_t*)base));
         break;
     case EcsI16:
-        ecs_strbuf_append(str, "%d", *(int16_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int16_t*)base));
         break;
     case EcsI32:
-        ecs_strbuf_append(str, "%d", *(int32_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int32_t*)base));
         break;
     case EcsI64:
-        ecs_strbuf_append(str, "%lld", *(int64_t*)base);
+        ecs_strbuf_appendint(str, *(int64_t*)base);
         break;
     case EcsF32:
         ecs_strbuf_appendflt(str, (double)*(float*)base, 0);
@@ -92,7 +94,7 @@ int expr_ser_primitive(
         ecs_strbuf_appendflt(str, *(double*)base, 0);
         break;
     case EcsIPtr:
-        ecs_strbuf_append(str, "%i", *(intptr_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(intptr_t*)base));
         break;
     case EcsUPtr:
         ecs_strbuf_append(str, "%u", *(uintptr_t*)base);
@@ -102,9 +104,9 @@ int expr_ser_primitive(
         if (value) {
             ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
             if (length == ecs_os_strlen(value)) {
-                ecs_strbuf_appendstrn(str, "\"", 1);
-                ecs_strbuf_appendstr(str, value);
-                ecs_strbuf_appendstrn(str, "\"", 1);
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendstrn(str, value, length);
+                ecs_strbuf_appendch(str, '"');
             } else {
                 char *out = ecs_os_malloc(length + 3);
                 ecs_stresc(out + 1, length, '"', value);
@@ -114,19 +116,16 @@ int expr_ser_primitive(
                 ecs_strbuf_appendstr_zerocpy(str, out);
             }
         } else {
-            ecs_strbuf_appendstr(str, "null");
+            ecs_strbuf_appendlit(str, "null");
         }
         break;
     }
     case EcsEntity: {
         ecs_entity_t e = *(ecs_entity_t*)base;
         if (!e) {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         } else {
-            char *path = ecs_get_fullpath(world, e);
-            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_appendstr(str, path);
-            ecs_os_free(path);
+            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
         }
         break;
     }
@@ -296,7 +295,7 @@ int expr_ser_vector(
 {
     ecs_vector_t *value = *(ecs_vector_t**)base;
     if (!value) {
-        ecs_strbuf_appendstr(str, "null");
+        ecs_strbuf_appendlit(str, "null");
         return 0;
     }
 

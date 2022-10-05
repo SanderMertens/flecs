@@ -912,7 +912,7 @@ bool flecs_unit_validate(
             uptr = ecs_get(world, over, EcsUnit);
             ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
             if (uptr->symbol) {
-                ecs_strbuf_appendstr(&sbuf, "/");
+                ecs_strbuf_appendch(&sbuf, '/');
                 ecs_strbuf_appendstr(&sbuf, uptr->symbol);
                 must_match = true;
             }

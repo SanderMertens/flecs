@@ -28,7 +28,7 @@ static const double rounders[MAX_PRECISION + 1] =
 };
 
 static
-char* strbuf_itoa(
+char* flecs_strbuf_itoa(
     char *buf,
     int64_t v)
 {
@@ -39,10 +39,19 @@ char* strbuf_itoa(
 	if (!v) {
 		*ptr++ = '0';
     } else {
+        if (v < 0) {
+            ptr[0] = '-';
+            ptr ++;
+            v *= -1;
+        }
+
 		char *p = ptr;
 		while (v) {
-			*p++ = (char)('0' + v % 10);
-			v /= 10;
+            int64_t vdiv = v / 10;
+            int64_t vmod = v - (vdiv * 10);
+			p[0] = (char)('0' + vmod);
+            p ++;
+			v = vdiv;
 		}
 
 		p1 = p;
@@ -58,7 +67,7 @@ char* strbuf_itoa(
 }
 
 static
-int ecs_strbuf_ftoa(
+int flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
     int precision,
@@ -73,19 +82,19 @@ int ecs_strbuf_ftoa(
     if (isnan(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendstr(out, "NaN");
+            ecs_strbuf_appendlit(out, "NaN");
             return ecs_strbuf_appendch(out, nan_delim);
         } else {
-            return ecs_strbuf_appendstr(out, "NaN");
+            return ecs_strbuf_appendlit(out, "NaN");
         }
     }
     if (isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendstr(out, "Inf");
+            ecs_strbuf_appendlit(out, "Inf");
             return ecs_strbuf_appendch(out, nan_delim);
         } else {
-            return ecs_strbuf_appendstr(out, "Inf");
+            return ecs_strbuf_appendlit(out, "Inf");
         }
     }
 
@@ -121,7 +130,7 @@ int ecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = strbuf_itoa(ptr, intPart);
+    ptr = flecs_strbuf_itoa(ptr, intPart);
 
 	if (precision) {
 		*ptr++ = '.';
@@ -183,7 +192,7 @@ int ecs_strbuf_ftoa(
 
 
         ptr[0] = 'e';
-        ptr = strbuf_itoa(ptr + 1, exp);
+        ptr = flecs_strbuf_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -198,7 +207,7 @@ int ecs_strbuf_ftoa(
 
 /* Add an extra element to the buffer */
 static
-void ecs_strbuf_grow(
+void flecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
     /* Allocate new element */
@@ -215,7 +224,7 @@ void ecs_strbuf_grow(
 
 /* Add an extra dynamic element */
 static
-void ecs_strbuf_grow_str(
+void flecs_strbuf_grow_str(
     ecs_strbuf_t *b,
     char *str,
     char *alloc_str,
@@ -235,7 +244,7 @@ void ecs_strbuf_grow_str(
 }
 
 static
-char* ecs_strbuf_ptr(
+char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
     if (b->buf) {
@@ -247,7 +256,7 @@ char* ecs_strbuf_ptr(
 
 /* Compute the amount of space left in the current element */
 static
-int32_t ecs_strbuf_memLeftInCurrentElement(
+int32_t flecs_strbuf_memLeftInCurrentElement(
     ecs_strbuf_t *b)
 {
     if (b->current->buffer_embedded) {
@@ -259,7 +268,7 @@ int32_t ecs_strbuf_memLeftInCurrentElement(
 
 /* Compute the amount of space left */
 static
-int32_t ecs_strbuf_memLeft(
+int32_t flecs_strbuf_memLeft(
     ecs_strbuf_t *b)
 {
     if (b->max) {
@@ -270,7 +279,7 @@ int32_t ecs_strbuf_memLeft(
 }
 
 static
-void ecs_strbuf_init(
+void flecs_strbuf_init(
     ecs_strbuf_t *b)
 {
     /* Initialize buffer structure only once */
@@ -287,7 +296,7 @@ void ecs_strbuf_init(
 
 /* Append a format string to a buffer */
 static
-bool vappend(
+bool flecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* str,
     va_list args)
@@ -299,10 +308,10 @@ bool vappend(
         return result;
     }
 
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
 
     if (!memLeft) {
         return false;
@@ -316,7 +325,7 @@ bool vappend(
 
     va_copy(arg_cpy, args);
     memRequired = vsnprintf(
-        ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
+        flecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
     ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
 
@@ -331,10 +340,10 @@ bool vappend(
             /* Resulting string fits in standard-size buffer. Note that the
              * entire string needs to fit, not just the remainder, as the
              * format string cannot be partially evaluated */
-            ecs_strbuf_grow(b);
+            flecs_strbuf_grow(b);
 
             /* Copy entire string to new buffer */
-            ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
+            ecs_os_vsprintf(flecs_strbuf_ptr(b), str, arg_cpy);
 
             /* Ignore the part of the string that was copied into the
              * previous buffer. The string copied into the new buffer could
@@ -349,25 +358,25 @@ bool vappend(
              * Allocate a new buffer that can hold the entire string. */
             char *dst = ecs_os_malloc(memRequired + 1);
             ecs_os_vsprintf(dst, str, arg_cpy);
-            ecs_strbuf_grow_str(b, dst, dst, memRequired);
+            flecs_strbuf_grow_str(b, dst, dst, memRequired);
         }
     }
 
     va_end(arg_cpy);
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 static
-bool appendstr(
+bool flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str,
     int n)
 {
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
     if (memLeft <= 0) {
         return false;
     }
@@ -379,10 +388,10 @@ bool appendstr(
 
     if (n <= memLeftInElement) {
         /* Element was large enough to fit string */
-        ecs_os_strncpy(ecs_strbuf_ptr(b), str, n);
+        ecs_os_strncpy(flecs_strbuf_ptr(b), str, n);
         b->current->pos += n;
     } else if ((n - memLeftInElement) < memLeft) {
-        ecs_os_strncpy(ecs_strbuf_ptr(b), str, memLeftInElement);
+        ecs_os_strncpy(flecs_strbuf_ptr(b), str, memLeftInElement);
 
         /* Element was not large enough, but buffer still has space */
         b->current->pos += memLeftInElement;
@@ -391,18 +400,18 @@ bool appendstr(
         /* Current element was too small, copy remainder into new element */
         if (n < ECS_STRBUF_ELEMENT_SIZE) {
             /* A standard-size buffer is large enough for the new string */
-            ecs_strbuf_grow(b);
+            flecs_strbuf_grow(b);
 
             /* Copy the remainder to the new buffer */
             if (n) {
                 /* If a max number of characters to write is set, only a
                  * subset of the string should be copied to the buffer */
                 ecs_os_strncpy(
-                    ecs_strbuf_ptr(b),
+                    flecs_strbuf_ptr(b),
                     str + memLeftInElement,
                     (size_t)n);
             } else {
-                ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
+                ecs_os_strcpy(flecs_strbuf_ptr(b), str + memLeftInElement);
             }
 
             /* Update to number of characters copied to new buffer */
@@ -410,40 +419,40 @@ bool appendstr(
         } else {
             /* String doesn't fit in a single element, strdup */
             char *remainder = ecs_os_strdup(str + memLeftInElement);
-            ecs_strbuf_grow_str(b, remainder, remainder, n);
+            flecs_strbuf_grow_str(b, remainder, remainder, n);
         }
     } else {
         /* Buffer max has been reached */
         return false;
     }
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 static
-bool appendch(
+bool flecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
     if (memLeft <= 0) {
         return false;
     }
 
     if (memLeftInElement) {
         /* Element was large enough to fit string */
-        ecs_strbuf_ptr(b)[0] = ch;
+        flecs_strbuf_ptr(b)[0] = ch;
         b->current->pos ++;
     } else {
-        ecs_strbuf_grow(b);
-        ecs_strbuf_ptr(b)[0] = ch;
+        flecs_strbuf_grow(b);
+        flecs_strbuf_ptr(b)[0] = ch;
         b->current->pos ++;
     }
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 bool ecs_strbuf_vappend(
@@ -453,7 +462,7 @@ bool ecs_strbuf_vappend(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
-    return vappend(b, fmt, args);
+    return flecs_strbuf_vappend(b, fmt, args);
 }
 
 bool ecs_strbuf_append(
@@ -466,7 +475,7 @@ bool ecs_strbuf_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = vappend(b, fmt, args);
+    bool result = flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
 
     return result;
@@ -479,7 +488,7 @@ bool ecs_strbuf_appendstrn(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return appendstr(b, str, len);
+    return flecs_strbuf_appendstr(b, str, len);
 }
 
 bool ecs_strbuf_appendch(
@@ -487,7 +496,17 @@ bool ecs_strbuf_appendch(
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return appendch(b, ch);
+    return flecs_strbuf_appendch(b, ch);
+}
+
+bool ecs_strbuf_appendint(
+    ecs_strbuf_t *b,
+    int64_t v)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    char numbuf[32];
+    char *ptr = flecs_strbuf_itoa(numbuf, v);
+    return ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
 }
 
 bool ecs_strbuf_appendflt(
@@ -496,7 +515,7 @@ bool ecs_strbuf_appendflt(
     char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_ftoa(b, flt, 10, nan_delim);
+    return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
@@ -505,8 +524,8 @@ bool ecs_strbuf_appendstr_zerocpy(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_strbuf_init(b);
-    ecs_strbuf_grow_str(b, str, str, 0);
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, str, str, 0);
     return true;
 }
 
@@ -517,8 +536,8 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     /* Removes const modifier, but logic prevents changing / delete string */
-    ecs_strbuf_init(b);
-    ecs_strbuf_grow_str(b, (char*)str, NULL, 0);
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, (char*)str, NULL, 0);
     return true;
 }
 
@@ -528,7 +547,7 @@ bool ecs_strbuf_appendstr(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return appendstr(b, str, ecs_os_strlen(str));
+    return flecs_strbuf_appendstr(b, str, ecs_os_strlen(str));
 }
 
 bool ecs_strbuf_mergebuff(
@@ -537,7 +556,8 @@ bool ecs_strbuf_mergebuff(
 {
     if (src_buffer->elementCount) {
         if (src_buffer->buf) {
-            return ecs_strbuf_appendstr(dst_buffer, src_buffer->buf);
+            return ecs_strbuf_appendstrn(
+                dst_buffer, src_buffer->buf, src_buffer->length);
         } else {
             ecs_strbuf_element *e = (ecs_strbuf_element*)&src_buffer->firstElement;
 
@@ -645,7 +665,12 @@ void ecs_strbuf_list_push(
     b->list_stack[b->list_sp].separator = separator;
 
     if (list_open) {
-        ecs_strbuf_appendstr(b, list_open);
+        char ch = list_open[0];
+        if (ch && !list_open[1]) {
+            ecs_strbuf_appendch(b, ch);
+        } else {
+            ecs_strbuf_appendstr(b, list_open);
+        }
     }
 }
 
@@ -659,7 +684,12 @@ void ecs_strbuf_list_pop(
     b->list_sp --;
     
     if (list_close) {
-        ecs_strbuf_appendstr(b, list_close);
+        char ch = list_close[0];
+        if (ch && !list_close[1]) {
+            ecs_strbuf_appendch(b, list_close[0]);
+        } else {
+            ecs_strbuf_appendstr(b, list_close);
+        }
     }
 }
 
@@ -670,9 +700,23 @@ void ecs_strbuf_list_next(
 
     int32_t list_sp = b->list_sp;
     if (b->list_stack[list_sp].count != 0) {
-        ecs_strbuf_appendstr(b, b->list_stack[list_sp].separator);
+        const char *sep = b->list_stack[list_sp].separator;
+        if (sep && !sep[1]) {
+            ecs_strbuf_appendch(b, sep[0]);
+        } else {
+            ecs_strbuf_appendstr(b, sep);
+        }
     }
     b->list_stack[list_sp].count ++;
+}
+
+bool ecs_strbuf_list_appendch(
+    ecs_strbuf_t *b,
+    char ch)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_strbuf_list_next(b);
+    return flecs_strbuf_appendch(b, ch);
 }
 
 bool ecs_strbuf_list_append(
@@ -687,7 +731,7 @@ bool ecs_strbuf_list_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = vappend(b, fmt, args);
+    bool result = flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
 
     return result;
@@ -702,6 +746,18 @@ bool ecs_strbuf_list_appendstr(
 
     ecs_strbuf_list_next(b);
     return ecs_strbuf_appendstr(b, str);
+}
+
+bool ecs_strbuf_list_appendstrn(
+    ecs_strbuf_t *b,
+    const char *str,
+    int32_t n)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_strbuf_list_next(b);
+    return ecs_strbuf_appendstrn(b, str, n);
 }
 
 int32_t ecs_strbuf_written(

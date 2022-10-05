@@ -9210,7 +9210,7 @@ void ecs_type_str_buf(
         }
 
         if (id == 1) {
-            ecs_strbuf_appendstr(buf, "Component");
+            ecs_strbuf_appendlit(buf, "Component");
         } else {
             ecs_id_str_buf(world, id, buf);
         }
@@ -9249,7 +9249,7 @@ char* ecs_entity_str(
 
     ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf);
     
-    ecs_strbuf_appendstr(&buf, " [");
+    ecs_strbuf_appendlit(&buf, " [");
     const ecs_type_t *type = ecs_get_type(world, entity);
     if (type) {
         ecs_type_str_buf(world, type, &buf);
@@ -12953,7 +12953,7 @@ static const double rounders[MAX_PRECISION + 1] =
 };
 
 static
-char* strbuf_itoa(
+char* flecs_strbuf_itoa(
     char *buf,
     int64_t v)
 {
@@ -12964,10 +12964,19 @@ char* strbuf_itoa(
 	if (!v) {
 		*ptr++ = '0';
     } else {
+        if (v < 0) {
+            ptr[0] = '-';
+            ptr ++;
+            v *= -1;
+        }
+
 		char *p = ptr;
 		while (v) {
-			*p++ = (char)('0' + v % 10);
-			v /= 10;
+            int64_t vdiv = v / 10;
+            int64_t vmod = v - (vdiv * 10);
+			p[0] = (char)('0' + vmod);
+            p ++;
+			v = vdiv;
 		}
 
 		p1 = p;
@@ -12983,7 +12992,7 @@ char* strbuf_itoa(
 }
 
 static
-int ecs_strbuf_ftoa(
+int flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
     int precision,
@@ -12998,19 +13007,19 @@ int ecs_strbuf_ftoa(
     if (isnan(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendstr(out, "NaN");
+            ecs_strbuf_appendlit(out, "NaN");
             return ecs_strbuf_appendch(out, nan_delim);
         } else {
-            return ecs_strbuf_appendstr(out, "NaN");
+            return ecs_strbuf_appendlit(out, "NaN");
         }
     }
     if (isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendstr(out, "Inf");
+            ecs_strbuf_appendlit(out, "Inf");
             return ecs_strbuf_appendch(out, nan_delim);
         } else {
-            return ecs_strbuf_appendstr(out, "Inf");
+            return ecs_strbuf_appendlit(out, "Inf");
         }
     }
 
@@ -13046,7 +13055,7 @@ int ecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = strbuf_itoa(ptr, intPart);
+    ptr = flecs_strbuf_itoa(ptr, intPart);
 
 	if (precision) {
 		*ptr++ = '.';
@@ -13108,7 +13117,7 @@ int ecs_strbuf_ftoa(
 
 
         ptr[0] = 'e';
-        ptr = strbuf_itoa(ptr + 1, exp);
+        ptr = flecs_strbuf_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -13123,7 +13132,7 @@ int ecs_strbuf_ftoa(
 
 /* Add an extra element to the buffer */
 static
-void ecs_strbuf_grow(
+void flecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
     /* Allocate new element */
@@ -13140,7 +13149,7 @@ void ecs_strbuf_grow(
 
 /* Add an extra dynamic element */
 static
-void ecs_strbuf_grow_str(
+void flecs_strbuf_grow_str(
     ecs_strbuf_t *b,
     char *str,
     char *alloc_str,
@@ -13160,7 +13169,7 @@ void ecs_strbuf_grow_str(
 }
 
 static
-char* ecs_strbuf_ptr(
+char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
     if (b->buf) {
@@ -13172,7 +13181,7 @@ char* ecs_strbuf_ptr(
 
 /* Compute the amount of space left in the current element */
 static
-int32_t ecs_strbuf_memLeftInCurrentElement(
+int32_t flecs_strbuf_memLeftInCurrentElement(
     ecs_strbuf_t *b)
 {
     if (b->current->buffer_embedded) {
@@ -13184,7 +13193,7 @@ int32_t ecs_strbuf_memLeftInCurrentElement(
 
 /* Compute the amount of space left */
 static
-int32_t ecs_strbuf_memLeft(
+int32_t flecs_strbuf_memLeft(
     ecs_strbuf_t *b)
 {
     if (b->max) {
@@ -13195,7 +13204,7 @@ int32_t ecs_strbuf_memLeft(
 }
 
 static
-void ecs_strbuf_init(
+void flecs_strbuf_init(
     ecs_strbuf_t *b)
 {
     /* Initialize buffer structure only once */
@@ -13212,7 +13221,7 @@ void ecs_strbuf_init(
 
 /* Append a format string to a buffer */
 static
-bool vappend(
+bool flecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* str,
     va_list args)
@@ -13224,10 +13233,10 @@ bool vappend(
         return result;
     }
 
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
 
     if (!memLeft) {
         return false;
@@ -13241,7 +13250,7 @@ bool vappend(
 
     va_copy(arg_cpy, args);
     memRequired = vsnprintf(
-        ecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
+        flecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
     ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
 
@@ -13256,10 +13265,10 @@ bool vappend(
             /* Resulting string fits in standard-size buffer. Note that the
              * entire string needs to fit, not just the remainder, as the
              * format string cannot be partially evaluated */
-            ecs_strbuf_grow(b);
+            flecs_strbuf_grow(b);
 
             /* Copy entire string to new buffer */
-            ecs_os_vsprintf(ecs_strbuf_ptr(b), str, arg_cpy);
+            ecs_os_vsprintf(flecs_strbuf_ptr(b), str, arg_cpy);
 
             /* Ignore the part of the string that was copied into the
              * previous buffer. The string copied into the new buffer could
@@ -13274,25 +13283,25 @@ bool vappend(
              * Allocate a new buffer that can hold the entire string. */
             char *dst = ecs_os_malloc(memRequired + 1);
             ecs_os_vsprintf(dst, str, arg_cpy);
-            ecs_strbuf_grow_str(b, dst, dst, memRequired);
+            flecs_strbuf_grow_str(b, dst, dst, memRequired);
         }
     }
 
     va_end(arg_cpy);
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 static
-bool appendstr(
+bool flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str,
     int n)
 {
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
     if (memLeft <= 0) {
         return false;
     }
@@ -13304,10 +13313,10 @@ bool appendstr(
 
     if (n <= memLeftInElement) {
         /* Element was large enough to fit string */
-        ecs_os_strncpy(ecs_strbuf_ptr(b), str, n);
+        ecs_os_strncpy(flecs_strbuf_ptr(b), str, n);
         b->current->pos += n;
     } else if ((n - memLeftInElement) < memLeft) {
-        ecs_os_strncpy(ecs_strbuf_ptr(b), str, memLeftInElement);
+        ecs_os_strncpy(flecs_strbuf_ptr(b), str, memLeftInElement);
 
         /* Element was not large enough, but buffer still has space */
         b->current->pos += memLeftInElement;
@@ -13316,18 +13325,18 @@ bool appendstr(
         /* Current element was too small, copy remainder into new element */
         if (n < ECS_STRBUF_ELEMENT_SIZE) {
             /* A standard-size buffer is large enough for the new string */
-            ecs_strbuf_grow(b);
+            flecs_strbuf_grow(b);
 
             /* Copy the remainder to the new buffer */
             if (n) {
                 /* If a max number of characters to write is set, only a
                  * subset of the string should be copied to the buffer */
                 ecs_os_strncpy(
-                    ecs_strbuf_ptr(b),
+                    flecs_strbuf_ptr(b),
                     str + memLeftInElement,
                     (size_t)n);
             } else {
-                ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
+                ecs_os_strcpy(flecs_strbuf_ptr(b), str + memLeftInElement);
             }
 
             /* Update to number of characters copied to new buffer */
@@ -13335,40 +13344,40 @@ bool appendstr(
         } else {
             /* String doesn't fit in a single element, strdup */
             char *remainder = ecs_os_strdup(str + memLeftInElement);
-            ecs_strbuf_grow_str(b, remainder, remainder, n);
+            flecs_strbuf_grow_str(b, remainder, remainder, n);
         }
     } else {
         /* Buffer max has been reached */
         return false;
     }
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 static
-bool appendch(
+bool flecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    ecs_strbuf_init(b);
+    flecs_strbuf_init(b);
 
-    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = ecs_strbuf_memLeft(b);
+    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = flecs_strbuf_memLeft(b);
     if (memLeft <= 0) {
         return false;
     }
 
     if (memLeftInElement) {
         /* Element was large enough to fit string */
-        ecs_strbuf_ptr(b)[0] = ch;
+        flecs_strbuf_ptr(b)[0] = ch;
         b->current->pos ++;
     } else {
-        ecs_strbuf_grow(b);
-        ecs_strbuf_ptr(b)[0] = ch;
+        flecs_strbuf_grow(b);
+        flecs_strbuf_ptr(b)[0] = ch;
         b->current->pos ++;
     }
 
-    return ecs_strbuf_memLeft(b) > 0;
+    return flecs_strbuf_memLeft(b) > 0;
 }
 
 bool ecs_strbuf_vappend(
@@ -13378,7 +13387,7 @@ bool ecs_strbuf_vappend(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
-    return vappend(b, fmt, args);
+    return flecs_strbuf_vappend(b, fmt, args);
 }
 
 bool ecs_strbuf_append(
@@ -13391,7 +13400,7 @@ bool ecs_strbuf_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = vappend(b, fmt, args);
+    bool result = flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
 
     return result;
@@ -13404,7 +13413,7 @@ bool ecs_strbuf_appendstrn(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return appendstr(b, str, len);
+    return flecs_strbuf_appendstr(b, str, len);
 }
 
 bool ecs_strbuf_appendch(
@@ -13412,7 +13421,17 @@ bool ecs_strbuf_appendch(
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return appendch(b, ch);
+    return flecs_strbuf_appendch(b, ch);
+}
+
+bool ecs_strbuf_appendint(
+    ecs_strbuf_t *b,
+    int64_t v)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    char numbuf[32];
+    char *ptr = flecs_strbuf_itoa(numbuf, v);
+    return ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
 }
 
 bool ecs_strbuf_appendflt(
@@ -13421,7 +13440,7 @@ bool ecs_strbuf_appendflt(
     char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_ftoa(b, flt, 10, nan_delim);
+    return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
@@ -13430,8 +13449,8 @@ bool ecs_strbuf_appendstr_zerocpy(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_strbuf_init(b);
-    ecs_strbuf_grow_str(b, str, str, 0);
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, str, str, 0);
     return true;
 }
 
@@ -13442,8 +13461,8 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     /* Removes const modifier, but logic prevents changing / delete string */
-    ecs_strbuf_init(b);
-    ecs_strbuf_grow_str(b, (char*)str, NULL, 0);
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, (char*)str, NULL, 0);
     return true;
 }
 
@@ -13453,7 +13472,7 @@ bool ecs_strbuf_appendstr(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return appendstr(b, str, ecs_os_strlen(str));
+    return flecs_strbuf_appendstr(b, str, ecs_os_strlen(str));
 }
 
 bool ecs_strbuf_mergebuff(
@@ -13462,7 +13481,8 @@ bool ecs_strbuf_mergebuff(
 {
     if (src_buffer->elementCount) {
         if (src_buffer->buf) {
-            return ecs_strbuf_appendstr(dst_buffer, src_buffer->buf);
+            return ecs_strbuf_appendstrn(
+                dst_buffer, src_buffer->buf, src_buffer->length);
         } else {
             ecs_strbuf_element *e = (ecs_strbuf_element*)&src_buffer->firstElement;
 
@@ -13570,7 +13590,12 @@ void ecs_strbuf_list_push(
     b->list_stack[b->list_sp].separator = separator;
 
     if (list_open) {
-        ecs_strbuf_appendstr(b, list_open);
+        char ch = list_open[0];
+        if (ch && !list_open[1]) {
+            ecs_strbuf_appendch(b, ch);
+        } else {
+            ecs_strbuf_appendstr(b, list_open);
+        }
     }
 }
 
@@ -13584,7 +13609,12 @@ void ecs_strbuf_list_pop(
     b->list_sp --;
     
     if (list_close) {
-        ecs_strbuf_appendstr(b, list_close);
+        char ch = list_close[0];
+        if (ch && !list_close[1]) {
+            ecs_strbuf_appendch(b, list_close[0]);
+        } else {
+            ecs_strbuf_appendstr(b, list_close);
+        }
     }
 }
 
@@ -13595,9 +13625,23 @@ void ecs_strbuf_list_next(
 
     int32_t list_sp = b->list_sp;
     if (b->list_stack[list_sp].count != 0) {
-        ecs_strbuf_appendstr(b, b->list_stack[list_sp].separator);
+        const char *sep = b->list_stack[list_sp].separator;
+        if (sep && !sep[1]) {
+            ecs_strbuf_appendch(b, sep[0]);
+        } else {
+            ecs_strbuf_appendstr(b, sep);
+        }
     }
     b->list_stack[list_sp].count ++;
+}
+
+bool ecs_strbuf_list_appendch(
+    ecs_strbuf_t *b,
+    char ch)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_strbuf_list_next(b);
+    return flecs_strbuf_appendch(b, ch);
 }
 
 bool ecs_strbuf_list_append(
@@ -13612,7 +13656,7 @@ bool ecs_strbuf_list_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = vappend(b, fmt, args);
+    bool result = flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
 
     return result;
@@ -13627,6 +13671,18 @@ bool ecs_strbuf_list_appendstr(
 
     ecs_strbuf_list_next(b);
     return ecs_strbuf_appendstr(b, str);
+}
+
+bool ecs_strbuf_list_appendstrn(
+    ecs_strbuf_t *b,
+    const char *str,
+    int32_t n)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_strbuf_list_next(b);
+    return ecs_strbuf_appendstrn(b, str, n);
 }
 
 int32_t ecs_strbuf_written(
@@ -15092,7 +15148,7 @@ void ecs_colorize_buf(
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
             if (isStr && (isStr == ch) && prev != '\\') {
@@ -15100,7 +15156,7 @@ void ecs_colorize_buf(
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
                 !isalpha(prev) && (prev != '\\'))
             {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isStr = ch;
             }
 
@@ -15109,17 +15165,17 @@ void ecs_colorize_buf(
                  !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
                  (prev != '.'))
             {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
                 isNum = true;
             }
 
             if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isVar = false;
             }
 
             if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isVar = true;
             }
         }
@@ -15132,28 +15188,28 @@ void ecs_colorize_buf(
             if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
             } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
             } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_RED);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_RED);
             } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BLUE);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_BLUE);
             } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_MAGENTA);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_MAGENTA);
             } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
             } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_YELLOW);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_YELLOW);
             } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREY);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREY);
             } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BOLD);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_BOLD);
             } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else {
                 isColor = false;
                 overrideColor = false;
@@ -15171,7 +15227,7 @@ void ecs_colorize_buf(
 
         if (ch == '\n') {
             if (isNum || isStr || isVar || overrideColor) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 overrideColor = false;
                 isNum = false;
                 isStr = false;
@@ -15185,7 +15241,7 @@ void ecs_colorize_buf(
 
         if (!overrideColor) {
             if (((ch == '\'') || (ch == '"')) && !isStr) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             }
         }
 
@@ -15193,7 +15249,7 @@ void ecs_colorize_buf(
     }
 
     if (isNum || isStr || isVar || overrideColor) {
-        if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+        if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
     }
 }
 
@@ -15219,8 +15275,9 @@ void _ecs_logv(
     ecs_colorize_buf(msg_nocolor, 
         ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
     ecs_os_free(msg_nocolor);
-    
+
     char *msg = ecs_strbuf_get(&msg_buf);
+
     if (msg) {
         ecs_os_api.log_(level, file, line, msg);
         ecs_os_free(msg);
@@ -15273,7 +15330,7 @@ void _ecs_parser_errorv(
         ecs_strbuf_vappend(&msg_buf, fmt, args);
 
         if (expr) {
-            ecs_strbuf_appendstr(&msg_buf, "\n");
+            ecs_strbuf_appendch(&msg_buf, '\n');
 
             /* Find start of line by taking column and looking for the
              * last occurring newline */
@@ -15301,10 +15358,13 @@ void _ecs_parser_errorv(
                 ecs_strbuf_appendstr(&msg_buf, expr);
             }
 
-            ecs_strbuf_appendstr(&msg_buf, "\n");
+            ecs_strbuf_appendch(&msg_buf, '\n');
 
             if (column != -1) {
-                ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+                int32_t c;
+                for (c = 0; c < column; c ++) {
+                    ecs_strbuf_appendch(&msg_buf, ' ');
+                }
             }
         }
 
@@ -22584,7 +22644,7 @@ char* ecs_rule_str(
             ecs_strbuf_append(&buf, "F:%s", filter_expr);
         }
 
-        ecs_strbuf_appendstr(&buf, "\n");
+        ecs_strbuf_appendch(&buf, '\n');
 
         ecs_os_free(pred_name_alloc);
         ecs_os_free(obj_name_alloc);
@@ -25863,7 +25923,7 @@ bool flecs_unit_validate(
             uptr = ecs_get(world, over, EcsUnit);
             ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
             if (uptr->symbol) {
-                ecs_strbuf_appendstr(&sbuf, "/");
+                ecs_strbuf_appendch(&sbuf, '/');
                 ecs_strbuf_appendstr(&sbuf, uptr->symbol);
                 must_match = true;
             }
@@ -27481,51 +27541,53 @@ int expr_ser_primitive(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    const char *bool_str[] = { "false", "true" };
-
     switch(kind) {
     case EcsBool:
-        ecs_strbuf_appendstr(str, bool_str[(int)*(bool*)base]);
+        if (*(bool*)base) {
+            ecs_strbuf_appendlit(str, "true");
+        } else {
+            ecs_strbuf_appendlit(str, "false");
+        }
         break;
     case EcsChar: {
         char chbuf[3];
         char ch = *(char*)base;
         if (ch) {
             ecs_chresc(chbuf, *(char*)base, '"');
-            ecs_strbuf_appendstrn(str, "\"", 1);
+            ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
-            ecs_strbuf_appendstrn(str, "\"", 1);
+            ecs_strbuf_appendch(str, '"');
         } else {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         }
         break;
     }
     case EcsByte:
-        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
         break;
     case EcsU8:
-        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
         break;
     case EcsU16:
-        ecs_strbuf_append(str, "%u", *(uint16_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint16_t*)base));
         break;
     case EcsU32:
-        ecs_strbuf_append(str, "%u", *(uint32_t*)base);
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint32_t*)base));
         break;
     case EcsU64:
         ecs_strbuf_append(str, "%llu", *(uint64_t*)base);
         break;
     case EcsI8:
-        ecs_strbuf_append(str, "%d", *(int8_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int8_t*)base));
         break;
     case EcsI16:
-        ecs_strbuf_append(str, "%d", *(int16_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int16_t*)base));
         break;
     case EcsI32:
-        ecs_strbuf_append(str, "%d", *(int32_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int32_t*)base));
         break;
     case EcsI64:
-        ecs_strbuf_append(str, "%lld", *(int64_t*)base);
+        ecs_strbuf_appendint(str, *(int64_t*)base);
         break;
     case EcsF32:
         ecs_strbuf_appendflt(str, (double)*(float*)base, 0);
@@ -27534,7 +27596,7 @@ int expr_ser_primitive(
         ecs_strbuf_appendflt(str, *(double*)base, 0);
         break;
     case EcsIPtr:
-        ecs_strbuf_append(str, "%i", *(intptr_t*)base);
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(intptr_t*)base));
         break;
     case EcsUPtr:
         ecs_strbuf_append(str, "%u", *(uintptr_t*)base);
@@ -27544,9 +27606,9 @@ int expr_ser_primitive(
         if (value) {
             ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
             if (length == ecs_os_strlen(value)) {
-                ecs_strbuf_appendstrn(str, "\"", 1);
-                ecs_strbuf_appendstr(str, value);
-                ecs_strbuf_appendstrn(str, "\"", 1);
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendstrn(str, value, length);
+                ecs_strbuf_appendch(str, '"');
             } else {
                 char *out = ecs_os_malloc(length + 3);
                 ecs_stresc(out + 1, length, '"', value);
@@ -27556,19 +27618,16 @@ int expr_ser_primitive(
                 ecs_strbuf_appendstr_zerocpy(str, out);
             }
         } else {
-            ecs_strbuf_appendstr(str, "null");
+            ecs_strbuf_appendlit(str, "null");
         }
         break;
     }
     case EcsEntity: {
         ecs_entity_t e = *(ecs_entity_t*)base;
         if (!e) {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         } else {
-            char *path = ecs_get_fullpath(world, e);
-            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_appendstr(str, path);
-            ecs_os_free(path);
+            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
         }
         break;
     }
@@ -27738,7 +27797,7 @@ int expr_ser_vector(
 {
     ecs_vector_t *value = *(ecs_vector_t**)base;
     if (!value) {
-        ecs_strbuf_appendstr(str, "null");
+        ecs_strbuf_appendlit(str, "null");
         return 0;
     }
 
@@ -31888,10 +31947,6 @@ void FlecsSystemImport(
 void flecs_json_next(
     ecs_strbuf_t *buf);
 
-void flecs_json_literal(
-    ecs_strbuf_t *buf,
-    const char *value);
-
 void flecs_json_number(
     ecs_strbuf_t *buf,
     double value);
@@ -31925,6 +31980,14 @@ void flecs_json_string(
 void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name);
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len);
+
+#define flecs_json_memberl(buf, name)\
+    flecs_json_membern(buf, name, sizeof(name) - 1)
 
 void flecs_json_path(
     ecs_strbuf_t *buf,
@@ -31960,13 +32023,6 @@ void flecs_json_next(
     ecs_strbuf_list_next(buf);
 }
 
-void flecs_json_literal(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_strbuf_appendstr(buf, value);
-}
-
 void flecs_json_number(
     ecs_strbuf_t *buf,
     double value)
@@ -31977,13 +32033,13 @@ void flecs_json_number(
 void flecs_json_true(
     ecs_strbuf_t *buf)
 {
-    flecs_json_literal(buf, "true");
+    ecs_strbuf_appendlit(buf, "true");
 }
 
 void flecs_json_false(
     ecs_strbuf_t *buf)
 {
-    flecs_json_literal(buf, "false");
+    ecs_strbuf_appendlit(buf, "false");
 }
 
 void flecs_json_bool(
@@ -32034,9 +32090,17 @@ void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name)
 {
-    ecs_strbuf_list_appendstr(buf, "\"");
-    ecs_strbuf_appendstr(buf, name);
-    ecs_strbuf_appendstr(buf, "\":");
+    flecs_json_membern(buf, name, ecs_os_strlen(name));
+}
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len)
+{
+    ecs_strbuf_list_appendch(buf, '"');
+    ecs_strbuf_appendstrn(buf, name, name_len);
+    ecs_strbuf_appendlit(buf, "\":");
 }
 
 void flecs_json_path(
@@ -32066,7 +32130,7 @@ void flecs_json_label(
         ecs_strbuf_appendstr(buf, lbl);
         ecs_strbuf_appendch(buf, '"');
     } else {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
     }
 }
 
@@ -32088,7 +32152,7 @@ void flecs_json_color(
         ecs_strbuf_appendstr(buf, color);
         ecs_strbuf_appendch(buf, '"');
     } else {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
     }
 }
 
@@ -32288,7 +32352,7 @@ int json_ser_vector(
 {
     ecs_vector_t *value = *(ecs_vector_t**)base;
     if (!value) {
-        ecs_strbuf_appendstr(str, "null");
+        ecs_strbuf_appendlit(str, "null");
         return 0;
     }
 
@@ -32618,7 +32682,7 @@ int flecs_json_append_type_labels(
         return 0;
     }
 
-    flecs_json_member(buf, "id_labels");
+    flecs_json_memberl(buf, "id_labels");
     flecs_json_array_push(buf);
 
     int32_t i;
@@ -32673,7 +32737,7 @@ int flecs_json_append_type_values(
         return 0;
     }
 
-    flecs_json_member(buf, "values");
+    flecs_json_memberl(buf, "values");
     flecs_json_array_push(buf);
 
     int32_t i;
@@ -32736,7 +32800,7 @@ int flecs_json_append_type_info(
         return 0;
     }
 
-    flecs_json_member(buf, "type_info");
+    flecs_json_memberl(buf, "type_info");
     flecs_json_array_push(buf);
 
     int32_t i;
@@ -32792,7 +32856,7 @@ int flecs_json_append_type_hidden(
         return 0; /* if this is not a base, components are never hidden */
     }
 
-    flecs_json_member(buf, "hidden");
+    flecs_json_memberl(buf, "hidden");
     flecs_json_array_push(buf);
 
     int32_t i;
@@ -32833,7 +32897,7 @@ int flecs_json_append_type(
         count = type->count;
     }
 
-    flecs_json_member(buf, "ids");
+    flecs_json_memberl(buf, "ids");
     flecs_json_array_push(buf);
 
     for (i = 0; i < count; i ++) {
@@ -32921,7 +32985,7 @@ int flecs_json_append_base(
 
     ecs_strbuf_list_next(buf);
     flecs_json_object_push(buf);
-    flecs_json_member(buf, "path");
+    flecs_json_memberl(buf, "path");
     flecs_json_path(buf, world, ent);
 
     if (flecs_json_append_type(world, buf, ent, inst, desc)) {
@@ -32947,14 +33011,14 @@ int ecs_entity_to_json_buf(
 
     if (!desc || desc->serialize_path) {
         char *path = ecs_get_fullpath(world, entity);
-        flecs_json_member(buf, "path");
+        flecs_json_memberl(buf, "path");
         flecs_json_string(buf, path);
         ecs_os_free(path);
     }
 
 #ifdef FLECS_DOC
     if (desc && desc->serialize_label) {
-        flecs_json_member(buf, "label");
+        flecs_json_memberl(buf, "label");
         const char *doc_name = ecs_doc_get_name(world, entity);
         if (doc_name) {
             flecs_json_string(buf, doc_name);
@@ -32968,7 +33032,7 @@ int ecs_entity_to_json_buf(
     if (desc && desc->serialize_brief) {
         const char *doc_brief = ecs_doc_get_brief(world, entity);
         if (doc_brief) {
-            flecs_json_member(buf, "brief");
+            flecs_json_memberl(buf, "brief");
             flecs_json_string(buf, doc_brief);
         }
     }
@@ -32976,7 +33040,7 @@ int ecs_entity_to_json_buf(
     if (desc && desc->serialize_link) {
         const char *doc_link = ecs_doc_get_link(world, entity);
         if (doc_link) {
-            flecs_json_member(buf, "link");
+            flecs_json_memberl(buf, "link");
             flecs_json_string(buf, doc_link);
         }
     }
@@ -32984,7 +33048,7 @@ int ecs_entity_to_json_buf(
     if (desc && desc->serialize_color) {
         const char *doc_color = ecs_doc_get_color(world, entity);
         if (doc_color) {
-            flecs_json_member(buf, "color");
+            flecs_json_memberl(buf, "color");
             flecs_json_string(buf, doc_color);
         }
     }
@@ -33000,7 +33064,7 @@ int ecs_entity_to_json_buf(
 
     if (!desc || desc->serialize_base) {
         if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
-            flecs_json_member(buf, "is_a");
+            flecs_json_memberl(buf, "is_a");
             flecs_json_array_push(buf);
 
             for (i = 0; i < count; i ++) {
@@ -33075,7 +33139,7 @@ void flecs_json_serialize_iter_ids(
         return;
     }
 
-    flecs_json_member(buf, "ids");
+    flecs_json_memberl(buf, "ids");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
@@ -33097,7 +33161,7 @@ void flecs_json_serialize_type_info(
         return;
     }
 
-    flecs_json_member(buf, "type_info");
+    flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
@@ -33105,12 +33169,11 @@ void flecs_json_serialize_type_info(
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
             flecs_json_serialize_id(world, typeid, buf);
-            ecs_strbuf_appendstr(buf, ":");
+            ecs_strbuf_appendch(buf, ':');
             ecs_type_info_to_json_buf(world, typeid, buf);
         } else {
             flecs_json_serialize_id(world, it->terms[i].id, buf);
-            ecs_strbuf_appendstr(buf, ":");
-            ecs_strbuf_appendstr(buf, "0");
+            ecs_strbuf_appendlit(buf, ":0");
         }
     }
 
@@ -33128,7 +33191,7 @@ void flecs_json_serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
         if (flecs_json_skip_variable(var_name)) continue;
 
         if (!actual_count) {
-            flecs_json_member(buf, "vars");
+            flecs_json_memberl(buf, "vars");
             flecs_json_array_push(buf);
             actual_count ++;
         }
@@ -33148,7 +33211,7 @@ void flecs_json_serialize_iter_result_ids(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_member(buf, "ids");
+    flecs_json_memberl(buf, "ids");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->field_count; i ++) {
@@ -33165,7 +33228,7 @@ void flecs_json_serialize_iter_result_sources(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_member(buf, "sources");
+    flecs_json_memberl(buf, "sources");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->field_count; i ++) {
@@ -33174,7 +33237,7 @@ void flecs_json_serialize_iter_result_sources(
         if (subj) {            
             flecs_json_path(buf, world, subj);
         } else {
-            flecs_json_literal(buf, "0");
+            ecs_strbuf_appendch(buf, '0');
         }
     }
 
@@ -33186,7 +33249,7 @@ void flecs_json_serialize_iter_result_is_set(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_member(buf, "is_set");
+    flecs_json_memberl(buf, "is_set");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->field_count; i ++) {
@@ -33217,7 +33280,7 @@ void flecs_json_serialize_iter_result_variables(
         if (flecs_json_skip_variable(var_name)) continue;
 
         if (!actual_count) {
-            flecs_json_member(buf, "vars");
+            flecs_json_memberl(buf, "vars");
             flecs_json_array_push(buf);
             actual_count ++;
         }
@@ -33247,7 +33310,7 @@ void flecs_json_serialize_iter_result_variable_labels(
         if (flecs_json_skip_variable(var_name)) continue;
 
         if (!actual_count) {
-            flecs_json_member(buf, "var_labels");
+            flecs_json_memberl(buf, "var_labels");
             flecs_json_array_push(buf);
             actual_count ++;
         }
@@ -33276,7 +33339,7 @@ void flecs_json_serialize_iter_result_variable_ids(
         if (flecs_json_skip_variable(var_name)) continue;
 
         if (!actual_count) {
-            flecs_json_member(buf, "var_ids");
+            flecs_json_memberl(buf, "var_ids");
             flecs_json_array_push(buf);
             actual_count ++;
         }
@@ -33301,7 +33364,7 @@ void flecs_json_serialize_iter_result_entities(
         return;
     }
 
-    flecs_json_member(buf, "entities");
+    flecs_json_memberl(buf, "entities");
     flecs_json_array_push(buf);
 
     ecs_entity_t *entities = it->entities;
@@ -33325,7 +33388,7 @@ void flecs_json_serialize_iter_result_entity_labels(
         return;
     }
 
-    flecs_json_member(buf, "entity_labels");
+    flecs_json_memberl(buf, "entity_labels");
     flecs_json_array_push(buf);
 
     ecs_entity_t *entities = it->entities;
@@ -33348,7 +33411,7 @@ void flecs_json_serialize_iter_result_entity_ids(
         return;
     }
 
-    flecs_json_member(buf, "entity_ids");
+    flecs_json_memberl(buf, "entity_ids");
     flecs_json_array_push(buf);
 
     ecs_entity_t *entities = it->entities;
@@ -33372,7 +33435,7 @@ void flecs_json_serialize_iter_result_colors(
         return;
     }
 
-    flecs_json_member(buf, "colors");
+    flecs_json_memberl(buf, "colors");
     flecs_json_array_push(buf);
 
     ecs_entity_t *entities = it->entities;
@@ -33391,7 +33454,7 @@ void flecs_json_serialize_iter_result_values(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    flecs_json_member(buf, "values");
+    flecs_json_memberl(buf, "values");
     flecs_json_array_push(buf);
 
     int32_t i, term_count = it->field_count;
@@ -33406,13 +33469,13 @@ void flecs_json_serialize_iter_result_values(
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
             if (ecs_field_is_set(it, i + 1)) {
-                flecs_json_literal(buf, "0");
+                ecs_strbuf_appendch(buf, '0');
                 continue;
             }
         }
 
         if (ecs_field_is_writeonly(it, i + 1)) {
-            flecs_json_literal(buf, "0");
+            ecs_strbuf_appendch(buf, '0');
             continue;
         }
 
@@ -33421,14 +33484,14 @@ void flecs_json_serialize_iter_result_values(
         if (!type) {
             /* Odd, we have a ptr but no Component? Not the place of the
              * serializer to complain about that. */
-            flecs_json_literal(buf, "0");
+            ecs_strbuf_appendch(buf, '0');
             continue;
         }
 
         const EcsComponent *comp = ecs_get(world, type, EcsComponent);
         if (!comp) {
             /* Also odd, typeid but not a component? */
-            flecs_json_literal(buf, "0");
+            ecs_strbuf_appendch(buf, '0');
             continue;
         }
 
@@ -33436,7 +33499,7 @@ void flecs_json_serialize_iter_result_values(
             world, type, EcsMetaTypeSerialized);
         if (!ser) {
             /* Not odd, component just has no reflection data */
-            flecs_json_literal(buf, "0");
+            ecs_strbuf_appendch(buf, '0');
             continue;
         }
 
@@ -33556,7 +33619,7 @@ int ecs_iter_to_json_buf(
     flecs_json_serialize_iter_variables(it, buf);
 
     /* Serialize results */
-    flecs_json_member(buf, "results");
+    flecs_json_memberl(buf, "results");
     flecs_json_array_push(buf);
 
     /* Use instancing for improved performance */
@@ -33571,7 +33634,7 @@ int ecs_iter_to_json_buf(
 
     if (desc && desc->measure_eval_duration) {
         double dt = ecs_time_measure(&duration);
-        flecs_json_member(buf, "eval_duration");
+        flecs_json_memberl(buf, "eval_duration");
         flecs_json_number(buf, dt);
     }
 
@@ -33752,18 +33815,18 @@ int json_typeinfo_ser_unit(
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
 {
-    flecs_json_member(str, "unit");
+    flecs_json_memberl(str, "unit");
     flecs_json_path(str, world, unit);
 
     const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
     if (uptr) {
         if (uptr->symbol) {
-            flecs_json_member(str, "symbol");
+            flecs_json_memberl(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
         ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
-            flecs_json_member(str, "quantity");
+            flecs_json_memberl(str, "quantity");
             flecs_json_path(str, world, quantity);
         }
     }
@@ -33880,14 +33943,14 @@ int json_typeinfo_ser_type(
 {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
         return 0;
     }
 
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
     if (!ser) {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
         return 0;
     }
 
@@ -34126,9 +34189,9 @@ void flecs_reply_verror(
     const char *fmt,
     va_list args)
 {
-    ecs_strbuf_appendstr(&reply->body, "{\"error\":\"");
+    ecs_strbuf_appendlit(&reply->body, "{\"error\":\"");
     ecs_strbuf_vappend(&reply->body, fmt, args);
-    ecs_strbuf_appendstr(&reply->body, "\"}");
+    ecs_strbuf_appendlit(&reply->body, "\"}");
 }
 
 static
@@ -34254,7 +34317,7 @@ bool flecs_rest_reply_query(
 {
     const char *q = ecs_http_get_param(req, "q");
     if (!q) {
-        ecs_strbuf_appendstr(&reply->body, "Missing parameter 'q'");
+        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
         return true;
     }
@@ -34299,14 +34362,16 @@ bool flecs_rest_reply_query(
 #ifdef FLECS_MONITOR
 
 static
-void flecs_rest_array_append(
+void _flecs_rest_array_append(
     ecs_strbuf_t *reply,
     const char *field,
+    int32_t field_len,
     const ecs_float_t *values,
     int32_t t)
 {
-    ecs_strbuf_list_append(reply, "\"%s\"", field);
-    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_appendch(reply, '"');
+    ecs_strbuf_appendstrn(reply, field, field_len);
+    ecs_strbuf_appendlit(reply, "\":");
     ecs_strbuf_list_push(reply, "[", ",");
 
     int32_t i;
@@ -34319,16 +34384,22 @@ void flecs_rest_array_append(
     ecs_strbuf_list_pop(reply, "]");
 }
 
+#define flecs_rest_array_append(reply, field, values, t)\
+    _flecs_rest_array_append(reply, field, sizeof(field) - 1, values, t)
+
 static
 void flecs_rest_gauge_append(
     ecs_strbuf_t *reply,
     const ecs_metric_t *m,
     const char *field,
+    int32_t field_len,
     int32_t t,
-    const char *brief)
+    const char *brief,
+    int32_t brief_len)
 {
-    ecs_strbuf_list_append(reply, "\"%s\"", field);
-    ecs_strbuf_appendch(reply, ':');
+    ecs_strbuf_list_appendch(reply, '"');
+    ecs_strbuf_appendstrn(reply, field, field_len);
+    ecs_strbuf_appendlit(reply, "\":");
     ecs_strbuf_list_push(reply, "{", ",");
 
     flecs_rest_array_append(reply, "avg", m->gauge.avg, t);
@@ -34336,9 +34407,9 @@ void flecs_rest_gauge_append(
     flecs_rest_array_append(reply, "max", m->gauge.max, t);
 
     if (brief) {
-        ecs_strbuf_list_append(reply, "\"brief\":\"");
-        ecs_strbuf_appendstr(reply, brief);
-        ecs_strbuf_appendstr(reply, "\"");
+        ecs_strbuf_list_appendlit(reply, "\"brief\":\"");
+        ecs_strbuf_appendstrn(reply, brief, brief_len);
+        ecs_strbuf_appendch(reply, '"');
     }
 
     ecs_strbuf_list_pop(reply, "}");
@@ -34349,17 +34420,19 @@ void flecs_rest_counter_append(
     ecs_strbuf_t *reply,
     const ecs_metric_t *m,
     const char *field,
+    int32_t field_len,
     int32_t t,
-    const char *brief)
+    const char *brief,
+    int32_t brief_len)
 {
-    flecs_rest_gauge_append(reply, m, field, t, brief);
+    flecs_rest_gauge_append(reply, m, field, field_len, t, brief, brief_len);
 }
 
 #define ECS_GAUGE_APPEND_T(reply, s, field, t, brief)\
-    flecs_rest_gauge_append(reply, &(s)->field, #field, t, brief)
+    flecs_rest_gauge_append(reply, &(s)->field, #field, sizeof(#field) - 1, t, brief, sizeof(brief) - 1)
 
 #define ECS_COUNTER_APPEND_T(reply, s, field, t, brief)\
-    flecs_rest_counter_append(reply, &(s)->field, #field, t, brief)
+    flecs_rest_counter_append(reply, &(s)->field, #field, sizeof(#field) - 1, t, brief, sizeof(brief) - 1)
 
 #define ECS_GAUGE_APPEND(reply, s, field, brief)\
     ECS_GAUGE_APPEND_T(reply, s, field, (s)->t, brief)
@@ -34445,17 +34518,16 @@ void flecs_system_stats_to_json(
     const ecs_system_stats_t *stats)
 {
     ecs_strbuf_list_push(reply, "{", ",");
-
-    char *path = ecs_get_fullpath(world, system);
-    ecs_strbuf_list_append(reply, "\"name\":\"%s\"", path);
-    ecs_os_free(path);
+    ecs_strbuf_list_appendlit(reply, "\"name\":\"");
+    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
+    ecs_strbuf_appendch(reply, '"');
 
     if (!stats->task) {
-        ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count, "Tables matched by system");
-        ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count, "Entities matched by system");
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count, "");
+        ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count, "");
     }
 
-    ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t, "Time spent by system");
+    ECS_COUNTER_APPEND_T(reply, stats, time_spent, stats->query.t, "");
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -34695,7 +34767,7 @@ bool flecs_rest_reply(
         return false;
     }
 
-    ecs_strbuf_appendstr(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
+    ecs_strbuf_appendlit(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
 
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */
@@ -35559,24 +35631,25 @@ void http_append_send_headers(
     ecs_strbuf_t *extra_headers,
     ecs_size_t content_len) 
 {
-    ecs_strbuf_appendstr(hdrs, "HTTP/1.1 ");
-    ecs_strbuf_append(hdrs, "%d ", code);
+    ecs_strbuf_appendlit(hdrs, "HTTP/1.1 ");
+    ecs_strbuf_appendint(hdrs, code);
+    ecs_strbuf_appendch(hdrs, ' ');
     ecs_strbuf_appendstr(hdrs, status);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Content-Type: ");
+    ecs_strbuf_appendlit(hdrs, "Content-Type: ");
     ecs_strbuf_appendstr(hdrs, content_type);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Content-Length: ");
+    ecs_strbuf_appendlit(hdrs, "Content-Length: ");
     ecs_strbuf_append(hdrs, "%d", content_len);
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendstr(hdrs, "Server: flecs\r\n");
+    ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
 
-    ecs_strbuf_appendstr(hdrs, "\r\n");
+    ecs_strbuf_appendlit(hdrs, "\r\n");
 }
 
 static
@@ -41462,7 +41535,7 @@ void filter_str_add_id(
     bool is_added = false;
     if (!is_subject || id->id != EcsThis) {
         if (id->flags & EcsIsVariable) {
-            ecs_strbuf_appendstr(buf, "$");
+            ecs_strbuf_appendlit(buf, "$");
         }
         if (id->id) {
             char *path = ecs_get_fullpath(world, id->id);
@@ -41471,7 +41544,7 @@ void filter_str_add_id(
         } else if (id->name) {
             ecs_strbuf_appendstr(buf, id->name);
         } else {
-            ecs_strbuf_appendstr(buf, "0");
+            ecs_strbuf_appendlit(buf, "0");
         }
         is_added = true;
     }
@@ -41540,27 +41613,27 @@ void term_str_w_strbuf(
     }
 
     if (term->oper == EcsNot) {
-        ecs_strbuf_appendstr(buf, "!");
+        ecs_strbuf_appendlit(buf, "!");
     } else if (term->oper == EcsOptional) {
-        ecs_strbuf_appendstr(buf, "?");
+        ecs_strbuf_appendlit(buf, "?");
     }
 
     if (!subj_set) {
         filter_str_add_id(world, buf, &term->first, false, def_first_mask);
-        ecs_strbuf_appendstr(buf, "()");
+        ecs_strbuf_appendlit(buf, "()");
     } else if (ecs_term_match_this(term) && 
         (src->flags & EcsTraverseFlags) == def_src_mask)
     {
         if (pred_set) {
             if (obj_set) {
-                ecs_strbuf_appendstr(buf, "(");
+                ecs_strbuf_appendlit(buf, "(");
             }
             filter_str_add_id(world, buf, &term->first, false, def_first_mask);   
             if (obj_set) {
-                ecs_strbuf_appendstr(buf, ",");
+                ecs_strbuf_appendlit(buf, ",");
                 filter_str_add_id(
                     world, buf, &term->second, false, def_second_mask);
-                ecs_strbuf_appendstr(buf, ")");
+                ecs_strbuf_appendlit(buf, ")");
             }
         } else if (term->id) {
             char *str = ecs_id_str(world, term->id);
@@ -41574,17 +41647,17 @@ void term_str_w_strbuf(
         }
 
         filter_str_add_id(world, buf, &term->first, false, def_first_mask);
-        ecs_strbuf_appendstr(buf, "(");
+        ecs_strbuf_appendlit(buf, "(");
         if (term->src.flags & EcsIsEntity && term->src.id == term->first.id) {
-            ecs_strbuf_appendstr(buf, "$");
+            ecs_strbuf_appendlit(buf, "$");
         } else {
             filter_str_add_id(world, buf, &term->src, true, def_src_mask);
         }
         if (obj_set) {
-            ecs_strbuf_appendstr(buf, ",");
+            ecs_strbuf_appendlit(buf, ",");
             filter_str_add_id(world, buf, &term->second, false, def_second_mask);
         }
-        ecs_strbuf_appendstr(buf, ")");
+        ecs_strbuf_appendlit(buf, ")");
     }
 }
 
@@ -41626,9 +41699,9 @@ char* flecs_filter_str(
 
         if (i) {
             if (terms[i - 1].oper == EcsOr && term->oper == EcsOr) {
-                ecs_strbuf_appendstr(&buf, " || ");
+                ecs_strbuf_appendlit(&buf, " || ");
             } else {
-                ecs_strbuf_appendstr(&buf, ", ");
+                ecs_strbuf_appendlit(&buf, ", ");
             }
         }
 
@@ -41638,13 +41711,13 @@ char* flecs_filter_str(
 
         if (or_count < 1) {
             if (term->inout == EcsIn) {
-                ecs_strbuf_appendstr(&buf, "[in] ");
+                ecs_strbuf_appendlit(&buf, "[in] ");
             } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[inout] ");
+                ecs_strbuf_appendlit(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
-                ecs_strbuf_appendstr(&buf, "[out] ");
+                ecs_strbuf_appendlit(&buf, "[out] ");
             } else if (term->inout == EcsInOutNone) {
-                ecs_strbuf_appendstr(&buf, "[none] ");
+                ecs_strbuf_appendlit(&buf, "[none] ");
             }
         }
 
@@ -44860,7 +44933,7 @@ void flecs_dump_backtrace(
 #undef HAVE_EXECINFO_H
 
 static
-void log_msg(
+void flecs_log_msg(
     int32_t level,
     const char *file, 
     int32_t line,  
@@ -45120,16 +45193,16 @@ char* ecs_os_api_module_to_dl(const char *module) {
     char *file_base = module_file_base(module, '_');
 
 #   if defined(ECS_TARGET_LINUX) || defined(ECS_TARGET_FREEBSD)
-    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendlit(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".so");
+    ecs_strbuf_appendlit(&lib, ".so");
 #   elif defined(ECS_TARGET_DARWIN)
-    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendlit(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".dylib");
+    ecs_strbuf_appendlit(&lib, ".dylib");
 #   elif defined(ECS_TARGET_WINDOWS)
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, ".dll");
+    ecs_strbuf_appendlit(&lib, ".dll");
 #   endif
 
     ecs_os_free(file_base);
@@ -45145,7 +45218,7 @@ char* ecs_os_api_module_to_etc(const char *module) {
     char *file_base = module_file_base(module, '-');
 
     ecs_strbuf_appendstr(&lib, file_base);
-    ecs_strbuf_appendstr(&lib, "/etc");
+    ecs_strbuf_appendlit(&lib, "/etc");
 
     ecs_os_free(file_base);
 
@@ -45178,7 +45251,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */
-    ecs_os_api.log_ = log_msg;
+    ecs_os_api.log_ = flecs_log_msg;
 
     /* Modules */
     if (!ecs_os_api.module_to_dl_) {
@@ -50166,13 +50239,13 @@ char* ecs_iter_str(
     }
 
     if (it->count) {
-        ecs_strbuf_appendstr(&buf, "this:\n");
+        ecs_strbuf_appendlit(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
             char *str = ecs_get_fullpath(world, e);
-            ecs_strbuf_appendstr(&buf, "    - ");
+            ecs_strbuf_appendlit(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
-            ecs_strbuf_appendstr(&buf, "\n");
+            ecs_strbuf_appendch(&buf, '\n');
             ecs_os_free(str);
         }
     }
@@ -50687,11 +50760,11 @@ error:
 #include <time.h>
 
 #ifndef FLECS_NDEBUG
-static int64_t s_min[] = { 
+static int64_t flecs_s_min[] = { 
     [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
-static int64_t s_max[] = { 
+static int64_t flecs_s_max[] = { 
     [1] = INT8_MAX, [2] = INT16_MAX, [4] = INT32_MAX, [8] = INT64_MAX };
-static uint64_t u_max[] = { 
+static uint64_t flecs_u_max[] = { 
     [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
 
 uint64_t _flecs_ito(
@@ -50709,11 +50782,11 @@ uint64_t _flecs_ito(
     v.u = u;
 
     if (is_signed) {
-        ecs_assert(v.s >= s_min[size], ECS_INVALID_CONVERSION, err);
-        ecs_assert(v.s <= s_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, err);
     } else {
         ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, err);
-        ecs_assert(u <= u_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, err);
     }
 
     return u;
@@ -52062,10 +52135,11 @@ bool flecs_path_append(
     ecs_strbuf_t *buf)
 {
     ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t cur = 0;
-    char buff[22];
-    const char *name;
+    const char *name = NULL;
+    ecs_size_t name_len = 0;
 
     if (ecs_is_valid(world, child)) {
         cur = ecs_get_target(world, child, EcsChildOf, 0);
@@ -52073,23 +52147,33 @@ bool flecs_path_append(
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
             if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
                 flecs_path_append(world, parent, cur, sep, prefix, buf);
-                ecs_strbuf_appendstr(buf, sep);
+                if (!sep[1]) {
+                    ecs_strbuf_appendch(buf, sep[0]);
+                } else {
+                    ecs_strbuf_appendstr(buf, sep);
+                }
             }
-        } else if (prefix) {
-            ecs_strbuf_appendstr(buf, prefix);
+        } else if (prefix && prefix[0]) {
+            if (!prefix[1]) {
+                ecs_strbuf_appendch(buf, prefix[0]);
+            } else {
+                ecs_strbuf_appendstr(buf, prefix);
+            }
         }
 
-        name = ecs_get_name(world, child);
-        if (!name || !ecs_os_strlen(name)) {
-            ecs_os_sprintf(buff, "%u", (uint32_t)child);
-            name = buff;
-        }        
-    } else {
-        ecs_os_sprintf(buff, "%u", (uint32_t)child);
-        name = buff;
+        const EcsIdentifier *id = ecs_get_pair(
+            world, child, EcsIdentifier, EcsName);
+        if (id) {
+            name = id->value;
+            name_len = id->length;
+        }      
     }
 
-    ecs_strbuf_appendstr(buf, name);
+    if (name) {
+        ecs_strbuf_appendstrn(buf, name, name_len);
+    } else {
+        ecs_strbuf_appendint(buf, flecs_uto(int64_t, (uint32_t)child));
+    }
 
     return cur != 0;
 }
@@ -52282,11 +52366,11 @@ void ecs_get_path_w_sep_buf(
     world = ecs_get_world(world);
 
     if (child == EcsWildcard) {
-        ecs_strbuf_appendstr(buf, "*");
+        ecs_strbuf_appendch(buf, '*');
         return;
     }
     if (child == EcsAny) {
-        ecs_strbuf_appendstr(buf, "_");
+        ecs_strbuf_appendch(buf, '_');
         return;
     }
 
@@ -52297,7 +52381,7 @@ void ecs_get_path_w_sep_buf(
     if (!child || parent != child) {
         flecs_path_append(world, parent, child, sep, prefix, buf);
     } else {
-        ecs_strbuf_appendstr(buf, "");
+        ecs_strbuf_appendstrn(buf, "", 0);
     }
 
 error:
