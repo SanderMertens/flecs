@@ -941,11 +941,6 @@ void Http_teardown(void);
 void Http_teardown_started(void);
 void Http_teardown_stopped(void);
 void Http_stop_start(void);
-void Http_stop_start_stresstest(void);
-void Http_stop_start_stresstest_w_0_sleep(void);
-void Http_stop_start_stresstest_w_100ns_sleep(void);
-void Http_stop_start_stresstest_w_100us_sleep(void);
-void Http_stop_start_stresstest_w_10ms_sleep(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -4535,26 +4530,6 @@ bake_test_case Http_testcases[] = {
     {
         "stop_start",
         Http_stop_start
-    },
-    {
-        "stop_start_stresstest",
-        Http_stop_start_stresstest
-    },
-    {
-        "stop_start_stresstest_w_0_sleep",
-        Http_stop_start_stresstest_w_0_sleep
-    },
-    {
-        "stop_start_stresstest_w_100ns_sleep",
-        Http_stop_start_stresstest_w_100ns_sleep
-    },
-    {
-        "stop_start_stresstest_w_100us_sleep",
-        Http_stop_start_stresstest_w_100us_sleep
-    },
-    {
-        "stop_start_stresstest_w_10ms_sleep",
-        Http_stop_start_stresstest_w_10ms_sleep
     }
 };
 
@@ -4731,7 +4706,7 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        9,
+        4,
         Http_testcases
     },
     {
