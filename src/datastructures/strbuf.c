@@ -569,7 +569,6 @@ char* ecs_strbuf_get(
         } else {
             void *next = NULL;
             int32_t len = b->size + b->current->pos + 1;
-
             ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
 
             result = ecs_os_malloc(len);
