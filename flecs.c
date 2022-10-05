@@ -16814,11 +16814,11 @@ void ecs_run_pipeline(
         }
     }
 
+done:
     if (measure_time) {
         world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
     }
 
-done:
     ecs_worker_end(stage->thread_ctx);
 }
 
