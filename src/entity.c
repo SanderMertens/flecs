@@ -4060,7 +4060,7 @@ void ecs_type_str_buf(
         }
 
         if (id == 1) {
-            ecs_strbuf_appendstr(buf, "Component");
+            ecs_strbuf_appendlit(buf, "Component");
         } else {
             ecs_id_str_buf(world, id, buf);
         }
@@ -4099,7 +4099,7 @@ char* ecs_entity_str(
 
     ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf);
     
-    ecs_strbuf_appendstr(&buf, " [");
+    ecs_strbuf_appendlit(&buf, " [");
     const ecs_type_t *type = ecs_get_type(world, entity);
     if (type) {
         ecs_type_str_buf(world, type, &buf);

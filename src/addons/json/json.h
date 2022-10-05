@@ -5,10 +5,6 @@
 void flecs_json_next(
     ecs_strbuf_t *buf);
 
-void flecs_json_literal(
-    ecs_strbuf_t *buf,
-    const char *value);
-
 void flecs_json_number(
     ecs_strbuf_t *buf,
     double value);
@@ -42,6 +38,14 @@ void flecs_json_string(
 void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name);
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len);
+
+#define flecs_json_memberl(buf, name)\
+    flecs_json_membern(buf, name, sizeof(name) - 1)
 
 void flecs_json_path(
     ecs_strbuf_t *buf,

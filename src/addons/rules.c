@@ -2846,7 +2846,7 @@ char* ecs_rule_str(
             ecs_strbuf_append(&buf, "F:%s", filter_expr);
         }
 
-        ecs_strbuf_appendstr(&buf, "\n");
+        ecs_strbuf_appendch(&buf, '\n');
 
         ecs_os_free(pred_name_alloc);
         ecs_os_free(obj_name_alloc);

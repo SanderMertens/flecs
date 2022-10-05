@@ -8,13 +8,6 @@ void flecs_json_next(
     ecs_strbuf_list_next(buf);
 }
 
-void flecs_json_literal(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_strbuf_appendstr(buf, value);
-}
-
 void flecs_json_number(
     ecs_strbuf_t *buf,
     double value)
@@ -25,13 +18,13 @@ void flecs_json_number(
 void flecs_json_true(
     ecs_strbuf_t *buf)
 {
-    flecs_json_literal(buf, "true");
+    ecs_strbuf_appendlit(buf, "true");
 }
 
 void flecs_json_false(
     ecs_strbuf_t *buf)
 {
-    flecs_json_literal(buf, "false");
+    ecs_strbuf_appendlit(buf, "false");
 }
 
 void flecs_json_bool(
@@ -82,9 +75,17 @@ void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name)
 {
-    ecs_strbuf_list_appendstr(buf, "\"");
-    ecs_strbuf_appendstr(buf, name);
-    ecs_strbuf_appendstr(buf, "\":");
+    flecs_json_membern(buf, name, ecs_os_strlen(name));
+}
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len)
+{
+    ecs_strbuf_list_appendch(buf, '"');
+    ecs_strbuf_appendstrn(buf, name, name_len);
+    ecs_strbuf_appendlit(buf, "\":");
 }
 
 void flecs_json_path(
@@ -114,7 +115,7 @@ void flecs_json_label(
         ecs_strbuf_appendstr(buf, lbl);
         ecs_strbuf_appendch(buf, '"');
     } else {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
     }
 }
 
@@ -136,7 +137,7 @@ void flecs_json_color(
         ecs_strbuf_appendstr(buf, color);
         ecs_strbuf_appendch(buf, '"');
     } else {
-        ecs_strbuf_appendstr(buf, "0");
+        ecs_strbuf_appendch(buf, '0');
     }
 }
 

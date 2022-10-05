@@ -1181,7 +1181,7 @@ void filter_str_add_id(
     bool is_added = false;
     if (!is_subject || id->id != EcsThis) {
         if (id->flags & EcsIsVariable) {
-            ecs_strbuf_appendstr(buf, "$");
+            ecs_strbuf_appendlit(buf, "$");
         }
         if (id->id) {
             char *path = ecs_get_fullpath(world, id->id);
@@ -1190,7 +1190,7 @@ void filter_str_add_id(
         } else if (id->name) {
             ecs_strbuf_appendstr(buf, id->name);
         } else {
-            ecs_strbuf_appendstr(buf, "0");
+            ecs_strbuf_appendlit(buf, "0");
         }
         is_added = true;
     }
@@ -1259,27 +1259,27 @@ void term_str_w_strbuf(
     }
 
     if (term->oper == EcsNot) {
-        ecs_strbuf_appendstr(buf, "!");
+        ecs_strbuf_appendlit(buf, "!");
     } else if (term->oper == EcsOptional) {
-        ecs_strbuf_appendstr(buf, "?");
+        ecs_strbuf_appendlit(buf, "?");
     }
 
     if (!subj_set) {
         filter_str_add_id(world, buf, &term->first, false, def_first_mask);
-        ecs_strbuf_appendstr(buf, "()");
+        ecs_strbuf_appendlit(buf, "()");
     } else if (ecs_term_match_this(term) && 
         (src->flags & EcsTraverseFlags) == def_src_mask)
     {
         if (pred_set) {
             if (obj_set) {
-                ecs_strbuf_appendstr(buf, "(");
+                ecs_strbuf_appendlit(buf, "(");
             }
             filter_str_add_id(world, buf, &term->first, false, def_first_mask);   
             if (obj_set) {
-                ecs_strbuf_appendstr(buf, ",");
+                ecs_strbuf_appendlit(buf, ",");
                 filter_str_add_id(
                     world, buf, &term->second, false, def_second_mask);
-                ecs_strbuf_appendstr(buf, ")");
+                ecs_strbuf_appendlit(buf, ")");
             }
         } else if (term->id) {
             char *str = ecs_id_str(world, term->id);
@@ -1293,17 +1293,17 @@ void term_str_w_strbuf(
         }
 
         filter_str_add_id(world, buf, &term->first, false, def_first_mask);
-        ecs_strbuf_appendstr(buf, "(");
+        ecs_strbuf_appendlit(buf, "(");
         if (term->src.flags & EcsIsEntity && term->src.id == term->first.id) {
-            ecs_strbuf_appendstr(buf, "$");
+            ecs_strbuf_appendlit(buf, "$");
         } else {
             filter_str_add_id(world, buf, &term->src, true, def_src_mask);
         }
         if (obj_set) {
-            ecs_strbuf_appendstr(buf, ",");
+            ecs_strbuf_appendlit(buf, ",");
             filter_str_add_id(world, buf, &term->second, false, def_second_mask);
         }
-        ecs_strbuf_appendstr(buf, ")");
+        ecs_strbuf_appendlit(buf, ")");
     }
 }
 
@@ -1345,9 +1345,9 @@ char* flecs_filter_str(
 
         if (i) {
             if (terms[i - 1].oper == EcsOr && term->oper == EcsOr) {
-                ecs_strbuf_appendstr(&buf, " || ");
+                ecs_strbuf_appendlit(&buf, " || ");
             } else {
-                ecs_strbuf_appendstr(&buf, ", ");
+                ecs_strbuf_appendlit(&buf, ", ");
             }
         }
 
@@ -1357,13 +1357,13 @@ char* flecs_filter_str(
 
         if (or_count < 1) {
             if (term->inout == EcsIn) {
-                ecs_strbuf_appendstr(&buf, "[in] ");
+                ecs_strbuf_appendlit(&buf, "[in] ");
             } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendstr(&buf, "[inout] ");
+                ecs_strbuf_appendlit(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
-                ecs_strbuf_appendstr(&buf, "[out] ");
+                ecs_strbuf_appendlit(&buf, "[out] ");
             } else if (term->inout == EcsInOutNone) {
-                ecs_strbuf_appendstr(&buf, "[none] ");
+                ecs_strbuf_appendlit(&buf, "[none] ");
             }
         }
 

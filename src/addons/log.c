@@ -23,7 +23,7 @@ void ecs_colorize_buf(
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
             if (isStr && (isStr == ch) && prev != '\\') {
@@ -31,7 +31,7 @@ void ecs_colorize_buf(
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
                 !isalpha(prev) && (prev != '\\'))
             {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isStr = ch;
             }
 
@@ -40,17 +40,17 @@ void ecs_colorize_buf(
                  !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
                  (prev != '.'))
             {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
                 isNum = true;
             }
 
             if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isVar = false;
             }
 
             if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isVar = true;
             }
         }
@@ -63,28 +63,28 @@ void ecs_colorize_buf(
             if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
             } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
             } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_RED);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_RED);
             } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BLUE);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_BLUE);
             } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_MAGENTA);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_MAGENTA);
             } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
             } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_YELLOW);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_YELLOW);
             } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREY);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREY);
             } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BOLD);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_BOLD);
             } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             } else {
                 isColor = false;
                 overrideColor = false;
@@ -102,7 +102,7 @@ void ecs_colorize_buf(
 
         if (ch == '\n') {
             if (isNum || isStr || isVar || overrideColor) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 overrideColor = false;
                 isNum = false;
                 isStr = false;
@@ -116,7 +116,7 @@ void ecs_colorize_buf(
 
         if (!overrideColor) {
             if (((ch == '\'') || (ch == '"')) && !isStr) {
-                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
             }
         }
 
@@ -124,7 +124,7 @@ void ecs_colorize_buf(
     }
 
     if (isNum || isStr || isVar || overrideColor) {
-        if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+        if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
     }
 }
 
@@ -150,8 +150,9 @@ void _ecs_logv(
     ecs_colorize_buf(msg_nocolor, 
         ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
     ecs_os_free(msg_nocolor);
-    
+
     char *msg = ecs_strbuf_get(&msg_buf);
+
     if (msg) {
         ecs_os_api.log_(level, file, line, msg);
         ecs_os_free(msg);
@@ -204,7 +205,7 @@ void _ecs_parser_errorv(
         ecs_strbuf_vappend(&msg_buf, fmt, args);
 
         if (expr) {
-            ecs_strbuf_appendstr(&msg_buf, "\n");
+            ecs_strbuf_appendch(&msg_buf, '\n');
 
             /* Find start of line by taking column and looking for the
              * last occurring newline */
@@ -232,10 +233,13 @@ void _ecs_parser_errorv(
                 ecs_strbuf_appendstr(&msg_buf, expr);
             }
 
-            ecs_strbuf_appendstr(&msg_buf, "\n");
+            ecs_strbuf_appendch(&msg_buf, '\n');
 
             if (column != -1) {
-                ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+                int32_t c;
+                for (c = 0; c < column; c ++) {
+                    ecs_strbuf_appendch(&msg_buf, ' ');
+                }
             }
         }
 
