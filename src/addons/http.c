@@ -47,6 +47,7 @@ typedef SOCKET ecs_http_socket_t;
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netdb.h>
 #include <strings.h>
 #include <signal.h>
@@ -200,6 +201,27 @@ ecs_size_t http_recv(
     }
 
     return ret;
+}
+
+static
+void http_sock_set_timeout(
+    ecs_http_socket_t sock,
+    int32_t timeout_ms)
+{
+    int r;
+#ifdef ECS_TARGET_POSIX
+    struct timeval tv;
+    tv.tv_sec = timeout_ms * 1000;
+    tv.tv_usec = 0;
+    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+#else
+    DWORD t = (DWORD)timeout_ms;
+    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&t, sizeof t);
+#endif
+    if (r) {
+        ecs_warn("http: failed to set socket timeout: %s", 
+            ecs_os_strerror(errno));
+    }
 }
 
 static
@@ -641,7 +663,7 @@ void http_send_reply(
     ecs_size_t written = http_send(conn->sock, hdrs, hdrs_len, 0);
 
     if (written != hdrs_len) {
-        ecs_err("failed to write HTTP response headers to '%s:%s': %s",
+        ecs_err("http: failed to write HTTP response headers to '%s:%s': %s",
             conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         return;
     }
@@ -650,7 +672,7 @@ void http_send_reply(
     if (content_length > 0) {
         written = http_send(conn->sock, content, content_length, 0);
         if (written != content_length) {
-            ecs_err("failed to write HTTP response body to '%s:%s': %s",
+            ecs_err("http: failed to write HTTP response body to '%s:%s': %s",
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
     }
@@ -702,6 +724,8 @@ void http_init_connection(
     struct sockaddr_storage *remote_addr, 
     ecs_size_t remote_addr_len) 
 {
+    http_sock_set_timeout(sock_conn, 100);
+
     /* Create new connection */
     ecs_os_mutex_lock(srv->lock);
     ecs_http_connection_impl_t *conn = flecs_sparse_add(
@@ -746,7 +770,7 @@ void http_accept_connections(
         WSADATA data = { 0 };
         int result = WSAStartup(MAKEWORD(2, 2), &data);
         if (result) {
-            ecs_warn("WSAStartup failed with GetLastError = %d\n", 
+            ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
                 GetLastError());
             return;
         }
@@ -776,7 +800,7 @@ void http_accept_connections(
 
         sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
         if (!http_socket_is_valid(sock)) {
-            ecs_err("unable to create new connection socket: %s", 
+            ecs_err("http: unable to create new connection socket: %s", 
                 ecs_os_strerror(errno));
             ecs_os_mutex_unlock(srv->lock);
             goto done;
@@ -786,7 +810,7 @@ void http_accept_connections(
         int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
             (char*)&reuse, ECS_SIZEOF(reuse)); 
         if (result) {
-            ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
+            ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
         }
 
         if (addr->sa_family == AF_INET6) {
@@ -794,7 +818,8 @@ void http_accept_connections(
             if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
                 (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
             {
-                ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
+                ecs_warn("http: failed to setsockopt: %s", 
+                    ecs_os_strerror(errno));
             }
         }
 
