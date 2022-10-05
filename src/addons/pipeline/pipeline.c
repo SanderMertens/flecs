@@ -303,6 +303,10 @@ bool flecs_pipeline_build(
                 }
             }
 
+            if (no_staging) {
+                needs_merge = true;
+            }
+
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
                 flecs_pipeline_reset_write_state(&ws);
@@ -649,17 +653,6 @@ void ecs_run_pipeline(
                 if (measure_time) {
                     /* Reset timer after merge */
                     ecs_time_measure(&st);
-                }
-            } else if (op->no_staging) {
-                bool rebuilt = flecs_pipeline_build(world, pipeline, pq);
-                if (rebuilt) {
-                    pq->last_system = e;
-                    ecs_pipeline_reset_iter(world, pq);
-                    i = pq->cur_i;
-                    count = it->count;
-                    poly = flecs_pipeline_term_system(it);
-                    op = pq->cur_op;
-                    op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                 }
             }
         }

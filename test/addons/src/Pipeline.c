@@ -1271,17 +1271,18 @@ void Pipeline_mixed_staging() {
     test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
-    test_int(ecs_vector_count(stats.systems), 10);
+    test_int(ecs_vector_count(stats.systems), 11);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], s2);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[5], s4);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[6], s5);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], s6);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[6], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], s5);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], s6);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[10], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
@@ -1867,14 +1868,14 @@ static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
     no_staging_create_velocity_invoked ++;
 }
 
-static int read_position_invoked = 0;
+static int32_t read_position_invoked = 0;
 static void ReadPosition(ecs_iter_t *it) {
-    read_position_invoked ++;
+    ecs_os_ainc(&read_position_invoked);
 }
 
-static int read_velocity_invoked = 0;
+static int32_t read_velocity_invoked = 0;
 static void ReadVelocity(ecs_iter_t *it) {
-    read_velocity_invoked ++;
+    ecs_os_ainc(&read_velocity_invoked);
 }
 
 void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
@@ -1900,7 +1901,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
 
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 1);
-    test_int(read_position_invoked, 0);
+    test_int(read_position_invoked, 1);
 
     test_assert(create_position_e != 0);
     test_assert(ecs_has(world, create_position_e, Position));
@@ -1908,7 +1909,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
     
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 2);
-    test_int(read_position_invoked, 1);
+    test_int(read_position_invoked, 2);
 
     ecs_fini(world);
 }
@@ -2014,6 +2015,94 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
     test_int(no_staging_create_velocity_invoked, 2);
     test_int(read_position_invoked, 2);
     test_int(read_velocity_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreatePosition,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = ReadPosition,
+        .multi_threaded = true
+    });
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 1);
+    test_int(read_position_invoked, 1);
+
+    test_assert(create_position_e != 0);
+    test_assert(ecs_has(world, create_position_e, Position));
+    ecs_delete(world, create_position_e);
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 2);
+    test_int(read_position_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreatePosition,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = ReadPosition,
+        .multi_threaded = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = ReadPosition,
+        .no_staging = true
+    });
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 1);
+    test_int(read_position_invoked, 2);
+
+    test_assert(create_position_e != 0);
+    test_assert(ecs_has(world, create_position_e, Position));
+    ecs_delete(world, create_position_e);
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 2);
+    test_int(read_position_invoked, 4);
 
     ecs_fini(world);
 }

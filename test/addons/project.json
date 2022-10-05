@@ -396,6 +396,8 @@
                 "inactive_system_after_no_staging_system_no_defer_w_filter",
                 "inactive_system_after_2_no_staging_system_no_defer_w_filter",
                 "inactive_system_after_no_staging_system_no_defer_w_filter_w_no_staging_at_end",
+                "inactive_multithread_system_after_no_staging_system_no_defer",
+                "inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end",
                 "multi_threaded_pipeline_change_w_only_singlethreaded",
                 "sync_after_not_out_for_out",
                 "pair_wildcard_read_after_staged_write",
