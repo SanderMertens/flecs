@@ -1913,6 +1913,50 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
     ecs_fini(world);
 }
 
+void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_staging_at_end() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = NoStagingSystemCreatePosition,
+        .no_staging = true
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = ReadPosition
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate )}
+        }),
+        .callback = SysA,
+        .no_staging = true
+    });
+
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 1);
+    test_int(read_position_invoked, 1);
+
+    test_assert(create_position_e != 0);
+    test_assert(ecs_has(world, create_position_e, Position));
+    ecs_delete(world, create_position_e);
+    
+    ecs_progress(world, 0);
+    test_int(no_staging_create_position_invoked, 2);
+    test_int(read_position_invoked, 2);
+
+    ecs_fini(world);
+}
+
 void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
     ecs_world_t *world = ecs_init();
 
@@ -1954,8 +1998,8 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 1);
     test_int(no_staging_create_velocity_invoked, 1);
-    test_int(read_position_invoked, 0);
-    test_int(read_velocity_invoked, 0);
+    test_int(read_position_invoked, 1);
+    test_int(read_velocity_invoked, 1);
 
     test_assert(create_position_e != 0);
     test_assert(ecs_has(world, create_position_e, Position));
@@ -1968,8 +2012,8 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 2);
     test_int(no_staging_create_velocity_invoked, 2);
-    test_int(read_position_invoked, 1);
-    test_int(read_velocity_invoked, 1);
+    test_int(read_position_invoked, 2);
+    test_int(read_velocity_invoked, 2);
 
     ecs_fini(world);
 }

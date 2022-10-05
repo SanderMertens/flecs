@@ -16120,15 +16120,6 @@ typedef struct ecs_write_state_t {
 } ecs_write_state_t;
 
 static
-ecs_write_kind_t flecs_pipeline_find_wildcard_write_state(
-    ecs_map_t *write_state,
-    ecs_id_t id)
-{
-
-    return WriteStateNone;
-}
-
-static
 ecs_write_kind_t flecs_pipeline_get_write_state(
     ecs_write_state_t *write_state,
     ecs_id_t id)
@@ -16180,8 +16171,7 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
 static
 void flecs_pipeline_set_write_state(
     ecs_write_state_t *write_state,
-    ecs_id_t id,
-    ecs_write_kind_t kind)
+    ecs_id_t id)
 {
     if (id == EcsWildcard) {
         /* If writing to wildcard, flag all components as written */
@@ -16266,8 +16256,7 @@ bool flecs_pipeline_check_term(
         case EcsInOut:
             if (is_active) {
                 /* Only flag component as written if system is active */
-                flecs_pipeline_set_write_state(
-                    write_state, id, WriteStateToStage);
+                flecs_pipeline_set_write_state(write_state, id);
             }
             break;
         default:
@@ -16277,7 +16266,7 @@ bool flecs_pipeline_check_term(
         switch(inout) {
         case EcsIn:
         case EcsInOut:
-            if (ws >= WriteStateToStage) {
+            if (ws == WriteStateToStage) {
                 /* If a system does a get/get_mut, the component is fetched from
                  * the main store so it must be merged first */
                 return true;
@@ -16742,6 +16731,17 @@ void ecs_run_pipeline(
                 poly = flecs_pipeline_term_system(it);
                 op = pq->cur_op;
                 op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+            } else if (op->no_staging) {
+                bool rebuilt = flecs_pipeline_build(world, pipeline, pq);
+                if (rebuilt) {
+                    pq->last_system = e;
+                    ecs_pipeline_reset_iter(world, pq);
+                    i = pq->cur_i;
+                    count = it->count;
+                    poly = flecs_pipeline_term_system(it);
+                    op = pq->cur_op;
+                    op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+                }
             }
         }
     }
