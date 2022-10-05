@@ -35108,6 +35108,7 @@ typedef struct ecs_http_send_queue_t {
     int32_t cur;
     int32_t count;
     ecs_os_thread_t thread;
+    int32_t wait_ms;
 } ecs_http_send_queue_t;
 
 /* HTTP server struct */
@@ -35696,6 +35697,7 @@ ecs_http_send_request_t* http_send_queue_get(
 static
 void* http_server_send_queue(void* arg) {
     ecs_http_server_t *srv = arg;
+    int32_t wait_ms = srv->send_queue.wait_ms;
 
     /* Run for as long as the server is running or there are messages. When the
      * server is stopping, no new messages will be enqueued */
@@ -35705,7 +35707,7 @@ void* http_server_send_queue(void* arg) {
             ecs_os_mutex_unlock(srv->lock);
             /* If the queue is empty, wait so we don't run too fast */
             if (srv->should_run) {
-                ecs_os_sleep(0, 1000 * 1000);
+                ecs_os_sleep(0, wait_ms);
             }
         } else {
             ecs_size_t written = http_send(
@@ -35995,7 +35997,7 @@ void http_accept_connections(
 
 done:
     ecs_os_mutex_lock(srv->lock);
-    if (http_socket_is_valid(srv->sock) && errno != EBADF) {
+    if (http_socket_is_valid(sock) && errno != EBADF) {
         http_close(&sock);
         srv->sock = sock;
     }
@@ -36123,6 +36125,10 @@ ecs_http_server_t* ecs_http_server_init(
     srv->ctx = desc->ctx;
     srv->port = desc->port;
     srv->ipaddr = desc->ipaddr;
+    srv->send_queue.wait_ms = desc->send_queue_wait_ms;
+    if (!srv->send_queue.wait_ms) {
+        srv->send_queue.wait_ms = 100 * 1000 * 1000;
+    }
 
     srv->connections = flecs_sparse_new(NULL, NULL, ecs_http_connection_impl_t);
     srv->requests = flecs_sparse_new(NULL, NULL, ecs_http_request_impl_t);

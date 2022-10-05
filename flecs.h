@@ -13320,6 +13320,7 @@ typedef struct {
     void *ctx;                        /* Passed to callback (optional) */
     uint16_t port;                    /* HTTP port */
     const char *ipaddr;               /* Interface to listen on (optional) */
+    int32_t send_queue_wait_ms;       /* Send queue wait time when empty */
 } ecs_http_server_desc_t;
 
 /** Create server. 
