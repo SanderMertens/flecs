@@ -137,9 +137,9 @@ typedef struct {
     int32_t param_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
     int32_t param_value_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
     int32_t param_count;
-    char header_buf[32];
-    char *header_buf_ptr;
     int32_t content_length;
+    char *header_buf_ptr;
+    char header_buf[32];
     bool parse_content_length;
     bool invalid;
 } ecs_http_fragment_t;
@@ -147,7 +147,6 @@ typedef struct {
 /** Extend public connection type with fragment data */
 typedef struct {
     ecs_http_connection_t pub;
-    ecs_http_fragment_t frag;
     ecs_http_socket_t sock;
 
     /* Connection is purged after both timeout expires and connection has
@@ -380,62 +379,58 @@ void http_header_buf_append(
 static
 void http_enqueue_request(
     ecs_http_connection_impl_t *conn,
-    uint64_t conn_id)
+    uint64_t conn_id,
+    ecs_http_fragment_t *frag)
 {
     ecs_http_server_t *srv = conn->pub.server;
-    ecs_http_fragment_t *frag = &conn->frag;
 
-    if (frag->invalid) { /* invalid request received, don't enqueue */
+    ecs_os_mutex_lock(srv->lock);
+    bool is_alive = conn->pub.id == conn_id;
+
+    if (!is_alive || frag->invalid) { 
+        /* Don't enqueue invalid requests or requests for purged connections */
         ecs_strbuf_reset(&frag->buf);
     } else {
         char *res = ecs_strbuf_get(&frag->buf);
         if (res) {
-            ecs_os_mutex_lock(srv->lock);
-            if (conn->pub.id == conn_id) {
-                /* Only enqueue for alive connections */
-                ecs_http_request_impl_t *req = flecs_sparse_add(
-                    srv->requests, ecs_http_request_impl_t);
-                req->pub.id = flecs_sparse_last_id(srv->requests);
-                req->conn_id = conn->pub.id;
+            ecs_http_request_impl_t *req = flecs_sparse_add(
+                srv->requests, ecs_http_request_impl_t);
+            req->pub.id = flecs_sparse_last_id(srv->requests);
+            req->conn_id = conn->pub.id;
 
-                req->pub.conn = (ecs_http_connection_t*)conn;
-                req->pub.method = frag->method;
-                req->pub.path = res + 1;
-                if (frag->body_offset) {
-                    req->pub.body = &res[frag->body_offset];
-                }
-                int32_t i, count = frag->header_count;
-                for (i = 0; i < count; i ++) {
-                    req->pub.headers[i].key = &res[frag->header_offsets[i]];
-                    req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
-                }
-                count = frag->param_count;
-                for (i = 0; i < count; i ++) {
-                    req->pub.params[i].key = &res[frag->param_offsets[i]];
-                    req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-                    http_decode_url_str((char*)req->pub.params[i].value);
-                }
-
-                req->pub.header_count = frag->header_count;
-                req->pub.param_count = frag->param_count;
-                req->res = res;
-            } else {
-                ecs_os_free(res);
+            req->pub.conn = (ecs_http_connection_t*)conn;
+            req->pub.method = frag->method;
+            req->pub.path = res + 1;
+            if (frag->body_offset) {
+                req->pub.body = &res[frag->body_offset];
             }
-            ecs_os_mutex_unlock(srv->lock);
+            int32_t i, count = frag->header_count;
+            for (i = 0; i < count; i ++) {
+                req->pub.headers[i].key = &res[frag->header_offsets[i]];
+                req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+            }
+            count = frag->param_count;
+            for (i = 0; i < count; i ++) {
+                req->pub.params[i].key = &res[frag->param_offsets[i]];
+                req->pub.params[i].value = &res[frag->param_value_offsets[i]];
+                http_decode_url_str((char*)req->pub.params[i].value);
+            }
+
+            req->pub.header_count = frag->header_count;
+            req->pub.param_count = frag->param_count;
+            req->res = res;
         }
     }
+
+    ecs_os_mutex_unlock(srv->lock);
 }
 
 static
 bool http_parse_request(
-    ecs_http_connection_impl_t *conn,
-    uint64_t conn_id,
+    ecs_http_fragment_t *frag,
     const char* req_frag, 
     ecs_size_t req_frag_len) 
 {
-    ecs_http_fragment_t *frag = &conn->frag;
-
     int32_t i;
     for (i = 0; i < req_frag_len; i++) {
         char c = req_frag[i];
@@ -588,8 +583,6 @@ bool http_parse_request(
     }
 
     if (frag->state == HttpFragStateDone) {
-        frag->state = HttpFragStateBegin;
-        http_enqueue_request(conn, conn_id);
         return true;
     } else {
         return false;
@@ -672,22 +665,34 @@ void http_recv_request(
 {
     ecs_size_t bytes_read;
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
+    ecs_http_fragment_t frag = {0};
 
     while ((bytes_read = http_recv(
         sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
     {
-        ecs_os_mutex_lock(srv->lock);
         bool is_alive = conn->pub.id == conn_id;
-        ecs_os_mutex_unlock(srv->lock);
+        if (!is_alive) {
+            /* Connection has been purged by main thread */
+            return;
+        }
 
-        if (is_alive) {
-            if (http_parse_request(conn, conn_id, recv_buf, bytes_read)) {
-                return;
-            }
-        } else {
+        if (http_parse_request(&frag, recv_buf, bytes_read)) {
+            http_enqueue_request(conn, conn_id, &frag);
             return;
         }
     }
+
+    /* Partial request received, cleanup resources */
+    ecs_strbuf_reset(&frag.buf);
+
+    /* No request was enqueued, flag connection so it'll get purged */
+    ecs_os_mutex_lock(srv->lock);
+    if (conn->pub.id == conn_id) {
+        /* Only flag connection if it was still alive */
+        conn->dequeue_timeout = ECS_HTTP_CONNECTION_PURGE_TIMEOUT;
+        conn->dequeue_retries = ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT;
+    }
+    ecs_os_mutex_unlock(srv->lock);
 }
 
 static
