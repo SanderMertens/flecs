@@ -15991,11 +15991,6 @@ void ecs_workers_progress(
     ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
     int32_t stage_count = ecs_get_stage_count(world);
 
-    ecs_time_t start = {0};
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        ecs_time_measure(&start);
-    }
-
     EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -16061,11 +16056,7 @@ void ecs_workers_progress(
                 }
             }
         }
-    }
-
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        world->info.system_time_total += (float)ecs_time_measure(&start);
-    }    
+    } 
 }
 
 /* -- Public functions -- */
@@ -16679,6 +16670,13 @@ void ecs_run_pipeline(
 
     ecs_worker_begin(stage->thread_ctx);
 
+    ecs_time_t st = {0};
+    bool measure_time = false;
+    if (!stage_index && (world->flags & EcsWorldMeasureSystemTime)) {
+        ecs_time_measure(&st);
+        measure_time = true;
+    }
+
     ecs_iter_t *it = &pq->iters[stage_index];
     while (ecs_query_next(it)) {
         if (flecs_pipeline_is_inactive(pq, it->table)) {
@@ -16714,6 +16712,12 @@ void ecs_run_pipeline(
                     goto done;
                 }
 
+                if (measure_time) {
+                    /* Don't include merge time in system time */
+                    world->info.system_time_total += 
+                        (ecs_ftime_t)ecs_time_measure(&st);
+                }
+
                 ran_since_merge = 0;
 
                 /* If the set of matched systems changed as a result of the
@@ -16731,6 +16735,11 @@ void ecs_run_pipeline(
                 poly = flecs_pipeline_term_system(it);
                 op = pq->cur_op;
                 op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+
+                if (measure_time) {
+                    /* Reset timer after merge */
+                    ecs_time_measure(&st);
+                }
             } else if (op->no_staging) {
                 bool rebuilt = flecs_pipeline_build(world, pipeline, pq);
                 if (rebuilt) {
@@ -16744,6 +16753,10 @@ void ecs_run_pipeline(
                 }
             }
         }
+    }
+
+    if (measure_time) {
+        world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
     }
 
 done:

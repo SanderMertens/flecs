@@ -274,11 +274,6 @@ void ecs_workers_progress(
     ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
     int32_t stage_count = ecs_get_stage_count(world);
 
-    ecs_time_t start = {0};
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        ecs_time_measure(&start);
-    }
-
     EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -344,11 +339,7 @@ void ecs_workers_progress(
                 }
             }
         }
-    }
-
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        world->info.system_time_total += (float)ecs_time_measure(&start);
-    }    
+    } 
 }
 
 /* -- Public functions -- */
