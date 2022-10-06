@@ -150,6 +150,10 @@ https://nicok.itch.io/sol-survivor-demo
 https://github.com/ConfettiFX/The-Forge
 ![image](docs/img/projects/the_forge.png)
 
+### Equilibrium Engine
+https://github.com/clibequilibrium/EquilibriumEngine
+![image](docs/img/projects/equilibrium_engine.png)
+
 ### Gravitas
 https://thepunkcollective.itch.io/gravitas
 ![image](docs/img/projects/gravitas.png)
@@ -165,10 +169,6 @@ https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderM
 ### Procedural City (open source demo)
 https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ![image](docs/img/projects/city.png)
-
-### Equilibrium Engine
-https://github.com/clibequilibrium/EquilibriumEngine
-![image](docs/img/projects/equilibrium_engine.png)
 
 ## Resources
 
