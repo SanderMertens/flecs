@@ -194,6 +194,7 @@ ecs_size_t http_send(
     ecs_size_t size, 
     int flags)
 {
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
 #ifdef ECS_TARGET_POSIX
     ssize_t send_bytes = send(sock, buf, flecs_itosize(size), 
         flags | MSG_NOSIGNAL);
@@ -762,7 +763,7 @@ void http_send_reply(
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
     ecs_http_send_request_t *req = NULL;
-    if (content_length) {
+    if (content_length > 0) {
         req = http_send_queue_post(conn->pub.server);
         if (!req) {
             reply->code = 503; /* queue full, server is busy */
