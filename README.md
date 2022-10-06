@@ -166,6 +166,10 @@ https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderM
 https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ![image](docs/img/projects/city.png)
 
+### Equilibrium Engine
+https://github.com/clibequilibrium/EquilibriumEngine
+![image](docs/img/projects/equilibrium_engine.png)
+
 ## Resources
 
 ### Resources provided by the community :heart:
