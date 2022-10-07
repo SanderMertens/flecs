@@ -187,8 +187,8 @@ int32_t ecs_search_relation(
 
     flags = flags ? flags : (EcsSelf|EcsUp);
 
+    if (subject_out) subject_out[0] = 0;
     if (!(flags & EcsUp)) {
-        if (subject_out) subject_out[0] = 0;
         return ecs_search_offset(world, table, offset, id, id_out);
     }
 

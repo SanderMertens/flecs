@@ -381,3 +381,143 @@ void Search_search_relation_at_offset() {
 
     ecs_fini(world);
 }
+
+void Search_search_relation_dont_inherit() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    
+    ecs_add_id(world, TagB, EcsDontInherit);
+
+    ecs_entity_t b = ecs_new_id(world);
+    ecs_add(world, b, TagA);
+    ecs_add(world, b, TagB);
+    ecs_add(world, b, TagC);
+    
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add_pair(world, e, EcsIsA, b);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t column = 0;
+
+    column = ecs_search_relation(world, table, 0, TagA, EcsIsA, EcsUp, &subj, &id, 0);
+    test_int(column, 3);
+    test_int(subj, b);
+    test_int(id, TagA);
+    column = ecs_search_relation(world, table, 0, TagB, EcsIsA, EcsUp, &subj, &id, 0);
+    test_int(column, -1);
+    column = ecs_search_relation(world, table, 0, TagC, EcsIsA, EcsUp, &subj, &id, 0);
+    test_int(column, 3);
+    test_int(subj, b);
+    test_int(id, TagC);
+
+    column = ecs_search_relation(world, table, 0, TagB, EcsIsA, EcsSelf|EcsUp, &subj, &id, 0);
+    test_int(column, 1);
+    test_int(subj, 0);
+    test_int(id, TagB);
+
+    column = ecs_search_relation(world, table, 0, TagB, EcsIsA, EcsSelf, &subj, &id, 0);
+    test_int(column, 1);
+    test_int(subj, 0);
+    test_int(id, TagB);
+
+    ecs_fini(world);
+}
+
+void Search_search_relation_dont_inherit_from_parent() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    
+    ecs_add_id(world, TagB, EcsDontInherit);
+
+    ecs_entity_t b = ecs_new_id(world);
+    ecs_add(world, b, TagA);
+    ecs_add(world, b, TagB);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_add_pair(world, p, EcsIsA, b);
+    ecs_add(world, p, TagC);
+    
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t column = 0;
+
+    column = ecs_search_relation(world, table, 0, TagA, EcsChildOf, EcsUp, &subj, &id, 0);
+    test_int(column, 3);
+    test_int(subj, b);
+    test_int(id, TagA);
+    column = ecs_search_relation(world, table, 0, TagB, EcsChildOf, EcsUp, &subj, &id, 0);
+    test_int(column, -1);
+
+    column = ecs_search_relation(world, table, 0, TagC, EcsChildOf, EcsUp, &subj, &id, 0);
+    test_int(column, 3);
+    test_int(subj, p);
+    test_int(id, TagC);
+
+    column = ecs_search_relation(world, table, 0, TagB, EcsChildOf, EcsSelf|EcsUp, &subj, &id, 0);
+    test_int(column, 1);
+    test_int(subj, 0);
+    test_int(id, TagB);
+
+    column = ecs_search_relation(world, table, 0, TagB, EcsChildOf, EcsSelf, &subj, &id, 0);
+    test_int(column, 1);
+    test_int(subj, 0);
+    test_int(id, TagB);
+
+    ecs_fini(world);
+}
+
+void Search_search_relation_exclusive() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+    
+    ecs_add_id(world, Rel, EcsExclusive);
+
+    ecs_entity_t b = ecs_new_id(world);
+    ecs_add_pair(world, b, Rel, TagA);
+    
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, TagB);
+    ecs_add_pair(world, e, EcsIsA, b);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t column = 0;
+
+    column = ecs_search_relation(world, table, 0, ecs_pair(Rel, TagA), EcsIsA, EcsSelf|EcsUp, &subj, &id, 0);
+    test_int(column, -1);
+
+    column = ecs_search_relation(world, table, 0, ecs_pair(Rel, TagB), EcsIsA, EcsSelf|EcsUp, &subj, &id, 0);
+    test_int(column, 1);
+    test_int(subj, 0);
+    test_int(id, ecs_pair(Rel, TagB));
+
+    column = ecs_search_relation(world, table, 0, ecs_pair(Rel, TagA), EcsIsA, EcsUp, &subj, &id, 0);
+    test_int(column, -1);
+
+    column = ecs_search_relation(world, table, 0, ecs_pair(Rel, TagB), EcsIsA, EcsUp, &subj, &id, 0);
+    test_int(column, -1);
+
+    ecs_fini(world);
+}

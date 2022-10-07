@@ -133,6 +133,9 @@ void Search_search_first_lvl_1(void);
 void Search_search_first_lvl_2(void);
 void Search_search_first_lvl_3(void);
 void Search_search_relation_at_offset(void);
+void Search_search_relation_dont_inherit(void);
+void Search_search_relation_dont_inherit_from_parent(void);
+void Search_search_relation_exclusive(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2699,6 +2702,18 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_at_offset",
         Search_search_relation_at_offset
+    },
+    {
+        "search_relation_dont_inherit",
+        Search_search_relation_dont_inherit
+    },
+    {
+        "search_relation_dont_inherit_from_parent",
+        Search_search_relation_dont_inherit_from_parent
+    },
+    {
+        "search_relation_exclusive",
+        Search_search_relation_exclusive
     }
 };
 
@@ -10752,7 +10767,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        15,
+        18,
         Search_testcases
     },
     {

@@ -141,7 +141,10 @@
                 "search_first_lvl_1",
                 "search_first_lvl_2",
                 "search_first_lvl_3",
-                "search_relation_at_offset"
+                "search_relation_at_offset",
+                "search_relation_dont_inherit",
+                "search_relation_dont_inherit_from_parent",
+                "search_relation_exclusive"
             ]
         }, {
             "id": "Event",
