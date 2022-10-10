@@ -45,6 +45,7 @@
 #define flecs_entities_remove(world, entity) flecs_sparse_remove(ecs_eis(world), entity)
 #define flecs_entities_set_generation(world, entity) flecs_sparse_set_generation(ecs_eis(world), entity)
 #define flecs_entities_is_alive(world, entity) flecs_sparse_is_alive(ecs_eis(world), entity)
+#define flecs_entities_is_valid(world, entity) flecs_sparse_is_valid(ecs_eis(world), entity)
 #define flecs_entities_get_current(world, entity) flecs_sparse_get_alive(ecs_eis(world), entity)
 #define flecs_entities_exists(world, entity) flecs_sparse_exists(ecs_eis(world), entity)
 #define flecs_entities_recycle(world) flecs_sparse_new_id(ecs_eis(world))
@@ -8252,6 +8253,38 @@ error:
     return NULL;
 }
 
+static
+void flecs_modified_id_if(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    if (flecs_defer_modified(world, stage, entity, id)) {
+        return;
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_t *table = r->table;
+    if (!flecs_table_record_get(world, table, id)) {
+        flecs_defer_end(world, stage);
+        return;
+    }
+
+    ecs_type_t ids = { .array = &id, .count = 1 };
+    flecs_notify_on_set(world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+
+    flecs_table_mark_dirty(world, table, id);
+    flecs_defer_end(world, stage);
+error:
+    return;
+}
+
 void ecs_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -9313,17 +9346,6 @@ void flecs_discard_cmd(
     }
 }
 
-static 
-bool flecs_is_entity_valid(
-    ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ecs_exists(world, e) && !ecs_is_alive(world, e)) {
-        return false;
-    }
-    return true;
-}
-
 static
 bool flecs_remove_invalid(
     ecs_world_t *world,
@@ -9331,15 +9353,15 @@ bool flecs_remove_invalid(
     ecs_id_t *id_out)
 {
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
-        ecs_entity_t rel = ecs_pair_first(world, id);
-        if (!rel || !flecs_is_entity_valid(world, rel)) {
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        if (!flecs_entities_is_valid(world, rel)) {
             /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
-            ecs_entity_t obj = ecs_pair_second(world, id);
-            if (!obj || !flecs_is_entity_valid(world, obj)) {
+            ecs_entity_t obj = ECS_PAIR_SECOND(id);
+            if (!flecs_entities_is_valid(world, obj)) {
                 /* Check the relationship's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
@@ -9365,7 +9387,7 @@ bool flecs_remove_invalid(
         }
     } else {
         id &= ECS_COMPONENT_MASK;
-        if (!flecs_is_entity_valid(world, id)) {
+        if (!flecs_entities_is_valid(world, id)) {
             /* After relationship is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
@@ -9388,9 +9410,6 @@ void flecs_cmd_batch_for_entity(
     ecs_table_t *table = NULL;
     if (r) {
         table = r->table;
-    } else if (!flecs_entities_is_alive(world, entity)) {
-        world->info.cmd.discard_count ++;
-        return;
     }
 
     world->info.cmd.batched_entity_count ++;
@@ -9550,21 +9569,23 @@ bool flecs_defer_end(
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
                 ecs_entity_t e = cmd->entity;
+                bool is_alive = flecs_entities_is_valid(world, e);
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
                     /* Batch commands for entity to limit archetype moves */
-                    flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    if (is_alive) {
+                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                    } else {
+                        world->info.cmd.discard_count ++;
+                    }
                 }
 
                 /* If entity is no longer alive, this could be because the queue
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
                 ecs_cmd_kind_t kind = cmd->kind;
-                if ((kind == EcsOpSkip) || 
-                    (e && !ecs_is_alive(world, e) && 
-                        flecs_entities_exists(world, e))) 
-                {
+                if ((kind == EcsOpSkip) || (e && !is_alive)) {
                     world->info.cmd.discard_count ++;
                     flecs_discard_cmd(world, cmd);
                     continue;
@@ -9616,9 +9637,7 @@ bool flecs_defer_end(
                     world->info.cmd.get_mut_count ++;
                     break;
                 case EcsOpModified:
-                    if (ecs_has_id(world, e, id)) {
-                        ecs_modified_id(world, e, id);
-                    }
+                    flecs_modified_id_if(world, e, id);
                     world->info.cmd.modified_count ++;
                     break;
                 case EcsOpDelete: {
@@ -11658,6 +11677,27 @@ bool flecs_sparse_exists(
     int32_t dense = chunk->sparse[offset];
 
     return dense != 0;
+}
+
+bool flecs_sparse_is_valid(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return true; /* Doesn't exist yet, so is valid */
+    }
+    
+    flecs_sparse_strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    if (!dense) {
+        return true; /* Doesn't exist yet, so is valid */
+    }
+
+    /* If the id exists, it must be alive */
+    return dense < sparse->count;
 }
 
 void* _flecs_sparse_get_dense(

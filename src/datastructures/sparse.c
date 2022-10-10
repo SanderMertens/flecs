@@ -619,6 +619,27 @@ bool flecs_sparse_exists(
     return dense != 0;
 }
 
+bool flecs_sparse_is_valid(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return true; /* Doesn't exist yet, so is valid */
+    }
+    
+    flecs_sparse_strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    if (!dense) {
+        return true; /* Doesn't exist yet, so is valid */
+    }
+
+    /* If the id exists, it must be alive */
+    return dense < sparse->count;
+}
+
 void* _flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,

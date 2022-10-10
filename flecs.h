@@ -3503,6 +3503,12 @@ bool flecs_sparse_exists(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
+/** Check whether an id has ever been issued and is currently alive. */
+FLECS_DBG_API
+bool flecs_sparse_is_valid(
+    const ecs_sparse_t *sparse,
+    uint64_t index);
+
 /** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
 bool flecs_sparse_is_alive(
