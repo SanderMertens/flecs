@@ -18,6 +18,7 @@
 #define flecs_entities_remove(world, entity) flecs_sparse_remove(ecs_eis(world), entity)
 #define flecs_entities_set_generation(world, entity) flecs_sparse_set_generation(ecs_eis(world), entity)
 #define flecs_entities_is_alive(world, entity) flecs_sparse_is_alive(ecs_eis(world), entity)
+#define flecs_entities_is_valid(world, entity) flecs_sparse_is_valid(ecs_eis(world), entity)
 #define flecs_entities_get_current(world, entity) flecs_sparse_get_alive(ecs_eis(world), entity)
 #define flecs_entities_exists(world, entity) flecs_sparse_exists(ecs_eis(world), entity)
 #define flecs_entities_recycle(world) flecs_sparse_new_id(ecs_eis(world))
