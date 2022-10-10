@@ -3487,6 +3487,16 @@ void flecs_sparse_remove(
     ecs_sparse_t *sparse,
     uint64_t id);
 
+/** Fast version of remove, no liveliness checking */
+FLECS_DBG_API
+void* _flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_remove_fast(sparse, T, index)\
+    ((T*)_flecs_sparse_remove_fast(sparse, ECS_SIZEOF(T), index))
+
 /** Remove an element, return pointer to the value in the sparse array */
 FLECS_DBG_API
 void* _flecs_sparse_remove_get(
@@ -3577,6 +3587,16 @@ void* _flecs_sparse_ensure(
 
 #define flecs_sparse_ensure(sparse, T, index)\
     ((T*)_flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
+
+/** Fast version of ensure, no liveliness checking */
+FLECS_DBG_API
+void* _flecs_sparse_ensure_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_ensure_fast(sparse, T, index)\
+    ((T*)_flecs_sparse_ensure_fast(sparse, ECS_SIZEOF(T), index))
 
 /** Set value. */
 FLECS_DBG_API
