@@ -61,8 +61,8 @@ ecs_float_t flecs_counter_record(
     if (gauge_value < 0) {
         gauge_value = 0; /* Counters are monotonically increasing */
     }
-    flecs_gauge_record(m, t, value - prev);
-    return value - prev;
+    flecs_gauge_record(m, t, gauge_value);
+    return gauge_value;
 }
 
 static

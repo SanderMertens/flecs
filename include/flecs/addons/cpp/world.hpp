@@ -162,7 +162,7 @@ struct world {
 
     /** Get current tick.
      */
-    int32_t tick() const {
+    int64_t tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
     }

@@ -52,7 +52,7 @@ ecs_ftime_t get_time_scale() const;
 /** Get tick
  * @return Monotonically increasing frame count.
  */
-int32_t get_tick() const;
+int64_t get_tick() const;
 
 /** Set target FPS
  * @see ecs_set_target_fps

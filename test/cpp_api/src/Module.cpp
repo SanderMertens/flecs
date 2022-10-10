@@ -236,3 +236,23 @@ void Module_module_in_namespace_w_root_name() {
     test_assert(p != 0);
     test_assert(p == p_lookup);
 }
+
+void Module_module_as_entity() {
+    flecs::world world;
+
+    auto m = world.import<ns::SimpleModule>();
+    test_assert(m != 0);
+
+    auto e = world.entity<ns::SimpleModule>();
+    test_assert(m == e);
+}
+
+void Module_module_as_component() {
+    flecs::world world;
+
+    auto m = world.import<ns::SimpleModule>();
+    test_assert(m != 0);
+
+    auto e = world.component<ns::SimpleModule>();
+    test_assert(m == e);
+}

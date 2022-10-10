@@ -876,7 +876,9 @@
                 "module_tag_on_namespace",
                 "dtor_on_fini",
                 "implicit_module",
-                "module_in_namespace_w_root_name"
+                "module_in_namespace_w_root_name",
+                "module_as_entity",
+                "module_as_component"
             ]
         }, {
             "id": "ImplicitComponents",

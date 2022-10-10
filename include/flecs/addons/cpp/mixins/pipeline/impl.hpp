@@ -60,7 +60,7 @@ inline ecs_ftime_t world::get_time_scale() const {
     return stats->time_scale;
 }
 
-inline int32_t world::get_tick() const {
+inline int64_t world::get_tick() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->frame_count_total;
 }

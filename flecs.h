@@ -16289,7 +16289,7 @@ struct world {
 
     /** Get current tick.
      */
-    int32_t tick() const {
+    int64_t tick() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->frame_count_total;
     }
@@ -17205,7 +17205,7 @@ ecs_ftime_t get_time_scale() const;
 /** Get tick
  * @return Monotonically increasing frame count.
  */
-int32_t get_tick() const;
+int64_t get_tick() const;
 
 /** Set target FPS
  * @see ecs_set_target_fps
@@ -20941,7 +20941,6 @@ struct cpp_type_impl {
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
         } else {
             ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
-            ecs_assert(s_allow_tag == allow_tag, ECS_INVALID_PARAMETER, NULL);
         }
 
         // If no id has been registered yet for the component (indicating the 
@@ -24069,7 +24068,7 @@ inline ecs_ftime_t world::get_time_scale() const {
     return stats->time_scale;
 }
 
-inline int32_t world::get_tick() const {
+inline int64_t world::get_tick() const {
     const ecs_world_info_t *stats = ecs_get_world_info(m_world);
     return stats->frame_count_total;
 }

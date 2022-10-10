@@ -837,6 +837,8 @@ void Module_module_tag_on_namespace(void);
 void Module_dtor_on_fini(void);
 void Module_implicit_module(void);
 void Module_module_in_namespace_w_root_name(void);
+void Module_module_as_entity(void);
+void Module_module_as_component(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -4265,6 +4267,14 @@ bake_test_case Module_testcases[] = {
     {
         "module_in_namespace_w_root_name",
         Module_module_in_namespace_w_root_name
+    },
+    {
+        "module_as_entity",
+        Module_module_as_entity
+    },
+    {
+        "module_as_component",
+        Module_module_as_component
     }
 };
 
@@ -5143,7 +5153,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        9,
+        11,
         Module_testcases
     },
     {
