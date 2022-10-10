@@ -10509,35 +10509,58 @@ error:
 }
 
 
+static
+ecs_size_t flecs_allocator_size(
+    ecs_size_t size)
+{
+    return ECS_ALIGN(size, 16);
+}
+
+static
+ecs_size_t flecs_allocator_size_hash(
+    ecs_size_t size)
+{
+    return size >> 4;
+}
+
 void flecs_allocator_init(
     ecs_allocator_t *a)
 {
-    ecs_map_init(&a->sizes, ecs_block_allocator_t, NULL, 0);
+    flecs_ballocator_init_n(&a->chunks, ecs_block_allocator_t,
+        FLECS_SPARSE_CHUNK_SIZE);
+    flecs_sparse_init(&a->sizes, NULL, &a->chunks, ecs_block_allocator_t);
 }
 
 void flecs_allocator_fini(
     ecs_allocator_t *a)
 {
-    ecs_map_iter_t it = ecs_map_iter(&a->sizes);
-    ecs_block_allocator_t *ba;
-    while ((ba = ecs_map_next(&it, ecs_block_allocator_t, NULL))) {
+    int32_t i = 0, count = flecs_sparse_count(&a->sizes);
+    for (i = 0; i < count; i ++) {
+        ecs_block_allocator_t *ba = flecs_sparse_get_dense(
+            &a->sizes, ecs_block_allocator_t, i);
         flecs_ballocator_fini(ba);
     }
-    ecs_map_fini(&a->sizes);
+    flecs_sparse_fini(&a->sizes);
+    flecs_ballocator_fini(&a->chunks);
 }
 
 ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     ecs_size_t size)
 {
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
     if (!size) {
         return NULL;
     }
 
-    ecs_block_allocator_t *result = ecs_map_get(&a->sizes, 
-        ecs_block_allocator_t, size);
+    size = flecs_allocator_size(size);
+    ecs_size_t hash = flecs_allocator_size_hash(size);
+    ecs_block_allocator_t *result = flecs_sparse_get_any(&a->sizes, 
+        ecs_block_allocator_t, (uint32_t)hash);
+
     if (!result) {
-        result = ecs_map_ensure(&a->sizes, ecs_block_allocator_t, size);
+        result = flecs_sparse_ensure_fast(&a->sizes, 
+            ecs_block_allocator_t, (uint32_t)hash);
         flecs_ballocator_init(result, size);
     }
 
@@ -11349,6 +11372,9 @@ void* flecs_sparse_get_sparse(
 {
     flecs_sparse_strip_generation(&index);
     chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
     int32_t offset = OFFSET(index);
     
     ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -11961,21 +11987,6 @@ void* _ecs_sparse_get(
     uint64_t id)
 {
     return _flecs_sparse_get(sparse, elem_size, id);
-}
-
-ecs_sparse_iter_t _flecs_sparse_iter(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem_size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    ecs_sparse_iter_t result;
-    result.sparse = sparse;
-    result.ids = flecs_sparse_ids(sparse);
-    result.size = elem_size;
-    result.i = 0;
-    result.count = sparse->count - 1;
-    return result;
 }
 
 

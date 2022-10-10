@@ -151,6 +151,7 @@
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/vector.h"           /* Vector datatype */
+#include "flecs/private/sparse.h"           /* Sparse set */
 #include "flecs/private/block_allocator.h"  /* Block allocator */
 #include "flecs/private/map.h"              /* Map */
 #include "flecs/private/allocator.h"        /* Allocator */
@@ -634,7 +635,6 @@ struct ecs_type_info_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/private/vec.h"              /* Vector */
-#include "flecs/private/sparse.h"           /* Sparse set */
 #include "flecs/private/hashmap.h"          /* Hashmap */
 
 /**
