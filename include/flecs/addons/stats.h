@@ -95,6 +95,7 @@ typedef struct ecs_world_stats_t {
         /* Frame data */
         ecs_metric_t frame_count;          /* Number of frames processed. */
         ecs_metric_t merge_count;          /* Number of merges executed. */
+        ecs_metric_t rematch_count;        /* Number of query rematches */
         ecs_metric_t pipeline_build_count; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
         ecs_metric_t systems_ran;          /* Number of systems ran. */
         ecs_metric_t observers_ran;        /* Number of times an observer was invoked. */
@@ -109,6 +110,7 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t system_time;          /* Time spent on running systems. */
         ecs_metric_t emit_time;            /* Time spent on notifying observers. */
         ecs_metric_t merge_time;           /* Time spent on merging commands. */
+        ecs_metric_t rematch_time;         /* Time spent on rematching. */
         ecs_metric_t fps;                  /* Frames per second. */
         ecs_metric_t delta_time;           /* Delta_time. */
     } performance;

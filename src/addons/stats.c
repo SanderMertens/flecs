@@ -252,6 +252,7 @@ void ecs_world_stats_get(
     ecs_ftime_t delta_frame_count = 
     ECS_COUNTER_RECORD(&s->frame.frame_count, t, world->info.frame_count_total);
     ECS_COUNTER_RECORD(&s->frame.merge_count, t, world->info.merge_count_total);
+    ECS_COUNTER_RECORD(&s->frame.rematch_count, t, world->info.rematch_count_total);
     ECS_COUNTER_RECORD(&s->frame.pipeline_build_count, t, world->info.pipeline_build_count_total);
     ECS_COUNTER_RECORD(&s->frame.systems_ran, t, world->info.systems_ran_frame);
     ECS_COUNTER_RECORD(&s->frame.observers_ran, t, world->info.observers_ran_frame);
@@ -264,6 +265,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.system_time, t, world->info.system_time_total);
     ECS_COUNTER_RECORD(&s->performance.emit_time, t, world->info.emit_time_total);
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
+    ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
     if (delta_world_time != 0 && delta_frame_count != 0) {
         ECS_GAUGE_RECORD(&s->performance.fps, t, (ecs_ftime_t)1 / (delta_world_time / (ecs_ftime_t)delta_frame_count));

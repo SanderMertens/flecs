@@ -29676,6 +29676,7 @@ void ecs_world_stats_get(
     ecs_ftime_t delta_frame_count = 
     ECS_COUNTER_RECORD(&s->frame.frame_count, t, world->info.frame_count_total);
     ECS_COUNTER_RECORD(&s->frame.merge_count, t, world->info.merge_count_total);
+    ECS_COUNTER_RECORD(&s->frame.rematch_count, t, world->info.rematch_count_total);
     ECS_COUNTER_RECORD(&s->frame.pipeline_build_count, t, world->info.pipeline_build_count_total);
     ECS_COUNTER_RECORD(&s->frame.systems_ran, t, world->info.systems_ran_frame);
     ECS_COUNTER_RECORD(&s->frame.observers_ran, t, world->info.observers_ran_frame);
@@ -29688,6 +29689,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.system_time, t, world->info.system_time_total);
     ECS_COUNTER_RECORD(&s->performance.emit_time, t, world->info.emit_time_total);
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
+    ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
     if (delta_world_time != 0 && delta_frame_count != 0) {
         ECS_GAUGE_RECORD(&s->performance.fps, t, (ecs_ftime_t)1 / (delta_world_time / (ecs_ftime_t)delta_frame_count));
@@ -34453,12 +34455,13 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, performance.system_time, "Time spent on running systems in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.emit_time, "Time spent on notifying observers in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.merge_time, "Time spent on merging commands in frame");
+    ECS_COUNTER_APPEND(reply, stats, performance.rematch_time, "Time spent on revalidating query caches in frame");
 
     ECS_COUNTER_APPEND(reply, stats, commands.add_count, "Add commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.remove_count, "Remove commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.delete_count, "Delete commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.clear_count, "Clear commands executed");
-    ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set command executeds");
+    ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.get_mut_count, "Get_mut commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.modified_count, "Modified commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.other_count, "Misc commands executed");
@@ -34467,10 +34470,11 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, commands.batched_count, "Number of commands batched");
 
     ECS_COUNTER_APPEND(reply, stats, frame.merge_count, "Number of merges (sync points)");
-    ECS_COUNTER_APPEND(reply, stats, frame.pipeline_build_count, "Pipeline rebuilds happen after systems activate or are enabled/disabled");
+    ECS_COUNTER_APPEND(reply, stats, frame.pipeline_build_count, "Pipeline rebuilds (happen when systems become active/enabled)");
     ECS_COUNTER_APPEND(reply, stats, frame.systems_ran, "Systems ran in frame");
     ECS_COUNTER_APPEND(reply, stats, frame.observers_ran, "Number of times an observer was invoked in frame");
     ECS_COUNTER_APPEND(reply, stats, frame.event_emit_count, "Events emitted in frame");
+    ECS_COUNTER_APPEND(reply, stats, frame.rematch_count, "Number of query cache revalidations");
 
     ECS_GAUGE_APPEND(reply, stats, tables.count, "Tables in the world (including empty)");
     ECS_GAUGE_APPEND(reply, stats, tables.empty_count, "Empty tables in the world");
@@ -47010,7 +47014,13 @@ void flecs_query_rematch_tables(
     ECS_BIT_SET(it.flags, EcsIterIsFilter);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
+    world->info.rematch_count_total ++;
     int32_t rematch_count = ++ query->rematch_count;
+
+    ecs_time_t t = {0};
+    if (world->flags & EcsWorldMeasureFrameTime) {
+        ecs_time_measure(&t);
+    }
 
     while (ecs_iter_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
@@ -47064,6 +47074,10 @@ void flecs_query_rematch_tables(
                 flecs_query_unmatch_table(query, qt->hdr.table);
             }
         }
+    }
+
+    if (world->flags & EcsWorldMeasureFrameTime) {
+        world->info.rematch_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
 }
 
