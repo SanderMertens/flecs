@@ -1809,8 +1809,7 @@ void flecs_table_set_empty(
         table->generation = 0;
     }
 
-    flecs_sparse_set_generation(world->pending_tables, (uint32_t)table->id);
-    flecs_sparse_ensure(world->pending_tables, ecs_table_t*, 
+    flecs_sparse_ensure_fast(world->pending_tables, ecs_table_t*, 
         (uint32_t)table->id)[0] = table;
 }
 

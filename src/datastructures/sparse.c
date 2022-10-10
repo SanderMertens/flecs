@@ -525,6 +525,37 @@ void* _flecs_sparse_ensure(
     return DATA(chunk->data, sparse->size, offset);
 }
 
+void* _flecs_sparse_ensure_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index_long)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
+
+    uint32_t index = (uint32_t)index_long;
+    chunk_t *chunk = flecs_sparse_get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (!dense) {
+        /* Element is not paired yet. Must add a new element to dense array */
+        ecs_vector_t *dense_vector = sparse->dense;
+        int32_t count = sparse->count ++;
+        if (count == ecs_vector_count(dense_vector)) {
+            flecs_sparse_grow_dense(sparse);
+            dense_vector = sparse->dense;
+        }
+
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        flecs_sparse_assign_index(chunk, dense_array, index, count);
+    }
+
+    return DATA(chunk->data, sparse->size, offset);
+}
+
 void* _flecs_sparse_set(
     ecs_sparse_t * sparse,
     ecs_size_t elem_size,
@@ -545,7 +576,11 @@ void* _flecs_sparse_remove_get(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    chunk_t *chunk = flecs_sparse_get_or_create_chunk(sparse, CHUNK(index));
+    chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
     uint64_t gen = flecs_sparse_strip_generation(&index);
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
@@ -582,6 +617,35 @@ void* _flecs_sparse_remove_get(
         /* Element is not paired and thus not alive, nothing to be done */
         return NULL;
     }
+}
+
+void* _flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index_long)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    uint32_t index = (uint32_t)index_long;
+    chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) { 
+        int32_t count = -- sparse->count;
+        if (dense != count) {
+            flecs_sparse_swap_dense(sparse, chunk, dense, count);
+        }
+
+        return DATA(chunk->data, sparse->size, offset);
+    }
+    return NULL;
 }
 
 void flecs_sparse_remove(
