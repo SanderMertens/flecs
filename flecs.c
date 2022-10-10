@@ -15650,10 +15650,10 @@ typedef struct ecs_system_t {
     bool multi_threaded;
     bool no_staging;
 
-    int32_t invoke_count;           /* Number of times system is invoked */
+    int64_t invoke_count;           /* Number of times system is invoked */
     float time_spent;               /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
-    int32_t last_frame;             /* Last frame for which the system was considered */
+    int64_t last_frame;             /* Last frame for which the system was considered */
 
     void *ctx;                      /* Userdata for system */
     void *binding_ctx;              /* Optional language binding context */
@@ -15991,7 +15991,7 @@ bool ecs_worker_sync(
 
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
-    int32_t build_count = world->info.pipeline_build_count_total;
+    int64_t build_count = world->info.pipeline_build_count_total;
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
@@ -29481,6 +29481,10 @@ ecs_float_t flecs_counter_record(
     int32_t tp = t_prev(t);
     ecs_float_t prev = m->counter.value[tp];
     m->counter.value[t] = value;
+    ecs_float_t gauge_value = value - prev;
+    if (gauge_value < 0) {
+        gauge_value = 0; /* Counters are monotonically increasing */
+    }
     flecs_gauge_record(m, t, value - prev);
     return value - prev;
 }

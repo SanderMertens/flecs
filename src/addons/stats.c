@@ -57,6 +57,10 @@ ecs_float_t flecs_counter_record(
     int32_t tp = t_prev(t);
     ecs_float_t prev = m->counter.value[tp];
     m->counter.value[t] = value;
+    ecs_float_t gauge_value = value - prev;
+    if (gauge_value < 0) {
+        gauge_value = 0; /* Counters are monotonically increasing */
+    }
     flecs_gauge_record(m, t, value - prev);
     return value - prev;
 }

@@ -4116,16 +4116,16 @@ typedef struct ecs_world_info_t {
     ecs_ftime_t world_time_total;     /* Time elapsed in simulation */
     ecs_ftime_t world_time_total_raw; /* Time elapsed in simulation (no scaling) */
     
-    int32_t frame_count_total;        /* Total number of frames */
-    int32_t merge_count_total;        /* Total number of merges */
+    int64_t frame_count_total;        /* Total number of frames */
+    int64_t merge_count_total;        /* Total number of merges */
 
-    int32_t id_create_total;          /* Total number of times a new id was created */
-    int32_t id_delete_total;          /* Total number of times an id was deleted */
-    int32_t table_create_total;       /* Total number of times a table was created */
-    int32_t table_delete_total;       /* Total number of times a table was deleted */
-    int32_t pipeline_build_count_total; /* Total number of pipeline builds */
-    int32_t systems_ran_frame;        /* Total number of systems ran in last frame */
-    int32_t observers_ran_frame;      /* Total number of times observer was invoked */
+    int64_t id_create_total;          /* Total number of times a new id was created */
+    int64_t id_delete_total;          /* Total number of times an id was deleted */
+    int64_t table_create_total;       /* Total number of times a table was created */
+    int64_t table_delete_total;       /* Total number of times a table was deleted */
+    int64_t pipeline_build_count_total; /* Total number of pipeline builds */
+    int64_t systems_ran_frame;        /* Total number of systems ran in last frame */
+    int64_t observers_ran_frame;      /* Total number of times observer was invoked */
 
     int32_t id_count;                 /* Number of ids in the world (excluding wildcards) */
     int32_t tag_id_count;             /* Number of tag (no data) ids in the world */
@@ -4142,17 +4142,17 @@ typedef struct ecs_world_info_t {
 
     /* -- Command counts -- */
     struct {
-        int32_t add_count;             /* add commands processed */
-        int32_t remove_count;          /* remove commands processed */
-        int32_t delete_count;          /* delete commands processed */
-        int32_t clear_count;           /* clear commands processed */
-        int32_t set_count;             /* set commands processed */
-        int32_t get_mut_count;         /* get_mut/emplace commands processed */
-        int32_t modified_count;        /* modified commands processed */
-        int32_t other_count;           /* other commands processed */
-        int32_t discard_count;         /* commands discarded, happens when entity is no longer alive when running the command */
-        int32_t batched_entity_count;  /* entities for which commands were batched */
-        int32_t batched_command_count; /* commands batched */
+        int64_t add_count;             /* add commands processed */
+        int64_t remove_count;          /* remove commands processed */
+        int64_t delete_count;          /* delete commands processed */
+        int64_t clear_count;           /* clear commands processed */
+        int64_t set_count;             /* set commands processed */
+        int64_t get_mut_count;         /* get_mut/emplace commands processed */
+        int64_t modified_count;        /* modified commands processed */
+        int64_t other_count;           /* other commands processed */
+        int64_t discard_count;         /* commands discarded, happens when entity is no longer alive when running the command */
+        int64_t batched_entity_count;  /* entities for which commands were batched */
+        int64_t batched_command_count; /* commands batched */
     } cmd;
 
     const char *name_prefix;          /* Value set by ecs_set_name_prefix. Used
