@@ -45,7 +45,7 @@ extern "C" {
 /** The number of elements in a single chunk */
 #define FLECS_SPARSE_CHUNK_SIZE (4096)
 
-struct ecs_sparse_t {
+typedef struct ecs_sparse_t {
     ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
                                  * dense array stores both alive and not alive
                                  * sparse indices. The 'count' member keeps
@@ -57,15 +57,15 @@ struct ecs_sparse_t {
     uint64_t max_id_local;      /* Local max index (if no global is set) */
     uint64_t *max_id;           /* Maximum issued sparse index */
     struct ecs_allocator_t *allocator;
-    ecs_block_allocator_t *chunk_allocator;
-};
+    struct ecs_block_allocator_t *chunk_allocator;
+} ecs_sparse_t;
 
 /** Initialize sparse set */
 FLECS_DBG_API
 void _flecs_sparse_init(
     ecs_sparse_t *sparse,
     struct ecs_allocator_t *allocator,
-    ecs_block_allocator_t *chunk_allocator,
+    struct ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
 #define flecs_sparse_init(sparse, allocator, chunk_allocator, T)\
@@ -75,7 +75,7 @@ void _flecs_sparse_init(
 FLECS_DBG_API
 ecs_sparse_t* _flecs_sparse_new(
     struct ecs_allocator_t *allocator,
-    ecs_block_allocator_t *chunk_allocator,
+    struct ecs_block_allocator_t *chunk_allocator,
     ecs_size_t elem_size);
 
 #define flecs_sparse_new(allocator, chunk_allocator, T)\
@@ -193,6 +193,7 @@ void* _flecs_sparse_get_dense(
 #define flecs_sparse_get_dense(sparse, T, index)\
     ((T*)_flecs_sparse_get_dense(sparse, ECS_SIZEOF(T), index))
 
+
 /** Get the number of alive elements in the sparse set. */
 FLECS_DBG_API
 int32_t flecs_sparse_count(
@@ -281,25 +282,6 @@ FLECS_DBG_API
 void flecs_sparse_restore(
     ecs_sparse_t *dst,
     const ecs_sparse_t *src);
-
-FLECS_DBG_API
-ecs_sparse_iter_t _flecs_sparse_iter(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-#define flecs_sparse_iter(sparse, T)\
-    _flecs_sparse_iter(sparse, ECS_SIZEOF(T))
-
-#ifndef FLECS_LEGACY
-#define flecs_sparse_each(sparse, T, var, ...)\
-    {\
-        int var##_i, var##_count = ecs_sparse_count(sparse);\
-        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
-            T* var = ecs_sparse_get_dense(sparse, T, var##_i);\
-            __VA_ARGS__\
-        }\
-    }
-#endif
 
 /* Publicly exposed APIs 
  * The flecs_ functions aren't exposed directly as this can cause some

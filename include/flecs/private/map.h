@@ -55,7 +55,7 @@ typedef struct ecs_map_t {
     int32_t bucket_count;
     int32_t count;
     struct ecs_allocator_t *allocator;
-    ecs_block_allocator_t *entry_allocator;
+    struct ecs_block_allocator_t *entry_allocator;
 } ecs_map_t;
 
 typedef struct ecs_map_iter_t {
@@ -67,7 +67,7 @@ typedef struct ecs_map_iter_t {
 typedef struct ecs_map_params_t {
     ecs_size_t size;
     struct ecs_allocator_t *allocator;
-    ecs_block_allocator_t entry_allocator;
+    struct ecs_block_allocator_t entry_allocator;
     int32_t initial_count;
 } ecs_map_params_t;
 

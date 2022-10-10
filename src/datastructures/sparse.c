@@ -289,6 +289,9 @@ void* flecs_sparse_get_sparse(
 {
     flecs_sparse_strip_generation(&index);
     chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
     int32_t offset = OFFSET(index);
     
     ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -914,19 +917,4 @@ void* _ecs_sparse_get(
     uint64_t id)
 {
     return _flecs_sparse_get(sparse, elem_size, id);
-}
-
-ecs_sparse_iter_t _flecs_sparse_iter(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem_size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    ecs_sparse_iter_t result;
-    result.sparse = sparse;
-    result.ids = flecs_sparse_ids(sparse);
-    result.size = elem_size;
-    result.i = 0;
-    result.count = sparse->count - 1;
-    return result;
 }

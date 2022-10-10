@@ -30,9 +30,6 @@ typedef struct ecs_record_t ecs_record_t;
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
-/* Sparse set */
-typedef struct ecs_sparse_t ecs_sparse_t;
-
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
 
@@ -174,15 +171,6 @@ typedef struct ecs_snapshot_iter_t {
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
 } ecs_snapshot_iter_t;  
-
-/** Type used for iterating ecs_sparse_t */
-typedef struct ecs_sparse_iter_t {
-    ecs_sparse_t *sparse;
-    const uint64_t *ids;
-    ecs_size_t size;
-    int32_t i;
-    int32_t count;
-} ecs_sparse_iter_t;
 
 /** Rule-iterator specific data */
 typedef struct ecs_rule_iter_t {
