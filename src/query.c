@@ -713,16 +713,8 @@ void flecs_query_add_ref(
     ecs_size_t size)
 {
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (!qm->refs.array) {
-        ecs_vec_init_t(&world->allocator, &qm->refs, ecs_ref_t, 1);
-    }
     ecs_ref_t *ref = ecs_vec_append_t(&world->allocator, &qm->refs, ecs_ref_t);
-    ecs_term_id_t *src = &term->src;
-
-    if (!(src->flags & EcsCascade)) {
-        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-    }
+    ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     
     if (size) {
         *ref = ecs_ref_init_id(world, entity, component);
@@ -783,10 +775,8 @@ void flecs_query_set_table_match(
         ecs_vector_free(qm->bitset_columns);
         qm->bitset_columns = NULL;
     }
-    if (qm->refs.array) {
-        ecs_vec_fini_t(&world->allocator, &qm->refs, ecs_ref_t);
-    }
 
+    ecs_vec_reset_t(&world->allocator, &qm->refs, ecs_ref_t);
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
     ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
     ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
@@ -1558,7 +1548,7 @@ void flecs_query_rematch_tables(
         ecs_time_measure(&t);
     }
 
-    while (ecs_iter_next(&it)) {
+    while (ecs_filter_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
                 flecs_query_table_match_free(query, qt, qm->next_match);
