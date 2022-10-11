@@ -7,11 +7,11 @@
 #define FLECS_ID_RECORD_H
 
 /* Payload for id cache */
-typedef struct ecs_table_record_t {
+struct ecs_table_record_t {
     ecs_table_cache_hdr_t hdr;  /* Table cache header */
     int32_t column;             /* First column where id occurs in table */
     int32_t count;              /* Number of times id occurs in table */
-} ecs_table_record_t;
+};
 
 /* Linked list of id records */
 typedef struct ecs_id_record_elem_t {
@@ -106,6 +106,10 @@ ecs_table_record_t* flecs_table_record_get(
 const ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table);
+
+/* Bootstrap cached id records */
+void flecs_init_id_records(
+    ecs_world_t *world);
 
 /* Cleanup all id records in world */
 void flecs_fini_id_records(

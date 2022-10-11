@@ -169,6 +169,44 @@ int32_t type_search_relation(
     return -1;
 }
 
+int32_t flecs_search_relation_w_idr(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    ecs_flags32_t flags,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out,
+    ecs_id_record_t *idr)
+{
+    if (!table) return -1;
+
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    flags = flags ? flags : (EcsSelf|EcsUp);
+
+    if (subject_out) subject_out[0] = 0;
+    if (!(flags & EcsUp)) {
+        return ecs_search_offset(world, table, offset, id, id_out);
+    }
+
+    if (!idr) {
+        idr = flecs_query_id_record_get(world, id);
+        if (!idr) {
+            return -1;
+        }
+    }
+
+    int32_t result = type_search_relation(world, table, offset, id, idr, 
+        ecs_pair(rel, EcsWildcard), NULL, flags & EcsSelf, subject_out, 
+            id_out, tr_out);
+
+    return result;
+}
+
 int32_t ecs_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,

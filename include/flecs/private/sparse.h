@@ -145,9 +145,6 @@ void* _flecs_sparse_remove_fast(
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_remove_fast(sparse, T, index)\
-    ((T*)_flecs_sparse_remove_fast(sparse, ECS_SIZEOF(T), index))
-
 /** Remove an element, return pointer to the value in the sparse array */
 FLECS_DBG_API
 void* _flecs_sparse_remove_get(

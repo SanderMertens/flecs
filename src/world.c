@@ -550,6 +550,7 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, ECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_id_record_t);
+    flecs_ballocator_init_n(&a->id_record_chunk, ecs_id_record_t, FLECS_SPARSE_CHUNK_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_CHUNK_SIZE);
     flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
@@ -570,6 +571,7 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->id_record);
+    flecs_ballocator_fini(&a->id_record_chunk);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
     flecs_ballocator_fini(&a->hashmap);
@@ -709,7 +711,9 @@ ecs_world_t *ecs_mini(void) {
     world->type_info = flecs_sparse_new(
         &world->allocator, &world->allocators.sparse_chunk, 
         ecs_type_info_t);
-    ecs_map_init_w_params(&world->id_index, &world->allocators.ptr);
+    ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
+    flecs_sparse_init(&world->id_index_lo, NULL, 
+        &world->allocators.id_record_chunk, ecs_id_record_t);
     flecs_observable_init(&world->observable);
     world->iterable.init = flecs_world_iter_init;
     world->pending_tables = flecs_sparse_new(
