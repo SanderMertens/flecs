@@ -707,7 +707,6 @@ void flecs_query_add_ref(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_table_match_t *qm,
-    ecs_term_t *term,
     ecs_entity_t component,
     ecs_entity_t entity,
     ecs_size_t size)
@@ -868,7 +867,7 @@ void flecs_query_set_table_match(
             ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
             if (id) {
-                flecs_query_add_ref(world, query, qm, term, id, src, size);
+                flecs_query_add_ref(world, query, qm, id, src, size);
 
                 /* Use column index to bind term and ref */
                 if (qm->columns[field] != 0) {

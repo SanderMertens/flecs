@@ -240,6 +240,12 @@ typedef struct ecs_type_hooks_t ecs_type_hooks_t;
 /** Type information */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
+/* Internal index that stores tables tables for a (component) id */
+typedef struct ecs_id_record_t ecs_id_record_t;
+
+/* Internal table storage record */
+typedef struct ecs_table_record_t ecs_table_record_t;
+
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
@@ -510,6 +516,7 @@ struct ecs_term_t {
     char *name;                 /* Name of term */
 
     int32_t field_index;        /* Index of field for term in iterator */
+    ecs_id_record_t *idr;       /* Cached pointer to internal index */
 
     bool move;                  /* Used by internals */
 };

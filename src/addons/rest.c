@@ -580,58 +580,6 @@ bool flecs_rest_reply_tables(
 }
 
 static
-void flecs_rest_reply_id_append(
-    ecs_world_t *world,
-    ecs_strbuf_t *reply,
-    const ecs_id_record_t *idr)
-{
-    ecs_strbuf_list_next(reply);
-    ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendstr(reply, "\"id\":\"");
-    ecs_id_str_buf(world, idr->id, reply);
-    ecs_strbuf_appendch(reply, '"');
-
-    if (idr->type_info) {
-        if (idr->type_info->component != idr->id) {
-            ecs_strbuf_list_appendstr(reply, "\"component\":\"");
-            ecs_id_str_buf(world, idr->type_info->component, reply);
-            ecs_strbuf_appendch(reply, '"');
-        }
-
-        ecs_strbuf_list_append(reply, "\"size\":%d", 
-            idr->type_info->size);
-        ecs_strbuf_list_append(reply, "\"alignment\":%d", 
-            idr->type_info->alignment);
-    }
-
-    ecs_strbuf_list_append(reply, "\"table_count\":%d", 
-        idr->cache.tables.count);
-    ecs_strbuf_list_append(reply, "\"empty_table_count\":%d", 
-        idr->cache.empty_tables.count);
-
-    ecs_strbuf_list_pop(reply, "}");
-}
-
-static
-bool flecs_rest_reply_ids(
-    ecs_world_t *world,
-    const ecs_http_request_t* req,
-    ecs_http_reply_t *reply)
-{
-    (void)req;
-
-    ecs_strbuf_list_push(&reply->body, "[", ",");
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index);
-    ecs_id_record_t *idr;
-    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, NULL))) {
-        flecs_rest_reply_id_append(world, &reply->body, idr);
-    }
-    ecs_strbuf_list_pop(&reply->body, "]");
-
-    return true;
-}
-
-static
 bool flecs_rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -665,11 +613,8 @@ bool flecs_rest_reply(
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {
             return flecs_rest_reply_tables(world, req, reply);
-
-        /* Ids endpoint */
-        } else if (!ecs_os_strncmp(req->path, "ids", 3)) {
-            return flecs_rest_reply_ids(world, req, reply);
         }
+
     } else if (req->method == EcsHttpOptions) {
         return true;
     }

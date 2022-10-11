@@ -33,14 +33,8 @@ typedef struct ecs_data_t ecs_data_t;
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
 
-/* Internal structure to lookup tables for a (component) id */
-typedef struct ecs_id_record_t ecs_id_record_t;
-
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
-
-/* Internal table storage record */
-struct ecs_table_record_t;
 
 /* Allocator type */
 struct ecs_allocator_t;

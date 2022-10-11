@@ -44,6 +44,7 @@ ecs_block_allocator_t* flecs_allocator_get(
         return NULL;
     }
 
+    ecs_assert(size <= flecs_allocator_size(size), ECS_INTERNAL_ERROR, NULL);
     size = flecs_allocator_size(size);
     ecs_size_t hash = flecs_allocator_size_hash(size);
     ecs_block_allocator_t *result = flecs_sparse_get_any(&a->sizes, 
@@ -54,6 +55,8 @@ ecs_block_allocator_t* flecs_allocator_get(
             ecs_block_allocator_t, (uint32_t)hash);
         flecs_ballocator_init(result, size);
     }
+
+    ecs_assert(result->data_size == size, ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -74,4 +77,19 @@ void flecs_strfree(
 {
     ecs_size_t len = ecs_os_strlen(str);
     flecs_free_n(a, char, len + 1, str);
+}
+
+void* flecs_dup(
+    ecs_allocator_t *a,
+    ecs_size_t size,
+    const void *src)
+{
+    ecs_block_allocator_t *ba = flecs_allocator_get(a, size);
+    if (ba) {
+        void *dst = flecs_balloc(ba);
+        ecs_os_memcpy(dst, src, size);
+        return dst;
+    } else {
+        return NULL;
+    }
 }
