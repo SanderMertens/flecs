@@ -263,4 +263,16 @@ void flecs_dump_backtrace(
 bool flecs_isident(
     char ch);
 
+int32_t flecs_search_relation_w_idr(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    ecs_flags32_t flags,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out,
+    ecs_id_record_t *idr);
+
 #endif

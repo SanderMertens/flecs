@@ -65,7 +65,7 @@ char* ecs_vasprintf(
     va_list args);
 
 /* Create allocated string from format */
-FLECS_DBG_API
+FLECS_API
 char* ecs_asprintf(
     const char *fmt,
     ...);

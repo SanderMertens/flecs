@@ -390,6 +390,7 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t id_record;
+    ecs_block_allocator_t id_record_chunk;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
     ecs_block_allocator_t hashmap;
@@ -544,7 +545,8 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_map_t id_index;          /* map<id, ecs_id_record_t*> */
+    ecs_sparse_t id_index_lo;    /* sparse<id, ecs_id_record_t> */
+    ecs_map_t id_index_hi;       /* map<id, ecs_id_record_t*> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */

@@ -653,6 +653,7 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsOnDelete);
     ecs_ensure(world, EcsPanic);
     ecs_ensure(world, EcsFlag);
+    ecs_ensure(world, EcsIsA);
     ecs_ensure(world, EcsWildcard);
     ecs_ensure(world, EcsAny);
     ecs_ensure(world, EcsTag);
@@ -682,11 +683,8 @@ void flecs_bootstrap(
 
     flecs_type_info_init(world, EcsIterable, { 0 });
 
-    /* Cache often used id records on world */
-    world->idr_wildcard = flecs_id_record_ensure(world, EcsWildcard);
-    world->idr_wildcard_wildcard = flecs_id_record_ensure(world, 
-        ecs_pair(EcsWildcard, EcsWildcard));
-    world->idr_any = flecs_id_record_ensure(world, EcsAny);
+    /* Cache often used id records */
+    flecs_init_id_records(world);
 
     /* Create table for initial components */
     ecs_table_t *table = flecs_bootstrap_component_table(world);
@@ -806,10 +804,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
-
-    /* The (IsA, *) id record is used often in searches, so cache it */
-    world->idr_isa_wildcard = flecs_id_record_ensure(world, 
-        ecs_pair(EcsIsA, EcsWildcard));
 
     /* Create triggers in internals scope */
     ecs_set_scope(world, EcsFlecsInternals);
