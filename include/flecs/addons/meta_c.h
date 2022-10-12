@@ -44,9 +44,11 @@ extern "C" {
     ecs_meta_from_desc(world, ecs_id(name),\
         FLECS__##name##_kind, FLECS__##name##_desc)
 
+#define ECS__META_STRINGIFY(...) #__VA_ARGS__
+
 /** ECS_STRUCT(name, body) */
 #define ECS_STRUCT(name, ...)\
-    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, ECS__META_STRINGIFY(__VA_ARGS__));\
     ECS_STRUCT_TYPE(name, __VA_ARGS__)
 
 /** ECS_ENUM(name, body) */
