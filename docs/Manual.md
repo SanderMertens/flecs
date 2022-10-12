@@ -504,7 +504,7 @@ The `ecs_get` operation returns a const pointer which should not be modified by 
 ```c
 Position *p = ecs_get_mut(world, e, Position);
 p->x++;
-ecs_modified(world, p, Position);
+ecs_modified(world, e, Position);
 ```
 
 ### Component handles
