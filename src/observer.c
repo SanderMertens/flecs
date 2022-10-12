@@ -133,30 +133,6 @@ ecs_entity_t flecs_observer_get_actual_event(
 }
 
 static
-void flecs_unregister_event_observer(
-    ecs_event_record_t *evt,
-    ecs_id_t id)
-{
-    if (ecs_map_remove(&evt->event_ids, id) == 0) {
-        ecs_map_fini(&evt->event_ids);
-    }
-}
-
-static
-ecs_event_id_record_t* flecs_ensure_event_id_record(
-    ecs_map_t *map,
-    ecs_id_t id)
-{
-    ecs_event_id_record_t **idt = ecs_map_ensure(
-        map, ecs_event_id_record_t*, id);
-    if (!idt[0]) {
-        idt[0] = ecs_os_calloc_t(ecs_event_id_record_t);
-    }
-
-    return idt[0];
-}
-
-static
 ecs_flags32_t flecs_id_flag_for_event(
     ecs_entity_t e)
 {
@@ -183,7 +159,7 @@ void flecs_inc_observer_count(
     ecs_id_t id,
     int32_t value)
 {
-    ecs_event_id_record_t *idt = flecs_ensure_event_id_record(&evt->event_ids, id);
+    ecs_event_id_record_t *idt = flecs_event_id_record_ensure(evt, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
     
     int32_t result = idt->observer_count += value;
@@ -218,10 +194,10 @@ void flecs_inc_observer_count(
         }
 
         /* Remove admin for id for event */
-        if (!ecs_map_is_initialized(&idt->observers) && 
+        if (!ecs_map_is_initialized(&idt->self) && 
             !ecs_map_is_initialized(&idt->set_observers)) 
         {
-            flecs_unregister_event_observer(evt, id);
+            flecs_event_id_record_remove(evt, id);
             ecs_os_free(idt);
         }
     }
@@ -235,8 +211,6 @@ void flecs_register_observer_for_id(
     ecs_id_t id,
     size_t offset)
 {
-    ecs_sparse_t *events = observable->events;
-    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t term_id = observer->register_id;
 
     int i;
@@ -245,15 +219,12 @@ void flecs_register_observer_for_id(
             observer, observer->events[i]);
 
         /* Get observers for event */
-        ecs_event_record_t *evt = flecs_sparse_ensure(
-            events, ecs_event_record_t, event);
-        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_map_init_w_params_if(&evt->event_ids, &world->allocators.ptr);
+        ecs_event_record_t *er = flecs_event_record_ensure(observable, event);
+        ecs_assert(er != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
 
         /* Get observers for (component) id for event */
-        ecs_event_id_record_t *idt = flecs_ensure_event_id_record(
-            &evt->event_ids, id);
+        ecs_event_id_record_t *idt = flecs_event_id_record_ensure(er, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
@@ -262,9 +233,9 @@ void flecs_register_observer_for_id(
         ecs_map_ensure(observers, ecs_observer_t*, 
             observer->entity)[0] = observer;
 
-        flecs_inc_observer_count(world, event, evt, term_id, 1);
+        flecs_inc_observer_count(world, event, er, term_id, 1);
         if (term_id != id) {
-            flecs_inc_observer_count(world, event, evt, id, 1);
+            flecs_inc_observer_count(world, event, er, id, 1);
         }
     }
 }
@@ -277,6 +248,18 @@ void flecs_uni_observer_register(
 {
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
+    ecs_flags32_t flags = term->src.flags;
+
+    if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
+        flecs_register_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, self_up));
+    } else if (flags & EcsSelf) {
+        flecs_register_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, self));
+    } else if (flags & EcsUp) {
+        flecs_register_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, up));
+    }
 
     if (term->src.flags & EcsSelf) {
         if (ecs_term_match_this(term)) {
@@ -303,8 +286,6 @@ void flecs_unregister_observer_for_id(
     ecs_id_t id,
     size_t offset)
 {
-    ecs_sparse_t *events = observable->events;
-    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t term_id = observer->register_id;
 
     int i;
@@ -313,13 +294,11 @@ void flecs_unregister_observer_for_id(
             observer, observer->events[i]);
 
         /* Get observers for event */
-        ecs_event_record_t *evt = flecs_sparse_get(
-            events, ecs_event_record_t, event);
-        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_event_record_t *er = flecs_event_record_get(observable, event);
+        ecs_assert(er != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Get observers for (component) id */
-        ecs_event_id_record_t *idt = ecs_map_get_ptr(
-            &evt->event_ids, ecs_event_id_record_t*, id);
+        ecs_event_id_record_t *idt = flecs_event_id_record_get(er, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *id_observers = ECS_OFFSET(idt, offset);
@@ -328,19 +307,19 @@ void flecs_unregister_observer_for_id(
             ecs_map_fini(id_observers);
         }
 
-        flecs_inc_observer_count(world, event, evt, term_id, -1);
+        flecs_inc_observer_count(world, event, er, term_id, -1);
 
         if (id != term_id) {
             /* Id is different from term_id in case of a set observer. If they're
              * the same, flecs_inc_observer_count could already have done cleanup */
-            if (!ecs_map_is_initialized(&idt->observers) && 
+            if (!ecs_map_is_initialized(&idt->self) && 
                 !ecs_map_is_initialized(&idt->set_observers) && 
                 !idt->observer_count) 
             {
-                flecs_unregister_event_observer(evt, id);
+                flecs_event_id_record_remove(er, id);
             }
 
-            flecs_inc_observer_count(world, event, evt, id, -1);
+            flecs_inc_observer_count(world, event, er, id, -1);
         }
     }
 }
@@ -359,6 +338,18 @@ void flecs_unregister_observer(
 
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_id_t id = observer->register_id;
+    ecs_flags32_t flags = term->src.flags;
+
+    if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
+        flecs_unregister_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, self_up));
+    } else if (flags & EcsSelf) {
+        flecs_unregister_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, self));
+    } else if (flags & EcsUp) {
+        flecs_unregister_observer_for_id(world, observable, observer, id,
+            offsetof(ecs_event_id_record_t, up));
+    }
 
     if (term->src.flags & EcsSelf) {
         if (ecs_term_match_this(term)) {
@@ -387,10 +378,7 @@ ecs_map_t* flecs_get_observers_for_event(
 
     ecs_sparse_t *events = observable->events;
     ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const ecs_event_record_t *evt = flecs_sparse_get(
-        events, ecs_event_record_t, event);
-    
+    const ecs_event_record_t *evt = flecs_event_record_get(observable, event);    
     if (evt) {
         return (ecs_map_t*)&evt->event_ids;
     }
@@ -497,12 +485,11 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
     }
 }
 
-static 
+static
 void flecs_default_multi_observer_run_callback(ecs_iter_t *it) {
     flecs_multi_observer_invoke(it);
 }
 
-static 
 void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *observer = it->ctx;
     it->ctx = observer->ctx;
@@ -522,7 +509,6 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
 
 /* For convenience, so applications can (in theory) use a single run callback 
  * that uses ecs_iter_next to iterate results */
-static 
 bool flecs_default_observer_next_callback(ecs_iter_t *it) {
     if (it->interrupted_by) {
         return false;

@@ -19,7 +19,6 @@ void OnSet(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         p[i].x ++;
-
         if (v) {
             v[i].x = p[i].x;
             v[i].y = p[i].y;
@@ -481,7 +480,6 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
-
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
@@ -675,7 +673,7 @@ void TriggerOnSet_on_set_after_remove_override() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);
+    test_int(ctx.s[0][0], Base);
 
     ecs_fini(world);
 }

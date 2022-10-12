@@ -104,6 +104,13 @@ extern "C" {
 //// Filter flags (used by ecs_filter_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
+#define EcsEventTableOnly              (1u << 8u)   /* Table event (no data, same as iter flags) */
+#define EcsEventNoOnSet                (1u << 16u)  /* Don't emit OnSet/UnSet for inherited ids */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Filter flags (used by ecs_filter_t::flags)
+////////////////////////////////////////////////////////////////////////////////
+
 #define EcsFilterMatchThis             (1u << 1u)  /* Has terms that match This */
 #define EcsFilterMatchOnlyThis         (1u << 2u)  /* Has only terms that match This */
 #define EcsFilterMatchPrefab           (1u << 3u)  /* Does filter match prefabs */

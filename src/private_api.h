@@ -82,6 +82,13 @@ int32_t flecs_relation_depth(
     ecs_entity_t r,
     ecs_table_t *table);
 
+void flecs_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////

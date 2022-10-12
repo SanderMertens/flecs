@@ -1930,7 +1930,10 @@ void DeferredActions_merge_cleanup_ops_before_delete() {
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Counter),
+        .filter.terms[0] = {
+            .id = ecs_id(Counter),
+            .src.flags = EcsSelf
+        },
         .events = {EcsOnRemove},
         .callback = remove_counter
     });
@@ -1962,13 +1965,19 @@ void DeferredActions_merge_nested_cleanup_ops_before_delete() {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .filter.terms[0] = {
+            .id = Tag,
+            .src.flags = EcsSelf
+        },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = update_counter
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Counter),
+        .filter.terms[0] = {
+            .id = ecs_id(Counter),
+            .src.flags = EcsSelf
+        },
         .events = {EcsOnRemove},
         .callback = remove_counter
     });

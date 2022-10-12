@@ -1635,6 +1635,7 @@ void Trigger_on_add_superset() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
+    test_int(ctx.s[0][0], base);
 
     ecs_os_zeromem(&ctx);
 
@@ -1685,6 +1686,7 @@ void Trigger_on_add_superset_2_levels() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
+    test_int(ctx.s[0][0], base_of_base);
 
     ecs_os_zeromem(&ctx);
 
@@ -2324,6 +2326,8 @@ void Trigger_trigger_w_named_entity() {
 
 void RemoveSelf(ecs_iter_t *it) {
     Self *s = ecs_field(it, Self, 1);
+    test_assert(s != NULL);
+
     ecs_id_t ecs_id(Self) = ecs_field_id(it, 1);
 
     int i;
@@ -3207,6 +3211,7 @@ void Trigger_on_add_base_superset_trigger() {
     test_int(ctx.invoked, 0);
 
     ecs_add(world, base, TagA);
+
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
@@ -4246,7 +4251,7 @@ void Trigger_on_set_superset_w_component() {
     test_int(ctx.s[0][0], 0);
 
     ecs_os_zeromem(&ctx);
-	
+
 	ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, b);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
@@ -4356,15 +4361,16 @@ void Trigger_on_set_self_from_child_of_prefab() {
     });
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
-    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
-    test_assert(inst_child != 0);
-    test_assert(ecs_has(world, inst_child, Position));
-    test_assert(ecs_owns(world, inst_child, Position));
-
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
+
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
     test_int(ctx.e[0], inst_child);
     test_int(ctx.s[0][0], 0);
+
+    test_assert(ecs_has(world, inst_child, Position));
+    test_assert(ecs_owns(world, inst_child, Position));
 
     ecs_fini(world);
 }
