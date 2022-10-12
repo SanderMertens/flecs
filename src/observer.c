@@ -555,6 +555,7 @@ void flecs_uni_observer_builtin_run(
     ecs_observer_t *observer,
     ecs_iter_t *it)
 {
+    ecs_flags32_t flags = it->flags;
     ECS_BIT_COND(it->flags, EcsIterIsFilter, 
         observer->filter.terms[0].inout == EcsInOutNone);
 
@@ -584,6 +585,7 @@ void flecs_uni_observer_builtin_run(
 
     it->event = event;
     it->ptrs = ptrs;
+    it->flags = flags;
 }
 
 static

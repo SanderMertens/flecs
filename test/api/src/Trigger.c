@@ -4660,3 +4660,196 @@ void Trigger_not_only_w_base_no_match() {
 
     ecs_fini(world);
 }
+
+void Trigger_on_set_superset_after_filter_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx_1 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position) }
+        },
+        .filter.flags = EcsFilterIsFilter,
+        .events = { EcsOnSet },
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    Probe ctx_2 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position), .src.flags = EcsUp }
+        },
+        .events = { EcsOnSet },
+        .callback = Trigger_w_value,
+        .ctx = &ctx_2
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_int(ctx_1.invoked, 2); 
+
+    test_int(ctx_2.invoked, 1);
+    test_int(ctx_2.count, 1);
+    test_int(ctx_2.e[0], inst);
+    test_int(ctx_2.c[0][0], ecs_id(Position));
+    test_int(ctx_2.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_superset_after_filter_observer_w_on_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx_1 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position) }
+        },
+        .filter.flags = EcsFilterIsFilter,
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    Probe ctx_2 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position), .src.flags = EcsUp }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_2
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_int(ctx_1.invoked, 2);
+
+    test_int(ctx_2.invoked, 1);
+    test_int(ctx_2.count, 1);
+    test_int(ctx_2.e[0], inst);
+    test_int(ctx_2.c[0][0], ecs_id(Position));
+    test_int(ctx_2.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx_1 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position), .src.flags = EcsUp }
+        },
+        .filter.flags = EcsFilterIsFilter,
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    Probe ctx_2 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position), .src.flags = EcsUp }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_2
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set(world, base, Position, {10, 20});
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_1.count, 1);
+    test_int(ctx_1.e[0], inst);
+    test_int(ctx_1.c[0][0], ecs_id(Position));
+    test_int(ctx_1.s[0][0], base);
+
+    test_int(ctx_2.invoked, 1);
+    test_int(ctx_2.count, 1);
+    test_int(ctx_2.e[0], inst);
+    test_int(ctx_2.c[0][0], ecs_id(Position));
+    test_int(ctx_2.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_superset_after_filter_observer_w_on_add_2() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    // first observer causes observer to be initialized with filter flag
+    Probe ctx_1 = {0};
+    ecs_observer(world, { 
+        .filter.terms = {
+            { ecs_id(Position) }
+        },
+        .filter.flags = EcsFilterIsFilter,
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    // second observer is not a filter, so value should be avaulable
+    Probe ctx_2 = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_id(Position), .src.flags = EcsUp }
+        },
+        .events = { EcsOnAdd },
+        .callback = Trigger,
+        .ctx = &ctx_2
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_override(world, base, Position); // override causes emit with 2 ids
+    
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_os_zeromem(&ctx_1);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_1.count, 1);
+    test_int(ctx_1.e[0], inst);
+    test_int(ctx_1.c[0][0], ecs_id(Position));
+    test_int(ctx_1.s[0][0], 0); // override
+
+    test_int(ctx_2.invoked, 1);
+    test_int(ctx_2.count, 1);
+    test_int(ctx_2.e[0], inst);
+    test_int(ctx_2.c[0][0], ecs_id(Position));
+    test_int(ctx_2.s[0][0], base);
+
+    ecs_fini(world);
+}

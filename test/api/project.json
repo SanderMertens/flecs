@@ -1655,7 +1655,11 @@
                "on_set_superset_auto_override",
                "not_only",
                "not_only_w_base",
-               "not_only_w_base_no_match"
+               "not_only_w_base_no_match",
+               "on_set_superset_after_filter_observer",
+               "on_set_superset_after_filter_observer_w_on_add",
+               "on_set_superset_after_filter_observer_w_on_add_isa_after_set",
+               "on_set_superset_after_filter_observer_w_on_add_2"
            ]
         }, {
             "id": "Observer",

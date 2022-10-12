@@ -1589,6 +1589,10 @@ void Trigger_on_set_superset_auto_override(void);
 void Trigger_not_only(void);
 void Trigger_not_only_w_base(void);
 void Trigger_not_only_w_base_no_match(void);
+void Trigger_on_set_superset_after_filter_observer(void);
+void Trigger_on_set_superset_after_filter_observer_w_on_add(void);
+void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
+void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8353,6 +8357,22 @@ bake_test_case Trigger_testcases[] = {
     {
         "not_only_w_base_no_match",
         Trigger_not_only_w_base_no_match
+    },
+    {
+        "on_set_superset_after_filter_observer",
+        Trigger_on_set_superset_after_filter_observer
+    },
+    {
+        "on_set_superset_after_filter_observer_w_on_add",
+        Trigger_on_set_superset_after_filter_observer_w_on_add
+    },
+    {
+        "on_set_superset_after_filter_observer_w_on_add_isa_after_set",
+        Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set
+    },
+    {
+        "on_set_superset_after_filter_observer_w_on_add_2",
+        Trigger_on_set_superset_after_filter_observer_w_on_add_2
     }
 };
 
@@ -10970,7 +10990,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        112,
+        116,
         Trigger_testcases
     },
     {
