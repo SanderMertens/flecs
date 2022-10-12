@@ -154,10 +154,19 @@ ecs_id_record_t* flecs_id_record_new(
 
         /* Check constraints */
         if (obj && !ecs_id_is_wildcard(obj)) {
+            /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             ecs_check( !oneof || ecs_has_pair(world, obj, EcsChildOf, oneof),
                 ECS_CONSTRAINT_VIOLATED, NULL);
             (void)oneof;
+
+            /* Check if we're not trying to inherit from a final target */
+            if (rel == EcsIsA) {
+                bool is_final = ecs_has_id(world, obj, EcsFinal);
+                ecs_check(!is_final, ECS_CONSTRAINT_VIOLATED, 
+                    "cannot inherit from final entity");
+                (void)is_final;
+            }
         }
 
         if (!is_wildcard && ECS_IS_PAIR(id) && (rel != EcsFlag)) {

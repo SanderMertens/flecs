@@ -26,6 +26,8 @@ void flecs_observable_fini(
     flecs_sparse_free(observable->events);
 }
 
+#if 0
+
 static
 void notify_subset(
     ecs_world_t *world,
@@ -142,6 +144,20 @@ void flecs_emit(
 
     world->event_id ++;
 
+    // for (int i = 0; i < ids->count; i ++) {
+    //     ecs_id_record_t *idr = flecs_query_id_record_get(world, ids->array[i]);
+    //     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    //     if ((event == EcsOnAdd) || (event == EcsOnSet)) {
+    //         if (flecs_id_record_get_table(idr, table) == NULL) {
+    //             printf("id=%s, table=[%s]\n",
+    //                 ecs_id_str(world, idr->id),
+    //                     ecs_table_str(world, it.table));
+    //         }
+    //         ecs_assert(flecs_id_record_get_table(idr, table) != NULL,
+    //             ECS_INTERNAL_ERROR, NULL);
+    //     }
+    // }
+
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -190,3 +206,5 @@ void ecs_emit(
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
     flecs_emit(world, stage, desc);
 }
+
+#endif

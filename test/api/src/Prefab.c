@@ -452,6 +452,7 @@ void Prefab_new_type_w_1_override() {
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e1, Velocity));
     test_assert( ecs_has_pair(world, e1, EcsIsA, Prefab));
+
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has_id(world, e1, EcsPrefab));
     test_assert( !ecs_has_id(world, e1, NamePair));
@@ -622,7 +623,10 @@ void Prefab_match_entity_prefab_w_system_optional() {
     ECS_COMPONENT(world, Mass);
 
     ECS_PREFAB(world, Prefab, Velocity, Mass);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity(self|up), ?Mass(self|up));
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, 
+        Position, 
+        Velocity(self|up), 
+        ?Mass(self|up));
 
     ecs_set(world, Prefab, Velocity, {1, 2});
     ecs_set(world, Prefab, Mass, {3});
@@ -3398,7 +3402,6 @@ void Prefab_get_component_from_1st_base_of_base_prefab_base() {
     ECS_PREFAB(world, base_3, (IsA, base_1), (IsA, base_2));
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_3);
-
     test_assert(ecs_has_pair(world, e, EcsIsA, base_1));
     test_assert(ecs_has_pair(world, e, EcsIsA, base_2));
 

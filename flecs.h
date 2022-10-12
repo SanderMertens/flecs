@@ -269,6 +269,13 @@ extern "C" {
 //// Filter flags (used by ecs_filter_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
+#define EcsEventTableOnly              (1u << 8u)   /* Table event (no data, same as iter flags) */
+#define EcsEventNoOnSet                (1u << 16u)  /* Don't emit OnSet/UnSet for inherited ids */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Filter flags (used by ecs_filter_t::flags)
+////////////////////////////////////////////////////////////////////////////////
+
 #define EcsFilterMatchThis             (1u << 1u)  /* Has terms that match This */
 #define EcsFilterMatchOnlyThis         (1u << 2u)  /* Has only terms that match This */
 #define EcsFilterMatchPrefab           (1u << 3u)  /* Does filter match prefabs */
@@ -3208,7 +3215,20 @@ struct ecs_allocator_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Mixin for emitting events to triggers/observers */
+/** All observers for a specific event */
+typedef struct ecs_event_record_t {
+    struct ecs_event_id_record_t *any;
+    struct ecs_event_id_record_t *wildcard;
+    struct ecs_event_id_record_t *wildcard_pair;
+    ecs_map_t event_ids; /* map<id, ecs_event_id_record_t> */
+} ecs_event_record_t;
+
 struct ecs_observable_t {
+    ecs_event_record_t on_add;
+    ecs_event_record_t on_remove;
+    ecs_event_record_t on_set;
+    ecs_event_record_t un_set;
+    ecs_event_record_t on_wildcard;
     ecs_sparse_t *events;  /* sparse<event, ecs_event_record_t> */
 };
 
@@ -6928,12 +6948,8 @@ typedef struct ecs_event_desc_t {
     /* Observable (usually the world) */
     ecs_poly_t *observable;
 
-    /* Table events apply to tables, not the entities in the table. When
-     * enabled, (up)set triggers are not notified. */
-    bool table_event;
-
-    /* When set, events will only be propagated by traversing the relationship */
-    ecs_entity_t relationship;
+    /* Event flags */
+    ecs_flags32_t flags;
 } ecs_event_desc_t;
 
 /** Send event.
@@ -6967,6 +6983,11 @@ typedef struct ecs_event_desc_t {
  */
 FLECS_API
 void ecs_emit( 
+    ecs_world_t *world,
+    ecs_event_desc_t *desc);
+
+FLECS_API
+void ecs_emit_2( 
     ecs_world_t *world,
     ecs_event_desc_t *desc);
 

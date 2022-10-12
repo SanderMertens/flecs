@@ -2621,11 +2621,10 @@ void Observer_observer_superset_wildcard_add_isa() {
 
     ecs_add_pair(world, inst, EcsIsA, base);
 
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], inst);
@@ -2663,11 +2662,10 @@ void Observer_observer_superset_wildcard_add_isa_at_offset() {
 
     ecs_add_pair(world, inst, EcsIsA, base);
 
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], inst);

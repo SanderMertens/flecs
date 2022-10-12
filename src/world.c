@@ -1788,7 +1788,7 @@ void flecs_process_pending_tables(
                     .table = table,
                     .ids = &table->type,
                     .observable = world,
-                    .table_event = true
+                    .flags = EcsEventTableOnly
                 });
 
                 world->info.empty_table_count += (table_count == 0) * 2 - 1;
