@@ -121,7 +121,7 @@ const char* parse_c_identifier(
     /* Ignore whitespaces */
     ptr = ecs_parse_eol_and_whitespace(ptr);
 
-    if (!isalpha(*ptr)) {
+    if (!isalpha(*ptr) && *ptr != '_') {
         ecs_meta_error(ctx, ptr, 
             "invalid identifier (starts with '%c')", *ptr);
         goto error;
