@@ -1791,7 +1791,6 @@ void flecs_process_pending_tables(
             }
         }
         flecs_sparse_clear(pending_tables);
-
         ecs_defer_end(world);
 
         world->pending_buffer = pending_tables;

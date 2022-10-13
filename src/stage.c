@@ -40,7 +40,7 @@ ecs_cmd_t* flecs_cmd_new(
                     last_op->next_for_entity *= -1;
                 }
             }
-        } else {
+        } else if (can_batch || is_delete) {
             entry = flecs_sparse_ensure(&stage->cmd_entries, 
                 ecs_cmd_entry_t, e);
             entry->first = cur;

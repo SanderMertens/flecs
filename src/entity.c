@@ -4547,9 +4547,8 @@ bool flecs_defer_purge(
 
             ecs_vec_clear(&commands);
             flecs_stack_reset(&stage->defer_stack);
+            flecs_sparse_clear(&stage->cmd_entries);
         }
-
-        flecs_sparse_clear(&stage->cmd_entries);
 
         return true;
     }

@@ -9697,9 +9697,8 @@ bool flecs_defer_purge(
 
             ecs_vec_clear(&commands);
             flecs_stack_reset(&stage->defer_stack);
+            flecs_sparse_clear(&stage->cmd_entries);
         }
-
-        flecs_sparse_clear(&stage->cmd_entries);
 
         return true;
     }
@@ -9749,7 +9748,7 @@ ecs_cmd_t* flecs_cmd_new(
                     last_op->next_for_entity *= -1;
                 }
             }
-        } else {
+        } else if (can_batch || is_delete) {
             entry = flecs_sparse_ensure(&stage->cmd_entries, 
                 ecs_cmd_entry_t, e);
             entry->first = cur;
@@ -31665,11 +31664,11 @@ ecs_entity_t ecs_run_intern(
         thread_ctx = stage->thread_ctx;
     }
 
-    ecs_defer_begin(thread_ctx);
-
     /* Prepare the query iterator */
     ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
+
+    ecs_defer_begin(thread_ctx);
 
     if (offset || limit) {
         pit = ecs_page_iter(it, offset, limit);
@@ -40163,7 +40162,6 @@ void flecs_process_pending_tables(
             }
         }
         flecs_sparse_clear(pending_tables);
-
         ecs_defer_end(world);
 
         world->pending_buffer = pending_tables;

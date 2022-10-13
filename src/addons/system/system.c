@@ -74,11 +74,11 @@ ecs_entity_t ecs_run_intern(
         thread_ctx = stage->thread_ctx;
     }
 
-    ecs_defer_begin(thread_ctx);
-
     /* Prepare the query iterator */
     ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
+
+    ecs_defer_begin(thread_ctx);
 
     if (offset || limit) {
         pit = ecs_page_iter(it, offset, limit);

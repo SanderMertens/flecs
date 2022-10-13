@@ -2635,3 +2635,35 @@ void DeferredActions_defer_add_after_clear() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_cmd_after_modified() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    
+    ecs_defer_begin(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_modified(world, e2, Position);
+    ecs_set(world, e2, Position, {20, 30});
+
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e2, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
