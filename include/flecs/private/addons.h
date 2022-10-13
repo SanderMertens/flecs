@@ -94,9 +94,15 @@
 #include "flecs/addons/log.h"
 
 #ifdef FLECS_MONITOR
+#ifndef FLECS_STATS
 #define FLECS_STATS
+#endif
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
+#ifndef FLECS_TIMER
 #define FLECS_TIMER
+#endif
 #endif
 
 #ifdef FLECS_APP
