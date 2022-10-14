@@ -11404,6 +11404,7 @@ void flecs_sparse_clear(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
 
+<<<<<<< HEAD
     int32_t i, count = ecs_vector_count(sparse->chunks);
     chunk_t *chunks = ecs_vector_first(sparse->chunks, chunk_t);
     for (i = 0; i < count; i ++) {
@@ -11411,6 +11412,16 @@ void flecs_sparse_clear(
         if (indices) {
             ecs_os_memset_n(indices, 0, int32_t, FLECS_SPARSE_CHUNK_SIZE);
         }
+=======
+    int32_t i, count = ecs_vector_count(sparse->dense);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    for (i = 1; i < count; i ++) {
+        uint64_t index = dense_array[i];
+        flecs_sparse_strip_generation(&index);
+        chunk_t *chunk = flecs_sparse_get_chunk(sparse, CHUNK(index));
+        int32_t offset = OFFSET(index);
+        chunk->sparse[offset] = 0;
+>>>>>>> 73cdc77a (Don't free chunks on flecs_sparse_clear)
     }
 
     ecs_vector_set_count(&sparse->dense, uint64_t, 1);
