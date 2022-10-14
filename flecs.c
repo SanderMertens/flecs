@@ -11404,14 +11404,17 @@ void flecs_sparse_clear(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_vector_each(sparse->chunks, chunk_t, chunk, {
-        flecs_sparse_chunk_free(sparse, chunk);
-    });
+    int32_t i, count = ecs_vector_count(sparse->chunks);
+    chunk_t *chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    for (i = 0; i < count; i ++) {
+        int32_t *indices = chunks[i].sparse;
+        if (indices) {
+            ecs_os_memset_n(indices, 0, int32_t, FLECS_SPARSE_CHUNK_SIZE);
+        }
+    }
 
-    ecs_vector_free(sparse->chunks);
     ecs_vector_set_count(&sparse->dense, uint64_t, 1);
 
-    sparse->chunks = NULL;   
     sparse->count = 1;
     sparse->max_id_local = 0;
 }
@@ -11420,8 +11423,18 @@ void _flecs_sparse_fini(
     ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_clear(sparse);
+    
+    int32_t i, count = ecs_vector_count(sparse->chunks);
+    chunk_t *chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    for (i = 0; i < count; i ++) {
+        flecs_sparse_chunk_free(sparse, &chunks[i]);
+    }
+
+    ecs_vector_free(sparse->chunks);
     ecs_vector_free(sparse->dense);
+
+    sparse->chunks = NULL;
+    sparse->dense = NULL;
 }
 
 void flecs_sparse_free(
