@@ -658,7 +658,8 @@
                 "struct_w_nested",
                 "enum_nospace",
                 "struct_nospace",
-                "identifier_w_underscore"
+                "identifier_w_underscore",
+                "struct_w_ptr"
             ]
         }, {
             "id": "Vars",

@@ -127,7 +127,9 @@ const char* parse_c_identifier(
         goto error;
     }
 
-    while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && ch != '>' && ch != '}') {
+    while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && 
+        ch != '>' && ch != '}' && ch != '*') 
+    {
         /* Type definitions can contain macros or templates */
         if (ch == '(' || ch == '<') {
             if (!params) {

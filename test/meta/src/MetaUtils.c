@@ -30,7 +30,6 @@ ECS_STRUCT(Struct_2_f64, {
     double y;
 });
 
-
 ECS_STRUCT(_Struct_w_underscore, {
     double value;
 });
@@ -41,6 +40,11 @@ ECS_STRUCT(Struct_w_underscore_member_name, {
 
 ECS_STRUCT(Struct_w_underscore_member_type, {
     _Struct_w_underscore value;
+});
+
+ECS_STRUCT(Struct_w_ptrs, {
+    void *ptr_a;
+    void* ptr_b;
 });
 
 ECS_ENUM(Enum_Default, {
@@ -359,6 +363,26 @@ void MetaUtils_identifier_w_underscore() {
     {
         ecs_entity_t s = ecs_id(Struct_w_underscore_member_type);
         ecs_entity_t m = ecs_lookup_child(world, s, "value");
+        test_assert(m != 0);
+    }
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_ptr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_ptrs);
+
+    test_assert(ecs_id(Struct_w_ptrs) != 0);
+    ecs_entity_t s = ecs_id(Struct_w_ptrs);
+
+    {
+        ecs_entity_t m = ecs_lookup_child(world, s, "ptr_a");
+        test_assert(m != 0);
+    }
+    {
+        ecs_entity_t m = ecs_lookup_child(world, s, "ptr_b");
         test_assert(m != 0);
     }
 
