@@ -623,6 +623,7 @@ void MetaUtils_struct_w_2_array_3_i32(void);
 void MetaUtils_struct_w_nested(void);
 void MetaUtils_enum_nospace(void);
 void MetaUtils_struct_nospace(void);
+void MetaUtils_identifier_w_underscore(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -3114,6 +3115,10 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_nospace",
         MetaUtils_struct_nospace
+    },
+    {
+        "identifier_w_underscore",
+        MetaUtils_identifier_w_underscore
     }
 };
 
@@ -3653,7 +3658,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        15,
+        16,
         MetaUtils_testcases
     },
     {

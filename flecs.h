@@ -2431,7 +2431,9 @@ typedef struct ecs_mixins_t ecs_mixins_t;
  */
 
 /* Maximum number of components to add/remove in a single operation */
+#ifndef ECS_ID_CACHE_SIZE
 #define ECS_ID_CACHE_SIZE (32)
+#endif
 
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
@@ -9504,9 +9506,15 @@ int ecs_log_last_error(void);
 
 
 #ifdef FLECS_MONITOR
+#ifndef FLECS_STATS
 #define FLECS_STATS
+#endif
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
+#ifndef FLECS_TIMER
 #define FLECS_TIMER
+#endif
 #endif
 
 #ifdef FLECS_APP
@@ -11364,7 +11372,9 @@ int ecs_iter_to_json_buf(
 
 #endif
 #if defined(FLECS_EXPR) || defined(FLECS_META_C)
+#ifndef FLECS_META
 #define FLECS_META
+#endif
 #endif
 #ifdef FLECS_UNITS
 #ifdef FLECS_NO_UNITS

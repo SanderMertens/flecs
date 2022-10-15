@@ -657,7 +657,8 @@
                 "struct_w_2_array_3_i32",
                 "struct_w_nested",
                 "enum_nospace",
-                "struct_nospace"
+                "struct_nospace",
+                "identifier_w_underscore"
             ]
         }, {
             "id": "Vars",
