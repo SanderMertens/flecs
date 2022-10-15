@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: install bake
         run: |
@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: install bake
         run: |
@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
@@ -95,7 +95,7 @@ jobs:
       CXX: ${{ matrix.compiler.cxx }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install compiler
         run: |
           sudo apt-get update
@@ -138,7 +138,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
@@ -170,7 +170,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -203,7 +203,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
@@ -242,7 +242,7 @@ jobs:
       CC: clang-10
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install clang
         run: |
           sudo apt-get install -y clang-10
@@ -271,7 +271,7 @@ jobs:
         os: [ macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -295,7 +295,7 @@ jobs:
         os: [ macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -319,7 +319,7 @@ jobs:
         os: [ macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -343,7 +343,7 @@ jobs:
         os: [ macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -367,7 +367,7 @@ jobs:
         os: [ macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -390,7 +390,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: "msvc dev"
         if: matrix.os == 'windows-latest'
@@ -427,7 +427,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: install meson
         run: |
@@ -452,7 +452,7 @@ jobs:
         compiler: [ gcc, clang ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -588,6 +588,6 @@ jobs:
         compiler: [ gcc, clang ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: build flecs
         run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
