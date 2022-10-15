@@ -225,9 +225,7 @@ void flecs_table_diff_build(
     ecs_table_diff_builder_t *builder,
     ecs_table_diff_t *diff,
     int32_t added_offset,
-    int32_t removed_offset,
-    int32_t on_set_offset,
-    int32_t un_set_offset);
+    int32_t removed_offset);
 
 void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,

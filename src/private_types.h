@@ -118,8 +118,6 @@ struct ecs_data_t {
 typedef struct ecs_table_diff_t {
     ecs_type_t added;         /* Components added between tables */
     ecs_type_t removed;       /* Components removed between tables */
-    ecs_type_t on_set;        /* OnSet from exposing/adding base components */
-    ecs_type_t un_set;        /* UnSet from hiding/removing base components */
 } ecs_table_diff_t;
 
 /** Builder for table diff. The table diff type itself doesn't use ecs_vec_t to
@@ -128,8 +126,6 @@ typedef struct ecs_table_diff_t {
 typedef struct ecs_table_diff_builder_t {
     ecs_vec_t added;
     ecs_vec_t removed;
-    ecs_vec_t on_set;
-    ecs_vec_t un_set;
 } ecs_table_diff_builder_t;
 
 /** Edge linked list (used to keep track of incoming edges) */
