@@ -1966,8 +1966,7 @@ void ecs_clear(
         }
 
         ecs_table_diff_t diff = {
-            .removed = table->type,
-            .un_set = { table->storage_ids, table->storage_count }
+            .removed = table->type
         };
 
         flecs_delete_entity(world, r, &diff);
@@ -2471,8 +2470,7 @@ void ecs_delete(
          * as delete actions could have deleted the table already. */
         if (table) {
             ecs_table_diff_t diff = {
-                .removed = table->type,
-                .un_set = { table->storage_ids, table->storage_count }
+                .removed = table->type
             };
 
             flecs_delete_entity(world, r, &diff);
