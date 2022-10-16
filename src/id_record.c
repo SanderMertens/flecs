@@ -119,7 +119,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr, **idr_ptr;
+    ecs_id_record_t *idr, **idr_ptr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= ECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
@@ -180,7 +180,9 @@ ecs_id_record_t* flecs_id_record_new(
              * allow for quickly enumerating all relationships for an object, 
              * or all objecs for a relationship. */
             flecs_insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
-            flecs_insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
+
+            idr_t = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, obj));
+            flecs_insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), idr_t);
 
             if (rel == EcsUnion) {
                 idr->flags |= EcsIdUnion;
@@ -215,7 +217,10 @@ ecs_id_record_t* flecs_id_record_new(
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
-            flecs_add_flag(world, obj, EcsEntityObservedAcyclic);
+            ecs_record_t *r = flecs_add_flag(world, obj, EcsEntityObservedAcyclic);
+
+            /* Add reference to (*, tgt) id record to entity record */
+            r->idr = idr_t;
         }
     }
 

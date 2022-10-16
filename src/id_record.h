@@ -29,6 +29,9 @@ struct ecs_id_record_t {
     /* Refcount */
     int32_t refcount;
 
+    /* Cache invalidation counter */
+    int32_t cache_generation;
+
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 

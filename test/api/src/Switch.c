@@ -1088,22 +1088,22 @@ void Switch_switch_w_bitset_query() {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e3);
+    test_int(it.entities[0], e1);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
-    test_int(p->x, 13);
-    test_int(p->y, 23);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e1);
+    test_int(it.entities[0], e3);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
@@ -1142,22 +1142,22 @@ void Switch_switch_w_bitset_query_inv() {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e3);
+    test_int(it.entities[0], e1);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
-    test_int(p->x, 13);
-    test_int(p->y, 23);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e1);
+    test_int(it.entities[0], e3);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
@@ -1201,17 +1201,6 @@ void Switch_switch_w_bitset_query_2_elems() {
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e3);
-    p = ecs_field(&it, Position, 1);
-    test_assert(p != NULL);
-    test_int(p->x, 13);
-    test_int(p->y, 23);
-    c = ecs_field(&it, ecs_entity_t, 2);
-    test_assert(c != NULL);
-    test_assert(c[0] == Walking);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
     test_int(it.entities[0], e1);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
@@ -1228,6 +1217,17 @@ void Switch_switch_w_bitset_query_2_elems() {
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
+    c = ecs_field(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);
@@ -1271,17 +1271,6 @@ void Switch_switch_w_bitset_query_2_elems_skip() {
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e3);
-    p = ecs_field(&it, Position, 1);
-    test_assert(p != NULL);
-    test_int(p->x, 13);
-    test_int(p->y, 23);
-    c = ecs_field(&it, ecs_entity_t, 2);
-    test_assert(c != NULL);
-    test_assert(c[0] == Walking);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
     test_int(it.entities[0], e1);
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
@@ -1298,6 +1287,17 @@ void Switch_switch_w_bitset_query_2_elems_skip() {
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
+    c = ecs_field(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
     c = ecs_field(&it, ecs_entity_t, 2);
     test_assert(c != NULL);
     test_assert(c[0] == Walking);

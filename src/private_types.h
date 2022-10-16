@@ -105,9 +105,9 @@ typedef struct ecs_table_event_t {
 
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vec_t entities;       /* Entity identifiers */
-    ecs_vec_t records;    /* Ptrs to records in main entity index */
-    ecs_vec_t *columns;       /* Component columns */
+    ecs_vec_t entities;          /* Entity identifiers */
+    ecs_vec_t records;           /* Ptrs to records in main entity index */
+    ecs_vec_t *columns;          /* Component columns */
     ecs_switch_t *sw_columns;    /* Switch columns */
     ecs_bitset_t *bs_columns;    /* Bitset columns */
 };

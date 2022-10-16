@@ -136,7 +136,6 @@ void flecs_uni_observer_register(
         flecs_register_observer_for_id(world, observable, observer,
             offsetof(ecs_event_id_record_t, self_up));
     } else if (flags & EcsSelf) {
-        ecs_assert(term->src.trav == 0, ECS_INTERNAL_ERROR, NULL);
         flecs_register_observer_for_id(world, observable, observer,
             offsetof(ecs_event_id_record_t, self));
     } else if (flags & EcsUp) {

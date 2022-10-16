@@ -202,6 +202,11 @@ bool flecs_table_release(
     ecs_world_t *world, 
     ecs_table_t *table);
 
+/* Increase observer count of table */
+void flecs_table_observer_add(
+    ecs_table_t *table,
+    int32_t value);
+
 /* Table diff builder, used to build id lists that indicate the difference in
  * ids between two tables. */
 void flecs_table_diff_builder_init(
