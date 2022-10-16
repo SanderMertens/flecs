@@ -52,7 +52,7 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
-void flecs_add_flag(
+ecs_record_t* flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,
     uint32_t flag);
@@ -67,7 +67,7 @@ void flecs_notify_on_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff);
+    const ecs_type_t *diff);
 
 void flecs_notify_on_set(
     ecs_world_t *world,
@@ -215,16 +215,6 @@ ecs_record_t flecs_to_row(
 /* Get 64bit integer from ecs_record_t */
 uint64_t flecs_from_row(
     ecs_record_t record);
-
-/* Get actual row from record row */
-uint32_t flecs_record_to_row(
-    uint32_t row, 
-    bool *is_watched_out);
-
-/* Convert actual row to record row */
-uint32_t flecs_row_to_record(
-    uint32_t row, 
-    bool is_watched);
 
 /* Convert a symbol name to an entity name by removing the prefix */
 const char* flecs_name_from_symbol(

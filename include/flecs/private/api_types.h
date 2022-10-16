@@ -63,8 +63,9 @@ struct ecs_observable_t {
 
 /** Record for entity index */
 struct ecs_record_t {
-    ecs_table_t *table;  /* Identifies a type (and table) in world */
-    uint32_t row;        /* Table row of the entity */
+    ecs_id_record_t *idr; /* Id record to (*, entity) for target entities */
+    ecs_table_t *table;   /* Identifies a type (and table) in world */
+    uint32_t row;         /* Table row of the entity */
 };
 
 /** Range in table */

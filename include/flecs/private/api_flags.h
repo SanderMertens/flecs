@@ -138,13 +138,15 @@ extern "C" {
 #define EcsTableHasCopy                (1u << 10u)
 #define EcsTableHasMove                (1u << 11u)
 #define EcsTableHasUnion               (1u << 12u)
-#define EcsTableHasToggle            (1u << 13u)
+#define EcsTableHasToggle              (1u << 13u)
 #define EcsTableHasOverrides           (1u << 14u)
 
 #define EcsTableHasOnAdd               (1u << 15u) /* Same values as id flags */
 #define EcsTableHasOnRemove            (1u << 16u)
 #define EcsTableHasOnSet               (1u << 17u)
 #define EcsTableHasUnSet               (1u << 18u)
+
+#define EcsTableHasObserved            (1u << 20u)
 
 #define EcsTableMarkedForDelete        (1u << 30u)
 

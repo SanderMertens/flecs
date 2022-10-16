@@ -83,7 +83,7 @@ void flecs_stages_merge(
         if (force_merge || stage->auto_merge) {
             ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
                 "mismatching defer_begin/defer_end detected");
-            ecs_defer_end((ecs_world_t*)stage);
+            flecs_defer_end(world, stage);
         }
     } else {
         /* Merge stages. Only merge if the stage has auto_merging turned on, or 
@@ -108,7 +108,7 @@ void flecs_stages_merge(
 
     /* If stage is asynchronous, deferring is always enabled */
     if (stage->async) {
-        ecs_defer_begin((ecs_world_t*)stage);
+        flecs_defer_begin(world, stage);
     }
     
     ecs_log_pop_3();
@@ -132,6 +132,8 @@ bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_poly_assert(stage, ecs_stage_t);
     (void)world;
     if (stage->defer_suspend) return false;
     return (++ stage->defer) == 1;
@@ -630,7 +632,7 @@ bool ecs_readonly_begin(
         stage->lookup_path = world->stages[0].lookup_path;
         ecs_assert(stage->defer == 0, ECS_INVALID_OPERATION, 
             "deferred mode cannot be enabled when entering readonly mode");
-        ecs_defer_begin((ecs_world_t*)stage);
+        flecs_defer_begin(world, stage);
     }
 
     bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
@@ -739,7 +741,7 @@ ecs_world_t* ecs_async_stage_new(
     stage->auto_merge = false;
     stage->async = true;
 
-    ecs_defer_begin((ecs_world_t*)stage);
+    flecs_defer_begin(world, stage);
 
     return (ecs_world_t*)stage;
 }

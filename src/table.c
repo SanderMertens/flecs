@@ -676,11 +676,7 @@ void flecs_table_notify_on_remove(
 {
     int32_t count = data->entities.count;
     if (count) {
-        ecs_table_diff_t diff = {
-            .removed = table->type
-        };
-        
-        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
+        flecs_notify_on_remove(world, table, NULL, 0, count, &table->type);
     }
 }
 
@@ -984,6 +980,7 @@ void flecs_table_fini_data(
     }
 
     table->observed_count = 0;
+    table->flags &= ~EcsTableHasObserved;
 }
 
 /* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
@@ -1155,6 +1152,19 @@ void flecs_table_reset(
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     flecs_table_clear_edges(world, table);
+}
+
+void flecs_table_observer_add(
+    ecs_table_t *table,
+    int32_t value)
+{
+    int32_t result = table->observed_count += value;
+    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
+    if (result == 0) {
+        table->flags &= ~EcsTableHasObserved;
+    } else if (result == 1) {
+        table->flags |= EcsTableHasObserved;
+    }
 }
 
 static
@@ -2312,7 +2322,7 @@ void flecs_table_merge(
             flecs_table_set_empty(world, dst_table);
         }
         flecs_table_set_empty(world, src_table);
-        dst_table->observed_count += src_table->observed_count;
+        flecs_table_observer_add(dst_table, src_table->observed_count);
         src_table->observed_count = 0;
     }
 
