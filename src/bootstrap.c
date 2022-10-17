@@ -649,6 +649,7 @@ void flecs_bootstrap(
     ecs_ensure(world, EcsSymbol);
     ecs_ensure(world, EcsAlias);
     ecs_ensure(world, EcsChildOf);
+    ecs_ensure(world, EcsFlecs);
     ecs_ensure(world, EcsFlecsCore);
     ecs_ensure(world, EcsOnDelete);
     ecs_ensure(world, EcsPanic);
@@ -741,6 +742,13 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsFlecsInternals, EcsChildOf, EcsFlecsCore);
     ecs_set_name(world, EcsFlecsInternals, "internals");
     ecs_add_id(world, EcsFlecsInternals, EcsModule);
+
+    /* Self check */
+    ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->row & EcsEntityObservedAcyclic, ECS_INTERNAL_ERROR, NULL);
+    (void)r;
 
     /* Initialize builtin entities */
     flecs_bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
