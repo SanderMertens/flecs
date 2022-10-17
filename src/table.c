@@ -685,9 +685,6 @@ void flecs_table_notify_on_remove(
     }
 }
 
-/* -- Private functions -- */
-
-static
 void flecs_on_component_callback(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -719,12 +716,12 @@ void flecs_on_component_callback(
     it.ctx = ti->hooks.ctx;
     it.binding_ctx = ti->hooks.binding_ctx;
     it.count = count;
+    it.offset = row;
     flecs_iter_validate(&it);
     callback(&it);
     ecs_iter_fini(&it);
 }
 
-static
 void flecs_ctor_component(
     ecs_type_info_t *ti,
     ecs_vec_t *column,
@@ -740,7 +737,6 @@ void flecs_ctor_component(
     }
 }
 
-static
 void flecs_run_add_hooks(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -764,6 +760,8 @@ void flecs_run_add_hooks(
             entities, id, row, count, ti);
     }
 }
+
+/* -- Private functions -- */
 
 static
 void flecs_dtor_component(

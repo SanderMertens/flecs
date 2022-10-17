@@ -1004,9 +1004,9 @@ const ecs_entity_t* flecs_bulk_new(
 
     ecs_type_t component_array = { 0 };
     if (!component_ids) {
-        component_ids = &component_array;
         component_array.array = type.array;
         component_array.count = type.count;
+        component_ids = &component_array;
     }
 
     ecs_data_t *data = &table->data;
@@ -1025,6 +1025,18 @@ const ecs_entity_t* flecs_bulk_new(
     }
 
     flecs_defer_begin(world, &world->stages[0]);
+    
+    int32_t c_i;
+    /* Invoke on_add hooks. Constructors should have already been invoked by flecs_table_appendn above. */
+    {
+        ecs_type_info_t **type_info = table->type_info;
+        ecs_vec_t *columns = table->data.columns;
+        ecs_id_t *ids = table->storage_ids;
+        int32_t dst_column_count = table->storage_count;
+        for (c_i = 0; c_i < dst_column_count; c_i ++) {
+            flecs_run_add_hooks(world, table, type_info[c_i], &columns[c_i], (ecs_entity_t *)entities, ids[c_i], row, count, false);
+        }
+    }
 
     flecs_notify_on_add(world, table, NULL, row, count, diff, 
         component_data == NULL);
@@ -1033,7 +1045,6 @@ const ecs_entity_t* flecs_bulk_new(
         /* Set components that we're setting in the component mask so the init
          * actions won't call OnSet triggers for them. This ensures we won't
          * call OnSet triggers multiple times for the same component */
-        int32_t c_i;
         ecs_table_t *storage_table = table->storage_table;
         for (c_i = 0; c_i < component_ids->count; c_i ++) {
             void *src_ptr = component_data[c_i];
@@ -1317,6 +1328,7 @@ void flecs_notify_on_set(
                 it.ctx = ti->hooks.ctx;
                 it.binding_ctx = ti->hooks.binding_ctx;
                 it.count = count;
+                it.offset = row;
                 flecs_iter_validate(&it);
                 on_set(&it);
                 ecs_iter_fini(&it);

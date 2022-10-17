@@ -83,6 +83,38 @@ int32_t flecs_relation_depth(
     ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Table API
+////////////////////////////////////////////////////////////////////////////////
+void flecs_on_component_callback(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_iter_action_t callback,
+    ecs_entity_t event,
+    ecs_vec_t *column,
+    ecs_entity_t *entities,
+    ecs_id_t id,
+    int32_t row,
+    int32_t count,
+    ecs_type_info_t *ti);
+
+void flecs_ctor_component(
+    ecs_type_info_t *ti,
+    ecs_vec_t *column,
+    int32_t row,
+    int32_t count);
+
+void flecs_run_add_hooks(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_type_info_t *ti,
+    ecs_vec_t *column,
+    ecs_entity_t *entities,
+    ecs_id_t id,
+    int32_t row,
+    int32_t count,
+    bool construct);
+
+////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
