@@ -922,9 +922,7 @@ void flecs_table_fini_data(
         return;
     }
 
-    ecs_flags32_t flags = table->flags;
-
-    if (do_on_remove && (flags & EcsTableHasOnRemove)) {
+    if (do_on_remove) {
         flecs_table_notify_on_remove(world, table, data);        
     }
 

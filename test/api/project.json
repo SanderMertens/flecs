@@ -1735,7 +1735,8 @@
                 "read_in_on_remove_after_add_other_w_not",
                 "observer_w_short_notation",
                 "observer_w_filter_term",
-                "multi_observer_w_ctx_free"
+                "multi_observer_w_ctx_free",
+                "propagate_after_on_delete_clear_action"
             ]                
         }, {
             "id": "ObserverOnSet",

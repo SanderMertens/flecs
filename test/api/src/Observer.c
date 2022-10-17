@@ -3102,7 +3102,7 @@ void Observer_multi_observer_w_ctx_free() {
         .ctx = ctx,
         .ctx_free = free_ctx
     });
-    
+
     test_int(observer_w_ctx_invoked, 0);
     test_int(free_ctx_invoked, 0);
 
@@ -3120,4 +3120,39 @@ void Observer_multi_observer_w_ctx_free() {
     ecs_fini(world);
 
     test_int(free_ctx_invoked, 1);
+}
+
+void Observer_propagate_after_on_delete_clear_action() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_add_pair(world, parent, Rel, tgt);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .filter.terms = {{ 
+            .id = ecs_pair(Rel, EcsWildcard), 
+            .src.flags = EcsUp, 
+            .src.trav = EcsChildOf 
+        }},
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
 }
