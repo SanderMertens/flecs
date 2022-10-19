@@ -257,6 +257,11 @@ void _assert_func(
 void flecs_dump_backtrace(
     FILE *stream);
 
+void ecs_colorize_buf(
+    char *msg,
+    bool enable_colors,
+    ecs_strbuf_t *buf);
+
 bool flecs_isident(
     char ch);
 

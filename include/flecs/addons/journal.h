@@ -26,24 +26,15 @@
 extern "C" {
 #endif
 
-/* Journaling API as used by the internals. Not intended to be called by apps */
+/* Journaling API, meant to be used by internals. */
 
 typedef enum ecs_journal_kind_t {
     EcsJournalNew,
     EcsJournalMove,
     EcsJournalClear,
     EcsJournalDelete,
+    EcsJournalTableEvents
 } ecs_journal_kind_t;
-
-FLECS_DBG_API
-char* flecs_journal_entitystr(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-FLECS_DBG_API
-char* flecs_journal_idstr(
-    ecs_world_t *world,
-    ecs_id_t id);
 
 FLECS_DBG_API
 void flecs_journal_begin(

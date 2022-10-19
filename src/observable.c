@@ -4,6 +4,10 @@ void flecs_observable_init(
     ecs_observable_t *observable)
 {
     observable->events = ecs_sparse_new(ecs_event_record_t);
+    observable->on_add.event = EcsOnAdd;
+    observable->on_remove.event = EcsOnRemove;
+    observable->on_set.event = EcsOnSet;
+    observable->un_set.event = EcsUnSet;
 }
 
 void flecs_observable_fini(
@@ -62,7 +66,9 @@ ecs_event_record_t* flecs_event_record_ensure(
     if (er) {
         return er;
     }
-    return flecs_sparse_ensure(o->events, ecs_event_record_t, event);
+    er = flecs_sparse_ensure(o->events, ecs_event_record_t, event);
+    er->event = event;
+    return er;
 }
 
 static
@@ -231,6 +237,13 @@ void flecs_emit_propagate(
     ecs_assert(tgt_idr != NULL, ECS_INTERNAL_ERROR, NULL);    
     bool refresh_tables = true;
 
+    if (ecs_should_log_3()) {
+        char *idstr = ecs_id_str(world, tgt_idr->id);
+        ecs_dbg_3("propagate events/invalidate cache for %s", idstr);
+        ecs_os_free(idstr);
+    }
+    ecs_log_push_3();
+
     /* Propagate to records of acyclic relationships */
     ecs_id_record_t *cur = tgt_idr;
     while ((cur = cur->acyclic.next)) {
@@ -293,13 +306,22 @@ void flecs_emit_propagate(
             }
         }
     }
+
+    ecs_log_pop_3();
 }
 
+static
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
     ecs_id_record_t *tgt_idr)
 {
     ecs_assert(tgt_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (ecs_should_log_3()) {
+        char *idstr = ecs_id_str(world, tgt_idr->id);
+        ecs_dbg_3("invalidate reachable cache for %s", idstr);
+        ecs_os_free(idstr);
+    }
 
     /* Invalidate records of acyclic relationships */
     ecs_id_record_t *cur = tgt_idr;
@@ -444,8 +466,7 @@ void flecs_emit_forward_up(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_id_t id,
+    ecs_id_record_t *idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids);
 
@@ -457,15 +478,15 @@ void flecs_emit_forward_id(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_id_t id,
     ecs_id_record_t *idr,
     ecs_entity_t tgt,
     ecs_table_t *tgt_table,
     int32_t column,
     int32_t offset)
 {
+    ecs_id_t id = idr->id;
     ecs_entity_t rel = ECS_PAIR_FIRST(id);
+    ecs_entity_t event = er ? er->event : 0;
     bool inherit = rel == EcsIsA;
     bool may_override = inherit && (event == EcsOnAdd) && (emit_ids->count > 1);
     ecs_event_id_record_t *iders[5];
@@ -524,30 +545,28 @@ void flecs_emit_forward_id(
             it->ptrs[0] = ptr;
         }
 
-        if (event == EcsOnAdd) {
-            it->event = EcsOnSet;
-        } else if (event == EcsOnRemove) {
-            it->event = EcsUnSet;
-        }
+        if (ider_onset_count) {
+            it->event = er_onset->event;
 
-        for (ider_onset_i = 0; ider_onset_i < ider_onset_count; ider_onset_i ++) {
-            ecs_event_id_record_t *ider = iders_onset[ider_onset_i];
-            flecs_observers_invoke(world, &ider->up, it, table);
+            for (ider_onset_i = 0; ider_onset_i < ider_onset_count; ider_onset_i ++) {
+                ecs_event_id_record_t *ider = iders_onset[ider_onset_i];
+                flecs_observers_invoke(world, &ider->up, it, table);
 
-            /* Owned takes precedence */
-            if (!owned) {
-                flecs_observers_invoke(world, &ider->self_up, it, table);
-            } else if (override) {
-                ecs_entity_t src = it->sources[0];
-                it->sources[0] = 0;
-                flecs_observers_invoke(world, &ider->self, it, table);
-                flecs_observers_invoke(world, &ider->self_up, it, table);
-                it->sources[0] = src;
+                /* Owned takes precedence */
+                if (!owned) {
+                    flecs_observers_invoke(world, &ider->self_up, it, table);
+                } else if (override) {
+                    ecs_entity_t src = it->sources[0];
+                    it->sources[0] = 0;
+                    flecs_observers_invoke(world, &ider->self, it, table);
+                    flecs_observers_invoke(world, &ider->self_up, it, table);
+                    it->sources[0] = src;
+                }
             }
-        }
 
-        it->event = event;
-        it->ptrs[0] = base_ptr;
+            it->event = event;
+            it->ptrs[0] = base_ptr;
+        }
     }
 }
 
@@ -559,8 +578,6 @@ void flecs_emit_forward_and_cache_id(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_id_t id,
     ecs_id_record_t *idr,
     ecs_entity_t tgt,
     ecs_record_t *tgt_record,
@@ -576,14 +593,41 @@ void flecs_emit_forward_and_cache_id(
     elem->tr = tgt_tr;
     elem->record = tgt_record;
     elem->src = tgt;
-    elem->id = id;
+    elem->id = idr->id;
 #ifndef NDEBUG
     elem->table = tgt_table;
 #endif
     ecs_assert(tgt_table == tgt_record->table, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table, 
-        event, id, idr, tgt, tgt_table, column, offset);
+    flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table, idr,
+        tgt, tgt_table, column, offset);
+}
+
+static
+int32_t flecs_emit_stack_at(
+    ecs_vec_t *stack,
+    ecs_id_record_t *idr)
+{
+    int32_t sp = 0, stack_count = ecs_vec_count(stack);
+    ecs_table_t **stack_elems = ecs_vec_first(stack);
+
+    for (sp = 0; sp < stack_count; sp ++) {
+        ecs_table_t *elem = stack_elems[sp];
+        if (flecs_id_record_get_table(idr, elem)) {
+            break;
+        }
+    }
+
+    return sp;
+}
+
+
+static
+bool flecs_emit_stack_has(
+    ecs_vec_t *stack,
+    ecs_id_record_t *idr)
+{
+    return flecs_emit_stack_at(stack, idr) != ecs_vec_count(stack);
 }
 
 static
@@ -594,9 +638,9 @@ void flecs_emit_forward_cached_ids(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
     ecs_reachable_cache_t *rc,
-    ecs_vec_t *reachable_ids)
+    ecs_vec_t *reachable_ids,
+    ecs_vec_t *stack)
 {
     ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids, 
         ecs_reachable_elem_t);
@@ -615,11 +659,37 @@ void flecs_emit_forward_cached_ids(
         ecs_dbg_assert(rc_record->table == rc_elem->table, 
             ECS_INTERNAL_ERROR, NULL);
 
+        if (flecs_emit_stack_has(stack, rc_idr)) {
+            continue;
+        }
+
         int32_t rc_offset = ECS_RECORD_TO_ROW(rc_record->row);
         flecs_emit_forward_and_cache_id(world, er, er_onset, emit_ids,
-            it, table, event, rc_elem->id, rc_idr, rc_elem->src,
+            it, table, rc_idr, rc_elem->src,
                 rc_record, rc_record->table, rc_tr, rc_tr->column,
                     rc_offset, reachable_ids);
+    }
+}
+
+static
+void flecs_emit_dump_cache(
+    ecs_world_t *world,
+    const ecs_vec_t *vec)
+{
+    ecs_reachable_elem_t *elems = ecs_vec_first_t(vec, ecs_reachable_elem_t);
+    for (int i = 0; i < ecs_vec_count(vec); i ++) {
+        ecs_reachable_elem_t *elem = &elems[i];
+        char *idstr = ecs_id_str(world, elem->id);
+        char *estr = ecs_id_str(world, elem->src);
+        ecs_dbg_3("- id: %s (%u), src: %s (%u), table: %p", 
+            idstr, (uint32_t)elem->id,
+            estr, (uint32_t)elem->src,
+            elem->table);
+        ecs_os_free(idstr);
+        ecs_os_free(estr);
+    }
+    if (!ecs_vec_count(vec)) {
+        ecs_dbg_3("- no entries");
     }
 }
 
@@ -631,22 +701,39 @@ void flecs_emit_forward_table_up(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_entity_t rel,
     ecs_entity_t tgt,
     ecs_table_t *tgt_table,
-    ecs_record_t *record,
+    ecs_record_t *tgt_record,
+    ecs_id_record_t *tgt_idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids)
 {
-    int32_t sp, stack_count = ecs_vec_count(stack);
-    ecs_table_t **stack_elems = ecs_vec_first(stack);
+    ecs_allocator_t *a = &world->allocator;
     int32_t i, id_count = tgt_table->type.count;
     ecs_id_t *ids = tgt_table->type.array;
-    int32_t offset = ECS_RECORD_TO_ROW(record->row);
+    int32_t offset = ECS_RECORD_TO_ROW(tgt_record->row);
+    int32_t rc_child_offset = ecs_vec_count(reachable_ids);
+    int32_t stack_count = ecs_vec_count(stack);
+
+    /* If tgt_idr is out of sync but is not the current id record being updated,
+     * keep track so that we can update two records for the cost of one. */
+    ecs_reachable_cache_t *rc = &tgt_idr->reachable;
+    bool parent_revalidate = (reachable_ids != &rc->ids) && 
+        (rc->current != rc->generation);
+    if (parent_revalidate) {
+        ecs_vec_reset_t(a, &rc->ids, ecs_reachable_elem_t);
+    }
+
+    if (ecs_should_log_3()) {
+        char *idstr = ecs_id_str(world, tgt_idr->id);
+        ecs_dbg_3("forward events from %s", idstr);
+        ecs_os_free(idstr);
+    }
+    ecs_log_push_3();
 
     /* Function may have to copy values from overridden components if an IsA
      * relationship was added together with other components. */
+    ecs_entity_t rel = ECS_PAIR_FIRST(tgt_idr->id);
     bool inherit = rel == EcsIsA;
 
     for (i = 0; i < id_count; i ++) {
@@ -659,53 +746,101 @@ void flecs_emit_forward_table_up(
 
         /* Id has the same relationship, traverse to find ids for forwarding */
         if (ECS_PAIR_FIRST(id) == rel) {
-            ecs_reachable_cache_t *rc = &idr->reachable;
-            if (rc->current == rc->generation) {
-                /* Cache hit, use cached ids to prevent traversing the same
-                 * hierarchy multiple times. This especially speeds up code 
-                 * where (deep) hierarchies are created. */
-                flecs_emit_forward_cached_ids(world, er, er_onset, emit_ids, it,
-                    table, event, rc, reachable_ids);
-                continue;
-            }
-
-            /* Cache is dirty, traverse upwards*/
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
                 ecs_table_t*);
             t[0] = tgt_table;
 
-            do {
-                flecs_emit_forward_up(world, er, er_onset, emit_ids, it, 
-                    table, event, id, stack, reachable_ids);
-                if (++i >= id_count) {
-                    break;
+            ecs_reachable_cache_t *idr_rc = &idr->reachable;
+            if (idr_rc->current == idr_rc->generation) {
+                /* Cache hit, use cached ids to prevent traversing the same
+                 * hierarchy multiple times. This especially speeds up code 
+                 * where (deep) hierarchies are created. */
+                if (ecs_should_log_3()) {
+                    char *idstr = ecs_id_str(world, id);
+                    ecs_dbg_3("forward cached for %s", idstr);
+                    ecs_os_free(idstr);
                 }
+                ecs_log_push_3();
+                flecs_emit_forward_cached_ids(world, er, er_onset, emit_ids, it,
+                    table, idr_rc, reachable_ids, stack);
+                ecs_log_pop_3();
+            } else {
+                /* Cache is dirty, traverse upwards */
+                do {
+                    flecs_emit_forward_up(world, er, er_onset, emit_ids, it, 
+                        table, idr, stack, reachable_ids);
+                    if (++i >= id_count) {
+                        break;
+                    }
 
-                id = ids[i];
-                if (ECS_PAIR_FIRST(id) != rel) {
-                    break;
-                }
-            } while (true);
+                    id = ids[i];
+                    if (ECS_PAIR_FIRST(id) != rel) {
+                        break;
+                    }
+                } while (true);
+            }
 
             ecs_vec_remove_last(stack);
             continue;
         }
 
-        /* Skip id if it's masked by a lower table in the tree */
-        for (sp = 0; sp < stack_count; sp ++) {
-            ecs_table_t *elem = stack_elems[sp];
-            if (flecs_id_record_get_table(idr, elem)) {
-                break;
-            }
+        int32_t stack_at = flecs_emit_stack_at(stack, idr);
+        if (parent_revalidate && (stack_at == (stack_count - 1))) {
+            /* If parent id record needs to be revalidated, add id */
+            ecs_reachable_elem_t *elem = ecs_vec_append_t(a, &rc->ids, 
+                ecs_reachable_elem_t);
+            elem->tr = tgt_tr;
+            elem->record = tgt_record;
+            elem->src = tgt;
+            elem->id = idr->id;
+#ifndef NDEBUG
+            elem->table = tgt_table;
+#endif
         }
-        if (sp != stack_count) {
+
+        /* Skip id if it's masked by a lower table in the tree */
+        if (stack_at != stack_count) {
             continue;
         }
 
         flecs_emit_forward_and_cache_id(world, er, er_onset, emit_ids, it,
-            table, event, id, idr, tgt, record, tgt_table, tgt_tr, i, offset,
-            reachable_ids);
+            table, idr, tgt, tgt_record, tgt_table, tgt_tr, i, 
+                offset, reachable_ids);
     }
+
+    if (parent_revalidate) {
+        /* If this is not the current cache being updated, but it's marked
+         * as out of date, use intermediate results to populate cache. */
+        int32_t rc_parent_offset = ecs_vec_count(&rc->ids);
+
+        /* Only add ids that were added for this table */
+        int32_t count = ecs_vec_count(reachable_ids);
+        count -= rc_child_offset;
+
+        /* Append ids to any ids that already were added /*/
+        if (count) {
+            ecs_vec_grow_t(a, &rc->ids, ecs_reachable_elem_t, count);
+            ecs_reachable_elem_t *dst = ecs_vec_get_t(&rc->ids, 
+                ecs_reachable_elem_t, rc_parent_offset);
+            ecs_reachable_elem_t *src = ecs_vec_get_t(reachable_ids,
+                ecs_reachable_elem_t, rc_child_offset);
+            ecs_os_memcpy_n(dst, src, ecs_reachable_elem_t, count);
+        }
+
+        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+            /* Only OnAdd/OnRemove events can validate a cache */
+            rc->current = rc->generation;
+        }
+
+        if (ecs_should_log_3()) {
+            char *idstr = ecs_id_str(world, tgt_idr->id);
+            ecs_dbg_3("cache revalidated for %s:", idstr);
+            ecs_os_free(idstr);
+            flecs_emit_dump_cache(world, &rc->ids);
+        }
+    }
+
+    ecs_log_pop_3();
 }
 
 static
@@ -716,12 +851,11 @@ void flecs_emit_forward_up(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_id_t id,
+    ecs_id_record_t *idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids)
 {
-    ecs_entity_t rel = ECS_PAIR_FIRST(id);
+    ecs_id_t id = idr->id;
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     tgt = flecs_entities_get_current(world, tgt);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
@@ -731,8 +865,8 @@ void flecs_emit_forward_up(
         return;
     }
 
-    flecs_emit_forward_table_up(world, er, er_onset, emit_ids, it, table, event, 
-        rel, tgt, tgt_table, tgt_record, stack, reachable_ids);
+    flecs_emit_forward_table_up(world, er, er_onset, emit_ids, it, table, 
+        tgt, tgt_table, tgt_record, idr, stack, reachable_ids);
 }
 
 static
@@ -743,24 +877,47 @@ void flecs_emit_forward(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t event,
-    ecs_id_t id,
     ecs_id_record_t *idr)
 {
     ecs_reachable_cache_t *rc = &idr->reachable;
 
     if (rc->current != rc->generation) {
         /* Cache miss, iterate the tree to find ids to forward */
+        if (ecs_should_log_3()) {
+            char *idstr = ecs_id_str(world, idr->id);
+            ecs_dbg_3("reachable cache miss for %s", idstr);
+            ecs_os_free(idstr);
+        }
+        ecs_log_push_3();
+
         ecs_vec_t stack;
         ecs_vec_init_t(&world->allocator, &stack, ecs_table_t*, 0);
         ecs_vec_reset_t(&world->allocator, &rc->ids, ecs_reachable_elem_t);
         flecs_emit_forward_up(world, er, er_onset, emit_ids, it, table, 
-            event, id, &stack, &idr->reachable.ids);
+            idr, &stack, &rc->ids);
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
-        rc->current = rc->generation;
+
+        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+            /* Only OnAdd/OnRemove events can validate a cache */
+            rc->current = rc->generation;
+        }
+
+        if (ecs_should_log_3()) {
+            ecs_dbg_3("cache after rebuild:");
+            flecs_emit_dump_cache(world, &rc->ids);
+        }
+
+        ecs_log_pop_3();
     } else {
         /* Cache hit, use cached values instead of walking the tree */
+        if (ecs_should_log_3()) {
+            char *idstr = ecs_id_str(world, idr->id);
+            ecs_dbg_3("reachable cache hit for %s", idstr);
+            ecs_os_free(idstr);
+            flecs_emit_dump_cache(world, &rc->ids);
+        }
+
         ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids, 
             ecs_reachable_elem_t);
         int32_t i, count = ecs_vec_count(&rc->ids);
@@ -779,8 +936,7 @@ void flecs_emit_forward(
 
             int32_t offset = ECS_RECORD_TO_ROW(r->row);
             flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table,
-                event, elem->id, rc_idr, elem->src, r->table, 
-                    tr->column, offset);
+                rc_idr, elem->src, r->table, tr->column, offset);
         }
     }
 }
@@ -968,8 +1124,7 @@ repeat_event:
                 }
 
                 /* Forward events for components from pair target */
-                flecs_emit_forward(
-                    world, er, er_fwd, ids, &it, table, event, id, idr);
+                flecs_emit_forward(world, er, er_fwd, ids, &it, table, idr);
             }
 
             if (can_override && (!(idr_flags & EcsIdDontInherit))) {
@@ -1020,7 +1175,13 @@ repeat_event:
 
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (tr == NULL) {
+            /* When a single batch contains multiple add's for an exclusive
+             * relationship, it's possible that an id was in the added list
+             * that is no longer available for the entity. */
+            continue;
+        }
+
         int32_t column = tr->column, storage_i = -1;
         it.columns[0] = column;
         it.ptrs[0] = NULL;

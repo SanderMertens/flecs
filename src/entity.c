@@ -2398,7 +2398,6 @@ void ecs_delete(
         ecs_table_t *table;
         if (row_flags) {
             if (row_flags & EcsEntityObservedAcyclic) {
-                flecs_emit_propagate_invalidate_tables(world, r->idr);
                 table = r->table;
                 if (table) {
                     flecs_table_observer_add(table, -1);

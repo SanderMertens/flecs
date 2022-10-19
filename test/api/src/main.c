@@ -1668,6 +1668,14 @@ void Observer_observer_w_short_notation(void);
 void Observer_observer_w_filter_term(void);
 void Observer_multi_observer_w_ctx_free(void);
 void Observer_propagate_after_on_delete_clear_action(void);
+void Observer_on_add_after_batch_w_exclusive_adds(void);
+void Observer_cache_test_1(void);
+void Observer_cache_test_2(void);
+void Observer_cache_test_3(void);
+void Observer_cache_test_4(void);
+void Observer_cache_test_5(void);
+void Observer_cache_test_6(void);
+void Observer_cache_test_7(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -8670,6 +8678,38 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_after_on_delete_clear_action",
         Observer_propagate_after_on_delete_clear_action
+    },
+    {
+        "on_add_after_batch_w_exclusive_adds",
+        Observer_on_add_after_batch_w_exclusive_adds
+    },
+    {
+        "cache_test_1",
+        Observer_cache_test_1
+    },
+    {
+        "cache_test_2",
+        Observer_cache_test_2
+    },
+    {
+        "cache_test_3",
+        Observer_cache_test_3
+    },
+    {
+        "cache_test_4",
+        Observer_cache_test_4
+    },
+    {
+        "cache_test_5",
+        Observer_cache_test_5
+    },
+    {
+        "cache_test_6",
+        Observer_cache_test_6
+    },
+    {
+        "cache_test_7",
+        Observer_cache_test_7
     }
 };
 
@@ -11007,7 +11047,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        73,
+        81,
         Observer_testcases
     },
     {

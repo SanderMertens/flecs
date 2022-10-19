@@ -4,7 +4,6 @@
 
 #include <ctype.h>
 
-static
 void ecs_colorize_buf(
     char *msg,
     bool enable_colors,

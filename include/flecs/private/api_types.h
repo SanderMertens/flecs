@@ -50,6 +50,7 @@ typedef struct ecs_event_record_t {
     struct ecs_event_id_record_t *wildcard;
     struct ecs_event_id_record_t *wildcard_pair;
     ecs_map_t event_ids; /* map<id, ecs_event_id_record_t> */
+    ecs_entity_t event;
 } ecs_event_record_t;
 
 struct ecs_observable_t {

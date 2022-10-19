@@ -71,8 +71,4 @@ void flecs_observers_invoke(
     ecs_iter_t *it,
     ecs_table_t *table);
 
-void flecs_emit_propagate_invalidate_tables(
-    ecs_world_t *world,
-    ecs_id_record_t *tgt_idr);
-
 #endif

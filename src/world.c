@@ -1757,6 +1757,8 @@ void flecs_process_pending_tables(
         return;
     }
 
+    flecs_journal_begin(world, EcsJournalTableEvents, 0, 0, 0);
+
     do {
         ecs_sparse_t *pending_tables = world->pending_tables;
         world->pending_tables = world->pending_buffer;
@@ -1786,8 +1788,8 @@ void flecs_process_pending_tables(
                 int32_t table_count = ecs_table_count(table);
                 ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
                 if (ecs_should_log_3()) {
-                    ecs_dbg_3("emit %s for table %u", ecs_get_name(world, evt),
-                        (uint32_t)table->id);
+                    ecs_dbg_3("table %u state change (%s)", (uint32_t)table->id,
+                        table_count ? "non-empty" : "empty");
                 }
 
                 ecs_log_push_3();
@@ -1805,11 +1807,14 @@ void flecs_process_pending_tables(
                 world->info.empty_table_count += (table_count == 0) * 2 - 1;
             }
         }
+
         flecs_sparse_clear(pending_tables);
         ecs_defer_end(world);
 
         world->pending_buffer = pending_tables;
     } while ((count = flecs_sparse_count(world->pending_tables)));
+
+    flecs_journal_end();
 }
 
 void flecs_table_set_empty(

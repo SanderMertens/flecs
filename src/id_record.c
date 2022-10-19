@@ -564,9 +564,7 @@ const ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table)
 {
-    if (!idr) {
-        return NULL;
-    }
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
