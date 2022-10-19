@@ -253,10 +253,12 @@ void flecs_observer_invoke(
     ecs_table_lock(it->world, table);
     if (ecs_should_log_3()) {
         char *path = ecs_get_fullpath(world, it->system);
-        ecs_dbg_3("observer %s", path);
+        ecs_dbg_3("observer: invoke %s", path);
         ecs_os_free(path);
-        ecs_log_push_3();
     }
+
+    ecs_log_push_3();
+
     world->info.observers_ran_frame ++;
 
     ecs_filter_t *filter = &observer->filter;
@@ -298,8 +300,8 @@ void flecs_observer_invoke(
         it->count = count;
     }
 
-    ecs_table_unlock(it->world, table);
     ecs_log_pop_3();
+    ecs_table_unlock(it->world, table);
 }
 
 static
@@ -448,8 +450,6 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         flecs_iter_validate(&user_it);
         flecs_observer_invoke(world, &user_it, o, o->callback, table);
         ecs_iter_fini(&user_it);
-
-        ecs_log_pop_3();
         return true;
     }
 
@@ -483,11 +483,10 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
         char *path = ecs_get_fullpath(it->world, it->system);
         ecs_dbg_3("observer %s", path);
         ecs_os_free(path);
-        ecs_log_push_3();
     }
 
+    ecs_log_push_3();
     flecs_observer_invoke(it->real_world, it, o, o->callback, it->table);
-
     ecs_log_pop_3();
 }
 

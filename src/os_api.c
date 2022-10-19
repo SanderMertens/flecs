@@ -157,7 +157,7 @@ void flecs_log_msg(
     }
 
     if (level >= 4) {
-        if (use_colors) fputs(ECS_BOLD, stream);
+        if (use_colors) fputs(ECS_NORMAL, stream);
         fputs("jrnl", stream);
     } else if (level >= 0) {
         if (level == 0) {

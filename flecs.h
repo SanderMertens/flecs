@@ -147,6 +147,7 @@
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
+// #define FLECS_JOURNAL    /* Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3223,6 +3224,7 @@ typedef struct ecs_event_record_t {
     struct ecs_event_id_record_t *wildcard;
     struct ecs_event_id_record_t *wildcard_pair;
     ecs_map_t event_ids; /* map<id, ecs_event_id_record_t> */
+    ecs_entity_t event;
 } ecs_event_record_t;
 
 struct ecs_observable_t {
@@ -9007,8 +9009,74 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_REST
 #undef FLECS_REST
 #endif
+#ifdef FLECS_NO_JOURNAL
+#undef FLECS_JOURNAL
+#endif
 
-/* Always included, if disabled log functions are replaced with dummy macros */
+/* Always included, if disabled functions are replaced with dummy macros */
+/**
+ * @file journal.h
+ * @brief Journaling addon that logs API functions.
+ *
+ * The journaling addon traces API calls. The trace is formatted as runnable
+ * C code, which allows for (partially) reproducing the behavior of an app
+ * with the journaling trace.
+ * 
+ * The journaling addon is disabled by default. Enabling it can have a 
+ * significant impact on performance.
+ */
+
+#ifdef FLECS_JOURNAL
+
+#ifndef FLECS_LOG
+#define FLECS_LOG
+#endif
+
+#ifndef FLECS_JOURNAL_H
+#define FLECS_JOURNAL_H
+
+/* Trace when log level is at or higher than level */
+#define FLECS_JOURNAL_LOG_LEVEL (0)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Journaling API, meant to be used by internals. */
+
+typedef enum ecs_journal_kind_t {
+    EcsJournalNew,
+    EcsJournalMove,
+    EcsJournalClear,
+    EcsJournalDelete,
+    EcsJournalTableEvents
+} ecs_journal_kind_t;
+
+FLECS_DBG_API
+void flecs_journal_begin(
+    ecs_world_t *world,
+    ecs_journal_kind_t kind,
+    ecs_entity_t entity,
+    ecs_type_t *add,
+    ecs_type_t *remove);
+
+FLECS_DBG_API
+void flecs_journal_end(void);
+
+#define flecs_journal(...)\
+    flecs_journal_begin(__VA_ARGS__);\
+    flecs_journal_end();
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+#endif // FLECS_JOURNAL_H
+#else
+#define flecs_journal_begin(...)
+#define flecs_journal_end(...)
+#define flecs_journal(...)
+#endif // FLECS_JOURNAL
+
 /**
  * @file log.h
  * @brief Logging addon.
@@ -9118,6 +9186,22 @@ const char* ecs_strerror(
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
+void _ecs_print(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_printv(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args);
+
+FLECS_API
 void _ecs_log(
     int32_t level,
     const char *file,
@@ -9175,6 +9259,12 @@ void _ecs_parser_errorv(
 #ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
 
 /* Base logging function. Accepts a custom level */
+#define ecs_print(level, ...)\
+    _ecs_print(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_printv(level, fmt, args)\
+    _ecs_printv(level, __FILE__, __LINE__, fmt, args)
+
 #define ecs_log(level, ...)\
     _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
 

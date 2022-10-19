@@ -6498,7 +6498,6 @@ void Query_cascade_w_3_depths() {
     ecs_add_id(world, e1, Bar);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
