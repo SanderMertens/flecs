@@ -107,6 +107,22 @@ const char* ecs_strerror(
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
+void _ecs_print(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_printv(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args);
+
+FLECS_API
 void _ecs_log(
     int32_t level,
     const char *file,
@@ -164,6 +180,12 @@ void _ecs_parser_errorv(
 #ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
 
 /* Base logging function. Accepts a custom level */
+#define ecs_print(level, ...)\
+    _ecs_print(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_printv(level, fmt, args)\
+    _ecs_printv(level, __FILE__, __LINE__, fmt, args)
+
 #define ecs_log(level, ...)\
     _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
 

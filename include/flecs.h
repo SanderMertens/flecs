@@ -145,6 +145,7 @@
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
+// #define FLECS_JOURNAL    /* Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */

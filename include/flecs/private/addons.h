@@ -89,8 +89,12 @@
 #ifdef FLECS_NO_REST
 #undef FLECS_REST
 #endif
+#ifdef FLECS_NO_JOURNAL
+#undef FLECS_JOURNAL
+#endif
 
-/* Always included, if disabled log functions are replaced with dummy macros */
+/* Always included, if disabled functions are replaced with dummy macros */
+#include "flecs/addons/journal.h"
 #include "flecs/addons/log.h"
 
 #ifdef FLECS_MONITOR
