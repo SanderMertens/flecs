@@ -22,7 +22,7 @@ typedef struct ecs_system_t {
     
     /* Schedule parameters */
     bool multi_threaded;
-    bool no_staging;
+    bool no_readonly;
 
     int64_t invoke_count;           /* Number of times system is invoked */
     float time_spent;               /* Time spent on running system */

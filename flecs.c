@@ -15606,7 +15606,7 @@ typedef struct ecs_system_t {
     
     /* Schedule parameters */
     bool multi_threaded;
-    bool no_staging;
+    bool no_readonly;
 
     int64_t invoke_count;           /* Number of times system is invoked */
     float time_spent;               /* Time spent on running system */
@@ -15661,7 +15661,7 @@ ecs_entity_t ecs_run_intern(
 typedef struct ecs_pipeline_op_t {
     int32_t count;              /* Number of systems to run before merge */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
-    bool no_staging;            /* Whether systems are staged or not */
+    bool no_readonly;            /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
 typedef struct {
@@ -15933,7 +15933,7 @@ void ecs_worker_begin(
         ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
-        if (!op || !op->no_staging) {
+        if (!op || !op->no_readonly) {
             ecs_readonly_begin(world);
         }
     }
@@ -15953,7 +15953,7 @@ bool ecs_worker_sync(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        if (!pq->cur_op->no_staging) {
+        if (!pq->cur_op->no_readonly) {
             ecs_readonly_end(world);
         }
 
@@ -15970,7 +15970,7 @@ bool ecs_worker_sync(
     }
 
     if (stage_count == 1) {
-        if (!pq->cur_op->no_staging) {
+        if (!pq->cur_op->no_readonly) {
             ecs_readonly_begin(world);
         }
     }
@@ -16038,7 +16038,7 @@ void ecs_workers_progress(
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
             bool is_threaded = world->flags & EcsWorldMultiThreaded;
-            if (!op->no_staging) {
+            if (!op->no_readonly) {
                 ecs_readonly_begin(world);
             }
             if (!op->multi_threaded) {
@@ -16053,7 +16053,7 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            if (!op->no_staging) {
+            if (!op->no_readonly) {
                 ecs_readonly_end(world);
             }
             if (is_threaded) {
@@ -16372,7 +16372,7 @@ bool flecs_pipeline_build(
     }
 
     bool multi_threaded = false;
-    bool no_staging = false;
+    bool no_readonly = false;
     bool first = true;
 
     /* Iterate systems in pipeline, add ops for running / merging */
@@ -16396,7 +16396,7 @@ bool flecs_pipeline_build(
             if (is_active) {
                 if (first) {
                     multi_threaded = sys->multi_threaded;
-                    no_staging = sys->no_staging;
+                    no_readonly = sys->no_readonly;
                     first = false;
                 }
 
@@ -16404,13 +16404,13 @@ bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
-                if (sys->no_staging != no_staging) {
+                if (sys->no_readonly != no_readonly) {
                     needs_merge = true;
-                    no_staging = sys->no_staging;
+                    no_readonly = sys->no_readonly;
                 }
             }
 
-            if (no_staging) {
+            if (no_readonly) {
                 needs_merge = true;
             }
 
@@ -16445,7 +16445,7 @@ bool flecs_pipeline_build(
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
                 op->multi_threaded = false;
-                op->no_staging = false;
+                op->no_readonly = false;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -16453,7 +16453,7 @@ bool flecs_pipeline_build(
             if (is_active) {
                 if (!op->count) {
                     op->multi_threaded = multi_threaded;
-                    op->no_staging = no_staging;
+                    op->no_readonly = no_readonly;
                 }
                 op->count ++;
             }
@@ -16479,7 +16479,7 @@ bool flecs_pipeline_build(
         ecs_log_push_1();
 
         ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
-            op->multi_threaded, !op->no_staging);
+            op->multi_threaded, !op->no_readonly);
         ecs_log_push_1();
 
         it = ecs_query_iter(world, pq->query);
@@ -16509,7 +16509,7 @@ bool flecs_pipeline_build(
                             "#[green]schedule#[reset]: "
                             "threading: %d, staging: %d:",
                             op[op_index].multi_threaded, 
-                            !op[op_index].no_staging);
+                            !op[op_index].no_readonly);
                     }
                     ecs_log_push_1();
                 }
@@ -16716,7 +16716,7 @@ void ecs_run_pipeline(
 
             if (!stage_index || op->multi_threaded) {
                 ecs_stage_t *s = NULL;
-                if (!op->no_staging) {
+                if (!op->no_readonly) {
                     s = stage;
                 }
 
@@ -31939,7 +31939,7 @@ ecs_entity_t ecs_system_init(
         system->tick_source = desc->tick_source;
 
         system->multi_threaded = desc->multi_threaded;
-        system->no_staging = desc->no_staging;
+        system->no_readonly = desc->no_readonly;
 
         if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
 #ifdef FLECS_TIMER
@@ -31984,8 +31984,8 @@ ecs_entity_t ecs_system_init(
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }
-        if (desc->no_staging) {
-            system->no_staging = desc->no_staging;
+        if (desc->no_readonly) {
+            system->no_readonly = desc->no_readonly;
         }
     }
 
@@ -51040,6 +51040,25 @@ int32_t ecs_iter_count(
         count += it->count;
     }
     return count;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_iter_first(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
+
+    ecs_entity_t result = 0;
+    if (ecs_iter_next(it)) {
+        result = it->entities[0];
+        ecs_iter_fini(it);
+    }
+
+    return result;
 error:
     return 0;
 }

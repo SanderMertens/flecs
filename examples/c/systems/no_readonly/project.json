@@ -1,0 +1,10 @@
+{
+    "id": "no_readonly",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

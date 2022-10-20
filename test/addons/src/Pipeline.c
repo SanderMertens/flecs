@@ -1184,7 +1184,7 @@ void Pipeline_mixed_staging() {
         .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
         .query.filter.expr = "Position",
         .callback = SysA,
-        .no_staging = true
+        .no_readonly = true
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
@@ -1200,13 +1200,13 @@ void Pipeline_mixed_staging() {
         .entity = ecs_entity(world, { .name = "SysD", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
         .query.filter.expr = "Position",
         .callback = SysD,
-        .no_staging = true
+        .no_readonly = true
     });
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysE", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
         .query.filter.expr = "Position",
         .callback = SysE,
-        .no_staging = true
+        .no_readonly = true
     });
     ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysF", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
@@ -1528,7 +1528,7 @@ void Pipeline_no_staging_system_create_query() {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "CreateQuery", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
         .callback = CreateQuery,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
@@ -1798,7 +1798,7 @@ void Pipeline_no_staging_after_inactive_system() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystem,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_progress(world, 0);
@@ -1888,7 +1888,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -1924,7 +1924,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -1940,7 +1940,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = SysA,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_progress(world, 0);
@@ -1969,7 +1969,7 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -1977,7 +1977,7 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreateVelocity,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -2030,7 +2030,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -2070,7 +2070,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_system(world, {
@@ -2087,7 +2087,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
             .add = { ecs_dependson(EcsOnUpdate )}
         }),
         .callback = ReadPosition,
-        .no_staging = true
+        .no_readonly = true
     });
 
     ecs_set_threads(world, 2);

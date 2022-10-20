@@ -1,0 +1,10 @@
+{
+    "id": "time_interval",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

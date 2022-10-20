@@ -7137,6 +7137,17 @@ FLECS_API
 bool ecs_iter_is_true(
     ecs_iter_t *it);
 
+/** Get first matching entity from iterator.
+ * After this operation the application should treat the iterator as if it has
+ * been iterated until completion.
+ * 
+ * @param it The iterator.
+ * @return The first matching entity, or 0 if no entities were matched.
+ */
+FLECS_API
+ecs_entity_t ecs_iter_first(
+    ecs_iter_t *it);
+
 /** Set value for iterator variable.
  * This constrains the iterator to return only results for which the variable
  * equals the specified value. The default value for all variables is 
@@ -10365,7 +10376,7 @@ typedef struct ecs_system_desc_t {
 
     /* If true, system will have access to actuall world. Cannot be true at the
      * same time as multi_threaded. */
-    bool no_staging;
+    bool no_readonly;
 } ecs_system_desc_t;
 
 /* Create a system */
@@ -17738,6 +17749,14 @@ public:
         return m_iter->ctx;
     }
 
+    /** Access ctx. 
+     * ctx contains the context pointer assigned to a system.
+     */
+    template <typename T>
+    T* ctx() {
+        return static_cast<T*>(m_iter->ctx);
+    }
+
     /** Access param. 
      * param contains the pointer passed to the param argument of system::run
      */
@@ -23595,11 +23614,17 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         return *this;
     }
 
-    /** Set system context */
+    /** Set observer context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
         return *this;
     }    
+
+    /** Set observer run callback */
+    Base& run(ecs_iter_action_t action) {
+        m_desc->run = action;
+        return *this;
+    }
 
 protected:
     virtual flecs::world_t* world_v() = 0;
@@ -23837,8 +23862,8 @@ public:
      *
      * @param value If false system will always run staged.
      */
-    Base& no_staging(bool value = true) {
-        m_desc->no_staging = value;
+    Base& no_readonly(bool value = true) {
+        m_desc->no_readonly = value;
         return *this;
     }
 
@@ -23883,6 +23908,12 @@ public:
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
+        return *this;
+    }
+
+    /** Set system run callback */
+    Base& run(ecs_iter_action_t action) {
+        m_desc->run = action;
         return *this;
     }
 

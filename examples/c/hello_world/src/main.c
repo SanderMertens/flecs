@@ -56,4 +56,9 @@ int main(int argc, char *argv[]) {
     printf("Bob's position is {%f, %f}\n", p->x, p->y);
 
     return ecs_fini(world);
+
+    // Output
+    //  Move entities with [Position, Velocity, (Identifier,Name), (Eats,Apples)]
+    //  Move entities with [Position, Velocity, (Identifier,Name), (Eats,Apples)]
+    //  Bob's position is {2.000000, 4.000000}
 }

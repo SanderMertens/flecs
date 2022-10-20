@@ -1978,3 +1978,34 @@ void System_multithread_system_w_query_iter_w_world() {
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
+
+void System_run_callback() {
+    flecs::world world;
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    world.system<Position, const Velocity>()
+        .run([](flecs::iter_t *it) {
+            while (ecs_iter_next(it)) {
+                it->callback(it);
+            }
+        })
+        .iter([](flecs::iter&it, Position *p, const Velocity* v) {
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
+        });
+
+    world.progress();
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}

@@ -275,7 +275,7 @@ ecs_entity_t ecs_system_init(
         system->tick_source = desc->tick_source;
 
         system->multi_threaded = desc->multi_threaded;
-        system->no_staging = desc->no_staging;
+        system->no_readonly = desc->no_readonly;
 
         if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
 #ifdef FLECS_TIMER
@@ -320,8 +320,8 @@ ecs_entity_t ecs_system_init(
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }
-        if (desc->no_staging) {
-            system->no_staging = desc->no_staging;
+        if (desc->no_readonly) {
+            system->no_readonly = desc->no_readonly;
         }
     }
 

@@ -573,3 +573,28 @@ void Observer_observer_w_filter_term() {
     e.add(TagA);
     test_int(invoked, 1);
 }
+
+void Observer_run_callback() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Position>()
+        .event(flecs::OnAdd)
+        .run([](flecs::iter_t *it) {
+            while (ecs_iter_next(it)) {
+                it->callback(it);
+            }
+        })
+        .each([&](Position& p) {
+            count ++;          
+        });
+
+    auto e = ecs.entity();
+    test_int(count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(count, 1);
+
+
+}

@@ -9,7 +9,7 @@
 typedef struct ecs_pipeline_op_t {
     int32_t count;              /* Number of systems to run before merge */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
-    bool no_staging;            /* Whether systems are staged or not */
+    bool no_readonly;            /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
 typedef struct {

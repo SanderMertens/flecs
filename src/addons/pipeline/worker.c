@@ -199,7 +199,7 @@ void ecs_worker_begin(
         ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
-        if (!op || !op->no_staging) {
+        if (!op || !op->no_readonly) {
             ecs_readonly_begin(world);
         }
     }
@@ -219,7 +219,7 @@ bool ecs_worker_sync(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        if (!pq->cur_op->no_staging) {
+        if (!pq->cur_op->no_readonly) {
             ecs_readonly_end(world);
         }
 
@@ -236,7 +236,7 @@ bool ecs_worker_sync(
     }
 
     if (stage_count == 1) {
-        if (!pq->cur_op->no_staging) {
+        if (!pq->cur_op->no_readonly) {
             ecs_readonly_begin(world);
         }
     }
@@ -304,7 +304,7 @@ void ecs_workers_progress(
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
             bool is_threaded = world->flags & EcsWorldMultiThreaded;
-            if (!op->no_staging) {
+            if (!op->no_readonly) {
                 ecs_readonly_begin(world);
             }
             if (!op->multi_threaded) {
@@ -319,7 +319,7 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            if (!op->no_staging) {
+            if (!op->no_readonly) {
                 ecs_readonly_end(world);
             }
             if (is_threaded) {

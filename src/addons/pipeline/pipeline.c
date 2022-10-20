@@ -265,7 +265,7 @@ bool flecs_pipeline_build(
     }
 
     bool multi_threaded = false;
-    bool no_staging = false;
+    bool no_readonly = false;
     bool first = true;
 
     /* Iterate systems in pipeline, add ops for running / merging */
@@ -289,7 +289,7 @@ bool flecs_pipeline_build(
             if (is_active) {
                 if (first) {
                     multi_threaded = sys->multi_threaded;
-                    no_staging = sys->no_staging;
+                    no_readonly = sys->no_readonly;
                     first = false;
                 }
 
@@ -297,13 +297,13 @@ bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
-                if (sys->no_staging != no_staging) {
+                if (sys->no_readonly != no_readonly) {
                     needs_merge = true;
-                    no_staging = sys->no_staging;
+                    no_readonly = sys->no_readonly;
                 }
             }
 
-            if (no_staging) {
+            if (no_readonly) {
                 needs_merge = true;
             }
 
@@ -338,7 +338,7 @@ bool flecs_pipeline_build(
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
                 op->multi_threaded = false;
-                op->no_staging = false;
+                op->no_readonly = false;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -346,7 +346,7 @@ bool flecs_pipeline_build(
             if (is_active) {
                 if (!op->count) {
                     op->multi_threaded = multi_threaded;
-                    op->no_staging = no_staging;
+                    op->no_readonly = no_readonly;
                 }
                 op->count ++;
             }
@@ -372,7 +372,7 @@ bool flecs_pipeline_build(
         ecs_log_push_1();
 
         ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
-            op->multi_threaded, !op->no_staging);
+            op->multi_threaded, !op->no_readonly);
         ecs_log_push_1();
 
         it = ecs_query_iter(world, pq->query);
@@ -402,7 +402,7 @@ bool flecs_pipeline_build(
                             "#[green]schedule#[reset]: "
                             "threading: %d, staging: %d:",
                             op[op_index].multi_threaded, 
-                            !op[op_index].no_staging);
+                            !op[op_index].no_readonly);
                     }
                     ecs_log_push_1();
                 }
@@ -609,7 +609,7 @@ void ecs_run_pipeline(
 
             if (!stage_index || op->multi_threaded) {
                 ecs_stage_t *s = NULL;
-                if (!op->no_staging) {
+                if (!op->no_readonly) {
                     s = stage;
                 }
 

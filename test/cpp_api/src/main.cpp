@@ -420,6 +420,7 @@ void System_multithread_system_w_query_each_w_world(void);
 void System_multithread_system_w_query_iter(void);
 void System_multithread_system_w_query_iter_w_iter(void);
 void System_multithread_system_w_query_iter_w_world(void);
+void System_run_callback(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -729,6 +730,7 @@ void Observer_on_add_tag_iter(void);
 void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
 void Observer_observer_w_filter_term(void);
+void Observer_run_callback(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2659,6 +2661,10 @@ bake_test_case System_testcases[] = {
     {
         "multithread_system_w_query_iter_w_world",
         System_multithread_system_w_query_iter_w_world
+    },
+    {
+        "run_callback",
+        System_run_callback
     }
 };
 
@@ -3855,6 +3861,10 @@ bake_test_case Observer_testcases[] = {
     {
         "observer_w_filter_term",
         Observer_observer_w_filter_term
+    },
+    {
+        "run_callback",
+        Observer_run_callback
     }
 };
 
@@ -5069,7 +5079,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        59,
+        60,
         System_testcases
     },
     {
@@ -5125,7 +5135,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        21,
+        22,
         Observer_testcases
     },
     {

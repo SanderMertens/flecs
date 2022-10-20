@@ -90,7 +90,7 @@ typedef struct ecs_system_desc_t {
 
     /* If true, system will have access to actuall world. Cannot be true at the
      * same time as multi_threaded. */
-    bool no_staging;
+    bool no_readonly;
 } ecs_system_desc_t;
 
 /* Create a system */

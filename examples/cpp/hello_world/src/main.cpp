@@ -1,5 +1,5 @@
 #include <hello_world.h>
-#include <stdio.h>
+#include <iostream>
 
 // Component types
 struct Position {
@@ -34,7 +34,7 @@ int main(int, char *[]) {
         .add<Eats, Apples>();
 
     // Show us what you got
-    printf("%s's got: [%s]\n", Bob.name().c_str(), Bob.type().str().c_str());
+    std::cout << Bob.name() << "'s got [" << Bob.type().str() << "]\n";
 
     // Run systems twice. Usually this function is called once per frame
     ecs.progress();
@@ -42,5 +42,9 @@ int main(int, char *[]) {
 
     // See if Bob has moved (he has)
     const Position *p = Bob.get<Position>();
-    printf("Bob's position is {%f, %f}\n", p->x, p->y);
+    std::cout << Bob.name() << "'s position is {" << p->x << ", " << p->y << "}\n";
+
+    // Output
+    //  Bob's got [Position, Velocity, (Identifier,Name), (Eats,Apples)]
+    //  Bob's position is {2, 4}
 }

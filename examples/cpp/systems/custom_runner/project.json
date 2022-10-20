@@ -1,0 +1,11 @@
+{
+    "id": "custom_runner",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "language": "c++"
+    }
+}

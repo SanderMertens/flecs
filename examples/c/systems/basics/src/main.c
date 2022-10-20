@@ -23,9 +23,15 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Position);
     ECS_COMPONENT(ecs, Velocity);
 
-    // Create a system for Position, Velocity. Systems are like queries (see
-    // queries) with a function that can be ran or scheduled (see pipeline).
+    // Create a system for Position, Velocity.
     ecs_entity_t move = ecs_system(ecs, {
+        // Systems are entities, and by initializing the .entity field we can
+        // set some additional properties for the system like a name. While this
+        // is not mandatory, it makes a system easier to find in tools like the
+        // explorer (https://www.flecs.dev/explorer/).
+        .entity = ecs_entity(ecs, {
+            .name = "Move" 
+        }),
         .query.filter.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsIn }

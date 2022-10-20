@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
-        Position *v = ecs_field(&it, Velocity, 2);
+        Velocity *v = ecs_field(&it, Velocity, 2);
 
         // Check if Velocity is owned, in which case it's accessed as array.
         // Position will always be owned, since we set the term to Self.
@@ -105,4 +105,12 @@ int main(int argc, char *argv[]) {
     }
 
     return ecs_fini(world);
+
+    // Output
+    //  Velocity is shared
+    //  e1: {11.000000, 22.000000}
+    //  e2: {11.000000, 22.000000}
+    //  Velocity is owned
+    //  e3: {13.000000, 24.000000}
+    //  e4: {14.000000, 25.000000}
 }

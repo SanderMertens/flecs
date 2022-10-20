@@ -1103,7 +1103,7 @@ void MultiThread_no_staging_w_multithread() {
 
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
-            .no_staging = true,
+            .no_readonly = true,
             .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
         });
 

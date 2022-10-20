@@ -209,6 +209,14 @@ public:
         return m_iter->ctx;
     }
 
+    /** Access ctx. 
+     * ctx contains the context pointer assigned to a system.
+     */
+    template <typename T>
+    T* ctx() {
+        return static_cast<T*>(m_iter->ctx);
+    }
+
     /** Access param. 
      * param contains the pointer passed to the param argument of system::run
      */

@@ -3897,6 +3897,17 @@ FLECS_API
 bool ecs_iter_is_true(
     ecs_iter_t *it);
 
+/** Get first matching entity from iterator.
+ * After this operation the application should treat the iterator as if it has
+ * been iterated until completion.
+ * 
+ * @param it The iterator.
+ * @return The first matching entity, or 0 if no entities were matched.
+ */
+FLECS_API
+ecs_entity_t ecs_iter_first(
+    ecs_iter_t *it);
+
 /** Set value for iterator variable.
  * This constrains the iterator to return only results for which the variable
  * equals the specified value. The default value for all variables is 

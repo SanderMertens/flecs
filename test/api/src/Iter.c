@@ -1714,3 +1714,25 @@ void Iter_iter_restore_stack_iter() {
 
     ecs_fini(world);
 }
+
+void Iter_get_first() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_new(world, Tag);
+    ecs_new(world, Tag);
+
+    ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+        .terms = {{ Tag }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_entity_t first = ecs_iter_first(&it);
+    test_assert(first == e);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
