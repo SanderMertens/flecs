@@ -1436,7 +1436,11 @@
                 "count",
                 "iter_restore_stack_iter",
                 "interleaved_iter",
-                "get_first"
+                "get_first",
+                "page_iter_w_only_tag",
+                "worker_iter_w_only_tag",
+                "page_iter_w_inout_none",
+                "worker_iter_w_inout_none"
             ]
         }, {
             "id": "Pairs",

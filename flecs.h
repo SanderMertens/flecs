@@ -23618,7 +23618,7 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
         return *this;
-    }    
+    }
 
     /** Set observer run callback */
     Base& run(ecs_iter_action_t action) {

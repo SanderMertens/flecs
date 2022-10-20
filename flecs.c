@@ -51296,24 +51296,27 @@ error:
 }
 
 static
-void offset_iter(
+void flecs_offset_iter(
     ecs_iter_t *it,
     int32_t offset)
 {
     it->entities = &it->entities[offset];
 
     int32_t t, field_count = it->field_count;
-    for (t = 0; t < field_count; t ++) {
-        void *ptrs = it->ptrs[t];
-        if (!ptrs) {
-            continue;
-        }
+    void **it_ptrs = it->ptrs;
+    if (it_ptrs) {
+        for (t = 0; t < field_count; t ++) {
+            void *ptrs = it_ptrs[t];
+            if (!ptrs) {
+                continue;
+            }
 
-        if (it->sources[t]) {
-            continue;
-        }
+            if (it->sources[t]) {
+                continue;
+            }
 
-        it->ptrs[t] = ECS_OFFSET(ptrs, offset * it->sizes[t]);
+            it->ptrs[t] = ECS_OFFSET(ptrs, offset * it->sizes[t]);
+        }
     }
 }
 
@@ -51368,7 +51371,7 @@ bool ecs_page_next_instanced(
                 it->offset += offset;
                 count = it->count -= offset;
                 iter->offset = 0;
-                offset_iter(it, offset);
+                flecs_offset_iter(it, offset);
             }
         }
 
@@ -51498,7 +51501,7 @@ bool ecs_worker_next_instanced(
     it->instance_count = instances_per_worker;
     it->frame_offset += first;
 
-    offset_iter(it, it->offset + first);
+    flecs_offset_iter(it, it->offset + first);
     it->count = per_worker;
 
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced)) {

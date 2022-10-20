@@ -1736,3 +1736,103 @@ void Iter_get_first() {
 
     ecs_fini(world);
 }
+
+void Iter_page_iter_w_only_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ Tag }}
+    });
+    
+    ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 0);
+
+    test_assert(ecs_page_next(&pit));
+    test_int(pit.count, 1);
+    test_uint(pit.entities[0], e2);
+    test_assert(!ecs_page_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_only_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ Tag }}
+    });
+    
+    ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_worker_iter(&it, 1, 2);
+
+    test_assert(ecs_worker_next(&pit));
+    test_int(pit.count, 1);
+    test_uint(pit.entities[0], e2);
+    test_assert(!ecs_worker_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
+    });
+    
+    ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 0);
+
+    test_assert(ecs_page_next(&pit));
+    test_int(pit.count, 1);
+    test_uint(pit.entities[0], e2);
+    test_assert(!ecs_page_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
+    });
+    
+    ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_worker_iter(&it, 1, 2);
+
+    test_assert(ecs_worker_next(&pit));
+    test_int(pit.count, 1);
+    test_uint(pit.entities[0], e2);
+    test_assert(!ecs_worker_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
