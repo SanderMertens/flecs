@@ -815,6 +815,7 @@
                 "ctor_on_move_pair",
                 "move_on_realloc",
                 "move_on_bulk_new",
+                "on_add_on_bulk_new",
                 "move_on_delete",
                 "move_dtor_on_delete",
                 "copy_on_override_pair",

@@ -3819,9 +3819,7 @@ int32_t flecs_table_grow_data(
     /* Initialize entity ids and record ptrs */
     int32_t i;
     if (ids) {
-        for (i = 0; i < to_add; i ++) {
-            e[i] = ids[i];
-        }
+        ecs_os_memcpy_n(e, ids, ecs_entity_t, to_add);
     } else {
         ecs_os_memset(e, 0, ECS_SIZEOF(ecs_entity_t) * to_add);
     }
@@ -3834,6 +3832,8 @@ int32_t flecs_table_grow_data(
         ecs_type_info_t *ti = type_info[i];
         flecs_table_grow_column(world, column, ti, to_add, size, true);
         ecs_assert(columns[i].size == size, ECS_INTERNAL_ERROR, NULL);
+        flecs_run_add_hooks(world, table, ti, column, e, table->type.array[i], 
+            cur_count, to_add, false);
     }
 
     /* Add elements to each switch column */
@@ -4303,11 +4303,11 @@ int32_t flecs_table_appendn(
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     flecs_table_check_sanity(table);
-
     int32_t cur_count = flecs_table_data_count(data);
     int32_t result = flecs_table_grow_data(
         world, table, data, to_add, cur_count + to_add, ids);
     flecs_table_check_sanity(table);
+
     return result;
 }
 

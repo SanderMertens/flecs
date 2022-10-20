@@ -94,6 +94,130 @@ void comp_move(
     memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
+/* Position */
+
+static int ctor_position = 0;
+static
+ECS_CTOR(Position, ptr, {
+    ptr->x = 0;
+    ptr->y = 0;
+    ctor_position ++;
+})
+
+static int dtor_position = 0;
+static
+ECS_DTOR(Position, ptr, {
+    dtor_position ++;
+})
+
+static int copy_position = 0;
+static
+ECS_COPY(Position, dst, src, {
+    copy_position ++;
+})
+
+static int move_position = 0;
+static
+ECS_MOVE(Position, dst, src, {
+    move_position ++;
+})
+
+static int on_add_position = 0;
+
+static void ecs_on_add(Position)(ecs_iter_t *it) {
+    test_assert(it->count >= 1);
+    test_assert(it->event == EcsOnAdd);
+
+    Position *p = ecs_field(it, Position, 1);
+    for (int i = 0; i < it->count; i ++) {
+        on_add_position ++;
+        test_int(p[i].x, 0);
+        test_int(p[i].y, 0);
+    }
+}
+
+static void on_add_position_emplace(ecs_iter_t *it) {
+    on_add_position += it->count;
+}
+
+/* Velocity */
+
+static int ctor_velocity = 0;
+static
+ECS_CTOR(Velocity, ptr, {
+    ctor_velocity ++;
+})
+
+static int dtor_velocity = 0;
+static
+ECS_DTOR(Velocity, ptr, {
+    dtor_velocity ++;
+})
+
+static int copy_velocity = 0;
+static
+ECS_COPY(Velocity, dst, src, {
+    copy_velocity ++;
+})
+
+static int move_velocity = 0;
+static
+ECS_MOVE(Velocity, dst, src, {
+    move_velocity ++;
+})
+
+/* Mass */
+
+static int ctor_mass = 0;
+static
+ECS_CTOR(Mass, ptr, {
+    ctor_mass ++;
+})
+
+static int dtor_mass = 0;
+static
+ECS_DTOR(Mass, ptr, {
+    dtor_mass ++;
+})
+
+static int copy_mass = 0;
+static
+ECS_COPY(Mass, dst, src, {
+    copy_mass ++;
+})
+
+static int move_mass = 0;
+static
+ECS_MOVE(Mass, dst, src, {
+    move_mass ++;
+})
+
+/* Rotation */
+
+static int ctor_rotation = 0;
+static
+ECS_CTOR(Rotation, ptr, {
+    ctor_rotation ++;
+})
+
+static int dtor_rotation = 0;
+static
+ECS_DTOR(Rotation, ptr, {
+    dtor_rotation ++;
+})
+
+static int copy_rotation = 0;
+static
+ECS_COPY(Rotation, dst, src, {
+    copy_rotation ++;
+})
+
+static int move_rotation = 0;
+static
+ECS_MOVE(Rotation, dst, src, {
+    move_rotation ++;
+})
+
 void ComponentLifecycle_ctor_on_add() {
     ecs_world_t *world = ecs_mini();
 
@@ -508,130 +632,6 @@ void ComponentLifecycle_move_on_tag() {
     ecs_fini(world);
 }
 
-/* Position */
-
-static int ctor_position = 0;
-static
-ECS_CTOR(Position, ptr, {
-    ptr->x = 0;
-    ptr->y = 0;
-    ctor_position ++;
-})
-
-static int dtor_position = 0;
-static
-ECS_DTOR(Position, ptr, {
-    dtor_position ++;
-})
-
-static int copy_position = 0;
-static
-ECS_COPY(Position, dst, src, {
-    copy_position ++;
-})
-
-static int move_position = 0;
-static
-ECS_MOVE(Position, dst, src, {
-    move_position ++;
-})
-
-static int on_add_position = 0;
-
-static void ecs_on_add(Position)(ecs_iter_t *it) {
-    test_assert(it->count >= 1);
-    test_assert(it->event == EcsOnAdd);
-
-    Position *p = ecs_field(it, Position, 1);
-    for (int i = 0; i < it->count; i ++) {
-        on_add_position ++;
-        test_int(p[i].x, 0);
-        test_int(p[i].y, 0);
-    }
-}
-
-static void on_add_position_emplace(ecs_iter_t *it) {
-    on_add_position += it->count;
-}
-
-/* Velocity */
-
-static int ctor_velocity = 0;
-static
-ECS_CTOR(Velocity, ptr, {
-    ctor_velocity ++;
-})
-
-static int dtor_velocity = 0;
-static
-ECS_DTOR(Velocity, ptr, {
-    dtor_velocity ++;
-})
-
-static int copy_velocity = 0;
-static
-ECS_COPY(Velocity, dst, src, {
-    copy_velocity ++;
-})
-
-static int move_velocity = 0;
-static
-ECS_MOVE(Velocity, dst, src, {
-    move_velocity ++;
-})
-
-/* Mass */
-
-static int ctor_mass = 0;
-static
-ECS_CTOR(Mass, ptr, {
-    ctor_mass ++;
-})
-
-static int dtor_mass = 0;
-static
-ECS_DTOR(Mass, ptr, {
-    dtor_mass ++;
-})
-
-static int copy_mass = 0;
-static
-ECS_COPY(Mass, dst, src, {
-    copy_mass ++;
-})
-
-static int move_mass = 0;
-static
-ECS_MOVE(Mass, dst, src, {
-    move_mass ++;
-})
-
-/* Rotation */
-
-static int ctor_rotation = 0;
-static
-ECS_CTOR(Rotation, ptr, {
-    ctor_rotation ++;
-})
-
-static int dtor_rotation = 0;
-static
-ECS_DTOR(Rotation, ptr, {
-    dtor_rotation ++;
-})
-
-static int copy_rotation = 0;
-static
-ECS_COPY(Rotation, dst, src, {
-    copy_rotation ++;
-})
-
-static int move_rotation = 0;
-static
-ECS_MOVE(Rotation, dst, src, {
-    move_rotation ++;
-})
-
 void ComponentLifecycle_merge_to_different_table() {
     ecs_world_t *world = ecs_mini();
     
@@ -1006,10 +1006,26 @@ void ComponentLifecycle_move_on_bulk_new() {
 
     ctx = (cl_ctx){ { 0 } };
 
-    /* Trigger realloc & move */
     ecs_bulk_new(world, Position, 1000);
     test_assert(ctx.ctor.invoked != 0);
     test_assert(ctx.move.invoked != 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_add_on_bulk_new() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = ecs_on_add(Position)
+    });
+
+    ecs_bulk_new(world, Position, 1000);
+    test_int(ctor_position, 1000);
+    test_int(on_add_position, 1000);
 
     ecs_fini(world);
 }

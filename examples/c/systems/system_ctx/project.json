@@ -6,5 +6,10 @@
             "flecs"
         ],
         "public": false
+    },
+    "lang.c": {
+        "${os linux}": {
+            "lib": ["m"]
+        }
     }
 }

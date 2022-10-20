@@ -1,5 +1,4 @@
 #include <time_interval.h>
-#include <basics.h>
 #include <stdio.h>
 
 // This example shows how to run a system at a specified time interval.

@@ -764,6 +764,7 @@ void ComponentLifecycle_ctor_on_add_pair_tag(void);
 void ComponentLifecycle_ctor_on_move_pair(void);
 void ComponentLifecycle_move_on_realloc(void);
 void ComponentLifecycle_move_on_bulk_new(void);
+void ComponentLifecycle_on_add_on_bulk_new(void);
 void ComponentLifecycle_move_on_delete(void);
 void ComponentLifecycle_move_dtor_on_delete(void);
 void ComponentLifecycle_copy_on_override_pair(void);
@@ -5112,6 +5113,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_on_bulk_new",
         ComponentLifecycle_move_on_bulk_new
+    },
+    {
+        "on_add_on_bulk_new",
+        ComponentLifecycle_on_add_on_bulk_new
     },
     {
         "move_on_delete",
@@ -11009,7 +11014,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        75,
+        76,
         ComponentLifecycle_testcases
     },
     {

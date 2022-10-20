@@ -16,8 +16,12 @@ typedef struct {
     double value;
 } Radius;
 
-double distance(const Position *p1, const Position *p2) {
-    return sqrt(pow(p2->x - p1->x, 2) + pow(p2->y - p1->y, 2));
+double sqr(double value) {
+    return value * value;
+}
+
+double distance_sqr(const Position *p1, const Position *p2) {
+    return sqr(p2->x - p1->x) + sqr(p2->y - p1->y);
 }
 
 void Collide(ecs_iter_t *it) {
@@ -47,11 +51,10 @@ void Collide(ecs_iter_t *it) {
                 }
 
                 // Check for collision
-                double d = distance(&p1[i], &p2[j]);
-                double r = r1[i].value + r2[j].value;
-                if (r > d) {
-                    printf("%u (r: %.0f) and %u (r: %.0f) collided! (d = %.2f)\n",
-                        (uint32_t)e1, r1[i].value, (uint32_t)e2, r2[j].value, d);
+                double d_sqr = distance_sqr(&p1[i], &p2[j]);
+                double r_sqr = sqr(r1[i].value + r2[j].value);
+                if (r_sqr > d_sqr) {
+                    printf("%u and %u collided!\n", (uint32_t)e1, (uint32_t)e2);
                 }
             }
         }
@@ -96,8 +99,8 @@ int main(int argc, char *argv[]) {
     return ecs_fini(ecs);
 
     // Output
-    //  508 (r: 6) and 505 (r: 4) collided! (d = 9.22)
-    //  510 (r: 10) and 508 (r: 6) collided! (d = 14.32)
-    //  513 (r: 10) and 506 (r: 3) collided! (d = 3.61)
-    //  514 (r: 6) and 512 (r: 8) collided! (d = 11.40)
+    //  508 and 505 collided!
+    //  510 and 508 collided!
+    //  513 and 506 collided!
+    //  514 and 512 collided!
 }

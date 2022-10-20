@@ -1,6 +1,5 @@
 #include <system_ctx.h>
 #include <iostream>
-#include <math.h>
 
 // Applications can pass context data to a system. A common use case where this
 // comes in handy is when a system needs to iterate more than one query. The
@@ -15,8 +14,12 @@ struct Radius {
     double value;
 };
 
-double distance(const Position& p1, const Position& p2) {
-    return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
+double sqr(double value) {
+    return value * value;
+}
+
+double distance_sqr(const Position& p1, const Position& p2) {
+    return sqr(p2.x - p1.x) + sqr(p2.y - p1.y);
 }
 
 double randd(int max) {
@@ -33,10 +36,10 @@ int main(int, char *[]) {
     auto sys = ecs.system<const Position, const Radius>("Collide")
         .ctx(&q_collide)
         .each([](flecs::iter& it, size_t i, const Position& p1, const Radius& r1) {
-            CollisionQuery *q_collide = it.ctx<CollisionQuery>();
+            CollisionQuery *q = it.ctx<CollisionQuery>();
             flecs::entity e1 = it.entity(i);
 
-            q_collide->each([&](flecs::entity e2, const Position& p2, const Radius& r2) {
+            q->each([&](flecs::entity e2, const Position& p2, const Radius& r2) {
                 if (e1 == e2) {
                     // don't collide with self
                     return;
@@ -49,12 +52,10 @@ int main(int, char *[]) {
                 }
 
                 // Check for collision
-                double d = distance(p1, p2);
-                double r = r1.value + r2.value;
-                if (r > d) {
-                    std::cout << e1 << " (r: " << r1.value << ") and " 
-                        << e2 << " (r: " << r2.value << ") collided! "
-                        << "(d = " << d << "\n";
+                double d_sqr = distance_sqr(p1, p2);
+                double r_sqr = sqr(r1.value + r2.value);
+                if (r_sqr > d_sqr) {
+                    std::cout << e1 << " and " << e2 << " collided!\n";
                 }
             });
         });
@@ -70,8 +71,8 @@ int main(int, char *[]) {
     sys.run();
 
     // Output
-    //  526 (r: 4) and 529 (r: 6) collided! (d = 9.21954
-    //  527 (r: 3) and 534 (r: 10) collided! (d = 3.60555
-    //  529 (r: 6) and 531 (r: 10) collided! (d = 14.3178
-    //  533 (r: 8) and 535 (r: 6) collided! (d = 11.4018
+    //  526 and 529 collided!
+    //  527 and 534 collided!
+    //  529 and 531 collided!
+    //  533 and 535 collided!
 }
