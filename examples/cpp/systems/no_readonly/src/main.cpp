@@ -13,7 +13,9 @@ int main(int, char *[]) {
         .term<Plate>(flecs::Wildcard).not_()
         .build();
 
-    // System that assigns plates to waiter
+    // System that assigns plates to waiter. By making this system no_readonly
+    // plate assignments are assigned directly (not deferred) to waiters, which 
+    // ensures that we won't assign plates to the same waiter more than once.
     ecs.system("AssignPlate")
         .term<Plate>()
         .term<Waiter>(flecs::Wildcard).not_()

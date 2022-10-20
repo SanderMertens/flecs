@@ -4412,8 +4412,6 @@ void Trigger_on_set_self_superset_from_child_of_prefab() {
 }
 
 void Trigger_on_set_self_from_child_base_of_prefab() {
-    test_quarantine("15 May 2022");
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

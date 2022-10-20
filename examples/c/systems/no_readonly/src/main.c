@@ -17,7 +17,9 @@
 ECS_DECLARE(Waiter);
 ECS_DECLARE(Plate);
 
-// System that assigns plates to waiter
+// System that assigns plates to waiter. By making this system no_readonly
+// plate assignments are assigned directly (not deferred) to waiters, which 
+// ensures that we won't assign plates to the same waiter more than once.
 void AssignPlate(ecs_iter_t *it) {
     ecs_world_t *ecs = it->world;
     ecs_query_t *q_waiter = it->ctx; // Get query from system context
