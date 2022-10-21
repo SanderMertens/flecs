@@ -141,10 +141,16 @@
                 "search_first_lvl_1",
                 "search_first_lvl_2",
                 "search_first_lvl_3",
+                "search_relation_wildcard",
                 "search_relation_at_offset",
+                "search_relation_inherit_from_parent",
                 "search_relation_dont_inherit",
                 "search_relation_dont_inherit_from_parent",
-                "search_relation_exclusive"
+                "search_relation_exclusive",
+                "search_relation_exclusive_from_parent",
+                "search_relation_union",
+                "search_relation_union_wildcard",
+                "search_relation_union_pair"
             ]
         }, {
             "id": "Event",
@@ -1090,8 +1096,17 @@
                 "filter_iter_cascade_childof",
                 "filter_iter_superset_2_rel_instances",
                 "filter_iter_superset_2_rel_instances_match_2nd",
+                "filter_iter_superset_2_levels",
+                "filter_iter_superset_only_w_owned",
+                "filter_iter_superset_after_add",
+                "filter_iter_superset_after_remove",
+                "filter_iter_superset_after_clear",
+                "filter_iter_superset_after_delete",
                 "filter_iter_2_terms_superset_2_rel_instances",
                 "filter_iter_2_terms_superset_2_rel_instances_match_2nd",
+                "filter_iter_superset_parent_w_isa",
+                "filter_iter_superset_isa_after_remove_parent",
+                "filter_iter_superset_isa_create_table_after_iter",
                 "filter_w_10_terms",
                 "filter_w_10_terms_move",
                 "filter_w_10_terms_copy",
@@ -1170,6 +1185,8 @@
                 "set_this_to_superset_w_self_filter_no_match",
                 "set_this_to_isa_cascade",
                 "set_this_to_childof_cascade",
+                "set_this_w_wildcard_2_matches",
+                "set_this_to_entity_superset_self_has_component",
                 "oneof",
                 "oneof_expr",
                 "oneof_w_mismatching_obj",
@@ -1665,7 +1682,8 @@
                "on_set_superset_after_filter_observer",
                "on_set_superset_after_filter_observer_w_on_add",
                "on_set_superset_after_filter_observer_w_on_add_isa_after_set",
-               "on_set_superset_after_filter_observer_w_on_add_2"
+               "on_set_superset_after_filter_observer_w_on_add_2",
+               "propagate_w_union_pair"
            ]
         }, {
             "id": "Observer",

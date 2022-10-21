@@ -1241,7 +1241,7 @@ void flecs_query_sort_tables(
                 ecs_table_t *storage_table = table->storage_table;
                 if (storage_table) {
                     column = ecs_search(world, storage_table, 
-                        order_by_component, NULL);
+                        order_by_component, 0);
                 }
 
                 if (column == -1) {

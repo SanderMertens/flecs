@@ -132,10 +132,16 @@ void Search_search_first_lvl_0(void);
 void Search_search_first_lvl_1(void);
 void Search_search_first_lvl_2(void);
 void Search_search_first_lvl_3(void);
+void Search_search_relation_wildcard(void);
 void Search_search_relation_at_offset(void);
+void Search_search_relation_inherit_from_parent(void);
 void Search_search_relation_dont_inherit(void);
 void Search_search_relation_dont_inherit_from_parent(void);
 void Search_search_relation_exclusive(void);
+void Search_search_relation_exclusive_from_parent(void);
+void Search_search_relation_union(void);
+void Search_search_relation_union_wildcard(void);
+void Search_search_relation_union_pair(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -1033,8 +1039,17 @@ void Filter_filter_iter_cascade_isa(void);
 void Filter_filter_iter_cascade_childof(void);
 void Filter_filter_iter_superset_2_rel_instances(void);
 void Filter_filter_iter_superset_2_rel_instances_match_2nd(void);
+void Filter_filter_iter_superset_2_levels(void);
+void Filter_filter_iter_superset_only_w_owned(void);
+void Filter_filter_iter_superset_after_add(void);
+void Filter_filter_iter_superset_after_remove(void);
+void Filter_filter_iter_superset_after_clear(void);
+void Filter_filter_iter_superset_after_delete(void);
 void Filter_filter_iter_2_terms_superset_2_rel_instances(void);
 void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd(void);
+void Filter_filter_iter_superset_parent_w_isa(void);
+void Filter_filter_iter_superset_isa_after_remove_parent(void);
+void Filter_filter_iter_superset_isa_create_table_after_iter(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
 void Filter_filter_w_10_terms_copy(void);
@@ -1113,6 +1128,8 @@ void Filter_set_this_to_childof_superset_match(void);
 void Filter_set_this_to_superset_w_self_filter_no_match(void);
 void Filter_set_this_to_isa_cascade(void);
 void Filter_set_this_to_childof_cascade(void);
+void Filter_set_this_w_wildcard_2_matches(void);
+void Filter_set_this_to_entity_superset_self_has_component(void);
 void Filter_oneof(void);
 void Filter_oneof_expr(void);
 void Filter_oneof_w_mismatching_obj(void);
@@ -1599,6 +1616,7 @@ void Trigger_on_set_superset_after_filter_observer(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
+void Trigger_propagate_w_union_pair(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -2720,8 +2738,16 @@ bake_test_case Search_testcases[] = {
         Search_search_first_lvl_3
     },
     {
+        "search_relation_wildcard",
+        Search_search_relation_wildcard
+    },
+    {
         "search_relation_at_offset",
         Search_search_relation_at_offset
+    },
+    {
+        "search_relation_inherit_from_parent",
+        Search_search_relation_inherit_from_parent
     },
     {
         "search_relation_dont_inherit",
@@ -2734,6 +2760,22 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_exclusive",
         Search_search_relation_exclusive
+    },
+    {
+        "search_relation_exclusive_from_parent",
+        Search_search_relation_exclusive_from_parent
+    },
+    {
+        "search_relation_union",
+        Search_search_relation_union
+    },
+    {
+        "search_relation_union_wildcard",
+        Search_search_relation_union_wildcard
+    },
+    {
+        "search_relation_union_pair",
+        Search_search_relation_union_pair
     }
 };
 
@@ -6176,12 +6218,48 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_superset_2_rel_instances_match_2nd
     },
     {
+        "filter_iter_superset_2_levels",
+        Filter_filter_iter_superset_2_levels
+    },
+    {
+        "filter_iter_superset_only_w_owned",
+        Filter_filter_iter_superset_only_w_owned
+    },
+    {
+        "filter_iter_superset_after_add",
+        Filter_filter_iter_superset_after_add
+    },
+    {
+        "filter_iter_superset_after_remove",
+        Filter_filter_iter_superset_after_remove
+    },
+    {
+        "filter_iter_superset_after_clear",
+        Filter_filter_iter_superset_after_clear
+    },
+    {
+        "filter_iter_superset_after_delete",
+        Filter_filter_iter_superset_after_delete
+    },
+    {
         "filter_iter_2_terms_superset_2_rel_instances",
         Filter_filter_iter_2_terms_superset_2_rel_instances
     },
     {
         "filter_iter_2_terms_superset_2_rel_instances_match_2nd",
         Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd
+    },
+    {
+        "filter_iter_superset_parent_w_isa",
+        Filter_filter_iter_superset_parent_w_isa
+    },
+    {
+        "filter_iter_superset_isa_after_remove_parent",
+        Filter_filter_iter_superset_isa_after_remove_parent
+    },
+    {
+        "filter_iter_superset_isa_create_table_after_iter",
+        Filter_filter_iter_superset_isa_create_table_after_iter
     },
     {
         "filter_w_10_terms",
@@ -6494,6 +6572,14 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_to_childof_cascade",
         Filter_set_this_to_childof_cascade
+    },
+    {
+        "set_this_w_wildcard_2_matches",
+        Filter_set_this_w_wildcard_2_matches
+    },
+    {
+        "set_this_to_entity_superset_self_has_component",
+        Filter_set_this_to_entity_superset_self_has_component
     },
     {
         "oneof",
@@ -8413,6 +8499,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_superset_after_filter_observer_w_on_add_2",
         Trigger_on_set_superset_after_filter_observer_w_on_add_2
+    },
+    {
+        "propagate_w_union_pair",
+        Trigger_propagate_w_union_pair
     }
 };
 
@@ -10867,7 +10957,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        18,
+        24,
         Search_testcases
     },
     {
@@ -11035,7 +11125,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        234,
+        245,
         Filter_testcases
     },
     {
@@ -11070,7 +11160,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        116,
+        117,
         Trigger_testcases
     },
     {
