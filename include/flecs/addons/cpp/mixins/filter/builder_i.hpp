@@ -97,9 +97,20 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    Base& term(entity_t r, const char *o) {
+        this->term();
+        *this->m_term = flecs::term(r).second(o).move();
+        return *this;
+    }
+
     template<typename First>
     Base& term(id_t o) {
         return this->term(_::cpp_type<First>::id(this->world_v()), o);
+    }
+
+    template<typename First>
+    Base& term(const char *second) {
+        return this->term(_::cpp_type<First>::id(this->world_v())).second(second);
     }
 
     template<typename First, typename Second>

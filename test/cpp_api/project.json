@@ -711,7 +711,9 @@
                 "get_first_direct",
                 "var_src_w_prefixed_name",
                 "var_first_w_prefixed_name",
-                "var_second_w_prefixed_name"
+                "var_second_w_prefixed_name",
+                "term_w_second_var_string",
+                "term_type_w_second_var_string"
             ]
         }, {
             "id": "SystemBuilder",

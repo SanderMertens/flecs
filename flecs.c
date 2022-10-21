@@ -15055,7 +15055,6 @@ void flecs_stack_fini(
 }
 
 
-
 #ifdef FLECS_LOG
 
 #include <ctype.h>

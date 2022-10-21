@@ -684,6 +684,8 @@ void RuleBuilder_get_first_direct(void);
 void RuleBuilder_var_src_w_prefixed_name(void);
 void RuleBuilder_var_first_w_prefixed_name(void);
 void RuleBuilder_var_second_w_prefixed_name(void);
+void RuleBuilder_term_w_second_var_string(void);
+void RuleBuilder_term_type_w_second_var_string(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -3687,6 +3689,14 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "var_second_w_prefixed_name",
         RuleBuilder_var_second_w_prefixed_name
+    },
+    {
+        "term_w_second_var_string",
+        RuleBuilder_term_w_second_var_string
+    },
+    {
+        "term_type_w_second_var_string",
+        RuleBuilder_term_type_w_second_var_string
     }
 };
 
@@ -5121,7 +5131,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        21,
+        23,
         RuleBuilder_testcases
     },
     {

@@ -606,3 +606,53 @@ void RuleBuilder_var_second_w_prefixed_name() {
 
     r.destruct();
 }
+
+void RuleBuilder_term_w_second_var_string() {
+    flecs::world ecs;
+
+    flecs::entity Foo = ecs.entity();
+
+    auto r = ecs.rule_builder()
+        .term(Foo, "$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add(Foo, t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void RuleBuilder_term_type_w_second_var_string() {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.rule_builder()
+        .term<Foo>("$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add<Foo>(t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
