@@ -39,8 +39,8 @@ int main(int, char *[]) {
         //
         // By replacing * with _Food, both terms are constrained to use the
         // same entity.
-        .term<Eats>().second().var("Food")
-        .term<Healthy>().src().var("Food")
+        .term<Eats>("$Food")
+        .term<Healthy>().src("$Food")
         .build();
     
     // Lookup the index of the variable. This will let us quickly lookup its

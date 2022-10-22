@@ -47,8 +47,8 @@ int main(int, char *[]) {
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
     auto friends = ecs.rule_builder()
-        .term<Likes>().src().var("X").second().var("Y")
-        .term<Likes>().src().var("Y").second().var("X")
+        .term<Likes>("$Y").src("$X")
+        .term<Likes>("$X").src("$Y")
         .build();
 
     int x_var = friends.find_var("X");

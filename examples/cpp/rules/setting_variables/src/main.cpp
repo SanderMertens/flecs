@@ -71,8 +71,8 @@ int main(int, char *[]) {
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
     auto r = ecs.rule_builder<RangedUnit>()
-        .term<Platoon>().second().var("Platoon")
-        .term<Player>().src().var("Platoon").second().var("Player")
+        .term<Platoon>().second("$Platoon")
+        .term<Player>("$Player").src("$Platoon")
         .build();
 
     // If we would iterate this rule it would return all ranged units for all
