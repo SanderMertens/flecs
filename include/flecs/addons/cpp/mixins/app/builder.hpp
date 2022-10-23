@@ -57,7 +57,12 @@ struct app_builder {
 
     int run() {
         int result = ecs_app_run(m_world, &m_desc);
-        ecs_fini(m_world); // app takes ownership of world
+        if (ecs_should_quit(m_world)) {
+            // Only free world if quit flag is set. This ensures that we won't
+            // try to cleanup the world if the app is used in an environment 
+            // that takes over the main loop, like with emscripten.
+            ecs_fini(m_world);
+        }
         return result;
     }
 

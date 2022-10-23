@@ -18,24 +18,30 @@ typedef struct ecs_allocator_t {
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
 } ecs_allocator_t;
 
+FLECS_API
 void flecs_allocator_init(
     ecs_allocator_t *a);
 
+FLECS_API
 void flecs_allocator_fini(
     ecs_allocator_t *a);
 
+FLECS_API
 ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     ecs_size_t size);
 
+FLECS_API
 char* flecs_strdup(
     ecs_allocator_t *a, 
     const char* str);
 
+FLECS_API
 void flecs_strfree(
     ecs_allocator_t *a, 
     char* str);
 
+FLECS_API
 void* flecs_dup(
     ecs_allocator_t *a,
     ecs_size_t size,

@@ -1541,7 +1541,7 @@ typedef struct ecs_block_allocator_t {
     int32_t alloc_count;
 } ecs_block_allocator_t;
 
-FLECS_DBG_API
+FLECS_API
 void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
     ecs_size_t size);
@@ -1551,38 +1551,38 @@ void flecs_ballocator_init(
 #define flecs_ballocator_init_n(ba, T, count)\
     flecs_ballocator_init(ba, ECS_SIZEOF(T) * count)
 
-FLECS_DBG_API
+FLECS_API
 ecs_block_allocator_t* flecs_ballocator_new(
     ecs_size_t size);
 
-FLECS_DBG_API
+FLECS_API
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba);
 
-FLECS_DBG_API
+FLECS_API
 void flecs_ballocator_free(
     ecs_block_allocator_t *ba);
 
-FLECS_DBG_API
+FLECS_API
 void* flecs_balloc(
     ecs_block_allocator_t *allocator);
 
-FLECS_DBG_API
+FLECS_API
 void* flecs_bcalloc(
     ecs_block_allocator_t *allocator);
 
-FLECS_DBG_API
+FLECS_API
 void flecs_bfree(
     ecs_block_allocator_t *allocator, 
     void *memory);
 
-FLECS_DBG_API
+FLECS_API
 void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
     void *memory);
 
-FLECS_DBG_API
+FLECS_API
 void* flecs_bdup(
     ecs_block_allocator_t *ba, 
     void *memory);
@@ -1894,24 +1894,30 @@ typedef struct ecs_allocator_t {
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
 } ecs_allocator_t;
 
+FLECS_API
 void flecs_allocator_init(
     ecs_allocator_t *a);
 
+FLECS_API
 void flecs_allocator_fini(
     ecs_allocator_t *a);
 
+FLECS_API
 ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     ecs_size_t size);
 
+FLECS_API
 char* flecs_strdup(
     ecs_allocator_t *a, 
     const char* str);
 
+FLECS_API
 void flecs_strfree(
     ecs_allocator_t *a, 
     char* str);
 
+FLECS_API
 void* flecs_dup(
     ecs_allocator_t *a,
     ecs_size_t size,
@@ -15691,7 +15697,12 @@ struct app_builder {
 
     int run() {
         int result = ecs_app_run(m_world, &m_desc);
-        ecs_fini(m_world); // app takes ownership of world
+        if (ecs_should_quit(m_world)) {
+            // Only free world if quit flag is set. This ensures that we won't
+            // try to cleanup the world if the app is used in an environment 
+            // that takes over the main loop, like with emscripten.
+            ecs_fini(m_world);
+        }
         return result;
     }
 
@@ -23744,7 +23755,7 @@ namespace flecs {
 
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
-    ecs_trace("import %s", _::type_name<T>());
+    ecs_trace("#[magenta]import#[reset] %s", _::type_name<T>());
     ecs_log_push();
 
     ecs_entity_t scope = ecs_set_scope(world, 0);

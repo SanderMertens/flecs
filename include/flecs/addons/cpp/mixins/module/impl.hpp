@@ -4,7 +4,7 @@ namespace flecs {
 
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
-    ecs_trace("import %s", _::type_name<T>());
+    ecs_trace("#[magenta]import#[reset] %s", _::type_name<T>());
     ecs_log_push();
 
     ecs_entity_t scope = ecs_set_scope(world, 0);
