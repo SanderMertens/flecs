@@ -1,0 +1,10 @@
+{
+    "id": "fwd_declare_component",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
