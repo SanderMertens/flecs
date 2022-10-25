@@ -3197,6 +3197,61 @@ void Observer_on_add_after_batch_w_exclusive_adds() {
     ecs_fini(world);
 }
 
+void Observer_propagate_match_relationship_w_self_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagB, .src.flags = EcsSelf|EcsUp }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_add(world, parent, TagA);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, parent, TagB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], parent);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagB);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_match_relationship_w_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagB, .src.flags = EcsUp }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_add(world, parent, TagA);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, parent, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     
@@ -3666,6 +3721,37 @@ void Observer_cache_test_7() {
 
     ecs_add_id(world, e3, ecs_pair(EcsChildOf, e1));
     test_int(ctx_1.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_cache_test_8() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagB }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_add(world, parent, TagA);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_new_w_pair(world, EcsChildOf, child);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, parent, TagB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], parent);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagB);
+    test_int(ctx.event, EcsOnAdd);
 
     ecs_fini(world);
 }

@@ -1762,13 +1762,16 @@
                 "multi_observer_w_ctx_free",
                 "propagate_after_on_delete_clear_action",
                 "on_add_after_batch_w_exclusive_adds",
+                "propagate_match_relationship_w_self_up",
+                "propagate_match_relationship_w_up",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
                 "cache_test_4",
                 "cache_test_5",
                 "cache_test_6",
-                "cache_test_7"
+                "cache_test_7",
+                "cache_test_8"
             ]                
         }, {
             "id": "ObserverOnSet",

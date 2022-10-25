@@ -309,11 +309,18 @@ void flecs_uni_observer_invoke(
     ecs_world_t *world,
     ecs_observer_t *observer,
     ecs_iter_t *it,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_entity_t trav)
 {
     ecs_filter_t *filter = &observer->filter;
     ecs_term_t *term = &filter->terms[0];
     if (flecs_ignore_observer(world, observer, table)) {
+        return;
+    }
+
+    ecs_assert(trav == 0 || it->sources[0] != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (trav && term->src.trav != trav) {
         return;
     }
 
@@ -351,13 +358,14 @@ void flecs_observers_invoke(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_entity_t trav)
 {
     if (ecs_map_is_initialized(observers)) {
         ecs_map_iter_t oit = ecs_map_iter(observers);
         ecs_observer_t *o;
         while ((o = ecs_map_next_ptr(&oit, ecs_observer_t*, NULL))) {
-            flecs_uni_observer_invoke(world, o, it, table);
+            flecs_uni_observer_invoke(world, o, it, table, trav);
         }
     }
 }

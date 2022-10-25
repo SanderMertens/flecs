@@ -69,6 +69,7 @@ void flecs_observers_invoke(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
-    ecs_table_t *table);
+    ecs_table_t *table,
+    ecs_entity_t trav);
 
 #endif
