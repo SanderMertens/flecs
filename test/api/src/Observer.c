@@ -3755,3 +3755,51 @@ void Observer_cache_test_8() {
 
     ecs_fini(world);
 }
+
+void Observer_cache_test_9() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_id(Position), .src.flags = EcsUp }},
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t base_2 = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base_2, EcsIsA, base);
+    ecs_set(world, base_2, Position, {20, 30});
+
+    ecs_entity_t base_3 = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base_3, EcsIsA, base);
+    ecs_set(world, base_3, Position, {40, 50});
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_2);
+    ecs_add_pair(world, inst, EcsIsA, base_3);
+
+    ecs_clear(world, base_2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base_2);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_clear(world, base_3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base_3);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}

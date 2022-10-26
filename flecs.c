@@ -7140,16 +7140,16 @@ void ecs_clear(
 
     ecs_table_t *table = r->table;
     if (table) {
-        if (r->row & EcsEntityObservedAcyclic) {
-            flecs_table_observer_add(table, -1);
-        }
-
         ecs_table_diff_t diff = {
             .removed = table->type
         };
 
         flecs_delete_entity(world, r, &diff);
         r->table = NULL;
+
+        if (r->row & EcsEntityObservedAcyclic) {
+            flecs_table_observer_add(table, -1);
+        }
     }    
 
     flecs_defer_end(world, stage);
@@ -41607,9 +41607,10 @@ repeat_event:
 
             ecs_id_record_t *idr_t = record->idr;
             if (idr_t) {
-                /* Event is used as target in acyclic relationship, propagate */
+                /* Entity is used as target in acyclic pairs, propagate */
                 ecs_entity_t e = entities[r];
                 it.sources[0] = e;
+
                 flecs_emit_propagate(world, &it, idr, idr_t, iders, ider_count);
             }
         }

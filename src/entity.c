@@ -1911,16 +1911,16 @@ void ecs_clear(
 
     ecs_table_t *table = r->table;
     if (table) {
-        if (r->row & EcsEntityObservedAcyclic) {
-            flecs_table_observer_add(table, -1);
-        }
-
         ecs_table_diff_t diff = {
             .removed = table->type
         };
 
         flecs_delete_entity(world, r, &diff);
         r->table = NULL;
+
+        if (r->row & EcsEntityObservedAcyclic) {
+            flecs_table_observer_add(table, -1);
+        }
     }    
 
     flecs_defer_end(world, stage);

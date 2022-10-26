@@ -1703,6 +1703,7 @@ void Observer_cache_test_5(void);
 void Observer_cache_test_6(void);
 void Observer_cache_test_7(void);
 void Observer_cache_test_8(void);
+void Observer_cache_test_9(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -8845,6 +8846,10 @@ bake_test_case Observer_testcases[] = {
     {
         "cache_test_8",
         Observer_cache_test_8
+    },
+    {
+        "cache_test_9",
+        Observer_cache_test_9
     }
 };
 
@@ -11182,7 +11187,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        84,
+        85,
         Observer_testcases
     },
     {

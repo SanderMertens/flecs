@@ -1275,9 +1275,10 @@ repeat_event:
 
             ecs_id_record_t *idr_t = record->idr;
             if (idr_t) {
-                /* Event is used as target in acyclic relationship, propagate */
+                /* Entity is used as target in acyclic pairs, propagate */
                 ecs_entity_t e = entities[r];
                 it.sources[0] = e;
+
                 flecs_emit_propagate(world, &it, idr, idr_t, iders, ider_count);
             }
         }
