@@ -41,8 +41,30 @@
 #endif
 #endif
 
+#if defined(__clang__)
+#define ECS_TARGET_CLANG
+#endif
+
 #if defined(__GNUC__)
 #define ECS_TARGET_GNU
+#endif
+
+/* Map between clang and apple clang versions, as version 13 has a difference in
+ * the format of __PRETTY_FUNCTION__ which enum reflection depends on. */
+#if defined(__clang__)
+    #if defined(__APPLE__)
+        #if __clang_major__ == 13
+            #if __clang_minor__ < 1
+                #define ECS_CLANG_VERSION 12
+            #else
+                #define ECS_CLANG_VERSION 13
+            #endif
+        #else
+            #define ECS_CLANG_VERSION __clang_major__
+        #endif
+    #else
+        #define ECS_CLANG_VERSION __clang_major__
+    #endif
 #endif
 
 /* Standard library dependencies */
