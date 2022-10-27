@@ -8,6 +8,10 @@
 
 #include <cpp_api.h>
 
+// Testsuite 'PrettyFunction'
+void PrettyFunction_component(void);
+void PrettyFunction_enum(void);
+
 // Testsuite 'Entity'
 void Entity_new(void);
 void Entity_new_named(void);
@@ -1043,6 +1047,17 @@ void Doc_set_name(void);
 void Doc_set_link(void);
 void Doc_set_color(void);
 void Doc_get_name_no_doc_name(void);
+
+bake_test_case PrettyFunction_testcases[] = {
+    {
+        "component",
+        PrettyFunction_component
+    },
+    {
+        "enum",
+        PrettyFunction_enum
+    }
+};
 
 bake_test_case Entity_testcases[] = {
     {
@@ -5051,6 +5066,13 @@ bake_test_case Doc_testcases[] = {
 
 static bake_test_suite suites[] = {
     {
+        "PrettyFunction",
+        NULL,
+        NULL,
+        2,
+        PrettyFunction_testcases
+    },
+    {
         "Entity",
         NULL,
         NULL,
@@ -5242,5 +5264,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 27);
+    return bake_test_run("cpp_api", argc, argv, suites, 28);
 }

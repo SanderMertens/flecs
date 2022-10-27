@@ -5,7 +5,7 @@ on: [ push, pull_request ]
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
 
@@ -24,7 +24,7 @@ jobs:
 
   build-macos:
     runs-on: macOS-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
 
@@ -43,7 +43,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
 
@@ -64,7 +64,7 @@ jobs:
   build-configs:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -79,6 +79,8 @@ jobs:
             cxx: g++-10
           - cc: gcc-11
             cxx: g++-11
+          - cc: gcc-12
+            cxx: g++-12
           - cc: clang-8
             cxx: clang++-8
           - cc: clang-9
@@ -133,7 +135,7 @@ jobs:
   build-configs-windows:
     needs: [build-windows]
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
 
@@ -160,7 +162,7 @@ jobs:
       - name: build examples (release)
         run: bake/bake examples --strict --cfg debug
 
-  test-unix:
+  test-c-unix:
     needs: [build-linux, build-macos]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -171,6 +173,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: compiler version
+        run: |
+          gcc --version
+          clang --version
+
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -191,6 +199,105 @@ jobs:
 
       - name: test collections
         run: bake run test/collections -- -j 8
+
+  test-cpp-unix:
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          # Currently not supported for C++ API, as enum reflection doesn't work
+          # - cc: gcc-7
+          #   cxx: g++-7
+          # - cc: gcc-8
+          #   cxx: g++-8
+          - cc: gcc-9
+            cxx: g++-9
+          - cc: gcc-10
+            cxx: g++-10
+          - cc: gcc-11
+            cxx: g++-11
+          - cc: gcc-12
+            cxx: g++-12
+          - cc: clang-8
+            cxx: clang++-8
+          - cc: clang-9
+            cxx: clang++-9
+          - cc: clang-10
+            cxx: clang++-10
+          - cc: clang-11
+            cxx: clang++-11
+          - cc: clang-12
+            cxx: clang++-12
+
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.compiler.cc }}
+          sudo apt-get install -y ${{ matrix.compiler.cxx }}
+
+      - name: compiler version
+        run: |
+          ${{ matrix.compiler.cc }} --version
+          ${{ matrix.compiler.cxx }} --version
+
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: test c++
+        run: bake run test/cpp_api -- -j 8
+
+  test-cpp-macos-11:
+    needs: [build-macos]
+    runs-on: ${{ matrix.os.version }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: 
+          - { version: macOS-11, xcode: '11.7' }
+          - { version: macOS-11, xcode: '12.4' }
+          - { version: macOS-12, xcode: '13.1' }
+          - { version: macOS-12, xcode: '14.0' }
+
+    env:
+      CC: clang
+      CXX: clang++
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.os.xcode }}
+
+      - name: compiler version
+        run: |
+          clang --version
+
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
 
       - name: test c++
         run: bake run test/cpp_api -- -j 8
@@ -263,12 +370,10 @@ jobs:
 
   analyze-sanitized-api:
     needs: build-macos
-    runs-on: ${{ matrix.os }}
+    runs-on: macOS-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        os: [ macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -287,12 +392,10 @@ jobs:
 
   analyze-sanitized-addons:
     needs: build-macos
-    runs-on: ${{ matrix.os }}
+    runs-on: macOS-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        os: [ macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -311,12 +414,10 @@ jobs:
 
   analyze-sanitized-meta:
     needs: build-macos
-    runs-on: ${{ matrix.os }}
+    runs-on: macOS-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        os: [ macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -335,12 +436,10 @@ jobs:
 
   analyze-sanitized-collections:
     needs: build-macos
-    runs-on: ${{ matrix.os }}
+    runs-on: macOS-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        os: [ macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -359,12 +458,10 @@ jobs:
 
   analyze-sanitized-cpp_api:
     needs: build-macos
-    runs-on: ${{ matrix.os }}
+    runs-on: macOS-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        os: [ macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -422,7 +519,7 @@ jobs:
 
   buildsystem-meson:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     strategy:
       fail-fast: false
 
@@ -445,7 +542,7 @@ jobs:
   flecs-custom-builds:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -581,7 +678,7 @@ jobs:
 
   flecs-amalgamated:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
