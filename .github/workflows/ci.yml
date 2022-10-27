@@ -79,8 +79,6 @@ jobs:
             cxx: g++-10
           - cc: gcc-11
             cxx: g++-11
-          - cc: gcc-12
-            cxx: g++-12
           - cc: clang-8
             cxx: clang++-8
           - cc: clang-9
@@ -219,8 +217,6 @@ jobs:
             cxx: g++-10
           - cc: gcc-11
             cxx: g++-11
-          - cc: gcc-12
-            cxx: g++-12
           - cc: clang-8
             cxx: clang++-8
           - cc: clang-9
@@ -262,7 +258,7 @@ jobs:
       - name: test c++
         run: bake run test/cpp_api -- -j 8
 
-  test-cpp-macos-11:
+  test-cpp-macos:
     needs: [build-macos]
     runs-on: ${{ matrix.os.version }}
     timeout-minutes: 30
