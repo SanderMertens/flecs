@@ -13,6 +13,12 @@
     },
     "test": {
         "testsuites": [{
+            "id": "PrettyFunction",
+            "testcases": [
+                "component",
+                "enum"
+            ]
+        }, {
             "id": "Entity",
             "testcases": [
                 "new",
