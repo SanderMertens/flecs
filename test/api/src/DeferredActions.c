@@ -2676,3 +2676,70 @@ void DeferredActions_defer_cmd_after_modified() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_remove_after_emplace_different_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+
+    ecs_defer_begin(world);
+    Position *p = ecs_emplace(world, e, Position);
+    p->x = 10;
+    p->y = 20;
+    ecs_remove(world, e, Tag);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Tag));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_remove_after_set_and_emplace_different_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+
+    ecs_defer_begin(world);
+    Position *p = ecs_emplace(world, e, Position);
+    p->x = 10;
+    p->y = 20;
+    ecs_set(world, e, Velocity, {1, 2});
+    ecs_remove(world, e, Tag);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(world, e, Tag));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

@@ -2206,7 +2206,9 @@
                 "add_2_in_observer_while_on_remove_for_delete_recycled_id",
                 "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
                 "defer_add_after_clear",
-                "defer_cmd_after_modified"
+                "defer_cmd_after_modified",
+                "defer_remove_after_emplace_different_id",
+                "defer_remove_after_set_and_emplace_different_id"
             ]
         }, {
             "id": "SingleThreadStaging",

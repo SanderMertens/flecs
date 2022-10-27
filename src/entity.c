@@ -4027,12 +4027,12 @@ void flecs_cmd_batch_for_entity(
         case EcsOpSet:
         case EcsOpMut:
             table = flecs_find_table_add(world, table, id, diff);
-            /* fallthrough */
+            world->info.cmd.batched_command_count ++;
+            has_set = true;
+            break;
         case EcsOpEmplace:
             /* Don't add for emplace, as this requires a special call to ensure
              * the constructor is not invoked for the component */
-            has_set = true;
-            world->info.cmd.batched_command_count ++;
             break;
         case EcsOpRemove:
             table = flecs_find_table_remove(world, table, id, diff);
@@ -4073,8 +4073,7 @@ void flecs_cmd_batch_for_entity(
             }
             switch(cmd->kind) {
             case EcsOpSet:
-            case EcsOpMut:
-            case EcsOpEmplace: {
+            case EcsOpMut: {
                 ecs_id_record_t *idr = cmd->idr;
                 if (!idr) {
                     idr = flecs_id_record_get(world, cmd->id);
