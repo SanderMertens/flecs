@@ -1,0 +1,30 @@
+
+# MSVC+Bazel can't stand for the header at the root, so we have to use the amalgamated one
+cc_library(
+    name = "flecs",
+    visibility = ["//visibility:public"],
+
+    srcs = ["flecs.c"],
+    hdrs = ["flecs.h"],
+)
+
+# In theory this is the correct build rule (if it was named `:flecs`)
+cc_library(
+    name = "flecs-broken",
+
+    srcs = glob(["src/**/*.h*", "src/**/*.c*", "src/**/*.inl"]),
+    hdrs = glob(["include/**/*.h*"]),
+    includes = ["include"],
+    strip_include_prefix = "include",
+
+    # because the MSVC include path generator is just wrong
+    # see gh: https://github.com/bazelbuild/bazel/issues/8706#issuecomment-985133244
+    features = select({
+        "@bazel_tools//src/conditions:windows": ["-include_paths"],
+        "//conditions:default": [],
+    }),
+    copts = select({
+        "@bazel_tools//src/conditions:windows": ["/Iinclude"],
+        "//conditions:default": [],
+    }),
+)
