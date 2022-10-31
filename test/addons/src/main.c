@@ -862,6 +862,10 @@ void MultiThread_fini_after_set_threads(void);
 void MultiThread_2_threads_single_threaded_system(void);
 void MultiThread_no_staging_w_multithread(void);
 void MultiThread_multithread_w_monitor_addon(void);
+void MultiThread_get_ctx(void);
+void MultiThread_get_binding_ctx(void);
+void MultiThread_get_ctx_w_run(void);
+void MultiThread_get_binding_ctx_w_run(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -4249,6 +4253,22 @@ bake_test_case MultiThread_testcases[] = {
     {
         "multithread_w_monitor_addon",
         MultiThread_multithread_w_monitor_addon
+    },
+    {
+        "get_ctx",
+        MultiThread_get_ctx
+    },
+    {
+        "get_binding_ctx",
+        MultiThread_get_binding_ctx
+    },
+    {
+        "get_ctx_w_run",
+        MultiThread_get_ctx_w_run
+    },
+    {
+        "get_binding_ctx_w_run",
+        MultiThread_get_binding_ctx_w_run
     }
 };
 
@@ -4681,7 +4701,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        42,
+        46,
         MultiThread_testcases
     },
     {

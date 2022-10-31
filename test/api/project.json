@@ -1458,7 +1458,11 @@
                 "page_iter_w_only_tag",
                 "worker_iter_w_only_tag",
                 "page_iter_w_inout_none",
-                "worker_iter_w_inout_none"
+                "worker_iter_w_inout_none",
+                "page_iter_w_ctx",
+                "page_iter_w_binding_ctx",
+                "worker_iter_w_ctx",
+                "worker_iter_w_binding_ctx"
             ]
         }, {
             "id": "Pairs",

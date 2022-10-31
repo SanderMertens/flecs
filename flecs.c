@@ -31744,6 +31744,14 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
 
+    qit.system = system;
+    qit.delta_time = delta_time;
+    qit.delta_system_time = time_elapsed;
+    qit.frame_offset = offset;
+    qit.param = param;
+    qit.ctx = system_data->ctx;
+    qit.binding_ctx = system_data->binding_ctx;
+
     flecs_defer_begin(world, stage);
 
     if (offset || limit) {
@@ -31755,14 +31763,6 @@ ecs_entity_t ecs_run_intern(
         wit = ecs_worker_iter(it, stage_index, stage_count);
         it = &wit;
     }
-
-    qit.system = system;
-    qit.delta_time = delta_time;
-    qit.delta_system_time = time_elapsed;
-    qit.frame_offset = offset;
-    qit.param = param;
-    qit.ctx = system_data->ctx;
-    qit.binding_ctx = system_data->binding_ctx;
 
     ecs_iter_action_t action = system_data->action;
     it->callback = action;
@@ -51451,18 +51451,15 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
-    return (ecs_iter_t){
-        .real_world = it->real_world,
-        .world = it->world,
-        .priv.iter.worker = {
-            .index = index,
-            .count = count
-        },
-        .next = ecs_worker_next,
-        .chain_it = (ecs_iter_t*)it,
-        .flags = it->flags & EcsIterIsInstanced
+    ecs_iter_t result = *it;
+    result.priv.iter.worker = (ecs_worker_iter_t){
+        .index = index,
+        .count = count
     };
+    result.next = ecs_worker_next;
+    result.chain_it = (ecs_iter_t*)it;
 
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }

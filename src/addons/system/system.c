@@ -80,6 +80,14 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
 
+    qit.system = system;
+    qit.delta_time = delta_time;
+    qit.delta_system_time = time_elapsed;
+    qit.frame_offset = offset;
+    qit.param = param;
+    qit.ctx = system_data->ctx;
+    qit.binding_ctx = system_data->binding_ctx;
+
     flecs_defer_begin(world, stage);
 
     if (offset || limit) {
@@ -91,14 +99,6 @@ ecs_entity_t ecs_run_intern(
         wit = ecs_worker_iter(it, stage_index, stage_count);
         it = &wit;
     }
-
-    qit.system = system;
-    qit.delta_time = delta_time;
-    qit.delta_system_time = time_elapsed;
-    qit.frame_offset = offset;
-    qit.param = param;
-    qit.ctx = system_data->ctx;
-    qit.binding_ctx = system_data->binding_ctx;
 
     ecs_iter_action_t action = system_data->action;
     it->callback = action;

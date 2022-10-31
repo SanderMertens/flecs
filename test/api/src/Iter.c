@@ -1836,3 +1836,111 @@ void Iter_worker_iter_w_inout_none() {
 
     ecs_fini(world);
 }
+
+void Iter_page_iter_w_ctx() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagA  }}
+    });
+    
+    ecs_new(world, TagA);
+
+    int ctx;
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    it.ctx = &ctx;
+
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 1);
+    test_assert(pit.ctx == &ctx);
+
+    test_assert(ecs_page_next(&pit));
+    test_assert(!ecs_page_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_binding_ctx() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagA  }}
+    });
+    
+    ecs_new(world, TagA);
+
+    int ctx;
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    it.binding_ctx = &ctx;
+
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 1);
+    test_assert(pit.binding_ctx == &ctx);
+
+    test_assert(ecs_page_next(&pit));
+    test_assert(!ecs_page_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_ctx() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagA  }}
+    });
+    
+    ecs_new(world, TagA);
+
+    int ctx;
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    it.ctx = &ctx;
+
+    ecs_iter_t pit = ecs_worker_iter(&it, 0, 2);
+    test_assert(pit.ctx == &ctx);
+
+    test_assert(ecs_worker_next(&pit));
+    test_assert(!ecs_worker_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_binding_ctx() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagA  }}
+    });
+    
+    ecs_new(world, TagA);
+
+    int ctx;
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    it.binding_ctx = &ctx;
+
+    ecs_iter_t pit = ecs_worker_iter(&it, 0, 2);
+    test_assert(pit.binding_ctx == &ctx);
+
+    test_assert(ecs_worker_next(&pit));
+    test_assert(!ecs_worker_next(&pit));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}

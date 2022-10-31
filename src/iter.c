@@ -1063,18 +1063,15 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
-    return (ecs_iter_t){
-        .real_world = it->real_world,
-        .world = it->world,
-        .priv.iter.worker = {
-            .index = index,
-            .count = count
-        },
-        .next = ecs_worker_next,
-        .chain_it = (ecs_iter_t*)it,
-        .flags = it->flags & EcsIterIsInstanced
+    ecs_iter_t result = *it;
+    result.priv.iter.worker = (ecs_worker_iter_t){
+        .index = index,
+        .count = count
     };
+    result.next = ecs_worker_next;
+    result.chain_it = (ecs_iter_t*)it;
 
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }

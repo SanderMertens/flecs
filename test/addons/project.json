@@ -902,7 +902,11 @@
                 "fini_after_set_threads",
                 "2_threads_single_threaded_system",
                 "no_staging_w_multithread",
-                "multithread_w_monitor_addon"
+                "multithread_w_monitor_addon",
+                "get_ctx",
+                "get_binding_ctx",
+                "get_ctx_w_run",
+                "get_binding_ctx_w_run"
             ]
         }, {
             "id": "MultiThreadStaging",

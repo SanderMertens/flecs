@@ -1396,6 +1396,10 @@ void Iter_page_iter_w_only_tag(void);
 void Iter_worker_iter_w_only_tag(void);
 void Iter_page_iter_w_inout_none(void);
 void Iter_worker_iter_w_inout_none(void);
+void Iter_page_iter_w_ctx(void);
+void Iter_page_iter_w_binding_ctx(void);
+void Iter_worker_iter_w_ctx(void);
+void Iter_worker_iter_w_binding_ctx(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -7635,6 +7639,22 @@ bake_test_case Iter_testcases[] = {
     {
         "worker_iter_w_inout_none",
         Iter_worker_iter_w_inout_none
+    },
+    {
+        "page_iter_w_ctx",
+        Iter_page_iter_w_ctx
+    },
+    {
+        "page_iter_w_binding_ctx",
+        Iter_page_iter_w_binding_ctx
+    },
+    {
+        "worker_iter_w_ctx",
+        Iter_worker_iter_w_ctx
+    },
+    {
+        "worker_iter_w_binding_ctx",
+        Iter_worker_iter_w_binding_ctx
     }
 };
 
@@ -11176,7 +11196,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        32,
+        36,
         Iter_testcases
     },
     {

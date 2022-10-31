@@ -1127,3 +1127,95 @@ void MultiThread_multithread_w_monitor_addon() {
     /* Make sure monitor could be run in multithreaded mode */
     test_assert(true);
 }
+
+static int system_ctx = 0;
+
+void System_w_ctx(ecs_iter_t *it) {
+    test_assert(it->ctx == &system_ctx);
+    test_assert(it->system != 0);
+    test_assert(it->delta_time != 0);
+    system_ctx ++;
+}
+
+void System_w_binding_ctx(ecs_iter_t *it) {
+    test_assert(it->binding_ctx == &system_ctx);
+    test_assert(it->system != 0);
+    test_assert(it->delta_time != 0);
+    system_ctx ++;
+}
+
+void MultiThread_get_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .callback = System_w_ctx,
+        .multi_threaded = true,
+        .ctx = &system_ctx
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(system_ctx != 0);
+
+    ecs_fini(world);
+}
+
+void MultiThread_get_binding_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .callback = System_w_binding_ctx,
+        .multi_threaded = true,
+        .binding_ctx = &system_ctx
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(system_ctx != 0);
+
+    ecs_fini(world);
+}
+
+void MultiThread_get_ctx_w_run() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .run = System_w_ctx,
+        .multi_threaded = true,
+        .ctx = &system_ctx
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(system_ctx != 0);
+
+    ecs_fini(world);
+}
+
+void MultiThread_get_binding_ctx_w_run() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .run = System_w_binding_ctx,
+        .multi_threaded = true,
+        .binding_ctx = &system_ctx
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(system_ctx != 0);
+
+    ecs_fini(world);
+}
