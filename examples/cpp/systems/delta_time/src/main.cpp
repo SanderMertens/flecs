@@ -7,7 +7,7 @@ int main(int, char *[]) {
     // Create system that prints delta_time. This system doesn't query for any
     // components which means it won't match any entities, but will still be ran
     // once for each call to ecs_progress.
-    ecs.system<>()
+    ecs.system()
         .iter([](flecs::iter& it) {
             std::cout << "delta_time: " << it.delta_time() << std::endl;
         });

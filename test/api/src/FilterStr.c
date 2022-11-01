@@ -411,3 +411,28 @@ void FilterStr_one_term_w_first_var_entity_src() {
 
     ecs_fini(world);
 }
+
+void FilterStr_one_term_w_pair_w_0_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            { .first.id = Rel, .second.id = Tgt, .src = {
+                .id = 0, .flags = EcsIsEntity
+            } }
+        }
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "Rel(0,Tgt)");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

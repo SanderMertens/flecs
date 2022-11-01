@@ -1,4 +1,4 @@
-#include <ad_hoc_query.h>
+#include <world_query.h>
 #include <iostream>
 
 struct Position { 

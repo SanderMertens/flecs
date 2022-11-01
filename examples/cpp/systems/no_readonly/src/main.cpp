@@ -30,8 +30,8 @@ int main(int, char *[]) {
     // plate assignments are assigned directly (not deferred) to waiters, which 
     // ensures that we won't assign plates to the same waiter more than once.
     ecs.system("AssignPlate")
-        .term<Plate>()
-        .term<Waiter>(flecs::Wildcard).not_()
+        .with<Plate>()
+        .without<Waiter>(flecs::Wildcard)
         .no_readonly()
         .iter([&](flecs::iter& it) {
             for (auto i : it) {

@@ -1161,6 +1161,7 @@ void FilterStr_one_term_w_src_var(void);
 void FilterStr_one_term_w_first_var(void);
 void FilterStr_one_term_w_second_var(void);
 void FilterStr_one_term_w_first_var_entity_src(void);
+void FilterStr_one_term_w_pair_w_0_entity(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -6709,6 +6710,10 @@ bake_test_case FilterStr_testcases[] = {
     {
         "one_term_w_first_var_entity_src",
         FilterStr_one_term_w_first_var_entity_src
+    },
+    {
+        "one_term_w_pair_w_0_entity",
+        FilterStr_one_term_w_pair_w_0_entity
     }
 };
 
@@ -11182,7 +11187,7 @@ static bake_test_suite suites[] = {
         "FilterStr",
         NULL,
         NULL,
-        19,
+        20,
         FilterStr_testcases
     },
     {

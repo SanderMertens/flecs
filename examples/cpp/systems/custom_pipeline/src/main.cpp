@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
     // pipeline does not require the use of phases (see custom_phases) or of the
     // DependsOn relationship.
     flecs::entity pipeline = ecs.pipeline()
-        .term(flecs::System) // Mandatory, must always match systems
-        .term<Physics>()
+        .with(flecs::System) // Mandatory, must always match systems
+        .with<Physics>()
         .build();
 
     // Configure the world to use the custom pipeline

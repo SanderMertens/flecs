@@ -42926,7 +42926,13 @@ void term_str_w_strbuf(
 
     if (!subj_set) {
         filter_str_add_id(world, buf, &term->first, false, def_first_mask);
-        ecs_strbuf_appendlit(buf, "()");
+        if (!obj_set) {
+            ecs_strbuf_appendlit(buf, "()");
+        } else {
+            ecs_strbuf_appendlit(buf, "(0,");
+            filter_str_add_id(world, buf, &term->second, false, def_second_mask);
+            ecs_strbuf_appendlit(buf, ")");
+        }
     } else if (ecs_term_match_this(term) && 
         (src->flags & EcsTraverseFlags) == def_src_mask)
     {

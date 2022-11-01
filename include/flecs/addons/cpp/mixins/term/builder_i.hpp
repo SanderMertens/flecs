@@ -269,7 +269,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         this->assert_term();
         m_term->inout = static_cast<ecs_inout_kind_t>(inout);
         if (m_term->oper != EcsNot) {
-            this->entity(0);
+            this->src().entity(0);
         }
         return *this;
     }

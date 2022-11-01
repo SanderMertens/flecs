@@ -26,8 +26,8 @@ int main(int, char *[]) {
     // want to match entities with Position, we're not interested in reading or 
     // writing the component value.
     ecs.system("SetVelocity")
-        .term<Position>().inout_none()
-        .term<Velocity>().write() // Velocity is written, but shouldn't be matched
+        .with<Position>().inout_none()
+        .write<Velocity>() // Velocity is written, but shouldn't be matched
         .each([](flecs::entity e) {
             e.set<Velocity>({1, 2});
         });

@@ -1219,7 +1219,8 @@
                 "one_term_w_src_var",
                 "one_term_w_first_var",
                 "one_term_w_second_var",
-                "one_term_w_first_var_entity_src"
+                "one_term_w_first_var_entity_src",
+                "one_term_w_pair_w_0_entity"
             ]
         }, {
             "id": "Query",

@@ -22383,7 +22383,7 @@ struct term_builder_i : term_id_builder_i<Base> {
         this->assert_term();
         m_term->inout = static_cast<ecs_inout_kind_t>(inout);
         if (m_term->oper != EcsNot) {
-            this->entity(0);
+            this->src().entity(0);
         }
         return *this;
     }
@@ -22525,6 +22525,11 @@ namespace flecs {
 
 // Class that describes a term
 struct term final : term_builder_i<term> {
+    term()
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(nullptr) { value.move = true; }
+
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})
@@ -22768,6 +22773,82 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /* With/without shorthand notation. */
+
+    template <typename ... Args>
+    Base& with(Args&&... args) {
+        return this->term(FLECS_FWD(args)...);
+    }
+
+    template <typename T, typename ... Args>
+    Base& with(Args&&... args) {
+        return this->term<T>(FLECS_FWD(args)...);
+    }
+
+    template <typename First, typename Second>
+    Base& with() {
+        return this->term<First, Second>();
+    }
+
+    template <typename ... Args>
+    Base& without(Args&&... args) {
+        return this->term(FLECS_FWD(args)...).not_();
+    }
+
+    template <typename T, typename ... Args>
+    Base& without(Args&&... args) {
+        return this->term<T>(FLECS_FWD(args)...).not_();
+    }
+
+    template <typename First, typename Second>
+    Base& without() {
+        return this->term<First, Second>().not_();
+    }
+
+    /* Write/read shorthand notation */
+
+    Base& write() {
+        term_builder_i<Base>::write();
+        return *this;
+    }
+
+    template <typename ... Args>
+    Base& write(Args&&... args) {
+        return this->term(FLECS_FWD(args)...).write();
+    }
+
+    template <typename T, typename ... Args>
+    Base& write(Args&&... args) {
+        return this->term<T>(FLECS_FWD(args)...).write();
+    }
+
+    template <typename First, typename Second>
+    Base& write() {
+        return this->term<First, Second>().write();
+    }
+
+    Base& read() {
+        term_builder_i<Base>::read();
+        return *this;
+    }
+
+    template <typename ... Args>
+    Base& read(Args&&... args) {
+        return this->term(FLECS_FWD(args)...).read();
+    }
+
+    template <typename T, typename ... Args>
+    Base& read(Args&&... args) {
+        return this->term<T>(FLECS_FWD(args)...).read();
+    }
+
+    template <typename First, typename Second>
+    Base& read() {
+        return this->term<First, Second>().read();
+    }
+
+    /* Term notation for more complex query features */
+
     Base& term() {
         if (this->m_term) {
             ecs_check(ecs_term_is_initialized(this->m_term), 
@@ -22828,6 +22909,18 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term(id_t id) {
         this->term();
         *this->m_term = flecs::term(id).move();
+        return *this;
+    }
+
+    Base& term(const char *name) {
+        this->term();
+        *this->m_term = flecs::term().first(name).move();
+        return *this;
+    }
+
+    Base& term(const char *first, const char *second) {
+        this->term();
+        *this->m_term = flecs::term().first(first).second(second).move();
         return *this;
     }
 

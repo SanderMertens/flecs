@@ -1,8 +1,8 @@
-#ifndef AD_HOC_QUERY_H
-#define AD_HOC_QUERY_H
+#ifndef WORLD_QUERY_H
+#define WORLD_QUERY_H
 
 /* This generated file contains includes for project dependencies */
-#include "ad_hoc_query/bake_config.h"
+#include "world_query/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -29,7 +29,7 @@ int main(int, char *[]) {
 
     // Create a query that writes the component based on a Dirty state.
     auto q_write = ecs.query_builder<const Dirty, Position>()
-        .arg(1).up()         // Only match Dirty from prefab
+        .term_at(1).up()     // Only match Dirty from prefab
         .instanced()         // Instanced iteration is faster (see example)
         .build();
 

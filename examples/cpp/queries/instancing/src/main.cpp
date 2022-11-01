@@ -41,7 +41,7 @@ int main(int, char *[]) {
     // Create a query for Position, Velocity. We'll create a few entities that
     // have Velocity as owned and shared component.
     auto q = ecs.query_builder<Position, const Velocity>()
-        .arg(1).self()           // Position must always be owned by the entity
+        .term_at(1).self()       // Position must always be owned by the entity
         .instanced()             // create instanced query
         .build();
 

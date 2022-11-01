@@ -36,7 +36,7 @@ int main(int, char *[]) {
     // component could be written by the system. Position itself is added as 
     // const, since inside the system we're only reading it.
     ecs.system<const Position>("DeleteEntity")
-        .term(flecs::Wildcard).write()
+        .write(flecs::Wildcard)
         .each([](flecs::entity e, const Position& p) {
             if (p.x >= 3) {
                 std::cout << "Delete entity " << e.name() << "\n";

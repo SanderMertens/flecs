@@ -4,6 +4,10 @@ struct Other {
     int32_t value;
 };
 
+enum Color {
+    Red, Green, Blue
+};
+
 void FilterBuilder_builder_assign_same_type() {
     flecs::world ecs;
 
@@ -1760,4 +1764,729 @@ void FilterBuilder_iter_column_w_const_deref() {
     });
 
     test_int(count, 2);
+}
+
+void FilterBuilder_with_id() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with(ecs.id<Position>())
+            .with(ecs.id<Velocity>())
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_name() {
+    flecs::world ecs;
+
+    ecs.component<Velocity>();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with("Velocity")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_component() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with<Velocity>()
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_pair_id() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with(Likes, Apples)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Likes, Apples);
+    ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_pair_name() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with("Likes", "Apples")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Likes, Apples);
+    ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_pair_components() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with<Likes, Apples>()
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes, Apples>();
+    ecs.entity().add<Position>().add<Likes, Pears>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_pair_component_id() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with<Likes>(Apples)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes>(Apples);
+    ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_pair_component_name() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with<Likes>("Apples")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes>(Apples);
+    ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_with_enum() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .with(Green)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Green);
+    ecs.entity().add<Position>().add(Red);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_id() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with(ecs.id<Position>())
+            .without(ecs.id<Velocity>())
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_name() {
+    flecs::world ecs;
+
+    ecs.component<Velocity>();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with(ecs.id<Position>())
+            .without("Velocity")
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_component() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without<Velocity>()
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_pair_id() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without(Likes, Apples)
+            .build();
+
+    ecs.entity().add<Position>().add(Likes, Apples);
+    auto e2 = ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_pair_name() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without("Likes", "Apples")
+            .build();
+
+    ecs.entity().add<Position>().add(Likes, Apples);
+    auto e2 = ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_pair_components() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without<Likes, Apples>()
+            .build();
+
+    ecs.entity().add<Position>().add<Likes, Apples>();
+    auto e2 = ecs.entity().add<Position>().add<Likes, Pears>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_pair_component_id() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without<Likes>(Apples)
+            .build();
+
+    ecs.entity().add<Position>().add<Likes>(Apples);
+    auto e2 = ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_pair_component_name() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without<Likes>("Apples")
+            .build();
+
+    ecs.entity().add<Position>().add<Likes>(Apples);
+    auto e2 = ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_without_enum() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .without(Green)
+            .build();
+
+    ecs.entity().add<Position>().add(Green);
+    auto e2 = ecs.entity().add<Position>().add(Red);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void FilterBuilder_write_id() {
+    flecs::world ecs;
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write(ecs.id<Position>())
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_name() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write("Position")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_component() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write<Position>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_pair_id() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write(Likes, Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_pair_name() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write("Likes", "Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_pair_components() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write<Likes, Apples>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == ecs.id<Apples>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_pair_component_id() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write<Likes>(Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_pair_component_name() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write<Likes>("Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_write_enum() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .write(Green)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Color>());
+    test_assert(q.term(1).get_second() == ecs.to_entity<Color>(Green));
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_id() {
+    flecs::world ecs;
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read(ecs.id<Position>())
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_name() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read("Position")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_component() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read<Position>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_pair_id() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read(Likes, Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_pair_name() {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read("Likes", "Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_pair_components() {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read<Likes, Apples>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == ecs.id<Apples>());
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_pair_component_id() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read<Likes>(Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_pair_component_name() {
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read<Likes>("Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+
+    test_assert(q.term(1).get_src() == 0);
+}
+
+void FilterBuilder_read_enum() {
+    flecs::world ecs;
+
+    flecs::filter<> q = 
+        ecs.filter_builder()
+            .with<Position>()
+            .read(Green)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Color>());
+    test_assert(q.term(1).get_second() == ecs.to_entity<Color>(Green));
+    test_assert(q.term(1).get_src() == 0);
 }
