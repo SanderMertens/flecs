@@ -148,7 +148,7 @@ r.each([](Position& p, Velocity& v) {
 });
 ```
 
-For more information on thow each implementation performs, see [Query Performance](#query-performance).
+For more information on how each implementation performs, see [Query Performance](#query-performance).
 
 ## Query Creation
 This section explains how to create queries in the different language bindings and the flecs query DSL.
@@ -391,7 +391,7 @@ f.iter([](flecs::iter& it, Position *p, Velocity *v) {
 });
 ```
 
-The component arguments may be ommitted, and can be obtained from the iterator object:
+The component arguments may be omitted, and can be obtained from the iterator object:
 
 ```cpp
 auto f = world.filter<Position, const Velocity>();
@@ -489,7 +489,7 @@ Only entities `e2` and `e3` match the query `Position, Velocity`.
 
 The following sections describe how to create queries for components in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 
-#### Query Decsriptor (C)
+#### Query Descriptor (C)
 To query for a component in C, the `id` field of a term can be set:
 
 ```c
@@ -944,7 +944,7 @@ Access modifiers specify which components of a query can be read and/or written.
 
 Access modifiers can be used by API functions to ensure a component cannot be written, for example by requiring a component to be accessed with a `const` modifier. APIs may also infer access modifiers where possible, for example by using the `In` modifier for a query term with a type that has a `const` modifier.
 
-When using pipelines, the scheduler may use access modifiers to determine where sync points are inserted. This typically happens when a system acccess modifier indicates a system writing to a component not matched by the query (for example, by using `set`), and is followed by a system that reads that component.
+When using pipelines, the scheduler may use access modifiers to determine where sync points are inserted. This typically happens when a system access modifier indicates a system writing to a component not matched by the query (for example, by using `set`), and is followed by a system that reads that component.
 
 Access modifiers may also be used by serializers that serialize the output of an iterator (for example: `ecs_iter_to_json`). A serializer may for example decide to not serialize component values that have the `Out` or `None` modifiers.
 
@@ -1688,7 +1688,7 @@ By default queries traverse the `IsA` relationship if a component cannot be foun
 
 ```c
 ecs_entity_t base = ecs_new(world, Position);
-ecs_entity_t inst = ecs_new_w_pair(worl, EcsIsA, base); // Inherits Position
+ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base); // Inherits Position
 
 ecs_filter_t *f = ecs_filter(world, {
   .terms = {
@@ -2103,7 +2103,7 @@ f.iter([](flecs::iter& it, Position *p, Mass *v) {
 Note how the `it.is_self()` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
 
 ### Variables
-> *Partial suppport: filters, cached queries. Full support: rules*
+> *Partial support: filters, cached queries. Full support: rules*
 
 Query variables represent the state of a query while it is being evaluated. The most common form of state is "the entity (or table) against which the query is evaluated". While a query is evaluating an entity or table, it has to store it somewhere. In flecs, that "somewhere" is a query variable.
 
@@ -2380,7 +2380,7 @@ Query sorting works best for data that does not change often, as the sorting pro
 
 An application should also prevent having sorted queries with conflicting sorting requirements. This can cause scenarios in which both queries are invalidating each others ordering, which can result in a resort each time an iterator is created for one of the conflicting queries.
 
-Sorted queries are encouraged to mark the component used for sorting as `In`. If a sorted query has write access to the sorted component, iterating the query will invalidate its own order which can lead to continous resorting.
+Sorted queries are encouraged to mark the component used for sorting as `In`. If a sorted query has write access to the sorted component, iterating the query will invalidate its own order which can lead to continuous resorting.
 
 Components matched through [traversal](#relationship-traversal) can be used to sort entities. This often results in more efficient sorting as component values can be used to sort entire tables, and as a result tables themselves do not have to be sorted.
 
@@ -2407,7 +2407,7 @@ Position, Velocity | 3..4
 Position, Mass     | 5
 Position           | 6..7
 
-To minimize time spent on sorting, the results of a sort are cached. The performnace overhead of iterating an already sorted query is comparable to iterating a regular query, though for degenerate scenarios where a sort produces many slices for comparatively few tables the performance overhead can be significant.
+To minimize time spent on sorting, the results of a sort are cached. The performance overhead of iterating an already sorted query is comparable to iterating a regular query, though for degenerate scenarios where a sort produces many slices for comparatively few tables the performance overhead can be significant.
 
 The following sections show how to use sorting in the different language bindings. The code examples use cached queries, which is the only kind of query for which change detection is supported.
 
@@ -2785,7 +2785,7 @@ Return the city entities are in:
 ### Reflexive Relationships
 > *Supported by: rules*
 
-When a query matches a [relfexive](Relationships.md#reflexive-property) relationship, a query term will evaluate to true if the source and target are equal. Reflexivity can be defined as:
+When a query matches a [reflexive](Relationships.md#reflexive-property) relationship, a query term will evaluate to true if the source and target are equal. Reflexivity can be defined as:
 
 > R(X, X)
 
@@ -2941,7 +2941,7 @@ q.each([](Position& p, Velocity& v) {
 });
 ```
 
-The scenarios described so far are in the sweetspot of cached queries, where their performance is amongst the fastest of any ECS implementation. To build games that perform well however, it also helps to know when cached queries perform badly:
+The scenarios described so far are in the sweet spot of cached queries, where their performance is amongst the fastest of any ECS implementation. To build games that perform well however, it also helps to know when cached queries perform badly:
 
 - Cached queries do not perform well when they are repeatedly created and destroyed, or when they are only used a handful of times. The overhead of initializing the query cache and the cost of keeping it up to date would be many times higher than using a filter.
 
