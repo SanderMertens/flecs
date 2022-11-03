@@ -906,7 +906,8 @@
                 "get_ctx",
                 "get_binding_ctx",
                 "get_ctx_w_run",
-                "get_binding_ctx_w_run"
+                "get_binding_ctx_w_run",
+                "bulk_new_in_no_readonly_w_multithread"
             ]
         }, {
             "id": "MultiThreadStaging",

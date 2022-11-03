@@ -5,8 +5,8 @@
 #include "pipeline.h"
 
 static ECS_DTOR(EcsPipeline, ptr, {
-    ecs_vector_free(ptr->ops);
-    ecs_os_free(ptr->iters);
+    ecs_vector_free(ptr->state->ops);
+    ecs_os_free(ptr->state->iters);
 })
 
 typedef enum ecs_write_kind_t {
@@ -213,7 +213,7 @@ bool flecs_pipeline_check_terms(
 
 static
 bool flecs_pipeline_is_inactive(
-    const EcsPipeline *pq,
+    const ecs_pipeline_state_t *pq,
     ecs_table_t *table)
 {
     return flecs_id_record_get_table(pq->idr_inactive, table) != NULL;
@@ -235,11 +235,8 @@ EcsPoly* flecs_pipeline_term_system(
 static
 bool flecs_pipeline_build(
     ecs_world_t *world,
-    ecs_entity_t pipeline,
-    EcsPipeline *pq)
+    ecs_pipeline_state_t *pq)
 {
-    (void)pipeline;
-
     ecs_iter_t it = ecs_query_iter(world, pq->query);
     ecs_iter_fini(&it);
 
@@ -429,8 +426,8 @@ bool flecs_pipeline_build(
     return true;
 }
 
-void ecs_pipeline_fini_iter(
-    EcsPipeline *pq)
+void flecs_pipeline_fini_iter(
+    ecs_pipeline_state_t *pq)
 {
     int32_t i, iter_count = pq->iter_count;
     for (i = 0; i < iter_count; i ++) {
@@ -438,14 +435,14 @@ void ecs_pipeline_fini_iter(
     }
 }
 
-void ecs_pipeline_reset_iter(
+void flecs_pipeline_reset_iter(
     ecs_world_t *world,
-    EcsPipeline *pq)
+    ecs_pipeline_state_t *pq)
 {
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t i, ran_since_merge = 0, op_index = 0, iter_count = pq->iter_count;
 
-    ecs_pipeline_fini_iter(pq);
+    flecs_pipeline_fini_iter(pq);
 
     if (!pq->last_system) {
         /* It's possible that all systems that were ran were removed entirely
@@ -497,14 +494,13 @@ void ecs_pipeline_reset_iter(
     ecs_abort(ECS_INTERNAL_ERROR, NULL);
 }
 
-bool ecs_pipeline_update(
+bool flecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline,
+    ecs_pipeline_state_t *pq,
     bool start_of_frame)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* If any entity mutations happened that could have affected query matching
      * notify appropriate queries so caches are up to date. This includes the
@@ -513,11 +509,10 @@ bool ecs_pipeline_update(
         ecs_run_aperiodic(world, 0);
     }
 
-    EcsPipeline *pq = ecs_get_mut(world, pipeline, EcsPipeline);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    bool rebuilt = flecs_pipeline_build(world, pipeline, pq);
+    bool rebuilt = flecs_pipeline_build(world, pq);
      if (start_of_frame) {
         /* Initialize iterators */
         int32_t i, count = pq->iter_count;
@@ -528,7 +523,7 @@ bool ecs_pipeline_update(
         pq->cur_op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     } else if (rebuilt) {
         /* If pipeline got updated and we were mid frame, reset iterators */
-        ecs_pipeline_reset_iter(world, pq);
+        flecs_pipeline_reset_iter(world, pq);
         return true;
     } else {
         pq->cur_op += 1;
@@ -542,13 +537,22 @@ void ecs_run_pipeline(
     ecs_entity_t pipeline,
     ecs_ftime_t delta_time)
 {
-    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
-
     if (!pipeline) {
         pipeline = world->pipeline;
     }
 
-    ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+    EcsPipeline *pq = (EcsPipeline*)ecs_get(world, pipeline, EcsPipeline);
+    flecs_run_pipeline(world, pq->state, delta_time);
+}
+
+void flecs_run_pipeline(
+    ecs_world_t *world,
+    ecs_pipeline_state_t *pq,
+    ecs_ftime_t delta_time)
+{
+    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* If the world is passed to ecs_run_pipeline, the function will take care
      * of staging, so the world should not be in staged mode when called. */
@@ -558,7 +562,7 @@ void ecs_run_pipeline(
 
         /* Forward to worker_progress. This function handles staging, threading
          * and synchronization across workers. */
-        ecs_workers_progress(world, pipeline, delta_time);
+        flecs_workers_progress(world, pq, delta_time);
         return;
 
     /* If a stage is passed, the function could be ran from a worker thread. In
@@ -569,11 +573,6 @@ void ecs_run_pipeline(
     }
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
-
-    EcsPipeline *pq = (EcsPipeline*)ecs_get(world, pipeline, EcsPipeline);
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
@@ -582,7 +581,7 @@ void ecs_run_pipeline(
     int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
     int32_t stage_count = ecs_get_stage_count(world);
 
-    ecs_worker_begin(stage->thread_ctx);
+    flecs_worker_begin(stage->thread_ctx);
 
     ecs_time_t st = {0};
     bool measure_time = false;
@@ -639,8 +638,7 @@ void ecs_run_pipeline(
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                bool rebuild = ecs_worker_sync(world, pq);
-                pq = (EcsPipeline*)ecs_get(world, pipeline, EcsPipeline);
+                bool rebuild = flecs_worker_sync(world, pq);
                 if (rebuild) {
                     i = pq->cur_i;
                     count = it->count;
@@ -663,7 +661,7 @@ done:
         world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
     }
 
-    ecs_worker_end(stage->thread_ctx);
+    flecs_worker_end(stage->thread_ctx);
 }
 
 bool ecs_progress(
@@ -704,7 +702,14 @@ void ecs_set_pipeline(
     ecs_check( ecs_get(world, pipeline, EcsPipeline) != NULL, 
         ECS_INVALID_PARAMETER, "not a pipeline");
 
+    int32_t thread_count = ecs_get_stage_count(world);
+    if (thread_count > 1) {
+        ecs_set_threads(world, 1);
+    }
     world->pipeline = pipeline;
+    if (thread_count > 1) {
+        ecs_set_threads(world, thread_count);
+    }
 error:
     return;
 }
@@ -746,11 +751,11 @@ ecs_entity_t ecs_pipeline_init(
     ecs_assert(query->filter.terms[0].id == EcsSystem,
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_set(world, result, EcsPipeline, {
-        .query = query,
-        .match_count = -1,
-        .idr_inactive = flecs_id_record_ensure(world, EcsEmpty)
-    });
+    ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
+    pq->query = query;
+    pq->match_count = -1;
+    pq->idr_inactive = flecs_id_record_ensure(world, EcsEmpty);
+    ecs_set(world, result, EcsPipeline, { pq });
 
     return result;
 }

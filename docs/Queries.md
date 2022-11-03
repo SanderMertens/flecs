@@ -236,7 +236,7 @@ Additional helper methods have been added to the C++ API to replace combinations
 | Term                   | Equivalent                   |
 |------------------------|------------------------------|
 | `.with<Component>()`   | `.term<Component>()`         |
-| `.without<Component>()`| `.term<Component>().not()`   |
+| `.without<Component>()`| `.term<Component>().not_()`  |
 | `.read<Component>()`   | `.term<Component>().read()`  |
 | `.write<Component>()`  | `.term<Component>().write()` |
 

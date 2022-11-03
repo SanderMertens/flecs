@@ -510,10 +510,12 @@ bool ecs_pipeline_stats_get(
     ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
-    const EcsPipeline *pq = ecs_get(world, pipeline, EcsPipeline);
-    if (!pq) {
+    const EcsPipeline *pqc = ecs_get(world, pipeline, EcsPipeline);
+    if (!pqc) {
         return false;
     }
+    ecs_pipeline_state_t *pq = pqc->state;
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t sys_count = 0, active_sys_count = 0;
 

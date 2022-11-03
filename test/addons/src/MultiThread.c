@@ -1,6 +1,7 @@
 #include <addons.h>
 
 static ECS_COMPONENT_DECLARE(Position);
+static ECS_DECLARE(Tag);
 
 void MultiThread_setup() {
     ecs_log_set_level(-3);
@@ -1216,6 +1217,43 @@ void MultiThread_get_binding_ctx_w_run() {
     ecs_progress(world, 0);
 
     test_assert(system_ctx != 0);
+
+    ecs_fini(world);
+}
+
+void sys(ecs_iter_t *it) { }
+
+void sys_bulk_init(ecs_iter_t *it) {
+    ecs_bulk_init(it->world, &(ecs_bulk_desc_t){
+        .count = 10,
+        .ids = {Tag}
+    });
+}
+
+void MultiThread_bulk_new_in_no_readonly_w_multithread() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Tag);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .no_readonly = true,
+        .callback = sys_bulk_init
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .multi_threaded = true,
+        .callback = sys
+    });
+
+    ecs_set_threads(world, 64);
+
+    for (int i = 0; i < 100; i ++) {
+        ecs_progress(world, 0);
+    }
+
+    test_int(ecs_count(world, Tag), 100 * 10);
 
     ecs_fini(world);
 }
