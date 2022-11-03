@@ -231,6 +231,15 @@ The following table provides an overview of the query types with the factory fun
 | Query  | `flecs::query`  | `world::query_builder`  |
 | Rule   | `flecs::rule`   | `world::rule_builder`   |
 
+Additional helper methods have been added to the C++ API to replace combinations of the `term` method with other methods. They are the following:
+
+| Term                   | Equivalent                   |
+|------------------------|------------------------------|
+| `.with<Component>()`   | `.term<Component>()`         |
+| `.without<Component>()`| `.term<Component>().not()`   |
+| `.read<Component>()`   | `.term<Component>().read()`  |
+| `.write<Component>()`  | `.term<Component>().write()` |
+
 ### Query DSL
 The query DSL (domain specific language) is a string format that can represent a query. The query DSL is used by convenience macros in the C API like `ECS_SYSTEM` and `ECS_OBSERVER`, and makes it easier to create queries at runtime for tools like https://www.flecs.dev/explorer/. An example of a simple query in the DSL:
 
