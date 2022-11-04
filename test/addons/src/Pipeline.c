@@ -1,7 +1,7 @@
 #include <addons.h>
 
-void Pipeline_setup() {
-}
+static ECS_DECLARE(TagA);
+static ECS_DECLARE(TagB);
 
 static int sys_a_invoked;
 static int sys_b_invoked;
@@ -1553,9 +1553,6 @@ void Pipeline_no_staging_system_create_query() {
     ecs_fini(world);
 }
 
-ECS_DECLARE(TagA);
-ECS_DECLARE(TagB);
-
 static int set_singleton_invoked = 0;
 static int match_singleton_invoked = 0;
 static int match_all_invoked = 0;
@@ -2291,6 +2288,63 @@ void Pipeline_no_merge_after_from_nothing_w_default_inout() {
 
     test_int(sys_a_invoked, 1);
     test_int(sys_b_invoked, 0);
+
+    ecs_fini(world);
+}
+
+static int sys_add_tag_invoked = 0;
+static int sys_no_readonly_invoked = 0;
+
+static void sys_add_tag(ecs_iter_t *it) {
+  ecs_new(it->world, TagA);
+  ecs_new(it->world, TagB);
+  sys_add_tag_invoked ++;
+  test_assert(sys_a_invoked == 0);
+}
+
+static void sys_no_readonly(ecs_iter_t *it) {
+    test_assert(sys_a_invoked == 1);
+    test_assert(it->world == it->real_world);
+    test_assert(!ecs_stage_is_readonly(it->real_world));
+    sys_no_readonly_invoked ++;
+}
+
+void Pipeline_on_merge_activate_system_before_merge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, TagA);
+    ECS_TAG_DEFINE(world, TagB);
+
+    // system is annotated with TagA but writes both TagA, TagB
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter.terms = {{ TagA, .inout = EcsOut, .src.flags = EcsIsEntity }},
+        .callback = sys_add_tag
+    });
+
+    // no merge inserted between systems, but system activates after merge
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter.terms = {{ TagB, .inout = EcsIn }},
+        .callback = SysA
+    });
+
+    // read TagA, causes insertion of merge
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter.terms = {{ TagA, .inout = EcsIn }},
+        .no_readonly = true,
+        .callback = sys_no_readonly
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_add_tag_invoked, 1);
+    test_int(sys_no_readonly_invoked, 1);
+
+    test_int(ecs_count(world, TagA), 1);
+    test_int(ecs_count(world, TagB), 1);
 
     ecs_fini(world);
 }

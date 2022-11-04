@@ -337,7 +337,6 @@ void Doc_get_set_detail(void);
 void Doc_get_set_link(void);
 
 // Testsuite 'Pipeline'
-void Pipeline_setup(void);
 void Pipeline_system_order_same_phase(void);
 void Pipeline_system_order_same_phase_after_disable(void);
 void Pipeline_system_order_same_phase_after_activate(void);
@@ -393,6 +392,7 @@ void Pipeline_pair_wildcard_read_after_staged_write(void);
 void Pipeline_pair_read_after_staged_wildcard_write(void);
 void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(void);
 void Pipeline_no_merge_after_from_nothing_w_default_inout(void);
+void Pipeline_on_merge_activate_system_before_merge(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2469,6 +2469,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "no_merge_after_from_nothing_w_default_inout",
         Pipeline_no_merge_after_from_nothing_w_default_inout
+    },
+    {
+        "on_merge_activate_system_before_merge",
+        Pipeline_on_merge_activate_system_before_merge
     }
 };
 
@@ -4599,9 +4603,9 @@ static bake_test_suite suites[] = {
     },
     {
         "Pipeline",
-        Pipeline_setup,
         NULL,
-        55,
+        NULL,
+        56,
         Pipeline_testcases
     },
     {

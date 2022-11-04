@@ -25,6 +25,7 @@ typedef struct ecs_pipeline_state_t {
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
     int32_t cur_i;              /* Index in current result */
+    int32_t ran_since_merge;    /* Index in current op */
 } ecs_pipeline_state_t;
 
 typedef struct EcsPipeline {

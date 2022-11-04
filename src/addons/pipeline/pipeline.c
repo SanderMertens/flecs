@@ -450,6 +450,7 @@ void flecs_pipeline_reset_iter(
          * case (which should be very rare) the pipeline can't make assumptions
          * about where to continue, so end frame. */
         pq->cur_i = -1;
+        pq->ran_since_merge = 0;
         return;
     }
 
@@ -486,6 +487,7 @@ void flecs_pipeline_reset_iter(
             if (it->entities[i] == pq->last_system) {
                 pq->cur_op = &op[op_index];
                 pq->cur_i = i;
+                pq->ran_since_merge = ran_since_merge;
                 return;
             }
         }
@@ -641,6 +643,7 @@ void flecs_run_pipeline(
                 bool rebuild = flecs_worker_sync(world, pq);
                 if (rebuild) {
                     i = pq->cur_i;
+                    ran_since_merge = pq->ran_since_merge;
                     count = it->count;
                 }
 

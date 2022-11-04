@@ -347,7 +347,6 @@
             ]
         }, {
             "id": "Pipeline",
-            "setup": true,
             "testcases": [
                 "system_order_same_phase",
                 "system_order_same_phase_after_disable",
@@ -403,7 +402,8 @@
                 "pair_wildcard_read_after_staged_write",
                 "pair_read_after_staged_wildcard_write",
                 "no_sync_after_pair_wildcard_read_after_unmatching_staged_write",
-                "no_merge_after_from_nothing_w_default_inout"
+                "no_merge_after_from_nothing_w_default_inout",
+                "on_merge_activate_system_before_merge"
             ]
         }, {
             "id": "SystemMisc",
