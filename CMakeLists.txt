@@ -10,6 +10,26 @@ option(FLECS_PIC "Compile static flecs lib with position independent code (PIC)"
 include(cmake/target_default_compile_warnings.cmake)
 include(cmake/target_default_compile_options.cmake)
 
+# Automatically generate the same folder structure in Visual Studio as we have on disk
+macro(GroupSources curdir)
+	file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+	foreach(child ${children})
+		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+			GroupSources(${curdir}/${child})
+		else()
+			string(REPLACE "/" "\\" groupname ${curdir})
+            source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+		endif()
+	endforeach()
+endmacro()
+
+file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/. ${PROJECT_SOURCE_DIR}/./*)
+foreach(child ${children})
+	if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+		GroupSources(${child})
+	endif()
+endforeach()
+
 file(GLOB_RECURSE INC include/*.h include/*.hpp)
 file(GLOB_RECURSE SRC src/*.c)
 
