@@ -2743,3 +2743,48 @@ void DeferredActions_defer_remove_after_set_and_emplace_different_id() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_clear_after_add_to_nonempty() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagB);
+    ecs_clear(world, e);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_remove_after_add_to_nonempty() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagB);
+    ecs_remove(world, e, TagA);
+    ecs_remove(world, e, TagB);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}

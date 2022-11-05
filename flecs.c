@@ -9268,7 +9268,7 @@ void flecs_cmd_batch_for_entity(
             world->info.cmd.batched_command_count ++;
             break;
         case EcsOpClear:
-            table = NULL;
+            table = &world->store.root;
             world->info.cmd.batched_command_count ++;
             break;
         default:
