@@ -526,7 +526,7 @@ jobs:
       - name: install meson
         run: |
           pip3 install meson
-          pip3 install ninja
+          pip3 install ninja==1.10.2.4
         
       - name: create build folder
         run: meson meson_build
