@@ -2015,7 +2015,10 @@
                 "slot_has_union",
                 "slot_override",
                 "base_slot_override",
-                "prefab_child_w_union"
+                "prefab_child_w_union",
+                "override_twice_w_add",
+                "override_twice_w_set",
+                "auto_override_copy_once"
             ]
         }, {
             "id": "World",

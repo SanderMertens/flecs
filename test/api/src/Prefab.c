@@ -4073,3 +4073,90 @@ void Prefab_prefab_child_w_union() {
 
     ecs_fini(world);
 }
+
+void Prefab_override_twice_w_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set(world, base, Position, {10});
+    ecs_override(world, base, Position);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e1, Position, { 20 });
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add(world, e2, Position);
+
+    const Position *ptr = ecs_get(world, e1, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+
+    ptr = ecs_get(world, e2, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_twice_w_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set(world, base, Position, {10});
+    ecs_override(world, base, Position);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e1, Position, { 20 });
+    
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e2, Position, {30});
+
+    const Position *ptr = ecs_get(world, e1, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+
+    ptr = ecs_get(world, e2, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+
+    ecs_fini(world);
+}
+
+static int position_copy_invoked = 0;
+
+static ECS_COPY(Position, dst, src, {
+    dst->x = src->x;
+    dst->y = src->y;
+    position_copy_invoked ++;
+})
+
+void Prefab_auto_override_copy_once() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .copy = ecs_copy(Position)
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_override(world, base, Position);
+
+    test_int(position_copy_invoked, 1);
+    position_copy_invoked = 0;
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    const Position *ptr = ecs_get(world, inst, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_int(position_copy_invoked, 1);
+
+    ecs_fini(world);
+}

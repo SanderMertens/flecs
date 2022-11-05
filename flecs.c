@@ -40761,8 +40761,7 @@ void* flecs_override(
     const ecs_type_t *emit_ids,
     ecs_id_t id,
     ecs_table_t *table,
-    ecs_id_record_t *idr,
-    int32_t offset)
+    ecs_id_record_t *idr)
 {
     if (it->event != EcsOnAdd || (it->flags & EcsEventNoOnSet)) {
         return NULL;
@@ -40794,9 +40793,7 @@ void* flecs_override(
             ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_size_t size = ti->size;
             ecs_vec_t *vec = &table->data.columns[column];
-            void *ptr = ecs_vec_get(vec, size, offset);
-            flecs_override_copy(ti, ptr, it->ptrs[0], it->count);
-            return ptr;
+            return ecs_vec_get(vec, size, it->offset);
         }
     }
 
@@ -40884,7 +40881,7 @@ void flecs_emit_forward_id(
         /* If component was added together with IsA relationship, still emit
          * OnSet event, as it's a new value for the entity. */
         void *base_ptr = it->ptrs[0];
-        void *ptr = flecs_override(it, emit_ids, id, table, idr, offset);
+        void *ptr = flecs_override(it, emit_ids, id, table, idr);
         if (ptr) {
             override = true;
             it->ptrs[0] = ptr;
