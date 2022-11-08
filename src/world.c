@@ -218,8 +218,8 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_dbg_3("suspending readonly mode");
 
     /* Cannot suspend when running with multiple threads */
-    ecs_assert(ecs_get_stage_count(world) <= 1, 
-        ECS_INVALID_WHILE_READONLY, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly) ||
+        (ecs_get_stage_count(world) <= 1), ECS_INVALID_WHILE_READONLY, NULL);
 
     state->is_readonly = is_readonly;
     state->is_deferred = is_deferred;

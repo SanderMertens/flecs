@@ -2131,6 +2131,7 @@ void DeferredActions_defer_remove_after_emplace_different_id(void);
 void DeferredActions_defer_remove_after_set_and_emplace_different_id(void);
 void DeferredActions_clear_after_add_to_nonempty(void);
 void DeferredActions_remove_after_add_to_nonempty(void);
+void DeferredActions_register_while_deferred_with_n_stages(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10505,6 +10506,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "remove_after_add_to_nonempty",
         DeferredActions_remove_after_add_to_nonempty
+    },
+    {
+        "register_while_deferred_with_n_stages",
+        DeferredActions_register_while_deferred_with_n_stages
     }
 };
 
@@ -11322,7 +11327,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        93,
+        94,
         DeferredActions_testcases
     },
     {

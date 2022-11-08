@@ -2788,3 +2788,17 @@ void DeferredActions_remove_after_add_to_nonempty() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_register_while_deferred_with_n_stages() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_set_stage_count(world, 2);
+
+    ecs_defer_begin(world);
+    ECS_COMPONENT(world, Position);
+    ecs_defer_end(world);
+
+    test_assert(ecs_id(Position));
+
+    ecs_fini(world);
+}

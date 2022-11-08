@@ -1033,6 +1033,9 @@ void World_template_component_from_module_2_args() {
     test_assert(tid != 0);
 
     auto mid = m.lookup("TypeWithArgs<module_w_template_component::Foo, module_w_template_component::Bar>");
+    if (mid == 0) {
+        mid = m.lookup("TypeWithArgs<module_w_template_component::Foo,module_w_template_component::Bar>");
+    }
     test_assert(mid != 0);
     test_assert(tid == mid);
 }

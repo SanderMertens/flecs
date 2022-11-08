@@ -2219,7 +2219,8 @@
                 "defer_remove_after_emplace_different_id",
                 "defer_remove_after_set_and_emplace_different_id",
                 "clear_after_add_to_nonempty",
-                "remove_after_add_to_nonempty"
+                "remove_after_add_to_nonempty",
+                "register_while_deferred_with_n_stages"
             ]
         }, {
             "id": "SingleThreadStaging",
