@@ -72,4 +72,10 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav);
 
+void flecs_emit_propagate_invalidate(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count);
+
 #endif

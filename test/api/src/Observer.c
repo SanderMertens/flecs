@@ -3803,3 +3803,54 @@ void Observer_cache_test_9() {
 
     ecs_fini(world);
 }
+
+void Observer_cache_test_10() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t ns = ecs_new_id(world);
+    ecs_add_id(world, ns, tag);
+
+    ecs_entity_t foo_parent = ecs_new_w_pair(world, EcsChildOf, ns);
+    ecs_entity_t foo = ecs_new_w_pair(world, EcsChildOf, foo_parent);
+    ecs_entity_t bar = ecs_new_id(world);
+
+    ecs_entity_t parent = ecs_new_w_id(world, foo);
+    
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_id(world, e1, foo);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_id(world, e1, bar);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_id(world, e2, foo);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_id(world, e2, bar);
+
+    ecs_entity_t c1 = ecs_new_id(world);
+    ecs_add_id(world, c1, foo);
+    ecs_add_pair(world, c1, EcsChildOf, e1);
+
+    ecs_entity_t c2 = ecs_new_id(world);
+    ecs_add_id(world, c2, foo);
+    ecs_add_pair(world, c2, EcsChildOf, e2);
+
+    ecs_delete(world, ns);
+    test_assert(!ecs_is_alive(world, ns));
+    test_assert(!ecs_is_alive(world, foo));
+    test_assert(!ecs_is_alive(world, foo_parent));
+    test_assert(!ecs_has_id(world, parent, foo));
+    test_assert(!ecs_has_id(world, e1, foo));
+    test_assert(!ecs_has_id(world, e2, foo));
+    test_assert(!ecs_has_id(world, c1, foo));
+    test_assert(!ecs_has_id(world, c2, foo));
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+
+    ecs_fini(world);
+}

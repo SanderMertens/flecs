@@ -1219,6 +1219,12 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav);
 
+void flecs_emit_propagate_invalidate(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count);
+
 #endif
 
 /**
@@ -3203,6 +3209,12 @@ void flecs_dtor_all_components(
     int32_t i, c, end = row + count;
 
     (void)records;
+
+    if (is_delete && table->observed_count) {
+        /* If table contains monitored entities with acyclic relationships,
+         * make sure to invalidate observer cache */
+        flecs_emit_propagate_invalidate(world, table, row, count);
+    }
 
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
@@ -40706,7 +40718,6 @@ void flecs_emit_propagate_invalidate_tables(
     }
 }
 
-static
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -40720,7 +40731,7 @@ void flecs_emit_propagate_invalidate(
         ecs_record_t *record = recs[i];
         if (!record) {
             /* If the event is emitted after a bulk operation, it's possible
-                * that it hasn't been populated with entities yet. */
+             * that it hasn't been populated with entities yet. */
             continue;
         }
 
@@ -40964,7 +40975,6 @@ int32_t flecs_emit_stack_at(
 
     return sp;
 }
-
 
 static
 bool flecs_emit_stack_has(

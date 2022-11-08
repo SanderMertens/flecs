@@ -822,6 +822,12 @@ void flecs_dtor_all_components(
 
     (void)records;
 
+    if (is_delete && table->observed_count) {
+        /* If table contains monitored entities with acyclic relationships,
+         * make sure to invalidate observer cache */
+        flecs_emit_propagate_invalidate(world, table, row, count);
+    }
+
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
         /* Throw up a lock just to be sure */
