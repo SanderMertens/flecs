@@ -986,6 +986,7 @@ void World_template_component_w_namespace_name(void);
 void World_template_component_w_same_namespace_name(void);
 void World_template_component_w_namespace_name_and_namespaced_arg(void);
 void World_template_component_w_same_namespace_name_and_namespaced_arg(void);
+void World_template_component_from_module_2_args(void);
 void World_entity_as_tag(void);
 void World_entity_w_name_as_tag(void);
 void World_entity_as_component(void);
@@ -4884,6 +4885,10 @@ bake_test_case World_testcases[] = {
         World_template_component_w_same_namespace_name_and_namespaced_arg
     },
     {
+        "template_component_from_module_2_args",
+        World_template_component_from_module_2_args
+    },
+    {
         "entity_as_tag",
         World_entity_as_tag
     },
@@ -5403,7 +5408,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        91,
+        92,
         World_testcases
     },
     {

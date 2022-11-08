@@ -1007,6 +1007,36 @@ void World_template_component_w_same_namespace_name_and_namespaced_arg() {
     test_str(c.path().c_str(), "::foo::foo<foo::bar>");
 }
 
+struct module_w_template_component {
+    struct Foo { };
+    struct Bar { };
+
+    template <typename T, typename U>
+    struct TypeWithArgs { };
+
+    module_w_template_component(flecs::world &world) {
+        world.module<module_w_template_component>();
+        world.component<TypeWithArgs<Foo, Bar>>();
+    };
+};
+
+
+void World_template_component_from_module_2_args() {
+    flecs::world ecs;
+
+    auto m = ecs.import<module_w_template_component>();
+    test_assert(m == ecs.lookup("module_w_template_component"));
+
+    auto tid = ecs.id<module_w_template_component::TypeWithArgs<
+        module_w_template_component::Foo,
+        module_w_template_component::Bar>>();
+    test_assert(tid != 0);
+
+    auto mid = m.lookup("TypeWithArgs<module_w_template_component::Foo, module_w_template_component::Bar>");
+    test_assert(mid != 0);
+    test_assert(tid == mid);
+}
+
 void World_entity_as_tag() {
     flecs::world ecs;
 
@@ -1614,3 +1644,4 @@ void World_reregister_after_reset_w_hooks_and_in_use_implicit() {
     ecs.entity().add<Pod>();
     test_int(2, Pod::ctor_invoked);
 }
+

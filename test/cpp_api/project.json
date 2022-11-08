@@ -1036,6 +1036,7 @@
                 "template_component_w_same_namespace_name",
                 "template_component_w_namespace_name_and_namespaced_arg",
                 "template_component_w_same_namespace_name_and_namespaced_arg",
+                "template_component_from_module_2_args",
                 "entity_as_tag",
                 "entity_w_name_as_tag",
                 "entity_as_component",
