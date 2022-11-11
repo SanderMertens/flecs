@@ -173,4 +173,4 @@ In many cases you might want to use your own relationships. Here are a few signs
 - You are looking to group entities by something like world cells or layers, and want to be able to lookup all entities for a cell.
 - You're adding an enumeration type as component, but want to query for enumeration constants.
 
-See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/#/docs/Relationships)for more information.
+See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/#/docs/Relationships) for more information.
