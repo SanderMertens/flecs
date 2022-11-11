@@ -7,6 +7,7 @@
 static ECS_DTOR(EcsPipeline, ptr, {
     ecs_vector_free(ptr->state->ops);
     ecs_os_free(ptr->state->iters);
+    ecs_os_free(ptr->state);
 })
 
 typedef enum ecs_write_kind_t {
