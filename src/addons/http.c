@@ -88,6 +88,8 @@ typedef int ecs_http_socket_t;
 /* Send request queue */
 typedef struct ecs_http_send_request_t {
     ecs_http_socket_t sock;
+    char *headers;
+    int32_t header_length;
     char *content;
     int32_t content_length;
 } ecs_http_send_request_t;
@@ -700,19 +702,32 @@ void* http_server_send_queue(void* arg) {
                 ecs_os_sleep(0, wait_ms);
             }
         } else {
-            if (http_socket_is_valid(r->sock)) {
-                ecs_size_t written = http_send(
-                    r->sock, r->content, r->content_length, 0);
-                if (written != r->content_length) {
-                    ecs_err("http: failed to write HTTP response body: %s",
-                        ecs_os_strerror(errno));
-                }
-                ecs_os_free(r->content);
-                http_close(&r->sock);
-            } else {
-                ecs_os_free(r->content);
-            }
+            ecs_http_socket_t sock = r->sock;
+            char *headers = r->headers;
+            int32_t headers_length = r->header_length;
+            char *content = r->content;
+            int32_t content_length = r->content_length;
             ecs_os_mutex_unlock(srv->lock);
+
+            if (http_socket_is_valid(sock)) {
+                /* Write headers */
+                ecs_size_t written = http_send(sock, headers, headers_length, 0);
+                if (written != headers_length) {
+                    ecs_err("http: failed to write HTTP response headers: %s",
+                        ecs_os_strerror(errno));
+                } else {
+                    /* Write content */
+                    written = http_send(sock, content, content_length, 0);
+                    if (written != content_length) {
+                        ecs_err("http: failed to write HTTP response body: %s",
+                            ecs_os_strerror(errno));
+                    }
+                }
+                http_close(&sock);
+            }
+
+            ecs_os_free(content);
+            ecs_os_free(headers);
         }
     }
     return NULL;
@@ -757,42 +772,38 @@ void http_send_reply(
     ecs_http_connection_impl_t* conn, 
     ecs_http_reply_t* reply) 
 {
-    char hdrs[ECS_HTTP_REPLY_HEADER_SIZE];
-    ecs_strbuf_t hdr_buf = ECS_STRBUF_INIT;
-    hdr_buf.buf = hdrs;
-    hdr_buf.max = ECS_HTTP_REPLY_HEADER_SIZE;
-    hdr_buf.buf = hdrs;
-
+    ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
     char *content = ecs_strbuf_get(&reply->body);
     int32_t content_length = reply->body.length - 1;
 
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
-    ecs_http_send_request_t *req = NULL;
-    if (content_length > 0) {
-        req = http_send_queue_post(conn->pub.server);
-        if (!req) {
-            reply->code = 503; /* queue full, server is busy */
-        }
+    ecs_http_send_request_t *req = http_send_queue_post(conn->pub.server);
+    if (!req) {
+        reply->code = 503; /* queue full, server is busy */
     }
 
-    /* First, send the response HTTP headers */
-    http_append_send_headers(&hdr_buf, reply->code, reply->status, 
+    http_append_send_headers(&hdrs, reply->code, reply->status, 
         reply->content_type, &reply->headers, content_length);
+    char *headers = ecs_strbuf_get(&hdrs);
+    ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
 
-    ecs_size_t hdrs_len = ecs_strbuf_written(&hdr_buf);
-    hdrs[hdrs_len] = '\0';
-    ecs_size_t written = http_send(conn->sock, hdrs, hdrs_len, 0);
-
-    if (written != hdrs_len) {
-        ecs_err("http: failed to write HTTP response headers to '%s:%s': %s",
-            conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
+    if (!req) {
+        ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
+        if (written != headers_length) {
+            ecs_err("http: failed to write 503 response to '%s:%s': %s",
+                conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
+        }
+        ecs_os_free(content);
+        ecs_os_free(headers);
         return;
     }
 
     /* Second, enqueue send request for response body */
     if (req) {
         req->sock = conn->sock;
+        req->headers = headers;
+        req->header_length = headers_length;
         req->content = content;
         req->content_length = content_length;
 
