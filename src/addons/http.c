@@ -700,15 +700,17 @@ void* http_server_send_queue(void* arg) {
                 ecs_os_sleep(0, wait_ms);
             }
         } else {
-            ecs_size_t written = http_send(
-                r->sock, r->content, r->content_length, 0);
-            if (written != r->content_length) {
-                ecs_err("http: failed to write HTTP response body: %s",
-                    ecs_os_strerror(errno));
-            }
-            ecs_os_free(r->content);
             if (http_socket_is_valid(r->sock)) {
+                ecs_size_t written = http_send(
+                    r->sock, r->content, r->content_length, 0);
+                if (written != r->content_length) {
+                    ecs_err("http: failed to write HTTP response body: %s",
+                        ecs_os_strerror(errno));
+                }
+                ecs_os_free(r->content);
                 http_close(&r->sock);
+            } else {
+                ecs_os_free(r->content);
             }
             ecs_os_mutex_unlock(srv->lock);
         }
