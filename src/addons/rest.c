@@ -595,8 +595,6 @@ bool flecs_rest_reply(
         return false;
     }
 
-    ecs_strbuf_appendlit(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
-
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {

@@ -735,10 +735,14 @@ void http_append_send_headers(
     ecs_strbuf_appendstr(hdrs, content_type);
     ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendlit(hdrs, "Content-Length: ");
-    ecs_strbuf_append(hdrs, "%d", content_len);
-    ecs_strbuf_appendlit(hdrs, "\r\n");
+    if (content_len >= 0) {
+        ecs_strbuf_appendlit(hdrs, "Content-Length: ");
+        ecs_strbuf_append(hdrs, "%d", content_len);
+        ecs_strbuf_appendlit(hdrs, "\r\n");
+    }
 
+    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
+    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
     ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
@@ -1024,9 +1028,13 @@ void http_handle_request(
     ecs_http_connection_impl_t *conn = 
         (ecs_http_connection_impl_t*)req->pub.conn;
 
-    if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
-        reply.code = 404;
-        reply.status = "Resource not found";
+    if (req->pub.method != EcsHttpOptions) {
+        if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
+            reply.code = 404;
+            reply.status = "Resource not found";
+        }
+    } else {
+        reply.code = 200;
     }
 
     http_send_reply(conn, &reply);
