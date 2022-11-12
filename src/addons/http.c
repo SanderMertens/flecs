@@ -715,7 +715,7 @@ void* http_server_send_queue(void* arg) {
                 if (written != headers_length) {
                     ecs_err("http: failed to write HTTP response headers: %s",
                         ecs_os_strerror(errno));
-                } else {
+                } else if (content_length >= 0) {
                     /* Write content */
                     written = http_send(sock, content, content_length, 0);
                     if (written != content_length) {
@@ -800,17 +800,15 @@ void http_send_reply(
     }
 
     /* Second, enqueue send request for response body */
-    if (req) {
-        req->sock = conn->sock;
-        req->headers = headers;
-        req->header_length = headers_length;
-        req->content = content;
-        req->content_length = content_length;
+    req->sock = conn->sock;
+    req->headers = headers;
+    req->header_length = headers_length;
+    req->content = content;
+    req->content_length = content_length;
 
-        /* Take ownership of values */
-        reply->body.content = NULL;
-        conn->sock = HTTP_SOCKET_INVALID;
-    }
+    /* Take ownership of values */
+    reply->body.content = NULL;
+    conn->sock = HTTP_SOCKET_INVALID;
 }
 
 static
