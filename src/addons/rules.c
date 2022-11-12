@@ -4113,7 +4113,7 @@ void populate_iterator(
             table = slice.table;
             count = slice.count;
             offset = slice.offset;
-            if (!count) {
+            if (!count && table) {
                 count = ecs_table_count(table);
             }
         } else {

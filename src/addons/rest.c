@@ -188,11 +188,64 @@ bool flecs_rest_reply_entity(
 }
 
 static
+void flecs_rest_iter_to_reply(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    ecs_iter_t *it)
+{
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    flecs_rest_parse_json_ser_iter_params(&desc, req);
+
+    int32_t offset = 0;
+    int32_t limit = 1000;
+
+    flecs_rest_int_param(req, "offset", &offset);
+    flecs_rest_int_param(req, "limit", &limit);
+
+    ecs_iter_t pit = ecs_page_iter(it, offset, limit);
+    ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
+}
+
+static
+bool flecs_rest_reply_existing_query(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *name)
+{
+    ecs_entity_t q = ecs_lookup_fullpath(world, name);
+    if (!q) {
+        flecs_reply_error(reply, "unresolved identifier '%s'", name);
+        reply->code = 404;
+        return true;
+    }
+
+    const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    if (!poly) {
+        flecs_reply_error(reply, "resolved identifier '%s' is not a query", name);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_iter_t it;
+    ecs_iter_poly(world, poly->poly, &it, NULL);
+    flecs_rest_iter_to_reply(world, req, reply, &it);
+
+    return true;
+}
+
+static
 bool flecs_rest_reply_query(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
+    const char *q_name = ecs_http_get_param(req, "name");
+    if (q_name) {
+        return flecs_rest_reply_existing_query(world, req, reply, q_name);
+    }
+
     const char *q = ecs_http_get_param(req, "q");
     if (!q) {
         ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
@@ -216,18 +269,8 @@ bool flecs_rest_reply_query(
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     } else {
-        ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-        flecs_rest_parse_json_ser_iter_params(&desc, req);
-
-        int32_t offset = 0;
-        int32_t limit = 1000;
-
-        flecs_rest_int_param(req, "offset", &offset);
-        flecs_rest_int_param(req, "limit", &limit);
-
         ecs_iter_t it = ecs_rule_iter(world, r);
-        ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
-        ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
+        flecs_rest_iter_to_reply(world, req, reply, &it);
         ecs_rule_fini(r);
     }
 

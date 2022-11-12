@@ -153,6 +153,9 @@ rules query engine. The reply is formatted as an [JSON serializer Iterator](Json
 
 The following parameters can be provided to the endpoint:
 
+#### **name**
+Specify the name of an existing query or system.
+
 #### **offset**
 Skip the first _offset_ number of entities.
 
