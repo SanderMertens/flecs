@@ -188,6 +188,26 @@ bool flecs_rest_reply_entity(
 }
 
 static
+bool flecs_rest_enable(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path,
+    bool enable)
+{
+    ecs_entity_t e = ecs_lookup_path_w_sep(
+        world, 0, path, "/", NULL, false);
+    if (!e) {
+        flecs_reply_error(reply, "entity '%s' not found", path);
+        reply->code = 404;
+        return true;
+    }
+
+    ecs_enable(world, e, enable);
+    
+    return true;
+}
+
+static
 void flecs_rest_iter_to_reply(
     ecs_world_t *world,
     const ecs_http_request_t* req,
@@ -642,7 +662,7 @@ bool flecs_rest_reply(
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             return flecs_rest_reply_entity(world, req, reply);
-        
+
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
             return flecs_rest_reply_query(world, req, reply);
@@ -656,8 +676,15 @@ bool flecs_rest_reply(
             return flecs_rest_reply_tables(world, req, reply);
         }
 
-    } else if (req->method == EcsHttpOptions) {
-        return true;
+    } else if (req->method == EcsHttpPut) {
+        /* Enable endpoint */
+        if (!ecs_os_strncmp(req->path, "enable/", 7)) {
+            return flecs_rest_enable(world, reply, &req->path[7], true);
+
+        /* Disable endpoint */
+        } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
+            return flecs_rest_enable(world, reply, &req->path[8], false);
+        }
     }
 
     return false;

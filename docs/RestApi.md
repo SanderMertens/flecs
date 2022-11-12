@@ -86,7 +86,7 @@ This section describes the endpoints of the REST API.
 
 ### entity
 ```
-/entity/<path>
+GET /entity/<path>
 ```
 The entity endpoint requests data from an entity. The path is the entity path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](JsonFormat.md#entity) type.
 
@@ -144,9 +144,21 @@ Add reflection data for component types.
 /entity/parent/child
 ```
 
+### enable
+```
+PUT /enable/<path>
+```
+The enable endpoint enables the entity specified by the path by removing the `flecs.core.Disabled` component. If the entity does not have the `flecs.core.Disabled` component, the endpoint has no side effects.
+
+### disable
+```
+PUT /disable/<path>
+```
+The disable endpoint disables the entity specified by the path by adding the `flecs.core.Disabled` component. If the entity already has the `flecs.core.Disabled` component, the endpoint has no side effects.
+
 ### query
 ```
-/query?q=<query>
+GET /query?q=<query>
 ```
 The query endpoint requests data for a query. The implementation uses the
 rules query engine. The reply is formatted as an [JSON serializer Iterator](JsonFormat.md#iterator) type.
@@ -240,11 +252,12 @@ data, a 0 element is added to the array.
 /query?q=Position
 /query?q=Position&values=true
 /query?q=Position%2CVelocity
+/query?name=systems.Move
 ```
 
 ### stats
 ```
-/stats/<category>/<period>
+GET /stats/<category>/<period>
 ```
 The stats endpoint returns statistics for a specified category or period. This endpoint requires the monitor module to be imported (see above). The supported categories are:
 

@@ -760,6 +760,7 @@ void http_append_send_headers(
 
     ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
     ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
+    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
     ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
