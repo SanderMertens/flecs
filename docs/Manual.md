@@ -709,7 +709,7 @@ Systems allow the application to run logic that is matched with a set of entitie
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 ```
 
-In this definition, `Move` is the name of the system and also fo the function that will be registered with the system. `EcsOnUpdate` is the system "phase" which indicates when the system is ran in a frame (see "Pipelines"). The part that follows is the system expression, which follows the rules as described in "Signatures").
+In this definition, `Move` is the name of the system and also for the function that will be registered with the system. `EcsOnUpdate` is the system "phase" which indicates when the system is ran in a frame (see "Pipelines"). The part that follows is the system expression, which follows the rules as described in "Signatures").
 
 A system implementation is a function with the following signature:
 
@@ -1431,7 +1431,7 @@ Threads are created when the `ecs_set_threads` function is invoked. An applicati
 
 No structural changes (adding/removing components, or deleting an entity) are allowed while a thread is evaluating the systems. If a system does a structural change, it is deferred until the next synchronization point. During synchronization, all deferred operations will be flushed by the main thread.
 
-By default there is only a single synchronization point at the end of the frame, and a thread will run all of its systems to completion for each frame. This parallelizes extremely well, even in the case where there are lots of systems with small workloads, as all the logic for a frame can be executed without any waiting or taking any locks. If a system has deferred structural changes that are required by a subsequent system however, a mid-frame synchronization point may be necessary. In this case an application can annotate system signatures to enforce synchronization points, as is described in (Staging)[#staging]. The advantage of this approach is that synchronization points are not explicitly created, but automatically derived, which prevents having to specify explicit dependencies between systems.
+By default there is only a single synchronization point at the end of the frame, and a thread will run all of its systems to completion for each frame. This parallelizes extremely well, even in the case where there are lots of systems with small workloads, as all the logic for a frame can be executed without any waiting or taking any locks. If a system has deferred structural changes that are required by a subsequent system however, a mid-frame synchronization point may be necessary. In this case an application can annotate system signatures to enforce synchronization points, as is described in [Staging](#staging). The advantage of this approach is that synchronization points are not explicitly created, but automatically derived, which prevents having to specify explicit dependencies between systems.
 
 This approach does have some obvious limitations. All systems are parallelized, which can cause problems when a system's logic needs to be executed for example on the main thread (as is often the case for rendering logic). Additionally, if a system reads from component references, as is the case with systems that retrieve components from prefabs or parent entities, this approach can introduce race conditions where a component value is read while it is being updated. These are known issues, and improvements to the threading framework are scheduled for future versions.
 
