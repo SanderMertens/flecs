@@ -22,7 +22,7 @@ int main(int, char *[]) {
     // components provided by their signature, as these writes directly happen
     // in the ECS storage and are never deferred.
     //
-    // flecs::InOutNone for Position tells the scheduler that while we 
+    // .inout_none() for Position tells the scheduler that while we 
     // want to match entities with Position, we're not interested in reading or 
     // writing the component value.
     ecs.system("SetVelocity")
@@ -73,6 +73,6 @@ int main(int, char *[]) {
     //
     // The "merge" lines indicate sync points.
     //
-    // Removing '.term<Velocity>().inout(flecs::Out).set(flecs::Nothing)'
-    // from the system will remove the first sync point from the schedule.
+    // Removing '.write<Velocity>()' from the system will remove the first
+    // sync point from the schedule.
 }
