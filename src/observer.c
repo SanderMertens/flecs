@@ -113,7 +113,7 @@ void flecs_register_observer_for_id(
         ecs_map_init_w_params_if(observers, &world->allocators.ptr);
 
         ecs_map_ensure(observers, ecs_observer_t*, 
-            observer->entity)[0] = observer;
+            observer->filter.entity)[0] = observer;
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
         if (trav) {
@@ -171,7 +171,7 @@ void flecs_unregister_observer_for_id(
 
         ecs_map_t *id_observers = ECS_OFFSET(idt, offset);
 
-        if (ecs_map_remove(id_observers, observer->entity) == 0) {
+        if (ecs_map_remove(id_observers, observer->filter.entity) == 0) {
             ecs_map_fini(id_observers);
         }
 
@@ -326,7 +326,7 @@ void flecs_uni_observer_invoke(
 
     bool is_filter = term->inout == EcsInOutNone;
     ECS_BIT_COND(it->flags, EcsIterIsFilter, is_filter);
-    it->system = observer->entity;
+    it->system = observer->filter.entity;
     it->ctx = observer->ctx;
     it->binding_ctx = observer->binding_ctx;
     it->term_index = observer->term_index;
@@ -448,7 +448,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
             it->count, user_it.ptrs, user_it.sizes);
 
         user_it.ids[pivot_term] = it->event_id;
-        user_it.system = o->entity;
+        user_it.system = o->filter.entity;
         user_it.term_index = pivot_term;
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
@@ -545,7 +545,7 @@ void flecs_uni_observer_trigger_existing(
 
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->filter.terms[0]);
-        it.system = observer->entity;
+        it.system = observer->filter.entity;
         it.ctx = observer->ctx;
         it.binding_ctx = observer->binding_ctx;
         it.event = evt;
@@ -593,7 +593,7 @@ void flecs_multi_observer_yield_existing(
         it.terms = observer->filter.terms;
         it.field_count = 1;
         it.term_index = pivot_term;
-        it.system = observer->entity;
+        it.system = observer->filter.entity;
         it.ctx = observer;
         it.binding_ctx = observer->binding_ctx;
         it.event = evt;
@@ -691,7 +691,7 @@ int flecs_multi_observer_init(
     }
 
     /* Create observers as children of observer */
-    ecs_entity_t old_scope = ecs_set_scope(world, observer->entity);
+    ecs_entity_t old_scope = ecs_set_scope(world, observer->filter.entity);
 
     for (i = 0; i < term_count; i ++) {
         if (filter->terms[i].src.flags & EcsFilter) {
@@ -782,16 +782,13 @@ ecs_entity_t ecs_observer_init(
 
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        observer->world = world;
         observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
-        observer->entity = entity;
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
          * filter will have the name of the observer. */
         ecs_filter_desc_t filter_desc = desc->filter;
-        filter_desc.name = ecs_get_name(world, entity);
+        filter_desc.entity = entity;
         ecs_filter_t *filter = filter_desc.storage = &observer->filter;
         *filter = ECS_FILTER_INIT;
 
@@ -931,7 +928,7 @@ void flecs_observer_fini(
     } else {
         if (observer->filter.term_count) {
             flecs_unregister_observer(
-                observer->world, observer->observable, observer);
+                observer->filter.world, observer->observable, observer);
         } else {
             /* Observer creation failed while creating filter */
         }

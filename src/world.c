@@ -1662,6 +1662,11 @@ void flecs_notify_queries(
             EcsPoly *queries = ecs_table_get_column(table, tr->column);
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
+                if (!ecs_poly_is(query, ecs_query_t)) {
+                    /* EcsQuery can also contain filters or rules */
+                    continue;
+                }
+
                 if (query->flags & EcsQueryIsSubquery) {
                     continue;
                 }

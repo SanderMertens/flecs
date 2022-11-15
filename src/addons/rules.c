@@ -161,8 +161,7 @@ typedef struct ecs_rule_term_vars_t {
 /* Top-level rule datastructure */
 struct ecs_rule_t {
     ecs_header_t hdr;
-    
-    ecs_world_t *world;         /* Ref to world so rule can be used by itself */
+
     ecs_rule_op_t *operations;  /* Operations array */
     ecs_filter_t filter;        /* Filter of rule */
 
@@ -184,14 +183,17 @@ struct ecs_rule_t {
     int32_t operation_count;    /* Number of operations in rule */
 
     ecs_iterable_t iterable;    /* Iterable mixin */
+    ecs_poly_dtor_t dtor;
 };
 
 /* ecs_rule_t mixins */
 ecs_mixins_t ecs_rule_t_mixins = {
     .type_name = "ecs_rule_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_rule_t, world),
-        [EcsMixinIterable] = offsetof(ecs_rule_t, iterable)
+        [EcsMixinWorld] = offsetof(ecs_rule_t, filter.world),
+        [EcsMixinEntity] = offsetof(ecs_rule_t, filter.entity),
+        [EcsMixinIterable] = offsetof(ecs_rule_t, iterable),
+        [EcsMixinDtor] = offsetof(ecs_rule_t, dtor)
     }
 };
 
@@ -201,10 +203,14 @@ void rule_error(
     const char *fmt,
     ...)
 {
-    char *fstr = ecs_filter_str(rule->world, &rule->filter);
+    char *fstr = ecs_filter_str(rule->filter.world, &rule->filter);
     va_list valist;
     va_start(valist, fmt);
-    ecs_parser_errorv(rule->filter.name, fstr, -1, fmt, valist);
+    const char *name = NULL;
+    if (rule->filter.entity) {
+        name = ecs_get_name(rule->filter.world, rule->filter.entity);
+    }
+    ecs_parser_errorv(name, fstr, -1, fmt, valist);
     va_end(valist);
     ecs_os_free(fstr);
 }
@@ -552,7 +558,7 @@ void entity_reg_set(
     (void)rule;
     ecs_assert(rule->vars[r].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_check(ecs_is_valid(rule->world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(rule->filter.world, entity), ECS_INVALID_PARAMETER, NULL);
     regs[r].entity = entity;
 error:
     return;
@@ -570,7 +576,7 @@ ecs_entity_t entity_reg_get(
         return EcsWildcard;
     }
     
-    ecs_check(ecs_is_valid(rule->world, e), ECS_INVALID_PARAMETER, NULL);   
+    ecs_check(ecs_is_valid(rule->filter.world, e), ECS_INVALID_PARAMETER, NULL);   
     return e;
 error:
     return 0;
@@ -619,7 +625,7 @@ ecs_entity_t reg_get_entity(
         /* The subject is referenced from the query string by string identifier.
          * If subject entity is not valid, it could have been deletd by the
          * application after the rule was created */
-        ecs_check(ecs_is_valid(rule->world, op->subject), 
+        ecs_check(ecs_is_valid(rule->filter.world, op->subject), 
             ECS_INVALID_PARAMETER, NULL);
 
         return op->subject;
@@ -634,7 +640,7 @@ ecs_entity_t reg_get_entity(
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(offset < ecs_vec_count(&data->entities), 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_check(ecs_is_valid(rule->world, entities[offset]), 
+        ecs_check(ecs_is_valid(rule->filter.world, entities[offset]), 
             ECS_INVALID_PARAMETER, NULL);            
         
         return entities[offset];
@@ -678,15 +684,15 @@ ecs_table_range_t reg_get_range(
     int32_t r)
 {
     if (r == UINT8_MAX) {
-        ecs_check(ecs_is_valid(rule->world, op->subject), 
+        ecs_check(ecs_is_valid(rule->filter.world, op->subject), 
             ECS_INVALID_PARAMETER, NULL);
-        return table_from_entity(rule->world, op->subject);
+        return table_from_entity(rule->filter.world, op->subject);
     }
     if (rule->vars[r].kind == EcsRuleVarKindTable) {
         return table_reg_get(rule, regs, r);
     }
     if (rule->vars[r].kind == EcsRuleVarKindEntity) {
-        return table_from_entity(rule->world, entity_reg_get(rule, regs, r));
+        return table_from_entity(rule->filter.world, entity_reg_get(rule, regs, r));
     } 
 error:
     return (ecs_table_range_t){0};
@@ -700,7 +706,7 @@ void reg_set_entity(
     ecs_entity_t entity)
 {
     if (rule->vars[r].kind == EcsRuleVarKindTable) {
-        ecs_world_t *world = rule->world;
+        ecs_world_t *world = rule->filter.world;
         ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
         regs[r].range = table_from_entity(world, entity);
         regs[r].entity = entity;
@@ -772,22 +778,22 @@ ecs_rule_pair_t term_to_pair(
 
         /* Test if predicate is transitive. When evaluating the predicate, this
          * will also take into account transitive relationships */
-        if (ecs_has_id(rule->world, pred_id, EcsTransitive)) {
+        if (ecs_has_id(rule->filter.world, pred_id, EcsTransitive)) {
             /* Transitive queries must have an object */
             if (obj_is_set(term)) {
                 result.transitive = true;
             }
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsFinal)) {
+        if (ecs_has_id(rule->filter.world, pred_id, EcsFinal)) {
             result.final = true;
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsReflexive)) {
+        if (ecs_has_id(rule->filter.world, pred_id, EcsReflexive)) {
             result.reflexive = true;
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsAcyclic)) {
+        if (ecs_has_id(rule->filter.world, pred_id, EcsAcyclic)) {
             result.acyclic = true;
         }
     }
@@ -923,7 +929,7 @@ void reify_variables(
             ECS_INTERNAL_ERROR, NULL);
 
         entity_reg_set(rule, regs, obj_var, 
-            ecs_get_alive(rule->world, ECS_PAIR_SECOND(*elem)));
+            ecs_get_alive(rule->filter.world, ECS_PAIR_SECOND(*elem)));
     }
 
     if (pred_var != -1) {
@@ -931,7 +937,7 @@ void reify_variables(
             ECS_INTERNAL_ERROR, NULL);            
 
         entity_reg_set(rule, regs, pred_var, 
-            ecs_get_alive(rule->world, 
+            ecs_get_alive(rule->filter.world, 
                 ECS_PAIR_FIRST(*elem)));
     }
 }
@@ -1714,7 +1720,7 @@ void insert_reflexive_set(
         /* If the object of the filter is not a variable, store literal */
         if (!second) {
             store->r_in = UINT8_MAX;
-            store->subject = ecs_get_alive(rule->world, pair.second.id);
+            store->subject = ecs_get_alive(rule->filter.world, pair.second.id);
             store->filter.second = pair.second;
         } else {
             store->r_in = second->id;
@@ -1850,7 +1856,7 @@ void set_input_to_subj(
         op->subject = term->src.id;
 
         /* Invalid entities should have been caught during parsing */
-        ecs_assert(ecs_is_valid(rule->world, op->subject), 
+        ecs_assert(ecs_is_valid(rule->filter.world, op->subject), 
             ECS_INTERNAL_ERROR, NULL);
     } else {
         op->r_in = var->id;
@@ -1872,7 +1878,7 @@ void set_output_to_subj(
         op->subject = term->src.id;
 
         /* Invalid entities should have been caught during parsing */
-        ecs_assert(ecs_is_valid(rule->world, op->subject), 
+        ecs_assert(ecs_is_valid(rule->filter.world, op->subject), 
             ECS_INTERNAL_ERROR, NULL);
     } else {
         op->r_out = var->id;
@@ -2595,6 +2601,32 @@ int32_t find_term_var_id(
     return -1;
 }
 
+static
+void flecs_rule_fini(
+    ecs_rule_t *rule)
+{
+    int32_t i;
+    for (i = 0; i < rule->var_count; i ++) {
+        ecs_os_free(rule->vars[i].name);
+    }
+
+    ecs_filter_fini(&rule->filter);
+
+    ecs_os_free(rule->operations);
+    ecs_os_free(rule);
+}
+
+void ecs_rule_fini(
+    ecs_rule_t *rule)
+{
+    if (rule->filter.entity) {
+        /* If filter is associated with entity, use poly dtor path */
+        ecs_delete(rule->filter.world, rule->filter.entity);
+    } else {
+        flecs_rule_fini(rule);
+    }
+}
+
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *const_desc)
@@ -2608,8 +2640,6 @@ ecs_rule_t* ecs_rule_init(
     if (ecs_filter_init(world, &desc) == NULL) {
         goto error;
     }
-
-    result->world = world;
 
     /* Rule has no terms */
     if (!result->filter.term_count) {
@@ -2676,24 +2706,19 @@ ecs_rule_t* ecs_rule_init(
 
     result->iterable.init = rule_iter_init;
 
+    ecs_entity_t entity = const_desc->entity;
+    result->dtor = (ecs_poly_dtor_t)flecs_rule_fini;
+
+    if (entity) {
+        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_rule_t);
+        poly->poly = result;
+        ecs_poly_modified(world, entity, ecs_rule_t);
+    }
+
     return result;
 error:
     ecs_rule_fini(result);
     return NULL;
-}
-
-void ecs_rule_fini(
-    ecs_rule_t *rule)
-{
-    int32_t i;
-    for (i = 0; i < rule->var_count; i ++) {
-        ecs_os_free(rule->vars[i].name);
-    }
-
-    ecs_filter_fini(&rule->filter);
-
-    ecs_os_free(rule->operations);
-    ecs_os_free(rule);
 }
 
 const ecs_filter_t* ecs_rule_get_filter(
@@ -2722,7 +2747,7 @@ char* ecs_rule_str(
 {
     ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     char filter_expr[256];
 
@@ -2921,7 +2946,7 @@ ecs_iter_t ecs_rule_iter(
     int i;
 
     result.world = (ecs_world_t*)world;
-    result.real_world = (ecs_world_t*)ecs_get_world(rule->world);
+    result.real_world = (ecs_world_t*)ecs_get_world(rule->filter.world);
 
     flecs_process_pending_tables(result.real_world);
 
@@ -3136,7 +3161,7 @@ void set_term_vars(
     ecs_id_t id)
 {
     if (term != -1) {
-        ecs_world_t *world = rule->world;
+        ecs_world_t *world = rule->filter.world;
         const ecs_rule_term_vars_t *vars = &rule->term_vars[term];
         if (vars->first != -1) {
             regs[vars->first].entity = ecs_pair_first(world, id);
@@ -3185,7 +3210,7 @@ bool eval_superset(
 {
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_rule_superset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.superset;
     ecs_rule_superset_frame_t *frame = NULL;
     ecs_var_t *regs = get_registers(iter, op);
@@ -3314,7 +3339,7 @@ bool eval_subset(
 {
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_rule_subset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.subset;
     ecs_rule_subset_frame_t *frame = NULL;
     ecs_table_record_t table_record;
@@ -3453,7 +3478,7 @@ bool eval_select(
 {
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
     ecs_table_record_t table_record;
     ecs_var_t *regs = get_registers(iter, op);
@@ -3602,7 +3627,7 @@ bool eval_with(
 {
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
     ecs_var_t *regs = get_registers(iter, op);
 
@@ -3837,7 +3862,7 @@ bool eval_store(
 
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_var_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
@@ -3970,7 +3995,7 @@ bool eval_intable(
 
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     ecs_var_t *regs = get_registers(iter, op);
     ecs_table_t *table = table_reg_get(rule, regs, op->r_in).table;
 
@@ -4092,7 +4117,7 @@ void populate_iterator(
     ecs_rule_iter_t *it,
     ecs_rule_op_t *op)
 {
-    ecs_world_t *world = rule->world;
+    ecs_world_t *world = rule->filter.world;
     int32_t r = op->r_in;
     ecs_var_t *regs = get_register_frame(it, op->frame);
     ecs_table_t *table = NULL;

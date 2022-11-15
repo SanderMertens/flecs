@@ -545,6 +545,7 @@
                 "each_w_iter_no_this",
                 "invalid_each_w_no_this",
                 "named_query",
+                "named_scoped_query",
                 "instanced_nested_query_w_iter",
                 "instanced_nested_query_w_entity",
                 "instanced_nested_query_w_world"
@@ -755,7 +756,9 @@
                 "var_first_w_prefixed_name",
                 "var_second_w_prefixed_name",
                 "term_w_second_var_string",
-                "term_type_w_second_var_string"
+                "term_type_w_second_var_string",
+                "named_rule",
+                "named_scoped_rule"
             ]
         }, {
             "id": "SystemBuilder",
@@ -829,7 +832,9 @@
                 "get_first_direct",
                 "each_w_no_this",
                 "each_w_iter_no_this",
-                "invalid_each_w_no_this"
+                "invalid_each_w_no_this",
+                "named_filter",
+                "named_scoped_filter"
             ]
         }, {
             "id": "ComponentLifecycle",

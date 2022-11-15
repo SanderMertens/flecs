@@ -744,7 +744,7 @@ ecs_entity_t ecs_pipeline_init(
     if (!qd.order_by) {
         qd.order_by = flecs_entity_compare;
     }
-    qd.entity = result;
+    qd.filter.entity = result;
 
     ecs_query_t *query = ecs_query_init(world, &qd);
     if (!query) {

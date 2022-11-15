@@ -2329,7 +2329,13 @@
                 "iter_filter_w_filter",
                 "on_set_poly_observer",
                 "on_set_poly_query",
-                "on_set_poly_system"
+                "on_set_poly_system",
+                "iter_filter_from_entity",
+                "iter_query_from_entity",
+                "iter_rule_from_entity",
+                "free_filter_entity",
+                "free_query_entity",
+                "free_rule_entity"
             ]
         }, {
             "id": "Internals",

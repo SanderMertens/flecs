@@ -2235,6 +2235,12 @@ void Poly_iter_filter_w_filter(void);
 void Poly_on_set_poly_observer(void);
 void Poly_on_set_poly_query(void);
 void Poly_on_set_poly_system(void);
+void Poly_iter_filter_from_entity(void);
+void Poly_iter_query_from_entity(void);
+void Poly_iter_rule_from_entity(void);
+void Poly_free_filter_entity(void);
+void Poly_free_query_entity(void);
+void Poly_free_rule_entity(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -10899,6 +10905,30 @@ bake_test_case Poly_testcases[] = {
     {
         "on_set_poly_system",
         Poly_on_set_poly_system
+    },
+    {
+        "iter_filter_from_entity",
+        Poly_iter_filter_from_entity
+    },
+    {
+        "iter_query_from_entity",
+        Poly_iter_query_from_entity
+    },
+    {
+        "iter_rule_from_entity",
+        Poly_iter_rule_from_entity
+    },
+    {
+        "free_filter_entity",
+        Poly_free_filter_entity
+    },
+    {
+        "free_query_entity",
+        Poly_free_query_entity
+    },
+    {
+        "free_rule_entity",
+        Poly_free_rule_entity
     }
 };
 
@@ -11348,7 +11378,7 @@ static bake_test_suite suites[] = {
         "Poly",
         NULL,
         NULL,
-        11,
+        17,
         Poly_testcases
     },
     {

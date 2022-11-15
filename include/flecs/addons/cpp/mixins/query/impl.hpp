@@ -123,7 +123,7 @@ struct query_base {
     }
 
     flecs::entity entity() {
-        return flecs::entity(m_world, ecs_query_entity(m_query));
+        return flecs::entity(m_world, ecs_get_entity(m_query));
     }
     
     operator query<>() const;
