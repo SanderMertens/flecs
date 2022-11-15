@@ -68,7 +68,7 @@ typedef int ecs_http_socket_t;
 #define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
 
 /* Minimum interval between dequeueing requests (ms) */
-#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (100)
+#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
 
 /* Minimum interval between printing statistics (ms) */
 #define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
@@ -740,7 +740,8 @@ void http_append_send_headers(
     const char* status, 
     const char* content_type,  
     ecs_strbuf_t *extra_headers,
-    ecs_size_t content_len) 
+    ecs_size_t content_len,
+    bool preflight)
 {
     ecs_strbuf_appendlit(hdrs, "HTTP/1.1 ");
     ecs_strbuf_appendint(hdrs, code);
@@ -748,9 +749,11 @@ void http_append_send_headers(
     ecs_strbuf_appendstr(hdrs, status);
     ecs_strbuf_appendlit(hdrs, "\r\n");
 
-    ecs_strbuf_appendlit(hdrs, "Content-Type: ");
-    ecs_strbuf_appendstr(hdrs, content_type);
-    ecs_strbuf_appendlit(hdrs, "\r\n");
+    if (content_type) {
+        ecs_strbuf_appendlit(hdrs, "Content-Type: ");
+        ecs_strbuf_appendstr(hdrs, content_type);
+        ecs_strbuf_appendlit(hdrs, "\r\n");
+    }
 
     if (content_len >= 0) {
         ecs_strbuf_appendlit(hdrs, "Content-Length: ");
@@ -759,8 +762,11 @@ void http_append_send_headers(
     }
 
     ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
-    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
-    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
+    if (preflight) {
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
+    }
     ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
@@ -771,7 +777,8 @@ void http_append_send_headers(
 static
 void http_send_reply(
     ecs_http_connection_impl_t* conn, 
-    ecs_http_reply_t* reply) 
+    ecs_http_reply_t* reply,
+    bool preflight) 
 {
     ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
     char *content = ecs_strbuf_get(&reply->body);
@@ -779,20 +786,24 @@ void http_send_reply(
 
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
-    ecs_http_send_request_t *req = http_send_queue_post(conn->pub.server);
-    if (!req) {
-        reply->code = 503; /* queue full, server is busy */
+    ecs_http_send_request_t *req = NULL;
+
+    if (!preflight) {
+        req = http_send_queue_post(conn->pub.server);
+        if (!req) {
+            reply->code = 503; /* queue full, server is busy */
+        }
     }
 
     http_append_send_headers(&hdrs, reply->code, reply->status, 
-        reply->content_type, &reply->headers, content_length);
+        reply->content_type, &reply->headers, content_length, preflight);
     char *headers = ecs_strbuf_get(&hdrs);
     ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
 
     if (!req) {
         ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
         if (written != headers_length) {
-            ecs_err("http: failed to write 503 response to '%s:%s': %s",
+            ecs_err("http: failed to send reply to '%s:%s': %s",
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
         ecs_os_free(content);
@@ -833,7 +844,17 @@ void http_recv_request(
         }
 
         if (http_parse_request(&frag, recv_buf, bytes_read)) {
-            http_enqueue_request(conn, conn_id, &frag);
+            if (frag.method == EcsHttpOptions) {
+                ecs_http_reply_t reply;
+                reply.body = ECS_STRBUF_INIT;
+                reply.code = 200;
+                reply.content_type = NULL;
+                reply.headers = ECS_STRBUF_INIT;
+                reply.status = "OK";
+                http_send_reply(conn, &reply, true);
+            } else {
+                http_enqueue_request(conn, conn_id, &frag);
+            }
             return;
         }
     }
@@ -1045,12 +1066,12 @@ void http_handle_request(
             reply.code = 404;
             reply.status = "Resource not found";
         }
-    } else {
-        reply.code = 200;
-    }
 
-    http_send_reply(conn, &reply);
-    ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
+        http_send_reply(conn, &reply, false);
+        ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
+    } else {
+        /* Already taken care of */
+    }
 
     http_reply_free(&reply);
     http_request_free(req);
