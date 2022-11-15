@@ -2064,6 +2064,27 @@ void Query_named_query() {
     test_str(qe.name(), "my_query");
 }
 
+void Query_named_scoped_query() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my::query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "query");
+    test_str(qe.path(), "::my::query");
+}
+
 void Query_instanced_nested_query_w_iter() {
     auto ecs = flecs::world();
 

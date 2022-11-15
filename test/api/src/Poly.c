@@ -339,3 +339,165 @@ void Poly_on_set_poly_system() {
 
     ecs_fini(world);
 }
+
+void Poly_iter_filter_from_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ Tag }},
+        .entity = qe
+    });
+
+    test_assert(f->entity == qe);
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == f);
+
+    ecs_iter_t it;
+    ecs_iter_poly(world, poly->poly, &it, NULL);
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_filter_fini(f);
+
+    test_assert(!ecs_is_alive(world, qe));
+
+    ecs_fini(world);
+}
+
+void Poly_iter_query_from_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ Tag }},
+        .filter.entity = qe
+    });
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == q);
+
+    ecs_iter_t it;
+    ecs_iter_poly(world, poly->poly, &it, NULL);
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_query_fini(q);
+
+    test_assert(!ecs_is_alive(world, qe));
+
+    ecs_fini(world);
+}
+
+void Poly_iter_rule_from_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_rule_t *q = ecs_rule(world, {
+        .terms = {{ Tag }},
+        .entity = qe
+    });
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == q);
+
+    ecs_iter_t it;
+    ecs_iter_poly(world, poly->poly, &it, NULL);
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_rule_fini(q);
+
+    test_assert(!ecs_is_alive(world, qe));
+
+    ecs_fini(world);
+}
+
+void Poly_free_filter_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ Tag }},
+        .entity = qe
+    });
+
+    test_assert(f->entity == qe);
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == f);
+
+    ecs_delete(world, qe);
+
+    ecs_fini(world);
+}
+
+void Poly_free_query_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ Tag }},
+        .filter.entity = qe
+    });
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == q);
+
+    ecs_delete(world, qe);
+
+    test_assert(!ecs_is_alive(world, qe));
+
+    ecs_fini(world);
+}
+
+void Poly_free_rule_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t qe = ecs_new_id(world);
+    ecs_rule_t *q = ecs_rule(world, {
+        .terms = {{ Tag }},
+        .entity = qe
+    });
+
+    const EcsPoly *poly = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(poly != NULL);
+    test_assert(poly->poly == q);
+
+    ecs_delete(world, qe);
+
+    ecs_fini(world);
+}

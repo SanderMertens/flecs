@@ -30,8 +30,8 @@ ecs_mixins_t ecs_stage_t_mixins = {
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_t, world),
-        [EcsMixinEntity] = offsetof(ecs_query_t, entity),
+        [EcsMixinWorld] = offsetof(ecs_query_t, filter.world),
+        [EcsMixinEntity] = offsetof(ecs_query_t, filter.entity),
         [EcsMixinIterable] = offsetof(ecs_query_t, iterable),
         [EcsMixinDtor] = offsetof(ecs_query_t, dtor)
     }
@@ -40,8 +40,8 @@ ecs_mixins_t ecs_query_t_mixins = {
 ecs_mixins_t ecs_observer_t_mixins = {
     .type_name = "ecs_observer_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_observer_t, world),
-        [EcsMixinEntity] = offsetof(ecs_observer_t, entity),
+        [EcsMixinWorld] = offsetof(ecs_observer_t, filter.world),
+        [EcsMixinEntity] = offsetof(ecs_observer_t, filter.entity),
         [EcsMixinDtor] = offsetof(ecs_observer_t, dtor)
     }
 };
@@ -49,7 +49,10 @@ ecs_mixins_t ecs_observer_t_mixins = {
 ecs_mixins_t ecs_filter_t_mixins = {
     .type_name = "ecs_filter_t",
     .elems = {
-        [EcsMixinIterable] = offsetof(ecs_filter_t, iterable)
+        [EcsMixinWorld] = offsetof(ecs_filter_t, world),
+        [EcsMixinEntity] = offsetof(ecs_filter_t, entity),
+        [EcsMixinIterable] = offsetof(ecs_filter_t, iterable),
+        [EcsMixinDtor] = offsetof(ecs_filter_t, dtor)
     }
 };
 
@@ -251,6 +254,12 @@ const ecs_world_t* ecs_get_world(
     const ecs_poly_t *poly)
 {
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
+}
+
+ecs_entity_t ecs_get_entity(
+    const ecs_poly_t *poly)
+{
+    return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
 ecs_poly_dtor_t* ecs_get_dtor(

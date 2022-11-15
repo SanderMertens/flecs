@@ -249,7 +249,7 @@ ecs_entity_t ecs_system_init(
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
-        query_desc.entity = entity;
+        query_desc.filter.entity = entity;
 
         ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
@@ -261,7 +261,7 @@ ecs_entity_t ecs_system_init(
         flecs_defer_begin(world, &world->stages[0]);
 
         system->query = query;
-        system->query_entity = query->entity;
+        system->query_entity = query->filter.entity;
 
         system->run = desc->run;
         system->action = desc->callback;

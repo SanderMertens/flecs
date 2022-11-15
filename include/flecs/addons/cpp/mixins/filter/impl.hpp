@@ -80,6 +80,10 @@ struct filter_base {
         return *this; 
     }
 
+    flecs::entity entity() {
+        return flecs::entity(m_world, ecs_get_entity(m_filter_ptr));
+    }
+
     operator const flecs::filter_t*() const {
         return m_filter_ptr;
     }

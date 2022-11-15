@@ -35,6 +35,10 @@ struct rule_base {
         return m_rule;
     }
 
+    flecs::entity entity() {
+        return flecs::entity(m_world, ecs_get_entity(m_rule));
+    }
+
     /** Free the rule.
      */
     void destruct() {

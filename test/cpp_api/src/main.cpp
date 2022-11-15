@@ -521,6 +521,7 @@ void Query_each_w_no_this(void);
 void Query_each_w_iter_no_this(void);
 void Query_invalid_each_w_no_this(void);
 void Query_named_query(void);
+void Query_named_scoped_query(void);
 void Query_instanced_nested_query_w_iter(void);
 void Query_instanced_nested_query_w_entity(void);
 void Query_instanced_nested_query_w_world(void);
@@ -726,6 +727,8 @@ void RuleBuilder_var_first_w_prefixed_name(void);
 void RuleBuilder_var_second_w_prefixed_name(void);
 void RuleBuilder_term_w_second_var_string(void);
 void RuleBuilder_term_type_w_second_var_string(void);
+void RuleBuilder_named_rule(void);
+void RuleBuilder_named_scoped_rule(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -794,6 +797,8 @@ void Filter_get_first_direct(void);
 void Filter_each_w_no_this(void);
 void Filter_each_w_iter_no_this(void);
 void Filter_invalid_each_w_no_this(void);
+void Filter_named_filter(void);
+void Filter_named_scoped_filter(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -3090,6 +3095,10 @@ bake_test_case Query_testcases[] = {
         Query_named_query
     },
     {
+        "named_scoped_query",
+        Query_named_scoped_query
+    },
+    {
         "instanced_nested_query_w_iter",
         Query_instanced_nested_query_w_iter
     },
@@ -3893,6 +3902,14 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "term_type_w_second_var_string",
         RuleBuilder_term_type_w_second_var_string
+    },
+    {
+        "named_rule",
+        RuleBuilder_named_rule
+    },
+    {
+        "named_scoped_rule",
+        RuleBuilder_named_scoped_rule
     }
 };
 
@@ -4150,6 +4167,14 @@ bake_test_case Filter_testcases[] = {
     {
         "invalid_each_w_no_this",
         Filter_invalid_each_w_no_this
+    },
+    {
+        "named_filter",
+        Filter_named_filter
+    },
+    {
+        "named_scoped_filter",
+        Filter_named_scoped_filter
     }
 };
 
@@ -5317,7 +5342,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        74,
+        75,
         Query_testcases
     },
     {
@@ -5338,7 +5363,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        23,
+        25,
         RuleBuilder_testcases
     },
     {
@@ -5359,7 +5384,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        19,
+        21,
         Filter_testcases
     },
     {

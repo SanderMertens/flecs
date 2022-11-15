@@ -3099,10 +3099,13 @@ struct ecs_filter_t {
 
     ecs_flags32_t flags;       /* Filter flags */
     
-    char *name;                /* Name of filter (optional) */
     char *variable_names[1];   /* Array with variable names */
 
+    /* Mixins */
+    ecs_entity_t entity;       /* Entity associated with filter (optional) */
+    ecs_world_t *world;
     ecs_iterable_t iterable;   /* Iterable mixin */
+    ecs_poly_dtor_t dtor;      /* Dtor mixin */
 };
 
 /* An observer reacts to events matching a filter */
@@ -3138,8 +3141,6 @@ struct ecs_observer_t {
     bool is_multi;              /* If true, the observer triggers on more than one term */
 
     /* Mixins */
-    ecs_world_t *world;
-    ecs_entity_t entity;
     ecs_poly_dtor_t dtor;
 };
 
@@ -4017,9 +4018,8 @@ typedef struct ecs_filter_desc_t {
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;
 
-    /* Optional name of filter, used for debugging. If a filter is created for
-     * a system, the provided name should match the system name. */
-    const char *name;
+    /* Entity associated with query (optional) */
+    ecs_entity_t entity;
 } ecs_filter_desc_t;
 
 
@@ -4075,9 +4075,6 @@ typedef struct ecs_query_desc_t {
      * queries need to be matched with new tables.
      * Subqueries can be nested. */
     ecs_query_t *parent;
-
-    /* Entity associated with query (optional) */
-    ecs_entity_t entity;
 } ecs_query_desc_t;
 
 /** Used with ecs_observer_init. */
@@ -4875,6 +4872,23 @@ int32_t ecs_delete_empty_tables(
     int32_t min_id_count,
     double time_budget_seconds);
 
+/** Get world from poly.
+ *
+ * @param poly A pointer to a poly object.
+ * @return The world.
+ */
+FLECS_API
+const ecs_world_t* ecs_get_world(
+    const ecs_poly_t *poly);
+
+/** Get entity from poly.
+ *
+ * @param poly A pointer to a poly object.
+ * @return Entity associated with the poly object.
+ */
+FLECS_API
+ecs_entity_t ecs_get_entity(
+    const ecs_poly_t *poly);
 
 /** Test if pointer is of specified type.
  * Usage:
@@ -6504,7 +6518,7 @@ ecs_flags32_t ecs_id_get_flags(
  */
 FLECS_API
 ecs_filter_t * ecs_filter_init(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     const ecs_filter_desc_t *desc);
 
 /** Deinitialize filter.
@@ -6953,12 +6967,6 @@ int32_t ecs_query_empty_table_count(
  */
 FLECS_API
 int32_t ecs_query_entity_count(
-    const ecs_query_t *query);
-
-/** Get entity associated with query.
- */
-FLECS_API
-ecs_entity_t ecs_query_entity(
     const ecs_query_t *query);
 
 /** @} */
@@ -7832,15 +7840,6 @@ FLECS_API
 ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id);
-
-/** Get actual world from world.
- *
- * @param world A pointer to a stage or the world.
- * @return The world.
- */
-FLECS_API
-const ecs_world_t* ecs_get_world(
-    const ecs_poly_t *world);
 
 /** Test whether the current world is readonly.
  * This function allows the code to test whether the currently used world
@@ -23010,10 +23009,17 @@ namespace _ {
 
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
-    filter_builder(flecs::world_t* world)
+    filter_builder(flecs::world_t* world, const char *name = nullptr)
         : _::filter_builder_base<Components...>(world)
     {
         _::sig<Components...>(world).populate(this);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::",
+            entity_desc.root_sep = "::",
+            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+        }
     }
 };
 
@@ -23096,6 +23102,10 @@ struct filter_base {
         }
         ecs_filter_move(&m_filter, &obj.m_filter);
         return *this; 
+    }
+
+    flecs::entity entity() {
+        return flecs::entity(m_world, ecs_get_entity(m_filter_ptr));
     }
 
     operator const flecs::filter_t*() const {
@@ -23471,9 +23481,10 @@ struct query_builder final : _::query_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+            entity_desc.sep = "::",
+            entity_desc.root_sep = "::",
+            this->m_desc.filter.entity = ecs_entity_init(world, &entity_desc);
         }
-
     }
 };
 
@@ -23601,7 +23612,7 @@ struct query_base {
     }
 
     flecs::entity entity() {
-        return flecs::entity(m_world, ecs_query_entity(m_query));
+        return flecs::entity(m_world, ecs_get_entity(m_query));
     }
     
     operator query<>() const;
@@ -24656,10 +24667,17 @@ namespace _ {
 
 template <typename ... Components>
 struct rule_builder final : _::rule_builder_base<Components...> {
-    rule_builder(flecs::world_t* world)
+    rule_builder(flecs::world_t* world, const char *name = nullptr)
         : _::rule_builder_base<Components...>(world)
     {
         _::sig<Components...>(world).populate(this);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::",
+            entity_desc.root_sep = "::",
+            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+        }
     }
 };
 
@@ -24697,6 +24715,10 @@ struct rule_base {
 
     operator rule_t*() const {
         return m_rule;
+    }
+
+    flecs::entity entity() {
+        return flecs::entity(m_world, ecs_get_entity(m_rule));
     }
 
     /** Free the rule.
