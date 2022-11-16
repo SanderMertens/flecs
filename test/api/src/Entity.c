@@ -1710,3 +1710,27 @@ void Entity_entity_w_short_notation() {
     ecs_fini(world);
 }
 
+
+void Entity_override_inherited_symbol() {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_entity_t Foo = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Foo",
+        .symbol = "FooSymbol"
+    });
+    test_assert(Foo != 0);
+
+    ecs_entity_t Bar = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Bar",
+        .symbol = "BarSymbol",
+        .add = { ecs_pair(EcsIsA, Foo) }
+    });
+    test_assert(Bar != 0);
+
+    test_str(ecs_get_name(world, Foo), "Foo");
+    test_str(ecs_get_name(world, Bar), "Bar");
+    test_str(ecs_get_symbol(world, Foo), "FooSymbol");
+    test_str(ecs_get_symbol(world, Bar), "BarSymbol");
+
+    ecs_fini(world);
+}

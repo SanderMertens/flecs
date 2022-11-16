@@ -122,7 +122,8 @@
                 "staged_set_name_n_stages",
                 "staged_set_symbol_n_stages",
                 "entity_init_w_add_childof_no_name",
-                "entity_w_short_notation"
+                "entity_w_short_notation",
+                "override_inherited_symbol"
             ]
         }, {
             "id": "Search",
