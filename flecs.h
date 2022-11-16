@@ -13833,6 +13833,7 @@ void ecs_cpp_component_validate(
     ecs_world_t *world,
     ecs_entity_t id,
     const char *name,
+    const char *symbol,
     size_t size,
     size_t alignment,
     bool implicit_name);
@@ -21469,7 +21470,7 @@ struct component : untyped_component {
              * this operation does nothing besides returning the existing id */
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
 
-            ecs_cpp_component_validate(world, id, n,
+            ecs_cpp_component_validate(world, id, n, _::symbol_name<T>(),
                 _::cpp_type<T>::size(),
                 _::cpp_type<T>::alignment(),
                 implicit_name);
@@ -24856,12 +24857,18 @@ inline void init(flecs::world& world) {
         flecs::_::cpp_type<iptr_t>::init(world, flecs::Iptr, true);
         ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
             ECS_INTERNAL_ERROR, NULL);
+        // Remove symbol to prevent validation errors, as it doesn't match with 
+        // the typename
+        ecs_remove_pair(world, flecs::Iptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
 
     if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
         flecs::_::cpp_type<uptr_t>::init(world, flecs::Uptr, true);
         ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
             ECS_INTERNAL_ERROR, NULL);
+        // Remove symbol to prevent validation errors, as it doesn't match with 
+        // the typename
+        ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
 }
 

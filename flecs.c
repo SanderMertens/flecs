@@ -17786,6 +17786,7 @@ void ecs_cpp_component_validate(
     ecs_world_t *world,
     ecs_entity_t id,
     const char *name,
+    const char *symbol,
     size_t size,
     size_t alignment,
     bool implicit_name)
@@ -17793,17 +17794,27 @@ void ecs_cpp_component_validate(
     /* If entity has a name check if it matches */
     if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
         if (!implicit_name && id >= EcsFirstUserComponentId) {
-#           ifndef FLECS_NDEBUG
+#ifndef FLECS_NDEBUG
             char *path = ecs_get_path_w_sep(
                 world, 0, id, "::", NULL);
             if (ecs_os_strcmp(path, name)) {
-                ecs_err(
+                ecs_abort(ECS_INCONSISTENT_NAME,
                     "component '%s' already registered with name '%s'",
                     name, path);
-                ecs_abort(ECS_INCONSISTENT_NAME, NULL);
             }
             ecs_os_free(path);
-#           endif
+#endif
+        }
+
+        if (symbol) {
+            const char *existing_symbol = ecs_get_symbol(world, id);
+            if (existing_symbol) {
+                if (ecs_os_strcmp(symbol, existing_symbol)) {
+                    ecs_abort(ECS_INCONSISTENT_NAME,
+                        "component '%s' with symbol '%s' already registered with symbol '%s'",
+                        name, symbol, existing_symbol);
+                }
+            }
         }
     } else {
         /* Ensure that the entity id valid */
