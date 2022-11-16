@@ -529,6 +529,18 @@ bool ecs_strbuf_appendstr_zerocpy(
     return true;
 }
 
+bool ecs_strbuf_appendstr_zerocpyn(
+    ecs_strbuf_t *b,
+    char *str,
+    int32_t n)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, str, str, n);
+    return true;
+}
+
 bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *b,
     const char* str)
@@ -538,6 +550,19 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     /* Removes const modifier, but logic prevents changing / delete string */
     flecs_strbuf_init(b);
     flecs_strbuf_grow_str(b, (char*)str, NULL, 0);
+    return true;
+}
+
+bool ecs_strbuf_appendstr_zerocpyn_const(
+    ecs_strbuf_t *b,
+    const char *str,
+    int32_t n)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    /* Removes const modifier, but logic prevents changing / delete string */
+    flecs_strbuf_init(b);
+    flecs_strbuf_grow_str(b, (char*)str, NULL, n);
     return true;
 }
 

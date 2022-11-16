@@ -2,12 +2,37 @@
 
 #ifdef FLECS_REST
 
+/* Time interval used to determine when to return a result from the cache. Use
+ * a short interval so that clients still get realtime data, but multiple 
+ * clients requesting for the same data can reuse the same result. */
+#define FLECS_REST_CACHE_TIMEOUT ((ecs_ftime_t)0.5)
+
+typedef struct {
+    char *content;
+    int32_t content_length;
+    ecs_ftime_t time;
+} ecs_rest_cached_t;
+
 typedef struct {
     ecs_world_t *world;
     ecs_entity_t entity;
     ecs_http_server_t *srv;
+    ecs_map_t reply_cache;
     int32_t rc;
+    ecs_ftime_t time;
 } ecs_rest_ctx_t;
+
+static
+void flecs_rest_free_reply_cache(ecs_map_t *reply_cache) {
+    if (ecs_map_is_initialized(reply_cache)) {
+        ecs_map_iter_t it = ecs_map_iter(reply_cache);
+        ecs_rest_cached_t *reply;
+        while ((reply = ecs_map_next(&it, ecs_rest_cached_t, 0))) {
+            ecs_os_free(reply->content);
+        }
+        ecs_map_fini(reply_cache);
+    }
+}
 
 static ECS_COPY(EcsRest, dst, src, {
     ecs_rest_ctx_t *impl = src->impl;
@@ -32,6 +57,7 @@ static ECS_DTOR(EcsRest, ptr, {
         impl->rc --;
         if (!impl->rc) {
             ecs_http_server_fini(impl->srv);
+            flecs_rest_free_reply_cache(&impl->reply_cache);
             ecs_os_free(impl);
         }
     }
@@ -230,6 +256,7 @@ void flecs_rest_iter_to_reply(
 static
 bool flecs_rest_reply_existing_query(
     ecs_world_t *world,
+    ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     const char *name)
@@ -241,9 +268,27 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
+    ecs_map_init_if(&impl->reply_cache, ecs_rest_cached_t, NULL, 1);
+    ecs_rest_cached_t *cached = ecs_map_get(&impl->reply_cache, 
+        ecs_rest_cached_t, q);
+    if (cached) {
+        if ((impl->time - cached->time) > FLECS_REST_CACHE_TIMEOUT) {
+            ecs_os_free(cached->content);
+        } else {
+            /* Cache hit */
+            ecs_strbuf_appendstr_zerocpyn_const(
+                &reply->body, cached->content, cached->content_length);
+            return true;
+        }
+    } else {
+        cached = ecs_map_ensure(&impl->reply_cache, ecs_rest_cached_t, q);
+    }
+
+    /* Cache miss */
     const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
     if (!poly) {
-        flecs_reply_error(reply, "resolved identifier '%s' is not a query", name);
+        flecs_reply_error(reply, 
+            "resolved identifier '%s' is not a query", name);
         reply->code = 400;
         return true;
     }
@@ -252,18 +297,26 @@ bool flecs_rest_reply_existing_query(
     ecs_iter_poly(world, poly->poly, &it, NULL);
     flecs_rest_iter_to_reply(world, req, reply, &it);
 
+    cached->content_length = ecs_strbuf_written(&reply->body);
+    cached->content = ecs_strbuf_get(&reply->body);
+    ecs_strbuf_reset(&reply->body);
+    ecs_strbuf_appendstr_zerocpyn_const(
+        &reply->body, cached->content, cached->content_length);
+    cached->time = impl->time;
+
     return true;
 }
 
 static
 bool flecs_rest_reply_query(
     ecs_world_t *world,
+    ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
     const char *q_name = ecs_http_get_param(req, "name");
     if (q_name) {
-        return flecs_rest_reply_existing_query(world, req, reply, q_name);
+        return flecs_rest_reply_existing_query(world, impl, req, reply, q_name);
     }
 
     const char *q = ecs_http_get_param(req, "q");
@@ -665,7 +718,7 @@ bool flecs_rest_reply(
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
-            return flecs_rest_reply_query(world, req, reply);
+            return flecs_rest_reply_query(world, impl, req, reply);
 
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
@@ -691,8 +744,7 @@ bool flecs_rest_reply(
 }
 
 static
-void flecs_on_set_rest(ecs_iter_t *it)
-{
+void flecs_on_set_rest(ecs_iter_t *it) {
     EcsRest *rest = it->ptrs[0];
 
     int i;
@@ -701,7 +753,7 @@ void flecs_on_set_rest(ecs_iter_t *it)
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_rest_ctx_t *srv_ctx = ecs_os_malloc_t(ecs_rest_ctx_t);
+        ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
         ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
             .ipaddr = rest[i].ipaddr,
             .port = rest[i].port,
@@ -742,6 +794,7 @@ void DequeueRest(ecs_iter_t *it) {
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
+            ctx->time += it->delta_time;
             ecs_http_server_dequeue(ctx->srv, it->delta_time);
         }
     } 

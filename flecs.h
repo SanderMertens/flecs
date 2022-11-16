@@ -2110,12 +2110,28 @@ bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *buffer,
     char *str);
 
+/* Append string to buffer, transfer ownership to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstr_zerocpyn(
+    ecs_strbuf_t *buffer,
+    char *str,
+    int32_t n);
+
 /* Append string to buffer, do not free/modify string.
  * Returns false when max is reached, true when there is still space */
 FLECS_API
 bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *buffer,
     const char *str);
+
+/* Append string to buffer, transfer ownership to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendstr_zerocpyn_const(
+    ecs_strbuf_t *buffer,
+    const char *str,
+    int32_t n);
 
 /* Append n characters to buffer.
  * Returns false when max is reached, true when there is still space */
