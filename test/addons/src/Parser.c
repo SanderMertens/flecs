@@ -555,6 +555,212 @@ void Parser_pair_implicit_subject_this_obj() {
     ecs_fini(world);
 }
 
+void Parser_pair_implicit_subject_pred_w_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred:self, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_obj_w_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred, Obj:self)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_pred_w_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred:up, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsUp|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_obj_w_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred, Obj:up)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsUp|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_pred_w_self_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred:self|up, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsUp|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_obj_w_self_up() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred, Obj:self|up)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsUp|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_pred_w_up_trav() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred:up(ChildOf), Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsUp|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    
+    test_assert(terms[0].first.trav == EcsChildOf);
+    test_assert(terms[0].second.trav == 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_obj_w_up_trav() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred, Obj:up(ChildOf))"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsUp|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_assert(terms[0].first.trav == EcsIsA);
+    test_assert(terms[0].second.trav == EcsChildOf);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Parser_pair_explicit_subject() {
     ecs_world_t *world = ecs_mini();
 
@@ -4227,28 +4433,4 @@ void Parser_oneof_other_pred_w_invalid_obj() {
     }));
  
     ecs_fini(world);
-}
-
-void Parser_pred_implicit_subject_superset_depth_1_digit() {
-    // Implement testcase
-}
-
-void Parser_pred_implicit_subject_subset_depth_1_digit() {
-    // Implement testcase
-}
-
-void Parser_pred_implicit_subject_superset_depth_2_digits() {
-    // Implement testcase
-}
-
-void Parser_pred_implicit_subject_subset_depth_2_digits() {
-    // Implement testcase
-}
-
-void Parser_pred_implicit_superset_min_max_depth() {
-    // Implement testcase
-}
-
-void Parser_pred_implicit_superset_childof_min_max_depth() {
-    // Implement testcase
 }

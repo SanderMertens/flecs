@@ -750,6 +750,12 @@ parse_pair:
         goto error;
     }
 
+    if (ptr[0] == TOK_COLON) {
+        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
+            NULL, &term.first, TOK_PAREN_CLOSE);
+    }
+
     if (ptr[0] == TOK_AND) {
         ptr ++;
         term.src.id = EcsThis;
@@ -776,6 +782,12 @@ parse_pair_predicate:
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
+        }
+
+        if (ptr[0] == TOK_COLON) {
+            ptr = ecs_parse_whitespace(ptr + 1);
+            ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
+                NULL, &term.second, TOK_PAREN_CLOSE);
         }
 
         if (ptr[0] == TOK_PAREN_CLOSE) {

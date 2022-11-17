@@ -33,6 +33,14 @@ void Parser_pair_implicit_subject_any_pred(void);
 void Parser_pair_implicit_subject_any_obj(void);
 void Parser_pair_implicit_subject_this_pred(void);
 void Parser_pair_implicit_subject_this_obj(void);
+void Parser_pair_implicit_subject_pred_w_self(void);
+void Parser_pair_implicit_subject_obj_w_self(void);
+void Parser_pair_implicit_subject_pred_w_up(void);
+void Parser_pair_implicit_subject_obj_w_up(void);
+void Parser_pair_implicit_subject_pred_w_self_up(void);
+void Parser_pair_implicit_subject_obj_w_self_up(void);
+void Parser_pair_implicit_subject_pred_w_up_trav(void);
+void Parser_pair_implicit_subject_obj_w_up_trav(void);
 void Parser_pair_explicit_subject(void);
 void Parser_pair_explicit_subject_this(void);
 void Parser_pair_explicit_subject_this_by_name(void);
@@ -1048,6 +1056,38 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_implicit_subject_this_obj",
         Parser_pair_implicit_subject_this_obj
+    },
+    {
+        "pair_implicit_subject_pred_w_self",
+        Parser_pair_implicit_subject_pred_w_self
+    },
+    {
+        "pair_implicit_subject_obj_w_self",
+        Parser_pair_implicit_subject_obj_w_self
+    },
+    {
+        "pair_implicit_subject_pred_w_up",
+        Parser_pair_implicit_subject_pred_w_up
+    },
+    {
+        "pair_implicit_subject_obj_w_up",
+        Parser_pair_implicit_subject_obj_w_up
+    },
+    {
+        "pair_implicit_subject_pred_w_self_up",
+        Parser_pair_implicit_subject_pred_w_self_up
+    },
+    {
+        "pair_implicit_subject_obj_w_self_up",
+        Parser_pair_implicit_subject_obj_w_self_up
+    },
+    {
+        "pair_implicit_subject_pred_w_up_trav",
+        Parser_pair_implicit_subject_pred_w_up_trav
+    },
+    {
+        "pair_implicit_subject_obj_w_up_trav",
+        Parser_pair_implicit_subject_obj_w_up_trav
     },
     {
         "pair_explicit_subject",
@@ -4584,7 +4624,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        170,
+        178,
         Parser_testcases
     },
     {
