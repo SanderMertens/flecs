@@ -46,6 +46,8 @@
                 "pair_implicit_subject_obj_w_self_up",
                 "pair_implicit_subject_pred_w_up_trav",
                 "pair_implicit_subject_obj_w_up_trav",
+                "pair_implicit_subject_pred_w_invalid_flags",
+                "pair_implicit_subject_obj_w_invalid_flags",
                 "pair_explicit_subject",
                 "pair_explicit_subject_this",
                 "pair_explicit_subject_this_by_name",

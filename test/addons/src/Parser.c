@@ -761,6 +761,38 @@ void Parser_pair_implicit_subject_obj_w_up_trav() {
     ecs_fini(world);
 }
 
+void Parser_pair_implicit_subject_pred_w_invalid_flags() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred:, Obj)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_obj_w_invalid_flags() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Pred, Obj:)"
+    }));
+
+    ecs_fini(world);
+}
+
 void Parser_pair_explicit_subject() {
     ecs_world_t *world = ecs_mini();
 

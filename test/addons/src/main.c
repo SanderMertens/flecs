@@ -41,6 +41,8 @@ void Parser_pair_implicit_subject_pred_w_self_up(void);
 void Parser_pair_implicit_subject_obj_w_self_up(void);
 void Parser_pair_implicit_subject_pred_w_up_trav(void);
 void Parser_pair_implicit_subject_obj_w_up_trav(void);
+void Parser_pair_implicit_subject_pred_w_invalid_flags(void);
+void Parser_pair_implicit_subject_obj_w_invalid_flags(void);
 void Parser_pair_explicit_subject(void);
 void Parser_pair_explicit_subject_this(void);
 void Parser_pair_explicit_subject_this_by_name(void);
@@ -1088,6 +1090,14 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_implicit_subject_obj_w_up_trav",
         Parser_pair_implicit_subject_obj_w_up_trav
+    },
+    {
+        "pair_implicit_subject_pred_w_invalid_flags",
+        Parser_pair_implicit_subject_pred_w_invalid_flags
+    },
+    {
+        "pair_implicit_subject_obj_w_invalid_flags",
+        Parser_pair_implicit_subject_obj_w_invalid_flags
     },
     {
         "pair_explicit_subject",
@@ -4624,7 +4634,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        178,
+        180,
         Parser_testcases
     },
     {

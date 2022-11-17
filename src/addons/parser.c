@@ -754,6 +754,9 @@ parse_pair:
         ptr = ecs_parse_whitespace(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
             NULL, &term.first, TOK_PAREN_CLOSE);
+        if (!ptr) {
+            goto error;
+        }
     }
 
     if (ptr[0] == TOK_AND) {
@@ -788,6 +791,9 @@ parse_pair_predicate:
             ptr = ecs_parse_whitespace(ptr + 1);
             ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                 NULL, &term.second, TOK_PAREN_CLOSE);
+            if (!ptr) {
+                goto error;
+            }
         }
 
         if (ptr[0] == TOK_PAREN_CLOSE) {
