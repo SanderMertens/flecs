@@ -781,7 +781,9 @@ ecs_rule_pair_t term_to_pair(
         if (ecs_has_id(rule->filter.world, pred_id, EcsTransitive)) {
             /* Transitive queries must have an object */
             if (obj_is_set(term)) {
-                result.transitive = true;
+                if (term->second.flags & (EcsUp|EcsTraverseAll)) {
+                    result.transitive = true;
+                }
             }
         }
 

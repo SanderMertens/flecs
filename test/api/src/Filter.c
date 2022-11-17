@@ -715,6 +715,77 @@ void Filter_filter_1_term_optional_only() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_term_transitive_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Transitive);
+    ECS_TAG(world, Tgt);
+    
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_filter_t *r = ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ 
+            .id = ecs_pair(Rel, Tgt)
+        }}
+    });
+    test_assert(r != NULL);
+
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, Tgt));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, Rel);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+    test_int(f.terms[0].second.id, Tgt);
+    test_int(f.terms[0].second.flags, EcsSelf|EcsUp|EcsTraverseAll|EcsIsEntity);
+    test_int(f.terms[0].second.trav, Rel);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_transitive_pair_explicit_self_tgt() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Transitive);
+    ECS_TAG(world, Tgt);
+    
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_filter_t *r = ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ 
+            .id = ecs_pair(Rel, Tgt),
+            .second.flags = EcsSelf
+        }}
+    });
+    test_assert(r != NULL);
+
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, Tgt));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, Rel);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+    test_int(f.terms[0].second.id, Tgt);
+    test_int(f.terms[0].second.flags, EcsSelf|EcsIsEntity);
+    test_int(f.terms[0].second.trav, 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_1_variable_as_pred_only() {
     ecs_log_set_level(-4);
 

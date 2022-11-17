@@ -471,13 +471,14 @@ typedef enum ecs_oper_kind_t {
 #define EcsSelf                       (1u << 1) /* Match on self */
 #define EcsUp                         (1u << 2) /* Match by traversing upwards */
 #define EcsDown                       (1u << 3) /* Match by traversing downwards (derived, cannot be set) */
-#define EcsCascade                    (1u << 4) /* Sort results breadth first */
-#define EcsParent                     (1u << 5) /* Short for up(ChildOf) */
-#define EcsIsVariable                 (1u << 6) /* Term id is a variable */
-#define EcsIsEntity                   (1u << 7) /* Term id is an entity */
-#define EcsFilter                     (1u << 8) /* Prevent observer from triggering on term */
+#define EcsTraverseAll                (1u << 4) /* Match all entities encountered through traversal */
+#define EcsCascade                    (1u << 5) /* Sort results breadth first */
+#define EcsParent                     (1u << 6) /* Short for up(ChildOf) */
+#define EcsIsVariable                 (1u << 7) /* Term id is a variable */
+#define EcsIsEntity                   (1u << 8) /* Term id is an entity */
+#define EcsFilter                     (1u << 9) /* Prevent observer from triggering on term */
 
-#define EcsTraverseFlags              (EcsUp|EcsDown|EcsSelf|EcsCascade|EcsParent)
+#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {

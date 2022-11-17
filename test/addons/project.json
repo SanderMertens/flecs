@@ -680,7 +680,8 @@
                 "rule_iter_set_transitive_self_variable",
                 "rule_iter_set_transitive_2_variables_set_one",
                 "rule_iter_set_transitive_2_variables_set_both",
-                "rule_iter_set_transitive_self_2_variables_set_both"
+                "rule_iter_set_transitive_self_2_variables_set_both",
+                "transitive_w_self_tgt"
             ]
         }, {
             "id": "SystemPeriodic",

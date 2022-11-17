@@ -975,6 +975,8 @@
                 "filter_1_term_cascade_childof",
                 "filter_1_term_cascade_down",
                 "filter_1_term_optional_only",
+                "filter_1_term_transitive_pair",
+                "filter_1_term_transitive_pair_explicit_self_tgt",
                 "filter_1_variable_as_pred_only",
                 "filter_1_variable_as_pred_w_subj",
                 "filter_1_variable_as_pred_w_pair",

@@ -664,6 +664,7 @@ void TransitiveRules_rule_iter_set_transitive_self_variable(void);
 void TransitiveRules_rule_iter_set_transitive_2_variables_set_one(void);
 void TransitiveRules_rule_iter_set_transitive_2_variables_set_both(void);
 void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both(void);
+void TransitiveRules_transitive_w_self_tgt(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -3552,6 +3553,10 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "rule_iter_set_transitive_self_2_variables_set_both",
         TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both
+    },
+    {
+        "transitive_w_self_tgt",
+        TransitiveRules_transitive_w_self_tgt
     }
 };
 
@@ -4676,7 +4681,7 @@ static bake_test_suite suites[] = {
         "TransitiveRules",
         NULL,
         NULL,
-        24,
+        25,
         TransitiveRules_testcases
     },
     {

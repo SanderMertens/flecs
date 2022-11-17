@@ -553,6 +553,7 @@ int flecs_term_finalize(
     ecs_term_id_t *second = &term->second;
     ecs_flags32_t first_flags = first->flags;
     ecs_flags32_t src_flags = src->flags;
+    ecs_flags32_t second_flags = second->flags;
 
     if (term->id) {
         if (flecs_term_populate_from_id(world, term, ctx)) {
@@ -587,8 +588,8 @@ int flecs_term_finalize(
         first_id = term->first.id;
     }
 
-    /* If component id is final, don't attempt component inheritance */
     if (first_id) {
+        /* If component id is final, don't attempt component inheritance */
         if (ecs_has_id(world, first_id, EcsFinal)) {
             if (first_flags & EcsDown) {
                 flecs_filter_error(ctx, "final id cannot be traversed down");
@@ -597,6 +598,7 @@ int flecs_term_finalize(
             first->flags &= ~EcsDown;
             first->trav = 0;
         }
+        /* Don't traverse ids that cannot be inherited */
         if (ecs_has_id(world, first_id, EcsDontInherit)) {
             if (src_flags & (EcsUp | EcsDown)) {
                 flecs_filter_error(ctx, 
@@ -605,6 +607,13 @@ int flecs_term_finalize(
             }
             src->flags &= ~(EcsUp | EcsDown);
             src->trav = 0;
+        }
+        /* Add traversal flags for transitive relationships */
+        if (!(second_flags & EcsTraverseFlags)) {
+            if (ecs_has_id(world, first_id, EcsTransitive)) {
+                second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
+                second->trav = first_id;
+            }
         }
     }
 
