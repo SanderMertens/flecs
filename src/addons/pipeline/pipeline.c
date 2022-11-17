@@ -385,7 +385,15 @@ bool flecs_pipeline_build(
                 ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
                 if (ecs_should_log_1()) {
                     char *path = ecs_get_fullpath(world, it.entities[i]);
-                    ecs_dbg("#[green]system#[reset] %s", path);
+                    const char *doc_name = NULL;
+#ifdef FLECS_DOC
+                    doc_name = ecs_doc_get_name(world, it.entities[i]);
+#endif
+                    if (doc_name) {
+                        ecs_dbg("#[green]system#[reset] %s (%s)", path, doc_name);
+                    } else {
+                        ecs_dbg("#[green]system#[reset] %s", path);
+                    }
                     ecs_os_free(path);
                 }
 
