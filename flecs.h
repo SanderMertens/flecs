@@ -9877,6 +9877,21 @@ typedef struct {
     void *impl;
 } EcsRest;
 
+/* Global statistics */
+extern int64_t ecs_rest_request_count;
+extern int64_t ecs_rest_entity_count;
+extern int64_t ecs_rest_entity_error_count;
+extern int64_t ecs_rest_query_count;
+extern int64_t ecs_rest_query_error_count;
+extern int64_t ecs_rest_query_name_count;
+extern int64_t ecs_rest_query_name_error_count;
+extern int64_t ecs_rest_query_name_from_cache_count;
+extern int64_t ecs_rest_enable_count;
+extern int64_t ecs_rest_enable_error_count;
+extern int64_t ecs_rest_world_stats_count;
+extern int64_t ecs_rest_pipeline_stats_count;
+extern int64_t ecs_rest_stats_error_count;
+
 /* Module import */
 FLECS_API
 void FlecsRestImport(
@@ -10751,6 +10766,36 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stack_free_count;     /* Page frees per frame */
         ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
     } memory;
+
+    struct {
+        /* REST statistics */
+        ecs_metric_t request_count;
+        ecs_metric_t entity_count;
+        ecs_metric_t entity_error_count;
+        ecs_metric_t query_count;
+        ecs_metric_t query_error_count;
+        ecs_metric_t query_name_count;
+        ecs_metric_t query_name_error_count;
+        ecs_metric_t query_name_from_cache_count;
+        ecs_metric_t enable_count;
+        ecs_metric_t enable_error_count;
+        ecs_metric_t world_stats_count;
+        ecs_metric_t pipeline_stats_count;
+        ecs_metric_t stats_error_count;
+    } rest;
+
+    struct {
+        /* HTTP statistics */
+        ecs_metric_t request_received_count;
+        ecs_metric_t request_invalid_count;
+        ecs_metric_t request_handled_ok_count;
+        ecs_metric_t request_handled_error_count;
+        ecs_metric_t request_not_handled_count;
+        ecs_metric_t request_preflight_count;
+        ecs_metric_t send_ok_count;
+        ecs_metric_t send_error_count;
+        ecs_metric_t busy_count;
+    } http;
 
     int64_t last_;
 
@@ -13512,6 +13557,17 @@ typedef struct {
 
 #define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
+
+/* Global statistics. */
+extern int64_t ecs_http_request_received_count;
+extern int64_t ecs_http_request_invalid_count;
+extern int64_t ecs_http_request_handled_ok_count;
+extern int64_t ecs_http_request_handled_error_count;
+extern int64_t ecs_http_request_not_handled_count;
+extern int64_t ecs_http_request_preflight_count;
+extern int64_t ecs_http_send_ok_count;
+extern int64_t ecs_http_send_error_count;
+extern int64_t ecs_http_busy_count;
 
 /** Request callback.
  * Invoked for each valid request. The function should populate the reply and

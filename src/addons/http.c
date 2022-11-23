@@ -85,6 +85,17 @@ typedef int ecs_http_socket_t;
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
+/* Global statistics */
+int64_t ecs_http_request_received_count = 0;
+int64_t ecs_http_request_invalid_count = 0;
+int64_t ecs_http_request_handled_ok_count = 0;
+int64_t ecs_http_request_handled_error_count = 0;
+int64_t ecs_http_request_not_handled_count = 0;
+int64_t ecs_http_request_preflight_count = 0;
+int64_t ecs_http_send_ok_count = 0;
+int64_t ecs_http_send_error_count = 0;
+int64_t ecs_http_busy_count = 0;
+
 /* Send request queue */
 typedef struct ecs_http_send_request_t {
     ecs_http_socket_t sock;
@@ -480,6 +491,8 @@ void http_enqueue_request(
             req->pub.header_count = frag->header_count;
             req->pub.param_count = frag->param_count;
             req->res = res;
+
+            ecs_os_linc(&ecs_http_request_received_count);
         }
     }
 
@@ -710,18 +723,27 @@ void* http_server_send_queue(void* arg) {
             ecs_os_mutex_unlock(srv->lock);
 
             if (http_socket_is_valid(sock)) {
+                bool error = false;
+
                 /* Write headers */
                 ecs_size_t written = http_send(sock, headers, headers_length, 0);
                 if (written != headers_length) {
                     ecs_err("http: failed to write HTTP response headers: %s",
                         ecs_os_strerror(errno));
+                    ecs_os_linc(&ecs_http_send_error_count);
+                    error = true;
                 } else if (content_length >= 0) {
                     /* Write content */
                     written = http_send(sock, content, content_length, 0);
                     if (written != content_length) {
                         ecs_err("http: failed to write HTTP response body: %s",
                             ecs_os_strerror(errno));
+                        ecs_os_linc(&ecs_http_send_error_count);
+                        error = true;
                     }
+                }
+                    ecs_os_linc(&ecs_http_send_ok_count);
+                if (!error) {
                 }
                 http_close(&sock);
             }
@@ -793,6 +815,7 @@ void http_send_reply(
         req = http_send_queue_post(conn->pub.server);
         if (!req) {
             reply->code = 503; /* queue full, server is busy */
+            ecs_os_linc(&ecs_http_busy_count);
         }
     }
 
@@ -806,6 +829,7 @@ void http_send_reply(
         if (written != headers_length) {
             ecs_err("http: failed to send reply to '%s:%s': %s",
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
+            ecs_os_linc(&ecs_http_send_error_count);
         }
         ecs_os_free(content);
         ecs_os_free(headers);
@@ -853,10 +877,13 @@ void http_recv_request(
                 reply.headers = ECS_STRBUF_INIT;
                 reply.status = "OK";
                 http_send_reply(conn, &reply, true);
+                ecs_os_linc(&ecs_http_request_preflight_count);
             } else {
                 http_enqueue_request(conn, conn_id, &frag);
             }
             return;
+        } else {
+            ecs_os_linc(&ecs_http_request_invalid_count);
         }
     }
 
@@ -1066,6 +1093,13 @@ void http_handle_request(
         if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
             reply.code = 404;
             reply.status = "Resource not found";
+            ecs_os_linc(&ecs_http_request_not_handled_count);
+        } else {
+            if (reply.code >= 400) {
+                ecs_os_linc(&ecs_http_request_handled_error_count);
+            } else {
+                ecs_os_linc(&ecs_http_request_handled_ok_count);
+            }
         }
 
         http_send_reply(conn, &reply, false);
