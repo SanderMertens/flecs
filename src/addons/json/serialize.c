@@ -835,10 +835,8 @@ int ecs_entity_to_json_buf(
     flecs_json_object_push(buf);
 
     if (!desc || desc->serialize_path) {
-        char *path = ecs_get_fullpath(world, entity);
         flecs_json_memberl(buf, "path");
-        flecs_json_string(buf, path);
-        ecs_os_free(path);
+        flecs_json_path(buf, world, entity);
     }
 
 #ifdef FLECS_DOC

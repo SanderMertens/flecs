@@ -570,6 +570,7 @@
                 "serialize_entity_union_relationship_invalid_entity_w_labels",
                 "serialize_entity_w_union_property",
                 "serialize_entity_w_union_property",
+                "serialize_entity_from_core",
                 "serialize_iterator_1_comps_empty",
                 "serialize_iterator_1_comps_2_ents_same_table",
                 "serialize_iterator_1_tag_2_ents_same_table",

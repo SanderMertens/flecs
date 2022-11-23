@@ -2150,6 +2150,17 @@ void SerializeToJson_serialize_entity_w_doc_w_quotes() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_from_core() {
+    ecs_world_t *world = ecs_init();
+
+    char *json = ecs_entity_to_json(world, EcsWorld, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"path\":\"flecs.core.World\", \"ids\":[]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 
