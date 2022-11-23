@@ -15,7 +15,7 @@
     flecs_gauge_record(m, t, (ecs_float_t)(value))
 
 #define ECS_COUNTER_RECORD(m, t, value)\
-    flecs_counter_record(m, t, (ecs_float_t)(value))
+    flecs_counter_record(m, t, (double)(value))
 
 #define ECS_METRIC_FIRST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
@@ -49,19 +49,19 @@ void flecs_gauge_record(
 }
 
 static
-ecs_float_t flecs_counter_record(
+double flecs_counter_record(
     ecs_metric_t *m,
     int32_t t,
-    ecs_float_t value)
+    double value)
 {
     int32_t tp = t_prev(t);
-    ecs_float_t prev = m->counter.value[tp];
+    double prev = m->counter.value[tp];
     m->counter.value[t] = value;
-    ecs_float_t gauge_value = value - prev;
+    double gauge_value = value - prev;
     if (gauge_value < 0) {
         gauge_value = 0; /* Counters are monotonically increasing */
     }
-    flecs_gauge_record(m, t, gauge_value);
+    flecs_gauge_record(m, t, (ecs_float_t)gauge_value);
     return gauge_value;
 }
 
@@ -249,7 +249,7 @@ void ecs_world_stats_get(
 
     int32_t t = s->t = t_next(s->t);
 
-    ecs_ftime_t delta_frame_count = 
+    double delta_frame_count = 
     ECS_COUNTER_RECORD(&s->frame.frame_count, t, world->info.frame_count_total);
     ECS_COUNTER_RECORD(&s->frame.merge_count, t, world->info.merge_count_total);
     ECS_COUNTER_RECORD(&s->frame.rematch_count, t, world->info.rematch_count_total);
@@ -258,7 +258,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->frame.observers_ran, t, world->info.observers_ran_frame);
     ECS_COUNTER_RECORD(&s->frame.event_emit_count, t, world->event_id);
 
-    ecs_ftime_t delta_world_time = 
+    double delta_world_time = 
     ECS_COUNTER_RECORD(&s->performance.world_time_raw, t, world->info.world_time_total_raw);
     ECS_COUNTER_RECORD(&s->performance.world_time, t, world->info.world_time_total);
     ECS_COUNTER_RECORD(&s->performance.frame_time, t, world->info.frame_time_total);
@@ -268,7 +268,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
     if (delta_world_time != 0 && delta_frame_count != 0) {
-        ECS_GAUGE_RECORD(&s->performance.fps, t, (ecs_ftime_t)1 / (delta_world_time / (ecs_ftime_t)delta_frame_count));
+        ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / (delta_world_time / (double)delta_frame_count));
     } else {
         ECS_GAUGE_RECORD(&s->performance.fps, t, 0);
     }

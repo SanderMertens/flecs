@@ -27,7 +27,7 @@ typedef struct ecs_gauge_t {
 /* Monotonically increasing counter */
 typedef struct ecs_counter_t {
     ecs_gauge_t rate;                          /* Keep track of deltas too */
-    ecs_float_t value[ECS_STAT_WINDOW];
+    double value[ECS_STAT_WINDOW];
 } ecs_counter_t;
 
 /* Make all metrics the same size, so we can iterate over fields */
