@@ -2114,6 +2114,42 @@ void SerializeToJson_serialize_entity_w_meta_ids() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_doc_w_quotes() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t p = ecs_new_entity(world, "Parent");
+    ecs_entity_t e = ecs_new_entity(world, "Child");
+    ecs_add(world, e, Tag);
+    ecs_add_pair(world, e, EcsChildOf, p);
+    ecs_doc_set_name(world, e, "Doc \"name\"");
+    ecs_doc_set_brief(world, e, "Doc \"brief\"");
+    ecs_doc_set_link(world, e, "Doc \"link\"");
+    ecs_doc_set_color(world, e, "Doc \"color\"");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_label = true;
+    desc.serialize_brief = true;
+    desc.serialize_color = true;
+    desc.serialize_link = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"Parent.Child\", "
+        "\"label\":\"Doc \\\"name\\\"\", " 
+        "\"brief\":\"Doc \\\"brief\\\"\", "
+        "\"link\":\"Doc \\\"link\\\"\", "
+        "\"color\":\"Doc \\\"color\\\"\", "
+        "\"ids\":[[\"Tag\"]]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 

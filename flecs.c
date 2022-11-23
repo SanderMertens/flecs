@@ -32161,6 +32161,10 @@ void flecs_json_string(
     ecs_strbuf_t *buf,
     const char *value);
 
+void flecs_json_string_escape(
+    ecs_strbuf_t *buf,
+    const char *value);
+
 void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name);
@@ -32268,6 +32272,25 @@ void flecs_json_string(
     ecs_strbuf_appendch(buf, '"');
     ecs_strbuf_appendstr(buf, value);
     ecs_strbuf_appendch(buf, '"');
+}
+
+void flecs_json_string_escape(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+    if (length == ecs_os_strlen(value)) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstrn(buf, value, length);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        char *out = ecs_os_malloc(length + 3);
+        ecs_stresc(out + 1, length, '"', value);
+        out[0] = '"';
+        out[length + 1] = '"';
+        out[length + 2] = '\0';
+        ecs_strbuf_appendstr_zerocpy(buf, out);
+    }
 }
 
 void flecs_json_member(
@@ -33205,7 +33228,7 @@ int ecs_entity_to_json_buf(
         flecs_json_memberl(buf, "label");
         const char *doc_name = ecs_doc_get_name(world, entity);
         if (doc_name) {
-            flecs_json_string(buf, doc_name);
+            flecs_json_string_escape(buf, doc_name);
         } else {
             char num_buf[20];
             ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
@@ -33217,7 +33240,7 @@ int ecs_entity_to_json_buf(
         const char *doc_brief = ecs_doc_get_brief(world, entity);
         if (doc_brief) {
             flecs_json_memberl(buf, "brief");
-            flecs_json_string(buf, doc_brief);
+            flecs_json_string_escape(buf, doc_brief);
         }
     }
 
@@ -33225,7 +33248,7 @@ int ecs_entity_to_json_buf(
         const char *doc_link = ecs_doc_get_link(world, entity);
         if (doc_link) {
             flecs_json_memberl(buf, "link");
-            flecs_json_string(buf, doc_link);
+            flecs_json_string_escape(buf, doc_link);
         }
     }
 
@@ -33233,7 +33256,7 @@ int ecs_entity_to_json_buf(
         const char *doc_color = ecs_doc_get_color(world, entity);
         if (doc_color) {
             flecs_json_memberl(buf, "color");
-            flecs_json_string(buf, doc_color);
+            flecs_json_string_escape(buf, doc_color);
         }
     }
 #endif

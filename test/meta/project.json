@@ -563,6 +563,7 @@
                 "serialize_entity_w_link_no_link",
                 "serialize_entity_w_meta_ids",
                 "serialize_entity_color",
+                "serialize_entity_w_doc_w_quotes",
                 "serialize_entity_union_relationship",
                 "serialize_entity_union_relationship_w_labels",
                 "serialize_entity_union_relationship_invalid_entity",
