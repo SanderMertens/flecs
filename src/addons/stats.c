@@ -18,7 +18,7 @@
     flecs_counter_record(m, t, (double)(value))
 
 #define ECS_METRIC_FIRST(stats)\
-    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int32_t)))
+    ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->first_, ECS_SIZEOF(int64_t)))
 
 #define ECS_METRIC_LAST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
@@ -121,7 +121,7 @@ void ecs_metric_reduce(
             dst->gauge.max[t_dst] = src->gauge.max[t];
         }
     }
-    
+
     dst->counter.value[t_dst] = src->counter.value[t_src];
 
 error:

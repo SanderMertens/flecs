@@ -37,7 +37,7 @@ typedef union ecs_metric_t {
 } ecs_metric_t;
 
 typedef struct ecs_world_stats_t {
-    int32_t first_;
+    int64_t first_;
 
     /* Entities */
     struct {
@@ -131,7 +131,7 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
     } memory;
 
-    int32_t last_;
+    int64_t last_;
 
     /** Current position in ringbuffer */
     int32_t t;
@@ -139,11 +139,11 @@ typedef struct ecs_world_stats_t {
 
 /* Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
-    int32_t first_;
+    int64_t first_;
     ecs_metric_t matched_table_count;       /* Matched non-empty tables */    
     ecs_metric_t matched_empty_table_count; /* Matched empty tables */
     ecs_metric_t matched_entity_count;      /* Number of matched entities */
-    int32_t last_;
+    int64_t last_;
 
     /** Current position in ringbuffer */
     int32_t t; 
@@ -151,12 +151,12 @@ typedef struct ecs_query_stats_t {
 
 /** Statistics for a single system (use ecs_system_stats_get) */
 typedef struct ecs_system_stats_t {
-    int32_t first_;
+    int64_t first_;
     ecs_metric_t time_spent;       /* Time spent processing a system */
     ecs_metric_t invoke_count;     /* Number of times system is invoked */
     ecs_metric_t active;           /* Whether system is active (is matched with >0 entities) */
     ecs_metric_t enabled;          /* Whether system is enabled */
-    int32_t last_;
+    int64_t last_;
 
     bool task;                     /* Is system a task */
 
