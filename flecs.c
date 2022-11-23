@@ -37702,7 +37702,7 @@ char* ecs_parse_term(
         term->first.name = NULL;
     }
 
-    /* Cannot combine EcsNothing with operators other than AND */
+    /* Cannot combine EcsIsEntity/0 with operators other than AND */
     if (term->oper != EcsAnd && ecs_term_match_0(term)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
