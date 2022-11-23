@@ -247,7 +247,8 @@ void flecs_observer_invoke(
     ecs_iter_t *it,
     ecs_observer_t *observer,
     ecs_iter_action_t callback,
-    ecs_table_t *table) 
+    ecs_table_t *table,
+    int32_t term_index) 
 {
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_table_lock(it->world, table);
@@ -262,7 +263,8 @@ void flecs_observer_invoke(
     world->info.observers_ran_frame ++;
 
     ecs_filter_t *filter = &observer->filter;
-    ecs_term_t *term = &filter->terms[0];
+    ecs_assert(term_index < filter->term_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_term_t *term = &filter->terms[term_index];
     ecs_entity_t observer_src = term->src.id;
     if (observer_src && !(term->src.flags & EcsIsEntity)) {
         observer_src = 0;
@@ -347,7 +349,7 @@ void flecs_uni_observer_invoke(
     } else {
         ecs_iter_action_t callback = observer->callback;
         it->callback = callback;
-        flecs_observer_invoke(world, it, observer, callback, table);
+        flecs_observer_invoke(world, it, observer, callback, table, 0);
     }
 
     it->event = event;
@@ -456,7 +458,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.callback = o->callback;
         
         flecs_iter_validate(&user_it);
-        flecs_observer_invoke(world, &user_it, o, o->callback, table);
+        flecs_observer_invoke(world, &user_it, o, o->callback, table, pivot_term);
         ecs_iter_fini(&user_it);
         return true;
     }
@@ -472,7 +474,7 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
         return flecs_multi_observer_invoke(it);
     } else {
         it->ctx = o->ctx;
-        flecs_observer_invoke(it->real_world, it, o, o->callback, it->table);
+        flecs_observer_invoke(it->real_world, it, o, o->callback, it->table, 0);
         return true;
     }
 }
@@ -494,7 +496,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     }
 
     ecs_log_push_3();
-    flecs_observer_invoke(it->real_world, it, o, o->callback, it->table);
+    flecs_observer_invoke(it->real_world, it, o, o->callback, it->table, 0);
     ecs_log_pop_3();
 }
 

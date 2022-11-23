@@ -3252,6 +3252,36 @@ void Observer_propagate_match_relationship_w_up() {
     ecs_fini(world);
 }
 
+void Observer_observer_w_2_fixed_src() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Foo  = ecs_new_id(world);
+    ecs_entity_t Bar = ecs_new_id(world);
+
+    ecs_entity_t e1  = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {
+            // Comment out either of these and the callback succeeds.
+            { Foo , .src.id = e1 },
+            { Bar, .src.id = e2 },
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_add_id(world, e1, Foo);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e2, Bar);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     

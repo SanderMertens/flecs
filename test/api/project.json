@@ -1772,6 +1772,7 @@
                 "on_add_after_batch_w_exclusive_adds",
                 "propagate_match_relationship_w_self_up",
                 "propagate_match_relationship_w_up",
+                "observer_w_2_fixed_src",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

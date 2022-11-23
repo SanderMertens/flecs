@@ -1703,6 +1703,7 @@ void Observer_propagate_after_on_delete_clear_action(void);
 void Observer_on_add_after_batch_w_exclusive_adds(void);
 void Observer_propagate_match_relationship_w_self_up(void);
 void Observer_propagate_match_relationship_w_up(void);
+void Observer_observer_w_2_fixed_src(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -8871,6 +8872,10 @@ bake_test_case Observer_testcases[] = {
         Observer_propagate_match_relationship_w_up
     },
     {
+        "observer_w_2_fixed_src",
+        Observer_observer_w_2_fixed_src
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11302,7 +11307,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        86,
+        87,
         Observer_testcases
     },
     {
