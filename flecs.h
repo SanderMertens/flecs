@@ -15,12 +15,13 @@
  * @{
  */
 
-/* Customizable precision for floating point operations (such as time ops) */
+/* Customizable precision for floating point operations */
 #ifndef ecs_float_t
 #define ecs_float_t float
 #endif
 
-/* Customizable precision for time scalar values */
+/* Customizable precision for scalar time values. Change to double precision for 
+ * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
 #define ecs_ftime_t ecs_float_t
 #endif
