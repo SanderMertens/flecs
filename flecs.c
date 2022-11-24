@@ -30510,6 +30510,12 @@ ECS_DECLARE(EcsAngle);
 ECS_DECLARE(EcsBel);
 ECS_DECLARE(EcsDeciBel);
 
+ECS_DECLARE(EcsFrequency);
+    ECS_DECLARE(EcsHerz);
+    ECS_DECLARE(EcsKiloHerz);
+    ECS_DECLARE(EcsMegaHerz);
+    ECS_DECLARE(EcsGigaHerz);
+
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -31320,6 +31326,47 @@ void FlecsUnitsImport(
         .entity = EcsDeciBel,
         .kind = EcsF32
     });
+
+    EcsFrequency = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
+        .name = "Frequency" });
+    prev_scope = ecs_set_scope(world, EcsFrequency);
+
+        EcsHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "Herz" }),
+            .quantity = EcsFrequency,
+            .symbol = "Hz" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
+            .entity = EcsHerz,
+            .kind = EcsF32
+        });
+
+        EcsKiloHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "KiloHerz" }),
+            .prefix = EcsKilo,
+            .base = EcsHerz });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
+            .entity = EcsKiloHerz,
+            .kind = EcsF32
+        });
+
+        EcsMegaHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "MegaHerz" }),
+            .prefix = EcsMega,
+            .base = EcsHerz });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
+            .entity = EcsMegaHerz,
+            .kind = EcsF32
+        });
+
+        EcsGigaHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "GigaHerz" }),
+            .prefix = EcsGiga,
+            .base = EcsHerz });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
+            .entity = EcsGigaHerz,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
 
     /* Documentation */
 #ifdef FLECS_DOC

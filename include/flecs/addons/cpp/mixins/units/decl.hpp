@@ -57,6 +57,7 @@ struct Temperature { };
 struct Data { };
 struct DataRate { };
 struct Angle { };
+struct Frequency { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +157,13 @@ struct BytesPerSecond { };
 struct KiloBytesPerSecond { };
 struct MegaBytesPerSecond { };
 struct GigaBytesPerSecond { };
+};
+
+struct frequency {
+struct Herz { };
+struct KiloHerz { };
+struct MegaHerz { };
+struct GigaHerz { };
 };
 
 struct Percentage { };
