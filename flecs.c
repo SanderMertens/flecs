@@ -36163,8 +36163,8 @@ void* http_server_send_queue(void* arg) {
                         error = true;
                     }
                 }
-                    ecs_os_linc(&ecs_http_send_ok_count);
                 if (!error) {
+                    ecs_os_linc(&ecs_http_send_ok_count);
                 }
                 http_close(&sock);
             }
@@ -36254,6 +36254,7 @@ void http_send_reply(
         }
         ecs_os_free(content);
         ecs_os_free(headers);
+        http_close(&conn->sock);
         return;
     }
 
@@ -36353,8 +36354,8 @@ void http_init_connection(
         ecs_os_strcpy(remote_port, "unknown");
     }
 
-    ecs_dbg_2("http: connection established from '%s:%s'", 
-        remote_host, remote_port);
+    ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
+        remote_host, remote_port, sock_conn);
 
     http_recv_request(srv, conn, conn_id, sock_conn);
 
@@ -36436,6 +36437,8 @@ void http_accept_connections(
             goto done;
         }
 
+        http_sock_set_timeout(sock, 1000);
+
         srv->sock = sock;
 
         result = listen(srv->sock, SOMAXCONN);
@@ -36460,7 +36463,7 @@ void http_accept_connections(
         sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
             &remote_addr_len);
 
-        if (sock_conn == -1) {
+        if (!http_socket_is_valid(sock_conn)) {
             if (srv->should_run) {
                 ecs_dbg("http: connection attempt failed: %s", 
                     ecs_os_strerror(errno));
