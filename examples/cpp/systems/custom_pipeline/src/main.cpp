@@ -2,8 +2,12 @@
 #include <iostream>
 
 // Custom pipelines make it possible for applications to override which systems
-// are ran by a pipieline and how they are ordered. Pipelines are queries under
+// are ran by a pipeline and how they are ordered. Pipelines are queries under
 // the hood, and custom pipelines override the query used for system matching.
+
+// If you only want to use custom phases in addition or in place of the builtin
+// phases see the custom_phases and custom_phases_no_builtin examples, as this 
+// does not require using a custom pipeline.
 
 struct Physics {};
 

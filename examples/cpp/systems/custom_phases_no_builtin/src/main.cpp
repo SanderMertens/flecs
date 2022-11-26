@@ -1,4 +1,4 @@
-#include <custom_phases.h>
+#include <custom_phases_no_builtin.h>
 #include <iostream>
 
 // This application demonstrates how to use custom phases for systems. The 
@@ -13,10 +13,11 @@ void Sys(flecs::iter& it) {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    // Create two custom phases that branch off of EcsOnUpdate. Note that the
-    // phases have the Phase tag, which is necessary for the builtin pipeline 
-    // to discover which systems it should run.
-    auto Physics = ecs.entity().add(flecs::Phase).depends_on(flecs::OnUpdate);
+    // Create three custom phases. Note that the phases have the Phase tag, 
+    // which is necessary for the builtin pipeline to discover which systems it 
+    // should run.
+    auto Update = ecs.entity().add(flecs::Phase);
+    auto Physics = ecs.entity().add(flecs::Phase).depends_on(Update);
     auto Collisions = ecs.entity().add(flecs::Phase).depends_on(Physics);
 
     // Create 3 dummy systems.
