@@ -2224,7 +2224,8 @@
                 "defer_remove_after_set_and_emplace_different_id",
                 "clear_after_add_to_nonempty",
                 "remove_after_add_to_nonempty",
-                "register_while_deferred_with_n_stages"
+                "register_while_deferred_with_n_stages",
+                "defer_2_sets_w_multi_observer"
             ]
         }, {
             "id": "SingleThreadStaging",

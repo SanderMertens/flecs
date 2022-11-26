@@ -3567,7 +3567,7 @@ const ecs_type_info_t* ecs_get_type_info(
     if (idr) {
         return idr->type_info;
     } else if (!(id & ECS_ID_FLAGS_MASK)) {
-        return flecs_sparse_get(world->type_info, ecs_type_info_t, id);
+        return flecs_type_info_get(world, id);
     }
 error:
     return NULL;

@@ -2802,3 +2802,49 @@ void DeferredActions_register_while_deferred_with_n_stages() {
 
     ecs_fini(world);
 }
+
+static int position_velocity_observer_invoked = 0;
+
+static
+void PositionVelocityObserver(ecs_iter_t *it) {
+    position_velocity_observer_invoked ++;
+    test_int(it->count, 1);
+    
+    Position *p = ecs_field(it, Position, 1);
+    Velocity *v = ecs_field(it, Velocity, 2);
+
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void DeferredActions_defer_2_sets_w_multi_observer() {
+    test_quarantine("Nov 25 2022");
+
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .callback = PositionVelocityObserver,
+        .events = { EcsOnSet }
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+    ecs_defer_end(world);
+
+    test_int(position_velocity_observer_invoked, 1);
+
+    ecs_fini(world);
+}

@@ -871,7 +871,7 @@ struct ecs_world_t {
     /* --  Type metadata -- */
     ecs_sparse_t id_index_lo;    /* sparse<id, ecs_id_record_t> */
     ecs_map_t id_index_hi;       /* map<id, ecs_id_record_t*> */
-    ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+    ecs_sparse_t type_info;      /* sparse<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
     ecs_id_record_t *idr_wildcard;
@@ -8815,7 +8815,7 @@ const ecs_type_info_t* ecs_get_type_info(
     if (idr) {
         return idr->type_info;
     } else if (!(id & ECS_ID_FLAGS_MASK)) {
-        return flecs_sparse_get(world->type_info, ecs_type_info_t, id);
+        return flecs_type_info_get(world, id);
     }
 error:
     return NULL;
@@ -29886,7 +29886,7 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->ids.component_count, t, world->info.component_id_count);
     ECS_GAUGE_RECORD(&s->ids.pair_count, t, world->info.pair_id_count);
     ECS_GAUGE_RECORD(&s->ids.wildcard_count, t, world->info.wildcard_id_count);
-    ECS_GAUGE_RECORD(&s->ids.type_count, t, ecs_sparse_count(world->type_info));
+    ECS_GAUGE_RECORD(&s->ids.type_count, t, ecs_sparse_count(&world->type_info));
     ECS_COUNTER_RECORD(&s->ids.create_count, t, world->info.id_create_total);
     ECS_COUNTER_RECORD(&s->ids.delete_count, t, world->info.id_delete_total);
 
@@ -39587,9 +39587,8 @@ ecs_world_t *ecs_mini(void) {
     flecs_world_allocators_init(world);
 
     world->self = world;
-    world->type_info = flecs_sparse_new(
-        &world->allocator, &world->allocators.sparse_chunk, 
-        ecs_type_info_t);
+    flecs_sparse_init(&world->type_info, &world->allocator, 
+        &world->allocators.sparse_chunk, ecs_type_info_t);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     flecs_sparse_init(&world->id_index_lo, NULL, 
         &world->allocators.id_record_chunk, ecs_id_record_t);
@@ -40018,14 +40017,14 @@ static
 void flecs_fini_type_info(
     ecs_world_t *world)
 {
-    int32_t i, count = flecs_sparse_count(world->type_info);
-    ecs_sparse_t *type_info = world->type_info;
+    int32_t i, count = flecs_sparse_count(&world->type_info);
+    ecs_sparse_t *type_info = &world->type_info;
     for (i = 0; i < count; i ++) {
         ecs_type_info_t *ti = flecs_sparse_get_dense(type_info, 
             ecs_type_info_t, i);
         flecs_type_info_fini(ti);
     }
-    flecs_sparse_free(world->type_info);
+    flecs_sparse_fini(&world->type_info);
 }
 
 ecs_entity_t flecs_get_oneof(
@@ -40244,7 +40243,7 @@ const ecs_type_info_t* flecs_type_info_get(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
+    return flecs_sparse_get(&world->type_info, ecs_type_info_t, component);
 }
 
 ecs_type_info_t* flecs_type_info_ensure(
@@ -40258,7 +40257,7 @@ ecs_type_info_t* flecs_type_info_ensure(
     ecs_type_info_t *ti_mut = NULL;
     if (!ti) {
         ti_mut = flecs_sparse_ensure(
-            world->type_info, ecs_type_info_t, component);
+            &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
         const char *sym = ecs_get_symbol(world, component);
@@ -40288,7 +40287,7 @@ bool flecs_type_info_init_id(
         ecs_assert(size == 0 && alignment == 0, 
             ECS_INVALID_COMPONENT_SIZE, NULL);
         ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        flecs_sparse_remove(world->type_info, component);
+        flecs_sparse_remove(&world->type_info, component);
     } else {
         ti = flecs_type_info_ensure(world, component);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -40364,7 +40363,7 @@ void flecs_type_info_free(
         return;
     }
     ecs_type_info_t *ti = flecs_sparse_remove_get(
-        world->type_info, ecs_type_info_t, component);
+        &world->type_info, ecs_type_info_t, component);
     if (ti) {
         flecs_type_info_fini(ti);
     }
