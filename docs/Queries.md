@@ -2493,7 +2493,7 @@ Queries may specify zero for component id to sort on entity ids:
 
 ```cpp
 auto q = world.query_builder<Position>()
-  .order_by(0, [](flecs::entity e1, const void *d1, flecs::entity e2, const void *d2) {
+  .order_by(0, [](flecs::entity_t e1, const void *d1, flecs::entity_t e2, const void *d2) {
     return (e1 > e2) - (e1 < e2);
   })
   .build();
