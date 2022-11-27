@@ -926,30 +926,27 @@ ECS_ENTITY(world, child, (ChildOf, parent));
 ```
 
 ### Iteration
-Applications can iterate hierarchies breadth first with the `ecs_scope_iter` API in C, and the `children()` iterator in C++. This example shows how to iterate all the children of an entity:
+Applications can iterate hierarchies depth first with the `ecs_children` API in C, and the `children()` iterator in C++. This example shows how to iterate all the children of an entity:
 
-```cpp
-ecs_iter_t it = ecs_scope_iter(world, parent);
+In C:
+```c
+ecs_iter_t it = ecs_children(world, parent);
 
-while(ecs_scope_next(&it)) {
+while(ecs_children_next(&it)) {
     for (int i = 0; i < it.count; i++) {
         ecs_entity_t child = it.entities[i];
         char *path = ecs_get_fullpath(world, child);
-        printf(" - %s\n", path);
+        printf("%s\n", path);
         free(path);
     }
 }
 ```
 
-Additionally, applications can request all children that have a specific set of components, by adding a filter to the scope iterator:
-
-```c
-ecs_filter_t f = {
-    .include = ecs_type(Position)
-};
-
-// Iterate all children that have Position
-ecs_iter_t it = ecs_scope_iter_w_filter(world, parent, &f);
+In C++:
+```cpp
+e.children([&](flecs::entity child) {
+    std::cout << child.path() << std::endl;
+});
 ```
 
 ### Hierarchical queries
