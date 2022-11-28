@@ -1340,7 +1340,7 @@ This is interpreted as the system may write any component, and forces a sync poi
 ## Pipelines
 A pipeline is a list of systems that is executed when the `ecs_progress`/`world::progress` function is invoked. Which systems are part of the pipeline is determined by a pipeline query. A pipeline query is a regular ECS query, which matches system entities. Flecs has a builtin pipeline with a predefined query, in addition to offering the ability to specify a custom pipeline query.
 
-A pipeline by default orders systems by their entity id, to ensure deterministic order. This generally means that systems will be ran in the order they are declared, as entity ids are monotonically increasing. Note that this is not guaranteed: when an application deletes entities before creating a system, the system can receive a recycled id, which means it could be lower than the last issued id. For this reason it is recommended to prevent entity deletion while registering systems. When this is can't be avoided, an application can create a custom pipeline with a user-defined `order_by` function (see custom pipeline).
+A pipeline by default orders systems by their entity id, to ensure deterministic order. This generally means that systems will be ran in the order they are declared, as entity ids are monotonically increasing. Note that this is not guaranteed: when an application deletes entities before creating a system, the system can receive a recycled id, which means it could be lower than the last issued id. For this reason it is recommended to prevent entity deletion while registering systems. When this can't be avoided, an application can create a custom pipeline with a user-defined `order_by` function (see custom pipeline).
 
 Pipelines may utilize additional query mechanisms for ordering, such as `cascade` or `group_by`.
 
@@ -1424,7 +1424,7 @@ ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
         { .id = ecs_id(EcsSystem) },
         { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
         { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
-        { .id = EcsPhase, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
     }
 });
 ```
