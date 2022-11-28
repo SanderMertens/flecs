@@ -925,6 +925,8 @@ void Filter_filter_1_variable_as_pred_w_subj(void);
 void Filter_filter_1_variable_as_pred_w_pair(void);
 void Filter_filter_1_variable_as_subj(void);
 void Filter_filter_1_variable_as_obj(void);
+void Filter_filter_2_terms_or_w_dontinherit(void);
+void Filter_filter_2_terms_or_w_both_dontinherit(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_w_pair_id_and_subj(void);
@@ -1053,6 +1055,7 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd(void);
 void Filter_filter_iter_superset_parent_w_isa(void);
 void Filter_filter_iter_superset_isa_after_remove_parent(void);
 void Filter_filter_iter_superset_isa_create_table_after_iter(void);
+void Filter_filter_iter_not_up_disabled(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
 void Filter_filter_w_10_terms_copy(void);
@@ -1872,7 +1875,7 @@ void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
 void Prefab_add_to_empty_base_in_system(void);
-void Prefab_dont_inherit_disabled(void);
+void Prefab_inherit_disabled(void);
 void Prefab_clone_after_inherit_in_on_add(void);
 void Prefab_override_from_nested(void);
 void Prefab_create_multiple_nested_w_on_set(void);
@@ -5791,6 +5794,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_1_variable_as_obj
     },
     {
+        "filter_2_terms_or_w_dontinherit",
+        Filter_filter_2_terms_or_w_dontinherit
+    },
+    {
+        "filter_2_terms_or_w_both_dontinherit",
+        Filter_filter_2_terms_or_w_both_dontinherit
+    },
+    {
         "filter_w_pair_id",
         Filter_filter_w_pair_id
     },
@@ -6301,6 +6312,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_superset_isa_create_table_after_iter",
         Filter_filter_iter_superset_isa_create_table_after_iter
+    },
+    {
+        "filter_iter_not_up_disabled",
+        Filter_filter_iter_not_up_disabled
     },
     {
         "filter_w_10_terms",
@@ -9511,8 +9526,8 @@ bake_test_case Prefab_testcases[] = {
         Prefab_add_to_empty_base_in_system
     },
     {
-        "dont_inherit_disabled",
-        Prefab_dont_inherit_disabled
+        "inherit_disabled",
+        Prefab_inherit_disabled
     },
     {
         "clone_after_inherit_in_on_add",
@@ -11270,7 +11285,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        247,
+        250,
         Filter_testcases
     },
     {

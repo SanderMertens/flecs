@@ -813,16 +813,30 @@ void FlecsPipelineImport(
     flecs_bootstrap_component(world, EcsPipeline);
     flecs_bootstrap_tag(world, EcsPhase);
 
+    /* Create anonymous phases to which the builtin phases will have DependsOn 
+     * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
+     * direct DependsOn relationship on EcsPreUpdate, which ensures that when
+     * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
+    ecs_entity_t phase_0 = ecs_new(world, 0);
+    ecs_entity_t phase_1 = ecs_new_w_pair(world, EcsDependsOn, phase_0);
+    ecs_entity_t phase_2 = ecs_new_w_pair(world, EcsDependsOn, phase_1);
+    ecs_entity_t phase_3 = ecs_new_w_pair(world, EcsDependsOn, phase_2);
+    ecs_entity_t phase_4 = ecs_new_w_pair(world, EcsDependsOn, phase_3);
+    ecs_entity_t phase_5 = ecs_new_w_pair(world, EcsDependsOn, phase_4);
+    ecs_entity_t phase_6 = ecs_new_w_pair(world, EcsDependsOn, phase_5);
+    ecs_entity_t phase_7 = ecs_new_w_pair(world, EcsDependsOn, phase_6);
+    ecs_entity_t phase_8 = ecs_new_w_pair(world, EcsDependsOn, phase_7);
+
     flecs_bootstrap_phase(world, EcsPreFrame,   0);
-    flecs_bootstrap_phase(world, EcsOnLoad,     EcsPreFrame);
-    flecs_bootstrap_phase(world, EcsPostLoad,   EcsOnLoad);
-    flecs_bootstrap_phase(world, EcsPreUpdate,  EcsPostLoad);
-    flecs_bootstrap_phase(world, EcsOnUpdate,   EcsPreUpdate);
-    flecs_bootstrap_phase(world, EcsOnValidate, EcsOnUpdate);
-    flecs_bootstrap_phase(world, EcsPostUpdate, EcsOnValidate);
-    flecs_bootstrap_phase(world, EcsPreStore,   EcsPostUpdate);
-    flecs_bootstrap_phase(world, EcsOnStore,    EcsPreStore);
-    flecs_bootstrap_phase(world, EcsPostFrame,  EcsOnStore);
+    flecs_bootstrap_phase(world, EcsOnLoad,     phase_0);
+    flecs_bootstrap_phase(world, EcsPostLoad,   phase_1);
+    flecs_bootstrap_phase(world, EcsPreUpdate,  phase_2);
+    flecs_bootstrap_phase(world, EcsOnUpdate,   phase_3);
+    flecs_bootstrap_phase(world, EcsOnValidate, phase_4);
+    flecs_bootstrap_phase(world, EcsPostUpdate, phase_5);
+    flecs_bootstrap_phase(world, EcsPreStore,   phase_6);
+    flecs_bootstrap_phase(world, EcsOnStore,    phase_7);
+    flecs_bootstrap_phase(world, EcsPostFrame,  phase_8);
 
     ecs_set_hooks(world, EcsPipeline, {
         .ctor = ecs_default_ctor,
@@ -834,7 +848,9 @@ void FlecsPipelineImport(
         .query = {
             .filter.terms = {
                 { .id = EcsSystem },
-                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn }
+                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
             },
             .order_by = flecs_entity_compare
         }

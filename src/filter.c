@@ -889,7 +889,6 @@ int ecs_filter_finalize(
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     bool is_or = false, prev_or = false;
-    ecs_flags32_t prev_src_flags = 0;
     ecs_entity_t prev_src_id = 0;
     int32_t filter_terms = 0;
 
@@ -910,17 +909,12 @@ int ecs_filter_finalize(
         term->field_index = field_count - 1;
 
         if (prev_or && is_or) {
-            if (prev_src_flags != term->src.flags) {
-                flecs_filter_error(&ctx, "mismatching src.flags for OR terms");
-                return -1;
-            }
             if (prev_src_id != term->src.id) {
                 flecs_filter_error(&ctx, "mismatching src.id for OR terms");
                 return -1;
             }
         }
 
-        prev_src_flags = term->src.flags;
         prev_src_id = term->src.id;
         prev_or = is_or;
 
@@ -933,7 +927,7 @@ int ecs_filter_finalize(
         if (term->id == EcsPrefab) {
             ECS_BIT_SET(f->flags, EcsFilterMatchPrefab);
         }
-        if (term->id == EcsDisabled) {
+        if (term->id == EcsDisabled && (term->src.flags & EcsSelf)) {
             ECS_BIT_SET(f->flags, EcsFilterMatchDisabled);
         }
 

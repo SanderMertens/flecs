@@ -1338,7 +1338,41 @@ ECS_SYSTEM(world, DeleteEntity, EcsOnUpdate, Position, [out] *());
 This is interpreted as the system may write any component, and forces a sync point.
 
 ## Pipelines
-A pipeline defines the different phases that are executed for each frame. By default an application uses the builtin pipeline which has the following phases:
+A pipeline is a list of systems that is executed when the `ecs_progress`/`world::progress` function is invoked. Which systems are part of the pipeline is determined by a pipeline query. A pipeline query is a regular ECS query, which matches system entities. Flecs has a builtin pipeline with a predefined query, in addition to offering the ability to specify a custom pipeline query.
+
+A pipeline by default orders systems by their entity id, to ensure deterministic order. This generally means that systems will be ran in the order they are declared, as entity ids are monotonically increasing. Note that this is not guaranteed: when an application deletes entities before creating a system, the system can receive a recycled id, which means it could be lower than the last issued id. For this reason it is recommended to prevent entity deletion while registering systems. When this is can't be avoided, an application can create a custom pipeline with a user-defined `order_by` function (see custom pipeline).
+
+Pipelines may utilize additional query mechanisms for ordering, such as `cascade` or `group_by`.
+
+### Builtin Pipeline
+The builtin pipeline matches systems that depend on a _phase_. A phase is any entity with the `EcsPhase`/`flecs::Phase` tag. To add a dependency on a phase, the `DependsOn` relationship is used. This happens automatically when using the `ECS_SYSTEM` macro/`flecs::system::kind` method:
+
+```c
+// System is created with (DependsOn, OnUpdate)
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+```
+```cpp
+// System is created with (DependsOn, OnUpdate)
+world.system<Position, Velocity>("Move")
+  .kind(flecs::OnUpdate)
+  .each([](Position& p, Velocity& v) {
+    // ...
+  });
+```
+
+Systems are ordered using a topology sort on the `DependsOn` relationship. Systems higher up in the topology are ran first. In the following example the order of systems is `InputSystem, MoveSystem, CollisionSystem`:
+
+```
+      PreUpdate
+      /       \
+ InputSystem  OnUpdate
+               /     \
+        MoveSystem  PostUpdate
+                     /
+                CollisionSystem
+```
+
+Flecs has the following builtin phases, listed in topology order:
 
 - `EcsOnLoad`
 - `EcsPostLoad`
@@ -1349,17 +1383,18 @@ A pipeline defines the different phases that are executed for each frame. By def
 - `EcsPreStore`
 - `EcsOnStore`
 
-These phases can be provided as an argument to the `ECS_SYSTEM` macro:
+In C++ the phase identifiers are namespaced:
 
-```c
-// System ran in the EcsOnUpdate phase
-ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+- `flecs::OnLoad`
+- `flecs::PostLoad`
+- `flecs::PreUpdate`
+- `flecs::OnUpdate`
+- `flecs::OnValidate`
+- `flecs::PostUpdate`
+- `flecs::PreStore`
+- `flecs::OnStore`
 
-// System ran in the EcsOnValidate phase
-ECS_SYSTEM(world, DetectCollisions, EcsOnValidate, Position);
-```
-
-An application can create custom phases, which can be branched off of existing ones:
+An application can create custom phases, which can be (but don't need to be) branched off of existing ones:
 
 ```c
 // Phases must have the EcsPhase tag
@@ -1374,12 +1409,37 @@ ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
 ECS_SYSTEM(world, Collide, Collisions, Position, Velocity);
 ```
 
-Pipelines are implemented using queries that return matching systems. The builtin pipeline has a query that returns systems with a DependsOn relationship on a phase, topology-sorted by the depth in the `DependsOn` graph:
+#### Builtin Pipeline Query
+The builtin pipeline query looks like this:
 
-```c
-flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn))
+Query DSL:
+```
+flecs.system.System, Phase(cascade(DependsOn)), !Disabled(up(DependsOn)), !Disabled(up(ChildOf))
 ```
 
+C descriptor API:
+```c
+ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+    .query.filter.terms = {
+        { .id = ecs_id(EcsSystem) },
+        { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
+        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
+        { .id = EcsPhase, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+    }
+});
+```
+
+C++ builder API:
+```c
+world.pipeline()
+  .with(flecs::System)
+  .with(flecs::Phase).cascade(flecs::DependsOn)
+  .without(flecs::Disabled).up(flecs::DependsOn)
+  .without(flecs::Disabled).up(flecs::ChildOf)
+  .build();
+```
+
+### Custom pipeline
 Applications can create their own pipelines which fully customize which systems are matched, and in which order they are executed. Custom pipelines can use phases and `DependsOn`, or they may use a completely different approach. This example shows how to create a pipeline that matches all systems with the `Foo` tag:
 
 ```c
@@ -1396,16 +1456,62 @@ ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
 ecs_set_pipeline(world, pipeline);
 
 // Create system
-ECS_SYSTEM(world, Move, 0, Position, Velocity);
-
-// Add Foo to system. That this can be done in one step with ecs_system_init.
-ecs_add(world, ecs_id(Move), Foo);
+ECS_SYSTEM(world, Move, Foo, Position, Velocity);
 
 // Runs the pipeline & system
 ecs_progress(world, 0);
 ```
 
-Custom pipelines can specify their own `order_by` and `group_by` functions. If no `order_by` function is provided, the pipeline will specify one that sorts by entity id. This ensures that regardless of whether systems are moved around in the storage, the pipeline query will always return them in a well-defined order.
+Note that `ECS_SYSTEM` kind parameter/`flecs::system::kind` add the provided entity both by itself as well as with a `DependsOn` relationship. As a result, the above `Move` system ends up with both:
+
+- `Foo`
+- `(DependsOn, Foo)`
+
+This allows applications to still use the macro/builder API with custom pipelines, even if the custom pipeline does not use the `DependsOn` relationship. To avoid adding the `DependsOn` relationship, `0` can be passed to `ECS_SYSTEM` or `flecs::system::kind` followed by adding the tag manually:
+
+### Disabling systems
+Because pipelines use regular ECS queries, adding the `EcsDisabled`/`flecs::Disabled` tag to a system entity will exclude the system from the pipeline. An application can use the `ecs_enable` function or `entity::enable`/`entity::disable` methods to enable/disable a system:
+
+```c
+// Disable system in C
+ecs_enable(world, Move, false);
+// Enable system in C
+ecs_enable(world, Move, true);
+```
+```cpp
+// Disable system in C++
+s.disable();
+// Enable system in C++
+s.enable();
+```
+
+Additionally the `EcsDisabled`/`flecs::Disabled` tag can be added/removed directly:
+
+```c
+ecs_add_id(world, Move, EcsDisabled);
+```
+```c
+s.add(flecs::Disabled);
+```
+
+Note that this applies both to builtin pipelines and custom pipelines, as entiites with the `Disabled` tag are ignored by default by queries.
+
+Phases can also be disabled when using the builtin pipeline, which excludes all systems that depend on the phase. Note that is transitive, if `PhaseB` depends on `PhaseA` and `PhaseA` is disabled, systems that depend on both `PhaseA` and `PhaseB` will be excluded from the pipeline. For this reason, the builtin phases don't directly depend on each other, so that disabling `EcsOnUpdate` does not exclude systems that depend on `EcsPostUpdate`.
+
+When the parent of a system is disabled, it will also be excluded from the builin pipeline. This makes it possible to disable all systems in a module with a single operation.
+
+```c
+ECS_SYSTEM(world, Move, 0, Position, Velocity);
+
+ecs_add(world, Move, Foo);
+```
+```cpp
+auto s = world.system()
+  .kind(0) // prevents adding default `EcsOnUpdate` phase
+  .each(...);
+
+s.add(Foo);
+```
 
 ## Time management
 

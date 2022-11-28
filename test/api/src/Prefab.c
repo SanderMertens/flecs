@@ -2138,7 +2138,7 @@ void Prefab_add_to_empty_base_in_system() {
     ecs_fini(world);
 }
 
-void Prefab_dont_inherit_disabled() {
+void Prefab_inherit_disabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2152,7 +2152,7 @@ void Prefab_dont_inherit_disabled() {
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e1, Velocity));
-    test_assert( !ecs_has_id(world, e1, EcsDisabled));
+    test_assert( ecs_has_id(world, e1, EcsDisabled));
     test_assert( ecs_has_pair(world, e1, EcsIsA, e2));
     test_assert( !ecs_has(world, e2, Position));
     test_assert( ecs_has(world, e2, Velocity));

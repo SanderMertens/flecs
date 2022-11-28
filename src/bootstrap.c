@@ -928,7 +928,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* DontInherit components */
-    ecs_add_id(world, EcsDisabled, EcsDontInherit);
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
     /* Transitive relationships are always Acyclic */

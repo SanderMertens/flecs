@@ -998,6 +998,89 @@ void Filter_filter_1_variable_as_obj() {
     ecs_fini(world);
 }
 
+void Filter_filter_2_terms_or_w_dontinherit() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_add_id(world, TagB, EcsDontInherit);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {{ TagA, .oper = EcsOr }, { TagB, .oper = EcsOr }}
+    }));
+
+    test_int(f.term_count, 2);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].oper, EcsOr);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, TagA);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+
+    test_int(f.terms[1].id, TagB);
+    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].field_index, 0);
+    test_int(f.terms[1].first.id, TagB);
+    test_int(f.terms[1].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[1].src.id, EcsThis);
+    test_int(f.terms[1].src.flags, EcsSelf|EcsIsVariable);
+    test_int(f.terms[1].src.trav, 0);
+    
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_2_terms_or_w_both_dontinherit() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_add_id(world, TagA, EcsDontInherit);
+    ecs_add_id(world, TagB, EcsDontInherit);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {{ TagA, .oper = EcsOr }, { TagB, .oper = EcsOr }}
+    }));
+
+    test_int(f.term_count, 2);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].oper, EcsOr);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, TagA);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsIsVariable);
+    test_int(f.terms[0].src.trav, 0);
+
+    test_int(f.terms[1].id, TagB);
+    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].field_index, 0);
+    test_int(f.terms[1].first.id, TagB);
+    test_int(f.terms[1].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+    test_int(f.terms[1].src.id, EcsThis);
+    test_int(f.terms[1].src.flags, EcsSelf|EcsIsVariable);
+    test_int(f.terms[1].src.trav, 0);
+    
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();
 
@@ -1705,16 +1788,35 @@ void Filter_filter_2_terms_w_or_mixed_src_flags() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_log_set_level(-4);
-
     ecs_filter_t f = ECS_FILTER_INIT;
-    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
             {TagA, .oper = EcsOr}, 
             {TagB, .oper = EcsOr, .src.flags = EcsUp}
         }
     }));
+
+    ecs_entity_t base = ecs_new(world, TagB);
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(TagA, it.ids[0]);
+    test_uint(0, it.sources[0]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(TagB, it.ids[0]);
+    test_uint(base, it.sources[0]);
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -6253,6 +6355,39 @@ void Filter_filter_iter_superset_isa_create_table_after_iter() {
 
     ecs_filter_fini(f);
 
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_not_up_disabled() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { TagA },
+            { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+        }
+    });
+    test_assert(f != NULL);
+
+    ecs_entity_t parent = ecs_new_w_id(world, EcsDisabled);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_id(world, e2, EcsDisabled);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+    
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(TagA, it.ids[0]);
+    test_uint(0, it.sources[0]);
+
+    test_bool(false, ecs_filter_next(&it));
+    
     ecs_fini(world);
 }
 

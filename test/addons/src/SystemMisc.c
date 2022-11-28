@@ -248,24 +248,6 @@ void SystemMisc_invalid_empty_string_w_space() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_mixed_src_modifier() {
-    ecs_log_set_level(-4);
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position(up) || Velocity",
-        .callback = Dummy
-    });
-
-    test_assert(s == 0);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_redefine_row_system() {
     ecs_world_t *world = ecs_init();
 

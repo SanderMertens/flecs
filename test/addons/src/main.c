@@ -403,6 +403,8 @@ void Pipeline_pair_read_after_staged_wildcard_write(void);
 void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(void);
 void Pipeline_no_merge_after_from_nothing_w_default_inout(void);
 void Pipeline_on_merge_activate_system_before_merge(void);
+void Pipeline_disable_phase(void);
+void Pipeline_disable_parent(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -421,7 +423,6 @@ void SystemMisc_invalid_entity_id(void);
 void SystemMisc_invalid_null_string(void);
 void SystemMisc_invalid_empty_string(void);
 void SystemMisc_invalid_empty_string_w_space(void);
-void SystemMisc_invalid_mixed_src_modifier(void);
 void SystemMisc_redefine_row_system(void);
 void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
@@ -2524,6 +2525,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "on_merge_activate_system_before_merge",
         Pipeline_on_merge_activate_system_before_merge
+    },
+    {
+        "disable_phase",
+        Pipeline_disable_phase
+    },
+    {
+        "disable_parent",
+        Pipeline_disable_parent
     }
 };
 
@@ -2591,10 +2600,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_empty_string_w_space",
         SystemMisc_invalid_empty_string_w_space
-    },
-    {
-        "invalid_mixed_src_modifier",
-        SystemMisc_invalid_mixed_src_modifier
     },
     {
         "redefine_row_system",
@@ -4660,14 +4665,14 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        56,
+        58,
         Pipeline_testcases
     },
     {
         "SystemMisc",
         NULL,
         NULL,
-        63,
+        62,
         SystemMisc_testcases
     },
     {

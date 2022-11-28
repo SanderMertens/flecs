@@ -16973,16 +16973,30 @@ void FlecsPipelineImport(
     flecs_bootstrap_component(world, EcsPipeline);
     flecs_bootstrap_tag(world, EcsPhase);
 
+    /* Create anonymous phases to which the builtin phases will have DependsOn 
+     * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
+     * direct DependsOn relationship on EcsPreUpdate, which ensures that when
+     * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
+    ecs_entity_t phase_0 = ecs_new(world, 0);
+    ecs_entity_t phase_1 = ecs_new_w_pair(world, EcsDependsOn, phase_0);
+    ecs_entity_t phase_2 = ecs_new_w_pair(world, EcsDependsOn, phase_1);
+    ecs_entity_t phase_3 = ecs_new_w_pair(world, EcsDependsOn, phase_2);
+    ecs_entity_t phase_4 = ecs_new_w_pair(world, EcsDependsOn, phase_3);
+    ecs_entity_t phase_5 = ecs_new_w_pair(world, EcsDependsOn, phase_4);
+    ecs_entity_t phase_6 = ecs_new_w_pair(world, EcsDependsOn, phase_5);
+    ecs_entity_t phase_7 = ecs_new_w_pair(world, EcsDependsOn, phase_6);
+    ecs_entity_t phase_8 = ecs_new_w_pair(world, EcsDependsOn, phase_7);
+
     flecs_bootstrap_phase(world, EcsPreFrame,   0);
-    flecs_bootstrap_phase(world, EcsOnLoad,     EcsPreFrame);
-    flecs_bootstrap_phase(world, EcsPostLoad,   EcsOnLoad);
-    flecs_bootstrap_phase(world, EcsPreUpdate,  EcsPostLoad);
-    flecs_bootstrap_phase(world, EcsOnUpdate,   EcsPreUpdate);
-    flecs_bootstrap_phase(world, EcsOnValidate, EcsOnUpdate);
-    flecs_bootstrap_phase(world, EcsPostUpdate, EcsOnValidate);
-    flecs_bootstrap_phase(world, EcsPreStore,   EcsPostUpdate);
-    flecs_bootstrap_phase(world, EcsOnStore,    EcsPreStore);
-    flecs_bootstrap_phase(world, EcsPostFrame,  EcsOnStore);
+    flecs_bootstrap_phase(world, EcsOnLoad,     phase_0);
+    flecs_bootstrap_phase(world, EcsPostLoad,   phase_1);
+    flecs_bootstrap_phase(world, EcsPreUpdate,  phase_2);
+    flecs_bootstrap_phase(world, EcsOnUpdate,   phase_3);
+    flecs_bootstrap_phase(world, EcsOnValidate, phase_4);
+    flecs_bootstrap_phase(world, EcsPostUpdate, phase_5);
+    flecs_bootstrap_phase(world, EcsPreStore,   phase_6);
+    flecs_bootstrap_phase(world, EcsOnStore,    phase_7);
+    flecs_bootstrap_phase(world, EcsPostFrame,  phase_8);
 
     ecs_set_hooks(world, EcsPipeline, {
         .ctor = ecs_default_ctor,
@@ -16994,7 +17008,9 @@ void FlecsPipelineImport(
         .query = {
             .filter.terms = {
                 { .id = EcsSystem },
-                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn }
+                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
             },
             .order_by = flecs_entity_compare
         }
@@ -43028,7 +43044,6 @@ int ecs_filter_finalize(
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     bool is_or = false, prev_or = false;
-    ecs_flags32_t prev_src_flags = 0;
     ecs_entity_t prev_src_id = 0;
     int32_t filter_terms = 0;
 
@@ -43049,17 +43064,12 @@ int ecs_filter_finalize(
         term->field_index = field_count - 1;
 
         if (prev_or && is_or) {
-            if (prev_src_flags != term->src.flags) {
-                flecs_filter_error(&ctx, "mismatching src.flags for OR terms");
-                return -1;
-            }
             if (prev_src_id != term->src.id) {
                 flecs_filter_error(&ctx, "mismatching src.id for OR terms");
                 return -1;
             }
         }
 
-        prev_src_flags = term->src.flags;
         prev_src_id = term->src.id;
         prev_or = is_or;
 
@@ -43072,7 +43082,7 @@ int ecs_filter_finalize(
         if (term->id == EcsPrefab) {
             ECS_BIT_SET(f->flags, EcsFilterMatchPrefab);
         }
-        if (term->id == EcsDisabled) {
+        if (term->id == EcsDisabled && (term->src.flags & EcsSelf)) {
             ECS_BIT_SET(f->flags, EcsFilterMatchDisabled);
         }
 
@@ -53407,7 +53417,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* DontInherit components */
-    ecs_add_id(world, EcsDisabled, EcsDontInherit);
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
     /* Transitive relationships are always Acyclic */

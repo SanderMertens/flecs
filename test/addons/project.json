@@ -413,7 +413,9 @@
                 "pair_read_after_staged_wildcard_write",
                 "no_sync_after_pair_wildcard_read_after_unmatching_staged_write",
                 "no_merge_after_from_nothing_w_default_inout",
-                "on_merge_activate_system_before_merge"
+                "on_merge_activate_system_before_merge",
+                "disable_phase",
+                "disable_parent"
             ]
         }, {
             "id": "SystemMisc",
@@ -433,8 +435,7 @@
                 "invalid_entity_id",
                 "invalid_null_string",
                 "invalid_empty_string",
-                "invalid_empty_string_w_space",
-                "invalid_mixed_src_modifier",                
+                "invalid_empty_string_w_space",        
                 "redefine_row_system",
                 "system_w_or_prefab",
                 "system_w_or_disabled",

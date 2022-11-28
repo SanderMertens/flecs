@@ -2348,3 +2348,92 @@ void Pipeline_on_merge_activate_system_before_merge() {
 
     ecs_fini(world);
 }
+
+void Pipeline_disable_phase() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsPostUpdate) }}),
+        .callback = SysB
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+
+    ecs_enable(world, EcsOnUpdate, false);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 2);
+
+    ecs_enable(world, EcsOnUpdate, true);
+    ecs_enable(world, EcsPostUpdate, false);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 2);
+
+    ecs_enable(world, EcsPostUpdate, true);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 3);
+    test_int(sys_b_invoked, 3);
+
+    ecs_fini(world);
+}
+
+void Pipeline_disable_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p1 = ecs_new_id(world);
+    ecs_entity_t p2 = ecs_new_id(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_childof(p1), ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_childof(p2), ecs_dependson(EcsPostUpdate) }}),
+        .callback = SysB
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+
+    ecs_enable(world, p1, false);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 2);
+
+    ecs_enable(world, p1, true);
+    ecs_enable(world, p2, false);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 2);
+
+    ecs_enable(world, p2, true);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 3);
+    test_int(sys_b_invoked, 3);
+
+    ecs_fini(world);
+}
