@@ -1445,6 +1445,7 @@ Applications can create their own pipelines which fully customize which systems 
 ```c
 ECS_TAG(world, Foo);
 
+// Create custom pipeline
 ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
     .query.filter.terms = {
         { .id = ecs_id(EcsSystem) }, // mandatory
@@ -1461,6 +1462,24 @@ ECS_SYSTEM(world, Move, Foo, Position, Velocity);
 // Runs the pipeline & system
 ecs_progress(world, 0);
 ```
+```cpp
+// Create custom pipeline
+flecs::entity pipeline = world.pipeline()
+  .with(flecs::System)
+  .with(Foo) // or .with<Foo>() if a type
+  .build();
+
+// Configure the world to use the custom pipeline
+world.set_pipeline(pipeline);
+
+// Create system
+auto move = world.system<Position, Velocity>("Move")
+  .kind(Foo) // or .kind<Foo>() if a type
+  .each(...);
+
+// Runs the pipeline & system
+world.progress();
+```
 
 Note that `ECS_SYSTEM` kind parameter/`flecs::system::kind` add the provided entity both by itself as well as with a `DependsOn` relationship. As a result, the above `Move` system ends up with both:
 
@@ -1468,6 +1487,13 @@ Note that `ECS_SYSTEM` kind parameter/`flecs::system::kind` add the provided ent
 - `(DependsOn, Foo)`
 
 This allows applications to still use the macro/builder API with custom pipelines, even if the custom pipeline does not use the `DependsOn` relationship. To avoid adding the `DependsOn` relationship, `0` can be passed to `ECS_SYSTEM` or `flecs::system::kind` followed by adding the tag manually:
+
+```c
+ecs_add(world, Move, Foo);
+```
+```cpp
+move.add(Foo);
+```
 
 ### Disabling systems
 Because pipelines use regular ECS queries, adding the `EcsDisabled`/`flecs::Disabled` tag to a system entity will exclude the system from the pipeline. An application can use the `ecs_enable` function or `entity::enable`/`entity::disable` methods to enable/disable a system:
