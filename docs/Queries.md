@@ -2470,7 +2470,7 @@ The following example shows how to use sorted queries in C++:
 ```cpp
 // Use readonly term for component used for sorting
 auto q = world.query_builder<const Depth, Position>()
-  .order_by([](flecs::entity e1, const Depth *d1, flecs::entity e2, const Depth *d2) {
+  .order_by([](flecs::entity_t e1, const Depth *d1, flecs::entity_t e2, const Depth *d2) {
     return (d1->value > d2->value) - (d1->value < d2->value);
   })
   .build();
@@ -2483,7 +2483,7 @@ flecs::entity depth_id = world.component<Depth>();
 
 auto q = world.query_builder<Position>()
   .term(depth_id).in()
-  .order_by(depth_id, [](flecs::entity e1, const void *d1, flecs::entity e2, const void *d2) {
+  .order_by(depth_id, [](flecs::entity_t e1, const void *d1, flecs::entity_t e2, const void *d2) {
     // Generic sort code ...
   })
   .build();
