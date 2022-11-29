@@ -7018,6 +7018,9 @@ typedef struct ecs_event_desc_t {
      * automatically determined by doing ecs_table_count(table) - offset. */
     int32_t count;
 
+    /* Single-entity alternative to setting table / offset / count */
+    ecs_entity_t entity;
+
     /* Optional context. Assigned to iter param member */
     const void *param;
 

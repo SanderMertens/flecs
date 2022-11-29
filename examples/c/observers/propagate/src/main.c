@@ -50,9 +50,9 @@ int main(int argc, char *argv[]) {
     ecs_observer(ecs, {
         .filter = { .terms = {
             // Listen for Position events from self
-            { ecs_id(Position) },
+            { .id = ecs_id(Position) },
             // Listen for Position events from parent
-            { ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }
+            { .id = ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }
         }},
         .events = { EcsOnSet },
         .callback = Observer
@@ -73,5 +73,5 @@ int main(int argc, char *argv[]) {
     ecs_fini(ecs);
 
     // Output
-    //    - OnSet: Position: e: self: {10.000000, 20.000000}, parent: {1.000000, 2.000000}
+    //   - OnSet: Position: e: self: {10.000000, 20.000000}, parent: {1.000000, 2.000000}
 }

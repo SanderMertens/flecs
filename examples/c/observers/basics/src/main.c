@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     // be used to create an observer.
     ecs_observer(ecs, {
         // Observer filter. Uses same ecs_filter_desc_t as systems/queries
-        .filter = { .terms = {{ ecs_id(Position) }}},
+        .filter = { .terms = {{ .id = ecs_id(Position) }}},
         // Events the observer will listen for. Can contain multiple events
         .events = { EcsOnAdd, EcsOnRemove },
         // Observer callback

@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, e2, Position, {20, 30});
 
     ecs_observer(ecs, {
-        .filter = { .terms = {{ ecs_id(Position) }}},
+        .filter = { .terms = {{ .id = ecs_id(Position) }}},
         .events = { EcsOnSet },
         .callback = Observer,
         .yield_existing = true // Trigger for existing matching entities

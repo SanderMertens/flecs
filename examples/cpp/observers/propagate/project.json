@@ -1,10 +1,11 @@
 {
-    "id": "yield_existing",
+    "id": "propagate",
     "type": "application",
     "value": {
         "use": [
             "flecs"
         ],
+        "language": "c++",
         "public": false
     }
 }

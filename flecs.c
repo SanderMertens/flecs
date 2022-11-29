@@ -42151,6 +42151,23 @@ void ecs_emit(
     ecs_event_desc_t *desc)
 {
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
+    if (desc->entity) {
+        ecs_assert(desc->table == NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(desc->offset == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(desc->count == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_record_t *r = flecs_entities_get(world, desc->entity);
+        ecs_table_t *table;
+        if (!r || !(table = r->table)) {
+            /* Empty entities can't trigger observers */
+            return;
+        }
+        desc->table = table;
+        desc->offset = ECS_RECORD_TO_ROW(r->row);
+        desc->count = 1;
+    }
+    if (!desc->observable) {
+        desc->observable = world;
+    }
     flecs_emit(world, stage, desc);
 }
 

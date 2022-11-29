@@ -5,6 +5,7 @@
         "use": [
             "flecs"
         ],
+        "language": "c++",
         "public": false
     }
 }

@@ -1,4 +1,4 @@
-#include <yield_existing.h>
+#include <monitor.h>
 #include <stdio.h>
 
 // A monitor observer triggers when an entity starts/stop matching the observer
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Velocity);
 
     ecs_observer(ecs, {
-        .filter = { .terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }}},
+        .filter = { .terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }}},
         .events = { EcsMonitor }, // Monitor entities entering/leaving the query
         .callback = Observer,
     });
