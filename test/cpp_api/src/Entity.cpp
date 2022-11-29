@@ -234,26 +234,64 @@ void Entity_emplace_after_add_pair() {
     test_int(v->y, 40);
 }
 
-class SelfCtor {
-public:
-    SelfCtor(flecs::entity e, int x, int y) : e_(e), x_(x), y_(y) { }
-
-    flecs::entity e_;
-    int x_;
-    int y_;
-};
-
-void Entity_emplace_w_self_ctor() {
+void Entity_emplace_pair() {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .emplace<SelfCtor>(10, 20);
+        .emplace<Position, Tag>(10.0f, 20.0f);
 
-    const SelfCtor *ptr = e.get<SelfCtor>();
-    test_assert(ptr != NULL);
-    test_int(ptr->x_, 10);
-    test_int(ptr->y_, 20);
-    test_assert(ptr->e_ == e);
+    test_assert((e.has<Position, Tag>()));
+
+    const Position *p = e.get<Position, Tag>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_emplace_pair_w_entity() {
+    flecs::world ecs;
+
+    auto tag = ecs.entity();
+
+    auto e = ecs.entity()
+        .emplace_first<Position>(tag, 10.0f, 20.0f);
+
+    test_assert((e.has<Position>(tag)));
+
+    const Position *p = e.get<Position>(tag);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_emplace_pair_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .emplace<flecs::pair<Position, Tag>>(10.0f, 20.0f);
+
+    test_assert((e.has<Position, Tag>()));
+
+    const Position *p = e.get<Position, Tag>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_emplace_pair_second() {
+    flecs::world ecs;
+
+    auto tag = ecs.entity();
+
+    auto e = ecs.entity()
+        .emplace_second<Position>(tag, 10.0f, 20.0f);
+
+    test_assert((e.has_second<Position>(tag)));
+
+    const Position *p = e.get_second<Position>(tag);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }
 
 void Entity_add_2() {

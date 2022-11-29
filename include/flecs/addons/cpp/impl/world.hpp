@@ -3,14 +3,6 @@
 namespace flecs 
 {
 
-// emplace for T(flecs::entity, Args...)
-template <typename T, typename ... Args, if_t<
-    std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value >>
-inline void emplace(world_t *world, id_t entity, Args&&... args) {
-    flecs::entity self(world, entity);
-    emplace<T>(world, entity, self, FLECS_FWD(args)...);
-}
-
 inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Identifier>("flecs::core::Identifier");

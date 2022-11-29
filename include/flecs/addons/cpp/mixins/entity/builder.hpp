@@ -432,7 +432,7 @@ struct entity_builder : entity_view {
         this->override<T>();
 
         flecs::emplace<T>(this->m_world, this->m_id, 
-            FLECS_FWD(args)...);
+            _::cpp_type<T>::id(this->m_world), FLECS_FWD(args)...);
 
         return to_base();  
     }
@@ -736,9 +736,35 @@ struct entity_builder : entity_view {
      * @tparam T the component to emplace
      * @param args The arguments to pass to the constructor of T
      */
-    template <typename T, typename ... Args>
+    template<typename T, typename ... Args, typename A = actual_type_t<T>>
     Self& emplace(Args&&... args) {
-        flecs::emplace<T>(this->m_world, this->m_id, 
+        flecs::emplace<A>(this->m_world, this->m_id, 
+            _::cpp_type<T>::id(this->m_world), FLECS_FWD(args)...);
+        return to_base();
+    }
+
+    template <typename First, typename Second, typename ... Args, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
+    Self& emplace(Args&&... args) {
+        flecs::emplace<A>(this->m_world, this->m_id, 
+            ecs_pair(_::cpp_type<First>::id(this->m_world),
+                _::cpp_type<Second>::id(this->m_world)),
+            FLECS_FWD(args)...);
+        return to_base();
+    }
+
+    template <typename First, typename ... Args>
+    Self& emplace_first(flecs::entity_t second, Args&&... args) {
+        flecs::emplace<First>(this->m_world, this->m_id, 
+            ecs_pair(_::cpp_type<First>::id(this->m_world), second),
+            FLECS_FWD(args)...);
+        return to_base();
+    }
+
+    template <typename Second, typename ... Args>
+    Self& emplace_second(flecs::entity_t first, Args&&... args) {
+        flecs::emplace<Second>(this->m_world, this->m_id, 
+            ecs_pair(first, _::cpp_type<Second>::id(this->m_world)),
             FLECS_FWD(args)...);
         return to_base();
     }

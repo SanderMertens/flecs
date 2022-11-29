@@ -38,7 +38,10 @@ void Entity_emplace(void);
 void Entity_emplace_2(void);
 void Entity_emplace_after_add(void);
 void Entity_emplace_after_add_pair(void);
-void Entity_emplace_w_self_ctor(void);
+void Entity_emplace_pair(void);
+void Entity_emplace_pair_w_entity(void);
+void Entity_emplace_pair_type(void);
+void Entity_emplace_pair_second(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
@@ -1203,8 +1206,20 @@ bake_test_case Entity_testcases[] = {
         Entity_emplace_after_add_pair
     },
     {
-        "emplace_w_self_ctor",
-        Entity_emplace_w_self_ctor
+        "emplace_pair",
+        Entity_emplace_pair
+    },
+    {
+        "emplace_pair_w_entity",
+        Entity_emplace_pair_w_entity
+    },
+    {
+        "emplace_pair_type",
+        Entity_emplace_pair_type
+    },
+    {
+        "emplace_pair_second",
+        Entity_emplace_pair_second
     },
     {
         "get_generic",
@@ -5286,7 +5301,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        223,
+        226,
         Entity_testcases
     },
     {
