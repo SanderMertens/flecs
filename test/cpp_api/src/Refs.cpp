@@ -83,3 +83,35 @@ void Refs_non_const_ref() {
 
     test_int(e.get<Position>()->x, 11);
 }
+
+void Refs_pair_ref() {
+    flecs::world world;
+
+    auto e = world.entity().set<Position, Tag>({10, 20});
+    auto ref = e.get_ref<Position, Tag>();
+    ref->x ++;
+
+    test_int((e.get<Position, Tag>()->x), 11);
+}
+
+void Refs_pair_ref_w_entity() {
+    flecs::world world;
+
+    auto tag = world.entity();
+    auto e = world.entity().set<Position>(tag, {10, 20});
+    auto ref = e.get_ref<Position>(tag);
+    ref->x ++;
+
+    test_int(e.get<Position>(tag)->x, 11);
+}
+
+void Refs_pair_ref_second() {
+    flecs::world world;
+
+    auto tag = world.entity();
+    auto e = world.entity().set_second<Position>(tag, {10, 20});
+    auto ref = e.get_ref_second<Position>(tag);
+    ref->x ++;
+
+    test_int(e.get_second<Position>(tag)->x, 11);
+}

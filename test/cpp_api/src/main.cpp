@@ -878,6 +878,9 @@ void Refs_ref_after_remove(void);
 void Refs_ref_after_set(void);
 void Refs_ref_before_set(void);
 void Refs_non_const_ref(void);
+void Refs_pair_ref(void);
+void Refs_pair_ref_w_entity(void);
+void Refs_pair_ref_second(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -4484,6 +4487,18 @@ bake_test_case Refs_testcases[] = {
     {
         "non_const_ref",
         Refs_non_const_ref
+    },
+    {
+        "pair_ref",
+        Refs_pair_ref
+    },
+    {
+        "pair_ref_w_entity",
+        Refs_pair_ref_w_entity
+    },
+    {
+        "pair_ref_second",
+        Refs_pair_ref_second
     }
 };
 
@@ -5413,7 +5428,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        7,
+        10,
         Refs_testcases
     },
     {
