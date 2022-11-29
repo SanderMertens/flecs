@@ -906,7 +906,13 @@
                 "ctor_w_2_worlds_explicit_registration",
                 "defer_emplace",
                 "emplace_w_on_add",
-                "emplace_w_on_add_existing"
+                "emplace_w_on_add_existing",
+                "set_pair_no_copy",
+                "set_pair_w_entity_no_copy",
+                "set_pair_second_no_copy",
+                "set_override_no_copy",
+                "set_override_pair_no_copy",
+                "set_override_pair_w_entity_no_copy"
             ]
         }, {
             "id": "Refs",

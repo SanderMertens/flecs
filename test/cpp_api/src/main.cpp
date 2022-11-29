@@ -869,6 +869,12 @@ void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void);
 void ComponentLifecycle_defer_emplace(void);
 void ComponentLifecycle_emplace_w_on_add(void);
 void ComponentLifecycle_emplace_w_on_add_existing(void);
+void ComponentLifecycle_set_pair_no_copy(void);
+void ComponentLifecycle_set_pair_w_entity_no_copy(void);
+void ComponentLifecycle_set_pair_second_no_copy(void);
+void ComponentLifecycle_set_override_no_copy(void);
+void ComponentLifecycle_set_override_pair_no_copy(void);
+void ComponentLifecycle_set_override_pair_w_entity_no_copy(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4456,6 +4462,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "emplace_w_on_add_existing",
         ComponentLifecycle_emplace_w_on_add_existing
+    },
+    {
+        "set_pair_no_copy",
+        ComponentLifecycle_set_pair_no_copy
+    },
+    {
+        "set_pair_w_entity_no_copy",
+        ComponentLifecycle_set_pair_w_entity_no_copy
+    },
+    {
+        "set_pair_second_no_copy",
+        ComponentLifecycle_set_pair_second_no_copy
+    },
+    {
+        "set_override_no_copy",
+        ComponentLifecycle_set_override_no_copy
+    },
+    {
+        "set_override_pair_no_copy",
+        ComponentLifecycle_set_override_pair_no_copy
+    },
+    {
+        "set_override_pair_w_entity_no_copy",
+        ComponentLifecycle_set_override_pair_w_entity_no_copy
     }
 };
 
@@ -5421,7 +5451,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        65,
+        71,
         ComponentLifecycle_testcases
     },
     {

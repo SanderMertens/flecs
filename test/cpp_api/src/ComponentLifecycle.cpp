@@ -1634,3 +1634,83 @@ void ComponentLifecycle_emplace_w_on_add_existing() {
     e1.emplace<Position>();
     test_int(on_add, 1);
 }
+
+void ComponentLifecycle_set_pair_no_copy() {
+    flecs::world ecs;
+
+    struct Tag { };
+
+    flecs::entity e = ecs.entity()
+        .set<NoCopy, Tag>({ 10 });
+
+    const NoCopy *ptr = e.get<NoCopy, Tag>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+}
+
+void ComponentLifecycle_set_pair_w_entity_no_copy() {
+    flecs::world ecs;
+
+    flecs::entity tag = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .set<NoCopy>(tag, { 10 });
+
+    const NoCopy *ptr = e.get<NoCopy>(tag);
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+}
+
+void ComponentLifecycle_set_pair_second_no_copy() {
+    flecs::world ecs;
+
+    flecs::entity tag = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .set_second<NoCopy>(tag, { 10 });
+
+    const NoCopy *ptr = e.get_second<NoCopy>(tag);
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+}
+
+void ComponentLifecycle_set_override_no_copy() {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .set_override<NoCopy>({ 10 });
+
+    const NoCopy *ptr = e.get<NoCopy>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+
+    test_assert(e.has(flecs::Override | ecs.id<NoCopy>()));
+}
+
+void ComponentLifecycle_set_override_pair_no_copy() {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .set_override<NoCopy, Tag>({ 10 });
+
+    const NoCopy *ptr = e.get<NoCopy, Tag>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+
+    test_assert(e.has(flecs::Override | ecs.pair<NoCopy, Tag>()));
+}
+
+void ComponentLifecycle_set_override_pair_w_entity_no_copy() {
+    flecs::world ecs;
+
+    flecs::entity tag = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .set_override<NoCopy>(tag, { 10 });
+
+    const NoCopy *ptr = e.get<NoCopy>(tag);
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 10);
+
+    test_assert(e.has(flecs::Override | ecs.pair<NoCopy>(tag)));
+}
