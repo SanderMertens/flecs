@@ -165,7 +165,8 @@
                 "emit_staged_from_world",
                 "emit_staged_from_stage",
                 "emit_staged_from_world_observer",
-                "emit_staged_from_stage_observer"
+                "emit_staged_from_stage_observer",
+                "emit_for_entity"
             ]
         }, {
             "id": "New",

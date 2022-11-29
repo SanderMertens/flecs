@@ -1,0 +1,10 @@
+{
+    "id": "custom_event",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

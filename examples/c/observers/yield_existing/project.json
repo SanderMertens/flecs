@@ -1,0 +1,9 @@
+{
+    "id": "yield_existing",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

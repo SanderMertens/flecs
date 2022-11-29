@@ -1,0 +1,10 @@
+{
+    "id": "two_components",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
