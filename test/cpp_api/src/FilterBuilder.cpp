@@ -2490,3 +2490,22 @@ void FilterBuilder_read_enum() {
     test_assert(q.term(1).get_second() == ecs.to_entity<Color>(Green));
     test_assert(q.term(1).get_src() == 0);
 }
+
+void FilterBuilder_assign_after_init() {
+    flecs::world ecs;
+
+    flecs::filter<> f;
+    flecs::filter_builder<> fb = ecs.filter_builder();
+    fb.with<Position>();
+    f = fb.build();
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+
+    int32_t count = 0;
+    f.each([&](flecs::entity e) {
+        test_assert(e == e1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

@@ -732,7 +732,8 @@
                 "read_pair_components",
                 "read_pair_component_id",
                 "read_pair_component_name",
-                "read_enum"
+                "read_enum",
+                "assign_after_init"
             ]
         }, {
             "id": "RuleBuilder",

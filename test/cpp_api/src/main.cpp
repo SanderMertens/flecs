@@ -705,6 +705,7 @@ void FilterBuilder_read_pair_components(void);
 void FilterBuilder_read_pair_component_id(void);
 void FilterBuilder_read_pair_component_name(void);
 void FilterBuilder_read_enum(void);
+void FilterBuilder_assign_after_init(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -3831,6 +3832,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "read_enum",
         FilterBuilder_read_enum
+    },
+    {
+        "assign_after_init",
+        FilterBuilder_assign_after_init
     }
 };
 
@@ -5416,7 +5421,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        106,
+        107,
         FilterBuilder_testcases
     },
     {
