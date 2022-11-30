@@ -1257,3 +1257,62 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread() {
 
     ecs_fini(world);
 }
+
+static ecs_os_thread_id_t main_thread;
+static int invoked_count = 0;
+static int invoked_main_count = 0;
+
+static void dummy(ecs_iter_t *it) {
+    int stage_id = ecs_get_stage_id(it->world);
+
+    if (stage_id == 0) {
+        test_assert(main_thread == ecs_os_thread_self());
+        ecs_os_ainc(&invoked_main_count);
+    } else {
+        test_assert(main_thread != ecs_os_thread_self());
+    }
+
+    ecs_os_ainc(&invoked_count);
+}
+
+void MultiThread_run_first_worker_on_main() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .multi_threaded = true,
+        .callback = dummy
+    });
+
+    ecs_set_threads(world, 3);
+
+    main_thread = ecs_os_thread_self();
+
+    ecs_progress(world, 0);
+
+    test_int(invoked_count, 3);
+    test_int(invoked_main_count, 1);
+
+    ecs_fini(world);
+}
+
+void MultiThread_run_single_thread_on_main() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .multi_threaded = false,
+        .callback = dummy
+    });
+
+    ecs_set_threads(world, 3);
+
+    main_thread = ecs_os_thread_self();
+
+    ecs_progress(world, 0);
+
+    test_int(invoked_count, 1);
+    test_int(invoked_main_count, 1);
+
+    ecs_fini(world);
+}
