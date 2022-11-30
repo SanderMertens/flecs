@@ -29,6 +29,12 @@ void* win_thread_join(
 }
 
 static
+ecs_os_thread_id_t win_thread_self(void)
+{
+    return (ecs_os_thread_id_t)GetCurrentThreadId();
+}
+
+static
 int32_t win_ainc(
     int32_t *count) 
 {
@@ -235,6 +241,7 @@ void ecs_set_os_api_impl(void) {
 
     api.thread_new_ = win_thread_new;
     api.thread_join_ = win_thread_join;
+    api.thread_self_ = win_thread_self;
     api.ainc_ = win_ainc;
     api.adec_ = win_adec;
     api.lainc_ = win_lainc;

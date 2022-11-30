@@ -26,6 +26,7 @@ typedef struct ecs_pipeline_state_t {
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
     int32_t cur_i;              /* Index in current result */
     int32_t ran_since_merge;    /* Index in current op */
+    bool no_readonly;           /* Is pipeline in readonly mode */
 } ecs_pipeline_state_t;
 
 typedef struct EcsPipeline {
@@ -63,10 +64,12 @@ void flecs_worker_begin(
 
 bool flecs_worker_sync(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_pipeline_state_t *pq);
 
 void flecs_worker_end(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 void flecs_workers_progress(
     ecs_world_t *world,

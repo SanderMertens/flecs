@@ -919,7 +919,9 @@
                 "get_binding_ctx",
                 "get_ctx_w_run",
                 "get_binding_ctx_w_run",
-                "bulk_new_in_no_readonly_w_multithread"
+                "bulk_new_in_no_readonly_w_multithread",
+                "run_first_worker_on_main",
+                "run_single_thread_on_main"
             ]
         }, {
             "id": "MultiThreadStaging",

@@ -649,7 +649,7 @@ void flecs_run_pipeline(
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                bool rebuild = flecs_worker_sync(world, pq);
+                bool rebuild = flecs_worker_sync(world, stage, pq);
                 if (rebuild) {
                     i = pq->cur_i;
                     ran_since_merge = pq->ran_since_merge;
@@ -673,7 +673,7 @@ done:
         world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
     }
 
-    flecs_worker_end(stage->thread_ctx);
+    flecs_worker_end(stage->thread_ctx, stage);
 }
 
 bool ecs_progress(
