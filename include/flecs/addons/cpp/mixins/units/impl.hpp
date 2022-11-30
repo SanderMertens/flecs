@@ -172,8 +172,8 @@ inline units::units(flecs::world& world) {
         "::flecs::units::DataRate::GigaBytesPerSecond");
 
     // Initialize datarate units
-    world.entity<frequency::Herz>(
-        "::flecs::units::Frequency::Herz");
+    world.entity<frequency::Hertz>(
+        "::flecs::units::Frequency::Hertz");
     world.entity<frequency::KiloHerz>(
         "::flecs::units::Frequency::KiloHerz");
     world.entity<frequency::MegaHerz>(

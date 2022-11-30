@@ -945,7 +945,7 @@ void FlecsUnitsImport(
     prev_scope = ecs_set_scope(world, EcsFrequency);
 
         EcsHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
-            .entity = ecs_entity(world, { .name = "Herz" }),
+            .entity = ecs_entity(world, { .name = "Hertz" }),
             .quantity = EcsFrequency,
             .symbol = "Hz" });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){

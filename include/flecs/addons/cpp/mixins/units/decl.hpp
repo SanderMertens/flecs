@@ -160,7 +160,7 @@ struct GigaBytesPerSecond { };
 };
 
 struct frequency {
-struct Herz { };
+struct Hertz { };
 struct KiloHerz { };
 struct MegaHerz { };
 struct GigaHerz { };
