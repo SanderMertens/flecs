@@ -30573,10 +30573,10 @@ ECS_DECLARE(EcsBel);
 ECS_DECLARE(EcsDeciBel);
 
 ECS_DECLARE(EcsFrequency);
-    ECS_DECLARE(EcsHerz);
-    ECS_DECLARE(EcsKiloHerz);
-    ECS_DECLARE(EcsMegaHerz);
-    ECS_DECLARE(EcsGigaHerz);
+    ECS_DECLARE(EcsHertz);
+    ECS_DECLARE(EcsKiloHertz);
+    ECS_DECLARE(EcsMegaHertz);
+    ECS_DECLARE(EcsGigaHertz);
 
 void FlecsUnitsImport(
     ecs_world_t *world)
@@ -31393,39 +31393,39 @@ void FlecsUnitsImport(
         .name = "Frequency" });
     prev_scope = ecs_set_scope(world, EcsFrequency);
 
-        EcsHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+        EcsHertz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
             .entity = ecs_entity(world, { .name = "Hertz" }),
             .quantity = EcsFrequency,
             .symbol = "Hz" });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){
-            .entity = EcsHerz,
+            .entity = EcsHertz,
             .kind = EcsF32
         });
 
-        EcsKiloHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
-            .entity = ecs_entity(world, { .name = "KiloHerz" }),
+        EcsKiloHertz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "KiloHertz" }),
             .prefix = EcsKilo,
-            .base = EcsHerz });
+            .base = EcsHertz });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){
-            .entity = EcsKiloHerz,
+            .entity = EcsKiloHertz,
             .kind = EcsF32
         });
 
-        EcsMegaHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
-            .entity = ecs_entity(world, { .name = "MegaHerz" }),
+        EcsMegaHertz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "MegaHertz" }),
             .prefix = EcsMega,
-            .base = EcsHerz });
+            .base = EcsHertz });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){
-            .entity = EcsMegaHerz,
+            .entity = EcsMegaHertz,
             .kind = EcsF32
         });
 
-        EcsGigaHerz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
-            .entity = ecs_entity(world, { .name = "GigaHerz" }),
+        EcsGigaHertz = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "GigaHertz" }),
             .prefix = EcsGiga,
-            .base = EcsHerz });
+            .base = EcsHertz });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){
-            .entity = EcsGigaHerz,
+            .entity = EcsGigaHertz,
             .kind = EcsF32
         });
     ecs_set_scope(world, prev_scope);

@@ -163,10 +163,10 @@ FLECS_API extern ECS_DECLARE(EcsBel);
 FLECS_API extern ECS_DECLARE(EcsDeciBel);
 
 FLECS_API extern ECS_DECLARE(EcsFrequency);
-FLECS_API extern     ECS_DECLARE(EcsHerz);
-FLECS_API extern     ECS_DECLARE(EcsKiloHerz);
-FLECS_API extern     ECS_DECLARE(EcsMegaHerz);
-FLECS_API extern     ECS_DECLARE(EcsGigaHerz);
+FLECS_API extern     ECS_DECLARE(EcsHertz);
+FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
+FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
+FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module

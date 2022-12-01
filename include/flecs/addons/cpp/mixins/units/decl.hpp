@@ -161,9 +161,9 @@ struct GigaBytesPerSecond { };
 
 struct frequency {
 struct Hertz { };
-struct KiloHerz { };
-struct MegaHerz { };
-struct GigaHerz { };
+struct KiloHertz { };
+struct MegaHertz { };
+struct GigaHertz { };
 };
 
 struct Percentage { };

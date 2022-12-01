@@ -11795,10 +11795,10 @@ FLECS_API extern ECS_DECLARE(EcsBel);
 FLECS_API extern ECS_DECLARE(EcsDeciBel);
 
 FLECS_API extern ECS_DECLARE(EcsFrequency);
-FLECS_API extern     ECS_DECLARE(EcsHerz);
-FLECS_API extern     ECS_DECLARE(EcsKiloHerz);
-FLECS_API extern     ECS_DECLARE(EcsMegaHerz);
-FLECS_API extern     ECS_DECLARE(EcsGigaHerz);
+FLECS_API extern     ECS_DECLARE(EcsHertz);
+FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
+FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
+FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -15733,9 +15733,9 @@ struct GigaBytesPerSecond { };
 
 struct frequency {
 struct Hertz { };
-struct KiloHerz { };
-struct MegaHerz { };
-struct GigaHerz { };
+struct KiloHertz { };
+struct MegaHertz { };
+struct GigaHertz { };
 };
 
 struct Percentage { };
@@ -25275,12 +25275,12 @@ inline units::units(flecs::world& world) {
     // Initialize datarate units
     world.entity<frequency::Hertz>(
         "::flecs::units::Frequency::Hertz");
-    world.entity<frequency::KiloHerz>(
-        "::flecs::units::Frequency::KiloHerz");
-    world.entity<frequency::MegaHerz>(
-        "::flecs::units::Frequency::MegaHerz");
-    world.entity<frequency::GigaHerz>(
-        "::flecs::units::Frequency::GigaHerz");
+    world.entity<frequency::KiloHertz>(
+        "::flecs::units::Frequency::KiloHertz");
+    world.entity<frequency::MegaHertz>(
+        "::flecs::units::Frequency::MegaHertz");
+    world.entity<frequency::GigaHertz>(
+        "::flecs::units::Frequency::GigaHertz");
 
     // Initialize angles
     world.entity<angle::Radians>(

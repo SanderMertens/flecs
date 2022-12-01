@@ -174,12 +174,12 @@ inline units::units(flecs::world& world) {
     // Initialize datarate units
     world.entity<frequency::Hertz>(
         "::flecs::units::Frequency::Hertz");
-    world.entity<frequency::KiloHerz>(
-        "::flecs::units::Frequency::KiloHerz");
-    world.entity<frequency::MegaHerz>(
-        "::flecs::units::Frequency::MegaHerz");
-    world.entity<frequency::GigaHerz>(
-        "::flecs::units::Frequency::GigaHerz");
+    world.entity<frequency::KiloHertz>(
+        "::flecs::units::Frequency::KiloHertz");
+    world.entity<frequency::MegaHertz>(
+        "::flecs::units::Frequency::MegaHertz");
+    world.entity<frequency::GigaHertz>(
+        "::flecs::units::Frequency::GigaHertz");
 
     // Initialize angles
     world.entity<angle::Radians>(
