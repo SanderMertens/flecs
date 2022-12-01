@@ -1111,16 +1111,12 @@ void World_delete_empty_tables_after_mini() {
 void World_delete_empty_tables_after_init() {
     ecs_world_t *world = ecs_init();
 
-    const ecs_world_info_t *info = ecs_get_world_info(world);
-    int32_t old_empty_table_count = info->empty_table_count;
-
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0); /* Increase to 1 */
     test_int(deleted, 0);
 
     deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0); /* Delete */
     test_assert(deleted != 0);
-    test_int(info->empty_table_count + deleted, old_empty_table_count);
 
     ecs_fini(world);
 }
