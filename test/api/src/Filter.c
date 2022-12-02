@@ -6387,6 +6387,8 @@ void Filter_filter_iter_not_up_disabled() {
     test_uint(0, it.sources[0]);
 
     test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
     
     ecs_fini(world);
 }
