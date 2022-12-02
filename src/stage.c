@@ -101,7 +101,7 @@ void flecs_stages_merge(
     flecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->info.merge_time_total += (float)ecs_time_measure(&t_start);
+        world->info.merge_time_total += (ecs_ftime_t)ecs_time_measure(&t_start);
     }
 
     world->info.merge_count_total ++; 
