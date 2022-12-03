@@ -63,7 +63,7 @@ jobs:
 
   build-configs:
     needs: build-linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -200,7 +200,7 @@ jobs:
 
   test-cpp-unix:
     needs: [build-linux]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -342,14 +342,8 @@ jobs:
     strategy:
       fail-fast: false
 
-    env:
-      CC: clang-10
-
     steps:
       - uses: actions/checkout@v3
-      - name: Install clang
-        run: |
-          sudo apt-get install -y clang-10
           
       - name: install clang-build
         run: |
