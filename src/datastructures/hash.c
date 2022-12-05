@@ -330,5 +330,10 @@ uint64_t flecs_hash(
         &h_1,
         &h_2);
 
-    return h_1 | ((uint64_t)h_2 << 32);
+#ifndef __clang_analyzer__
+    uint64_t h_2_shift = (uint64_t)h_2 << 32;
+#else
+  uint64_t h_2_shift = 0;
+#endif
+    return h_1 | h_2_shift;
 }

@@ -16592,7 +16592,7 @@ struct world {
     /** Signal application should quit.
      * After calling this operation, the next call to progress() returns false.
      */
-    void quit() {
+    void quit() const {
         ecs_quit(m_world);
     }
 
@@ -16604,7 +16604,7 @@ struct world {
 
     /** Test if quit() has been called.
      */
-    bool should_quit() {
+    bool should_quit() const {
         return ecs_should_quit(m_world);
     }
 
@@ -16626,7 +16626,7 @@ struct world {
      * @param delta_time Time elapsed since the last frame.
      * @return The provided delta_time, or measured time if 0 was provided.
      */
-    ecs_ftime_t frame_begin(float delta_time = 0) {
+    ecs_ftime_t frame_begin(float delta_time = 0) const {
         return ecs_frame_begin(m_world, delta_time);
     }
 
@@ -16636,7 +16636,7 @@ struct world {
      *
      * This function should only be ran from the main thread.
      */
-    void frame_end() {
+    void frame_end() const {
         ecs_frame_end(m_world);
     }
 
@@ -16658,7 +16658,7 @@ struct world {
      *
      * @return Whether world is currently staged.
      */
-    bool readonly_begin() {
+    bool readonly_begin() const {
         return ecs_readonly_begin(m_world);
     }
 
@@ -16669,7 +16669,7 @@ struct world {
      *
      * This function should only be ran from the main thread.
      */
-    void readonly_end() {
+    void readonly_end() const {
         ecs_readonly_end(m_world);
     }
 
@@ -16679,7 +16679,7 @@ struct world {
      *
      * This operation is thread safe.
      */
-    bool defer_begin() {
+    bool defer_begin() const {
         return ecs_defer_begin(m_world);
     }
 
@@ -16688,13 +16688,13 @@ struct world {
      *
      * This operation is thread safe.
      */
-    bool defer_end() {
+    bool defer_end() const {
         return ecs_defer_end(m_world);
     }
 
     /** Test whether deferring is enabled.
      */
-    bool is_deferred() {
+    bool is_deferred() const {
         return ecs_is_deferred(m_world);
     }
 
@@ -16763,7 +16763,7 @@ struct world {
      *
      * @param automerge Whether to enable or disable automerging.
      */
-    void set_automerge(bool automerge) {
+    void set_automerge(bool automerge) const {
         ecs_set_automerge(m_world, automerge);
     }
 
@@ -16775,7 +16775,7 @@ struct world {
      *
      * This operation may be called on an already merged stage or world.
      */
-    void merge() {
+    void merge() const {
         ecs_merge(m_world);
     }
 
@@ -16914,7 +16914,7 @@ struct world {
 
     /** Set search path.
      */
-    flecs::entity_t* set_lookup_path(const flecs::entity_t *search_path) {
+    flecs::entity_t* set_lookup_path(const flecs::entity_t *search_path) const {
         return ecs_set_lookup_path(m_world, search_path);
     }
 
@@ -16940,7 +16940,7 @@ struct world {
     /** Set singleton component inside a callback.
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
-    void set(const Func& func);
+    void set(const Func& func) const;
 
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
@@ -16967,7 +16967,7 @@ struct world {
     /** Get singleton component inside a callback.
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
-    void get(const Func& func);
+    void get(const Func& func) const;
 
     /** Test if world has singleton component.
      */
@@ -16987,7 +16987,7 @@ struct world {
     /** Get singleton entity for type.
      */
     template <typename T>
-    flecs::entity singleton();
+    flecs::entity singleton() const;
 
     /** Create alias for component.
      *
@@ -16996,21 +16996,21 @@ struct world {
      * @return Entity representing the component.
      */
     template <typename T>
-    flecs::entity use(const char *alias = nullptr);
+    flecs::entity use(const char *alias = nullptr) const;
 
     /** Create alias for entity.
      *
      * @param name Name of the entity.
      * @param alias Alias for the entity.
      */
-    flecs::entity use(const char *name, const char *alias = nullptr);    
+    flecs::entity use(const char *name, const char *alias = nullptr) const;    
 
     /** Create alias for entity.
      *
      * @param entity Entity for which to create the alias.
      * @param alias Alias for the entity.
      */
-    void use(flecs::entity entity, const char *alias = nullptr);   
+    void use(flecs::entity entity, const char *alias = nullptr) const;   
 
     /** Count entities matching a component.
      *
@@ -17118,10 +17118,10 @@ struct world {
     /** Use provided scope for operations ran on returned world.
      * Operations need to be ran in a single statement.
      */
-    flecs::scoped_world scope(id_t parent);
+    flecs::scoped_world scope(id_t parent) const;
 
     template <typename T>
-    flecs::scoped_world scope();
+    flecs::scoped_world scope() const;
 
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
@@ -17238,7 +17238,7 @@ struct world {
 #endif
 
     /* Run callback after completing frame */
-    void run_post_frame(ecs_fini_action_t action, void *ctx) {
+    void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(m_world, action, ctx);
     }
 
@@ -25419,7 +25419,7 @@ inline void world::init_builtin_components() {
 }
 
 template <typename T>
-inline flecs::entity world::use(const char *alias) {
+inline flecs::entity world::use(const char *alias) const {
     entity_t e = _::cpp_type<T>::id(m_world);
     const char *name = alias;
     if (!name) {
@@ -25430,7 +25430,7 @@ inline flecs::entity world::use(const char *alias) {
     return flecs::entity(m_world, e);
 }
 
-inline flecs::entity world::use(const char *name, const char *alias) {
+inline flecs::entity world::use(const char *name, const char *alias) const {
     entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -25438,7 +25438,7 @@ inline flecs::entity world::use(const char *name, const char *alias) {
     return flecs::entity(m_world, e);
 }
 
-inline void world::use(flecs::entity e, const char *alias) {
+inline void world::use(flecs::entity e, const char *alias) const {
     entity_t eid = e.id();
     const char *name = alias;
     if (!name) {
@@ -25503,19 +25503,19 @@ void world::remove() const {
 }
 
 template <typename T>
-inline flecs::entity world::singleton() {
+inline flecs::entity world::singleton() const {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
-void world::get(const Func& func) {
+void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
-void world::set(const Func& func) {
+void world::set(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
@@ -25552,12 +25552,12 @@ inline flecs::entity enum_data<E>::entity(E value) const {
 /** Use provided scope for operations ran on returned world.
  * Operations need to be ran in a single statement.
  */
-inline flecs::scoped_world world::scope(id_t parent) {
+inline flecs::scoped_world world::scope(id_t parent) const {
     return scoped_world(m_world, parent);
 }
 
 template <typename T>
-inline flecs::scoped_world world::scope() {
+inline flecs::scoped_world world::scope() const {
     flecs::id_t parent = _::cpp_type<T>::id(m_world);
     return scoped_world(m_world, parent);
 }
