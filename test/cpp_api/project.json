@@ -1136,7 +1136,8 @@
                 "units",
                 "unit_w_quantity",
                 "unit_w_prefix",
-                "unit_w_over"
+                "unit_w_over",
+                "bitmask"
             ]
         }, {
             "id": "TableLock",

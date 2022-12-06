@@ -1081,6 +1081,7 @@ void Meta_units(void);
 void Meta_unit_w_quantity(void);
 void Meta_unit_w_prefix(void);
 void Meta_unit_w_over(void);
+void Meta_bitmask(void);
 
 // Testsuite 'TableLock'
 void TableLock_each(void);
@@ -5262,6 +5263,10 @@ bake_test_case Meta_testcases[] = {
     {
         "unit_w_over",
         Meta_unit_w_over
+    },
+    {
+        "bitmask",
+        Meta_bitmask
     }
 };
 
@@ -5519,7 +5524,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        9,
+        10,
         Meta_testcases
     },
     {

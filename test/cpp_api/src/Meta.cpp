@@ -256,3 +256,34 @@ void Meta_partial_struct_custom_offset() {
     test_uint(x->type, flecs::F32);
     test_uint(x->offset, 4);
 }
+
+struct Toppings : flecs::bitmask {
+    static constexpr uint32_t Bacon = 0x1;
+    static constexpr uint32_t Lettuce = 0x2;
+    static constexpr uint32_t Tomato = 0x4;
+};
+
+struct Sandwich {
+    uint32_t toppings;
+};
+
+void Meta_bitmask() {
+    flecs::world ecs;
+
+    // Register components with reflection data
+    ecs.component<Toppings>()
+        .bit("Bacon", Toppings::Bacon)
+        .bit("Lettuce", Toppings::Lettuce)
+        .bit("Tomato", Toppings::Tomato);
+
+    ecs.component<Sandwich>()
+        .member<Toppings>("toppings");
+
+    // Create entity with Position as usual
+    auto e = ecs.entity()
+        .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
+
+    // Convert position component to flecs expression string
+    const Sandwich *ptr = e.get<Sandwich>();
+    test_str(ecs.to_expr(ptr).c_str(), "{toppings: Lettuce|Bacon}");
+}

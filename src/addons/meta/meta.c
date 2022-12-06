@@ -273,18 +273,19 @@ int init_type(
     } else {
         const EcsComponent *comp = ecs_get(world, type, EcsComponent);
         if (comp->size < size) {
-            ecs_err("computed size for '%s' is larger than actual type", 
-                ecs_get_name(world, type));
+            ecs_err("computed size (%d) for '%s' is larger than actual type (%d)", 
+                size, ecs_get_name(world, type), comp->size);
             return -1;
         }
         if (comp->alignment < alignment) {
-            ecs_err("computed alignment for '%s' is larger than actual type", 
-                ecs_get_name(world, type));
+            ecs_err("computed alignment (%d) for '%s' is larger than actual type (%d)", 
+                alignment, ecs_get_name(world, type), comp->alignment);
             return -1;
         }
         if (comp->size == size && comp->alignment != alignment) {
             ecs_err("computed size for '%s' matches with actual type but "
-                "alignment is different", ecs_get_name(world, type));
+                "alignment is different (%d vs. %d)", ecs_get_name(world, type),
+                    alignment, comp->alignment);
             return -1;
         }
         

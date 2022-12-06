@@ -34,6 +34,11 @@ using Array = EcsArray;
 using Vector = EcsVector;
 using Unit = EcsUnit;
 
+// Base type for bitmasks
+struct bitmask {
+    uint32_t value;
+};
+
 static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
 static const flecs::entity_t Char = ecs_id(ecs_char_t);
 static const flecs::entity_t Byte = ecs_id(ecs_byte_t);

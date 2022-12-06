@@ -1,7 +1,7 @@
 #include <basics_bitmask.h>
 #include <iostream>
 
-struct Toppings {
+struct Toppings : flecs::bitmask {
     static constexpr uint32_t Bacon = 0x1;
     static constexpr uint32_t Lettuce = 0x2;
     static constexpr uint32_t Tomato = 0x4;
@@ -29,5 +29,5 @@ int main(int, char *[]) {
 
     // Convert position component to flecs expression string
     const Sandwich *ptr = e.get<Sandwich>();
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {toppings: Bacon|Lettuce}
+    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {toppings: Lettuce|Bacon}
 }
