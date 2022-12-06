@@ -2736,3 +2736,57 @@ void ComponentLifecycle_move_ctor_on_move() {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    void *ptr;
+} TestSelf;
+
+ECS_COPY(TestSelf, dst, src, {
+    test_assert(dst->ptr == dst);
+})
+
+ECS_MOVE(TestSelf, dst, src, {
+    test_assert(dst->ptr == dst);
+    test_assert(src->ptr == src);
+})
+
+ECS_CTOR(TestSelf, ptr, {
+    ptr->ptr = ptr;
+})
+
+ECS_DTOR(TestSelf, ptr, {
+    test_assert(ptr->ptr == ptr);
+})
+
+void ComponentLifecycle_ptr_to_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, TestSelf);
+
+    ecs_set_hooks(world, TestSelf, {
+        .ctor = ecs_ctor(TestSelf),
+        .copy = ecs_copy(TestSelf),
+        .move = ecs_move(TestSelf),
+        .dtor = ecs_dtor(TestSelf)
+    });
+
+    ecs_entity_t role = ecs_new_entity(world, "MyRole");
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, TestSelf, {"a"});
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_set(world, e2, TestSelf, {"a"});
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_pair(world, e2, e3, role);
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    ecs_set(world, e4, TestSelf, {"a"});
+
+    ecs_delete(world, role);
+
+    ecs_delete_with(world, ecs_id(TestSelf));
+
+    ecs_fini(world);
+}

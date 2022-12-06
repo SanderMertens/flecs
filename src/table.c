@@ -2132,14 +2132,15 @@ void flecs_merge_column(
      * src into the dst. */
     } else {
         int32_t src_count = src->count;
-        ecs_vec_set_count(&world->allocator, 
-            dst, size, dst_count + src_count);
 
-        /* Construct new values */
         if (ti) {
-            flecs_ctor_component(ti, dst, dst_count, src_count);
+            flecs_table_grow_column(world, dst, ti, src_count, 
+                flecs_next_pow_of_2(dst_count + src_count), true);
+        } else {
+            ecs_vec_set_count(&world->allocator, 
+                dst, size, dst_count + src_count);
         }
-        
+
         void *dst_ptr = ECS_ELEM(dst->array, size, dst_count);
         void *src_ptr = src->array;
         

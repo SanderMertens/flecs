@@ -876,7 +876,8 @@
                 "on_add_after_ctor_w_add",
                 "on_add_after_ctor_w_add_to",
                 "with_before_hooks",
-                "move_ctor_on_move"
+                "move_ctor_on_move",
+                "ptr_to_self"
             ]
         }, {
             "id": "Sorting",
