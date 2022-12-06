@@ -46,6 +46,7 @@
         ecs_component_desc_t desc = {0}; \
         ecs_entity_desc_t edesc = {0}; \
         edesc.id = ecs_id(id_); \
+        edesc.use_low_id = true; \
         edesc.name = #id_; \
         edesc.symbol = #id_; \
         desc.entity = ecs_entity_init(world, &edesc); \

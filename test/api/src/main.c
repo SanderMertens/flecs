@@ -117,6 +117,7 @@ void Entity_staged_set_symbol_n_stages(void);
 void Entity_entity_init_w_add_childof_no_name(void);
 void Entity_entity_w_short_notation(void);
 void Entity_override_inherited_symbol(void);
+void Entity_use_low_id_for_component(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2714,6 +2715,10 @@ bake_test_case Entity_testcases[] = {
     {
         "override_inherited_symbol",
         Entity_override_inherited_symbol
+    },
+    {
+        "use_low_id_for_component",
+        Entity_use_low_id_for_component
     }
 };
 
@@ -11115,7 +11120,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        80,
+        81,
         Entity_testcases
     },
     {

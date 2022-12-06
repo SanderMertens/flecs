@@ -1734,3 +1734,13 @@ void Entity_override_inherited_symbol() {
 
     ecs_fini(world);
 }
+
+void Entity_use_low_id_for_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_assert(ecs_id(Position) < ECS_HI_COMPONENT_ID);
+
+    ecs_fini(world);
+}

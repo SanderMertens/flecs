@@ -123,7 +123,8 @@
                 "staged_set_symbol_n_stages",
                 "entity_init_w_add_childof_no_name",
                 "entity_w_short_notation",
-                "override_inherited_symbol"
+                "override_inherited_symbol",
+                "use_low_id_for_component"
             ]
         }, {
             "id": "Search",
