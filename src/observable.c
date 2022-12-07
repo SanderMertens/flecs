@@ -1278,6 +1278,7 @@ repeat_event:
             }
         }
 
+        it.table = table;
         it.entities = entities;
         it.count = count;
         it.sources[0] = 0;

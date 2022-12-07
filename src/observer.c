@@ -251,6 +251,7 @@ void flecs_observer_invoke(
     int32_t term_index) 
 {
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_table_lock(it->world, table);
     if (ecs_should_log_3()) {
         char *path = ecs_get_fullpath(world, it->system);
@@ -268,6 +269,11 @@ void flecs_observer_invoke(
     ecs_entity_t observer_src = term->src.id;
     if (observer_src && !(term->src.flags & EcsIsEntity)) {
         observer_src = 0;
+    }
+
+    if (term->oper != EcsNot) {
+        ecs_assert((it->offset + it->count) <= ecs_table_count(table), 
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     int32_t i, count = it->count;
@@ -367,6 +373,7 @@ void flecs_observers_invoke(
         ecs_map_iter_t oit = ecs_map_iter(observers);
         ecs_observer_t *o;
         while ((o = ecs_map_next_ptr(&oit, ecs_observer_t*, NULL))) {
+            ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
         }
     }

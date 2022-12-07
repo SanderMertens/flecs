@@ -2117,6 +2117,7 @@ void flecs_merge_column(
     ecs_vec_t *dst,
     ecs_vec_t *src,
     int32_t size,
+    int32_t column_size,
     ecs_type_info_t *ti)
 {
     int32_t dst_count = dst->count;
@@ -2135,8 +2136,12 @@ void flecs_merge_column(
 
         if (ti) {
             flecs_table_grow_column(world, dst, ti, src_count, 
-                flecs_next_pow_of_2(dst_count + src_count), true);
+                column_size, true);
         } else {
+            if (column_size) {
+                ecs_vec_set_size(&world->allocator, 
+                    dst, size, column_size);
+            }
             ecs_vec_set_count(&world->allocator, 
                 dst, size, dst_count + src_count);
         }
@@ -2188,13 +2193,14 @@ void flecs_merge_table_data(
 
     /* Merge entities */
     flecs_merge_column(world, &dst_data->entities, &src_data->entities, 
-        ECS_SIZEOF(ecs_entity_t), NULL);
+        ECS_SIZEOF(ecs_entity_t), 0, NULL);
     ecs_assert(dst_data->entities.count == src_count + dst_count, 
         ECS_INTERNAL_ERROR, NULL);
+    int32_t column_size = dst_data->entities.size;
 
     /* Merge record pointers */
     flecs_merge_column(world, &dst_data->records, &src_data->records, 
-        ECS_SIZEOF(ecs_record_t*), 0);
+        ECS_SIZEOF(ecs_record_t*), 0, NULL);
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count); ) {
         ecs_id_t dst_id = dst_ids[i_new];
@@ -2204,8 +2210,10 @@ void flecs_merge_table_data(
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
         if (dst_id == src_id) {
-            flecs_merge_column(world, &dst[i_new], &src[i_old], size, dst_ti);
+            flecs_merge_column(world, &dst[i_new], &src[i_old], size, column_size, dst_ti);
             flecs_table_mark_table_dirty(world, dst_table, i_new + 1);
+            ecs_assert(dst[i_new].size == dst_data->entities.size, 
+                ECS_INTERNAL_ERROR, NULL);
             
             i_new ++;
             i_old ++;
