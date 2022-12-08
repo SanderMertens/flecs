@@ -2,6 +2,8 @@
 
 static ECS_DECLARE(TagA);
 static ECS_DECLARE(TagB);
+ECS_COMPONENT_DECLARE(Position);
+ECS_COMPONENT_DECLARE(Velocity);
 
 static int sys_a_invoked;
 static int sys_b_invoked;
@@ -1812,9 +1814,6 @@ void Pipeline_no_staging_after_inactive_system() {
     ecs_fini(world);
 }
 
-ECS_COMPONENT_DECLARE(Position);
-ECS_COMPONENT_DECLARE(Velocity);
-
 static ecs_entity_t create_position_e = 0;
 static ecs_entity_t create_velocity_e = 0;
 
@@ -2434,6 +2433,50 @@ void Pipeline_disable_parent() {
 
     test_int(sys_a_invoked, 3);
     test_int(sys_b_invoked, 3);
+
+    ecs_fini(world);
+}
+
+static int no_staging_add_position_invoked = 0;
+
+static void NoReadonlyAddPosition(ecs_iter_t *it) {
+    test_assert(it->world == it->real_world);
+    no_staging_add_position_invoked ++;
+
+    ecs_entity_t e = ecs_new_id(it->world);
+    ecs_add(it->world, e, Position);
+}
+
+void Pipeline_multi_threaded_no_staging_w_add_after_read() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_threads(world, 2);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter = { .terms = {{ ecs_id(Position) }}},
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = NoReadonlyAddPosition,
+        .no_readonly = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 0);
+    test_int(no_staging_add_position_invoked, 1);
+    test_int(ecs_count(world, Position), 1);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(no_staging_add_position_invoked, 2);
+    test_int(ecs_count(world, Position), 2);
 
     ecs_fini(world);
 }

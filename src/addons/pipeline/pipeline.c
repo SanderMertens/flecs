@@ -556,7 +556,7 @@ void ecs_run_pipeline(
     flecs_run_pipeline(world, pq->state, delta_time);
 }
 
-void flecs_run_pipeline(
+ecs_pipeline_op_t* flecs_run_pipeline(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time)
@@ -574,7 +574,7 @@ void flecs_run_pipeline(
         /* Forward to worker_progress. This function handles staging, threading
          * and synchronization across workers. */
         flecs_workers_progress(world, pq, delta_time);
-        return;
+        return NULL;
 
     /* If a stage is passed, the function could be ran from a worker thread. In
      * that case the main thread should manage staging, and staging should be
@@ -674,6 +674,8 @@ done:
     }
 
     flecs_worker_end(stage->thread_ctx, stage);
+
+    return op;
 }
 
 bool ecs_progress(

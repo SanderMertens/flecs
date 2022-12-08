@@ -18293,7 +18293,7 @@ struct entity_view : public id {
         return flecs::string(path);
     }   
 
-    bool enabled() {
+    bool enabled() const {
         return !ecs_has_id(m_world, m_id, flecs::Disabled);
     }
 
@@ -18786,7 +18786,7 @@ struct entity_view : public id {
      * @param id The id to test.
      * @return True if enabled, false if not.
      */
-    bool enabled(flecs::id_t id) {
+    bool enabled(flecs::id_t id) const {
         return ecs_is_enabled_id(m_world, m_id, id);
     }
 
@@ -18796,7 +18796,7 @@ struct entity_view : public id {
      * @return True if enabled, false if not.
      */
     template<typename T>
-    bool enabled() {
+    bool enabled() const {
         return this->enabled(_::cpp_type<T>::id(m_world));
     }
 
@@ -18806,7 +18806,7 @@ struct entity_view : public id {
      * @param second The second element of the pair.
      * @return True if enabled, false if not.
      */
-    bool enabled(flecs::id_t first, flecs::id_t second) {
+    bool enabled(flecs::id_t first, flecs::id_t second) const {
         return this->enabled(ecs_pair(first, second));
     }
 
@@ -18817,7 +18817,7 @@ struct entity_view : public id {
      * @return True if enabled, false if not.
      */
     template <typename First>
-    bool enabled(flecs::id_t second) {
+    bool enabled(flecs::id_t second) const {
         return this->enabled(_::cpp_type<First>::id(m_world), second);
     }
 
@@ -18828,7 +18828,7 @@ struct entity_view : public id {
      * @return True if enabled, false if not.
      */
     template <typename First, typename Second>
-    bool enabled() {
+    bool enabled() const {
         return this->enabled<First>(_::cpp_type<Second>::id(m_world));
     }
 

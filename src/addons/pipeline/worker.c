@@ -359,7 +359,8 @@ void flecs_workers_progress(
 
             ecs_world_t *stage = ecs_get_stage(world, 0);
             ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
-            flecs_run_pipeline(stage, pq, delta_time);
+            op = flecs_run_pipeline(stage, pq, delta_time);
+            ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_set_scope((ecs_world_t*)stage, old_scope);
 
             /* Wait until all workers are waiting on sync point */
@@ -380,6 +381,8 @@ void flecs_workers_progress(
                 if (op == op_last) {
                     flecs_pipeline_fini_iter(pq);
                 }
+            } else {
+                op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
             }
         }
     } 

@@ -2396,7 +2396,6 @@ void ecs_delete(
 
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
         ecs_table_t *table;
-        ecs_id_record_t *tgt_idr = NULL;
         if (row_flags) {
             if (row_flags & EcsEntityObservedAcyclic) {
                 table = r->table;
@@ -2409,15 +2408,9 @@ void ecs_delete(
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0);
             }
             if (row_flags & EcsEntityObservedTarget) {
-                /* Ensure id record doesn't get cleaned up until OnRemove events
-                 * are emitted. */
-                tgt_idr = r->idr;
-                if (tgt_idr) {
-                    flecs_id_record_claim(world, tgt_idr);
-                }
-
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0);
+                r->idr = NULL;
             }
 
             /* Merge operations before deleting entity */
@@ -2436,10 +2429,6 @@ void ecs_delete(
 
             r->row = 0;
             r->table = NULL;
-
-            if (tgt_idr) {
-                flecs_id_record_release(world, tgt_idr);
-            }
         }
         
         flecs_entities_remove(world, entity);

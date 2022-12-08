@@ -50,7 +50,7 @@ void flecs_pipeline_reset_iter(
     ecs_world_t *world,
     ecs_pipeline_state_t *q);
 
-void flecs_run_pipeline(
+ecs_pipeline_op_t* flecs_run_pipeline(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time);

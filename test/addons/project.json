@@ -415,7 +415,8 @@
                 "no_merge_after_from_nothing_w_default_inout",
                 "on_merge_activate_system_before_merge",
                 "disable_phase",
-                "disable_parent"
+                "disable_parent",
+                "multi_threaded_no_staging_w_add_after_read"
             ]
         }, {
             "id": "SystemMisc",
