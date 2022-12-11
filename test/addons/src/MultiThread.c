@@ -1258,6 +1258,58 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread() {
     ecs_fini(world);
 }
 
+void sys_bulk_init_2(ecs_iter_t *it) {
+    ecs_bulk_init(it->world, &(ecs_bulk_desc_t){
+        .count = 1,
+        .ids = {ecs_id(Position)}
+    });
+
+    ecs_iter_t qit = ecs_query_iter(it->world, it->ctx);
+    ecs_iter_fini(&qit);
+}
+
+void MultiThread_bulk_new_in_no_readonly_w_multithread_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_threads(world, 64);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {{ ecs_id(Position) }},
+        .callback = sys
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .callback = sys_bulk_init_2,
+        .no_readonly = true,
+        .ctx = q
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .callback = sys
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(ecs_count(world, Position), 1);
+
+    ecs_fini(world);
+}
+
 static ecs_os_thread_id_t main_thread;
 static int invoked_count = 0;
 static int invoked_main_count = 0;

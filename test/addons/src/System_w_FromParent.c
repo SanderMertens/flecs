@@ -797,12 +797,6 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    /* This will rematch tables, but not match Iter with e1 and e2 because the
-     * Parent does not have Mass yet */
-    ecs_progress(world, 1);
-    test_int(ctx.count, 0);
-
-    /* Now a rematch of tables need to happen again, since parent has changed */
     ecs_os_zeromem(&ctx);
     ecs_progress(world, 1);
 
