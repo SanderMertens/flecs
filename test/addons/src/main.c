@@ -880,6 +880,7 @@ void MultiThread_get_binding_ctx(void);
 void MultiThread_get_ctx_w_run(void);
 void MultiThread_get_binding_ctx_w_run(void);
 void MultiThread_bulk_new_in_no_readonly_w_multithread(void);
+void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void);
 void MultiThread_run_first_worker_on_main(void);
 void MultiThread_run_single_thread_on_main(void);
 
@@ -4347,6 +4348,10 @@ bake_test_case MultiThread_testcases[] = {
         MultiThread_bulk_new_in_no_readonly_w_multithread
     },
     {
+        "bulk_new_in_no_readonly_w_multithread_2",
+        MultiThread_bulk_new_in_no_readonly_w_multithread_2
+    },
+    {
         "run_first_worker_on_main",
         MultiThread_run_first_worker_on_main
     },
@@ -4785,7 +4790,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        49,
+        50,
         MultiThread_testcases
     },
     {

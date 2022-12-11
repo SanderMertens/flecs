@@ -203,7 +203,8 @@ void* ecs_vec_last(
     const ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_dbg_assert(!v->elem_size || size == v->elem_size, 
+        ECS_INVALID_PARAMETER, NULL);
     return ECS_ELEM(v->array, size, v->count - 1);
 }
 

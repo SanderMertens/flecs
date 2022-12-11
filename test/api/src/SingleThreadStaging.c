@@ -1,5 +1,7 @@
 #include <api.h>
 
+static ECS_COMPONENT_DECLARE(Velocity);
+
 void SingleThreadStaging_setup() {
     ecs_log_set_level(-3);
 }
@@ -2017,10 +2019,6 @@ void SingleThreadStaging_match_table_created_in_progress() {
 
 static
 void Set_velocity_on_new(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_context(it->world);
-
-    ecs_entity_t ecs_id(Velocity) = ctx->component;
-
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_set(it->world, 0, Velocity, {10, 20});
@@ -2043,22 +2041,15 @@ void SingleThreadStaging_match_table_created_w_new_in_progress() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT_DEFINE(world, Velocity);
 
     ECS_SYSTEM(world, Set_velocity_on_new, EcsOnUpdate, Position);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
-    IterData add_ctx = {.component = ecs_id(Velocity)};
-    ecs_set_context(world, &add_ctx);
-
     ecs_set(world, 0, Position, {10, 20});
-
-    ecs_progress(world, 1);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
-    ecs_enable(world, Set_velocity_on_new, false);
-
     ecs_progress(world, 1);
 
     test_int(ctx.count, 1);
@@ -2077,7 +2068,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT_DEFINE(world, Velocity);
 
     ECS_OBSERVER(world, Set_velocity_on_new, EcsOnSet, Position);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
