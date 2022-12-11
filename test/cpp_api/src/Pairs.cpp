@@ -505,6 +505,20 @@ void Pairs_get_R_obj_id_t() {
     test_int(ptr->y, 20);
 }
 
+void Pairs_get_R_O() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<Position, Tag>({10, 20});
+
+    test_assert((e.has<Position, Tag>()));
+
+    const Position *ptr = e.get<Position, Tag>();
+    test_assert(ptr != nullptr);
+
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
 void Pairs_get_second() {
     flecs::world ecs;
 

@@ -277,6 +277,7 @@
                 "get_R_obj",
                 "get_R_obj_id",
                 "get_R_obj_id_t",
+                "get_R_O",
                 "get_second",
                 "get_second_id",
                 "get_second_id_t",

@@ -1344,8 +1344,6 @@ void Entity_get_type() {
     test_int(type_2.count(), 0);
 }
 
-#include <stdio.h>
-
 void Entity_get_nonempty_type() {
     flecs::world world;
 
