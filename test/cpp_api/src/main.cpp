@@ -267,6 +267,7 @@ void Pairs_get_rel_obj_id_t(void);
 void Pairs_get_R_obj(void);
 void Pairs_get_R_obj_id(void);
 void Pairs_get_R_obj_id_t(void);
+void Pairs_get_R_O(void);
 void Pairs_get_second(void);
 void Pairs_get_second_id(void);
 void Pairs_get_second_id_t(void);
@@ -2126,6 +2127,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_R_obj_id_t",
         Pairs_get_R_obj_id_t
+    },
+    {
+        "get_R_O",
+        Pairs_get_R_O
     },
     {
         "get_second",
@@ -5363,7 +5368,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        63,
+        64,
         Pairs_testcases
     },
     {
