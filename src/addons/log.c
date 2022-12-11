@@ -225,6 +225,11 @@ void _ecs_parser_errorv(
     const char *fmt,
     va_list args)
 {
+    if (column_arg > 65536) {
+        /* Limit column size, which prevents the code from throwing up when the
+         * function is called with (expr - ptr), and expr is NULL. */
+        column_arg = 0;
+    }
     int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
@@ -268,6 +273,7 @@ void _ecs_parser_errorv(
                 for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
+                ecs_strbuf_appendch(&msg_buf, '^');
             }
         }
 

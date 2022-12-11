@@ -47,6 +47,14 @@ typedef struct {
     int32_t value;
 } Mass;
 
+typedef struct {
+    int32_t x, y;
+} Point;
+
+typedef struct {
+    Point start, stop;
+} Line;
+
 #ifdef __cplusplus
 }
 #endif

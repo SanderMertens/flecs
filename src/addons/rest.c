@@ -33,6 +33,8 @@ int64_t ecs_rest_query_name_error_count = 0;
 int64_t ecs_rest_query_name_from_cache_count = 0;
 int64_t ecs_rest_enable_count = 0;
 int64_t ecs_rest_enable_error_count = 0;
+int64_t ecs_rest_set_count = 0;
+int64_t ecs_rest_set_error_count = 0;
 int64_t ecs_rest_world_stats_count = 0;
 int64_t ecs_rest_pipeline_stats_count = 0;
 int64_t ecs_rest_stats_error_count = 0;
@@ -228,6 +230,39 @@ bool flecs_rest_reply_entity(
     flecs_rest_parse_json_ser_entity_params(&desc, req);
 
     ecs_entity_to_json_buf(world, e, &reply->body, &desc);
+    return true;
+}
+
+static
+bool flecs_rest_set(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_os_linc(&ecs_rest_set_count);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(
+        world, 0, path, "/", NULL, false);
+
+    if (!e) {
+        flecs_reply_error(reply, "entity '%s' not found", path);
+        reply->code = 404;
+        ecs_os_linc(&ecs_rest_set_error_count);
+        return true;
+    }
+
+    const char *data = ecs_http_get_param(req, "data");
+    ecs_parse_json_desc_t desc = {0};
+    desc.expr = data;
+    desc.name = path;
+    if (ecs_parse_json_values(world, e, data, &desc) == NULL) {
+        flecs_reply_error(reply, "invalid request");
+        reply->code = 400;
+        ecs_os_linc(&ecs_rest_set_error_count);
+        return true;
+    }
+    
     return true;
 }
 
@@ -792,8 +827,12 @@ bool flecs_rest_reply(
         }
 
     } else if (req->method == EcsHttpPut) {
+        /* Set endpoint */
+        if (!ecs_os_strncmp(req->path, "set/", 4)) {
+            return flecs_rest_set(world, req, reply, &req->path[4]);
+        
         /* Enable endpoint */
-        if (!ecs_os_strncmp(req->path, "enable/", 7)) {
+        } else if (!ecs_os_strncmp(req->path, "enable/", 7)) {
             return flecs_rest_enable(world, reply, &req->path[7], true);
 
         /* Disable endpoint */

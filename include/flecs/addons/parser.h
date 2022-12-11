@@ -73,7 +73,8 @@ const char* ecs_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
-    char *token_out);
+    char *token_out,
+    char delim);
 
 /** Parse term in expression.
  * This operation parses a single term in an expression and returns a pointer

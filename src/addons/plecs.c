@@ -681,7 +681,7 @@ const char* plecs_parse_const_stmt(
     const char *ptr,
     plecs_state_t *state)
 {
-    ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name);
+    ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name, 0);
     if (!ptr || ptr[0] != '=') {
         return NULL;
     }

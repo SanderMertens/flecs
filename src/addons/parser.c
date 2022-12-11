@@ -205,7 +205,8 @@ const char* ecs_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
-    char *token_out)
+    char *token_out,
+    char delim)
 {
     int64_t column = ptr - expr;
 
@@ -249,6 +250,9 @@ const char* ecs_parse_token(
         if (!flecs_valid_token_char(ch) && !in_str) {
             break;
         }
+        if (delim && (ch == delim)) {
+            break;
+        }
 
         tptr[0] = ch;
         tptr ++;
@@ -286,7 +290,7 @@ const char* ecs_parse_identifier(
         return NULL;
     }
 
-    ptr = ecs_parse_token(name, expr, ptr, token_out);
+    ptr = ecs_parse_token(name, expr, ptr, token_out, 0);
 
     return ptr;
 }
