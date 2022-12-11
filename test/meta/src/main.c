@@ -461,6 +461,18 @@ void DeserializeFromJson_struct_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
 void DeserializeFromJson_struct_w_array_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_array_type_i32_i32(void);
+void DeserializeFromJson_struct_w_nested_member_i32(void);
+void DeserializeFromJson_struct_w_2_nested_members_i32(void);
+void DeserializeFromJson_struct_w_nested_members_struct(void);
+void DeserializeFromJson_struct_w_2_nested_members_struct(void);
+void DeserializeFromJson_deser_entity_1_component_1_member(void);
+void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void);
+void DeserializeFromJson_deser_entity_1_component_2_members(void);
+void DeserializeFromJson_deser_entity_2_components(void);
+void DeserializeFromJson_deser_entity_1_component_composite_member(void);
+void DeserializeFromJson_deser_entity_1_component_nested_member(void);
+void DeserializeFromJson_deser_entity_1_pair(void);
+void DeserializeFromJson_deser_entity_2_pairs(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -2485,6 +2497,54 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "struct_w_2_array_type_i32_i32",
         DeserializeFromJson_struct_w_2_array_type_i32_i32
+    },
+    {
+        "struct_w_nested_member_i32",
+        DeserializeFromJson_struct_w_nested_member_i32
+    },
+    {
+        "struct_w_2_nested_members_i32",
+        DeserializeFromJson_struct_w_2_nested_members_i32
+    },
+    {
+        "struct_w_nested_members_struct",
+        DeserializeFromJson_struct_w_nested_members_struct
+    },
+    {
+        "struct_w_2_nested_members_struct",
+        DeserializeFromJson_struct_w_2_nested_members_struct
+    },
+    {
+        "deser_entity_1_component_1_member",
+        DeserializeFromJson_deser_entity_1_component_1_member
+    },
+    {
+        "deser_entity_1_component_1_member_w_spaces",
+        DeserializeFromJson_deser_entity_1_component_1_member_w_spaces
+    },
+    {
+        "deser_entity_1_component_2_members",
+        DeserializeFromJson_deser_entity_1_component_2_members
+    },
+    {
+        "deser_entity_2_components",
+        DeserializeFromJson_deser_entity_2_components
+    },
+    {
+        "deser_entity_1_component_composite_member",
+        DeserializeFromJson_deser_entity_1_component_composite_member
+    },
+    {
+        "deser_entity_1_component_nested_member",
+        DeserializeFromJson_deser_entity_1_component_nested_member
+    },
+    {
+        "deser_entity_1_pair",
+        DeserializeFromJson_deser_entity_1_pair
+    },
+    {
+        "deser_entity_2_pairs",
+        DeserializeFromJson_deser_entity_2_pairs
     }
 };
 
@@ -3652,7 +3712,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        31,
+        43,
         DeserializeFromJson_testcases
     },
     {

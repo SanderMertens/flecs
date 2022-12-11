@@ -15362,6 +15362,11 @@ void _ecs_parser_errorv(
     const char *fmt,
     va_list args)
 {
+    if (column_arg > 65536) {
+        /* Limit column size, which prevents the code from throwing up when the
+         * function is called with (expr - ptr), and expr is NULL. */
+        column_arg = 0;
+    }
     int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
@@ -15405,6 +15410,7 @@ void _ecs_parser_errorv(
                 for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
+                ecs_strbuf_appendch(&msg_buf, '^');
             }
         }
 
@@ -19293,7 +19299,7 @@ const char* plecs_parse_const_stmt(
     const char *ptr,
     plecs_state_t *state)
 {
-    ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name);
+    ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name, 0);
     if (!ptr || ptr[0] != '=') {
         return NULL;
     }
@@ -26518,13 +26524,28 @@ const char* flecs_meta_op_kind_str(
 
 /* Get current scope */
 static
-ecs_meta_scope_t* get_scope(
+ecs_meta_scope_t* flecs_meta_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
     return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
 error:
     return NULL;
+}
+
+/* Restore scope, if dotmember was used */
+static
+void flecs_meta_cursor_restore_scope(
+    ecs_meta_cursor_t *cursor,
+    const ecs_meta_scope_t* scope)
+{
+    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(scope != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (scope->prev_depth) {
+        cursor->depth = scope->prev_depth;
+    }
+error:
+    return;
 }
 
 /* Get previous scope */
@@ -26541,7 +26562,7 @@ error:
 
 /* Get current operation for scope */
 static
-ecs_meta_type_op_t* get_op(
+ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
     ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
@@ -26588,17 +26609,17 @@ int32_t get_elem_count(
         return ecs_vector_count(*(scope->vector));
     }
 
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->count;
 }
 
 /* Get pointer to current field/element */
 static
-ecs_meta_type_op_t* get_ptr(
+ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
 {
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     ecs_size_t size = get_size(world, scope);
 
     if (scope->vector) {
@@ -26612,7 +26633,7 @@ ecs_meta_type_op_t* get_ptr(
 }
 
 static
-int push_type(
+int flecs_meta_cursor_push_type(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope,
     ecs_entity_t type,
@@ -26651,7 +26672,7 @@ ecs_meta_cursor_t ecs_meta_cursor(
         .valid = true
     };
 
-    if (push_type(world, result.scope, type, ptr) != 0) {
+    if (flecs_meta_cursor_push_type(world, result.scope, type, ptr) != 0) {
         result.valid = false;
     }
 
@@ -26663,14 +26684,15 @@ error:
 void* ecs_meta_get_ptr(
     ecs_meta_cursor_t *cursor)
 {
-    return get_ptr(cursor->world, get_scope(cursor));
+    return flecs_meta_cursor_get_ptr(cursor->world, 
+        flecs_meta_cursor_get_scope(cursor));
 }
 
 int ecs_meta_next(
     ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
 
     if (scope->is_collection) {
         scope->elem_cur ++;
@@ -26696,7 +26718,7 @@ int ecs_meta_elem(
     ecs_meta_cursor_t *cursor,
     int32_t elem)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     if (!scope->is_collection) {
         ecs_err("ecs_meta_elem can be used for collections only");
         return -1;
@@ -26723,8 +26745,8 @@ int ecs_meta_member(
     }
 
     ecs_meta_scope_t *prev_scope = get_prev_scope(cursor);
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *push_op = get_op(prev_scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *push_op = flecs_meta_cursor_get_op(prev_scope);
     const ecs_world_t *world = cursor->world;
 
     ecs_assert(push_op->kind == EcsOpPush, ECS_INTERNAL_ERROR, NULL);
@@ -26747,11 +26769,54 @@ int ecs_meta_member(
     return 0;
 }
 
+int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    int32_t prev_depth = cursor->depth;
+    int dotcount = 0;
+
+    char token[ECS_MAX_TOKEN_SIZE];
+    const char *ptr = name;
+    while ((ptr = ecs_parse_token(NULL, NULL, ptr, token, '.'))) {
+        if (ptr[0] != '.' && ptr[0]) {
+            ecs_parser_error(NULL, name, ptr - name, 
+                "expected '.' or end of string");
+            goto error;
+        }
+
+        if (dotcount) {
+            ecs_meta_push(cursor);
+        }
+
+        if (ecs_meta_member(cursor, token)) {
+            goto error;
+        }
+
+        if (!ptr[0]) {
+            break;   
+        }
+
+        ptr ++; /* Skip . */
+
+        dotcount ++;
+    }
+
+    ecs_meta_scope_t *cur_scope = flecs_meta_cursor_get_scope(cursor);
+    if (dotcount) {
+        cur_scope->prev_depth = prev_depth;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int ecs_meta_push(
     ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     const ecs_world_t *world = cursor->world;
 
     if (cursor->depth == 0) {
@@ -26763,12 +26828,12 @@ int ecs_meta_push(
         }
     }
 
-    void *ptr = get_ptr(world, scope);
+    void *ptr = flecs_meta_cursor_get_ptr(world, scope);
     cursor->depth ++;
     ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH,
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_meta_scope_t *next_scope = get_scope(cursor);
+    ecs_meta_scope_t *next_scope = flecs_meta_cursor_get_scope(cursor);
 
     /* If we're not already in an inline array and this operation is an inline
      * array, push a frame for the array.
@@ -26802,7 +26867,7 @@ int ecs_meta_push(
         break;
 
     case EcsOpArray: {
-        if (push_type(world, next_scope, op->type, ptr) != 0) {
+        if (flecs_meta_cursor_push_type(world, next_scope, op->type, ptr) != 0) {
             goto error;
         }
 
@@ -26814,7 +26879,7 @@ int ecs_meta_push(
 
     case EcsOpVector:
         next_scope->vector = ptr;
-        if (push_type(world, next_scope, op->type, NULL) != 0) {
+        if (flecs_meta_cursor_push_type(world, next_scope, op->type, NULL) != 0) {
             goto error;
         }
 
@@ -26849,22 +26914,22 @@ int ecs_meta_pop(
         return 0;
     }
 
-    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     cursor->depth --;
     if (cursor->depth < 0) {
         ecs_err("unexpected end of scope");
         return -1;
     }
 
-    ecs_meta_scope_t *next_scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(next_scope);
+    ecs_meta_scope_t *next_scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(next_scope);
 
     if (!scope->is_inline_array) {
         if (op->kind == EcsOpPush) {
             next_scope->op_cur += op->op_count - 1;
 
             /* push + op_count should point to the operation after pop */
-            op = get_op(next_scope);
+            op = flecs_meta_cursor_get_op(next_scope);
             ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
         } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
             /* Collection type, nothing else to do */
@@ -26878,37 +26943,38 @@ int ecs_meta_pop(
         ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
     }
 
+    flecs_meta_cursor_restore_scope(cursor, next_scope);
     return 0;
 }
 
 bool ecs_meta_is_collection(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     return scope->is_collection;
 }
 
 ecs_entity_t ecs_meta_get_type(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->type;
 }
 
 ecs_entity_t ecs_meta_get_unit(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->unit;
 }
 
 const char* ecs_meta_get_member(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->name;
 }
 
@@ -27043,9 +27109,9 @@ int ecs_meta_set_bool(
     ecs_meta_cursor_t *cursor,
     bool value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
@@ -27055,6 +27121,7 @@ int ecs_meta_set_bool(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27062,9 +27129,9 @@ int ecs_meta_set_char(
     ecs_meta_cursor_t *cursor,
     char value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
@@ -27074,6 +27141,7 @@ int ecs_meta_set_char(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27081,9 +27149,9 @@ int ecs_meta_set_int(
     ecs_meta_cursor_t *cursor,
     int64_t value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
@@ -27097,6 +27165,7 @@ int ecs_meta_set_int(
     }
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27104,9 +27173,9 @@ int ecs_meta_set_uint(
     ecs_meta_cursor_t *cursor,
     uint64_t value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
@@ -27119,6 +27188,7 @@ int ecs_meta_set_uint(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27126,9 +27196,9 @@ int ecs_meta_set_float(
     ecs_meta_cursor_t *cursor,
     double value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
@@ -27140,6 +27210,7 @@ int ecs_meta_set_float(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27187,15 +27258,16 @@ int ecs_meta_set_value(
     } else if (mt->kind == EcsBitmaskType) {
         return ecs_meta_set_int(cursor, *(uint32_t*)value->ptr);
     } else {
-        ecs_meta_scope_t *scope = get_scope(cursor);
-        ecs_meta_type_op_t *op = get_op(scope);
-        void *ptr = get_ptr(cursor->world, scope);
+        ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+        ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+        void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
         if (op->type != value->type) {
             char *type_str = ecs_get_fullpath(cursor->world, value->type);
             conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
         }
+        flecs_meta_cursor_restore_scope(cursor, scope);
         return ecs_value_copy(cursor->world, value->type, ptr, value->ptr);
     }
 
@@ -27273,9 +27345,9 @@ int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     case EcsOpBool:
@@ -27386,6 +27458,7 @@ int ecs_meta_set_string(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27393,9 +27466,9 @@ int ecs_meta_set_string_literal(
     ecs_meta_cursor_t *cursor,
     const char *value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     ecs_size_t len = ecs_os_strlen(value);
     if (value[0] != '\"' || value[len - 1] != '\"') {
@@ -27427,6 +27500,7 @@ int ecs_meta_set_string_literal(
         break;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -27434,9 +27508,9 @@ int ecs_meta_set_entity(
     ecs_meta_cursor_t *cursor,
     ecs_entity_t value)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
     case EcsOpEntity:
@@ -27447,15 +27521,16 @@ int ecs_meta_set_entity(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
 int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch (op->kind) {
     case EcsOpString:
         ecs_os_free(*(char**)ptr);
@@ -27466,15 +27541,16 @@ int ecs_meta_set_null(
         return -1;
     }
 
+    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
 bool ecs_meta_get_bool(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return *(ecs_i8_t*)ptr != 0;
@@ -27498,6 +27574,7 @@ bool ecs_meta_get_bool(
     default: ecs_throw(ECS_INVALID_PARAMETER,
                 "invalid element for bool");
     }
+
 error:
     return 0;
 }
@@ -27505,14 +27582,15 @@ error:
 char ecs_meta_get_char(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpChar: return *(ecs_char_t*)ptr != 0;
     default: ecs_throw(ECS_INVALID_PARAMETER,
                 "invalid element for char");
     }
+
 error:
     return 0;
 }
@@ -27520,9 +27598,9 @@ error:
 int64_t ecs_meta_get_int(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return *(ecs_i8_t*)ptr;
@@ -27548,6 +27626,7 @@ int64_t ecs_meta_get_int(
         break;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
     }
+
 error:
     return 0;
 }
@@ -27555,9 +27634,9 @@ error:
 uint64_t ecs_meta_get_uint(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return flecs_ito(uint64_t, *(ecs_i8_t*)ptr);
@@ -27587,9 +27666,9 @@ error:
 double ecs_meta_get_float(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return *(ecs_i8_t*)ptr;
@@ -27622,9 +27701,9 @@ error:
 const char* ecs_meta_get_string(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpString: return *(const char**)ptr;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
@@ -27636,9 +27715,9 @@ error:
 ecs_entity_t ecs_meta_get_entity(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_meta_scope_t *scope = get_scope(cursor);
-    ecs_meta_type_op_t *op = get_op(scope);
-    void *ptr = get_ptr(cursor->world, scope);
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_entity_t*)ptr;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
@@ -28629,7 +28708,7 @@ const char *ecs_parse_expr_token(
         }
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr))) {
+    while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr, 0))) {
         if (ptr[0] == '|' && ptr[1] != '|') {
             token_ptr = &token_ptr[ptr - start];
             token_ptr[0] = '|';
@@ -34347,7 +34426,7 @@ const char* ecs_parse_json(
                     token[len - 1] = '\0';
                 }
 
-                if (ecs_meta_member(&cur, token + 1) != 0) {
+                if (ecs_meta_dotmember(&cur, token + 1) != 0) {
                     goto error;
                 }
             } else {
@@ -34369,6 +34448,243 @@ const char* ecs_parse_json(
     }
 
     return ptr;
+error:
+    return NULL;
+}
+
+static
+const char* flecs_parse_json_path(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token,
+    ecs_entity_t *out)
+{
+    /* Start of id. Ids can have two elements, in case of pairs. */
+    if (ptr[0] != '"') {
+        ecs_parser_error(name, expr, ptr - expr, "expected starting '\"'");
+        goto error;
+    }
+
+    const char *token_start = ptr;
+    ptr = ecs_parse_expr_token(name, expr, ptr, token);
+    if (!ptr) {
+        goto error;
+    }
+
+    ecs_size_t len = ecs_os_strlen(token);
+    if (token_start[len - 1] != '"') {
+        ecs_parser_error(name, expr, ptr - expr, "missing closing '\"'");
+        goto error;
+    }
+
+    token[len - 1] = '\0';
+    ecs_entity_t result = ecs_lookup_fullpath(world, token + 1);
+    if (!result) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "unresolved identifier '%s'", token);
+        goto error;
+    }
+
+    *out = result;
+
+    return ecs_parse_fluff(ptr, NULL);
+error:
+    return NULL;
+}
+
+const char* ecs_parse_json_values(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *ptr,
+    const ecs_parse_json_desc_t *desc)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+    const char *name = NULL;
+    const char *expr = ptr;
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
+    }
+
+    const char *ids = NULL, *values = NULL;
+
+    ptr = ecs_parse_fluff(ptr, NULL);
+    if (ptr[0] != '{') {
+        ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+        goto error;
+    }
+
+    /* Find start of ids array */
+    ptr = ecs_parse_fluff(ptr + 1, NULL);
+    if (ecs_os_strncmp(ptr, "\"ids\"", 5)) {
+        ecs_parser_error(name, expr, ptr - expr, "expected '\"ids\"'");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr + 5, NULL);
+    if (ptr[0] != ':') {
+        ecs_parser_error(name, expr, ptr - expr, "expected ':'");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr + 1, NULL);
+    if (ptr[0] != '[') {
+        ecs_parser_error(name, expr, ptr - expr, "expected '['");
+        goto error;
+    }
+
+    ids = ecs_parse_fluff(ptr + 1, NULL);
+
+    /* Find start of values array */
+    const char *vptr = ptr;
+    int32_t bracket_depth = 0;
+    while (vptr[0]) {
+        if (vptr[0] == '[') {
+            bracket_depth ++;
+        }
+        if (vptr[0] == ']') {
+            bracket_depth --;
+            if (!bracket_depth) {
+                break;
+            }
+        }
+        vptr ++;
+    }
+
+    if (!vptr[0]) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "found end of string while looking for values");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(vptr + 1, NULL);
+    if (ptr[0] == '}') {
+        /* String doesn't contain values, which is valid */
+        return ptr + 1;
+    }
+
+    if (ptr[0] != ',') {
+        ecs_parser_error(name, expr, ptr - expr, "expected ','");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr + 1, NULL);
+    if (ecs_os_strncmp(ptr, "\"values\"", 8)) {
+        ecs_parser_error(name, expr, ptr - expr, "expected '\"values\"'");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr + 8, NULL);
+    if (ptr[0] != ':') {
+        ecs_parser_error(name, expr, ptr - expr, "expected ':'");
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr + 1, NULL);
+    if (ptr[0] != '[') {
+        ecs_parser_error(name, expr, ptr - expr, "expected '['");
+        goto error;
+    }
+
+    values = ptr;
+
+    /* Parse ids & values */
+    while (ids[0]) {
+        ecs_entity_t first = 0, second = 0, type_id = 0;
+        ecs_id_t id;
+
+        if (ids[0] == ']') {
+            /* Last id found */
+            if (values[0] != ']') {
+                ecs_parser_error(name, expr, values - expr, "expected ']'");
+            }
+            ptr = values;
+            break;
+        } else if (ids[0] == '[') {
+            ids = ecs_parse_fluff(ids + 1, NULL);
+            ids = flecs_parse_json_path(world, name, expr, ids, token, &first);
+            if (!ids) {
+                goto error;
+            }
+
+            if (ids[0] == ',') {
+                /* Id is a pair*/
+                ids = ecs_parse_fluff(ids + 1, NULL);
+                ids = flecs_parse_json_path(world, name, expr, ids, token, 
+                    &second);
+                if (!ids) {
+                    goto error;
+                }
+            }
+            
+            if (ids[0] == ']') {
+                /* End of id array */
+            } else {
+                ecs_parser_error(name, expr, ids - expr, "expected ',' or ']'");
+                goto error;
+            }
+
+            ids = ecs_parse_fluff(ids + 1, NULL);
+            if (ids[0] == ',') {
+                /* Next id */
+                ids = ecs_parse_fluff(ids + 1, NULL);
+            } else if (ids[0] != ']') {
+                /* End of ids array */
+                ecs_parser_error(name, expr, ids - expr, "expected ',' or ']'");
+                goto error;
+            }
+        } else {
+            ecs_parser_error(name, expr, ids - expr, "expected '[' or ']'");
+            goto error;
+        }
+
+        if (second) {
+            id = ecs_pair(first, second);
+            type_id = ecs_get_typeid(world, id);
+            if (!type_id) {
+                ecs_parser_error(name, expr, ids - expr, "id is not a type");
+                goto error;
+            }
+        } else {
+            id = first;
+            type_id = first;
+        }
+
+        /* Get mutable pointer */
+        void *comp_ptr = ecs_get_mut_id(world, e, id);
+        if (!comp_ptr) {
+            char *idstr = ecs_id_str(world, id);
+            ecs_parser_error(name, expr, ptr - expr, 
+                "id '%s' is not a valid component", idstr);
+            ecs_os_free(idstr);
+            goto error;
+        }
+
+        ecs_parse_json_desc_t parse_desc = {
+            .name = name,
+            .expr = expr,
+        };
+        values = ecs_parse_json(world, values + 1, type_id, comp_ptr, &parse_desc);
+        if (!values) {
+            goto error;
+        }
+
+        if (values[0] != ']' && values[0] != ',') {
+            ecs_parser_error(name, expr, ptr - expr, "expected ',' or ']'");
+            goto error;
+        }
+
+        ecs_modified_id(world, e, id);
+    }
+
+    ptr = ecs_parse_fluff(ptr + 1, NULL);
+    if (ptr[0] != '}') {
+        ecs_parser_error(name, expr, ptr - expr, "expected '}'");
+    }
+
+    return ptr + 1;
 error:
     return NULL;
 }
@@ -34409,6 +34725,8 @@ int64_t ecs_rest_query_name_error_count = 0;
 int64_t ecs_rest_query_name_from_cache_count = 0;
 int64_t ecs_rest_enable_count = 0;
 int64_t ecs_rest_enable_error_count = 0;
+int64_t ecs_rest_set_count = 0;
+int64_t ecs_rest_set_error_count = 0;
 int64_t ecs_rest_world_stats_count = 0;
 int64_t ecs_rest_pipeline_stats_count = 0;
 int64_t ecs_rest_stats_error_count = 0;
@@ -34604,6 +34922,39 @@ bool flecs_rest_reply_entity(
     flecs_rest_parse_json_ser_entity_params(&desc, req);
 
     ecs_entity_to_json_buf(world, e, &reply->body, &desc);
+    return true;
+}
+
+static
+bool flecs_rest_set(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_os_linc(&ecs_rest_set_count);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(
+        world, 0, path, "/", NULL, false);
+
+    if (!e) {
+        flecs_reply_error(reply, "entity '%s' not found", path);
+        reply->code = 404;
+        ecs_os_linc(&ecs_rest_set_error_count);
+        return true;
+    }
+
+    const char *data = ecs_http_get_param(req, "data");
+    ecs_parse_json_desc_t desc = {0};
+    desc.expr = data;
+    desc.name = path;
+    if (ecs_parse_json_values(world, e, data, &desc) == NULL) {
+        flecs_reply_error(reply, "invalid request");
+        reply->code = 400;
+        ecs_os_linc(&ecs_rest_set_error_count);
+        return true;
+    }
+    
     return true;
 }
 
@@ -35168,8 +35519,12 @@ bool flecs_rest_reply(
         }
 
     } else if (req->method == EcsHttpPut) {
+        /* Set endpoint */
+        if (!ecs_os_strncmp(req->path, "set/", 4)) {
+            return flecs_rest_set(world, req, reply, &req->path[4]);
+        
         /* Enable endpoint */
-        if (!ecs_os_strncmp(req->path, "enable/", 7)) {
+        } else if (!ecs_os_strncmp(req->path, "enable/", 7)) {
             return flecs_rest_enable(world, reply, &req->path[7], true);
 
         /* Disable endpoint */
@@ -37141,7 +37496,8 @@ const char* ecs_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
-    char *token_out)
+    char *token_out,
+    char delim)
 {
     int64_t column = ptr - expr;
 
@@ -37185,6 +37541,9 @@ const char* ecs_parse_token(
         if (!flecs_valid_token_char(ch) && !in_str) {
             break;
         }
+        if (delim && (ch == delim)) {
+            break;
+        }
 
         tptr[0] = ch;
         tptr ++;
@@ -37222,7 +37581,7 @@ const char* ecs_parse_identifier(
         return NULL;
     }
 
-    ptr = ecs_parse_token(name, expr, ptr, token_out);
+    ptr = ecs_parse_token(name, expr, ptr, token_out, 0);
 
     return ptr;
 }

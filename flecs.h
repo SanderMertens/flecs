@@ -11400,6 +11400,17 @@ const char* ecs_parse_json(
     void *data_out,
     const ecs_parse_json_desc_t *desc);
 
+/** Parse JSON object with multiple component values into entity. The format
+ * is the same as the one outputted by ecs_entity_to_json, but at the moment
+ * only supports the "ids" and "values" member.
+ */
+FLECS_API
+const char* ecs_parse_json_values(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *ptr,
+    const ecs_parse_json_desc_t *desc);
+
 /** Serialize value into JSON string.
  * This operation serializes a value of the provided type to a JSON string. The 
  * memory pointed to must be large enough to contain a value of the used type.
@@ -12158,6 +12169,7 @@ typedef struct ecs_meta_scope_t {
     int32_t op_count;         /* Number of operations in ops array to process */
     int32_t op_cur;           /* Current operation */
     int32_t elem_cur;         /* Current element (for collections) */
+    int32_t prev_depth;       /* Depth to restore, in case dotmember was used */
     void *ptr;                /* Pointer to the value being iterated */
 
     const EcsComponent *comp; /* Pointer to component, in case size/alignment is needed */
@@ -12204,6 +12216,12 @@ int ecs_meta_elem(
 /** Move cursor to member */
 FLECS_API
 int ecs_meta_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Move cursor to member, supports dot-separated nested members */
+FLECS_API
+int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
@@ -13432,7 +13450,8 @@ const char* ecs_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
-    char *token_out);
+    char *token_out,
+    char delim);
 
 /** Parse term in expression.
  * This operation parses a single term in an expression and returns a pointer

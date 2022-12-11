@@ -489,7 +489,19 @@
                 "struct_struct_i32_array_3",
                 "struct_struct_i32_i32_array_3",
                 "struct_w_array_type_i32_i32",
-                "struct_w_2_array_type_i32_i32"
+                "struct_w_2_array_type_i32_i32",
+                "struct_w_nested_member_i32",
+                "struct_w_2_nested_members_i32",
+                "struct_w_nested_members_struct",
+                "struct_w_2_nested_members_struct",
+                "deser_entity_1_component_1_member",
+                "deser_entity_1_component_1_member_w_spaces",
+                "deser_entity_1_component_2_members",
+                "deser_entity_2_components",
+                "deser_entity_1_component_composite_member",
+                "deser_entity_1_component_nested_member",
+                "deser_entity_1_pair",
+                "deser_entity_2_pairs"
             ]
         }, {
             "id": "SerializeToJson",

@@ -335,6 +335,7 @@ typedef struct ecs_meta_scope_t {
     int32_t op_count;         /* Number of operations in ops array to process */
     int32_t op_cur;           /* Current operation */
     int32_t elem_cur;         /* Current element (for collections) */
+    int32_t prev_depth;       /* Depth to restore, in case dotmember was used */
     void *ptr;                /* Pointer to the value being iterated */
 
     const EcsComponent *comp; /* Pointer to component, in case size/alignment is needed */
@@ -381,6 +382,12 @@ int ecs_meta_elem(
 /** Move cursor to member */
 FLECS_API
 int ecs_meta_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Move cursor to member, supports dot-separated nested members */
+FLECS_API
+int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 

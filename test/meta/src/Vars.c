@@ -300,11 +300,6 @@ void Vars_struct_expr_w_struct_var() {
     ecs_fini(world);
 }
 
-typedef struct {
-    Position start;
-    Position stop;
-} Line;
-
 void Vars_nested_struct_expr_w_struct_var() {
     ecs_world_t *world = ecs_init();
 
