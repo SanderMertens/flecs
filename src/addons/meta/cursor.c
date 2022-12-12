@@ -288,6 +288,7 @@ int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name)
 {
+#ifdef FLECS_PARSER
     int32_t prev_depth = cursor->depth;
     int dotcount = 0;
 
@@ -325,6 +326,12 @@ int ecs_meta_dotmember(
     return 0;
 error:
     return -1;
+#else
+    (void)cursor;
+    (void)name;
+    ecs_err("the FLECS_PARSER addon is required for ecs_meta_dotmember");
+    return -1;
+#endif
 }
 
 int ecs_meta_push(
