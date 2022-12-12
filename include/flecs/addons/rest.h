@@ -59,6 +59,8 @@ extern int64_t ecs_rest_query_name_error_count;
 extern int64_t ecs_rest_query_name_from_cache_count;
 extern int64_t ecs_rest_enable_count;
 extern int64_t ecs_rest_enable_error_count;
+extern int64_t ecs_rest_delete_count;
+extern int64_t ecs_rest_delete_error_count;
 extern int64_t ecs_rest_world_stats_count;
 extern int64_t ecs_rest_pipeline_stats_count;
 extern int64_t ecs_rest_stats_error_count;

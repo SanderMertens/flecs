@@ -35,6 +35,8 @@ int64_t ecs_rest_enable_count = 0;
 int64_t ecs_rest_enable_error_count = 0;
 int64_t ecs_rest_set_count = 0;
 int64_t ecs_rest_set_error_count = 0;
+int64_t ecs_rest_delete_count = 0;
+int64_t ecs_rest_delete_error_count = 0;
 int64_t ecs_rest_world_stats_count = 0;
 int64_t ecs_rest_pipeline_stats_count = 0;
 int64_t ecs_rest_stats_error_count = 0;
@@ -234,6 +236,21 @@ bool flecs_rest_reply_entity(
 }
 
 static
+ecs_entity_t flecs_rest_entity_from_path(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_entity_t e = ecs_lookup_path_w_sep(
+        world, 0, path, "/", NULL, false);
+    if (!e) {
+        flecs_reply_error(reply, "entity '%s' not found", path);
+        reply->code = 404;
+    }
+    return e;
+}
+
+static
 bool flecs_rest_set(
     ecs_world_t *world,
     const ecs_http_request_t* req,
@@ -242,12 +259,8 @@ bool flecs_rest_set(
 {
     ecs_os_linc(&ecs_rest_set_count);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(
-        world, 0, path, "/", NULL, false);
-
-    if (!e) {
-        flecs_reply_error(reply, "entity '%s' not found", path);
-        reply->code = 404;
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
         ecs_os_linc(&ecs_rest_set_error_count);
         return true;
     }
@@ -267,6 +280,25 @@ bool flecs_rest_set(
 }
 
 static
+bool flecs_rest_delete(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_os_linc(&ecs_rest_set_count);
+
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        ecs_os_linc(&ecs_rest_delete_error_count);
+        return true;
+    }
+
+    ecs_delete(world, e);
+    
+    return true;
+}
+
+static
 bool flecs_rest_enable(
     ecs_world_t *world,
     ecs_http_reply_t *reply,
@@ -275,12 +307,8 @@ bool flecs_rest_enable(
 {
     ecs_os_linc(&ecs_rest_enable_count);
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(
-        world, 0, path, "/", NULL, false);
-
-    if (!e) {
-        flecs_reply_error(reply, "entity '%s' not found", path);
-        reply->code = 404;
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
         ecs_os_linc(&ecs_rest_enable_error_count);
         return true;
     }
@@ -831,6 +859,10 @@ bool flecs_rest_reply(
         if (!ecs_os_strncmp(req->path, "set/", 4)) {
             return flecs_rest_set(world, req, reply, &req->path[4]);
         
+        /* Delete endpoint */
+        } else if (!ecs_os_strncmp(req->path, "delete/", 7)) {
+            return flecs_rest_delete(world, reply, &req->path[7]);
+
         /* Enable endpoint */
         } else if (!ecs_os_strncmp(req->path, "enable/", 7)) {
             return flecs_rest_enable(world, reply, &req->path[7], true);
