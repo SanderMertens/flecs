@@ -156,6 +156,29 @@ PUT /disable/<path>
 ```
 The disable endpoint disables the entity specified by the path by adding the `flecs.core.Disabled` component. If the entity already has the `flecs.core.Disabled` component, the endpoint has no side effects.
 
+### delete
+```
+PUT /delete/<path>
+```
+The delete endpoint deletes the entity specified by the path.
+
+### set
+```
+PUT /set/<path>&data={...}
+```
+The set endpoint sets components for the entity specified by the path. The data argument uses the same layout as the `ids` and `values` fields produced by the `ecs_entity_to_json` function. An example:
+
+```json
+{
+  "ids": [["Position"], ["Velocity"], ["Eats", "Apples"]],
+  "values": [
+    {"x": 10, "y": 20},
+    {"x": 1, "y": 1},
+    {"amount": 3}
+  ]
+}
+```
+
 ### query
 ```
 GET /query?q=<query>
