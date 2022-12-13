@@ -595,6 +595,32 @@ void Observer_run_callback() {
 
     e.set<Position>({10, 20});
     test_int(count, 1);
+}
 
+void Observer_get_query() {
+    flecs::world world;
 
+    world.entity().set<Position>({0, 0});
+    world.entity().set<Position>({1, 0});
+    world.entity().set<Position>({2, 0});
+
+    int32_t count = 0;
+
+    auto sys = world.observer<const Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, const Position& p) {
+            // Not used
+        });
+
+    auto q = sys.query();
+
+    q.iter([&](flecs::iter &it) {
+        auto pos = it.field<const Position>(1);
+        for (auto i : it) {
+            test_int(i, pos[i].x);
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
 }

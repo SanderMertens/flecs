@@ -35,6 +35,12 @@ struct observer final : entity
     void* ctx() const {
         return ecs_get_observer_ctx(m_world, m_id);
     }
+
+    flecs::filter<> query() const {
+        const flecs::Poly *poly = this->get<flecs::Poly>(flecs::Observer);
+        const ecs_observer_t *observer = static_cast<const flecs::observer_t*>(poly->poly);
+        return flecs::filter<>(m_world, &observer->filter);
+    }
 };
 
 // Mixin implementation
