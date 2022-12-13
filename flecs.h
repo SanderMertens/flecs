@@ -24131,8 +24131,8 @@ struct observer final : entity
 
     flecs::filter<> query() const {
         const flecs::Poly *poly = this->get<flecs::Poly>(flecs::Observer);
-        const ecs_observer_t *observer = static_cast<const flecs::observer_t*>(poly->poly);
-        return flecs::filter<>(m_world, &observer->filter);
+        const ecs_observer_t *ob = static_cast<const flecs::observer_t*>(poly->poly);
+        return flecs::filter<>(m_world, &ob->filter);
     }
 };
 
