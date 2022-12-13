@@ -16726,21 +16726,21 @@ void flecs_run_pipeline(
         }
 
         for (; i < count; i ++) {
-            ecs_entity_t system = systems[i];
-            const EcsPoly *poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-            ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_system_t *sys = ecs_poly(poly->poly, ecs_system_t);
-
-            /* Keep track of the last frame for which the system has ran, so we
-             * know from where to resume the schedule in case the schedule 
-             * changes during a merge. */
-            sys->last_frame = world->info.frame_count_total + 1;
-
             /* Run system if:
              * - this is the main thread, or if
              * - the system is multithreaded 
              */
             if (main_thread || op->multi_threaded) {
+                ecs_entity_t system = systems[i];
+                const EcsPoly *poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
+                ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_system_t *sys = ecs_poly(poly->poly, ecs_system_t);
+
+                /* Keep track of the last frame for which the system has ran, so we
+                * know from where to resume the schedule in case the schedule 
+                * changes during a merge. */
+                sys->last_frame = world->info.frame_count_total + 1;
+
                 ecs_stage_t *s = NULL;
                 if (!op->no_readonly) {
                     /* If system is no_readonly it operates on the actual world, not

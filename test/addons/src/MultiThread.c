@@ -1247,7 +1247,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread() {
         .callback = sys
     });
 
-    ecs_set_threads(world, 64);
+    ecs_set_threads(world, 80);
 
     for (int i = 0; i < 100; i ++) {
         ecs_progress(world, 0);
