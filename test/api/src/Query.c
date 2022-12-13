@@ -318,6 +318,126 @@ void Query_wildcard_query_new_table_2_results_p_table() {
     ecs_fini(world);
 }
 
+void Query_wildcard_query_2nd_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add_pair(world, e2, Rel, TgtA);
+
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_add_pair(world, e3, Rel, TgtA);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{ Tag }, { ecs_pair(Rel, EcsWildcard) }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtB), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtC), it.ids[1]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_wildcard_query_2nd_term_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add_pair(world, e2, Rel, TgtA);
+
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_add_pair(world, e3, Rel, TgtA);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.terms = {{ Tag }, { ecs_pair(Rel, EcsWildcard), .src.flags = EcsSelf }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtB), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtC), it.ids[1]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_simple_query_existing_empty_table() {
     ecs_world_t *world = ecs_mini();
 

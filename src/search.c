@@ -197,7 +197,12 @@ int32_t flecs_search_relation_w_idr(
 
     if (subject_out) subject_out[0] = 0;
     if (!(flags & EcsUp)) {
-        return ecs_search_offset(world, table, offset, id, id_out);
+        if (offset) {
+            return ecs_search_offset(world, table, offset, id, id_out);
+        } else {
+            return flecs_type_search(
+                table, id, idr, table->type.array, id_out, tr_out);
+        }
     }
 
     if (!idr) {

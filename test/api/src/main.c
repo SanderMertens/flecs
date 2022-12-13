@@ -1040,6 +1040,8 @@ void Filter_filter_iter_pair_w_wildcard_and_nothing(void);
 void Filter_filter_iter_any(void);
 void Filter_filter_iter_any_match_wildcard(void);
 void Filter_filter_iter_any_match_tag_and_wildcard(void);
+void Filter_filter_iter_wildcard_in_2nd_term(void);
+void Filter_filter_iter_wildcard_in_2nd_term_self(void);
 void Filter_filter_iter_any_obj(void);
 void Filter_filter_iter_not_any(void);
 void Filter_filter_iter_not_any_obj(void);
@@ -1182,6 +1184,8 @@ void Query_wildcard_query_existing_table(void);
 void Query_wildcard_query_new_table(void);
 void Query_wildcard_query_existing_table_2_results_p_table(void);
 void Query_wildcard_query_new_table_2_results_p_table(void);
+void Query_wildcard_query_2nd_term(void);
+void Query_wildcard_query_2nd_term_self(void);
 void Query_simple_query_existing_empty_table(void);
 void Query_simple_query_existing_empty_type(void);
 void Query_simple_query_new_empty_table(void);
@@ -6257,6 +6261,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_any_match_tag_and_wildcard
     },
     {
+        "filter_iter_wildcard_in_2nd_term",
+        Filter_filter_iter_wildcard_in_2nd_term
+    },
+    {
+        "filter_iter_wildcard_in_2nd_term_self",
+        Filter_filter_iter_wildcard_in_2nd_term_self
+    },
+    {
         "filter_iter_any_obj",
         Filter_filter_iter_any_obj
     },
@@ -6813,6 +6825,14 @@ bake_test_case Query_testcases[] = {
     {
         "wildcard_query_new_table_2_results_p_table",
         Query_wildcard_query_new_table_2_results_p_table
+    },
+    {
+        "wildcard_query_2nd_term",
+        Query_wildcard_query_2nd_term
+    },
+    {
+        "wildcard_query_2nd_term_self",
+        Query_wildcard_query_2nd_term_self
     },
     {
         "simple_query_existing_empty_table",
@@ -11300,7 +11320,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        250,
+        252,
         Filter_testcases
     },
     {
@@ -11314,7 +11334,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        199,
+        201,
         Query_testcases
     },
     {

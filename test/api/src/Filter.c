@@ -5494,6 +5494,132 @@ void Filter_filter_iter_any() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_wildcard_in_2nd_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add_pair(world, e2, Rel, TgtA);
+
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_add_pair(world, e3, Rel, TgtA);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ Tag }, { ecs_pair(Rel, EcsWildcard) }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtB), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtC), it.ids[1]);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_wildcard_in_2nd_term_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add_pair(world, e2, Rel, TgtA);
+
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_add_pair(world, e3, Rel, TgtA);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ Tag }, { ecs_pair(Rel, EcsWildcard), .src.flags = EcsSelf }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtB), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtA), it.ids[1]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Tag, it.ids[0]);
+    test_uint(ecs_pair(Rel, TgtC), it.ids[1]);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_any_match_wildcard() {
     ecs_world_t *world = ecs_mini();
 
