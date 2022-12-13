@@ -608,7 +608,7 @@ A system is a query combined with a callback. Systems can be either ran manually
 ```c
 // Option 1, use the ECS_SYSTEM convenience macro
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
-ecs_run(world, Move, delta_time, NULL); // Run system
+ecs_run(world, ecs_id(Move), delta_time, NULL); // Run system
 
 // Option 2, use the ecs_system_init function
 ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t){
@@ -685,6 +685,15 @@ flecs::PreStore
 flecs::OnStore
 ```
 
+In addition, Flecs has a phase for systems that are only ran during startup:
+
+```c
+EcsOnStart
+```
+```cpp
+flecs::OnStart
+```
+
 When a pipeline is executed, systems are ran in the order of the phases. This makes pipelines and phases the primary mechanism for defining ordering between systems. The following code shows how to assign systems to a pipeline, and how to run the pipeline with the `progress()` function:
 
 ```c
@@ -700,16 +709,6 @@ world.system<Position, Transform>("Transform").kind(flecs::PostUpdate).each( ...
 world.system<Transform, Mesh>("Render").kind(flecs::OnStore).each( ... );
 
 world.progress();
-```
-
-Because phases are just tags that are added to systems, applications can use the regular API to add/remove systems to a phase:
-```c
-ecs_remove_id(world, Move, EcsOnUpdate);
-ecs_add_id(world, Move, EcsPostUpdate);
-```
-```cpp
-move_sys.add(flecs::OnUpdate);
-move_sys.remove(flecs::PostUpdate);
 ```
 
 Inside a phase, systems are guaranteed to be ran in their declaration order.
