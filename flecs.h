@@ -4541,6 +4541,7 @@ FLECS_API extern const ecs_entity_t EcsEmpty;
 
 /* Pipeline module tags */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPipeline);
+FLECS_API extern const ecs_entity_t EcsOnStart;
 FLECS_API extern const ecs_entity_t EcsPreFrame;
 FLECS_API extern const ecs_entity_t EcsOnLoad;
 FLECS_API extern const ecs_entity_t EcsPostLoad;
@@ -15317,6 +15318,7 @@ template <typename ... Components>
 struct pipeline_builder;
 
 /* Builtin pipeline tags */
+static const flecs::entity_t OnStart = EcsOnStart;
 static const flecs::entity_t PreFrame = EcsPreFrame;
 static const flecs::entity_t OnLoad = EcsOnLoad;
 static const flecs::entity_t PostLoad = EcsPostLoad;

@@ -26,16 +26,21 @@ static bool sys_d_world_readonly;
 static bool sys_e_world_readonly;
 static bool sys_f_world_readonly;
 
+static ecs_ftime_t sys_a_delta_time = 0;
+static ecs_ftime_t sys_b_delta_time = 0;
+
 void SysA(ecs_iter_t *it) { 
     ecs_os_ainc(&sys_a_invoked);
     sys_a_real_world = it->world == it->real_world;
     sys_a_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_a_delta_time = it->delta_time;
 }
 void SysB(ecs_iter_t *it) { 
     test_assert(sys_a_invoked != 0);
     ecs_os_ainc(&sys_b_invoked);
     sys_b_real_world = it->world == it->real_world;
     sys_b_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_b_delta_time = it->delta_time;
 }
 void SysC(ecs_iter_t *it) { 
     test_assert(sys_b_invoked != 0);
@@ -2477,6 +2482,169 @@ void Pipeline_multi_threaded_no_staging_w_add_after_read() {
     test_int(sys_a_invoked, 1);
     test_int(no_staging_add_position_invoked, 2);
     test_int(ecs_count(world, Position), 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_1_startup_system() {
+    ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysB
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+
+    test_int(stats->merge_count_total, 2);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 2);
+
+    test_int(stats->merge_count_total, 3);
+    test_assert(sys_a_delta_time == 0);
+
+    ecs_fini(world);
+}
+
+void Pipeline_2_startup_systems() {
+    ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .callback = SysB
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysC
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    test_int(stats->merge_count_total, 2);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 2);
+
+    test_int(stats->merge_count_total, 3);
+    test_assert(sys_a_delta_time == 0);
+    test_assert(sys_b_delta_time == 0);
+
+    ecs_fini(world);
+}
+
+void Pipeline_2_startup_phases() {
+    ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_entity_t AfterStart = ecs_new_w_id(world, EcsPhase);
+    ecs_add_pair(world, AfterStart, EcsDependsOn, EcsOnStart);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(AfterStart) }}),
+        .callback = SysB
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysC
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    test_int(stats->merge_count_total, 2);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 2);
+
+    test_int(stats->merge_count_total, 3);
+    test_assert(sys_a_delta_time == 0);
+    test_assert(sys_b_delta_time == 0);
+
+    ecs_fini(world);
+}
+
+void Pipeline_2_startup_systems_w_merge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .query.filter = { .terms = {{ ecs_id(Position), .src.flags = EcsIsEntity, .inout = EcsOut }}},
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .query.filter = { .terms = {{ ecs_id(Position) }}},
+        .callback = SysB
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = SysC
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    test_int(stats->merge_count_total, 3);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 2);
+
+    test_int(stats->merge_count_total, 4);
 
     ecs_fini(world);
 }

@@ -416,7 +416,11 @@
                 "on_merge_activate_system_before_merge",
                 "disable_phase",
                 "disable_parent",
-                "multi_threaded_no_staging_w_add_after_read"
+                "multi_threaded_no_staging_w_add_after_read",
+                "1_startup_system",
+                "2_startup_systems",
+                "2_startup_phases",
+                "2_startup_systems_w_merge"
             ]
         }, {
             "id": "SystemMisc",

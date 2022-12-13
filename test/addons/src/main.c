@@ -406,6 +406,10 @@ void Pipeline_on_merge_activate_system_before_merge(void);
 void Pipeline_disable_phase(void);
 void Pipeline_disable_parent(void);
 void Pipeline_multi_threaded_no_staging_w_add_after_read(void);
+void Pipeline_1_startup_system(void);
+void Pipeline_2_startup_systems(void);
+void Pipeline_2_startup_phases(void);
+void Pipeline_2_startup_systems_w_merge(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2541,6 +2545,22 @@ bake_test_case Pipeline_testcases[] = {
     {
         "multi_threaded_no_staging_w_add_after_read",
         Pipeline_multi_threaded_no_staging_w_add_after_read
+    },
+    {
+        "1_startup_system",
+        Pipeline_1_startup_system
+    },
+    {
+        "2_startup_systems",
+        Pipeline_2_startup_systems
+    },
+    {
+        "2_startup_phases",
+        Pipeline_2_startup_phases
+    },
+    {
+        "2_startup_systems_w_merge",
+        Pipeline_2_startup_systems_w_merge
     }
 };
 
@@ -4685,7 +4705,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        59,
+        63,
         Pipeline_testcases
     },
     {

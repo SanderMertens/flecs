@@ -588,12 +588,73 @@ void flecs_run_pipeline(
     return;
 }
 
+static
+void flecs_run_startup_systems(
+    ecs_world_t *world)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_dependson(EcsOnStart));
+    if (!idr || !flecs_table_cache_count(&idr->cache)) {
+        /* Don't bother creating startup pipeline if no systems exist */
+        return;
+    }
+
+    ecs_dbg_2("#[bold]startup#[reset]");
+    ecs_log_push_2();
+    int32_t stage_count = world->stage_count;
+    world->stage_count = 1; /* Prevents running startup systems on workers */
+
+    /* Creating a pipeline is relatively expensive, but this only happens 
+     * for the first frame. The startup pipeline is deleted afterwards, which
+     * eliminates the overhead of keeping its query cache in sync. */
+    ecs_dbg_2("#[bold]create startup pipeline#[reset]");
+    ecs_log_push_2();
+    ecs_entity_t start_pip = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+        .query = {
+            .filter.terms = {
+                { .id = EcsSystem },
+                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .src.trav = EcsDependsOn },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+            },
+            .order_by = flecs_entity_compare
+        }
+    });
+    ecs_log_pop_2();
+
+    /* Run & delete pipeline */
+    ecs_dbg_2("#[bold]run startup systems#[reset]");
+    ecs_log_push_2();
+    ecs_assert(start_pip != 0, ECS_INTERNAL_ERROR, NULL);
+    const EcsPipeline *p = ecs_get(world, start_pip, EcsPipeline);
+    ecs_check(p != NULL, ECS_INVALID_OPERATION, NULL);
+    flecs_workers_progress(world, p->state, 0);
+    ecs_log_pop_2();
+
+    ecs_dbg_2("#[bold]delete startup pipeline#[reset]");
+    ecs_log_push_2();
+    ecs_delete(world, start_pip);
+    ecs_log_pop_2();
+
+    world->stage_count = stage_count;
+    ecs_log_pop_2();
+
+error:
+    return;
+}
+
 bool ecs_progress(
     ecs_world_t *world,
     ecs_ftime_t user_delta_time)
 {
     ecs_ftime_t delta_time = ecs_frame_begin(world, user_delta_time);
     
+    /* If this is the first frame, run startup systems */
+    if (world->info.frame_count_total == 0) {
+        flecs_run_startup_systems(world);
+    }
+
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
     const EcsPipeline *p = ecs_get(world, world->pipeline, EcsPipeline);
@@ -743,6 +804,7 @@ void FlecsPipelineImport(
     ecs_entity_t phase_7 = ecs_new_w_pair(world, EcsDependsOn, phase_6);
     ecs_entity_t phase_8 = ecs_new_w_pair(world, EcsDependsOn, phase_7);
 
+    flecs_bootstrap_phase(world, EcsOnStart,   0);
     flecs_bootstrap_phase(world, EcsPreFrame,   0);
     flecs_bootstrap_phase(world, EcsOnLoad,     phase_0);
     flecs_bootstrap_phase(world, EcsPostLoad,   phase_1);
@@ -765,6 +827,7 @@ void FlecsPipelineImport(
             .filter.terms = {
                 { .id = EcsSystem },
                 { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .src.trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
             },

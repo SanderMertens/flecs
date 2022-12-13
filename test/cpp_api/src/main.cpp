@@ -431,6 +431,7 @@ void System_multithread_system_w_query_iter(void);
 void System_multithread_system_w_query_iter_w_iter(void);
 void System_multithread_system_w_query_iter_w_world(void);
 void System_run_callback(void);
+void System_startup_system(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -2766,6 +2767,10 @@ bake_test_case System_testcases[] = {
     {
         "run_callback",
         System_run_callback
+    },
+    {
+        "startup_system",
+        System_startup_system
     }
 };
 
@@ -5411,7 +5416,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        60,
+        61,
         System_testcases
     },
     {

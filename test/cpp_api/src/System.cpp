@@ -2009,3 +2009,31 @@ void System_run_callback() {
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
+
+void System_startup_system() {
+    flecs::world ecs;
+
+    int32_t count_a = 0, count_b = 0;
+
+    ecs.system()
+        .kind(flecs::OnStart)
+        .iter([&](flecs::iter& it) {
+            test_assert(it.delta_time() == 0);
+            count_a ++;
+        });
+
+    ecs.system()
+        .kind(flecs::OnUpdate)
+        .iter([&](flecs::iter& it) {
+            test_assert(it.delta_time() != 0);
+            count_b ++;
+        });
+
+    ecs.progress();
+    test_int(count_a, 1);
+    test_int(count_b, 1);
+
+    ecs.progress();
+    test_int(count_a, 1);
+    test_int(count_b, 2);
+}

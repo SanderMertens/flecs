@@ -568,10 +568,10 @@ struct ecs_world_t {
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
 
     /* Used to track when cache needs to be updated */
-    ecs_monitor_set_t monitors;    /* map<id, ecs_monitor_t> */
+    ecs_monitor_set_t monitors;  /* map<id, ecs_monitor_t> */
 
     /* -- Systems -- */
-    ecs_entity_t pipeline;             /* Current pipeline */
+    ecs_entity_t pipeline;       /* Current pipeline */
 
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
