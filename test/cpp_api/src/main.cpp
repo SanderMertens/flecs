@@ -257,6 +257,7 @@ void Pairs_get_mut_pair(void);
 void Pairs_get_mut_pair_existing(void);
 void Pairs_get_mut_pair_tag(void);
 void Pairs_get_mut_pair_tag_existing(void);
+void Pairs_get_mut_R_tag_O(void);
 void Pairs_get_relation_from_id(void);
 void Pairs_get_second_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
@@ -268,6 +269,7 @@ void Pairs_get_R_obj(void);
 void Pairs_get_R_obj_id(void);
 void Pairs_get_R_obj_id_t(void);
 void Pairs_get_R_O(void);
+void Pairs_get_R_tag_O(void);
 void Pairs_get_second(void);
 void Pairs_get_second_id(void);
 void Pairs_get_second_id_t(void);
@@ -781,6 +783,7 @@ void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
 void Observer_observer_w_filter_term(void);
 void Observer_run_callback(void);
+void Observer_get_query(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2089,6 +2092,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_mut_pair_tag_existing
     },
     {
+        "get_mut_R_tag_O",
+        Pairs_get_mut_R_tag_O
+    },
+    {
         "get_relation_from_id",
         Pairs_get_relation_from_id
     },
@@ -2131,6 +2138,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_R_O",
         Pairs_get_R_O
+    },
+    {
+        "get_R_tag_O",
+        Pairs_get_R_tag_O
     },
     {
         "get_second",
@@ -4123,6 +4134,10 @@ bake_test_case Observer_testcases[] = {
     {
         "run_callback",
         Observer_run_callback
+    },
+    {
+        "get_query",
+        Observer_get_query
     }
 };
 
@@ -5368,7 +5383,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        64,
+        66,
         Pairs_testcases
     },
     {
@@ -5452,7 +5467,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        22,
+        23,
         Observer_testcases
     },
     {

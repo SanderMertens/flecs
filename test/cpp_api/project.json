@@ -267,6 +267,7 @@
                 "get_mut_pair_existing",
                 "get_mut_pair_tag",
                 "get_mut_pair_tag_existing",
+                "get_mut_R_tag_O",
                 "get_relation_from_id",
                 "get_second_from_id",
                 "get_recycled_relation_from_id",
@@ -278,6 +279,7 @@
                 "get_R_obj_id",
                 "get_R_obj_id_t",
                 "get_R_O",
+                "get_R_tag_O",
                 "get_second",
                 "get_second_id",
                 "get_second_id_t",
@@ -814,7 +816,8 @@
                 "on_add_tag_each",
                 "on_add_expr",
                 "observer_w_filter_term",
-                "run_callback"
+                "run_callback",
+                "get_query"
             ]
         }, {
             "id": "Filter",

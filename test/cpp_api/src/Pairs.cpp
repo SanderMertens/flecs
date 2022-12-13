@@ -317,6 +317,25 @@ void Pairs_get_mut_pair_tag_existing() {
     test_int(p->y, 20);
 }
 
+void Pairs_get_mut_R_tag_O() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Tag, Position>({10, 20});
+
+    Position *t = e.get_mut<Tag, Position>();
+    test_assert(t != NULL);
+    test_int(t->x, 10);
+    test_int(t->y, 20);
+    t->x = 30;
+    t->y = 40;
+
+    const Position *t_2 = e.get<Tag, Position>();
+    test_assert(t == t_2);
+    test_int(t->x, 30);
+    test_int(t->y, 40);
+}
+
 void Pairs_get_relation_from_id() {
     flecs::world ecs;
 
@@ -513,6 +532,20 @@ void Pairs_get_R_O() {
     test_assert((e.has<Position, Tag>()));
 
     const Position *ptr = e.get<Position, Tag>();
+    test_assert(ptr != nullptr);
+
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Pairs_get_R_tag_O() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<Tag, Position>({10, 20});
+
+    test_assert((e.has<Tag, Position>()));
+
+    const Position *ptr = e.get<Tag, Position>();
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
