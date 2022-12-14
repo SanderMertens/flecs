@@ -230,12 +230,16 @@ typedef struct flecs_bitset_term_t {
     int32_t column_index;
 } flecs_bitset_term_t;
 
-/* Entity filter iterator. This iterator filters the entities of a matched 
- * table, for example when iterating a table with disabled components or union
- * relationships (switch). */
+/* Entity filter. This filters the entities of a matched table, for example when
+ * it has disabled components or union relationships (switch). */
+typedef struct ecs_entity_filter_t {
+    ecs_vec_t sw_terms;       /* Terms with switch (union) entity filter */
+    ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
+    bool has_filter;
+} ecs_entity_filter_t;
+
 typedef struct ecs_entity_filter_iter_t {
-    ecs_vec_t *sw_terms;
-    ecs_vec_t *bs_terms;
+    ecs_entity_filter_t *entity_filter;
     int32_t *columns;
     ecs_table_range_t range;
     int32_t bs_offset;
@@ -269,9 +273,7 @@ struct ecs_query_table_match_t {
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_vec_t refs;           /* Cached components for non-this terms */
-
-    ecs_vec_t sw_terms;       /* Terms with switch (union) entity filter */
-    ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
+    ecs_entity_filter_t entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;

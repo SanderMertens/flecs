@@ -198,7 +198,19 @@ uint64_t _flecs_ito(
 //// Entity filter
 ////////////////////////////////////////////////////////////////////////////////
 
-int ecs_entity_filter_next(
+void flecs_entity_filter_init(
+    ecs_world_t *world,
+    ecs_entity_filter_t *entity_filter,
+    const ecs_filter_t *filter,
+    const ecs_table_t *table,
+    ecs_id_t *ids,
+    int32_t *columns);
+
+void flecs_entity_filter_fini(
+    ecs_world_t *world,
+    ecs_entity_filter_t *entity_filter);
+
+int flecs_entity_filter_next(
     ecs_entity_filter_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////
