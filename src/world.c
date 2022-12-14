@@ -501,6 +501,7 @@ bool flecs_world_iter_next(
 {
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsValid)) {
         ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
+        ecs_iter_fini(it);
         return false;
     }
 

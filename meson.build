@@ -59,6 +59,7 @@ flecs_src = files(
     'src/datastructures/vector.c',
     'src/bootstrap.c',
     'src/entity.c',
+    'src/entity_filter.c',
     'src/filter.c',
     'src/hierarchy.c',
     'src/id_record.c',

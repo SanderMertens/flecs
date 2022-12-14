@@ -230,6 +230,19 @@ typedef struct flecs_bitset_term_t {
     int32_t column_index;
 } flecs_bitset_term_t;
 
+/* Entity filter iterator. This iterator filters the entities of a matched 
+ * table, for example when iterating a table with disabled components or union
+ * relationships (switch). */
+typedef struct ecs_entity_filter_iter_t {
+    ecs_vec_t *sw_terms;
+    ecs_vec_t *bs_terms;
+    int32_t *columns;
+    ecs_table_range_t range;
+    int32_t bs_offset;
+    int32_t sw_offset;
+    int32_t sw_smallest;
+} ecs_entity_filter_iter_t;
+
 typedef struct ecs_query_table_match_t ecs_query_table_match_t;
 
 /** List node used to iterate tables in a query.
@@ -239,7 +252,7 @@ typedef struct ecs_query_table_match_t ecs_query_table_match_t;
 struct ecs_query_table_node_t {
     ecs_query_table_node_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
-    uint64_t group_id;        /* Value used to organize tables in groups */
+    uint64_t group_id;             /* Value used to organize tables in groups */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
     ecs_query_table_match_t *match;  /* Reference to the match */
@@ -257,8 +270,8 @@ struct ecs_query_table_match_t {
     ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_vec_t refs;           /* Cached components for non-this terms */
 
-    ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
-    ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
+    ecs_vec_t sw_terms;       /* Terms with switch (union) entity filter */
+    ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;

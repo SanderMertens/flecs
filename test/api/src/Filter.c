@@ -3123,6 +3123,8 @@ void Filter_term_iter_in_stage() {
     test_int(it.entities[0], e2);
     test_int(it.ids[0], Tag);
 
+    test_bool(ecs_term_next(&it), false);
+
     ecs_readonly_end(world);
 
     ecs_fini(world);

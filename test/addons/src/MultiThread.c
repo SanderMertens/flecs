@@ -1136,6 +1136,7 @@ void System_w_ctx(ecs_iter_t *it) {
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
+    ecs_iter_fini(it);
 }
 
 void System_w_binding_ctx(ecs_iter_t *it) {
@@ -1143,6 +1144,7 @@ void System_w_binding_ctx(ecs_iter_t *it) {
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
+    ecs_iter_fini(it);
 }
 
 void MultiThread_get_ctx() {

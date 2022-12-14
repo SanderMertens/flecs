@@ -2128,7 +2128,6 @@ bool ecs_term_next(
 
         do {
             if (!next(chain_it)) {
-                ecs_iter_fini(it);
                 goto done;
             }
 
@@ -2158,6 +2157,7 @@ yield:
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;
 done:
+    ecs_iter_fini(it);
 error:
     return false;
 }
