@@ -118,6 +118,7 @@ ecs_entity_t ecs_run_intern(
         }
     } else {
         action(&qit);
+        ecs_iter_fini(&qit);
     }
 
     if (measure_time) {
