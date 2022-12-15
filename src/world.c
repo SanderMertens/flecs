@@ -314,6 +314,9 @@ void flecs_monitor_mark_dirty(
     if (ecs_map_is_initialized(monitors)) {
         ecs_monitor_t *m = ecs_map_get(monitors, ecs_monitor_t, id);
         if (m) {
+            if (!world->monitors.is_dirty) {
+                world->monitor_generation ++;
+            }
             m->is_dirty = true;
             world->monitors.is_dirty = true;
         }

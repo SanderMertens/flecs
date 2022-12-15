@@ -697,6 +697,9 @@ struct ecs_query_t {
     /* Flags for query properties */
     ecs_flags32_t flags;
 
+    /* Monitor generation */
+    int32_t monitor_generation;
+
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Track if sorting is needed */
@@ -953,6 +956,9 @@ struct ecs_world_t {
 
     /* -- World flags -- */
     ecs_flags32_t flags;
+
+    /* Count that increases when component monitors change */
+    int32_t monitor_generation;
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */
@@ -40159,6 +40165,9 @@ void flecs_monitor_mark_dirty(
     if (ecs_map_is_initialized(monitors)) {
         ecs_monitor_t *m = ecs_map_get(monitors, ecs_monitor_t, id);
         if (m) {
+            if (!world->monitors.is_dirty) {
+                world->monitor_generation ++;
+            }
             m->is_dirty = true;
             world->monitors.is_dirty = true;
         }
@@ -49246,6 +49255,12 @@ void flecs_query_rematch_tables(
     ecs_table_t *table = NULL;
     ecs_query_table_t *qt = NULL;
     ecs_query_table_match_t *qm = NULL;
+
+    if (query->monitor_generation == world->monitor_generation) {
+        return;
+    }
+
+    query->monitor_generation = world->monitor_generation;
 
     if (parent_query) {
         parent_it = ecs_query_iter(world, parent_query);

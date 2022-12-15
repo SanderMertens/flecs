@@ -357,6 +357,9 @@ struct ecs_query_t {
     /* Flags for query properties */
     ecs_flags32_t flags;
 
+    /* Monitor generation */
+    int32_t monitor_generation;
+
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Track if sorting is needed */
@@ -613,6 +616,9 @@ struct ecs_world_t {
 
     /* -- World flags -- */
     ecs_flags32_t flags;
+
+    /* Count that increases when component monitors change */
+    int32_t monitor_generation;
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */

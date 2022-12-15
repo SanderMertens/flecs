@@ -1466,6 +1466,12 @@ void flecs_query_rematch_tables(
     ecs_query_table_t *qt = NULL;
     ecs_query_table_match_t *qm = NULL;
 
+    if (query->monitor_generation == world->monitor_generation) {
+        return;
+    }
+
+    query->monitor_generation = world->monitor_generation;
+
     if (parent_query) {
         parent_it = ecs_query_iter(world, parent_query);
         it = ecs_filter_chain_iter(&parent_it, &query->filter);
