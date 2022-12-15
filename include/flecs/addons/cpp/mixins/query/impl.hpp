@@ -116,13 +116,13 @@ struct query_base {
         return f->term_count;   
     }
 
-    flecs::string str() {
+    flecs::string str() const {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         char *result = ecs_filter_str(m_world, f);
         return flecs::string(result);
     }
 
-    flecs::entity entity() {
+    flecs::entity entity() const {
         return flecs::entity(m_world, ecs_get_entity(m_query));
     }
     
