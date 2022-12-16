@@ -4761,6 +4761,17 @@ void* ecs_table_get_column(
     ecs_table_t *table,
     int32_t index);
 
+/** Get column size from table.
+ * This operation returns the component size for the provided index.
+ * 
+ * @param table The table.
+ * @return The component size, or 0 if the index is not a component.
+ */
+FLECS_API
+ecs_size_t ecs_table_get_column_size(
+    ecs_table_t *table,
+    int32_t index);
+
 /** Get column index for id.
  * This operation returns the index for an id in the table's type.
  * 

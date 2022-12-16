@@ -53,6 +53,11 @@ inline flecs::table iter::table() const {
     return flecs::table(m_iter->world, m_iter->table);
 }
 
+inline flecs::table_range iter::range() const {
+    return flecs::table_range(m_iter->world, m_iter->table, 
+        m_iter->offset, m_iter->count);
+}
+
 #ifdef FLECS_RULES
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);

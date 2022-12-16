@@ -1089,19 +1089,35 @@ void Meta_unit_w_prefix(void);
 void Meta_unit_w_over(void);
 void Meta_bitmask(void);
 
-// Testsuite 'TableLock'
-void TableLock_each(void);
-void TableLock_each_locked(void);
-void TableLock_each_without_entity(void);
-void TableLock_each_without_entity_locked(void);
-void TableLock_iter(void);
-void TableLock_iter_locked(void);
-void TableLock_iter_without_components(void);
-void TableLock_iter_without_components_locked(void);
-void TableLock_multi_get(void);
-void TableLock_multi_get_locked(void);
-void TableLock_multi_set(void);
-void TableLock_multi_set_locked(void);
+// Testsuite 'Table'
+void Table_each(void);
+void Table_each_locked(void);
+void Table_each_without_entity(void);
+void Table_each_without_entity_locked(void);
+void Table_iter(void);
+void Table_iter_locked(void);
+void Table_iter_without_components(void);
+void Table_iter_without_components_locked(void);
+void Table_multi_get(void);
+void Table_multi_get_locked(void);
+void Table_multi_set(void);
+void Table_multi_set_locked(void);
+void Table_count(void);
+void Table_has_id(void);
+void Table_has_T(void);
+void Table_has_pair_r_t(void);
+void Table_has_pair_R_t(void);
+void Table_has_pair_R_T(void);
+void Table_get_id(void);
+void Table_get_T(void);
+void Table_get_pair_r_t(void);
+void Table_get_pair_R_t(void);
+void Table_get_pair_R_T(void);
+void Table_range_get_id(void);
+void Table_range_get_T(void);
+void Table_range_get_pair_r_t(void);
+void Table_range_get_pair_R_t(void);
+void Table_range_get_pair_R_T(void);
 
 // Testsuite 'Doc'
 void Doc_set_brief(void);
@@ -5300,54 +5316,118 @@ bake_test_case Meta_testcases[] = {
     }
 };
 
-bake_test_case TableLock_testcases[] = {
+bake_test_case Table_testcases[] = {
     {
         "each",
-        TableLock_each
+        Table_each
     },
     {
         "each_locked",
-        TableLock_each_locked
+        Table_each_locked
     },
     {
         "each_without_entity",
-        TableLock_each_without_entity
+        Table_each_without_entity
     },
     {
         "each_without_entity_locked",
-        TableLock_each_without_entity_locked
+        Table_each_without_entity_locked
     },
     {
         "iter",
-        TableLock_iter
+        Table_iter
     },
     {
         "iter_locked",
-        TableLock_iter_locked
+        Table_iter_locked
     },
     {
         "iter_without_components",
-        TableLock_iter_without_components
+        Table_iter_without_components
     },
     {
         "iter_without_components_locked",
-        TableLock_iter_without_components_locked
+        Table_iter_without_components_locked
     },
     {
         "multi_get",
-        TableLock_multi_get
+        Table_multi_get
     },
     {
         "multi_get_locked",
-        TableLock_multi_get_locked
+        Table_multi_get_locked
     },
     {
         "multi_set",
-        TableLock_multi_set
+        Table_multi_set
     },
     {
         "multi_set_locked",
-        TableLock_multi_set_locked
+        Table_multi_set_locked
+    },
+    {
+        "count",
+        Table_count
+    },
+    {
+        "has_id",
+        Table_has_id
+    },
+    {
+        "has_T",
+        Table_has_T
+    },
+    {
+        "has_pair_r_t",
+        Table_has_pair_r_t
+    },
+    {
+        "has_pair_R_t",
+        Table_has_pair_R_t
+    },
+    {
+        "has_pair_R_T",
+        Table_has_pair_R_T
+    },
+    {
+        "get_id",
+        Table_get_id
+    },
+    {
+        "get_T",
+        Table_get_T
+    },
+    {
+        "get_pair_r_t",
+        Table_get_pair_r_t
+    },
+    {
+        "get_pair_R_t",
+        Table_get_pair_R_t
+    },
+    {
+        "get_pair_R_T",
+        Table_get_pair_R_T
+    },
+    {
+        "range_get_id",
+        Table_range_get_id
+    },
+    {
+        "range_get_T",
+        Table_range_get_T
+    },
+    {
+        "range_get_pair_r_t",
+        Table_range_get_pair_r_t
+    },
+    {
+        "range_get_pair_R_t",
+        Table_range_get_pair_R_t
+    },
+    {
+        "range_get_pair_R_T",
+        Table_range_get_pair_R_T
     }
 };
 
@@ -5558,11 +5638,11 @@ static bake_test_suite suites[] = {
         Meta_testcases
     },
     {
-        "TableLock",
+        "Table",
         NULL,
         NULL,
-        12,
-        TableLock_testcases
+        28,
+        Table_testcases
     },
     {
         "Doc",

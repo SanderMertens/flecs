@@ -257,7 +257,7 @@ void Observer_2_entities_table_column() {
     ecs.observer<const Position>()
         .event(flecs::OnSet)
         .iter([&](flecs::iter& it) {
-            auto p = it.table_column<Position>();
+            auto p = it.range().get<Position>();
 
             for (auto i : it) {
                 count ++;

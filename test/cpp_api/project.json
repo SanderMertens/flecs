@@ -1146,7 +1146,7 @@
                 "bitmask"
             ]
         }, {
-            "id": "TableLock",
+            "id": "Table",
             "testcases": [
                 "each",
                 "each_locked",
@@ -1159,7 +1159,23 @@
                 "multi_get",
                 "multi_get_locked",
                 "multi_set",
-                "multi_set_locked"
+                "multi_set_locked",
+                "count",
+                "has_id",
+                "has_T",
+                "has_pair_r_t",
+                "has_pair_R_t",
+                "has_pair_R_T",
+                "get_id",
+                "get_T",
+                "get_pair_r_t",
+                "get_pair_R_t",
+                "get_pair_R_T",
+                "range_get_id",
+                "range_get_T",
+                "range_get_pair_r_t",
+                "range_get_pair_R_t",
+                "range_get_pair_R_T"
             ]
         }, {
             "id": "Doc",
