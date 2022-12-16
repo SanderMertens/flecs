@@ -1111,7 +1111,8 @@
                 "get_singleton",
                 "type_id_from_world",
                 "set_lambda",
-                "get_lambda"
+                "get_lambda",
+                "get_write_lambda"
             ]
         }, {
             "id": "Misc",

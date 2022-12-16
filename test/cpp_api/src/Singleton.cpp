@@ -188,3 +188,24 @@ void Singleton_get_lambda() {
 
     test_int(count, 1);
 }
+
+void Singleton_get_write_lambda() {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+
+    int32_t count = 0;
+    world.get([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        p.x ++;
+        p.y ++;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    const Position *p = world.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+}
