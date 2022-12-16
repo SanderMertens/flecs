@@ -197,6 +197,8 @@ public:
 
     flecs::table table() const;
 
+    flecs::table_range range() const;
+
     /** Is current type a module or does it contain module contents? */
     bool has_module() const {
         return ecs_table_has_module(m_iter->table);
@@ -313,14 +315,13 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-        
     flecs::column<A> field(int32_t index) const {
         return get_field<A>(index);
     }
 
     /** Get read/write access to field data.
-     * If the matched id for the specified field does not match with the provided type or if
-     * the field is readonly, the function will assert.
+     * If the matched id for the specified field does not match with the provided 
+     * type or if the field is readonly, the function will assert.
      *
      * @tparam T Type of the field.
      * @param index The field index.
@@ -329,7 +330,6 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-
     flecs::column<A> field(int32_t index) const {
         ecs_assert(!ecs_field_is_readonly(m_iter, index), 
             ECS_ACCESS_VIOLATION, NULL);
@@ -346,44 +346,9 @@ public:
         return get_unchecked_field(index);
     }
 
-    /** Obtain the total number of tables the iterator will iterate over.
-     */
+    /** Obtain the total number of tables the iterator will iterate over. */
     int32_t table_count() const {
         return m_iter->table_count;
-    }
-
-    /** Obtain untyped pointer to table column.
-     *
-     * @param column Id of table column (corresponds with location in table type).
-     * @return Pointer to table column.
-     */
-    void* table_column(int32_t column) const {
-        return ecs_iter_column_w_size(m_iter, 0, column);
-    }
-
-    /** Obtain typed pointer to table column.
-     * If the table does not contain a column with the specified type, the
-     * function will assert.
-     *
-     * @tparam T Type of the table column.
-     */
-    template <typename T, typename A = actual_type_t<T>>
-    flecs::column<T> table_column() const {
-        auto col = ecs_iter_find_column(m_iter, _::cpp_type<T>::id());
-        ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
-
-        return flecs::column<A>(static_cast<A*>(ecs_iter_column_w_size(m_iter,
-            sizeof(A), col)), static_cast<std::size_t>(m_iter->count), false);
-    }
-
-    template <typename T>
-    flecs::column<T> table_column(flecs::id_t obj) const {
-        auto col = ecs_iter_find_column(m_iter, 
-            ecs_pair(_::cpp_type<T>::id(), obj));
-        ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
-
-        return flecs::column<T>(static_cast<T*>(ecs_iter_column_w_size(m_iter,
-            sizeof(T), col)), static_cast<std::size_t>(m_iter->count), false);
     }
 
     /** Check if the current table has changed since the last iteration.

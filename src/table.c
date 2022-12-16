@@ -2547,6 +2547,23 @@ error:
     return NULL;
 }
 
+ecs_size_t ecs_table_get_column_size(
+    ecs_table_t *table,
+    int32_t index)
+{
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t storage_index = table->storage_map[index];
+    if (storage_index == -1) {
+        return 0;
+    }
+
+    return table->type_info[storage_index]->size;
+error:
+    return 0;
+}
+
 int32_t ecs_table_get_index(
     const ecs_world_t *world,
     const ecs_table_t *table,

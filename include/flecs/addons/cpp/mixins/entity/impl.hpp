@@ -99,6 +99,15 @@ inline flecs::table entity_view::table() const {
     return flecs::table(m_world, ecs_get_table(m_world, m_id));
 }
 
+inline flecs::table_range entity_view::range() const {
+    ecs_record_t *r = ecs_record_find(m_world, m_id);
+    if (r) {
+        return flecs::table_range(m_world, r->table, 
+            ECS_RECORD_TO_ROW(r->row), 1);
+    }
+    return flecs::table_range();
+}
+
 template <typename Func>
 inline void entity_view::each(const Func& func) const {
     const ecs_type_t *type = ecs_get_type(m_world, m_id);

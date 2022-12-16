@@ -21,6 +21,7 @@ struct entity_view;
 struct entity;
 struct type;
 struct table;
+struct table_range;
 struct untyped_component;
 
 template <typename T>
