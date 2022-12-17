@@ -57,6 +57,8 @@ inline units::units(flecs::world& world) {
     world.entity<Data>("::flecs::units::Data");
     world.entity<DataRate>("::flecs::units::DataRate");
     world.entity<Angle>("::flecs::units::Angle");
+    world.entity<Frequency>("::flecs::units::Frequency");
+    world.entity<Uri>("::flecs::units::Uri");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -171,7 +173,7 @@ inline units::units(flecs::world& world) {
     world.entity<datarate::GigaBytesPerSecond>(
         "::flecs::units::DataRate::GigaBytesPerSecond");
 
-    // Initialize datarate units
+    // Initialize hertz units
     world.entity<frequency::Hertz>(
         "::flecs::units::Frequency::Hertz");
     world.entity<frequency::KiloHertz>(
@@ -180,6 +182,14 @@ inline units::units(flecs::world& world) {
         "::flecs::units::Frequency::MegaHertz");
     world.entity<frequency::GigaHertz>(
         "::flecs::units::Frequency::GigaHertz");
+
+    // Initialize uri units
+    world.entity<uri::Hyperlink>(
+        "::flecs::units::Uri::Hyperlink");
+    world.entity<uri::Image>(
+        "::flecs::units::Uri::Image");
+    world.entity<uri::File>(
+        "::flecs::units::Uri::File");
 
     // Initialize angles
     world.entity<angle::Radians>(

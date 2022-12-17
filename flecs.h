@@ -11774,6 +11774,11 @@ FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
 FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
 FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
+FLECS_API extern ECS_DECLARE(EcsUri);
+FLECS_API extern     ECS_DECLARE(EcsUriHyperlink);
+FLECS_API extern     ECS_DECLARE(EcsUriImage);
+FLECS_API extern     ECS_DECLARE(EcsUriFile);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
@@ -15620,6 +15625,7 @@ struct Data { };
 struct DataRate { };
 struct Angle { };
 struct Frequency { };
+struct Uri { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15726,6 +15732,12 @@ struct Hertz { };
 struct KiloHertz { };
 struct MegaHertz { };
 struct GigaHertz { };
+};
+
+struct uri {
+struct Hyperlink { };
+struct Image { };
+struct File { };
 };
 
 struct Percentage { };
@@ -25355,6 +25367,8 @@ inline units::units(flecs::world& world) {
     world.entity<Data>("::flecs::units::Data");
     world.entity<DataRate>("::flecs::units::DataRate");
     world.entity<Angle>("::flecs::units::Angle");
+    world.entity<Frequency>("::flecs::units::Frequency");
+    world.entity<Uri>("::flecs::units::Uri");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -25469,7 +25483,7 @@ inline units::units(flecs::world& world) {
     world.entity<datarate::GigaBytesPerSecond>(
         "::flecs::units::DataRate::GigaBytesPerSecond");
 
-    // Initialize datarate units
+    // Initialize hertz units
     world.entity<frequency::Hertz>(
         "::flecs::units::Frequency::Hertz");
     world.entity<frequency::KiloHertz>(
@@ -25478,6 +25492,14 @@ inline units::units(flecs::world& world) {
         "::flecs::units::Frequency::MegaHertz");
     world.entity<frequency::GigaHertz>(
         "::flecs::units::Frequency::GigaHertz");
+
+    // Initialize uri units
+    world.entity<uri::Hyperlink>(
+        "::flecs::units::Uri::Hyperlink");
+    world.entity<uri::Image>(
+        "::flecs::units::Uri::Image");
+    world.entity<uri::File>(
+        "::flecs::units::Uri::File");
 
     // Initialize angles
     world.entity<angle::Radians>(

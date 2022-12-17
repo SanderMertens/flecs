@@ -168,6 +168,11 @@ FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
 FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
 FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
+FLECS_API extern ECS_DECLARE(EcsUri);
+FLECS_API extern     ECS_DECLARE(EcsUriHyperlink);
+FLECS_API extern     ECS_DECLARE(EcsUriImage);
+FLECS_API extern     ECS_DECLARE(EcsUriFile);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 ////////////////////////////////////////////////////////////////////////////////

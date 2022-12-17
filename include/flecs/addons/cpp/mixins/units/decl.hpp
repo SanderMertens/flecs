@@ -58,6 +58,7 @@ struct Data { };
 struct DataRate { };
 struct Angle { };
 struct Frequency { };
+struct Uri { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,12 @@ struct Hertz { };
 struct KiloHertz { };
 struct MegaHertz { };
 struct GigaHertz { };
+};
+
+struct uri {
+struct Hyperlink { };
+struct Image { };
+struct File { };
 };
 
 struct Percentage { };
