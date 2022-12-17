@@ -1624,6 +1624,17 @@ void Entity_emplace_override() {
     test_int(ptr->x_, 10);
 }
 
+void Entity_emplace_override_pair() {
+    flecs::world world;
+
+    auto e = world.entity().emplace_override<NoDefaultCtor, Tag>(10);
+    test_assert((e.has<NoDefaultCtor, Tag>()));
+
+    const NoDefaultCtor *ptr = e.get<NoDefaultCtor, Tag>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 10);
+}
+
 void Entity_implicit_name_to_char() {
     flecs::world world;
 

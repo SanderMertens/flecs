@@ -19353,7 +19353,7 @@ struct entity_builder : entity_view {
     /** Emplace component, mark component for auto-overriding.
      * @see override(flecs::id_t id)
      *
-     * @tparam T The component to set and for which to add the OVERRIDE flag
+     * @tparam T The component to emplace and override.
      */    
     template <typename T, typename ... Args>
     Self& emplace_override(Args&&... args) {
@@ -19361,6 +19361,26 @@ struct entity_builder : entity_view {
 
         flecs::emplace<T>(this->m_world, this->m_id, 
             _::cpp_type<T>::id(this->m_world), FLECS_FWD(args)...);
+
+        return to_base();  
+    }
+
+    /** Emplace pair, mark pair for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam First The first element of the pair to emplace and override.
+     * @tparam Second The second element of the pair to emplace and override.
+     */    
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0,
+            typename ... Args>
+    Self& emplace_override(Args&&... args) {
+        this->override<First, Second>();
+
+        flecs::emplace<A>(this->m_world, this->m_id, 
+            ecs_pair(_::cpp_type<First>::id(this->m_world),
+                _::cpp_type<Second>::id(this->m_world)),
+                    FLECS_FWD(args)...);
 
         return to_base();  
     }

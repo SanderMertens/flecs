@@ -118,6 +118,7 @@
                 "set_override_pair_w_tgt_id",
                 "set_override_pair_w_rel_tag",
                 "emplace_override",
+                "emplace_override_pair",
                 "implicit_name_to_char",
                 "implicit_path_to_char",
                 "implicit_type_str_to_char",
