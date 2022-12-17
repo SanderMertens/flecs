@@ -2248,6 +2248,7 @@ void Table_get_column_w_offset(void);
 void Table_get_id(void);
 void Table_get_component(void);
 void Table_get_pair(void);
+void Table_get_from_stage(void);
 
 // Testsuite 'Poly'
 void Poly_iter_query(void);
@@ -10983,6 +10984,10 @@ bake_test_case Table_testcases[] = {
     {
         "get_pair",
         Table_get_pair
+    },
+    {
+        "get_from_stage",
+        Table_get_from_stage
     }
 };
 
@@ -11503,7 +11508,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        9,
+        10,
         Table_testcases
     },
     {

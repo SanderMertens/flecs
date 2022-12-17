@@ -2559,6 +2559,10 @@ int32_t ecs_table_get_index(
     const ecs_table_t *table,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return -1;
@@ -2570,6 +2574,8 @@ int32_t ecs_table_get_index(
     }
 
     return tr->column;
+error:
+    return -1;
 }
 
 void* ecs_table_get_id(
@@ -2578,12 +2584,20 @@ void* ecs_table_get_id(
     ecs_id_t id,
     int32_t offset)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
     int32_t index = ecs_table_get_index(world, table, id);
     if (index == -1) {
         return NULL;
     }
 
     return ecs_table_get_column(table, index, offset);
+error:
+    return NULL;
 }
 
 void* ecs_record_get_column(

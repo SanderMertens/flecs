@@ -2342,7 +2342,8 @@
                 "get_column_w_offset",
                 "get_id",
                 "get_component",
-                "get_pair"
+                "get_pair",
+                "get_from_stage"
             ]
         }, {
             "id": "Poly",

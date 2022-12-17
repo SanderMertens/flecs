@@ -258,3 +258,39 @@ void Table_get_pair() {
 
     ecs_fini(world);
 }
+
+void Table_get_from_stage() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+    test_assert(stage != world);
+
+    Position *p = ecs_table_get(stage, table, Position, 0);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+
+    Velocity *v = ecs_table_get(stage, table, Velocity, 0);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+    test_int(v[1].x, 2);
+    test_int(v[1].y, 3);
+
+    ecs_fini(world);
+}
