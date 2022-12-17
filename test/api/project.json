@@ -2332,6 +2332,19 @@
                 "create_1m_set_two_components"
             ]
         }, {
+            "id": "Table",
+            "testcases": [
+                "get_index",
+                "get_index_not_in_table",
+                "get_column",
+                "get_column_for_tag",
+                "get_column_for_component_after_tag",
+                "get_column_w_offset",
+                "get_id",
+                "get_component",
+                "get_pair"
+            ]
+        }, {
             "id": "Poly",
             "testcases": [
                 "iter_query",

@@ -1663,7 +1663,7 @@ void flecs_notify_queries(
                 continue;
             }
 
-            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
                 if (!ecs_poly_is(query, ecs_query_t)) {
@@ -1713,7 +1713,7 @@ void flecs_process_empty_queries(
     if (flecs_table_cache_iter(&idr->cache, &it)) {
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
             int32_t i, count = ecs_table_count(table);
 
             for (i = 0; i < count; i ++) {

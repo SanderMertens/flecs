@@ -2238,6 +2238,17 @@ void Stresstests_create_2m_entities_bulk_1_comp(void);
 void Stresstests_add_1k_tags(void);
 void Stresstests_create_1m_set_two_components(void);
 
+// Testsuite 'Table'
+void Table_get_index(void);
+void Table_get_index_not_in_table(void);
+void Table_get_column(void);
+void Table_get_column_for_tag(void);
+void Table_get_column_for_component_after_tag(void);
+void Table_get_column_w_offset(void);
+void Table_get_id(void);
+void Table_get_component(void);
+void Table_get_pair(void);
+
 // Testsuite 'Poly'
 void Poly_iter_query(void);
 void Poly_iter_query_w_filter(void);
@@ -10936,6 +10947,45 @@ bake_test_case Stresstests_testcases[] = {
     }
 };
 
+bake_test_case Table_testcases[] = {
+    {
+        "get_index",
+        Table_get_index
+    },
+    {
+        "get_index_not_in_table",
+        Table_get_index_not_in_table
+    },
+    {
+        "get_column",
+        Table_get_column
+    },
+    {
+        "get_column_for_tag",
+        Table_get_column_for_tag
+    },
+    {
+        "get_column_for_component_after_tag",
+        Table_get_column_for_component_after_tag
+    },
+    {
+        "get_column_w_offset",
+        Table_get_column_w_offset
+    },
+    {
+        "get_id",
+        Table_get_id
+    },
+    {
+        "get_component",
+        Table_get_component
+    },
+    {
+        "get_pair",
+        Table_get_pair
+    }
+};
+
 bake_test_case Poly_testcases[] = {
     {
         "iter_query",
@@ -11450,6 +11500,13 @@ static bake_test_suite suites[] = {
         Stresstests_testcases
     },
     {
+        "Table",
+        NULL,
+        NULL,
+        9,
+        Table_testcases
+    },
+    {
         "Poly",
         NULL,
         NULL,
@@ -11473,5 +11530,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 48);
+    return bake_test_run("api", argc, argv, suites, 49);
 }

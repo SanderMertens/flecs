@@ -342,10 +342,10 @@ void TableColumns(ecs_iter_t *it) {
     test_int(components[0], ecs_id(Position));
     test_int(components[1], ecs_id(Velocity));
 
-    void *column_0 = ecs_iter_column_w_size(it, sizeof(Position), 0);
+    void *column_0 = ecs_table_get(it->real_world, it->table, Position, 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_iter_column_w_size(it, sizeof(Velocity), 1);
+    void *column_1 = ecs_table_get(it->real_world, it->table, Velocity, 0);
     test_assert(column_1 == v);
 
     is_invoked ++;

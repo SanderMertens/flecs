@@ -491,8 +491,17 @@
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
-#define ecs_iter_column(it, T, index)\
-    (ECS_CAST(T*, ecs_iter_column_w_size(it, sizeof(T), index)))
+
+/* -- Tables -- */
+
+#define ecs_table_get(world, table, T, offset)\
+    (ECS_CAST(T*, ecs_table_get_id(world, table, ecs_id(T), offset)))
+
+#define ecs_table_get_pair(world, table, First, second, offset)\
+    (ECS_CAST(First*, ecs_table_get_id(world, table, ecs_pair(ecs_id(First), second), offset)))
+
+#define ecs_table_get_pair_second(world, table, first, Second, offset)\
+    (ECS_CAST(Second*, ecs_table_get_id(world, table, ecs_pair(first, ecs_id(Second)), offset)))
 
 /** @} */
 

@@ -9,6 +9,8 @@ struct table {
         : m_world(world)
         , m_table(t) { }
 
+    virtual ~table() { }
+
     /** Convert table type to string. */
     flecs::string str() const {
         return flecs::string(ecs_table_str(m_world, m_table));
@@ -53,7 +55,7 @@ struct table {
     }
 
     /** Find index for pair. 
-     * @param first First element of pair.
+     * @tparam First First element of pair.
      * @param second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
@@ -63,8 +65,8 @@ struct table {
     }
 
     /** Find index for pair. 
-     * @param first First element of pair.
-     * @param second Second element of pair.
+     * @tparam First First element of pair.
+     * @tparam Second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
     template <typename First, typename Second>
@@ -129,7 +131,7 @@ struct table {
      * @return Pointer to the column, NULL if not a component.
      */
     virtual void* get_by_index(int32_t index) const {
-        return ecs_table_get_column(m_table, index);
+        return ecs_table_get_column(m_table, index, 0);
     }
 
     /** Get pointer to component array by component.
@@ -210,7 +212,10 @@ protected:
 };
 
 struct table_range : table {
-    using table::table;
+    table_range() 
+        : table()
+        , m_offset(0)
+        , m_count(0) { }
 
     table_range(world_t *world, table_t *t, int32_t offset, int32_t count)
         : table(world, t)
@@ -232,9 +237,7 @@ private:
      * @return Pointer to the column, NULL if not a component.
      */
     void* get_by_index(int32_t index) const override {
-        void *elem = ecs_table_get_column(m_table, index);
-        ecs_size_t size = ecs_table_get_column_size(m_table, index);
-        return ECS_ELEM(elem, size, m_offset);
+        return ecs_table_get_column(m_table, index, m_offset);
     }
 
     int32_t m_offset = 0;
