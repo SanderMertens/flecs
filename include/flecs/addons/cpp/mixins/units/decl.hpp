@@ -115,6 +115,7 @@ struct MilliMeters { };
 struct CentiMeters { };
 struct KiloMeters { };
 struct Miles { };
+struct Pixels { };
 };
 
 struct pressure {

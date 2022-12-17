@@ -11718,6 +11718,7 @@ FLECS_API extern         ECS_DECLARE(EcsMilliMeters);
 FLECS_API extern         ECS_DECLARE(EcsCentiMeters);
 FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
 FLECS_API extern     ECS_DECLARE(EcsMiles);
+FLECS_API extern     ECS_DECLARE(EcsPixels);
 
 FLECS_API extern ECS_DECLARE(EcsPressure);
 FLECS_API extern     ECS_DECLARE(EcsPascal);
@@ -15682,6 +15683,7 @@ struct MilliMeters { };
 struct CentiMeters { };
 struct KiloMeters { };
 struct Miles { };
+struct Pixels { };
 };
 
 struct pressure {
@@ -25418,6 +25420,7 @@ inline units::units(flecs::world& world) {
     world.entity<length::CentiMeters>("::flecs::units::Length::CentiMeters");
     world.entity<length::KiloMeters>("::flecs::units::Length::KiloMeters");
     world.entity<length::Miles>("::flecs::units::Length::Miles");
+    world.entity<length::Pixels>("::flecs::units::Length::Pixels");
 
     // Initialize pressure units
     world.entity<pressure::Pascal>("::flecs::units::Pressure::Pascal");

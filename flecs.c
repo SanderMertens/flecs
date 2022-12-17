@@ -31116,6 +31116,7 @@ ECS_DECLARE(EcsLength);
         ECS_DECLARE(EcsCentiMeters);
         ECS_DECLARE(EcsKiloMeters);
     ECS_DECLARE(EcsMiles);
+    ECS_DECLARE(EcsPixels);
 
 ECS_DECLARE(EcsPressure);
     ECS_DECLARE(EcsPascal);
@@ -31606,6 +31607,16 @@ void FlecsUnitsImport(
         });
         ecs_primitive_init(world, &(ecs_primitive_desc_t){
             .entity = EcsMiles,
+            .kind = EcsF32
+        });
+
+        EcsPixels = ecs_unit_init(world, &(ecs_unit_desc_t){ 
+            .entity = ecs_entity(world, { .name = "Pixels" }),
+            .quantity = EcsLength,
+            .symbol = "px"
+        });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t){
+            .entity = EcsPixels,
             .kind = EcsF32
         });
     ecs_set_scope(world, prev_scope);
