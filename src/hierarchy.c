@@ -89,7 +89,11 @@ ecs_entity_t flecs_name_to_id(
     if (alive) {
         return alive;
     } else {
-        return (ecs_entity_t)result;
+        if ((uint32_t)result == (uint64_t)result) {
+            return (ecs_entity_t)result;
+        } else {
+            return 0;
+        }
     }
 }
 
@@ -287,7 +291,13 @@ ecs_entity_t ecs_lookup_child(
     world = ecs_get_world(world);
 
     if (flecs_is_string_number(name)) {
-        return flecs_name_to_id(world, name);
+        ecs_entity_t result = flecs_name_to_id(world, name);
+        if (result) {
+            if (parent && !ecs_has_pair(world, result, EcsChildOf, parent)) {
+                return 0;
+            }
+            return result;
+        }
     }
 
     ecs_id_t pair = ecs_childof(parent);

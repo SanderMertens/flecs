@@ -540,8 +540,6 @@ void Delete_get_alive_w_generation_for_recycled_alive() {
 }
 
 void Delete_get_alive_w_generation_for_recycled_not_alive() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -556,10 +554,9 @@ void Delete_get_alive_w_generation_for_recycled_not_alive() {
 
     ecs_delete(world, e);
 
-    test_expect_abort();
+    test_assert(ecs_get_alive(world, e) == 0);
 
-    // Will assert, because function is called with generation that is not alive
-    ecs_get_alive(world, e);
+    ecs_fini(world);
 }
 
 void Delete_get_alive_for_0() {

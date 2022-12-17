@@ -599,3 +599,44 @@ void Lookup_defer_set_same_name() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_invalid_digit() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t child = ecs_lookup(world, "111111111111");
+    test_assert(child == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_child_invalid_digit() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "p");
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_lookup_child(world, parent, "111111111111");
+    test_assert(child == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_digit_from_wrong_scope() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "p");
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "p.1");
+    test_assert(child == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_core_entity_from_wrong_scope() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "p");
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "p.10.Component");
+    test_assert(child == 0);
+
+    ecs_fini(world);
+}

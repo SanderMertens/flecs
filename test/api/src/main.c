@@ -724,6 +724,10 @@ void Lookup_set_same_name(void);
 void Lookup_set_same_name_after_reparenting(void);
 void Lookup_defer_set_name(void);
 void Lookup_defer_set_same_name(void);
+void Lookup_lookup_invalid_digit(void);
+void Lookup_lookup_child_invalid_digit(void);
+void Lookup_lookup_digit_from_wrong_scope(void);
+void Lookup_lookup_core_entity_from_wrong_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -5041,6 +5045,22 @@ bake_test_case Lookup_testcases[] = {
     {
         "defer_set_same_name",
         Lookup_defer_set_same_name
+    },
+    {
+        "lookup_invalid_digit",
+        Lookup_lookup_invalid_digit
+    },
+    {
+        "lookup_child_invalid_digit",
+        Lookup_lookup_child_invalid_digit
+    },
+    {
+        "lookup_digit_from_wrong_scope",
+        Lookup_lookup_digit_from_wrong_scope
+    },
+    {
+        "lookup_core_entity_from_wrong_scope",
+        Lookup_lookup_core_entity_from_wrong_scope
     }
 };
 
@@ -11333,7 +11353,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        40,
+        44,
         Lookup_testcases
     },
     {
