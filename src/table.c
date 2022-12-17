@@ -2531,8 +2531,9 @@ error:
 }
 
 void* ecs_table_get_column(
-    ecs_table_t *table,
-    int32_t index)
+    const ecs_table_t *table,
+    int32_t index,
+    int32_t offset)
 {
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
@@ -2542,26 +2543,15 @@ void* ecs_table_get_column(
         return NULL;
     }
 
-    return table->data.columns[storage_index].array;
-error:
-    return NULL;
-}
-
-ecs_size_t ecs_table_get_column_size(
-    ecs_table_t *table,
-    int32_t index)
-{
-    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t storage_index = table->storage_map[index];
-    if (storage_index == -1) {
-        return 0;
+    void *result = table->data.columns[storage_index].array;
+    if (offset) {
+        ecs_size_t size = table->type_info[storage_index]->size;
+        result = ECS_ELEM(result, size, offset);
     }
 
-    return table->type_info[storage_index]->size;
+    return result;
 error:
-    return 0;
+    return NULL;
 }
 
 int32_t ecs_table_get_index(
@@ -2580,6 +2570,20 @@ int32_t ecs_table_get_index(
     }
 
     return tr->column;
+}
+
+void* ecs_table_get_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    int32_t offset)
+{
+    int32_t index = ecs_table_get_index(world, table, id);
+    if (index == -1) {
+        return NULL;
+    }
+
+    return ecs_table_get_column(table, index, offset);
 }
 
 void* ecs_record_get_column(

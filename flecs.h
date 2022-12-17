@@ -7567,74 +7567,6 @@ FLECS_API
 char* ecs_iter_str(
     const ecs_iter_t *it);
 
-/** Find the column index for a given id.
- * This operation finds the index of a column in the current type for the 
- * specified id. For example, if an entity has type Position, Velocity, and the
- * application requests the id for the Velocity component, this function will
- * return 1.
- *
- * Note that the column index returned by this function starts from 0, as
- * opposed to 1 for the terms. The reason for this is that the returned index
- * is equivalent to using the ecs_type_get_index function.
- *
- * This operation can be used to request columns that are not requested by a
- * query. For example, a query may request Position, Velocity, but an entity
- * may also have Mass. With this function the iterator can request the data for
- * Mass as well, when used in combination with ecs_iter_column.
- *
- * @param it The iterator.
- * @return The type of the currently iterated entity/entities.
- */
-FLECS_API
-int32_t ecs_iter_find_column(
-    const ecs_iter_t *it,
-    ecs_id_t id);
-
-/** Obtain data for a column index.
- * This operation can be used with the id obtained from ecs_iter_find_column to
- * request data from the currently iterated over entity/entities that is not
- * requested by the query.
- *
- * The data in the returned pointer can be accessed using the same index as
- * the one used to access the arrays returned by the ecs_field function.
- *
- * The provided size must be either 0 or must match the size of the datatype
- * of the returned array. If the size does not match, the operation may assert.
- * The size can be dynamically obtained with ecs_iter_column_size.
- *
- * Note that this function can be used together with iter::type to 
- * dynamically iterate all data that the matched entities have. An application
- * can use the ecs_vector_count function to obtain the number of elements in a
- * type. All indices from 0..type->count are valid column indices.
- *
- * Additionally, note that this provides unprotected access to the column data.
- * An iterator cannot know or prevent accessing columns that are not queried for
- * and thus applications should only use this when it can be guaranteed that
- * there are no other threads reading/writing the same column data.
- *
- * @param it The iterator.
- * @param size The size of the column.
- * @param index The index of the column.
- * @return The data belonging to the column.
- */
-FLECS_API
-void* ecs_iter_column_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t index);
-
-/** Obtain size for a column index.
- * This operation obtains the size for a column. The size is equal to the size
- * of the datatype associated with the column.
- *
- * @param it The iterator.
- * @param index The index of the column.
- * @return The size belonging to the column.
- */
-FLECS_API
-size_t ecs_iter_column_size(
-    const ecs_iter_t *it,
-    int32_t index);    
 
 /** @} */
 
@@ -8064,23 +7996,15 @@ const ecs_type_t* ecs_table_get_type(
  * This operation returns the component array for the provided index.
  * 
  * @param table The table.
+ * @param index The index of the column (corresponds with element in type).
+ * @param offset The index of the first row to return (0 for entire column).
  * @return The component array, or NULL if the index is not a component.
  */
 FLECS_API
 void* ecs_table_get_column(
-    ecs_table_t *table,
-    int32_t index);
-
-/** Get column size from table.
- * This operation returns the component size for the provided index.
- * 
- * @param table The table.
- * @return The component size, or 0 if the index is not a component.
- */
-FLECS_API
-ecs_size_t ecs_table_get_column_size(
-    ecs_table_t *table,
-    int32_t index);
+    const ecs_table_t *table,
+    int32_t index,
+    int32_t offset);
 
 /** Get column index for id.
  * This operation returns the index for an id in the table's type.
@@ -8095,6 +8019,21 @@ int32_t ecs_table_get_index(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
+
+/** Get column from table by component id.
+ * This operation returns the component array for the provided component  id.
+ * 
+ * @param table The table.
+ * @param id The component id for the column.
+ * @param offset The index of the first row to return (0 for entire column).
+ * @return The component array, or NULL if the index is not a component.
+ */
+FLECS_API
+void* ecs_table_get_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    int32_t offset);
 
 /** Get storage type for table.
  *
@@ -8921,8 +8860,17 @@ int ecs_value_move_ctor(
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
-#define ecs_iter_column(it, T, index)\
-    (ECS_CAST(T*, ecs_iter_column_w_size(it, sizeof(T), index)))
+
+/* -- Tables -- */
+
+#define ecs_table_get(world, table, T, offset)\
+    (ECS_CAST(T*, ecs_table_get_id(world, table, ecs_id(T), offset)))
+
+#define ecs_table_get_pair(world, table, First, second, offset)\
+    (ECS_CAST(First*, ecs_table_get_id(world, table, ecs_pair(ecs_id(First), second), offset)))
+
+#define ecs_table_get_pair_second(world, table, first, Second, offset)\
+    (ECS_CAST(Second*, ecs_table_get_id(world, table, ecs_pair(first, ecs_id(Second)), offset)))
 
 /** @} */
 
@@ -21914,6 +21862,8 @@ struct table {
         : m_world(world)
         , m_table(t) { }
 
+    virtual ~table() { }
+
     /** Convert table type to string. */
     flecs::string str() const {
         return flecs::string(ecs_table_str(m_world, m_table));
@@ -21958,7 +21908,7 @@ struct table {
     }
 
     /** Find index for pair. 
-     * @param first First element of pair.
+     * @tparam First First element of pair.
      * @param second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
@@ -21968,8 +21918,8 @@ struct table {
     }
 
     /** Find index for pair. 
-     * @param first First element of pair.
-     * @param second Second element of pair.
+     * @tparam First First element of pair.
+     * @tparam Second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
     template <typename First, typename Second>
@@ -22034,7 +21984,7 @@ struct table {
      * @return Pointer to the column, NULL if not a component.
      */
     virtual void* get_by_index(int32_t index) const {
-        return ecs_table_get_column(m_table, index);
+        return ecs_table_get_column(m_table, index, 0);
     }
 
     /** Get pointer to component array by component.
@@ -22115,7 +22065,10 @@ protected:
 };
 
 struct table_range : table {
-    using table::table;
+    table_range() 
+        : table()
+        , m_offset(0)
+        , m_count(0) { }
 
     table_range(world_t *world, table_t *t, int32_t offset, int32_t count)
         : table(world, t)
@@ -22137,9 +22090,7 @@ private:
      * @return Pointer to the column, NULL if not a component.
      */
     void* get_by_index(int32_t index) const override {
-        void *elem = ecs_table_get_column(m_table, index);
-        ecs_size_t size = ecs_table_get_column_size(m_table, index);
-        return ECS_ELEM(elem, size, m_offset);
+        return ecs_table_get_column(m_table, index, m_offset);
     }
 
     int32_t m_offset = 0;

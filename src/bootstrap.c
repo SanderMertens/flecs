@@ -464,7 +464,8 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     }
 
     /* Get the table column with names */
-    EcsIdentifier *names = ecs_iter_column(it, EcsIdentifier, col);
+    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
+        table, EcsIdentifier, EcsName, it->offset);
 
     ecs_hashmap_t *from_index = 0;
     if (from_has_name) {

@@ -222,9 +222,8 @@ EcsPoly* flecs_pipeline_term_system(
     int32_t index = ecs_search(it->real_world, it->table, 
         ecs_poly_id(EcsSystem), 0);
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-    EcsPoly *poly = ecs_table_get_column(it->table, index);
+    EcsPoly *poly = ecs_table_get_column(it->table, index, it->offset);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-    poly = &poly[it->offset];
     return poly;
 }
 

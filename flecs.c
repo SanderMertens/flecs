@@ -4965,8 +4965,9 @@ error:
 }
 
 void* ecs_table_get_column(
-    ecs_table_t *table,
-    int32_t index)
+    const ecs_table_t *table,
+    int32_t index,
+    int32_t offset)
 {
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
@@ -4976,26 +4977,15 @@ void* ecs_table_get_column(
         return NULL;
     }
 
-    return table->data.columns[storage_index].array;
-error:
-    return NULL;
-}
-
-ecs_size_t ecs_table_get_column_size(
-    ecs_table_t *table,
-    int32_t index)
-{
-    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t storage_index = table->storage_map[index];
-    if (storage_index == -1) {
-        return 0;
+    void *result = table->data.columns[storage_index].array;
+    if (offset) {
+        ecs_size_t size = table->type_info[storage_index]->size;
+        result = ECS_ELEM(result, size, offset);
     }
 
-    return table->type_info[storage_index]->size;
+    return result;
 error:
-    return 0;
+    return NULL;
 }
 
 int32_t ecs_table_get_index(
@@ -5014,6 +5004,20 @@ int32_t ecs_table_get_index(
     }
 
     return tr->column;
+}
+
+void* ecs_table_get_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    int32_t offset)
+{
+    int32_t index = ecs_table_get_index(world, table, id);
+    if (index == -1) {
+        return NULL;
+    }
+
+    return ecs_table_get_column(table, index, offset);
 }
 
 void* ecs_record_get_column(
@@ -16931,9 +16935,8 @@ EcsPoly* flecs_pipeline_term_system(
     int32_t index = ecs_search(it->real_world, it->table, 
         ecs_poly_id(EcsSystem), 0);
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-    EcsPoly *poly = ecs_table_get_column(it->table, index);
+    EcsPoly *poly = ecs_table_get_column(it->table, index, it->offset);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-    poly = &poly[it->offset];
     return poly;
 }
 
@@ -41531,7 +41534,7 @@ void flecs_notify_queries(
                 continue;
             }
 
-            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
                 if (!ecs_poly_is(query, ecs_query_t)) {
@@ -41581,7 +41584,7 @@ void flecs_process_empty_queries(
     if (flecs_table_cache_iter(&idr->cache, &it)) {
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column);
+            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
             int32_t i, count = ecs_table_count(table);
 
             for (i = 0; i < count; i ++) {
@@ -51941,17 +51944,6 @@ error:
     return false;
 }
 
-int32_t ecs_iter_find_column(
-    const ecs_iter_t *it,
-    ecs_entity_t component)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    return ecs_search(it->real_world, it->table, component, 0);
-error:
-    return -1;
-}
-
 bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
@@ -52019,51 +52011,6 @@ size_t ecs_field_size(
     } else {
         return (size_t)it->sizes[index - 1];
     }
-}
-
-void* ecs_iter_column_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t index)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    (void)size;
-    
-    ecs_table_t *table = it->table;
-    int32_t storage_index = ecs_table_type_to_storage_index(table, index);
-    if (storage_index == -1) {
-        return NULL;
-    }
-
-    ecs_type_info_t *ti = table->type_info[storage_index];
-    ecs_check(!size || (ecs_size_t)size == ti->size, 
-        ECS_INVALID_PARAMETER, NULL);
-    (void)ti;
-
-    ecs_vec_t *column = &table->data.columns[storage_index];
-    return ecs_vec_get(column, flecs_uto(int32_t, size), it->offset);
-error:
-    return NULL;
-}
-
-size_t ecs_iter_column_size(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_table_t *table = it->table;
-    int32_t storage_index = ecs_table_type_to_storage_index(table, index);
-    if (storage_index == -1) {
-        return 0;
-    }
-
-    ecs_type_info_t *ti = table->type_info[storage_index];
-    return flecs_ito(size_t, ti->size);
-error:
-    return 0;
 }
 
 char* ecs_iter_str(
@@ -53540,7 +53487,8 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     }
 
     /* Get the table column with names */
-    EcsIdentifier *names = ecs_iter_column(it, EcsIdentifier, col);
+    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
+        table, EcsIdentifier, EcsName, it->offset);
 
     ecs_hashmap_t *from_index = 0;
     if (from_has_name) {
