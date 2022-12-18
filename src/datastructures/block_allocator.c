@@ -1,3 +1,11 @@
+/**
+ * @file datastructures/block_allocator.c
+ * @brief Block allocator.
+ * 
+ * A block allocator is an allocator for a fixed size that allocates blocks of
+ * memory with N elements of the requested size.
+ */
+
 #include "../private_api.h"
 
 // #ifdef FLECS_SANITIZE

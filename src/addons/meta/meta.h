@@ -1,3 +1,8 @@
+/**
+ * @file meta/meta.h
+ * @brief Private functions for meta addon.
+ */
+
 #ifndef FLECS_META_PRIVATE_H
 #define FLECS_META_PRIVATE_H
 

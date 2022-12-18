@@ -1,3 +1,29 @@
+/**
+ * @file table.c
+ * @brief Table storage implementation.
+ * 
+ * Tables are the data structure that store the component data. Tables have
+ * columns for each component in the table, and rows for each entity stored in
+ * the table. Once created, the component list for a table doesn't change, but
+ * entities can move from one table to another.
+ * 
+ * Each table has a type, which is a vector with the (component) ids in the 
+ * table. The vector is sorted by id, which ensures that there can be only one
+ * table for each unique combination of components.
+ * 
+ * Not all ids in a table have to be components. Tags are ids that have no
+ * data type associated with them, and as a result don't need to be explicitly
+ * stored beyond an element in the table type. To save space and speed up table
+ * creation, each table has a reference to a "storage table", which is a table
+ * that only includes component ids (so excluding tags).
+ * 
+ * Note that the actual data is not stored on the storage table. The storage 
+ * table is only used for sharing administration. A storage_map member maps
+ * between column indices of the table and its storage table. Tables are 
+ * refcounted, which ensures that storage tables won't be deleted if other
+ * tables have references to it.
+ */
+
 #include "flecs.h"
 /**
  * @file private_api.h
@@ -26,7 +52,7 @@
 #include <stdio.h>
 
 /**
- * @file entity_index.h
+ * @file datastructures/entity_index.h
  * @brief Entity index data structure.
  *
  * The entity index stores the table, row for an entity id. It is implemented as
@@ -60,8 +86,8 @@
 #endif
 
 /**
- * @file stack_allocator.h
- * @brief Data structure used for temporary small allocations.
+ * @file datastructures/stack_allocator.h
+ * @brief Stack allocator.
  */
 
 #ifndef FLECS_STACK_ALLOCATOR_H
@@ -134,10 +160,7 @@ void flecs_stack_restore_cursor(
 
 /**
  * @file bitset.h
- * @brief Bitset datastructure.
- *
- * Simple bitset implementation. The bitset allows for storage of arbitrary
- * numbers of bits.
+ * @brief Bitset data structure.
  */
 
 #ifndef FLECS_BITSET_H
@@ -216,25 +239,6 @@ void flecs_bitset_swap(
 /**
  * @file switch_list.h
  * @brief Interleaved linked list for storing mutually exclusive values.
- *
- * Datastructure that stores N interleaved linked lists in an array. 
- * This allows for efficient storage of elements with mutually exclusive values.
- * Each linked list has a header element which points to the index in the array
- * that stores the first node of the list. Each list node points to the next
- * array element.
- *
- * The datastructure needs to be created with min and max values, so that it can
- * allocate an array of headers that can be directly indexed by the value. The
- * values are stored in a contiguous array, which allows for the values to be
- * iterated without having to follow the linked list nodes.
- *
- * The datastructure allows for efficient storage and retrieval for values with
- * mutually exclusive values, such as enumeration values. The linked list allows
- * an application to obtain all elements for a given (enumeration) value without
- * having to search.
- *
- * While the list accepts 64 bit values, it only uses the lower 32bits of the
- * value for selecting the correct linked list.
  */
 
 #ifndef FLECS_SWITCH_LIST_H
@@ -1290,8 +1294,8 @@ bool flecs_iter_next_instanced(
 #endif
 
 /**
- * @file table.h
- * @brief Table functions.
+ * @file table.c
+ * @brief Table storage implementation.
  */
 
 #ifndef FLECS_TABLE_H
@@ -1532,19 +1536,6 @@ void flecs_table_diff_build_noalloc(
 /**
  * @file poly.h
  * @brief Functions for managing poly objects.
- * 
- * The poly framework makes it possible to generalize common functionality for
- * different kinds of API objects, as well as improved type safety checks. Poly
- * objects have a header that identifiers what kind of object it is. This can
- * then be used to discover a set of "mixins" implemented by the type.
- * 
- * Mixins are like a vtable, but for members. Each type populates the table with
- * offsets to the members that correspond with the mixin. If an entry in the
- * mixin table is not set, the type does not support the mixin.
- * 
- * An example is the Iterable mixin, which makes it possible to create an 
- * iterator for any poly object (like filters, queries, the world) that 
- * implements the Iterable mixin.
  */
 
 #ifndef FLECS_POLY_H
@@ -1749,8 +1740,8 @@ bool flecs_defer_purge(
 #endif
 
 /**
- * @file world.h
- * @brief World utilities.
+ * @file world.c
+ * @brief World-level API.
  */
 
 #ifndef FLECS_WORLD_H
@@ -1891,6 +1882,11 @@ void flecs_resume_readonly(
     flecs_dup_n(&world->allocator, T, count, ptr)
 
 #endif
+
+/**
+ * @file datastructures/qsort.h
+ * @brief Quicksort implementation.
+ */
 
 /* From: https://github.com/svpv/qsort/blob/master/qsort.h 
  * Use custom qsort implementation rather than relying on the version in libc to
@@ -2092,8 +2088,8 @@ void ecs_qsort(
 #endif
 
 /**
- * @file name_index.h
- * @brief Data structure used for id <-> name lookups.
+ * @file datastructures/name_index.h
+ * @brief Data structure for resolving 64bit keys by string (name).
  */
 
 #ifndef FLECS_NAME_INDEX_H
@@ -5070,6 +5066,24 @@ int32_t flecs_table_observed_count(
     return table->observed_count;
 }
 
+/**
+ * @file poly.c
+ * @brief Functions for managing poly objects.
+ * 
+ * The poly framework makes it possible to generalize common functionality for
+ * different kinds of API objects, as well as improved type safety checks. Poly
+ * objects have a header that identifiers what kind of object it is. This can
+ * then be used to discover a set of "mixins" implemented by the type.
+ * 
+ * Mixins are like a vtable, but for members. Each type populates the table with
+ * offsets to the members that correspond with the mixin. If an entry in the
+ * mixin table is not set, the type does not support the mixin.
+ * 
+ * An example is the Iterable mixin, which makes it possible to create an 
+ * iterator for any poly object (like filters, queries, the world) that 
+ * implements the Iterable mixin.
+ */
+
 
 static const char* mixin_kind_str[] = {
     [EcsMixinBase] = "base (should never be requested by application)",
@@ -5338,6 +5352,18 @@ ecs_poly_dtor_t* ecs_get_dtor(
 {
     return (ecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }
+
+/**
+ * @file entity.c
+ * @brief Entity API.
+ * 
+ * This file contains the implementation for the entity API, which includes 
+ * creating/deleting entities, adding/removing/setting components, instantiating
+ * prefabs, and several other APIs for retrieving entity data.
+ * 
+ * The file also contains the implementation of the command buffer, which is 
+ * located here so it can call functions private to the compilation unit.
+ */
 
 #include <ctype.h>
 
@@ -9646,6 +9672,23 @@ error:
     return false;
 }
 
+/**
+ * @file stage.c
+ * @brief Staging implementation.
+ * 
+ * A stage is an object that can be used to temporarily store mutations to a
+ * world while a world is in readonly mode. ECS operations that are invoked on
+ * a stage are stored in a command buffer, which is flushed during sync points,
+ * or manually by the user.
+ * 
+ * Stages contain additional state to enable other API functionality without
+ * having to mutate the world, such as setting the current scope, and allocators
+ * that are local to a stage.
+ * 
+ * In a multi threaded application, each thread has its own stage which allows
+ * threads to insert mutations without having to lock administration.
+ */
+
 
 static
 ecs_cmd_t* flecs_cmd_alloc(
@@ -10429,6 +10472,13 @@ error:
     return false;
 }
 
+/**
+ * @file datastructures/allocator.c
+ * @brief Allocator for any size.
+ * 
+ * Allocators create a block allocator for each requested size.
+ */
+
 
 static
 ecs_size_t flecs_allocator_size(
@@ -10524,6 +10574,34 @@ void* flecs_dup(
     }
 }
 
+/**
+ * @file datastructures/vector.c
+ * @brief Vector datastructure.
+ *
+ * This is an implementation of a simple vector type. The vector is allocated in
+ * a single block of memory, with the element count, and allocated number of
+ * elements encoded in the block. As this vector is used for user-types it has
+ * been designed to support alignments higher than 8 bytes. This makes the size
+ * of the vector header variable in size. To reduce the overhead associated with
+ * retrieving or computing this size, the functions are wrapped in macro calls
+ * that compute the header size at compile time.
+ *
+ * The API provides a number of _t macros, which accept a size and alignment.
+ * These macros are used when no compile-time type is available.
+ *
+ * The vector guarantees contiguous access to its elements. When an element is
+ * removed from the vector, the last element is copied to the removed element.
+ *
+ * The API requires passing in the type of the vector. This type is used to test
+ * whether the size of the provided type equals the size of the type with which
+ * the vector was created. In release mode this check is not performed.
+ *
+ * When elements are added to the vector, it will automatically resize to the
+ * next power of two. This can change the pointer of the vector, which is why
+ * operations that can increase the vector size, accept a double pointer to the
+ * vector.
+ */
+
 
 struct ecs_vector_t {
     int32_t count;
@@ -10536,7 +10614,7 @@ struct ecs_vector_t {
 
 /** Resize the vector buffer */
 static
-ecs_vector_t* resize(
+ecs_vector_t* flecs_vector_resize(
     ecs_vector_t *vector,
     int16_t offset,
     int32_t size)
@@ -10657,7 +10735,7 @@ void* _ecs_vector_addn(
         }
 
         max_count = flecs_next_pow_of_2(max_count);
-        vector = resize(vector, offset, max_count * elem_size);
+        vector = flecs_vector_resize(vector, offset, max_count * elem_size);
         vector->size = max_count;
         *array_inout = vector;
     }
@@ -10688,7 +10766,7 @@ void* _ecs_vector_add(
             }
 
             size = flecs_next_pow_of_2(size);
-            vector = resize(vector, offset, size * elem_size);
+            vector = flecs_vector_resize(vector, offset, size * elem_size);
             *array_inout = vector;
             vector->size = size;
         }
@@ -10824,7 +10902,7 @@ void _ecs_vector_reclaim(
     if (count < size) {
         if (count) {
             size = count;
-            vector = resize(vector, offset, size * elem_size);
+            vector = flecs_vector_resize(vector, offset, size * elem_size);
             vector->size = size;
             *array_inout = vector;
         } else {
@@ -10874,7 +10952,7 @@ int32_t _ecs_vector_set_size(
 
         if (result < elem_count) {
             elem_count = flecs_next_pow_of_2(elem_count);
-            vector = resize(vector, offset, elem_count * elem_size);
+            vector = flecs_vector_resize(vector, offset, elem_count * elem_size);
             vector->size = elem_count;
             *array_inout = vector;
             result = elem_count;
@@ -11020,6 +11098,42 @@ ecs_vector_t* _ecs_vector_copy(
     ecs_os_memcpy(dst, src, offset + elem_size * src->count);
     return dst;
 }
+
+/**
+ * @file datastructures/sparse.c
+ * @brief Sparse set data structure.
+ * 
+ * The sparse set data structure allows for fast lookups by 64bit key with 
+ * variable payload size. Lookup operations are guaranteed to be O(1), in 
+ * contrast to ecs_map_t which has O(1) lookup time on average. At a high level
+ * the sparse set works with two arrays:
+ * 
+ * dense  [ - ][ 3 ][ 1 ][ 4 ]
+ * sparse [   ][ 2 ][   ][ 1 ][ 3 ]
+ * 
+ * Indices in the dense array point to the sparse array, and vice versa. The
+ * dense array is guaranteed to contain no holes. By iterating the dense array, 
+ * all populated elements in the sparse set can be found without having to skip
+ * empty elements.
+ * 
+ * The sparse array is paged, which means that it is split up in memory blocks
+ * (pages, not to be confused with OS pages) of equal size. The page size is
+ * set to 4096 elements. Paging prevents the sparse array from having to grow
+ * to N elements, where N is the largest key used in the set. It also ensures
+ * that payload pointers are stable.
+ * 
+ * The sparse set recycles deleted keys. It does this by moving not alive keys
+ * to the end of the dense array, and using a count member that indicates the
+ * last alive member in the dense array. This approach makes it possible to
+ * recycle keys in bulk, by increasing the alive count.
+ * 
+ * When a key is deleted, the sparse set increases its generation count. This
+ * generation count is used to test whether a key passed to the sparse set is
+ * still valid, or whether it has been deleted.
+ * 
+ * The sparse set is used in a number of places, like for retrieving entity
+ * administration, tables and allocators.
+ */
 
 
 /** Compute the chunk index from an id by stripping the first 12 bits */
@@ -11913,10 +12027,31 @@ void* _ecs_sparse_get(
     return _flecs_sparse_get(sparse, elem_size, id);
 }
 
+/**
+ * @file datastructures/switch_list.c
+ * @brief Interleaved linked list for storing mutually exclusive values.
+ * 
+ * Datastructure that stores N interleaved linked lists in an array. 
+ * This allows for efficient storage of elements with mutually exclusive values.
+ * Each linked list has a header element which points to the index in the array
+ * that stores the first node of the list. Each list node points to the next
+ * array element.
+ *
+ * The datastructure allows for efficient storage and retrieval for values with
+ * mutually exclusive values, such as enumeration values. The linked list allows
+ * an application to obtain all elements for a given (enumeration) value without
+ * having to search.
+ *
+ * While the list accepts 64 bit values, it only uses the lower 32bits of the
+ * value for selecting the correct linked list.
+ * 
+ * The switch list is used to store union relationships.
+ */
+
 
 #ifdef FLECS_SANITIZE
 static 
-void verify_nodes(
+void flecs_switch_verify_nodes(
     ecs_switch_header_t *hdr,
     ecs_switch_node_t *nodes)
 {
@@ -11935,11 +12070,11 @@ void verify_nodes(
     ecs_assert(count == hdr->count, ECS_INTERNAL_ERROR, NULL);
 }
 #else
-#define verify_nodes(hdr, nodes)
+#define flecs_switch_verify_nodes(hdr, nodes)
 #endif
 
 static
-ecs_switch_header_t *get_header(
+ecs_switch_header_t *flecs_switch_get_header(
     const ecs_switch_t *sw,
     uint64_t value)
 {
@@ -11951,7 +12086,7 @@ ecs_switch_header_t *get_header(
 }
 
 static
-ecs_switch_header_t *ensure_header(
+ecs_switch_header_t *flecs_switch_ensure_header(
     ecs_switch_t *sw,
     uint64_t value)
 {
@@ -11959,7 +12094,7 @@ ecs_switch_header_t *ensure_header(
         return NULL;
     }
 
-    ecs_switch_header_t *node = get_header(sw, value);
+    ecs_switch_header_t *node = flecs_switch_get_header(sw, value);
     if (!node) {
         node = ecs_map_ensure(&sw->hdrs, ecs_switch_header_t, value);
         node->element = -1;
@@ -11969,7 +12104,7 @@ ecs_switch_header_t *ensure_header(
 }
 
 static
-void remove_node(
+void flecs_switch_remove_node(
     ecs_switch_header_t *hdr,
     ecs_switch_node_t *nodes,
     ecs_switch_node_t *node,
@@ -12126,18 +12261,18 @@ void flecs_switch_set(
     ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
     ecs_switch_node_t *node = &nodes[element];
 
-    ecs_switch_header_t *dst_hdr = ensure_header(sw, value);
-    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
+    ecs_switch_header_t *dst_hdr = flecs_switch_ensure_header(sw, value);
+    ecs_switch_header_t *cur_hdr = flecs_switch_get_header(sw, cur_value);
 
-    verify_nodes(cur_hdr, nodes);
-    verify_nodes(dst_hdr, nodes);
+    flecs_switch_verify_nodes(cur_hdr, nodes);
+    flecs_switch_verify_nodes(dst_hdr, nodes);
 
     /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
      * for this switch */
     ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
 
     if (cur_hdr) {
-        remove_node(cur_hdr, nodes, node, element);
+        flecs_switch_remove_node(cur_hdr, nodes, node, element);
     }
 
     /* Now update the node itself by adding it as the first node of dst */
@@ -12175,11 +12310,11 @@ void flecs_switch_remove(
 
     /* If node is currently assigned to a case, remove it from the list */
     if (value != 0) {
-        ecs_switch_header_t *hdr = get_header(sw, value);
+        ecs_switch_header_t *hdr = flecs_switch_get_header(sw, value);
         ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        verify_nodes(hdr, nodes);
-        remove_node(hdr, nodes, node, elem);
+        flecs_switch_verify_nodes(hdr, nodes);
+        flecs_switch_remove_node(hdr, nodes, node, elem);
     }
 
     int32_t last_elem = ecs_vec_count(&sw->nodes) - 1;
@@ -12195,7 +12330,7 @@ void flecs_switch_remove(
             ecs_switch_node_t *n = &nodes[prev];
             n->next = elem;
         } else {
-            ecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
+            ecs_switch_header_t *hdr = flecs_switch_get_header(sw, values[last_elem]);
             if (hdr && hdr->element != -1) {
                 ecs_assert(hdr->element == last_elem, 
                     ECS_INTERNAL_ERROR, NULL);
@@ -12232,7 +12367,7 @@ int32_t flecs_switch_case_count(
     const ecs_switch_t *sw,
     uint64_t value)
 {
-    ecs_switch_header_t *hdr = get_header(sw, value);
+    ecs_switch_header_t *hdr = flecs_switch_get_header(sw, value);
     if (!hdr) {
         return 0;
     }
@@ -12258,7 +12393,7 @@ int32_t flecs_switch_first(
 {
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_switch_header_t *hdr = get_header(sw, value);
+    ecs_switch_header_t *hdr = flecs_switch_get_header(sw, value);
     if (!hdr) {
         return -1;
     }
@@ -12278,6 +12413,11 @@ int32_t flecs_switch_next(
 
     return nodes[element].next;
 }
+
+/**
+ * @file datastructures/name_index.c
+ * @brief Data structure for resolving 64bit keys by string (name).
+ */
 
 
 static
@@ -12495,6 +12635,11 @@ void flecs_name_index_ensure(
 error:
     return;
 }
+
+/**
+ * @file datastructures/hash.c
+ * @brief Functions for hasing byte arrays to 64bit value.
+ */
 
 
 #ifdef ECS_TARGET_GNU
@@ -12835,6 +12980,11 @@ uint64_t flecs_hash(
     return h_1 | h_2_shift;
 }
 
+/**
+ * @file datastructures/qsort.c
+ * @brief Quicksort implementation.
+ */
+
 
 void ecs_qsort(
     void *base, 
@@ -12855,6 +13005,13 @@ void ecs_qsort(
     QSORT(nitems, LESS, SWAP);
 }
 
+/**
+ * @file datastructures/bitset.c
+ * @brief Bitset data structure.
+ * 
+ * Simple bitset implementation. The bitset allows for storage of arbitrary
+ * numbers of bits.
+ */
 
 
 static
@@ -12967,6 +13124,24 @@ void flecs_bitset_swap(
 error:
     return;
 }
+
+/**
+ * @file datastructures/strbuf.c
+ * @brief Utility for constructing strings.
+ *
+ * A buffer builds up a list of elements which individually can be up to N bytes
+ * large. While appending, data is added to these elements. More elements are
+ * added on the fly when needed. When an application calls ecs_strbuf_get, all
+ * elements are combined in one string and the element administration is freed.
+ *
+ * This approach prevents reallocs of large blocks of memory, and therefore
+ * copying large blocks of memory when appending to a large buffer. A buffer
+ * preallocates some memory for the element overhead so that for small strings
+ * there is hardly any overhead, while for large strings the overhead is offset
+ * by the reduced time spent on copying memory.
+ * 
+ * The functionality provided by strbuf is similar to std::stringstream.
+ */
 
 #include <math.h>
 
@@ -13765,6 +13940,11 @@ int32_t ecs_strbuf_written(
     }
 }
 
+/**
+ * @file datastructures/vec.c
+ * @brief Vector with allocator support.
+ */
+
 
 ecs_vec_t* ecs_vec_init(
     ecs_allocator_t *allocator,
@@ -13979,6 +14159,13 @@ void* ecs_vec_first(
 {
     return v->array;
 }
+
+/**
+ * @file datastructures/map.c
+ * @brief Map data structure.
+ * 
+ * Map data structure for 64bit keys and dynamic payload size.
+ */
 
 #include <math.h>
 
@@ -14609,6 +14796,14 @@ ecs_map_t* ecs_map_copy(
     return result;
 }
 
+/**
+ * @file datastructures/block_allocator.c
+ * @brief Block allocator.
+ * 
+ * A block allocator is an allocator for a fixed size that allocates blocks of
+ * memory with N elements of the requested size.
+ */
+
 
 // #ifdef FLECS_SANITIZE
 // #define FLECS_USE_OS_ALLOC
@@ -14843,6 +15038,15 @@ void* flecs_bdup(
     }
     return result;
 }
+
+/**
+ * @file datastructures/hashmap.c
+ * @brief Hashmap data structure.
+ * 
+ * The hashmap data structure is built on top of the map data structure. Where 
+ * the map data structure can only work with 64bit key values, the hashmap can
+ * hash keys of any size, and handles collisions between hashes.
+ */
 
 
 static
@@ -15084,6 +15288,18 @@ void* _flecs_hashmap_next(
     return ecs_vec_get(&bucket->values, value_size, index);
 }
 
+/**
+ * @file datastructures/stack_allocator.c
+ * @brief Stack allocator.
+ * 
+ * The stack allocator enables pushing and popping values to a stack, and has
+ * a lower overhead when compared to block allocators. A stack allocator is a
+ * good fit for small temporary allocations.
+ * 
+ * The stack allocator allocates memory in pages. If the requested size of an
+ * allocation exceeds the page size, a regular allocator is used instead.
+ */
+
 
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
@@ -15224,6 +15440,17 @@ void flecs_stack_fini(
         }
     } while ((cur = next));
 }
+
+/**
+ * @file entity_filter.c
+ * @brief Filters that are applied to entities in a table.
+ * 
+ * After a table has been matched by a query, additional filters may have to
+ * be applied before returning entities to the application. The two scenarios
+ * under which this happens are queries for union relationship pairs (entities
+ * for multiple targets are stored in the same table) and toggles (components 
+ * that are enabled/disabled with a bitset).
+ */
 
 
 static
@@ -15676,6 +15903,11 @@ int flecs_entity_filter_next(
         return -1;
     }
 }
+
+/**
+ * @file addons/log.c
+ * @brief Log addon.
+ */
 
 
 #ifdef FLECS_LOG
@@ -16212,6 +16444,16 @@ int ecs_log_last_error(void)
     return result;
 }
 
+/**
+ * @file addons/pipeline/worker.c
+ * @brief Functions for running pipelines on one or more threads.
+ */
+
+/**
+ * @file addons/system/system.c
+ * @brief Internal types and functions for system addon.
+ */
+
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
@@ -16280,6 +16522,11 @@ ecs_entity_t ecs_run_intern(
 
 
 #ifdef FLECS_PIPELINE
+/**
+ * @file addons/pipeline/pipeline.h
+ * @brief Internal functions/types for pipeline addon.
+ */
+
 #ifndef FLECS_PIPELINE_PRIVATE_H
 #define FLECS_PIPELINE_PRIVATE_H
 
@@ -16734,6 +16981,11 @@ void ecs_set_threads(
 }
 
 #endif
+
+/**
+ * @file addons/ipeline/pipeline.c
+ * @brief Functions for building and running pipelines.
+ */
 
 
 #ifdef FLECS_PIPELINE
@@ -17574,6 +17826,11 @@ void FlecsPipelineImport(
 
 #endif
 
+/**
+ * @file addons/monitor.c
+ * @brief Monitor addon.
+ */
+
 
 #ifdef FLECS_MONITOR
 
@@ -17880,6 +18137,11 @@ void FlecsMonitorImport(
 
 #endif
 
+/**
+ * @file addons/timer.c
+ * @brief Timer addon.
+ */
+
 
 #ifdef FLECS_TIMER
 
@@ -18172,6 +18434,11 @@ void FlecsTimerImport(
 }
 
 #endif
+
+/**
+ * @file addons/flecs_cpp.c
+ * @brief Utilities for C++ addon.
+ */
 
 #include <ctype.h>
 
@@ -18651,9 +18918,19 @@ int32_t ecs_cpp_reset_count_inc(void) {
 
 #endif
 
+/**
+ * @file addons/os_api_impl/os_api_impl.c
+ * @brief Builtin implementation for OS API.
+ */
+
 
 #ifdef FLECS_OS_API_IMPL
 #ifdef ECS_TARGET_WINDOWS
+/**
+ * @file addons/os_api_impl/posix_impl.inl
+ * @brief Builtin Windows implementation for OS API.
+ */
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -18925,6 +19202,11 @@ void ecs_set_os_api_impl(void) {
 }
 
 #else
+/**
+ * @file addons/os_api_impl/posix_impl.inl
+ * @brief Builtin POSIX implementation for OS API.
+ */
+
 #include "pthread.h"
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -19220,6 +19502,11 @@ void ecs_set_os_api_impl(void) {
 
 #endif
 #endif
+
+/**
+ * @file addons/plecs.c
+ * @brief Plecs addon.
+ */
 
 
 #ifdef FLECS_PLECS
@@ -20411,6 +20698,11 @@ error:
 
 #endif
 
+/**
+ * @file addons/journal.c
+ * @brief Journal addon.
+ */
+
 
 #ifdef FLECS_JOURNAL
 
@@ -20525,6 +20817,11 @@ void flecs_journal_end(void) {
 }
 
 #endif
+
+/**
+ * @file addons/rules.c
+ * @brief Rules addon.
+ */
 
 
 #ifdef FLECS_RULES
@@ -24956,6 +25253,11 @@ error:
 
 #endif
 
+/**
+ * @file addons/module.c
+ * @brief Module addon.
+ */
+
 
 #ifdef FLECS_MODULE
 
@@ -25178,6 +25480,16 @@ error:
 }
 
 #endif
+
+/**
+ * @file meta/api.c
+ * @brief API for creating entities with reflection data.
+ */
+
+/**
+ * @file meta/meta.h
+ * @brief Private functions for meta addon.
+ */
 
 #ifndef FLECS_META_PRIVATE_H
 #define FLECS_META_PRIVATE_H
@@ -25466,6 +25778,11 @@ ecs_entity_t ecs_quantity_init(
 }
 
 #endif
+
+/**
+ * @file meta/serialized.c
+ * @brief Serialize type into flat operations array to speed up deserialization.
+ */
 
 
 #ifdef FLECS_META
@@ -25765,6 +26082,11 @@ void ecs_meta_type_serialized_init(
 }
 
 #endif
+
+/**
+ * @file meta/meta.c
+ * @brief Meta addon.
+ */
 
 
 #ifdef FLECS_META
@@ -27087,6 +27409,11 @@ void FlecsMetaImport(
 
 #endif
 
+/**
+ * @file meta/api.c
+ * @brief API for assigning values of runtime types with reflection.
+ */
+
 #include <ctype.h>
 
 #ifdef FLECS_META
@@ -28338,6 +28665,10 @@ error:
 
 #endif
 
+/**
+ * @file expr/serialize.c
+ * @brief Serialize (component) values to flecs string format.
+ */
 
 
 #ifdef FLECS_EXPR
@@ -28819,6 +29150,10 @@ int ecs_primitive_to_expr_buf(
 
 #endif
 
+/**
+ * @file expr/vars.c
+ * @brief Utilities for variable substitution in flecs string expressions.
+ */
 
 
 #ifdef FLECS_EXPR
@@ -28984,6 +29319,10 @@ ecs_expr_var_t* ecs_vars_lookup(
 
 #endif
 
+/**
+ * @file expr/strutil.c
+ * @brief String parsing utilities.
+ */
 
 
 #ifdef FLECS_EXPR
@@ -29156,6 +29495,11 @@ char* ecs_astresc(
 }
 
 #endif
+
+/**
+ * @file expr/deserialize.c
+ * @brief Deserialize flecs string format into (component) values.
+ */
 
 #include <ctype.h>
 
@@ -30269,6 +30613,10 @@ const char* ecs_parse_expr(
 
 #endif
 
+/**
+ * @file addons/stats.c
+ * @brief Stats addon.
+ */
 
 
 #ifdef FLECS_SYSTEM
@@ -31049,6 +31397,10 @@ error:
 
 #endif
 
+/**
+ * @file addons/units.c
+ * @brief Units addon.
+ */
 
 
 #ifdef FLECS_UNITS
@@ -32138,6 +32490,11 @@ void FlecsUnitsImport(
 
 #endif
 
+/**
+ * @file addons/snapshot.c
+ * @brief Snapshot addon.
+ */
+
 
 #ifdef FLECS_SNAPSHOT
 
@@ -32562,6 +32919,11 @@ void ecs_snapshot_free(
 
 #endif
 
+/**
+ * @file addons/system/system.c
+ * @brief System addon.
+ */
+
 
 #ifdef FLECS_SYSTEM
 
@@ -32913,6 +33275,16 @@ void FlecsSystemImport(
 
 #endif
 
+/**
+ * @file json/json.c
+ * @brief JSON serializer utilities.
+ */
+
+/**
+ * @file json/json.h
+ * @brief Internal functions for JSON addon.
+ */
+
 
 #ifdef FLECS_JSON
 
@@ -33169,6 +33541,10 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
 
 #endif
 
+/**
+ * @file json/serialize.c
+ * @brief Serialize (component) values to JSON strings.
+ */
 
 
 #ifdef FLECS_JSON
@@ -34653,6 +35029,11 @@ char* ecs_iter_to_json(
 
 #endif
 
+/**
+ * @file json/serialize_type_info.c
+ * @brief Serialize type (reflection) information to JSON.
+ */
+
 
 #ifdef FLECS_JSON
 
@@ -34977,6 +35358,10 @@ char* ecs_type_info_to_json(
 
 #endif
 
+/**
+ * @file json/deserialize.c
+ * @brief Deserialize JSON strings into (component) values.
+ */
 
 
 #ifdef FLECS_JSON
@@ -35350,6 +35735,11 @@ error:
 }
 
 #endif
+
+/**
+ * @file addons/rest.c
+ * @brief Rest addon.
+ */
 
 
 #ifdef FLECS_REST
@@ -36347,6 +36737,10 @@ void FlecsRestImport(
 
 #endif
 
+/**
+ * @file addons/coredoc.c
+ * @brief Core doc addon.
+ */
 
 
 #ifdef FLECS_COREDOC
@@ -36481,12 +36875,16 @@ void FlecsCoreDocImport(
 
 #endif
 
-/* This is a heavily modified version of the EmbeddableWebServer (see copyright
+/**
+ * @file addons/http.c
+ * @brief HTTP addon.
+ *
+ * This is a heavily modified version of the EmbeddableWebServer (see copyright
  * below). This version has been stripped from everything not strictly necessary
  * for receiving/replying to simple HTTP requests, and has been modified to use
- * the Flecs OS API. */
-
-/* EmbeddableWebServer Copyright (c) 2016, 2019, 2020 Forrest Heller, and 
+ * the Flecs OS API.
+ *
+ * EmbeddableWebServer Copyright (c) 2016, 2019, 2020 Forrest Heller, and 
  * CONTRIBUTORS (see below) - All rights reserved.
  *
  * CONTRIBUTORS:
@@ -37824,6 +38222,10 @@ error:
 
 #endif
 
+/**
+ * @file addons/doc.c
+ * @brief Doc addon.
+ */
 
 
 #ifdef FLECS_DOC
@@ -37982,6 +38384,11 @@ void FlecsDocImport(
 }
 
 #endif
+
+/**
+ * @file addons/parser.c
+ * @brief Parser addon.
+ */
 
 
 #ifdef FLECS_PARSER
@@ -39010,6 +39417,11 @@ error:
 
 #endif
 
+/**
+ * @file addons/meta.c
+ * @brief C utilities for meta addon.
+ */
+
 
 #ifdef FLECS_META_C
 
@@ -39824,6 +40236,11 @@ error:
 
 #endif
 
+/**
+ * @file addons/app.c
+ * @brief App addon.
+ */
+
 
 #ifdef FLECS_APP
 
@@ -39939,6 +40356,11 @@ int ecs_app_set_frame_action(
 }
 
 #endif
+
+/**
+ * @file world.c
+ * @brief World-level API.
+ */
 
 
 /* Id flags */
@@ -41886,6 +42308,16 @@ done:
     return delete_count;
 }
 
+/**
+ * @file observable.c
+ * @brief Observable implementation.
+ * 
+ * The observable implementation contains functions that find the set of 
+ * observers to invoke for an event. The code also contains the implementation
+ * of a reachable id cache, which is used to speedup event propagation when
+ * relationships are added/removed to/from entities.
+ */
+
 
 void flecs_observable_init(
     ecs_observable_t *observable)
@@ -43226,6 +43658,24 @@ void ecs_emit(
     flecs_emit(world, stage, desc);
 }
 
+/**
+ * @file filter.c
+ * @brief Uncached query implementation.
+ * 
+ * Uncached queries (filters) are stateless objects that do not cache their 
+ * results. This file contains the creation and validation of uncached queries
+ * and code for query iteration.
+ * 
+ * There file contains the implementation for term queries and filters. Term 
+ * queries are uncached queries that only apply to a single term. Filters are
+ * uncached queries that support multiple terms. Filters are built on top of
+ * term queries: before iteration a filter will first find a "pivot" term (the
+ * term with the smallest number of elements), and create a term iterator for
+ * it. The output of that term iterator is then evaluated against the rest of
+ * the terms of the filter.
+ * 
+ * Cached queries and observers are built using filters.
+ */
 
 #include <ctype.h>
 
@@ -45793,6 +46243,15 @@ yield:
     return true;    
 }
 
+/**
+ * @file search.c
+ * @brief Search functions to find (component) ids in table types.
+ * 
+ * Search functions are used to find the column index of a (component) id in a
+ * table. Additionally, search functions implement the logic for finding a
+ * component id by following a relationship upwards.
+ */
+
 
 static
 int32_t flecs_type_search(
@@ -46135,6 +46594,16 @@ int32_t flecs_relation_depth(
     }
     return flecs_relation_depth_walk(world, idr, table, table);
 }
+
+/**
+ * @file observer.h
+ * @brief Observer implementation.
+ * 
+ * The observer implementation contains functions for creating, deleting and
+ * invoking observers. The code is split up into single-term observers and 
+ * multi-term observers. Multi-term observers are created from multiple single-
+ * term observers.
+ */
 
 #include <stddef.h>
 
@@ -47095,6 +47564,22 @@ void flecs_observer_fini(
     ecs_poly_free(observer, ecs_observer_t);
 }
 
+/**
+ * @file table_cache.c
+ * @brief Data structure for fast table iteration/lookups.
+ * 
+ * A table cache is a data structure that provides constant time operations for
+ * insertion and removal of tables, and to testing whether a table is registered
+ * with the cache. A table cache also provides functions to iterate the tables
+ * in a cache.
+ * 
+ * The world stores a table cache per (component) id inside the id record 
+ * administration. Cached queries store a table cache with matched tables.
+ * 
+ * A table cache has separate lists for non-empty tables and empty tables. This
+ * improves performance as applications don't waste time iterating empty tables.
+ */
+
 
 static
 void flecs_table_cache_list_remove(
@@ -47370,6 +47855,15 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
     it->next = next->next;
     return next;
 }
+
+/**
+ * @file os_api.h
+ * @brief Operating system abstraction API.
+ * 
+ * The OS API implements an overridable interface for implementing functions 
+ * that are operating system specific, in addition to a number of hooks which
+ * allow for customization by the user, like logging.
+ */
 
 #include <ctype.h>
 #include <time.h>
@@ -47878,6 +48372,21 @@ const char* ecs_os_strerror(int err) {
     return strerror(err);
 #   endif
 }
+
+/**
+ * @file query.c
+ * @brief Cached query implementation.
+ * 
+ * Cached queries store a list of matched tables. The inputs for a cached query
+ * are a filter and an observer. The filter is used to initially populate the
+ * cache, and an observer is used to keep the cacne up to date.
+ * 
+ * Cached queries additionally support features like sorting and grouping. 
+ * With sorting, an application can iterate over entities that can be sorted by
+ * a component. Grouping allows an application to group matched tables, which is
+ * used internally to implement the cascade feature, and can additionally be 
+ * used to implement things like world cells.
+ */
 
 
 static
@@ -50360,6 +50869,16 @@ int32_t ecs_query_entity_count(
     return result;
 }
 
+/**
+ * @file table_graph.c
+ * @brief Data structure to speed up table transitions.
+ * 
+ * The table graph is used to speed up finding tables in add/remove operations.
+ * For example, if component C is added to an entity in table [A, B], the entity
+ * must be moved to table [A, B, C]. The graph speeds this process up with an
+ * edge for component C that connects [A, B] to [A, B, C].
+ */
+
 
 /* Marker object used to differentiate a component vs. a tag edge */
 static ecs_table_diff_t ecs_table_edge_is_component;
@@ -51568,6 +52087,16 @@ ecs_table_t* ecs_table_remove_id(
     return flecs_table_traverse_remove(world, table, &id, NULL);
 }
 
+/**
+ * @file iter.c
+ * @brief Iterator API.
+ * 
+ * The iterator API contains functions that apply to all iterators, such as
+ * resource management, or fetching resources for a matched table. The API also
+ * contains functions for generic iterators, which make it possible to iterate
+ * an iterator without needing to know what created the iterator.
+ */
+
 #include <stddef.h>
 
 /* Utility macros to enforce consistency when initializing iterator fields */
@@ -52678,6 +53207,11 @@ error:
     return false;
 }
 
+/**
+ * @file misc.c
+ * @brief Miscallaneous functions.
+ */
+
 #include <time.h>
 
 #ifndef FLECS_NDEBUG
@@ -52877,6 +53411,11 @@ char* ecs_asprintf(
         3. This notice may not be removed or altered from any source
         distribution.
 */
+
+/**
+ * @file value.c
+ * @brief Utility functions to work with non-trivial pointers of user types.
+ */
 
 
 int ecs_value_init_w_type_info(
@@ -53091,6 +53630,24 @@ int ecs_value_move_ctor(
 error:
     return -1;
 }
+
+/**
+ * @file bootstrap.c
+ * @brief Bootstrap entities in the flecs.core namespace.
+ * 
+ * Before the ECS storage can be used, core entities such first need to be 
+ * initialized. For example, components in Flecs are stored as entities in the
+ * ECS storage itself with an EcsComponent component, but before this component
+ * can be stored, the component itself needs to be initialized.
+ * 
+ * The bootstrap code uses lower-level APIs to initialize the data structures.
+ * After bootstrap is completed, regular ECS operations can be used to create
+ * entities and components.
+ * 
+ * The bootstrap file also includes several lifecycle hooks and observers for
+ * builtin features, such as relationship properties and hooks for keeping the
+ * entity name administration in sync with the (Identifier, Name) component.
+ */
 
 
 /* -- Identifier Component -- */
@@ -54045,6 +54602,11 @@ void flecs_bootstrap(
     ecs_log_pop();
 }
 
+/**
+ * @file hierarchy.c
+ * @brief API for entity paths and name lookups.
+ */
+
 #include <ctype.h>
 
 #define ECS_NAME_BUFFER_LENGTH (64)
@@ -54698,6 +55260,22 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
+
+/**
+ * @file id_record.c
+ * @brief Index for looking up tables by (component) id.
+ * 
+ * An id record stores the administration for an in use (component) id, that is
+ * an id that has been used in tables.
+ * 
+ * An id record contains a table cache, which stores the list of tables that
+ * have the id. Each entry in the cache (a table record) stores the first 
+ * occurrence of the id in the table and the number of occurrences of the id in
+ * the table (in the case of wildcard ids).
+ * 
+ * Id records are used in lots of scenarios, like uncached queries, or for 
+ * getting a component array/component for an entity.
+ */
 
 
 #define ECS_HI_ID_RECORD_ID (4096 * 65536)

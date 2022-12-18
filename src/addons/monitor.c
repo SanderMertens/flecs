@@ -1,3 +1,8 @@
+/**
+ * @file addons/monitor.c
+ * @brief Monitor addon.
+ */
+
 #include "flecs.h"
 #include "../private_api.h"
 

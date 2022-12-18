@@ -1,3 +1,8 @@
+/**
+ * @file json/json.h
+ * @brief Internal functions for JSON addon.
+ */
+
 #include "../../private_api.h"
 
 #ifdef FLECS_JSON

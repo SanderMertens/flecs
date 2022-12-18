@@ -1,3 +1,7 @@
+/**
+ * @file json/serialize.c
+ * @brief Serialize (component) values to JSON strings.
+ */
 
 #include "json.h"
 

@@ -1,3 +1,8 @@
+/**
+ * @file world.c
+ * @brief World-level API.
+ */
+
 #include "private_api.h"
 
 /* Id flags */

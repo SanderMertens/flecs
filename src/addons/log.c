@@ -1,3 +1,8 @@
+/**
+ * @file addons/log.c
+ * @brief Log addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_LOG

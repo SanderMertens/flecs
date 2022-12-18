@@ -1,3 +1,8 @@
+/**
+ * @file meta/meta.c
+ * @brief Meta addon.
+ */
+
 #include "meta.h"
 
 #ifdef FLECS_META

@@ -1,3 +1,10 @@
+/**
+ * @file datastructures/allocator.c
+ * @brief Allocator for any size.
+ * 
+ * Allocators create a block allocator for each requested size.
+ */
+
 #include "../private_api.h"
 
 static

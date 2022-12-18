@@ -1,3 +1,8 @@
+/**
+ * @file json/json.c
+ * @brief JSON serializer utilities.
+ */
+
 #include "json.h"
 
 #ifdef FLECS_JSON

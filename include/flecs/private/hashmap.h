@@ -1,9 +1,6 @@
 /**
  * @file hashmap.h
- * @brief Hashmap datastructure.
- *
- * Datastructure that computes a hash to store & retrieve values. Similar to
- * ecs_map_t, but allows for arbitrary keytypes.
+ * @brief Hashmap data structure.
  */
 
 #ifndef FLECS_HASHMAP_H

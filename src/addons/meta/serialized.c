@@ -1,3 +1,8 @@
+/**
+ * @file meta/serialized.c
+ * @brief Serialize type into flat operations array to speed up deserialization.
+ */
+
 #include "meta.h"
 
 #ifdef FLECS_META

@@ -1,3 +1,7 @@
+/**
+ * @file addons/coredoc.c
+ * @brief Core doc addon.
+ */
 
 #include "../private_api.h"
 

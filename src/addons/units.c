@@ -1,3 +1,7 @@
+/**
+ * @file addons/units.c
+ * @brief Units addon.
+ */
 
 #include "../private_api.h"
 

@@ -1,30 +1,6 @@
-
 /**
  * @file vector.h
  * @brief Vector datastructure.
- *
- * This is an implementation of a simple vector type. The vector is allocated in
- * a single block of memory, with the element count, and allocated number of
- * elements encoded in the block. As this vector is used for user-types it has
- * been designed to support alignments higher than 8 bytes. This makes the size
- * of the vector header variable in size. To reduce the overhead associated with
- * retrieving or computing this size, the functions are wrapped in macro calls
- * that compute the header size at compile time.
- *
- * The API provides a number of _t macros, which accept a size and alignment.
- * These macros are used when no compile-time type is available.
- *
- * The vector guarantees contiguous access to its elements. When an element is
- * removed from the vector, the last element is copied to the removed element.
- *
- * The API requires passing in the type of the vector. This type is used to test
- * whether the size of the provided type equals the size of the type with which
- * the vector was created. In release mode this check is not performed.
- *
- * When elements are added to the vector, it will automatically resize to the
- * next power of two. This can change the pointer of the vector, which is why
- * operations that can increase the vector size, accept a double pointer to the
- * vector.
  */
 
 #ifndef FLECS_VECTOR_H

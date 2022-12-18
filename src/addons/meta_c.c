@@ -1,3 +1,8 @@
+/**
+ * @file addons/meta.c
+ * @brief C utilities for meta addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_META_C

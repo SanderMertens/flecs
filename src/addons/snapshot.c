@@ -1,3 +1,8 @@
+/**
+ * @file addons/snapshot.c
+ * @brief Snapshot addon.
+ */
+
 #include "flecs.h"
 
 #ifdef FLECS_SNAPSHOT

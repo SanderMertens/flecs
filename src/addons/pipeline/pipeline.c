@@ -1,3 +1,8 @@
+/**
+ * @file addons/ipeline/pipeline.c
+ * @brief Functions for building and running pipelines.
+ */
+
 #include "flecs.h"
 #include "../system/system.h"
 

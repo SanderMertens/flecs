@@ -1,3 +1,8 @@
+/**
+ * @file hierarchy.c
+ * @brief API for entity paths and name lookups.
+ */
+
 #include "private_api.h"
 #include <ctype.h>
 

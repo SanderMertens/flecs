@@ -1,3 +1,8 @@
+/**
+ * @file meta/api.c
+ * @brief API for assigning values of runtime types with reflection.
+ */
+
 #include "meta.h"
 #include <ctype.h>
 

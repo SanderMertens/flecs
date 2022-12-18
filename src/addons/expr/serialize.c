@@ -1,3 +1,7 @@
+/**
+ * @file expr/serialize.c
+ * @brief Serialize (component) values to flecs string format.
+ */
 
 #include "../../private_api.h"
 

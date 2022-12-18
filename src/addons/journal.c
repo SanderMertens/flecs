@@ -1,3 +1,8 @@
+/**
+ * @file addons/journal.c
+ * @brief Journal addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_JOURNAL

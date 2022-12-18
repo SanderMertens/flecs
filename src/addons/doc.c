@@ -1,3 +1,7 @@
+/**
+ * @file addons/doc.c
+ * @brief Doc addon.
+ */
 
 #include "../private_api.h"
 

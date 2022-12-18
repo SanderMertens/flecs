@@ -1,3 +1,8 @@
+/**
+ * @file addons/timer.c
+ * @brief Timer addon.
+ */
+
 #include "flecs.h"
 #include "system/system.h"
 #include "../private_api.h"

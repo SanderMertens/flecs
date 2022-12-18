@@ -1,3 +1,8 @@
+/**
+ * @file addons/parser.c
+ * @brief Parser addon.
+ */
+
 #include "flecs.h"
 
 #ifdef FLECS_PARSER

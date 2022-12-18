@@ -1,3 +1,8 @@
+/**
+ * @file meta/api.c
+ * @brief API for creating entities with reflection data.
+ */
+
 #include "meta.h"
 
 #ifdef FLECS_META

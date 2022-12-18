@@ -707,33 +707,9 @@ typedef int32_t ecs_size_t;
 
 #endif
 
-
 /**
  * @file vector.h
  * @brief Vector datastructure.
- *
- * This is an implementation of a simple vector type. The vector is allocated in
- * a single block of memory, with the element count, and allocated number of
- * elements encoded in the block. As this vector is used for user-types it has
- * been designed to support alignments higher than 8 bytes. This makes the size
- * of the vector header variable in size. To reduce the overhead associated with
- * retrieving or computing this size, the functions are wrapped in macro calls
- * that compute the header size at compile time.
- *
- * The API provides a number of _t macros, which accept a size and alignment.
- * These macros are used when no compile-time type is available.
- *
- * The vector guarantees contiguous access to its elements. When an element is
- * removed from the vector, the last element is copied to the removed element.
- *
- * The API requires passing in the type of the vector. This type is used to test
- * whether the size of the provided type equals the size of the type with which
- * the vector was created. In release mode this check is not performed.
- *
- * When elements are added to the vector, it will automatically resize to the
- * next power of two. This can change the pointer of the vector, which is why
- * operations that can increase the vector size, accept a double pointer to the
- * vector.
  */
 
 #ifndef FLECS_VECTOR_H
@@ -1197,37 +1173,7 @@ private:
 
 /**
  * @file sparse.h
- * @brief Sparse set datastructure.
- *
- * This is an implementation of a paged sparse set that stores the payload in
- * the sparse array.
- *
- * A sparse set has a dense and a sparse array. The sparse array is directly
- * indexed by a 64 bit identifier. The sparse element is linked with a dense
- * element, which allows for liveliness checking. The liveliness check itself
- * can be performed by doing (psuedo code):
- *  dense[sparse[sparse_id].dense] == sparse_id
- *
- * To ensure that the sparse array doesn't have to grow to a large size when
- * using large sparse_id's, the sparse set uses paging. This cuts up the array
- * into several pages of 4096 elements. When an element is set, the sparse set
- * ensures that the corresponding page is created. The page associated with an
- * id is determined by shifting a bit 12 bits to the right.
- *
- * The sparse set keeps track of a generation count per id, which is increased
- * each time an id is deleted. The generation is encoded in the returned id.
- *
- * This sparse set implementation stores payload in the sparse array, which is
- * not typical. The reason for this is to guarantee that (in combination with
- * paging) the returned payload pointers are stable. This allows for various
- * optimizations in the parts of the framework that uses the sparse set.
- *
- * The sparse set has been designed so that new ids can be generated in bulk, in
- * an O(1) operation. The way this works is that once a dense-sparse pair is
- * created, it is never unpaired. Instead it is moved to the end of the dense
- * array, and the sparse set stores an additional count to keep track of the
- * last alive id in the sparse set. To generate new ids in bulk, the sparse set
- * only needs to increase this count by the number of requested ids.
+ * @brief Sparse set data structure.
  */
 
 #ifndef FLECS_SPARSE_H
@@ -1535,8 +1481,7 @@ void* _ecs_sparse_get(
 
 /**
  * @file block_allocator.h
- * @brief Allocator that returns memory objects of the same (chunk) size. 
- *        Multiple elements are stored in a single block.
+ * @brief Block allocator.
  */
 
 #ifndef FLECS_BLOCK_ALLOCATOR_H
@@ -1613,28 +1558,7 @@ void* flecs_bdup(
 
 /**
  * @file map.h
- * @brief Map datastructure.
- *
- * Key-value datastructure. The map allows for fast retrieval of a payload for
- * a 64-bit key. While it is not as fast as the sparse set, it is better at
- * handling randomly distributed values.
- *
- * Payload is stored in bucket arrays. A bucket is computed from an id by
- * using the (bucket_count - 1) as an AND-mask. The number of buckets is always
- * a power of 2. Multiple keys will be stored in the same bucket. As a result
- * the worst case retrieval performance of the map is O(n), though this is rare.
- * On average lookup performance should equal O(1).
- *
- * The datastructure will automatically grow the number of buckets when the
- * ratio between elements and buckets exceeds a certain threshold (LOAD_FACTOR).
- *
- * Note that while the implementation is a hashmap, it can only compute hashes
- * for the provided 64 bit keys. This means that the provided keys must always
- * be unique. If the provided keys are hashes themselves, it is the
- * responsibility of the user to ensure that collisions are handled.
- *
- * In debug mode the map verifies that the type provided to the map functions
- * matches the one used at creation time.
+ * @brief Map data structure.
  */
 
 #ifndef FLECS_MAP_H
@@ -1973,17 +1897,6 @@ void* flecs_dup(
 /**
  * @file strbuf.h
  * @brief Utility for constructing strings.
- *
- * A buffer builds up a list of elements which individually can be up to N bytes
- * large. While appending, data is added to these elements. More elements are
- * added on the fly when needed. When an application calls ecs_strbuf_get, all
- * elements are combined in one string and the element administration is freed.
- *
- * This approach prevents reallocs of large blocks of memory, and therefore
- * copying large blocks of memory when appending to a large buffer. A buffer
- * preallocates some memory for the element overhead so that for small strings
- * there is hardly any overhead, while for large strings the overhead is offset
- * by the reduced time spent on copying memory.
  */
 
 #ifndef FLECS_STRBUF_H_
@@ -3789,10 +3702,7 @@ void* ecs_vec_last(
 
 /**
  * @file hashmap.h
- * @brief Hashmap datastructure.
- *
- * Datastructure that computes a hash to store & retrieve values. Similar to
- * ecs_map_t, but allows for arbitrary keytypes.
+ * @brief Hashmap data structure.
  */
 
 #ifndef FLECS_HASHMAP_H

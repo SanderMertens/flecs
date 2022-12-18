@@ -1,3 +1,8 @@
+/**
+ * @file datastructures/qsort.c
+ * @brief Quicksort implementation.
+ */
+
 #include "../private_api.h"
 #include "qsort.h"
 

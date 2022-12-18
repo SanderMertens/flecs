@@ -1,3 +1,7 @@
+/**
+ * @file expr/vars.c
+ * @brief Utilities for variable substitution in flecs string expressions.
+ */
 
 #include "../../private_api.h"
 

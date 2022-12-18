@@ -1,3 +1,8 @@
+/**
+ * @file addons/pipeline/worker.c
+ * @brief Functions for running pipelines on one or more threads.
+ */
+
 #include "flecs.h"
 #include "../system/system.h"
 

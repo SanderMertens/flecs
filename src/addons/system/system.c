@@ -1,3 +1,8 @@
+/**
+ * @file addons/system/system.c
+ * @brief System addon.
+ */
+
 #include "flecs.h"
 
 #ifdef FLECS_SYSTEM

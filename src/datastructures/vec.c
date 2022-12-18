@@ -1,3 +1,8 @@
+/**
+ * @file datastructures/vec.c
+ * @brief Vector with allocator support.
+ */
+
 #include "../private_api.h"
 
 ecs_vec_t* ecs_vec_init(

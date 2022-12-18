@@ -1,3 +1,8 @@
+/**
+ * @file value.c
+ * @brief Utility functions to work with non-trivial pointers of user types.
+ */
+
 #include "private_api.h"
 
 int ecs_value_init_w_type_info(

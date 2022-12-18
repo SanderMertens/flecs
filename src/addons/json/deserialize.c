@@ -1,3 +1,7 @@
+/**
+ * @file json/deserialize.c
+ * @brief Deserialize JSON strings into (component) values.
+ */
 
 #include "../../private_api.h"
 

@@ -1,7 +1,6 @@
 /**
  * @file block_allocator.h
- * @brief Allocator that returns memory objects of the same (chunk) size. 
- *        Multiple elements are stored in a single block.
+ * @brief Block allocator.
  */
 
 #ifndef FLECS_BLOCK_ALLOCATOR_H

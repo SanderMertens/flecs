@@ -1,3 +1,8 @@
+/**
+ * @file json/serialize_type_info.c
+ * @brief Serialize type (reflection) information to JSON.
+ */
+
 #include "json.h"
 
 #ifdef FLECS_JSON

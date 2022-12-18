@@ -1,3 +1,8 @@
+/**
+ * @file addons/flecs_cpp.c
+ * @brief Utilities for C++ addon.
+ */
+
 #include "../private_api.h"
 #include <ctype.h>
 

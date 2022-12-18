@@ -1,3 +1,31 @@
+/**
+ * @file datastructures/vector.c
+ * @brief Vector datastructure.
+ *
+ * This is an implementation of a simple vector type. The vector is allocated in
+ * a single block of memory, with the element count, and allocated number of
+ * elements encoded in the block. As this vector is used for user-types it has
+ * been designed to support alignments higher than 8 bytes. This makes the size
+ * of the vector header variable in size. To reduce the overhead associated with
+ * retrieving or computing this size, the functions are wrapped in macro calls
+ * that compute the header size at compile time.
+ *
+ * The API provides a number of _t macros, which accept a size and alignment.
+ * These macros are used when no compile-time type is available.
+ *
+ * The vector guarantees contiguous access to its elements. When an element is
+ * removed from the vector, the last element is copied to the removed element.
+ *
+ * The API requires passing in the type of the vector. This type is used to test
+ * whether the size of the provided type equals the size of the type with which
+ * the vector was created. In release mode this check is not performed.
+ *
+ * When elements are added to the vector, it will automatically resize to the
+ * next power of two. This can change the pointer of the vector, which is why
+ * operations that can increase the vector size, accept a double pointer to the
+ * vector.
+ */
+
 #include "../private_api.h"
 
 struct ecs_vector_t {
@@ -11,7 +39,7 @@ struct ecs_vector_t {
 
 /** Resize the vector buffer */
 static
-ecs_vector_t* resize(
+ecs_vector_t* flecs_vector_resize(
     ecs_vector_t *vector,
     int16_t offset,
     int32_t size)
@@ -132,7 +160,7 @@ void* _ecs_vector_addn(
         }
 
         max_count = flecs_next_pow_of_2(max_count);
-        vector = resize(vector, offset, max_count * elem_size);
+        vector = flecs_vector_resize(vector, offset, max_count * elem_size);
         vector->size = max_count;
         *array_inout = vector;
     }
@@ -163,7 +191,7 @@ void* _ecs_vector_add(
             }
 
             size = flecs_next_pow_of_2(size);
-            vector = resize(vector, offset, size * elem_size);
+            vector = flecs_vector_resize(vector, offset, size * elem_size);
             *array_inout = vector;
             vector->size = size;
         }
@@ -299,7 +327,7 @@ void _ecs_vector_reclaim(
     if (count < size) {
         if (count) {
             size = count;
-            vector = resize(vector, offset, size * elem_size);
+            vector = flecs_vector_resize(vector, offset, size * elem_size);
             vector->size = size;
             *array_inout = vector;
         } else {
@@ -349,7 +377,7 @@ int32_t _ecs_vector_set_size(
 
         if (result < elem_count) {
             elem_count = flecs_next_pow_of_2(elem_count);
-            vector = resize(vector, offset, elem_count * elem_size);
+            vector = flecs_vector_resize(vector, offset, elem_count * elem_size);
             vector->size = elem_count;
             *array_inout = vector;
             result = elem_count;

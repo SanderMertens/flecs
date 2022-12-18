@@ -1,3 +1,8 @@
+/**
+ * @file expr/deserialize.c
+ * @brief Deserialize flecs string format into (component) values.
+ */
+
 #include "../../private_api.h"
 #include <ctype.h>
 

@@ -1,3 +1,8 @@
+/**
+ * @file addons/rules.c
+ * @brief Rules addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_RULES

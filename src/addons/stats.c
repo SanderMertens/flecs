@@ -1,3 +1,7 @@
+/**
+ * @file addons/stats.c
+ * @brief Stats addon.
+ */
 
 #include "../private_api.h"
 

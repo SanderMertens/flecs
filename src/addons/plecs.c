@@ -1,3 +1,8 @@
+/**
+ * @file addons/plecs.c
+ * @brief Plecs addon.
+ */
+
 #include "flecs.h"
 
 #ifdef FLECS_PLECS

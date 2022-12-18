@@ -1,3 +1,8 @@
+/**
+ * @file addons/app.c
+ * @brief App addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_APP

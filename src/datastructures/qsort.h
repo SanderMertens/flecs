@@ -1,3 +1,8 @@
+/**
+ * @file datastructures/qsort.h
+ * @brief Quicksort implementation.
+ */
+
 /* From: https://github.com/svpv/qsort/blob/master/qsort.h 
  * Use custom qsort implementation rather than relying on the version in libc to
  * ensure that results are consistent across platforms.

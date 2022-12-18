@@ -1,3 +1,8 @@
+/**
+ * @file datastructures/name_index.c
+ * @brief Data structure for resolving 64bit keys by string (name).
+ */
+
 #include "../private_api.h"
 
 static

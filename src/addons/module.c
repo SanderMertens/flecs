@@ -1,3 +1,8 @@
+/**
+ * @file addons/module.c
+ * @brief Module addon.
+ */
+
 #include "flecs.h"
 
 #ifdef FLECS_MODULE

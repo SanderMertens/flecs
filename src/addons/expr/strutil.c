@@ -1,3 +1,7 @@
+/**
+ * @file expr/strutil.c
+ * @brief String parsing utilities.
+ */
 
 #include "../../private_api.h"
 

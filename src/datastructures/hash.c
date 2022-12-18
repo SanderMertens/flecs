@@ -1,3 +1,8 @@
+/**
+ * @file datastructures/hash.c
+ * @brief Functions for hasing byte arrays to 64bit value.
+ */
+
 #include "../private_api.h"
 
 #ifdef ECS_TARGET_GNU

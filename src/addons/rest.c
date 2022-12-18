@@ -1,3 +1,8 @@
+/**
+ * @file addons/rest.c
+ * @brief Rest addon.
+ */
+
 #include "../private_api.h"
 
 #ifdef FLECS_REST
