@@ -7144,9 +7144,12 @@ ecs_entity_t ecs_component_init(
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
+    bool new_component = true;
     ecs_entity_t result = desc->entity;
     if (!result) {
         result = ecs_new_low_id(world);
+    } else {
+        new_component = ecs_has(world, result, EcsComponent);
     }
 
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
@@ -7154,12 +7157,14 @@ ecs_entity_t ecs_component_init(
         ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);
         ptr->size = desc->type.size;
         ptr->alignment = desc->type.alignment;
-        if (!ptr->size) {
-            ecs_trace("#[green]tag#[reset] %s created", 
-                ecs_get_name(world, result));
-        } else {
-            ecs_trace("#[green]component#[reset] %s created", 
-                ecs_get_name(world, result));
+        if (!new_component || ptr->size != desc->type.size) {
+            if (!ptr->size) {
+                ecs_trace("#[green]tag#[reset] %s created", 
+                    ecs_get_name(world, result));
+            } else {
+                ecs_trace("#[green]component#[reset] %s created", 
+                    ecs_get_name(world, result));
+            }
         }
     } else {
         if (ptr->size != desc->type.size) {
