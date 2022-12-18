@@ -124,7 +124,11 @@
                 "entity_init_w_add_childof_no_name",
                 "entity_w_short_notation",
                 "override_inherited_symbol",
-                "use_low_id_for_component"
+                "use_low_id_for_component",
+                "get_depth",
+                "get_depth_non_acyclic",
+                "get_depth_empty",
+                "get_depth_2_paths"
             ]
         }, {
             "id": "Search",
@@ -2348,7 +2352,10 @@
                 "get_id",
                 "get_component",
                 "get_pair",
-                "get_from_stage"
+                "get_from_stage",
+                "get_depth",
+                "get_depth_non_acyclic",
+                "get_depth_2_paths"
             ]
         }, {
             "id": "Poly",

@@ -206,6 +206,25 @@ struct table {
         return static_cast<A*>(get<First>(_::cpp_type<Second>::id(m_world)));
     }
 
+    /** Get depth for given relationship.
+     *
+     * @param rel The relationship.
+     * @return The depth.
+     */    
+    int32_t depth(flecs::entity_t rel) {
+        return ecs_table_get_depth(m_world, m_table, rel);
+    }
+
+    /** Get depth for given relationship.
+     *
+     * @tparam Rel The relationship.
+     * @return The depth.
+     */
+    template <typename Rel>
+    int32_t depth() {
+        return depth(_::cpp_type<Rel>::id(m_world));
+    }
+
     /* Implicit conversion to table_t */
     operator table_t*() const {
         return m_table;

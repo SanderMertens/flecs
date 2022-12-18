@@ -5886,6 +5886,22 @@ ecs_entity_t ecs_get_target_for_id(
     ecs_entity_t rel,
     ecs_id_t id);
 
+/** Return depth for entity in tree for relationship rel.
+ * Depth is determined by counting the number of targets encountered while 
+ * traversing up the relationship tree for rel. Only acyclic relationships are
+ * supported.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param rel The relationship.
+ * @return The depth of the entity in the tree.
+ */
+FLECS_API
+int32_t ecs_get_depth(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t rel);
+
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the
  * EcsDisabled tag. A disabled entity will not be matched with any systems,
@@ -7944,6 +7960,22 @@ void* ecs_table_get_id(
     const ecs_table_t *table,
     ecs_id_t id,
     int32_t offset);
+
+/** Return depth for table in tree for relationship rel.
+ * Depth is determined by counting the number of targets encountered while 
+ * traversing up the relationship tree for rel. Only acyclic relationships are
+ * supported.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param rel The relationship.
+ * @return The depth of the table in the tree.
+ */
+FLECS_API
+int32_t ecs_table_get_depth(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_entity_t rel);
 
 /** Get storage type for table.
  *
@@ -18738,6 +18770,25 @@ struct entity_view : public id {
     template <typename First, typename Second>
     flecs::entity target_for(flecs::entity_t relationship) const;
 
+    /** Get depth for given relationship.
+     *
+     * @param rel The relationship.
+     * @return The depth.
+     */
+    int32_t depth(flecs::entity_t rel) const {
+        return ecs_get_depth(m_world, m_id, rel);
+    }
+
+    /** Get depth for given relationship.
+     *
+     * @tparam Rel The relationship.
+     * @return The depth.
+     */
+    template<typename Rel>
+    int32_t depth() const {
+        return this->depth(_::cpp_type<Rel>::id(m_world));
+    }
+
     /** Get parent of entity.
      * Short for target(flecs::ChildOf).
      * 
@@ -22299,6 +22350,25 @@ struct table {
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     A* get() const {
         return static_cast<A*>(get<First>(_::cpp_type<Second>::id(m_world)));
+    }
+
+    /** Get depth for given relationship.
+     *
+     * @param rel The relationship.
+     * @return The depth.
+     */    
+    int32_t depth(flecs::entity_t rel) {
+        return ecs_table_get_depth(m_world, m_table, rel);
+    }
+
+    /** Get depth for given relationship.
+     *
+     * @tparam Rel The relationship.
+     * @return The depth.
+     */
+    template <typename Rel>
+    int32_t depth() {
+        return depth(_::cpp_type<Rel>::id(m_world));
     }
 
     /* Implicit conversion to table_t */

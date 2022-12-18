@@ -294,3 +294,48 @@ void Table_get_from_stage() {
 
     ecs_fini(world);
 }
+
+void Table_get_depth() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, e3);
+
+    test_int(1, ecs_table_get_depth(world, ecs_get_table(world, e2), EcsChildOf));
+    test_int(2, ecs_table_get_depth(world, ecs_get_table(world, e3), EcsChildOf));
+    test_int(3, ecs_table_get_depth(world, ecs_get_table(world, e4), EcsChildOf));
+
+    ecs_fini(world);
+}
+
+void Table_get_depth_non_acyclic() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, Tgt);
+    
+    test_expect_abort();
+    ecs_table_get_depth(world, ecs_get_table(world, e1), Rel);
+}
+
+void Table_get_depth_2_paths() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, e2);
+    ecs_add_pair(world, e4, EcsIsA, e3);
+
+    test_int(1, ecs_table_get_depth(world, ecs_get_table(world, e2), EcsIsA));
+    test_int(2, ecs_table_get_depth(world, ecs_get_table(world, e3), EcsIsA));
+    test_int(3, ecs_table_get_depth(world, ecs_get_table(world, e4), EcsIsA));
+
+    ecs_fini(world);
+}

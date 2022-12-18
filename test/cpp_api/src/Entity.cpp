@@ -4168,3 +4168,34 @@ void Entity_children_w_custom_relation_type() {
     test_assert(child_1_found == true);
     test_assert(child_2_found == true);
 }
+
+void Entity_get_depth() {
+    flecs::world world;
+
+    flecs::entity e1 = world.entity();
+    flecs::entity e2 = world.entity().child_of(e1);
+    flecs::entity e3 = world.entity().child_of(e2);
+    flecs::entity e4 = world.entity().child_of(e3);
+
+    test_int(0, e1.depth(flecs::ChildOf));
+    test_int(1, e2.depth(flecs::ChildOf));
+    test_int(2, e3.depth(flecs::ChildOf));
+    test_int(3, e4.depth(flecs::ChildOf));
+}
+
+void Entity_get_depth_w_type() {
+    flecs::world world;
+
+    struct Rel { };
+    world.component<Rel>().add(flecs::Acyclic);
+
+    flecs::entity e1 = world.entity();
+    flecs::entity e2 = world.entity().add<Rel>(e1);
+    flecs::entity e3 = world.entity().add<Rel>(e2);
+    flecs::entity e4 = world.entity().add<Rel>(e3);
+
+    test_int(0, e1.depth<Rel>());
+    test_int(1, e2.depth<Rel>());
+    test_int(2, e3.depth<Rel>());
+    test_int(3, e4.depth<Rel>());
+}

@@ -240,6 +240,8 @@ void Entity_add_if_exclusive_R_O(void);
 void Entity_add_if_pair_w_0_object(void);
 void Entity_children_w_custom_relation(void);
 void Entity_children_w_custom_relation_type(void);
+void Entity_get_depth(void);
+void Entity_get_depth_w_type(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1119,6 +1121,8 @@ void Table_range_get_T(void);
 void Table_range_get_pair_r_t(void);
 void Table_range_get_pair_R_t(void);
 void Table_range_get_pair_R_T(void);
+void Table_get_depth(void);
+void Table_get_depth_w_type(void);
 
 // Testsuite 'Doc'
 void Doc_set_brief(void);
@@ -2046,6 +2050,14 @@ bake_test_case Entity_testcases[] = {
     {
         "children_w_custom_relation_type",
         Entity_children_w_custom_relation_type
+    },
+    {
+        "get_depth",
+        Entity_get_depth
+    },
+    {
+        "get_depth_w_type",
+        Entity_get_depth_w_type
     }
 };
 
@@ -5433,6 +5445,14 @@ bake_test_case Table_testcases[] = {
     {
         "range_get_pair_R_T",
         Table_range_get_pair_R_T
+    },
+    {
+        "get_depth",
+        Table_get_depth
+    },
+    {
+        "get_depth_w_type",
+        Table_get_depth_w_type
     }
 };
 
@@ -5471,7 +5491,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        227,
+        229,
         Entity_testcases
     },
     {
@@ -5646,7 +5666,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        28,
+        30,
         Table_testcases
     },
     {

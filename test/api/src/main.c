@@ -118,6 +118,10 @@ void Entity_entity_init_w_add_childof_no_name(void);
 void Entity_entity_w_short_notation(void);
 void Entity_override_inherited_symbol(void);
 void Entity_use_low_id_for_component(void);
+void Entity_get_depth(void);
+void Entity_get_depth_non_acyclic(void);
+void Entity_get_depth_empty(void);
+void Entity_get_depth_2_paths(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2254,6 +2258,9 @@ void Table_get_id(void);
 void Table_get_component(void);
 void Table_get_pair(void);
 void Table_get_from_stage(void);
+void Table_get_depth(void);
+void Table_get_depth_non_acyclic(void);
+void Table_get_depth_2_paths(void);
 
 // Testsuite 'Poly'
 void Poly_iter_query(void);
@@ -2741,6 +2748,22 @@ bake_test_case Entity_testcases[] = {
     {
         "use_low_id_for_component",
         Entity_use_low_id_for_component
+    },
+    {
+        "get_depth",
+        Entity_get_depth
+    },
+    {
+        "get_depth_non_acyclic",
+        Entity_get_depth_non_acyclic
+    },
+    {
+        "get_depth_empty",
+        Entity_get_depth_empty
+    },
+    {
+        "get_depth_2_paths",
+        Entity_get_depth_2_paths
     }
 };
 
@@ -11013,6 +11036,18 @@ bake_test_case Table_testcases[] = {
     {
         "get_from_stage",
         Table_get_from_stage
+    },
+    {
+        "get_depth",
+        Table_get_depth
+    },
+    {
+        "get_depth_non_acyclic",
+        Table_get_depth_non_acyclic
+    },
+    {
+        "get_depth_2_paths",
+        Table_get_depth_2_paths
     }
 };
 
@@ -11225,7 +11260,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        81,
+        85,
         Entity_testcases
     },
     {
@@ -11533,7 +11568,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        10,
+        13,
         Table_testcases
     },
     {

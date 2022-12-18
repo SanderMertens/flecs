@@ -247,7 +247,9 @@
                 "add_if_exclusive_R_O",
                 "add_if_pair_w_0_object",
                 "children_w_custom_relation",
-                "children_w_custom_relation_type"
+                "children_w_custom_relation_type",
+                "get_depth",
+                "get_depth_w_type"
             ]
         }, {
             "id": "Pairs",
@@ -1176,7 +1178,9 @@
                 "range_get_T",
                 "range_get_pair_r_t",
                 "range_get_pair_R_t",
-                "range_get_pair_R_T"
+                "range_get_pair_R_T",
+                "get_depth",
+                "get_depth_w_type"
             ]
         }, {
             "id": "Doc",

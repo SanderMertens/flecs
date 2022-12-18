@@ -411,6 +411,25 @@ struct entity_view : public id {
     template <typename First, typename Second>
     flecs::entity target_for(flecs::entity_t relationship) const;
 
+    /** Get depth for given relationship.
+     *
+     * @param rel The relationship.
+     * @return The depth.
+     */
+    int32_t depth(flecs::entity_t rel) const {
+        return ecs_get_depth(m_world, m_id, rel);
+    }
+
+    /** Get depth for given relationship.
+     *
+     * @tparam Rel The relationship.
+     * @return The depth.
+     */
+    template<typename Rel>
+    int32_t depth() const {
+        return this->depth(_::cpp_type<Rel>::id(m_world));
+    }
+
     /** Get parent of entity.
      * Short for target(flecs::ChildOf).
      * 

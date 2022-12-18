@@ -617,3 +617,32 @@ void Table_range_get_pair_R_T() {
     test_int(v[0].x, 2);
     test_int(v[0].y, 3);
 }
+
+void Table_get_depth() {
+    flecs::world world;
+
+    flecs::entity e1 = world.entity();
+    flecs::entity e2 = world.entity().child_of(e1);
+    flecs::entity e3 = world.entity().child_of(e2);
+    flecs::entity e4 = world.entity().child_of(e3);
+
+    test_int(1, e2.table().depth(flecs::ChildOf));
+    test_int(2, e3.table().depth(flecs::ChildOf));
+    test_int(3, e4.table().depth(flecs::ChildOf));
+}
+
+void Table_get_depth_w_type() {
+    flecs::world world;
+
+    struct Rel { };
+    world.component<Rel>().add(flecs::Acyclic);
+
+    flecs::entity e1 = world.entity();
+    flecs::entity e2 = world.entity().add<Rel>(e1);
+    flecs::entity e3 = world.entity().add<Rel>(e2);
+    flecs::entity e4 = world.entity().add<Rel>(e3);
+
+    test_int(1, e2.table().depth<Rel>());
+    test_int(2, e3.table().depth<Rel>());
+    test_int(3, e4.table().depth<Rel>());
+}
