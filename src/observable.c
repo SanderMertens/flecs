@@ -329,7 +329,7 @@ void flecs_emit_propagate_invalidate_tables(
         ecs_reachable_cache_t *rc = &cur->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
-            break;
+            continue;
         }
 
         rc->generation ++;
