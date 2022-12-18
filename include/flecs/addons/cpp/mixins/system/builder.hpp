@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/system/builder.hpp
+ * @brief System builder.
+ */
+
 #pragma once
 
 #include "../../utils/node_builder.hpp"

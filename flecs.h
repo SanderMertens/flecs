@@ -4187,7 +4187,7 @@ typedef struct ecs_query_group_info_t {
 /* Only include deprecated definitions if deprecated addon is required */
 #ifdef FLECS_DEPRECATED
 /**
- * @file deprecated.h
+ * @file addons/deprecated.h
  * @brief The deprecated addon contains deprecated operations.
  */
 
@@ -8278,7 +8278,7 @@ int ecs_value_move_ctor(
     void *src);
 
 /**
- * @file flecs_c.h
+ * @file addons/flecs_c.h
  * @brief Extends the core API with convenience functions/macros for C applications.
  */
 
@@ -8970,7 +8970,7 @@ int ecs_value_move_ctor(
 
 /* Always included, if disabled functions are replaced with dummy macros */
 /**
- * @file journal.h
+ * @file addons/journal.h
  * @brief Journaling addon that logs API functions.
  *
  * The journaling addon traces API calls. The trace is formatted as runnable
@@ -9033,7 +9033,7 @@ void flecs_journal_end(void);
 #endif // FLECS_JOURNAL
 
 /**
- * @file log.h
+ * @file addons/log.h
  * @brief Logging addon.
  * 
  * The logging addon provides an API for (debug) tracing and reporting errors
@@ -9598,7 +9598,7 @@ int ecs_log_last_error(void);
 #error "FLECS_NO_APP failed: APP is required by other addons"
 #endif
 /**
- * @file app.h
+ * @file addons/app.h
  * @brief App addon.
  *
  * The app addon is a wrapper around the application's main loop. Its main
@@ -9710,7 +9710,7 @@ int ecs_app_set_frame_action(
 #error "FLECS_NO_REST failed: REST is required by other addons"
 #endif
 /**
- * @file rest.h
+ * @file addons/rest.h
  * @brief REST API addon.
  *
  * A small REST API that uses the HTTP server and JSON serializer to provide
@@ -9795,7 +9795,7 @@ void FlecsRestImport(
 #error "FLECS_NO_TIMER failed: TIMER is required by other addons"
 #endif
 /**
- * @file timer.h
+ * @file addons/timer.h
  * @brief Timer module.
  *
  * Timers can be used to trigger actions at periodic or one-shot intervals. They
@@ -10044,7 +10044,7 @@ void FlecsTimerImport(
 #error "FLECS_NO_PIPELINE failed: PIPELINE is required by other addons"
 #endif
 /**
- * @file pipeline.h
+ * @file addons/pipeline.h
  * @brief Pipeline module.
  *
  * The pipeline module provides support for running systems automatically and
@@ -10246,7 +10246,7 @@ void FlecsPipelineImport(
 #error "FLECS_NO_SYSTEM failed: SYSTEM is required by other addons"
 #endif
 /**
- * @file system.h
+ * @file addons/system.h
  * @brief System module.
  *
  * The system module allows for creating and running systems. A system is a
@@ -10519,7 +10519,7 @@ void FlecsSystemImport(
 #error "FLECS_NO_STATS failed: STATS is required by other addons"
 #endif
 /**
- * @file stats.h
+ * @file addons/stats.h
  * @brief Statistics addon.
  *
  * The statistics addon enables an application to obtain detailed metrics about
@@ -10938,7 +10938,7 @@ void ecs_metric_copy(
 #error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
 #endif
 /**
- * @file doc.h
+ * @file addons/doc.h
  * @brief Doc module.
  *
  * The monitor module automatically tracks statistics from the stats addon and
@@ -11006,7 +11006,7 @@ void FlecsMonitorImport(
 #error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
 #endif
 /**
- * @file coredoc.h
+ * @file addons/coredoc.h
  * @brief Core doc module.
  *
  * The core doc module imports documentation and reflection data for core
@@ -11050,7 +11050,7 @@ void FlecsCoreDocImport(
 #error "FLECS_NO_DOC failed: DOC is required by other addons"
 #endif
 /**
- * @file doc.h
+ * @file addons/doc.h
  * @brief Doc module.
  *
  * The doc module allows for documenting entities (and thus components, systems)
@@ -11226,7 +11226,7 @@ void FlecsDocImport(
 #error "FLECS_NO_JSON failed: JSON is required by other addons"
 #endif
 /**
- * @file json.h
+ * @file addons/json.h
  * @brief JSON parser addon.
  *
  * Parse expression strings into component values. Entity identifiers, 
@@ -11515,7 +11515,7 @@ int ecs_iter_to_json_buf(
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
 #endif
 /**
- * @file units.h
+ * @file addons/units.h
  * @brief Units module.
  *
  * Builtin standard units. The units addon is not imported by default, even if
@@ -11712,7 +11712,7 @@ void FlecsUnitsImport(
 #error "FLECS_NO_META failed: META is required by other addons"
 #endif
 /**
- * @file meta.h
+ * @file addons/meta.h
  * @brief Meta addon.
  *
  * The meta addon enables reflecting on component data. Types are stored as
@@ -12430,7 +12430,7 @@ void FlecsMetaImport(
 #error "FLECS_NO_EXPR failed: EXPR is required by other addons"
 #endif
 /**
- * @file expr.h
+ * @file addons/expr.h
  * @brief Flecs expression parser addon.
  *
  * Parse expression strings into component values. The notation is similar to
@@ -12709,7 +12709,7 @@ const char *ecs_parse_expr_token(
 #error "FLECS_NO_META_C failed: META_C is required by other addons"
 #endif
 /**
- * @file meta_c.h
+ * @file addons/meta_c.h
  * @brief Utility macros for populating reflection data in C.
  */
 
@@ -12863,7 +12863,7 @@ int ecs_meta_from_desc(
 #error "FLECS_NO_PLECS failed: PLECS is required by other addons"
 #endif
 /**
- * @file pecs.h
+ * @file addons/plecs.h
  * @brief Plecs addon.
  *
  * Plecs is a small data definition language for instantiating entities that
@@ -12950,9 +12950,8 @@ int ecs_plecs_from_file(
 #ifdef FLECS_NO_RULES
 #error "FLECS_NO_RULES failed: RULES is required by other addons"
 #endif
-
 /**
- * @file rules.h
+ * @file addons/rules.h
  * @brief Rule query engine addon.
  * 
  * Rules are advanced queries that in addition to the capabilities of regular
@@ -13152,7 +13151,7 @@ char* ecs_rule_str(
 #error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
 #endif
 /**
- * @file snapshot.h
+ * @file addons/snapshot.h
  * @brief Snapshot addon.
  *
  * A snapshot records the state of a world in a way so that it can be restored
@@ -13255,7 +13254,7 @@ void ecs_snapshot_free(
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"
 #endif
 /**
- * @file parser.h
+ * @file addons/parser.h
  * @brief Parser addon.
  *
  * The parser addon parses string expressions into lists of terms, and can be
@@ -13381,7 +13380,7 @@ char* ecs_parse_term(
 #error "FLECS_NO_HTTP failed: HTTP is required by other addons"
 #endif
 /**
- * @file http.h
+ * @file addons/http.h
  * @brief HTTP addon.
  * 
  * Minimalistic HTTP server that can receive and reply to simple HTTP requests.
@@ -13587,7 +13586,7 @@ const char* ecs_http_get_param(
 #error "FLECS_NO_OS_API_IMPL failed: OS_API_IMPL is required by other addons"
 #endif
 /**
- * @file os_api_impl.h
+ * @file addons/os_api_impl.h
  * @brief Default OS API implementation.
  */
 
@@ -13617,7 +13616,7 @@ void ecs_set_os_api_impl(void);
 #error "FLECS_NO_MODULE failed: MODULE is required by other addons"
 #endif
 /**
- * @file module.h
+ * @file addons/module.h
  * @brief Module addon.
  *
  * The module addon allows for creating and importing modules. Flecs modules 
@@ -13742,7 +13741,7 @@ ecs_entity_t ecs_module_init(
 #error "FLECS_NO_CPP failed: CPP is required by other addons"
 #endif
 /**
- * @file flecs_cpp.h
+ * @file addons/flecs_cpp.h
  * @brief C++ utility functions
  *
  * This header contains utility functions that are accessible from both C and
@@ -13867,10 +13866,8 @@ int32_t ecs_cpp_reset_count_inc(void);
 }
 
 /**
- * @file flecs.hpp
- * @brief Flecs C++ API.
- *
- * Modern C++11 API
+ * @file addons/cpp/flecs.hpp
+ * @brief Flecs C++11 API.
  */
 
 #pragma once
@@ -13907,9 +13904,12 @@ struct each_invoker;
 } // namespace flecs
 
 // Types imported from C API
-////////////////////////////////////////////////////////////////////////////////
-//// Aliases for types/constants from C API
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @file addons/cpp/c_types.hpp
+ * @brief Aliases for types/constants from C API
+ */
+
+#pragma once
 
 namespace flecs {
 
@@ -14034,11 +14034,14 @@ static const flecs::entity_t Panic = EcsPanic;
 
 
 // C++ utilities
-////////////////////////////////////////////////////////////////////////////////
-//// Flecs STL (FTL?)
-//// Minimalistic utilities that allow for STL like functionality without having
-//// to depend on the actual STL.
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @file addons/cpp/utils/utils.hpp
+ * @brief Flecs STL (FTL?)
+ * 
+ * Flecs STL (FTL?)
+ * Minimalistic utilities that allow for STL like functionality without having
+ * to depend on the actual STL.
+ */
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:
@@ -14171,8 +14174,13 @@ struct always_false {
 } // namespace flecs
 
 #include <stdlib.h>
-// Array class. Simple std::array like utility that is mostly there to aid
-// template code where template expansion would lead to an array with size 0.
+/**
+ * @file addons/cpp/utils/array.hpp
+ * @brief Array class.
+ * 
+ * Array class. Simple std::array like utility that is mostly there to aid
+ * template code where template expansion would lead to an array with size 0.
+ */
 
 namespace flecs {
 
@@ -14279,7 +14287,10 @@ struct array<T, Size, enable_if_t<Size == 0>> final {
 
 }
 
-// String utility that doesn't implicitly allocate memory.
+/**
+ * @file addons/cpp/utils/string.hpp
+ * @brief String utility that doesn't implicitly allocate memory.
+ */
 
 namespace flecs {
 
@@ -14419,6 +14430,14 @@ struct string_view : string {
 };
 
 }
+
+/**
+ * @file addons/cpp/utils/enum.hpp
+ * @brief Compile time enum reflection utilities.
+ * 
+ * Discover at compile time valid enumeration constants for an enumeration type
+ * and their names. This is used to automatically register enum constants.
+ */
 
 #include <string.h>
 
@@ -14669,7 +14688,10 @@ enum_data<E> enum_type(flecs::world_t *world) {
 
 } // namespace flecs
 
-// Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+/**
+ * @file addons/cpp/utils/stringstream.hpp
+ * @brief Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+ */
 
 namespace flecs {
 
@@ -14713,9 +14735,12 @@ private:
 
 }
 
-
-// Neat utility to inspect arguments & returntype of a function type
-// Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
+/**
+ * @file addons/cpp/utils/function_traits.hpp
+ * @brief Compile time utilities to inspect properties of functions.
+ *
+ * Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
+ */
 
 namespace flecs {
 namespace _ {
@@ -14846,6 +14871,11 @@ using first_arg_t = typename first_arg<Func>::type;
 
 
 // Mixin forward declarations
+/**
+ * @file addons/cpp/mixins/id/decl.hpp
+ * @brief Id class.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -14976,6 +15006,11 @@ protected:
 
 }
 
+/**
+ * @file addons/cpp/mixins/term/decl.hpp
+ * @brief Term declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -14984,6 +15019,11 @@ struct term;
 struct term_builder;
 
 }
+
+/**
+ * @file addons/cpp/mixins/filter/decl.hpp
+ * @brief Filter declarations.
+ */
 
 #pragma once
 
@@ -14999,7 +15039,17 @@ struct filter_builder;
 
 }
 
+/**
+ * @file addons/cpp/mixins/event/decl.hpp
+ * @brief Event declarations.
+ */
+
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/event/builder.hpp
+ * @brief Event builder.
+ */
 
 #pragma once
 
@@ -15138,6 +15188,11 @@ public:
 }
 
 
+/**
+ * @file addons/cpp/mixins/query/decl.hpp
+ * @brief Query declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15152,6 +15207,11 @@ struct query_builder;
 
 }
 
+/**
+ * @file addons/cpp/mixins/observer/decl.hpp
+ * @brief Observer declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15164,6 +15224,11 @@ struct observer_builder;
 }
 
 #ifdef FLECS_SYSTEM
+/**
+ * @file addons/cpp/mixins/system/decl.hpp
+ * @brief System module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15184,6 +15249,11 @@ void system_init(flecs::world& world);
 
 #endif
 #ifdef FLECS_PIPELINE
+/**
+ * @file addons/cpp/mixins/pipeline/decl.hpp
+ * @brief Pipeline module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15211,6 +15281,11 @@ static const flecs::entity_t PostFrame = EcsPostFrame;
 
 #endif
 #ifdef FLECS_TIMER
+/**
+ * @file addons/cpp/mixins/timer/decl.hpp
+ * @brief Timer module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15229,6 +15304,11 @@ void timer_init(flecs::world& world);
 
 #endif
 #ifdef FLECS_SNAPSHOT
+/**
+ * @file addons/cpp/mixins/snapshot/decl.hpp
+ * @brief Snapshot module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15241,6 +15321,11 @@ struct snapshot;
 
 #endif
 #ifdef FLECS_DOC
+/**
+ * @file addons/cpp/mixins/doc/decl.hpp
+ * @brief Doc mixin declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15261,6 +15346,11 @@ void init(flecs::world& world);
 
 #endif
 #ifdef FLECS_REST
+/**
+ * @file addons/cpp/mixins/rest/decl.hpp
+ * @brief Rest module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15279,6 +15369,11 @@ void init(flecs::world& world);
 
 #endif
 #ifdef FLECS_RULES
+/**
+ * @file addons/cpp/mixins/rule/decl.hpp
+ * @brief Rule declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15295,6 +15390,11 @@ struct rule_builder;
 
 #endif
 #ifdef FLECS_META
+/**
+ * @file addons/cpp/mixins/meta/decl.hpp
+ * @brief Meta declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15476,6 +15576,11 @@ void init(flecs::world& world);
 
 #endif
 #ifdef FLECS_UNITS
+/**
+ * @file addons/cpp/mixins/units/decl.hpp
+ * @brief Units module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15663,6 +15768,11 @@ units(flecs::world& world);
 
 #endif
 #ifdef FLECS_MONITOR
+/**
+ * @file addons/cpp/mixins/monitor/decl.hpp
+ * @brief Monitor module declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15677,6 +15787,11 @@ struct monitor {
 }
 #endif
 #ifdef FLECS_JSON
+/**
+ * @file addons/cpp/mixins/json/decl.hpp
+ * @brief JSON addon declarations.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -15688,7 +15803,17 @@ using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
 
 #endif
 #ifdef FLECS_APP
+/**
+ * @file addons/cpp/mixins/app/decl.hpp
+ * @brief App addon declarations.
+ */
+
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/app/builder.hpp
+ * @brief App builder.
+ */
 
 #pragma once
 
@@ -15766,9 +15891,14 @@ private:
 }
 
 
-
 #endif
 
+/**
+ * @file addons/cpp/log.hpp
+ * @brief Logging functions.
+ */
+
+#pragma once
 
 namespace flecs {
 namespace log {
@@ -15836,6 +15966,12 @@ inline void pop() {
 }
 }
 
+/**
+ * @file addons/cpp/pair.hpp
+ * @brief Utilities for working with compile time pairs.
+ */
+
+#pragma once
 
 namespace flecs {
 
@@ -15957,6 +16093,13 @@ struct is_actual {
 };
 
 } // flecs
+
+/**
+ * @file addons/cpp/lifecycle_traits.hpp
+ * @brief Utilities for discovering and registering component lifecycle hooks.
+ */
+
+#pragma once
 
 namespace flecs 
 {
@@ -16334,6 +16477,12 @@ ecs_move_t move_dtor() {
 } // _
 } // flecs
 
+/**
+ * @file addons/cpp/world.hpp
+ * @brief World class.
+ */
+
+#pragma once
 
 namespace flecs
 {
@@ -17156,6 +17305,10 @@ struct world {
         ecs_run_post_frame(m_world, action, ctx);
     }
 
+/**
+ * @file addons/cpp/mixins/id/mixin.inl
+ * @brief Id world mixin.
+ */
 
 /** Get id from a type.
  */
@@ -17181,6 +17334,10 @@ flecs::id pair(entity_t o) const;
  */
 flecs::id pair(entity_t r, entity_t o) const;
 
+/**
+ * @file addons/cpp/mixins/component/mixin.inl
+ * @brief Component mixin.
+ */
 
 /** Register a component.
  */
@@ -17192,6 +17349,10 @@ flecs::component<T> component(Args &&... args) const;
 template <typename... Args>
 flecs::untyped_component component(Args &&... args) const;
 
+/**
+ * @file addons/cpp/mixins/entity/mixin.inl
+ * @brief Entity world mixin.
+ */
 
 /** Create an entity.
  */
@@ -17223,6 +17384,10 @@ flecs::entity entity(const char *name = nullptr) const;
 template <typename T>
 flecs::entity prefab(const char *name = nullptr) const;
 
+/**
+ * @file addons/cpp/mixins/event/mixin.inl
+ * @brief Event world mixin.
+ */
 
 /** Create a new event.
  * 
@@ -17238,6 +17403,11 @@ flecs::event_builder event(flecs::entity_t evt) const;
  */
 template <typename E>
 flecs::event_builder_typed<E> event() const;
+
+/**
+ * @file addons/cpp/mixins/term/mixin.inl
+ * @brief Term world mixin.
+ */
 
 /** Create a term.
  * 
@@ -17255,6 +17425,10 @@ flecs::term term() const;
 template<typename First, typename Second>
 flecs::term term() const;
 
+/**
+ * @file addons/cpp/mixins/filter/mixin.inl
+ * @brief Filter world mixin.
+ */
 
 /** Create a filter.
  * @see ecs_filter_init
@@ -17289,6 +17463,10 @@ void each(Func&& func) const;
 template <typename Func>
 void each(flecs::id_t term_id, Func&& func) const;
 
+/**
+ * @file addons/cpp/mixins/observer/mixin.inl
+ * @brief Observer world mixin.
+ */
 
 /** Upcast entity to an observer.
  * The provided entity must be an observer.
@@ -17307,6 +17485,10 @@ flecs::observer observer(flecs::entity e) const;
 template <typename... Components, typename... Args>
 flecs::observer_builder<Components...> observer(Args &&... args) const;
 
+/**
+ * @file addons/cpp/mixins/query/mixin.inl
+ * @brief Query world mixin.
+ */
 
 /** Create a query.
  * @see ecs_query_init
@@ -17326,6 +17508,10 @@ flecs::query<Comps...> query(flecs::query_base& parent, Args &&... args) const;
 template <typename... Comps, typename... Args>
 flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 
+/**
+ * @file addons/cpp/mixins/enum/mixin.inl
+ * @brief Enum world mixin.
+ */
 
 /** Convert enum constant to entity
  */
@@ -17335,6 +17521,10 @@ flecs::entity to_entity(E constant) const;
 
 
 #   ifdef FLECS_MODULE
+/**
+ * @file addons/cpp/mixins/module/mixin.inl
+ * @brief Module world mixin.
+ */
 
 /** Create a module.
  * 
@@ -17354,6 +17544,10 @@ flecs::entity import();
 
 #   endif
 #   ifdef FLECS_PIPELINE
+/**
+ * @file addons/cpp/mixins/pipeline/mixin.inl
+ * @brief Pipeline world mixin.
+ */
 
 /** Create a new pipeline.
  *
@@ -17437,6 +17631,10 @@ int32_t get_threads() const;
 
 #   endif
 #   ifdef FLECS_SNAPSHOT
+/**
+ * @file addons/cpp/mixins/snapshot/mixin.inl
+ * @brief Snapshot world mixin.
+ */
 
 /** Create a snapshot.
  */
@@ -17445,6 +17643,10 @@ flecs::snapshot snapshot(Args &&... args) const;
 
 #   endif
 #   ifdef FLECS_SYSTEM
+/**
+ * @file addons/cpp/mixins/system/mixin.inl
+ * @brief System module world mixin.
+ */
 
 /** Upcast entity to a system.
  * The provided entity must be a system.
@@ -17465,6 +17667,10 @@ flecs::system_builder<Components...> system(Args &&... args) const;
 
 #   endif
 #   ifdef FLECS_RULES
+/**
+ * @file addons/cpp/mixins/rule/mixin.inl
+ * @brief Rule world mixin.
+ */
 
 /** Create a rule.
  * @see ecs_rule_init
@@ -17486,6 +17692,10 @@ flecs::rule_builder<Comps...> rule_builder(Args &&... args) const;
 
 #   endif
 #   ifdef FLECS_PLECS
+/**
+ * @file addons/cpp/mixins/plecs/mixin.inl
+ * @brief Plecs world mixin.
+ */
 
 /** Load plecs string.
  * @see ecs_plecs_from_str
@@ -17503,6 +17713,10 @@ int plecs_from_file(const char *filename) const {
 
 #   endif
 #   ifdef FLECS_META
+/**
+ * @file addons/cpp/mixins/meta/world.inl
+ * @brief Meta world mixin.
+ */
 
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(m_world, tid, value);
@@ -17527,6 +17741,10 @@ flecs::meta::cursor cursor(void *ptr) {
 
 #   endif
 #   ifdef FLECS_JSON
+/**
+ * @file addons/cpp/mixins/json/world.inl
+ * @brief JSON world mixin.
+ */
 
 flecs::string to_json(flecs::entity_t tid, const void* value) {
     char *json = ecs_ptr_to_json(m_world, tid, value);
@@ -17541,6 +17759,10 @@ flecs::string to_json(const T* value) {
 
 #   endif
 #   ifdef FLECS_APP
+/**
+ * @file addons/cpp/mixins/app/mixin.inl
+ * @brief App world addon mixin.
+ */
 
 flecs::app_builder app() {
     m_owned = false; // App takes ownership of world
@@ -17595,6 +17817,12 @@ inline uint32_t get_generation(flecs::entity_t e) {
 
 } // namespace flecs
 
+/**
+ * @file addons/cpp/iter.hpp
+ * @brief Wrapper classes for ecs_iter_t and component arrays.
+ */
+
+#pragma once
 
 namespace flecs 
 {
@@ -18040,6 +18268,13 @@ private:
 
 } // namespace flecs
 
+/**
+ * @file addons/cpp/ref.hpp
+ * @brief Class that caches data to speedup get operations.
+ */
+
+#pragma once
+
 namespace flecs
 {
 
@@ -18081,14 +18316,19 @@ private:
 
 }
 
-#pragma once
+/**
+ * @file addons/cpp/entity.hpp
+ * @brief Entity class.
+ * 
+ * This class provides read/write access to entities.
+ */
 
 #pragma once
 
-namespace flecs
-{
-
-/** Entity view class
+/**
+ * @file addons/cpp/entity_view.hpp
+ * @brief Entity class with only readonly operations.
+ * 
  * This class provides readonly access to entities. Using this class to store 
  * entities in components ensures valid handles, as this class will always store
  * the actual world vs. a stage. The constructors of this class will never 
@@ -18096,6 +18336,12 @@ namespace flecs
  *
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
+
+#pragma once
+
+namespace flecs
+{
+
 struct entity_view : public id {
 
     entity_view() : flecs::id() { }
@@ -18769,6 +19015,10 @@ struct entity_view : public id {
     flecs::entity mut(const flecs::entity_view& e) const;
 
 #   ifdef FLECS_JSON
+/**
+ * @file addons/cpp/mixins/json/entity.inl
+ * @brief JSON entity mixin.
+ */
 
 flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
     char *json = ecs_entity_to_json(m_world, m_id, desc);
@@ -18777,6 +19027,10 @@ flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
 
 #   endif
 #   ifdef FLECS_DOC
+/**
+ * @file addons/cpp/mixins/doc/entity_view.inl
+ * @brief Doc entity view mixin.
+ */
 
 const char* doc_name() {
     return ecs_doc_get_name(m_world, m_id);
@@ -18800,6 +19054,10 @@ const char* doc_color() {
 
 #   endif
 
+/**
+ * @file addons/cpp/mixins/enum/entity_view.inl
+ * @brief Enum entity view mixin.
+ */
 
 /** Convert entity to enum cosnstant
  */
@@ -18813,6 +19071,11 @@ private:
 };
 
 }
+
+/**
+ * @file addons/cpp/mixins/entity/builder.hpp
+ * @brief Entity builder.
+ */
 
 #pragma once
 
@@ -19743,6 +20006,10 @@ struct entity_builder : entity_view {
     }
 
 #   ifdef FLECS_DOC
+/**
+ * @file addons/cpp/mixins/doc/entity_builder.inl
+ * @brief Doc entity builder mixin.
+ */
 
 Self& set_doc_name(const char *name) {
     ecs_doc_set_name(m_world, m_id, name);
@@ -19772,6 +20039,10 @@ Self& set_doc_color(const char *link) {
 #   endif
 
 #   ifdef FLECS_META
+/**
+ * @file addons/cpp/mixins/meta/entity_builder.inl
+ * @brief Meta entity builder mixin.
+ */
 
 /** Make entity a unit */
 Self& unit(
@@ -19863,8 +20134,6 @@ protected:
 namespace flecs
 {
 
-/** Entity class
- * This class provides access to entities. */
 struct entity : entity_builder<entity>
 {
     entity() : entity_builder<entity>() { }
@@ -20130,10 +20399,12 @@ struct entity : entity_builder<entity>
 
 } // namespace flecs
 
+/**
+ * @file addons/cpp/invoker.hpp
+ * @brief Utilities for invoking each/iter callbacks.
+ */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system each
-////////////////////////////////////////////////////////////////////////////////
+#pragma once
 
 namespace flecs
 {
@@ -20793,6 +21064,10 @@ struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
 
 } // namespace flecs
 
+/**
+ * @file addons/cpp/utils/iterable.hpp
+ * @brief Base class for iterable objects, like queries.
+ */
 
 namespace flecs {
 
@@ -20948,6 +21223,10 @@ struct iter_iterable final : iterable<Components...> {
     }
 
 #   ifdef FLECS_RULES
+/**
+ * @file addons/cpp/mixins/rule/iterable.inl
+ * @brief Rule iterable mixin.
+ */
 
 iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
     ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
@@ -20967,6 +21246,10 @@ iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
 
 #   endif
 #   ifdef FLECS_JSON
+/**
+ * @file addons/cpp/mixins/json/iterable.inl
+ * @brief JSON iterable mixin.
+ */
 
 flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
     char *json = ecs_iter_to_json(m_it.real_world, &m_it, desc);
@@ -21121,7 +21404,13 @@ worker_iterable<Components...> iterable<Components...>::worker(
 
 }
 
+/**
+ * @file addons/cpp/component.hpp
+ * @brief Registering/obtaining info from components.
+ */
+
 #pragma once
+
 #include <ctype.h>
 #include <stdio.h>
 
@@ -21454,6 +21743,10 @@ struct untyped_component : entity {
     using entity::entity;
     
 #   ifdef FLECS_META
+/**
+ * @file addons/cpp/mixins/meta/component.inl
+ * @brief Meta component mixin.
+ */
 
 /** Add member. */
 untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0, size_t offset = 0) {
@@ -21746,6 +22039,11 @@ inline void reset() {
 
 }
 
+/**
+ * @file addons/cpp/type.hpp
+ * @brief Utility functions for id vector.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -21794,6 +22092,11 @@ private:
 };
 
 }
+
+/**
+ * @file addons/cpp/table.hpp
+ * @brief Direct access to table data.
+ */
 
 #pragma once
 
@@ -22045,6 +22348,12 @@ private:
 
 
 // Mixin implementations
+/**
+ * @file addons/cpp/mixins/id/impl.hpp
+ * @brief Id class implementation.
+ */
+
+#pragma once
 
 namespace flecs {
 
@@ -22142,6 +22451,11 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
 }
 
 }
+
+/**
+ * @file addons/cpp/mixins/entity/impl.hpp
+ * @brief Entity implementation.
+ */
 
 #pragma once
 
@@ -22371,6 +22685,11 @@ inline flecs::entity world::prefab(const char *name) const {
 
 }
 
+/**
+ * @file addons/cpp/mixins/component/impl.hpp
+ * @brief Component mixin implementation
+ */
+
 #pragma once
 
 namespace flecs {
@@ -22388,9 +22707,24 @@ inline flecs::untyped_component world::component(Args &&... args) const {
 
 } // namespace flecs
 
-#pragma once
+/**
+ * @file addons/cpp/mixins/term/impl.hpp
+ * @brief Term implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/term/builder_i.hpp
+ * @brief Term builder interface.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/utils/signature.hpp
+ * @brief Compile time utilities for deriving query attributes from param pack.
+ */
 
 #pragma once
 
@@ -23043,9 +23377,26 @@ inline flecs::term world::term() const {
 
 }
 
-#pragma once
+/**
+ * @file addons/cpp/mixins/filter/impl.hpp
+ * @brief Filter implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/filter/builder.hpp
+ * @brief Filter builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/utils/builder.hpp
+ * @brief Builder base class.
+ * 
+ * Generic functionality for builder classes.
+ */
 
 #pragma once
 
@@ -23096,6 +23447,11 @@ protected:
 
 } // namespace _
 } // namespace flecs
+
+/**
+ * @file addons/cpp/mixins/filter/builder_i.hpp
+ * @brief Filter builder interface.
+ */
 
 #pragma once
 
@@ -23629,6 +23985,11 @@ inline filter_base::operator flecs::filter<> () const {
 
 }
 
+/**
+ * @file addons/cpp/mixins/event/impl.hpp
+ * @brief Event implementation.
+ */
+
 #pragma once
 
 
@@ -23648,9 +24009,24 @@ inline flecs::event_builder_typed<E> world::event() const {
 
 } // namespace flecs
 
-#pragma once
+/**
+ * @file addons/cpp/mixins/query/impl.hpp
+ * @brief Query implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/query/builder.hpp
+ * @brief Query builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/query/builder_i.hpp
+ * @brief Query builder interface.
+ */
 
 #pragma once
 
@@ -24017,9 +24393,24 @@ inline query_base::operator query<>() const {
 
 } // namespace flecs
 
-#pragma once
+/**
+ * @file addons/cpp/mixins/observer/impl.hpp
+ * @brief Observer implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/observer/builder.hpp
+ * @brief Observer builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/utils/node_builder.hpp
+ * @brief Base builder class for node objects, like systems, observers.
+ */
 
 #pragma once
 
@@ -24090,6 +24481,11 @@ private:
 
 } // namespace _
 } // namespace flecs
+
+/**
+ * @file addons/cpp/mixins/observer/builder_i.hpp
+ * @brief Observer builder interface.
+ */
 
 #pragma once
 
@@ -24233,6 +24629,11 @@ inline observer_builder<Comps...> world::observer(Args &&... args) const {
 
 } // namespace flecs
 
+/**
+ * @file addons/cpp/mixins/enum/impl.hpp
+ * @brief Enum implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24252,6 +24653,11 @@ inline flecs::entity world::to_entity(E constant) const {
 
 }
 #ifdef FLECS_MODULE
+/**
+ * @file addons/cpp/mixins/module/impl.hpp
+ * @brief Module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24327,9 +24733,24 @@ inline flecs::entity world::import() {
 
 #endif
 #ifdef FLECS_SYSTEM
-#pragma once
+/**
+ * @file addons/cpp/mixins/system/impl.hpp
+ * @brief System module implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/system/builder.hpp
+ * @brief System builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/system/builder_i.hpp
+ * @brief System builder interface.
+ */
 
 #pragma once
 
@@ -24591,6 +25012,10 @@ struct system final : entity
     }
 
 #   ifdef FLECS_TIMER
+/**
+ * @file addons/cpp/mixins/timer/system_mixin.inl
+ * @brief Timer module system mixin.
+ */
 
 /** Set interval.
  * @see ecs_set_interval
@@ -24657,9 +25082,24 @@ inline void system_init(flecs::world& world) {
 
 #endif
 #ifdef FLECS_PIPELINE
-#pragma once
+/**
+ * @file addons/cpp/mixins/pipeline/impl.hpp
+ * @brief Pipeline module implementation.
+ */
 
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/pipeline/builder.hpp
+ * @brief Pipeline builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/pipeline/builder_i.hpp
+ * @brief Pipeline builder interface.
+ */
 
 #pragma once
 
@@ -24789,6 +25229,11 @@ inline int32_t world::get_threads() const {
 
 #endif
 #ifdef FLECS_TIMER
+/**
+ * @file addons/cpp/mixins/timer/impl.hpp
+ * @brief Timer module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24843,6 +25288,11 @@ inline void timer_init(flecs::world& world) {
 
 #endif
 #ifdef FLECS_SNAPSHOT
+/**
+ * @file addons/cpp/mixins/snapshot/impl.hpp
+ * @brief Snapshot module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24931,6 +25381,11 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 
 #endif
 #ifdef FLECS_DOC
+/**
+ * @file addons/cpp/mixins/doc/impl.hpp
+ * @brief Doc mixin implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24982,6 +25437,11 @@ inline void init(flecs::world& world) {
 #ifdef FLECS_DOC
 #endif
 #ifdef FLECS_REST
+/**
+ * @file addons/cpp/mixins/rest/impl.hpp
+ * @brief Rest module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -24998,7 +25458,17 @@ inline void init(flecs::world& world) {
 
 #endif
 #ifdef FLECS_RULES
+/**
+ * @file addons/cpp/mixins/rule/impl.hpp
+ * @brief Rule implementation.
+ */
+
 #pragma once
+
+/**
+ * @file addons/cpp/mixins/rule/builder.hpp
+ * @brief Rule builder.
+ */
 
 #pragma once
 
@@ -25137,6 +25607,11 @@ inline rule_base::operator rule<>() const {
 
 #endif
 #ifdef FLECS_META
+/**
+ * @file addons/cpp/mixins/meta/impl.hpp
+ * @brief Meta implementation.
+ */
+
 #pragma once
 
 FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
@@ -25220,6 +25695,11 @@ inline flecs::entity cursor::get_entity() const {
 
 #endif
 #ifdef FLECS_UNITS
+/**
+ * @file addons/cpp/mixins/units/impl.hpp
+ * @brief Units module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -25432,6 +25912,11 @@ inline units::units(flecs::world& world) {
 
 #endif
 #ifdef FLECS_MONITOR
+/**
+ * @file addons/cpp/mixins/monitor/impl.hpp
+ * @brief Monitor module implementation.
+ */
+
 #pragma once
 
 namespace flecs {
@@ -25445,7 +25930,12 @@ inline monitor::monitor(flecs::world& world) {
 }
 #endif
 
+/**
+ * @file addons/cpp/impl/iter.hpp
+ * @brief Iterator implementation.
+ */
 
+#pragma once
 
 namespace flecs
 {
@@ -25527,6 +26017,11 @@ inline flecs::entity iter::get_var(const char *name) const {
 #endif
 
 } // namespace flecs
+
+/**
+ * @file addons/cpp/impl/world.hpp
+ * @brief World implementation.
+ */
 
 #pragma once
 
@@ -25700,7 +26195,6 @@ inline flecs::scoped_world world::scope() const {
 }
 
 } // namespace flecs
-
 
 
 

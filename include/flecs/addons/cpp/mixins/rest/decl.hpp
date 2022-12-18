@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/rest/decl.hpp
+ * @brief Rest module declarations.
+ */
+
 #pragma once
 
 namespace flecs {

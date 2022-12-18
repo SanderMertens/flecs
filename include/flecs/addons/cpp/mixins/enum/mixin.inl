@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/enum/mixin.inl
+ * @brief Enum world mixin.
+ */
 
 /** Convert enum constant to entity
  */

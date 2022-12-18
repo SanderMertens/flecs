@@ -1,6 +1,5 @@
-
 /**
- * @file rules.h
+ * @file addons/rules.h
  * @brief Rule query engine addon.
  * 
  * Rules are advanced queries that in addition to the capabilities of regular

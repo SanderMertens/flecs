@@ -1,5 +1,5 @@
 /**
- * @file json.h
+ * @file addons/json.h
  * @brief JSON parser addon.
  *
  * Parse expression strings into component values. Entity identifiers, 

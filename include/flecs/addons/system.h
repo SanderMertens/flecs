@@ -1,5 +1,5 @@
 /**
- * @file system.h
+ * @file addons/system.h
  * @brief System module.
  *
  * The system module allows for creating and running systems. A system is a

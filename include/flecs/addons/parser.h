@@ -1,5 +1,5 @@
 /**
- * @file parser.h
+ * @file addons/parser.h
  * @brief Parser addon.
  *
  * The parser addon parses string expressions into lists of terms, and can be

@@ -1,5 +1,5 @@
 /**
- * @file app.h
+ * @file addons/app.h
  * @brief App addon.
  *
  * The app addon is a wrapper around the application's main loop. Its main

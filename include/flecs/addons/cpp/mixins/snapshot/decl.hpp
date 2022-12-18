@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/snapshot/decl.hpp
+ * @brief Snapshot module declarations.
+ */
+
 #pragma once
 
 namespace flecs {

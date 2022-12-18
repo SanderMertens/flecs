@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/filter/mixin.inl
+ * @brief Filter world mixin.
+ */
 
 /** Create a filter.
  * @see ecs_filter_init

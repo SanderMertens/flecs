@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/query/decl.hpp
+ * @brief Query declarations.
+ */
+
 #pragma once
 
 namespace flecs {

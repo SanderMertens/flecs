@@ -1,5 +1,10 @@
-// Array class. Simple std::array like utility that is mostly there to aid
-// template code where template expansion would lead to an array with size 0.
+/**
+ * @file addons/cpp/utils/array.hpp
+ * @brief Array class.
+ * 
+ * Array class. Simple std::array like utility that is mostly there to aid
+ * template code where template expansion would lead to an array with size 0.
+ */
 
 namespace flecs {
 

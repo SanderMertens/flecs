@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/event/impl.hpp
+ * @brief Event implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/term/impl.hpp
+ * @brief Term implementation.
+ */
+
 #pragma once
 
 #include "builder_i.hpp"

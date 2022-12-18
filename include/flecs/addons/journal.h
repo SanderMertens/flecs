@@ -1,5 +1,5 @@
 /**
- * @file journal.h
+ * @file addons/journal.h
  * @brief Journaling addon that logs API functions.
  *
  * The journaling addon traces API calls. The trace is formatted as runnable

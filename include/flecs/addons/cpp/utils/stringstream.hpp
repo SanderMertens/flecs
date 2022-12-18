@@ -1,4 +1,7 @@
-// Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+/**
+ * @file addons/cpp/utils/stringstream.hpp
+ * @brief Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+ */
 
 namespace flecs {
 

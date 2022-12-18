@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/entity/mixin.inl
+ * @brief Entity world mixin.
+ */
 
 /** Create an entity.
  */

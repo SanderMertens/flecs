@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/meta/impl.hpp
+ * @brief Meta implementation.
+ */
+
 #pragma once
 
 FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)

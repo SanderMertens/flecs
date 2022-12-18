@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/impl/world.hpp
+ * @brief World implementation.
+ */
+
 #pragma once
 
 namespace flecs 

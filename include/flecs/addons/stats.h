@@ -1,5 +1,5 @@
 /**
- * @file stats.h
+ * @file addons/stats.h
  * @brief Statistics addon.
  *
  * The statistics addon enables an application to obtain detailed metrics about

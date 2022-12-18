@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/query/impl.hpp
+ * @brief Query implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

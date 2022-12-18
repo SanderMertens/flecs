@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/utils/iterable.hpp
+ * @brief Base class for iterable objects, like queries.
+ */
 
 namespace flecs {
 

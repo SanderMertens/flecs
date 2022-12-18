@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/iter.hpp
+ * @brief Wrapper classes for ecs_iter_t and component arrays.
+ */
+
+#pragma once
 
 namespace flecs 
 {

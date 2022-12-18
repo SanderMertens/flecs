@@ -1,5 +1,5 @@
 /**
- * @file rest.h
+ * @file addons/rest.h
  * @brief REST API addon.
  *
  * A small REST API that uses the HTTP server and JSON serializer to provide

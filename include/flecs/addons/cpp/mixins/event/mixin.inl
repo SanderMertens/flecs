@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/event/mixin.inl
+ * @brief Event world mixin.
+ */
 
 /** Create a new event.
  * 

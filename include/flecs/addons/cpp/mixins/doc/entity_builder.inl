@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/doc/entity_builder.inl
+ * @brief Doc entity builder mixin.
+ */
 
 Self& set_doc_name(const char *name) {
     ecs_doc_set_name(m_world, m_id, name);

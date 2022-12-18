@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/query/builder.hpp
+ * @brief Query builder.
+ */
+
 #pragma once
 
 #include "../../utils/builder.hpp"

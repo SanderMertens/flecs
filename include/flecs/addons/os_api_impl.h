@@ -1,5 +1,5 @@
 /**
- * @file os_api_impl.h
+ * @file addons/os_api_impl.h
  * @brief Default OS API implementation.
  */
 

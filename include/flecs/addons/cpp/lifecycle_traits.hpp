@@ -1,3 +1,10 @@
+/**
+ * @file addons/cpp/lifecycle_traits.hpp
+ * @brief Utilities for discovering and registering component lifecycle hooks.
+ */
+
+#pragma once
+
 namespace flecs 
 {
 

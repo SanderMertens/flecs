@@ -1,5 +1,5 @@
 /**
- * @file coredoc.h
+ * @file addons/coredoc.h
  * @brief Core doc module.
  *
  * The core doc module imports documentation and reflection data for core

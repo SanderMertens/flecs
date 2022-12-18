@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/filter/decl.hpp
+ * @brief Filter declarations.
+ */
+
 #pragma once
 
 namespace flecs {

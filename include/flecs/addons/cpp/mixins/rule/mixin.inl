@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/rule/mixin.inl
+ * @brief Rule world mixin.
+ */
 
 /** Create a rule.
  * @see ecs_rule_init

@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/term/mixin.inl
+ * @brief Term world mixin.
+ */
+
 /** Create a term.
  * 
  */

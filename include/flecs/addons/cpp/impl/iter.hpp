@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/impl/iter.hpp
+ * @brief Iterator implementation.
+ */
+
+#pragma once
 
 namespace flecs
 {

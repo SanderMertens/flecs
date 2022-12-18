@@ -1,5 +1,5 @@
 /**
- * @file timer.h
+ * @file addons/timer.h
  * @brief Timer module.
  *
  * Timers can be used to trigger actions at periodic or one-shot intervals. They

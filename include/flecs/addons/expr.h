@@ -1,5 +1,5 @@
 /**
- * @file expr.h
+ * @file addons/expr.h
  * @brief Flecs expression parser addon.
  *
  * Parse expression strings into component values. The notation is similar to

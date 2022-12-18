@@ -1,5 +1,5 @@
 /**
- * @file http.h
+ * @file addons/http.h
  * @brief HTTP addon.
  * 
  * Minimalistic HTTP server that can receive and reply to simple HTTP requests.

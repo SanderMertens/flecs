@@ -1,3 +1,10 @@
+/**
+ * @file addons/cpp/ref.hpp
+ * @brief Class that caches data to speedup get operations.
+ */
+
+#pragma once
+
 namespace flecs
 {
 

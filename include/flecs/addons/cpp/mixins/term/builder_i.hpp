@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/term/builder_i.hpp
+ * @brief Term builder interface.
+ */
+
 #pragma once
 
 #include "../../utils/signature.hpp"

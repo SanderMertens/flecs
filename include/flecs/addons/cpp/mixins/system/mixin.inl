@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/system/mixin.inl
+ * @brief System module world mixin.
+ */
 
 /** Upcast entity to a system.
  * The provided entity must be a system.

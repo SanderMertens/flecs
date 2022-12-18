@@ -1,5 +1,5 @@
 /**
- * @file pipeline.h
+ * @file addons/pipeline.h
  * @brief Pipeline module.
  *
  * The pipeline module provides support for running systems automatically and

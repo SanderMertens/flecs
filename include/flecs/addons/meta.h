@@ -1,5 +1,5 @@
 /**
- * @file meta.h
+ * @file addons/meta.h
  * @brief Meta addon.
  *
  * The meta addon enables reflecting on component data. Types are stored as

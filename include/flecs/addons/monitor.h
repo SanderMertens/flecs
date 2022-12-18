@@ -1,5 +1,5 @@
 /**
- * @file doc.h
+ * @file addons/doc.h
  * @brief Doc module.
  *
  * The monitor module automatically tracks statistics from the stats addon and

@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/event/builder.hpp
+ * @brief Event builder.
+ */
+
 #pragma once
 
 #define ECS_EVENT_DESC_ID_COUNT_MAX (8)

@@ -1,5 +1,5 @@
 /**
- * @file doc.h
+ * @file addons/doc.h
  * @brief Doc module.
  *
  * The doc module allows for documenting entities (and thus components, systems)

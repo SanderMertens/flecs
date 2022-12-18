@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/entity/impl.hpp
+ * @brief Entity implementation.
+ */
+
 #pragma once
 
 namespace flecs {

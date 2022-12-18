@@ -1,8 +1,6 @@
 /**
- * @file flecs.hpp
- * @brief Flecs C++ API.
- *
- * Modern C++11 API
+ * @file addons/cpp/flecs.hpp
+ * @brief Flecs C++11 API.
  */
 
 #pragma once
@@ -148,4 +146,5 @@ struct each_invoker;
 #include "mixins/monitor/impl.hpp"
 #endif
 
-#include "impl.hpp"
+#include "impl/iter.hpp"
+#include "impl/world.hpp"

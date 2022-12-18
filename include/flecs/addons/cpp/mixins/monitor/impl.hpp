@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/monitor/impl.hpp
+ * @brief Monitor module implementation.
+ */
+
 #pragma once
 
 namespace flecs {

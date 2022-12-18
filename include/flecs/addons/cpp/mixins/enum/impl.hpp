@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/enum/impl.hpp
+ * @brief Enum implementation.
+ */
+
 #pragma once
 
 namespace flecs {

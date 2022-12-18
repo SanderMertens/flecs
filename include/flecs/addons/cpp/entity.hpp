@@ -1,3 +1,10 @@
+/**
+ * @file addons/cpp/entity.hpp
+ * @brief Entity class.
+ * 
+ * This class provides read/write access to entities.
+ */
+
 #pragma once
 
 #include "entity_view.hpp"
@@ -6,8 +13,6 @@
 namespace flecs
 {
 
-/** Entity class
- * This class provides access to entities. */
 struct entity : entity_builder<entity>
 {
     entity() : entity_builder<entity>() { }

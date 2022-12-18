@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/json/world.inl
+ * @brief JSON world mixin.
+ */
 
 flecs::string to_json(flecs::entity_t tid, const void* value) {
     char *json = ecs_ptr_to_json(m_world, tid, value);

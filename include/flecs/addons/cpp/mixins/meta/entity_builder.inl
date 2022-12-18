@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/meta/entity_builder.inl
+ * @brief Meta entity builder mixin.
+ */
 
 /** Make entity a unit */
 Self& unit(

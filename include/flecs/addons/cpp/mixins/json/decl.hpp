@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/json/decl.hpp
+ * @brief JSON addon declarations.
+ */
+
 #pragma once
 
 namespace flecs {

@@ -1,5 +1,5 @@
 /**
- * @file units.h
+ * @file addons/units.h
  * @brief Units module.
  *
  * Builtin standard units. The units addon is not imported by default, even if

@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/module/impl.hpp
+ * @brief Module implementation.
+ */
+
 #pragma once
 
 namespace flecs {

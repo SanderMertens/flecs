@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/rule/iterable.inl
+ * @brief Rule iterable mixin.
+ */
 
 iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
     ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);

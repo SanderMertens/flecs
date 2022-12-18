@@ -1,4 +1,10 @@
+/**
+ * @file addons/cpp/component.hpp
+ * @brief Registering/obtaining info from components.
+ */
+
 #pragma once
+
 #include <ctype.h>
 #include <stdio.h>
 

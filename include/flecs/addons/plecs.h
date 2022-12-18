@@ -1,5 +1,5 @@
 /**
- * @file pecs.h
+ * @file addons/plecs.h
  * @brief Plecs addon.
  *
  * Plecs is a small data definition language for instantiating entities that

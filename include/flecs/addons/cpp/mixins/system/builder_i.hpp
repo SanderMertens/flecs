@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/system/builder_i.hpp
+ * @brief System builder interface.
+ */
+
 #pragma once
 
 #include "../query/builder_i.hpp"

@@ -1,5 +1,5 @@
 /**
- * @file flecs_cpp.h
+ * @file addons/flecs_cpp.h
  * @brief C++ utility functions
  *
  * This header contains utility functions that are accessible from both C and

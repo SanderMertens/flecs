@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/table.hpp
+ * @brief Direct access to table data.
+ */
+
 #pragma once
 
 namespace flecs {

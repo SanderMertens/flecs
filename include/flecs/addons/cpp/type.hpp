@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/type.hpp
+ * @brief Utility functions for id vector.
+ */
+
 #pragma once
 
 namespace flecs {

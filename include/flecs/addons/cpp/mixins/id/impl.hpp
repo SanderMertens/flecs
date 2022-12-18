@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/mixins/id/impl.hpp
+ * @brief Id class implementation.
+ */
+
+#pragma once
 
 namespace flecs {
 

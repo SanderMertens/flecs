@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/plecs/mixin.inl
+ * @brief Plecs world mixin.
+ */
 
 /** Load plecs string.
  * @see ecs_plecs_from_str

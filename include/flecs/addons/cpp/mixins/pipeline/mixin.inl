@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/pipeline/mixin.inl
+ * @brief Pipeline world mixin.
+ */
 
 /** Create a new pipeline.
  *

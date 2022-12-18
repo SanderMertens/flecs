@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/doc/entity_view.inl
+ * @brief Doc entity view mixin.
+ */
 
 const char* doc_name() {
     return ecs_doc_get_name(m_world, m_id);

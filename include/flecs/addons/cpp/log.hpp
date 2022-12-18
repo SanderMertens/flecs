@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/log.hpp
+ * @brief Logging functions.
+ */
+
+#pragma once
 
 namespace flecs {
 namespace log {

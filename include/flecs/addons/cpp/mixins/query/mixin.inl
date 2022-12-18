@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/query/mixin.inl
+ * @brief Query world mixin.
+ */
 
 /** Create a query.
  * @see ecs_query_init

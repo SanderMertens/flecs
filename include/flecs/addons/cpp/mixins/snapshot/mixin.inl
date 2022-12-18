@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/snapshot/mixin.inl
+ * @brief Snapshot world mixin.
+ */
 
 /** Create a snapshot.
  */

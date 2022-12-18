@@ -1,9 +1,7 @@
-#pragma once
-
-namespace flecs
-{
-
-/** Entity view class
+/**
+ * @file addons/cpp/entity_view.hpp
+ * @brief Entity class with only readonly operations.
+ * 
  * This class provides readonly access to entities. Using this class to store 
  * entities in components ensures valid handles, as this class will always store
  * the actual world vs. a stage. The constructors of this class will never 
@@ -11,6 +9,12 @@ namespace flecs
  *
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
+
+#pragma once
+
+namespace flecs
+{
+
 struct entity_view : public id {
 
     entity_view() : flecs::id() { }

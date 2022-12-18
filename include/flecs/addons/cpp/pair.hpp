@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/pair.hpp
+ * @brief Utilities for working with compile time pairs.
+ */
+
+#pragma once
 
 namespace flecs {
 

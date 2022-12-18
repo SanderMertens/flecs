@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/meta/decl.hpp
+ * @brief Meta declarations.
+ */
+
 #pragma once
 
 namespace flecs {

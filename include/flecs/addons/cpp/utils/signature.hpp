@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/utils/signature.hpp
+ * @brief Compile time utilities for deriving query attributes from param pack.
+ */
+
 #pragma once
 
 #include <stdio.h>

@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/rule/builder.hpp
+ * @brief Rule builder.
+ */
+
 #pragma once
 
 #include "../filter/builder_i.hpp"

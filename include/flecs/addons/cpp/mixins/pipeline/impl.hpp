@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/pipeline/impl.hpp
+ * @brief Pipeline module implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

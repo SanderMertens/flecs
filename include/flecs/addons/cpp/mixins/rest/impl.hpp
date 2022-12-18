@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/rest/impl.hpp
+ * @brief Rest module implementation.
+ */
+
 #pragma once
 
 namespace flecs {

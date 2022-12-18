@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/timer/impl.hpp
+ * @brief Timer module implementation.
+ */
+
 #pragma once
 
 namespace flecs {

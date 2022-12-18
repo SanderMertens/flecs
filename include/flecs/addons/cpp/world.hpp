@@ -1,3 +1,9 @@
+/**
+ * @file addons/cpp/world.hpp
+ * @brief World class.
+ */
+
+#pragma once
 
 namespace flecs
 {

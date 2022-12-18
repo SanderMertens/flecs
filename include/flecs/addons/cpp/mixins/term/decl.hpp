@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/term/decl.hpp
+ * @brief Term declarations.
+ */
+
 #pragma once
 
 namespace flecs {

@@ -1,5 +1,5 @@
 /**
- * @file deprecated.h
+ * @file addons/deprecated.h
  * @brief The deprecated addon contains deprecated operations.
  */
 

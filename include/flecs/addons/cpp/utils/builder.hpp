@@ -1,3 +1,10 @@
+/**
+ * @file addons/cpp/utils/builder.hpp
+ * @brief Builder base class.
+ * 
+ * Generic functionality for builder classes.
+ */
+
 #pragma once
 
 namespace flecs {

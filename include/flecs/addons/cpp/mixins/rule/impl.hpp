@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/rule/impl.hpp
+ * @brief Rule implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

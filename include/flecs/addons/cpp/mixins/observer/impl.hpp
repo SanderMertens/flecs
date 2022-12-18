@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/observer/impl.hpp
+ * @brief Observer implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

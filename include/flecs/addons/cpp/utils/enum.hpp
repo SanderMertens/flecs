@@ -1,3 +1,11 @@
+/**
+ * @file addons/cpp/utils/enum.hpp
+ * @brief Compile time enum reflection utilities.
+ * 
+ * Discover at compile time valid enumeration constants for an enumeration type
+ * and their names. This is used to automatically register enum constants.
+ */
+
 #include <string.h>
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value

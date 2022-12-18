@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/pipeline/builder_i.hpp
+ * @brief Pipeline builder interface.
+ */
+
 #pragma once
 
 #include "../query/builder_i.hpp"

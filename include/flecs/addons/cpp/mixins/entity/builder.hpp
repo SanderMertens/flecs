@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/entity/builder.hpp
+ * @brief Entity builder.
+ */
+
 #pragma once
 
 namespace flecs

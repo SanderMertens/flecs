@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/meta/world.inl
+ * @brief Meta world mixin.
+ */
 
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(m_world, tid, value);

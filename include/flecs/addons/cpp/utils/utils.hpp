@@ -1,8 +1,11 @@
-////////////////////////////////////////////////////////////////////////////////
-//// Flecs STL (FTL?)
-//// Minimalistic utilities that allow for STL like functionality without having
-//// to depend on the actual STL.
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @file addons/cpp/utils/utils.hpp
+ * @brief Flecs STL (FTL?)
+ * 
+ * Flecs STL (FTL?)
+ * Minimalistic utilities that allow for STL like functionality without having
+ * to depend on the actual STL.
+ */
 
 // Macros so that C++ new calls can allocate using ecs_os_api memory allocation functions
 // Rationale:

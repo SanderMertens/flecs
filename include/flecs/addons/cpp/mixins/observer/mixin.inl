@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/observer/mixin.inl
+ * @brief Observer world mixin.
+ */
 
 /** Upcast entity to an observer.
  * The provided entity must be an observer.

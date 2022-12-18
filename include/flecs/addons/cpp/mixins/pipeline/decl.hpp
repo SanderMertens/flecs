@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/pipeline/decl.hpp
+ * @brief Pipeline module declarations.
+ */
+
 #pragma once
 
 namespace flecs {

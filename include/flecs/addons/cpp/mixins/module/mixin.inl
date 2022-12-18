@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/module/mixin.inl
+ * @brief Module world mixin.
+ */
 
 /** Create a module.
  * 

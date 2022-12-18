@@ -1,5 +1,5 @@
 /**
- * @file log.h
+ * @file addons/log.h
  * @brief Logging addon.
  * 
  * The logging addon provides an API for (debug) tracing and reporting errors

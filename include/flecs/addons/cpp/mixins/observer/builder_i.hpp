@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/observer/builder_i.hpp
+ * @brief Observer builder interface.
+ */
+
 #pragma once
 
 #include "../filter/builder_i.hpp"

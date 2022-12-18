@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/utils/node_builder.hpp
+ * @brief Base builder class for node objects, like systems, observers.
+ */
+
 #pragma once
 
 namespace flecs {

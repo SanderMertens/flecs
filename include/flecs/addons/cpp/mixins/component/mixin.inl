@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/component/mixin.inl
+ * @brief Component mixin.
+ */
 
 /** Register a component.
  */

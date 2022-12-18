@@ -1,4 +1,7 @@
-// String utility that doesn't implicitly allocate memory.
+/**
+ * @file addons/cpp/utils/string.hpp
+ * @brief String utility that doesn't implicitly allocate memory.
+ */
 
 namespace flecs {
 

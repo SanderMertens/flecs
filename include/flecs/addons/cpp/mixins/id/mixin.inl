@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/id/mixin.inl
+ * @brief Id world mixin.
+ */
 
 /** Get id from a type.
  */

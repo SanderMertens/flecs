@@ -1,6 +1,9 @@
-
-// Neat utility to inspect arguments & returntype of a function type
-// Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
+/**
+ * @file addons/cpp/utils/function_traits.hpp
+ * @brief Compile time utilities to inspect properties of functions.
+ *
+ * Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
+ */
 
 namespace flecs {
 namespace _ {

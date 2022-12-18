@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/timer/system_mixin.inl
+ * @brief Timer module system mixin.
+ */
 
 /** Set interval.
  * @see ecs_set_interval

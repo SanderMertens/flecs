@@ -1,5 +1,5 @@
 /**
- * @file meta_c.h
+ * @file addons/meta_c.h
  * @brief Utility macros for populating reflection data in C.
  */
 

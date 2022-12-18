@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/filter/impl.hpp
+ * @brief Filter implementation.
+ */
+
 #pragma once
 
 #include "builder.hpp"

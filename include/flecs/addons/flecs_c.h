@@ -1,5 +1,5 @@
 /**
- * @file flecs_c.h
+ * @file addons/flecs_c.h
  * @brief Extends the core API with convenience functions/macros for C applications.
  */
 

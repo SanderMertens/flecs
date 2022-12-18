@@ -1,3 +1,8 @@
+/**
+ * @file addons/cpp/mixins/app/builder.hpp
+ * @brief App builder.
+ */
+
 #pragma once
 
 namespace flecs {
