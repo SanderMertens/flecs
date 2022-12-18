@@ -83,7 +83,7 @@ ecs_entity_t flecs_name_to_id(
     const ecs_world_t *world,
     const char *name)
 {
-    long int result = atol(name);
+    int64_t result = atoll(name);
     ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t alive = ecs_get_alive(world, (ecs_entity_t)result);
     if (alive) {
