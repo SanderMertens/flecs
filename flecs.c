@@ -46483,6 +46483,13 @@ int32_t flecs_search_relation_w_idr(
 
     flags = flags ? flags : (EcsSelf|EcsUp);
 
+    if (!idr && !offset) {
+        idr = flecs_query_id_record_get(world, id);
+        if (!idr) {
+            return -1;
+        }
+    }
+
     if (subject_out) subject_out[0] = 0;
     if (!(flags & EcsUp)) {
         if (offset) {
@@ -46490,13 +46497,6 @@ int32_t flecs_search_relation_w_idr(
         } else {
             return flecs_type_search(
                 table, id, idr, table->type.array, id_out, tr_out);
-        }
-    }
-
-    if (!idr) {
-        idr = flecs_query_id_record_get(world, id);
-        if (!idr) {
-            return -1;
         }
     }
 

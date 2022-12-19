@@ -5559,6 +5559,34 @@ void Filter_filter_iter_wildcard_in_2nd_term() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_2nd_term_self_create_id_after_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t *f_1 = ecs_filter(world, {
+        .terms = {
+            { TagA },
+            { TagB, .src.flags = EcsSelf }
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_new(world, TagB);
+
+    ecs_iter_t it = ecs_filter_iter(world, f_1);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_bool(false, ecs_filter_next(&it));
+    
+    ecs_filter_fini(f_1);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_wildcard_in_2nd_term_self() {
     ecs_world_t *world = ecs_mini();
 

@@ -1050,6 +1050,7 @@ void Filter_filter_iter_any_match_wildcard(void);
 void Filter_filter_iter_any_match_tag_and_wildcard(void);
 void Filter_filter_iter_wildcard_in_2nd_term(void);
 void Filter_filter_iter_wildcard_in_2nd_term_self(void);
+void Filter_filter_iter_2nd_term_self_create_id_after_filter(void);
 void Filter_filter_iter_any_obj(void);
 void Filter_filter_iter_not_any(void);
 void Filter_filter_iter_not_any_obj(void);
@@ -6325,6 +6326,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_wildcard_in_2nd_term_self
     },
     {
+        "filter_iter_2nd_term_self_create_id_after_filter",
+        Filter_filter_iter_2nd_term_self_create_id_after_filter
+    },
+    {
         "filter_iter_any_obj",
         Filter_filter_iter_any_obj
     },
@@ -11435,7 +11440,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        252,
+        253,
         Filter_testcases
     },
     {

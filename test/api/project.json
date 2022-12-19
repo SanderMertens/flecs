@@ -1107,6 +1107,7 @@
                 "filter_iter_any_match_tag_and_wildcard",
                 "filter_iter_wildcard_in_2nd_term",
                 "filter_iter_wildcard_in_2nd_term_self",
+                "filter_iter_2nd_term_self_create_id_after_filter",
                 "filter_iter_any_obj",
                 "filter_iter_not_any",
                 "filter_iter_not_any_obj",
