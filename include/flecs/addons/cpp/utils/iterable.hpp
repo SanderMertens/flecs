@@ -113,12 +113,12 @@ struct iterable {
         return this->iter().count();
     }
 
-    /** Return number of entities matched by iterable. */
+    /** Return whether iterable has any matches. */
     bool is_true() const {
         return this->iter().is_true();
     }
 
-    /** Return number of entities matched by iterable. */
+    /** Return first entity matched by iterable. */
     flecs::entity first() const {
         return this->iter().first();
     }
