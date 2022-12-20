@@ -2296,7 +2296,8 @@ bool flecs_on_delete_clear_tables(
 
 static
 bool flecs_on_delete_clear_ids(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool delete_id)
 {
     int32_t i, count = ecs_vector_count(world->store.marked_ids);
     ecs_marked_id_t *ids = ecs_vector_first(world->store.marked_ids,
@@ -2309,9 +2310,19 @@ bool flecs_on_delete_clear_ids(
 
         /* Release the claim taken by flecs_marked_id_push. This may delete the
          * id record as all other claims may have been released. */
-        if (flecs_id_record_release(world, idr)) {
-            /* If the id record is still alive, release the initial claim */
+        int32_t rc = flecs_id_record_release(world, idr);
+        ecs_assert(rc > 0, ECS_INTERNAL_ERROR, NULL);
+        (void)rc;
+
+        if (delete_id) {
+            /* If id should be deleted, release initial claim. This happens when
+             * a component, tag, or part of a pair is deleted. */
             flecs_id_record_release(world, idr);
+        } else {
+            /* If id should not be deleted, unmark id record for deletion. This
+             * happens when all instances *of* an id are deleted, for example
+             * when calling ecs_remove_all or ecs_delete_with. */
+            idr->flags &= ~EcsIdMarkedForDelete;
         }
     }
 
@@ -2322,7 +2333,8 @@ static
 void flecs_on_delete(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t action,
+    bool delete_id)
 {
     /* Cleanup can happen recursively. If a cleanup action is already in 
      * progress, only append ids to the marked_ids. The topmost cleanup
@@ -2347,7 +2359,7 @@ void flecs_on_delete(
         ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
         /* Release remaining references to the ids */
-        flecs_on_delete_clear_ids(world);
+        flecs_on_delete_clear_ids(world, delete_id);
 
         /* Verify deleted ids are no longer in use */
 #ifdef FLECS_DEBUG
@@ -2378,7 +2390,7 @@ void ecs_delete_with(
         return;
     }
 
-    flecs_on_delete(world, id, EcsDelete);
+    flecs_on_delete(world, id, EcsDelete, false);
     flecs_defer_end(world, stage);
 }
 
@@ -2391,7 +2403,7 @@ void ecs_remove_all(
         return;
     }
 
-    flecs_on_delete(world, id, EcsRemove);
+    flecs_on_delete(world, id, EcsRemove, false);
     flecs_defer_end(world, stage);
 }
 
@@ -2421,12 +2433,12 @@ void ecs_delete(
                 }
             }
             if (row_flags & EcsEntityObservedId) {
-                flecs_on_delete(world, entity, 0);
-                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0);
+                flecs_on_delete(world, entity, 0, true);
+                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
             }
             if (row_flags & EcsEntityObservedTarget) {
-                flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0);
-                flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0);
+                flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
+                flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
                 r->idr = NULL;
             }
 
@@ -4260,7 +4272,7 @@ bool flecs_defer_end(
                     world->info.cmd.clear_count ++;
                     break;
                 case EcsOpOnDeleteAction:
-                    flecs_on_delete(world, id, e);
+                    flecs_on_delete(world, id, e, false);
                     world->info.cmd.other_count ++;
                     break;
                 case EcsOpEnable:

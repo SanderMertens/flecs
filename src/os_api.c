@@ -95,7 +95,7 @@ void flecs_dump_backtrace(
         return;
     }
 
-    for (int j = 3; j < nptrs; j++) {
+    for (int j = 1; j < nptrs; j++) {
         fprintf(stream, "%s\n", strings[j]);
     }
 

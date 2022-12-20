@@ -3282,6 +3282,170 @@ void Observer_observer_w_2_fixed_src() {
     ecs_fini(world);
 }
 
+void Observer_emit_for_recreated_id_after_remove_all() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_remove_all(world, ecs_pair(Rel, Tgt));
+    test_assert(ecs_id_is_valid(world, ecs_pair(Rel, Tgt)));
+    test_assert(ecs_is_alive(world, e1));
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_pair(world, e2, Rel, Tgt);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], ecs_pair(Rel, Tgt));
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_emit_for_recreated_id_after_remove_all_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_remove_all(world, ecs_pair(Rel, EcsWildcard));
+    test_assert(ecs_id_is_valid(world, ecs_pair(Rel, Tgt)));
+    test_assert(ecs_is_alive(world, e1));
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_pair(world, e2, Rel, Tgt);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], ecs_pair(Rel, Tgt));
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_emit_for_recreated_id_after_delete_with() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_delete_with(world, ecs_pair(Rel, Tgt));
+    test_assert(ecs_id_is_valid(world, ecs_pair(Rel, Tgt)));
+    test_assert(!ecs_is_alive(world, e1));
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_pair(world, e2, Rel, Tgt);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], ecs_pair(Rel, Tgt));
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_emit_for_recreated_id_after_delete_with_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_delete_with(world, ecs_pair(Rel, EcsWildcard));
+    test_assert(ecs_id_is_valid(world, ecs_pair(Rel, Tgt)));
+    test_assert(!ecs_is_alive(world, e1));
+
+    test_int(0, ctx.invoked);
+
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_pair(world, e2, Rel, Tgt);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], ecs_pair(Rel, Tgt));
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     

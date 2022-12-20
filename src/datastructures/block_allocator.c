@@ -214,8 +214,7 @@ void* flecs_brealloc(
     if (dst && src && (dst->data_size > src->data_size)) {
         ecs_os_memset(ECS_OFFSET(result, src->data_size), 0xAA, 
             dst->data_size - src->data_size);
-    } else if (dst) {
-        // ecs_assert(!src || memory == NULL, ECS_INTERNAL_ERROR, NULL);
+    } else if (dst && !src) {
         ecs_os_memset(result, 0xAA, dst->data_size);
     }
 #endif

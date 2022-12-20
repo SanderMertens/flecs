@@ -1723,6 +1723,10 @@ void Observer_on_add_after_batch_w_exclusive_adds(void);
 void Observer_propagate_match_relationship_w_self_up(void);
 void Observer_propagate_match_relationship_w_up(void);
 void Observer_observer_w_2_fixed_src(void);
+void Observer_emit_for_recreated_id_after_remove_all(void);
+void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
+void Observer_emit_for_recreated_id_after_delete_with(void);
+void Observer_emit_for_recreated_id_after_delete_with_wildcard(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -8988,6 +8992,22 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_w_2_fixed_src
     },
     {
+        "emit_for_recreated_id_after_remove_all",
+        Observer_emit_for_recreated_id_after_remove_all
+    },
+    {
+        "emit_for_recreated_id_after_remove_all_wildcard",
+        Observer_emit_for_recreated_id_after_remove_all_wildcard
+    },
+    {
+        "emit_for_recreated_id_after_delete_with",
+        Observer_emit_for_recreated_id_after_delete_with
+    },
+    {
+        "emit_for_recreated_id_after_delete_with_wildcard",
+        Observer_emit_for_recreated_id_after_delete_with_wildcard
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11482,7 +11502,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        88,
+        92,
         Observer_testcases
     },
     {
