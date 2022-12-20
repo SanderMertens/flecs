@@ -2763,3 +2763,57 @@ void Pipeline_inactive_middle_system_merge_count() {
 
     ecs_fini(world);
 }
+
+static
+void CreateEntity(ecs_iter_t *it) {
+    ecs_id_t tag = ecs_field_id(it, 1);
+    ecs_new_w_id(it->world, tag);
+}
+
+void Pipeline_last_no_readonly_system_merge_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagA },
+            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagD }
+        },
+        .callback = CreateEntity,
+        .no_readonly = true
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_new(world, TagA);
+    ecs_new(world, TagD);
+
+    test_int(1, ecs_count(world, TagD));
+
+    ecs_progress(world, 0);
+
+    test_int(2, ecs_count(world, TagD));
+
+    test_int(stats->merge_count_total, 1);
+
+    ecs_fini(world);
+}

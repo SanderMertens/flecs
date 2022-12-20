@@ -412,6 +412,7 @@ void Pipeline_2_startup_phases(void);
 void Pipeline_2_startup_systems_w_merge(void);
 void Pipeline_inactive_last_system_merge_count(void);
 void Pipeline_inactive_middle_system_merge_count(void);
+void Pipeline_last_no_readonly_system_merge_count(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2571,6 +2572,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "inactive_middle_system_merge_count",
         Pipeline_inactive_middle_system_merge_count
+    },
+    {
+        "last_no_readonly_system_merge_count",
+        Pipeline_last_no_readonly_system_merge_count
     }
 };
 
@@ -4715,7 +4720,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        65,
+        66,
         Pipeline_testcases
     },
     {
