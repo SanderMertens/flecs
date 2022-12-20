@@ -1086,6 +1086,11 @@ struct ecs_id_record_t {
     /* Refcount */
     int32_t refcount;
 
+    /* Keep alive count. This count must be 0 when the id record is deleted. If
+     * it is not 0, an application attempted to delete an id that was still
+     * queried for. */
+    int32_t keep_alive;
+
     /* Cache invalidation counter */
     ecs_reachable_cache_t reachable;
 
@@ -44665,6 +44670,10 @@ int ecs_filter_finalize(
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
             ECS_BIT_CLEAR(f->flags, EcsFilterMatchAnything);
         }
+
+        if (term->idr) {
+            term->idr->keep_alive ++;
+        }
     }
 
     f->field_count = field_count;
@@ -44702,6 +44711,10 @@ void flecs_filter_fini(
     if (filter->terms) {
         int i, count = filter->term_count;
         for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &filter->terms[i];
+            if (term->idr) {
+                term->idr->keep_alive --;
+            }
             ecs_term_fini(&filter->terms[i]);
         }
 
@@ -55615,6 +55628,8 @@ void flecs_id_record_free(
     ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
+    ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
+        ECS_ID_IN_USE, "cannot delete id that is in use");
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);

@@ -7742,7 +7742,7 @@ void Query_rematch_after_delete_inherited_tag() {
     test_uint(tag, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
-    ecs_delete(world, tag);
+    ecs_delete_with(world, tag);
 
     it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
@@ -7777,7 +7777,7 @@ void Query_rematch_after_delete_rel_of_inherited_pair() {
     test_uint(ecs_pair(rel, obj), ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
-    ecs_delete(world, rel);
+    ecs_delete_with(world, ecs_pair(rel, EcsWildcard));
 
     it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
@@ -7812,7 +7812,7 @@ void Query_rematch_after_delete_obj_of_inherited_pair() {
     test_uint(ecs_pair(rel, obj), ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
-    ecs_delete(world, obj);
+    ecs_delete_with(world, ecs_pair(EcsWildcard, obj));
 
     it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));

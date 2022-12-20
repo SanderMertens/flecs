@@ -1727,6 +1727,9 @@ void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
 void Observer_emit_for_recreated_id_after_delete_with(void);
 void Observer_emit_for_recreated_id_after_delete_with_wildcard(void);
+void Observer_delete_observed_id(void);
+void Observer_delete_observed_rel(void);
+void Observer_delete_observed_tgt(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9008,6 +9011,18 @@ bake_test_case Observer_testcases[] = {
         Observer_emit_for_recreated_id_after_delete_with_wildcard
     },
     {
+        "delete_observed_id",
+        Observer_delete_observed_id
+    },
+    {
+        "delete_observed_rel",
+        Observer_delete_observed_rel
+    },
+    {
+        "delete_observed_tgt",
+        Observer_delete_observed_tgt
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11502,7 +11517,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        92,
+        95,
         Observer_testcases
     },
     {

@@ -960,6 +960,10 @@ int ecs_filter_finalize(
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
             ECS_BIT_CLEAR(f->flags, EcsFilterMatchAnything);
         }
+
+        if (term->idr) {
+            term->idr->keep_alive ++;
+        }
     }
 
     f->field_count = field_count;
@@ -997,6 +1001,10 @@ void flecs_filter_fini(
     if (filter->terms) {
         int i, count = filter->term_count;
         for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &filter->terms[i];
+            if (term->idr) {
+                term->idr->keep_alive --;
+            }
             ecs_term_fini(&filter->terms[i]);
         }
 

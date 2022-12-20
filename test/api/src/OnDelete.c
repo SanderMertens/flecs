@@ -1471,7 +1471,7 @@ void OnDelete_empty_table_w_on_remove() {
     test_int(trigger_count, 1);
 
     // Will delete table of e1, which is now empty. Should not call trigger
-    ecs_delete(world, e2);
+    ecs_delete_with(world, e2);
 
     test_int(trigger_count, 1);
 

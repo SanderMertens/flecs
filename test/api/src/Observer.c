@@ -3446,6 +3446,87 @@ void Observer_emit_for_recreated_id_after_delete_with_wildcard() {
     ecs_fini(world);
 }
 
+void Observer_delete_observed_id() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_expect_abort();
+    ecs_delete(world, TagA);
+}
+
+void Observer_delete_observed_rel() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_expect_abort();
+    ecs_delete(world, Rel);
+}
+
+void Observer_delete_observed_tgt() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA },
+            { ecs_pair(Rel, Tgt) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_expect_abort();
+    ecs_delete(world, Tgt);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     

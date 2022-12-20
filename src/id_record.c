@@ -307,6 +307,8 @@ void flecs_id_record_free(
     ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
+    ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
+        ECS_ID_IN_USE, "cannot delete id that is in use");
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
