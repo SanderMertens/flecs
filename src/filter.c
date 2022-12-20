@@ -962,7 +962,7 @@ int ecs_filter_finalize(
         }
 
         if (term->idr) {
-            term->idr->keep_alive ++;
+            ecs_os_ainc(&term->idr->keep_alive);
         }
     }
 
@@ -1003,7 +1003,7 @@ void flecs_filter_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &filter->terms[i];
             if (term->idr) {
-                term->idr->keep_alive --;
+                ecs_os_adec(&term->idr->keep_alive);
             }
             ecs_term_fini(&filter->terms[i]);
         }

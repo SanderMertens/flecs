@@ -21225,17 +21225,17 @@ struct iterable {
      */
     worker_iterable<Components...> worker(int32_t index, int32_t count);
 
-    /** Return number of entities matched by iteratble. */
+    /** Return number of entities matched by iterable. */
     int32_t count() const {
         return this->iter().count();
     }
 
-    /** Return number of entities matched by iteratble. */
+    /** Return whether iterable has any matches. */
     bool is_true() const {
         return this->iter().is_true();
     }
 
-    /** Return number of entities matched by iteratble. */
+    /** Return first entity matched by iterable. */
     flecs::entity first() const {
         return this->iter().first();
     }
