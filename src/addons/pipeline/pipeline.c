@@ -347,6 +347,10 @@ bool flecs_pipeline_build(
         }
     }
 
+    if (op && !op->count && ecs_vec_count(&pq->ops) > 1) {
+        ecs_vec_remove_last(&pq->ops);
+    }
+
     ecs_map_free(ws.ids);
     ecs_map_free(ws.wildcard_ids);
 

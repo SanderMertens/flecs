@@ -420,7 +420,9 @@
                 "1_startup_system",
                 "2_startup_systems",
                 "2_startup_phases",
-                "2_startup_systems_w_merge"
+                "2_startup_systems_w_merge",
+                "inactive_last_system_merge_count",
+                "inactive_middle_system_merge_count"
             ]
         }, {
             "id": "SystemMisc",

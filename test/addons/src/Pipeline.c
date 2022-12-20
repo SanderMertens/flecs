@@ -2648,3 +2648,118 @@ void Pipeline_2_startup_systems_w_merge() {
 
     ecs_fini(world);
 }
+
+void Pipeline_inactive_last_system_merge_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagA },
+            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagB },
+            { TagC, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysB
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_new(world, TagA);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 0);
+
+    test_int(stats->merge_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_inactive_middle_system_merge_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagA },
+            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagB },
+            { TagC, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysC
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagC },
+            { TagD, .src.flags = EcsIsEntity, .inout = EcsOut }
+        },
+        .callback = SysD
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { ecs_dependson(EcsOnUpdate) }
+        }),
+        .query.filter.terms = {
+            { TagD }
+        },
+        .callback = SysB
+    });
+
+    test_int(stats->merge_count_total, 0);
+
+    ecs_new(world, TagA);
+    ecs_new(world, TagD);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 0);
+    test_int(sys_d_invoked, 0);
+
+    test_int(stats->merge_count_total, 2);
+
+    ecs_fini(world);
+}
