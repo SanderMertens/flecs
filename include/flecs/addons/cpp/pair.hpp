@@ -14,6 +14,8 @@ namespace _ {
 
 /**
  * @defgroup cpp_pair_type Pair type
+ * @brief Compile time utilities for working with relationship pairs.
+ * 
  * \ingroup cpp_core
  * @{
  */

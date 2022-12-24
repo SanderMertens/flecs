@@ -12,6 +12,8 @@
 
 /**
  * @defgroup cpp_entities Entities
+ * @brief Entity operations.
+ * 
  * \ingroup cpp_core
  * @{
  */

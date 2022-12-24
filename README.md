@@ -3,7 +3,7 @@
 ## Introduction
 [![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs)
+[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/docs/api/html/index.html)
 [![actions](https://img.shields.io/github/actions/workflow/status/SanderMertens/flecs/ci.yml?branch=master&style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ACI)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)
 
@@ -58,20 +58,6 @@ If you are building on Windows with mingw/gcc/clang, add `-lWs2_32` to the linke
 Make sure to compile C++ files as at least C++11 by adding `-std=c++0x` or higher to gcc/clang compile commands.
 
 By default Flecs includes many features that may not be useful for every project. Builds can be customized to minimize the overhead of the library. See the [Addons](#addons) section for more information on customized builds.
-
-## Documentation
-Make sure to view the documentation at https://www.flecs.dev/ !
-
-- [FAQ](/docs/FAQ.md)
-- [Quickstart](/docs/Quickstart.md)
-- [Query Manual](/docs/Queries.md)
-- [Relationships Manual](/docs/Relationships.md)
-- [JSON Format Manual](/docs/JsonFormat.md)
-- [REST API Manual](/docs/RestApi.md)
-- [Manual](/docs/Manual.md)
-- [API reference](https://flecs.docsforge.com/master/)
-- [C examples](https://github.com/SanderMertens/flecs/tree/master/examples/c)
-- [C++ examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp)
 
 ## Show me the code!
 C99 example:

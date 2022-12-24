@@ -9,6 +9,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_types Types
+ * @brief Type operations.
+ * 
  * \ingroup cpp_core
  * @{
  */

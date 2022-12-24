@@ -9,6 +9,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_globals API Types & Globals
+ * @brief Types & constants bridged from C API.
+ * 
  * \ingroup cpp_core
  * @{
  */

@@ -7,6 +7,8 @@
 
 /**
  * @defgroup cpp_iterator Iterators
+ * @brief Iterator operations.
+ * 
  * \ingroup cpp_core
  * @{
  */

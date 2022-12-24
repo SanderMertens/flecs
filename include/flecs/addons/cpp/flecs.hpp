@@ -155,12 +155,16 @@ struct each_invoker;
 
 /**
  * @defgroup cpp_core Core
+ * @brief Core ECS functionality (entities, storage, queries)
+ * 
  * @{
  * @}
  */
 
 /**
  * @defgroup cpp_addons Addons
+ * @brief C++ APIs for addons.
+ * 
  * @{
  * @}
  */

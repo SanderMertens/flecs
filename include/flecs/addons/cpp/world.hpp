@@ -100,6 +100,8 @@ struct scoped_world;
 
 /**
  * @defgroup cpp_world World
+ * @brief World operations.
+ * 
  * \ingroup cpp_core
  * @{
  */

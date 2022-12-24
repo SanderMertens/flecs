@@ -10,6 +10,8 @@
 
 /**
  * @defgroup cpp_components Components
+ * @brief Registering and working with components.
+ * 
  * \ingroup cpp_core
  * @{
  */

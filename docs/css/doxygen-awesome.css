@@ -49,7 +49,7 @@ html {
     /* default spacings. Most components reference these values for spacing, to provide uniform spacing on the page. */
     --spacing-small: 5px;
     --spacing-medium: 10px;
-    --spacing-large: 16px;
+    --spacing-large: 32px;
 
     /* default box shadow used for raising an element above the normal content. Used in dropdowns, search result, ... */
     --box-shadow: 0 2px 8px 0 rgba(0,0,0,.075);
@@ -185,7 +185,7 @@ html {
     html:not(.light-mode) {
         color-scheme: dark;
 
-        --primary-color: #1982d2;
+        --primary-color: #42b983;
         --primary-dark-color: #86a9c4;
         --primary-light-color: #4779ac;
 
@@ -195,11 +195,11 @@ html {
 
         --menu-selected-background: rgba(0,0,0,.4);
 
-        --page-background-color: #1C1D1F;
+        --page-background-color: #0d1117;
         --page-foreground-color: #d2dbde;
         --page-secondary-foreground-color: #859399;
-        --separator-color: #38393b;
-        --side-nav-background: #252628;
+        --separator-color: #242832;
+        --side-nav-background: #1a1d23;
 
         --code-background: #2a2c2f;
 
@@ -227,7 +227,7 @@ html {
         --invariant-color-dark: #76ce96;
         --invariant-color-darker: #cceed5;
 
-        --fragment-background: #282c34;
+        --fragment-background: #242832;
         --fragment-foreground: #dbe4eb;
         --fragment-keyword: #cc99cd;
         --fragment-keywordtype: #ab99cd;

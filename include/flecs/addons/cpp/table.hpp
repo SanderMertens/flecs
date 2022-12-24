@@ -9,6 +9,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_tables Tables
+ * @brief Table operations.
+ * 
  * \ingroup cpp_core
  * @{
  */

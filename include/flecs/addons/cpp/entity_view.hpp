@@ -13,8 +13,7 @@
 #pragma once
 
 /**
- * @defgroup cpp_entities Entities
- * \ingroup cpp_core
+ * \ingroup cpp_entities
  * @{
  */
 

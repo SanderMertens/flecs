@@ -493,6 +493,8 @@
 
 /**
  * @defgroup flecs_c_table_sorting Table sorting
+ * @brief Convenience macro's for sorting tables.
+ * 
  * @{
  */
 #define ecs_sort_table(id) ecs_id(id##_sort_table)
@@ -605,6 +607,8 @@
 
 /**
  * @defgroup flecs_c_misc Misc
+ * @brief Misc convenience macro's.
+ * 
  * @{
  */
 
