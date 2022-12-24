@@ -8,6 +8,14 @@
 
 #ifdef FLECS_PARSER
 
+/**
+ * @defgroup c_addons_parser Parser
+ * @brief Query DSL parser and parsing utilities.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_PARSER_H
 #define FLECS_PARSER_H
 
@@ -116,5 +124,7 @@ char* ecs_parse_term(
 #endif // __cplusplus
 
 #endif // FLECS_PARSER_H
+
+/** @} */
 
 #endif // FLECS_PARSER

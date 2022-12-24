@@ -8,7 +8,11 @@
 // STL includes
 #include <type_traits>
 
-// Forward declarations
+/**
+ * @defgroup cpp C++ API
+ * @{
+ */
+
 namespace flecs 
 {
 
@@ -148,3 +152,17 @@ struct each_invoker;
 
 #include "impl/iter.hpp"
 #include "impl/world.hpp"
+
+/**
+ * @defgroup cpp_core Core
+ * @{
+ * @}
+ */
+
+/**
+ * @defgroup cpp_addons Addons
+ * @{
+ * @}
+ */
+
+/** @} */

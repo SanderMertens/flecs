@@ -82,7 +82,27 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     flecs::set(world, entity, value, id);
 }
 
+/** Return id without generation.
+ * 
+ * @see ecs_strip_generation
+ */
+inline flecs::id_t strip_generation(flecs::entity_t e) {
+    return ecs_strip_generation(e);
+}
+
+/** Return entity generation.
+ */
+inline uint32_t get_generation(flecs::entity_t e) {
+    return ECS_GENERATION(e);
+}
+
 struct scoped_world;
+
+/**
+ * @defgroup cpp_world World
+ * \ingroup cpp_core
+ * @{
+ */
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -871,6 +891,9 @@ public:
     bool m_owned;
 };
 
+/** Scoped world.
+ * Utility class used by the world::scope method to create entities in a scope.
+ */
 struct scoped_world : world {
     scoped_world(
         flecs::world_t *w, 
@@ -894,18 +917,6 @@ struct scoped_world : world {
     flecs::entity_t m_prev_scope;
 };
 
-/** Return id without generation.
- * 
- * @see ecs_strip_generation
- */
-inline flecs::id_t strip_generation(flecs::entity_t e) {
-    return ecs_strip_generation(e);
-}
-
-/** Return entity generation.
- */
-inline uint32_t get_generation(flecs::entity_t e) {
-    return ECS_GENERATION(e);
-}
+/** @} */
 
 } // namespace flecs

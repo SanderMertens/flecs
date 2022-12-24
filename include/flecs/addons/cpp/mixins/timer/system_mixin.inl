@@ -3,6 +3,11 @@
  * @brief Timer module system mixin.
  */
 
+/**
+ * \memberof flecs::system
+ * \ingroup cpp_addons_timer
+ */
+
 /** Set interval.
  * @see ecs_set_interval
  */
@@ -42,3 +47,5 @@ void stop();
  * @see ecs_set_tick_source
  */
 void set_tick_source(flecs::entity e);
+
+/** @} */

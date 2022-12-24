@@ -9,7 +9,12 @@
 
 namespace flecs {
 
-// Event builder interface
+/**
+ * \ingroup cpp_addons_event
+ * @{
+ */
+
+/** Event builder interface */
 template <typename Base, typename E>
 struct event_builder_base {
     event_builder_base(flecs::world_t *world, flecs::entity_t event)
@@ -136,5 +141,7 @@ public:
         return *this;
     }
 };
+
+/** @} */
 
 }

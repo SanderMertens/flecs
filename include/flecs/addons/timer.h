@@ -8,6 +8,14 @@
 
 #ifdef FLECS_TIMER
 
+/**
+ * @defgroup c_addons_timer Timer
+ * @brief Run systems at a time interval.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -239,5 +247,7 @@ void FlecsTimerImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

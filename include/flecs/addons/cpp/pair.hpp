@@ -12,14 +12,26 @@ namespace _ {
 } // _
 
 
-// Type that represents a pair and can encapsulate a temporary value
+/**
+ * @defgroup cpp_pair_type Pair type
+ * \ingroup cpp_core
+ * @{
+ */
+
+/** Type that represents a pair.
+ * The pair type can be used to represent a pair at compile time, and is able
+ * to automatically derive the storage type associated with the pair, accessible
+ * through pair::type.
+ * 
+ * The storage type is derived using the following rules:
+ * - if pair::first is non-empty, the storage type is pair::first
+ * - if pair::first is empty and pair::second is non-empty, the storage type is pair::second
+ * 
+ * The pair type can hold a temporary value so that it can be used in the
+ * signatures of queries
+ */
 template <typename First, typename Second>
 struct pair : _::pair_base { 
-    // Traits used to deconstruct the pair
-
-    // The actual type of the pair is determined by which type of the pair is
-    // empty. If both types are empty or not empty, the pair assumes the type
-    // of the first element.
     using type = conditional_t<!is_empty<First>::value || is_empty<Second>::value, First, Second>;
     using first = First;
     using second = Second;
@@ -61,25 +73,26 @@ template <typename First, typename Second, if_t<is_empty<First>::value> = 0>
 using pair_object = pair<First, Second>;
 
 
-// Utilities to test if type is a pair
+/** Test if type is a pair. */
 template <typename T>
 struct is_pair {
     static constexpr bool value = is_base_of<_::pair_base, remove_reference_t<T> >::value;
 };
 
 
-// Get actual type, relationship or object from pair while preserving cv qualifiers.
+/** Get pair::first from pair while preserving cv qualifiers. */
 template <typename P>
 using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::first>;
 
+/** Get pair::second from pair while preserving cv qualifiers. */
 template <typename P>
 using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::second>;
 
+/** Get pair::type type from pair while preserving cv qualifiers. */
 template <typename P>
 using pair_type_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::type>;
 
-
-// Get actual type from a regular type or pair
+/** Get actual type from a regular type or pair. */
 template <typename T, typename U = int>
 struct actual_type;
 

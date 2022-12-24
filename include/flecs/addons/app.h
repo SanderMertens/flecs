@@ -21,6 +21,14 @@
 extern "C" {
 #endif
 
+/**
+ * @defgroup c_addons_app App
+ * @brief Optional addon for running the main application loop.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 /** Callback type for init action. */
 typedef int(*ecs_app_init_action_t)(
     ecs_world_t *world);
@@ -96,6 +104,8 @@ int ecs_app_set_run_action(
 FLECS_API
 int ecs_app_set_frame_action(
     ecs_app_frame_action_t callback);
+
+/** @} */
 
 #ifdef __cplusplus
 }

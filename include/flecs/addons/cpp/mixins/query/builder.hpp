@@ -16,6 +16,10 @@ namespace _ {
         query_builder_i, Components ...>;
 }
 
+/** Query builder.
+ * 
+ * \ingroup cpp_core_queries
+ */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
     query_builder(flecs::world_t* world, const char *name = nullptr)

@@ -3,6 +3,13 @@
  * @brief Meta world mixin.
  */
 
+/**
+ * \memberof flecs::world
+ * \ingroup cpp_addons_meta
+ * 
+ * @{
+ */
+
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(m_world, tid, value);
     return flecs::string(expr);
@@ -23,3 +30,5 @@ flecs::meta::cursor cursor(void *ptr) {
     flecs::entity_t tid = _::cpp_type<T>::id(m_world);
     return cursor(tid, ptr);
 }
+
+/** @} */

@@ -5,15 +5,23 @@
 
 #pragma once
 
+/**
+ * @defgroup cpp_iterator Iterators
+ * \ingroup cpp_core
+ * @{
+ */
+
 namespace flecs 
 {
 
 /** Unsafe wrapper class around a column.
  * This class can be used when a system does not know the type of a column at
  * compile time.
+ * 
+ * \ingroup cpp_iterator
  */
-struct unchecked_column {
-    unchecked_column(void* array, size_t size, size_t count, bool is_shared = false)
+struct untyped_column {
+    untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
         : m_array(array)
         , m_size(size)
         , m_count(count) 
@@ -41,6 +49,8 @@ protected:
 /** Wrapper class around a column.
  * 
  * @tparam T component type of the column.
+ * 
+ * \ingroup cpp_iterator
  */
 template <typename T>
 struct column {
@@ -150,7 +160,9 @@ namespace flecs
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Class that enables iterating over table columns.
+/** Class for iterating over query results.
+ * 
+ * \ingroup cpp_iterator
  */
 struct iter {
 private:
@@ -348,7 +360,7 @@ public:
      *
      * @param index The field index. 
      */
-    flecs::unchecked_column field(int32_t index) const {
+    flecs::untyped_column field(int32_t index) const {
         return get_unchecked_field(index);
     }
 
@@ -422,7 +434,7 @@ private:
             count, is_shared);
     }
 
-    flecs::unchecked_column get_unchecked_field(int32_t index) const {
+    flecs::untyped_column get_unchecked_field(int32_t index) const {
         size_t count;
         size_t size = ecs_field_size(m_iter, index);
         bool is_shared = !ecs_field_is_self(m_iter, index);
@@ -438,7 +450,7 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::unchecked_column(
+        return flecs::untyped_column(
             ecs_field_w_size(m_iter, 0, index), size, count, is_shared);
     }     
 
@@ -448,3 +460,5 @@ private:
 };
 
 } // namespace flecs
+
+/** @} */

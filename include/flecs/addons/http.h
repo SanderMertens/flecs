@@ -19,6 +19,14 @@
 
 #ifdef FLECS_HTTP
 
+/**
+ * @defgroup c_addons_http Http
+ * @brief Simple HTTP server used for serving up REST API.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
@@ -194,6 +202,8 @@ const char* ecs_http_get_param(
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif // FLECS_HTTP_H
 

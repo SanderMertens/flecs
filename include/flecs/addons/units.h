@@ -18,6 +18,14 @@
 
 #ifdef FLECS_UNITS
 
+/**
+ * @defgroup c_addons_units Units.
+ * @brief Common unit annotations for reflection framework.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -187,5 +195,7 @@ void FlecsUnitsImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

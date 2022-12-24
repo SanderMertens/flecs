@@ -9,6 +9,14 @@
 
 #ifdef FLECS_SYSTEM
 
+/**
+ * @defgroup c_addons_system System
+ * @brief Systems are a query + function that can be ran manually or by a pipeline.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -263,5 +271,7 @@ void FlecsSystemImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

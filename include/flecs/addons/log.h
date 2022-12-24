@@ -34,6 +34,14 @@ extern "C" {
 
 #ifdef FLECS_LOG
 
+/**
+ * @defgroup c_addons_log Log
+ * @brief Logging functions.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
@@ -543,5 +551,7 @@ int ecs_log_last_error(void);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif // FLECS_LOG_H

@@ -16,6 +16,10 @@ namespace _ {
         filter_builder_i, Components ...>;
 }
 
+/** Filter builder.
+ * 
+ * \ingroup cpp_filters
+ */
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
     filter_builder(flecs::world_t* world, const char *name = nullptr)

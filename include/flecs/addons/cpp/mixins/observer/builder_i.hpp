@@ -9,7 +9,10 @@
 
 namespace flecs {
 
-// Observer builder interface
+/** Observer builder interface
+ * 
+ * \ingroup cpp_observers
+ */
 template<typename Base, typename ... Components>
 struct observer_builder_i : filter_builder_i<Base, Components ...> {
     using BaseClass = filter_builder_i<Base, Components ...>;

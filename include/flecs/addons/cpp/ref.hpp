@@ -8,6 +8,15 @@
 namespace flecs
 {
 
+/**
+ * @defgroup cpp_ref Refs
+ * \ingroup cpp_core
+ * @{
+ */
+
+/** Component reference.
+ * Reference to a component from a specific entity.
+ */
 template <typename T>
 struct ref {
     ref(world_t *world, entity_t entity, flecs::id_t id = 0) 
@@ -43,5 +52,7 @@ private:
     world_t *m_world;
     flecs::ref_t m_ref;
 };
+
+/** @} */
 
 }

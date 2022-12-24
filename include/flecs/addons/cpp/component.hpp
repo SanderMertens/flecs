@@ -8,6 +8,12 @@
 #include <ctype.h>
 #include <stdio.h>
 
+/**
+ * @defgroup cpp_components Components
+ * \ingroup cpp_core
+ * @{
+ */
+
 namespace flecs {
 
 namespace _ {
@@ -333,6 +339,11 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
 
 } // namespace _
 
+/** Untyped component class.
+ * Generic base class for flecs::component.
+ * 
+ * \ingroup cpp_components
+ */
 struct untyped_component : entity {
     using entity::entity;
     
@@ -341,6 +352,11 @@ struct untyped_component : entity {
 #   endif
 };
 
+/** Component class.
+ * Class used to register components and component metadata.
+ * 
+ * \ingroup cpp_components
+ */
 template <typename T>
 struct component : untyped_component {
     /** Register a component.
@@ -508,7 +524,7 @@ flecs::entity_t type_id() {
     }
 }
 
-/** Reset static component variables.
+/** Reset static component ids.
  * When components are registered their component ids are stored in a static
  * type specific variable. This stored id is passed into component registration
  * functions to ensure consistent ids across worlds.
@@ -527,9 +543,13 @@ flecs::entity_t type_id() {
  * Also note that this operation does not actually change the static component
  * variables. It only ensures that the next time a component id is requested, a
  * new id will be generated.
+ * 
+ * \ingroup cpp_components
  */
 inline void reset() {
     ecs_cpp_reset_count_inc();
 }
 
 }
+
+/** @} */

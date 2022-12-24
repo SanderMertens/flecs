@@ -7,6 +7,12 @@
 
 namespace flecs {
 
+/**
+ * @defgroup cpp_globals API Types & Globals
+ * \ingroup cpp_core
+ * @{
+ */
+
 using world_t = ecs_world_t;
 using world_info_t = ecs_world_info_t;
 using query_group_info_t = ecs_query_group_info_t;
@@ -123,5 +129,7 @@ static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
 static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
+
+/** @} */
 
 }

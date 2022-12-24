@@ -54,6 +54,14 @@
 
 #ifdef FLECS_META
 
+/**
+ * @defgroup c_addons_meta Meta
+ * @brief Flecs reflection framework.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #include <stddef.h>
 
 #ifndef FLECS_MODULE
@@ -708,5 +716,7 @@ void FlecsMetaImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

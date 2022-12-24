@@ -17,6 +17,14 @@
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
 
+/**
+ * @defgroup c_addons_json Json
+ * @brief Functions for serializing to/from JSON.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -274,5 +282,7 @@ int ecs_iter_to_json_buf(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

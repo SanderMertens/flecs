@@ -10,9 +10,20 @@
 #include "entity_view.hpp"
 #include "mixins/entity/builder.hpp"
 
+/**
+ * @defgroup cpp_entities Entities
+ * \ingroup cpp_core
+ * @{
+ */
+
 namespace flecs
 {
 
+/** Entity.
+ * Class with read/write operations for entities.
+ * 
+ * \ingroup cpp_entities
+*/
 struct entity : entity_builder<entity>
 {
     entity() : entity_builder<entity>() { }
@@ -277,3 +288,5 @@ struct entity : entity_builder<entity>
 };
 
 } // namespace flecs
+
+/** @} */

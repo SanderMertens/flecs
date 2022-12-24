@@ -3,6 +3,13 @@
  * @brief Meta component mixin.
  */
 
+/**
+ * \memberof flecs::component
+ * \ingroup cpp_addons_meta
+ * 
+ * @{
+ */
+
 /** Add member. */
 untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
@@ -97,3 +104,5 @@ untyped_component& bit(const char *name, uint32_t value) {
 
     return *this;
 }
+
+/** @} */

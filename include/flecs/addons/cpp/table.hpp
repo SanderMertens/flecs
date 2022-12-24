@@ -7,6 +7,12 @@
 
 namespace flecs {
 
+/**
+ * @defgroup cpp_tables Tables
+ * \ingroup cpp_core
+ * @{
+ */
+
 struct table {
     table() : m_world(nullptr), m_table(nullptr) { }
 
@@ -267,5 +273,7 @@ private:
     int32_t m_offset = 0;
     int32_t m_count = 0;
 };
+
+/** @} */
 
 }
