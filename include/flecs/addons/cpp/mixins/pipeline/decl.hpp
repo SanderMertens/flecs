@@ -7,6 +7,14 @@
 
 namespace flecs {
 
+/**
+ * @defgroup cpp_pipelines Pipelines
+ * @brief Pipelines order and schedule systems for execution.
+ * 
+ * \ingroup cpp_addons
+ * @{
+ */
+
 template <typename ... Components>
 struct pipeline;
 
@@ -25,5 +33,7 @@ static const flecs::entity_t PostUpdate = EcsPostUpdate;
 static const flecs::entity_t PreStore = EcsPreStore;
 static const flecs::entity_t OnStore = EcsOnStore;
 static const flecs::entity_t PostFrame = EcsPostFrame;
+
+/** @} */
 
 }

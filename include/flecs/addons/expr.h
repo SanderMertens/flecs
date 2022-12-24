@@ -45,6 +45,14 @@
 extern "C" {
 #endif
 
+/**
+ * @defgroup c_addons_expr Expr
+ * @brief Serialize/deserialize values to string.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 /** Write an escaped character.
  * Write a character to an output string, insert escape character if necessary.
  * 
@@ -263,6 +271,8 @@ const char *ecs_parse_expr_token(
     const char *expr,
     const char *ptr,
     char *token);
+
+/** @} */
 
 #ifdef __cplusplus
 }

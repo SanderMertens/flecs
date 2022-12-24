@@ -15,6 +15,14 @@
 
 #ifdef FLECS_PIPELINE
 
+/**
+ * @defgroup c_addons_pipeline Pipeline
+ * @brief Pipelines order and schedule systems for execution.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -192,5 +200,7 @@ void FlecsPipelineImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

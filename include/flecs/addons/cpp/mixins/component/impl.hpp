@@ -7,7 +7,6 @@
 
 namespace flecs {
 
-// Component mixin implementation
 template <typename T, typename... Args>
 inline flecs::component<T> world::component(Args &&... args) const {
     return flecs::component<T>(m_world, FLECS_FWD(args)...);

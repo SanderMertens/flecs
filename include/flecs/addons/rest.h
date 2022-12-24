@@ -10,6 +10,14 @@
 
 #ifdef FLECS_REST
 
+/**
+ * @defgroup c_addons_rest Rest
+ * @brief REST API for querying and mutating entities.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 /* Used for the HTTP server */
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
@@ -75,5 +83,7 @@ void FlecsRestImport(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

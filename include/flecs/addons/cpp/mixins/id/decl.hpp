@@ -10,9 +10,19 @@ namespace flecs {
 struct id;
 struct entity;
 
-/** Class that stores a flecs id.
- * A flecs id is an identifier that can store an entity id, an first-second 
- * pair, or role annotated id (such as SWITCH | Movement).
+/**
+ * @defgroup cpp_ids Ids
+ * @brief Class for working with entity, component, tag and pair ids.
+ * 
+ * \ingroup cpp_core
+ * @{
+ */
+
+/** Class that wraps around a flecs::id_t.
+ * A flecs id is an identifier that can be added to entities. Ids can be:
+ * - entities (including components, tags)
+ * - pair ids
+ * - entities with id flags set (like flecs::Override, flecs::Toggle)
  */
 struct id {
     id()
@@ -44,47 +54,48 @@ struct id {
         return (m_id & ECS_ID_FLAGS_MASK) == flecs::Pair;
     }
 
-    /* Test if id is a wildcard */
+    /** Test if id is a wildcard */
     bool is_wildcard() const {
         return ecs_id_is_wildcard(m_id);
     }
 
-    /* Test if id is entity */
+    /** Test if id is entity */
     bool is_entity() const {
         return !(m_id & ECS_ID_FLAGS_MASK);
     }
 
-    /* Return id as entity (only allowed when id is valid entity) */
+    /** Return id as entity (only allowed when id is valid entity) */
     flecs::entity entity() const;
 
-    /* Return id with role added */
+    /** Return id with role added */
     flecs::entity add_flags(flecs::id_t flags) const;
 
-    /* Return id with role removed */
+    /** Return id with role removed */
     flecs::entity remove_flags(flecs::id_t flags) const;
 
-    /* Return id without role */
+    /** Return id without role */
     flecs::entity remove_flags() const;
 
-    /* Return id without role */
+    /** Return id without role */
     flecs::entity remove_generation() const;    
 
-    /* Return component type of id */
+    /** Return component type of id */
     flecs::entity type_id() const;
 
-    /* Test if id has specified role */
+    /** Test if id has specified role */
     bool has_flags(flecs::id_t flags) const {
         return ((m_id & flags) == flags);
     }
 
-    /* Test if id has any role */
+    /** Test if id has any role */
     bool has_flags() const {
         return (m_id & ECS_ID_FLAGS_MASK) != 0;
     }
 
+    /** Return id flags set on id */
     flecs::entity flags() const;
 
-    /* Test if id has specified first */
+    /** Test if id has specified first */
     bool has_relation(flecs::id_t first) const {
         if (!is_pair()) {
             return false;
@@ -114,6 +125,7 @@ struct id {
         return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
     }
 
+    /** Return flecs::id_t value */
     flecs::id_t raw_id() const {
         return m_id;
     }
@@ -130,5 +142,7 @@ protected:
     flecs::world_t *m_world;
     flecs::id_t m_id;
 };
+
+/** @} */
 
 }

@@ -15,7 +15,7 @@ class SimpleModule {
 public:
     SimpleModule(flecs::world& world) {
         world.module<ns::SimpleModule>();
-        flecs::import<ns::NestedModule>(world);
+        world.import<ns::NestedModule>();
         flecs::component<Position>(world, "Position");
     }
 };
@@ -58,7 +58,7 @@ public:
 
 void Module_import() {
     flecs::world world;
-    auto m = flecs::import<ns::SimpleModule>(world);
+    auto m = world.import<ns::SimpleModule>();
     test_assert(m.id() != 0);
     test_str(m.path().c_str(), "::ns::SimpleModule");
     test_assert(m.has(flecs::Module));
@@ -71,7 +71,7 @@ void Module_import() {
 
 void Module_lookup_from_scope() {
     flecs::world world;
-    flecs::import<ns::SimpleModule>(world);
+    world.import<ns::SimpleModule>();
 
     auto ns_entity = world.lookup("ns");
     test_assert(ns_entity.id() != 0);
@@ -94,7 +94,7 @@ void Module_lookup_from_scope() {
 
 void Module_nested_module() {
     flecs::world world;
-    flecs::import<ns::SimpleModule>(world);
+    world.import<ns::SimpleModule>();
 
     auto velocity = world.lookup("ns::NestedModule::Velocity");
     test_assert(velocity.id() != 0);

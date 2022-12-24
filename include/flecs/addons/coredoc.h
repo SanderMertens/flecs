@@ -23,11 +23,21 @@
 extern "C" {
 #endif
 
+/**
+ * @defgroup c_addons_coredoc Coredoc
+ * @brief Module that adds documentation and reflection to core entities.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 /* Module import */
 
 FLECS_API
 void FlecsCoreDocImport(
     ecs_world_t *world);
+
+/* @} */
 
 #ifdef __cplusplus
 }

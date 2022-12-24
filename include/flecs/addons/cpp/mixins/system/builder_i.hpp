@@ -9,7 +9,11 @@
 
 namespace flecs 
 {
-// System builder interface
+
+/** System builder interface.
+ * 
+ * \ingroup cpp_addons_systems
+ */
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {
 private:
@@ -125,5 +129,7 @@ private:
 
     ecs_system_desc_t *m_desc;
 };
+
+/** @} */
 
 }

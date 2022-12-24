@@ -3,6 +3,12 @@
  * @brief Observer world mixin.
  */
 
+/** Observer builder
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_observers
+ */
+
 /** Upcast entity to an observer.
  * The provided entity must be an observer.
  * 
@@ -19,3 +25,5 @@ flecs::observer observer(flecs::entity e) const;
  */
 template <typename... Components, typename... Args>
 flecs::observer_builder<Components...> observer(Args &&... args) const;
+
+/** @} */

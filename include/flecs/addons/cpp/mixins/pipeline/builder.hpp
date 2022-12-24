@@ -16,6 +16,10 @@ namespace _ {
         pipeline_builder_i, Components ...>;
 }
 
+/** Pipeline builder.
+ * 
+ * \ingroup cpp_pipelines
+ */
 template <typename ... Components>
 struct pipeline_builder final : _::pipeline_builder_base<Components...> {
     pipeline_builder(flecs::world_t* world, flecs::entity_t id = 0)

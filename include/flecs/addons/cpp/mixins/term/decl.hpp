@@ -7,7 +7,13 @@
 
 namespace flecs {
 
+/**
+ * \ingroup cpp_core_filters
+ */
+
 struct term;
 struct term_builder;
+
+/** @} */
 
 }

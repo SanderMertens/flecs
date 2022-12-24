@@ -7,6 +7,8 @@
 
 namespace flecs {
 
+namespace _ {
+
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace("#[magenta]import#[reset] %s", _::type_name<T>());
@@ -47,17 +49,27 @@ flecs::entity import(world& world) {
         
         /* Module is not yet registered, register it now */
         } else {
-            m = do_import<T>(world, symbol);
+            m = _::do_import<T>(world, symbol);
         }
 
     /* Module has been registered, but could have been for another world. Import
      * if module hasn't been registered for this world. */
     } else if (!m) {
-        m = do_import<T>(world, symbol);
+        m = _::do_import<T>(world, symbol);
     }
 
     return flecs::entity(world, m);
 }
+
+}
+
+/**
+ * @defgroup cpp_addons_modules Modules
+ * @brief Modules organize components, systems and more in reusable units of code.
+ * 
+ * \ingroup cpp_addons
+ * @{
+ */
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
@@ -71,7 +83,9 @@ inline flecs::entity world::module(const char *name) const {
 
 template <typename Module>
 inline flecs::entity world::import() {
-    return flecs::import<Module>(*this);
+    return flecs::_::import<Module>(*this);
 }
+
+/** @} */
 
 }

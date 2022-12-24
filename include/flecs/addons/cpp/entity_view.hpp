@@ -12,9 +12,20 @@
 
 #pragma once
 
+/**
+ * @defgroup cpp_entities Entities
+ * \ingroup cpp_core
+ * @{
+ */
+
 namespace flecs
 {
 
+/** Entity view.
+ * Class with read operations for entities. Base for flecs::entity.
+ * 
+ * \ingroup cpp_entities
+ */
 struct entity_view : public id {
 
     entity_view() : flecs::id() { }
@@ -707,7 +718,7 @@ struct entity_view : public id {
     flecs::entity mut(const flecs::entity_view& e) const;
 
 #   ifdef FLECS_JSON
-#   include "mixins/json/entity.inl"
+#   include "mixins/json/entity_view.inl"
 #   endif
 #   ifdef FLECS_DOC
 #   include "mixins/doc/entity_view.inl"
@@ -720,3 +731,5 @@ private:
 };
 
 }
+
+/** @} */

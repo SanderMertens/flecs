@@ -9,6 +9,14 @@
 
 #ifdef FLECS_MODULE
 
+/**
+ * @defgroup c_addons_module Module
+ * @brief Modules organize components, systems and more in reusable units of code.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_MODULE_H
 #define FLECS_MODULE_H
 
@@ -114,5 +122,7 @@ ecs_entity_t ecs_module_init(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

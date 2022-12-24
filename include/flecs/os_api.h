@@ -13,6 +13,14 @@
 #ifndef FLECS_OS_API_H
 #define FLECS_OS_API_H
 
+/**
+ * @defgroup c_os_api OS API
+ * @brief Interface for providing OS specific functionality.
+ * 
+ * \ingroup c
+ * @{
+ */
+
 #include <stdarg.h>
 #include <errno.h>
 
@@ -520,5 +528,7 @@ bool ecs_os_has_modules(void);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif

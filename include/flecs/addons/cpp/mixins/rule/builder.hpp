@@ -15,6 +15,10 @@ namespace _ {
         filter_builder_i, Components ...>;
 }
 
+/** Rule builder.
+ * 
+ * \ingroup cpp_addons_rules
+ */
 template <typename ... Components>
 struct rule_builder final : _::rule_builder_base<Components...> {
     rule_builder(flecs::world_t* world, const char *name = nullptr)

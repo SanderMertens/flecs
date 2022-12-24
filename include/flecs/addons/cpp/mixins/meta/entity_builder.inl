@@ -3,6 +3,13 @@
  * @brief Meta entity builder mixin.
  */
 
+/**
+ * \memberof flecs::entity_view
+ * \ingroup cpp_addons_meta
+ * 
+ * @{
+ */
+
 /** Make entity a unit */
 Self& unit(
     const char *symbol, 
@@ -78,3 +85,5 @@ Self& quantity() {
     ecs_add_id(this->world(), this->id(), flecs::Quantity);
     return to_base();
 }
+
+/** @} */

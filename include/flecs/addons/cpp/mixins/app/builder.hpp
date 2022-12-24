@@ -7,7 +7,14 @@
 
 namespace flecs {
 
-// App builder interface
+/**
+ * @defgroup cpp_addons_app App
+ * @brief Optional addon for running the main application loop.
+ * \ingroup cpp_addons
+ * @{
+ */
+
+/** App builder interface */
 struct app_builder {
     app_builder(flecs::world_t *world)
         : m_world(world)
@@ -75,5 +82,7 @@ private:
     flecs::world_t *m_world;
     ecs_app_desc_t m_desc;
 };
+
+/** @} */
 
 }

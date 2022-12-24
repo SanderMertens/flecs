@@ -19,6 +19,14 @@
 #ifndef FLECS_JOURNAL_H
 #define FLECS_JOURNAL_H
 
+/**
+ * @defgroup c_addons_journal Journal
+ * @brief Journaling addon (disabled by default).
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 /* Trace when log level is at or higher than level */
 #define FLECS_JOURNAL_LOG_LEVEL (0)
 
@@ -59,4 +67,7 @@ void flecs_journal_end(void);
 #define flecs_journal_begin(...)
 #define flecs_journal_end(...)
 #define flecs_journal(...)
+
+/** @} */
+
 #endif // FLECS_JOURNAL

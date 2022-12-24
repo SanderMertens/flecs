@@ -8,6 +8,14 @@
 
 #ifdef FLECS_STATS
 
+/**
+ * @defgroup c_addons_stats Stats
+ * @brief Collection of statistics for world, queries, systems and pipelines.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
@@ -409,5 +417,7 @@ void ecs_metric_copy(
 #endif
 
 #endif
+
+/** @} */
 
 #endif

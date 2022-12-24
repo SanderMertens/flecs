@@ -9,7 +9,10 @@
 
 namespace flecs {
 
-// Query builder interface
+/** Pipeline builder interface.
+ * 
+ * \ingroup cpp_pipelines
+ */
 template<typename Base>
 struct pipeline_builder_i : query_builder_i<Base> {
     pipeline_builder_i(ecs_pipeline_desc_t *desc, int32_t term_index = 0) 

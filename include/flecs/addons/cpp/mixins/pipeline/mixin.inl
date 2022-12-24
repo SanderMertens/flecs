@@ -3,6 +3,11 @@
  * @brief Pipeline world mixin.
  */
 
+/**
+ * \memberof flecs::world
+ * \ingroup cpp_pipelines
+ */
+
 /** Create a new pipeline.
  *
  * @return A pipeline builder.
@@ -82,3 +87,5 @@ void set_threads(int32_t threads) const;
  * @see ecs_get_stage_count
  */
 int32_t get_threads() const;
+
+/** @} */

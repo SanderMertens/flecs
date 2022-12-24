@@ -3,6 +3,11 @@
  * @brief Rule iterable mixin.
  */
 
+/**
+ * \memberof flecs::iter
+ * \ingroup cpp_addons_rules
+ */
+
 iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
     ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
@@ -18,3 +23,5 @@ iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
     ecs_iter_set_var(&m_it, var_id, value);
     return *this;
 }
+
+/** @} */

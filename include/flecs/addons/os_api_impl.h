@@ -5,6 +5,14 @@
 
 #ifdef FLECS_OS_API_IMPL
 
+/**
+ * @defgroup c_addons_os_api_impl OS API Implementation
+ * @brief Default implementation for OS API interface.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_OS_API_IMPL_H
 #define FLECS_OS_API_IMPL_H
 
@@ -20,5 +28,7 @@ void ecs_set_os_api_impl(void);
 #endif
 
 #endif // FLECS_OS_API_IMPL_H
+
+/** @} */
 
 #endif // FLECS_OS_API_IMPL

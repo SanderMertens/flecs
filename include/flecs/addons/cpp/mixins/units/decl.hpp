@@ -8,6 +8,14 @@
 namespace flecs {
 struct units {
 
+/**
+ * @defgroup cpp_addons_units Units
+ * @brief Common unit annotations for reflection framework.
+ * 
+ * \ingroup cpp_addons
+ * @{
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Unit prefixes
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +192,8 @@ struct Bel { };
 struct DeciBel { };
 
 units(flecs::world& world);
+
+/** @} */
 
 };
 }
