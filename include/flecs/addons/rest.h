@@ -47,12 +47,12 @@ extern "C" {
 
 #define ECS_REST_DEFAULT_PORT (27750)
 
-/* Component that instantiates the REST API */
+/** Component that instantiates the REST API */
 FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
 
 typedef struct {
-    uint16_t port;        /* Port of server (optional, default = 27750) */
-    char *ipaddr;         /* Interface address (optional, default = 0.0.0.0) */
+    uint16_t port;      /**< Port of server (optional, default = 27750) */
+    char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0) */
     void *impl;
 } EcsRest;
 

@@ -28,34 +28,25 @@
 extern "C" {
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Components
-////////////////////////////////////////////////////////////////////////////////
-
-/* Component used to provide a tick source to systems */
+/** Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
-    bool tick;                   /* True if providing tick */
-    ecs_ftime_t time_elapsed;  /* Time elapsed since last tick */
+    bool tick;                 /**< True if providing tick */
+    ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
-////////////////////////////////////////////////////////////////////////////////
-//// Systems API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Use with ecs_system_init */
+/** Use with ecs_system_init */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* Existing entity to associate with system (optional) */
+    /** Existing entity to associate with system (optional) */
     ecs_entity_t entity;
 
-    /* System query parameters */
+    /** System query parameters */
     ecs_query_desc_t query;
 
-    /* Callback that is invoked when a system is ran. When left to NULL, the
-     * default system runner is used, which calls the "callback" action for each
-     * result returned from the system's query. 
+    /** Callback that is invoked when a system is ran. 
+     * When left to NULL, the default system runner is used, which calls the 
+     * "callback" action for each result returned from the system's query. 
      * 
      * It should not be assumed that the input iterator can always be iterated
      * with ecs_query_next. When a system is multithreaded and/or paged, the
@@ -67,41 +58,41 @@ typedef struct ecs_system_desc_t {
      * testing whether the it->next value is equal to ecs_query_next. */
     ecs_run_action_t run;
 
-    /* Callback that is ran for each result returned by the system's query. This
+    /** Callback that is ran for each result returned by the system's query. This
      * means that this callback can be invoked multiple times per system per
      * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
 
-    /* Context to be passed to callback (as ecs_iter_t::param) */
+    /** Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
-    /* Binding context, for when system is implemented in other language */
+    /** Binding context, for when system is implemented in other language */
     void *binding_ctx;
 
-    /* Functions that are invoked during system cleanup to free context data.
+    /** Functions that are invoked during system cleanup to free context data.
      * When set, functions are called unconditionally, even when the ctx
      * pointers are NULL. */
     ecs_ctx_free_t ctx_free;
     ecs_ctx_free_t binding_ctx_free;
 
-    /* Interval in seconds at which the system should run */
+    /** Interval in seconds at which the system should run */
     ecs_ftime_t interval;
 
-    /* Rate at which the system should run */
+    /** Rate at which the system should run */
     int32_t rate;
 
-    /* External tick soutce that determines when system ticks */
+    /** External tick soutce that determines when system ticks */
     ecs_entity_t tick_source;
 
-    /* If true, system will be ran on multiple threads */
+    /** If true, system will be ran on multiple threads */
     bool multi_threaded;
 
-    /* If true, system will have access to actuall world. Cannot be true at the
+    /** If true, system will have access to actuall world. Cannot be true at the
      * same time as multi_threaded. */
     bool no_readonly;
 } ecs_system_desc_t;
 
-/* Create a system */
+/** Create a system */
 FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
@@ -255,12 +246,7 @@ void* ecs_get_system_ctx(
 FLECS_API
 void* ecs_get_system_binding_ctx(
     const ecs_world_t *world,
-    ecs_entity_t system);    
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module
-////////////////////////////////////////////////////////////////////////////////
+    ecs_entity_t system);
 
 FLECS_API
 void FlecsSystemImport(

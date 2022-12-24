@@ -2996,7 +2996,6 @@ typedef enum ecs_oper_kind_t {
     EcsNotFrom      /* Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
-/** Term flags */
 #define EcsSelf                       (1u << 1) /**< Match on self */
 #define EcsUp                         (1u << 2) /**< Match by traversing upwards */
 #define EcsDown                       (1u << 3) /**< Match by traversing downwards (derived, cannot be set) */
@@ -3117,12 +3116,10 @@ struct ecs_observer_t {
 
 /** @} */
 
-/**
- * @defgroup core_types Core API Types
- * @{
+/** Type that contains component lifecycle callbacks. 
+ * 
+ * \ingroup components
  */
-
-/** Type that contains component lifecycle callbacks. */
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
@@ -3168,7 +3165,10 @@ struct ecs_type_hooks_t {
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 };
 
-/** Type that contains component information (passed to ctors/dtors/...) */
+/** Type that contains component information (passed to ctors/dtors/...) 
+ * 
+ * \ingroup components
+ */
 struct ecs_type_info_t {
     ecs_size_t size;         /* Size of type */
     ecs_size_t alignment;    /* Alignment of type */
@@ -3176,8 +3176,6 @@ struct ecs_type_info_t {
     ecs_entity_t component;  /* Handle to component (do not set) */
     const char *name;        /* Type name. */
 };
-
-/** @} */
 
 /**
  * @file api_types.h
@@ -3887,27 +3885,24 @@ void* _flecs_hashmap_next(
 #endif
 
 
-/**
- * @defgroup descriptor_types Descriptor types
- * @brief Types used to create entities, observers, queries and more.
- * @{
- */
-
-/** Used with ecs_entity_init */
+/** Used with ecs_entity_init 
+ * 
+ * \ingroup entities
+ */ 
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
-    ecs_entity_t id;     /* Set to modify existing entity (optional) */
+    ecs_entity_t id;     /**< Set to modify existing entity (optional) */
 
-    const char *name;    /* Name of the entity. If no entity is provided, an 
+    const char *name;    /**< Name of the entity. If no entity is provided, an 
                           * entity with this name will be looked up first. When
                           * an entity is provided, the name will be verified
                           * with the existing entity. */
 
-    const char *sep;     /* Optional custom separator for hierarchical names */
-    const char *root_sep; /* Optional, used for identifiers relative to root */
+    const char *sep;      /**< Optional custom separator for hierarchical names */
+    const char *root_sep; /**< Optional, used for identifiers relative to root */
 
-    const char *symbol;  /* Optional entity symbol. A symbol is an unscoped
+    const char *symbol;  /**< Optional entity symbol. A symbol is an unscoped
                           * identifier that can be used to lookup an entity. The
                           * primary use case for this is to associate the entity
                           * with a language identifier, such as a type or 
@@ -3917,132 +3912,146 @@ typedef struct ecs_entity_desc_t {
                           * as "flecs.components.transform.Position", with the
                           * symbol set to "EcsPosition". */
 
-    bool use_low_id;     /* When set to true, a low id (typically reserved for
+    bool use_low_id;     /**< When set to true, a low id (typically reserved for
                           * components) will be used to create the entity, if
                           * no id is specified. */
 
-    /* Array of ids to add to the new or existing entity. */
+    /** Array of ids to add to the new or existing entity. */
     ecs_id_t add[ECS_ID_CACHE_SIZE];
 
-    /* String expression with components to add */
+    /** String expression with components to add */
     const char *add_expr;
 } ecs_entity_desc_t;
 
-/** Used with ecs_bulk_init */
+/** Used with ecs_bulk_init 
+ * 
+ * \ingroup entities
+ */
 typedef struct ecs_bulk_desc_t { 
     int32_t _canary;
 
-    ecs_entity_t *entities;  /* Entities to bulk insert. Entity ids provided by 
+    ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by 
                          * the application application must be empty (cannot
                          * have components). If no entity ids are provided, the
                          * operation will create 'count' new entities. */
 
-    int32_t count;      /* Number of entities to create/populate */
+    int32_t count;      /**< Number of entities to create/populate */
 
-    ecs_id_t ids[ECS_ID_CACHE_SIZE]; /* Ids to create the entities with */
+    ecs_id_t ids[ECS_ID_CACHE_SIZE]; /**< Ids to create the entities with */
 
-    void **data;       /* Array with component data to insert. Each element in 
+    void **data;       /**< Array with component data to insert. Each element in 
                         * the array must correspond with an element in the ids
                         * array. If an element in the ids array is a tag, the
                         * data array must contain a NULL. An element may be
                         * set to NULL for a component, in which case the
                         * component will not be set by the operation. */
 
-    ecs_table_t *table; /* Table to insert the entities into. Should not be set
+    ecs_table_t *table; /**< Table to insert the entities into. Should not be set
                          * at the same time as ids. When 'table' is set at the
                          * same time as 'data', the elements in the data array
                          * must correspond with the ids in the table's type. */
 
 } ecs_bulk_desc_t;
 
-/** Used with ecs_component_init. */
+/** Used with ecs_component_init. 
+ * 
+ * \ingroup components
+ */
 typedef struct ecs_component_desc_t {
     int32_t _canary;
     
-    /* Existing entity to associate with observer (optional) */
+    /** Existing entity to associate with observer (optional) */
     ecs_entity_t entity;
 
-    ecs_type_info_t type;      /* Parameters for type (size, hooks, ...) */
+    ecs_type_info_t type; /**< Parameters for type (size, hooks, ...) */
 } ecs_component_desc_t;
 
-/** Used with ecs_filter_init. */
+/** Used with ecs_filter_init. 
+ * 
+ * \ingroup filters
+ */
 typedef struct ecs_filter_desc_t {
     int32_t _canary;
 
-    /* Terms of the filter. If a filter has more terms than 
+    /** Terms of the filter. If a filter has more terms than 
      * ECS_TERM_DESC_CACHE_SIZE use terms_buffer */
     ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
 
-    /* For filters with lots of terms an outside array can be provided. */
+    /** For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
+
+    /** Number of terms in array provided in terms_buffer. */
     int32_t terms_buffer_count;
 
-    /* External storage to prevent allocation of the filter object */
+    /** External storage to prevent allocation of the filter object */
     ecs_filter_t *storage;
 
-    /* When true, terms returned by an iterator may either contain 1 or N 
+    /** When true, terms returned by an iterator may either contain 1 or N 
      * elements, where terms with N elements are owned, and terms with 1 element 
      * are shared, for example from a parent or base entity. When false, the 
      * iterator will at most return 1 element when the result contains both 
      * owned and shared terms. */ 
     bool instanced;
 
-    /* Flags for advanced usage */
+    /** Flags for advanced usage */
     ecs_flags32_t flags;
 
-    /* Filter expression. Should not be set at the same time as terms array */
+    /** Filter expression. Should not be set at the same time as terms array */
     const char *expr;
 
-    /* Entity associated with query (optional) */
+    /** Entity associated with query (optional) */
     ecs_entity_t entity;
 } ecs_filter_desc_t;
 
-/** Used with ecs_query_init. */
+/** Used with ecs_query_init. 
+ * 
+ * \ingroup queries
+ */
 typedef struct ecs_query_desc_t {
     int32_t _canary;
 
-    /* Filter for the query */
+    /** Filter for the query */
     ecs_filter_desc_t filter;
 
-    /* Component to be used by order_by */
+    /** Component to be used by order_by */
     ecs_entity_t order_by_component;
 
-    /* Callback used for ordering query results. If order_by_id is 0, the 
+    /** Callback used for ordering query results. If order_by_id is 0, the 
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
     ecs_order_by_action_t order_by;
 
-    /* Callback used for ordering query results. Same as order_by,
+    /** Callback used for ordering query results. Same as order_by,
      * but more efficient. */
     ecs_sort_table_action_t sort_table;
 
-    /* Id to be used by group_by. This id is passed to the group_by function and
+    /** Id to be used by group_by. This id is passed to the group_by function and
      * can be used identify the part of an entity type that should be used for
      * grouping. */
     ecs_id_t group_by_id;
 
-    /* Callback used for grouping results. If the callback is not set, results
+    /** Callback used for grouping results. If the callback is not set, results
      * will not be grouped. When set, this callback will be used to calculate a
      * "rank" for each entity (table) based on its components. This rank is then
      * used to sort entities (tables), so that entities (tables) of the same
      * rank are "grouped" together when iterated. */
     ecs_group_by_action_t group_by;
 
-    /* Callback that is invoked when a new group is created. The return value of
+    /** Callback that is invoked when a new group is created. The return value of
      * the callback is stored as context for a group. */
     ecs_group_create_action_t on_group_create;
 
-    /* Callback that is invoked when an existing group is deleted. The return 
+    /** Callback that is invoked when an existing group is deleted. The return 
      * value of the on_group_create callback is passed as context parameter. */
     ecs_group_delete_action_t on_group_delete;
 
-    /* Context to pass to group_by */
+    /** Context to pass to group_by */
     void *group_by_ctx;
 
-    /* Function to free group_by_ctx */
+    /** Function to free group_by_ctx */
     ecs_ctx_free_t group_by_ctx_free;
 
-    /* If set, the query will be created as a subquery. A subquery matches at
+    /** If set, the query will be created as a subquery. A subquery matches at
      * most a subset of its parent query. Subqueries do not directly receive
      * (table) notifications from the world. Instead parent queries forward
      * results to subqueries. This can improve matching performance, as fewer
@@ -4051,28 +4060,31 @@ typedef struct ecs_query_desc_t {
     ecs_query_t *parent;
 } ecs_query_desc_t;
 
-/** Used with ecs_observer_init. */
+/** Used with ecs_observer_init. 
+ * 
+ * \ingroup observers
+ */
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
 
-    /* Existing entity to associate with observer (optional) */
+    /** Existing entity to associate with observer (optional) */
     ecs_entity_t entity;
 
-    /* Filter for observer */
+    /** Filter for observer */
     ecs_filter_desc_t filter;
 
-    /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
+    /** Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
 
-    /* When observer is created, generate events from existing data. For example,
+    /** When observer is created, generate events from existing data. For example,
      * EcsOnAdd Position would match all existing instances of Position.
      * This is only supported for events that are iterable (see EcsIterable) */
     bool yield_existing;
 
-    /* Callback to invoke on an event, invoked when the observer matches. */
+    /** Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
 
-    /* Callback invoked on an event. When left to NULL the default runner
+    /** Callback invoked on an event. When left to NULL the default runner
      * is used which matches the event with the observer's filter, and calls
      * 'callback' when it matches. 
      * A reason to override the run function is to improve performance, if there
@@ -4080,30 +4092,28 @@ typedef struct ecs_observer_desc_t {
      * the general purpose query matcher. */
     ecs_run_action_t run;
 
-    /* User context to pass to callback */
+    /** User context to pass to callback */
     void *ctx;
 
-    /* Context to be used for language bindings */
+    /** Context to be used for language bindings */
     void *binding_ctx;
     
-    /* Callback to free ctx */
+    /** Callback to free ctx */
     ecs_ctx_free_t ctx_free;
 
-    /* Callback to free binding_ctx */     
+    /** Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
 
-    /* Observable with which to register the observer */
+    /** Observable with which to register the observer */
     ecs_poly_t *observable;
 
-    /* Optional shared last event id for multiple observers. Ensures only one
+    /** Optional shared last event id for multiple observers. Ensures only one
      * of the observers with the shared id gets triggered for an event */
     int32_t *last_event_id;
 
-    /* Used for internal purposes */
+    /** Used for internal purposes */
     int32_t term_index;
 } ecs_observer_desc_t;
-
-/** @} */
 
 /**
  * @defgroup misc_types Miscellaneous types
@@ -4119,64 +4129,64 @@ typedef struct ecs_value_t {
 
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
-    ecs_entity_t last_component_id;   /* Last issued component entity id */
-    ecs_entity_t last_id;             /* Last issued entity id */
-    ecs_entity_t min_id;              /* First allowed entity id */
-    ecs_entity_t max_id;              /* Last allowed entity id */
+    ecs_entity_t last_component_id;   /**< Last issued component entity id */
+    ecs_entity_t last_id;             /**< Last issued entity id */
+    ecs_entity_t min_id;              /**< First allowed entity id */
+    ecs_entity_t max_id;              /**< Last allowed entity id */
 
-    ecs_ftime_t delta_time_raw;       /* Raw delta time (no time scaling) */
-    ecs_ftime_t delta_time;           /* Time passed to or computed by ecs_progress */
-    ecs_ftime_t time_scale;           /* Time scale applied to delta_time */
-    ecs_ftime_t target_fps;           /* Target fps */
-    ecs_ftime_t frame_time_total;     /* Total time spent processing a frame */
-    ecs_ftime_t system_time_total;    /* Total time spent in systems */
-    ecs_ftime_t emit_time_total;      /* Total time spent notifying observers */
-    ecs_ftime_t merge_time_total;     /* Total time spent in merges */
-    ecs_ftime_t world_time_total;     /* Time elapsed in simulation */
-    ecs_ftime_t world_time_total_raw; /* Time elapsed in simulation (no scaling) */
-    ecs_ftime_t rematch_time_total;   /* Time spent on query rematching */
+    ecs_ftime_t delta_time_raw;       /**< Raw delta time (no time scaling) */
+    ecs_ftime_t delta_time;           /**< Time passed to or computed by ecs_progress */
+    ecs_ftime_t time_scale;           /**< Time scale applied to delta_time */
+    ecs_ftime_t target_fps;           /**< Target fps */
+    ecs_ftime_t frame_time_total;     /**< Total time spent processing a frame */
+    ecs_ftime_t system_time_total;    /**< Total time spent in systems */
+    ecs_ftime_t emit_time_total;      /**< Total time spent notifying observers */
+    ecs_ftime_t merge_time_total;     /**< Total time spent in merges */
+    ecs_ftime_t world_time_total;     /**< Time elapsed in simulation */
+    ecs_ftime_t world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
+    ecs_ftime_t rematch_time_total;   /**< Time spent on query rematching */
     
-    int64_t frame_count_total;        /* Total number of frames */
-    int64_t merge_count_total;        /* Total number of merges */
-    int64_t rematch_count_total;      /* Total number of rematches */
+    int64_t frame_count_total;        /**< Total number of frames */
+    int64_t merge_count_total;        /**< Total number of merges */
+    int64_t rematch_count_total;      /**< Total number of rematches */
 
-    int64_t id_create_total;          /* Total number of times a new id was created */
-    int64_t id_delete_total;          /* Total number of times an id was deleted */
-    int64_t table_create_total;       /* Total number of times a table was created */
-    int64_t table_delete_total;       /* Total number of times a table was deleted */
-    int64_t pipeline_build_count_total; /* Total number of pipeline builds */
-    int64_t systems_ran_frame;        /* Total number of systems ran in last frame */
-    int64_t observers_ran_frame;      /* Total number of times observer was invoked */
+    int64_t id_create_total;          /**< Total number of times a new id was created */
+    int64_t id_delete_total;          /**< Total number of times an id was deleted */
+    int64_t table_create_total;       /**< Total number of times a table was created */
+    int64_t table_delete_total;       /**< Total number of times a table was deleted */
+    int64_t pipeline_build_count_total; /**< Total number of pipeline builds */
+    int64_t systems_ran_frame;        /**< Total number of systems ran in last frame */
+    int64_t observers_ran_frame;      /**< Total number of times observer was invoked */
 
-    int32_t id_count;                 /* Number of ids in the world (excluding wildcards) */
-    int32_t tag_id_count;             /* Number of tag (no data) ids in the world */
-    int32_t component_id_count;       /* Number of component (data) ids in the world */
-    int32_t pair_id_count;            /* Number of pair ids in the world */
-    int32_t wildcard_id_count;        /* Number of wildcard ids */
+    int32_t id_count;                 /**< Number of ids in the world (excluding wildcards) */
+    int32_t tag_id_count;             /**< Number of tag (no data) ids in the world */
+    int32_t component_id_count;       /**< Number of component (data) ids in the world */
+    int32_t pair_id_count;            /**< Number of pair ids in the world */
+    int32_t wildcard_id_count;        /**< Number of wildcard ids */
 
-    int32_t table_count;              /* Number of tables */
-    int32_t tag_table_count;          /* Number of tag-only tables */
-    int32_t trivial_table_count;      /* Number of tables with trivial components (no lifecycle callbacks) */
-    int32_t empty_table_count;        /* Number of tables without entities */
-    int32_t table_record_count;       /* Total number of table records (entries in table caches) */
-    int32_t table_storage_count;      /* Total number of table storages */
+    int32_t table_count;              /**< Number of tables */
+    int32_t tag_table_count;          /**< Number of tag-only tables */
+    int32_t trivial_table_count;      /**< Number of tables with trivial components (no lifecycle callbacks) */
+    int32_t empty_table_count;        /**< Number of tables without entities */
+    int32_t table_record_count;       /**< Total number of table records (entries in table caches) */
+    int32_t table_storage_count;      /**< Total number of table storages */
 
     /* -- Command counts -- */
     struct {
-        int64_t add_count;             /* add commands processed */
-        int64_t remove_count;          /* remove commands processed */
-        int64_t delete_count;          /* delete commands processed */
-        int64_t clear_count;           /* clear commands processed */
-        int64_t set_count;             /* set commands processed */
-        int64_t get_mut_count;         /* get_mut/emplace commands processed */
-        int64_t modified_count;        /* modified commands processed */
-        int64_t other_count;           /* other commands processed */
-        int64_t discard_count;         /* commands discarded, happens when entity is no longer alive when running the command */
-        int64_t batched_entity_count;  /* entities for which commands were batched */
-        int64_t batched_command_count; /* commands batched */
+        int64_t add_count;             /**< add commands processed */
+        int64_t remove_count;          /**< remove commands processed */
+        int64_t delete_count;          /**< delete commands processed */
+        int64_t clear_count;           /**< clear commands processed */
+        int64_t set_count;             /**< set commands processed */
+        int64_t get_mut_count;         /**< get_mut/emplace commands processed */
+        int64_t modified_count;        /**< modified commands processed */
+        int64_t other_count;           /**< other commands processed */
+        int64_t discard_count;         /**< commands discarded, happens when entity is no longer alive when running the command */
+        int64_t batched_entity_count;  /**< entities for which commands were batched */
+        int64_t batched_command_count; /**< commands batched */
     } cmd;
 
-    const char *name_prefix;          /* Value set by ecs_set_name_prefix. Used
+    const char *name_prefix;          /**< Value set by ecs_set_name_prefix. Used
                                        * to remove library prefixes of symbol
                                        * names (such as Ecs, ecs_) when 
                                        * registering them as names. */
@@ -4184,9 +4194,9 @@ typedef struct ecs_world_info_t {
 
 /** Type that contains information about a query group. */
 typedef struct ecs_query_group_info_t {
-    int32_t match_count;  /* How often tables have been matched/unmatched */
-    int32_t table_count;  /* Number of tables in group */
-    void *ctx;            /* Group context, returned by on_group_create */
+    int32_t match_count;  /**< How often tables have been matched/unmatched */
+    int32_t table_count;  /**< Number of tables in group */
+    void *ctx;            /**< Group context, returned by on_group_create */
 } ecs_query_group_info_t;
 
 /** @} */
@@ -4199,22 +4209,22 @@ typedef struct ecs_query_group_info_t {
 
 /** A (string) identifier. Used as pair with EcsName and EcsSymbol tags */
 typedef struct EcsIdentifier {
-    char *value;
-    ecs_size_t length;
-    uint64_t hash;
-    uint64_t index_hash; /* Hash of existing record in current index */
-    ecs_hashmap_t *index; /* Current index */
+    char *value;          /**< Identifier string */
+    ecs_size_t length;    /**< Length of identifier */
+    uint64_t hash;        /**< Hash of current value */
+    uint64_t index_hash;  /**< Hash of existing record in current index */
+    ecs_hashmap_t *index; /**< Current index */
 } EcsIdentifier;
 
 /** Component information. */
 typedef struct EcsComponent {
-    ecs_size_t size;           /* Component size */
-    ecs_size_t alignment;      /* Component alignment */
+    ecs_size_t size;           /**< Component size */
+    ecs_size_t alignment;      /**< Component alignment */
 } EcsComponent;
 
 /** Component for storing a poly object */
 typedef struct EcsPoly {
-    ecs_poly_t *poly;
+    ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
 /** Component for iterable entities */
@@ -4279,13 +4289,12 @@ FLECS_API extern const ecs_id_t ECS_AND;
 
 /** @} */
 
-
 /**
  * @defgroup builtin_tags Builtin component ids.
  * @{
  */
 
-/** Builtin component ids */
+/* Builtin component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
@@ -4298,41 +4307,41 @@ FLECS_API extern const ecs_entity_t EcsObserver;
 FLECS_API extern const ecs_entity_t EcsSystem;
 FLECS_API extern const ecs_entity_t ecs_id(EcsTickSource);
 
-/** Pipeline module component ids */
+/* Pipeline module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPipelineQuery);
 
-/** Timer module component ids */
+/* Timer module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTimer);
 FLECS_API extern const ecs_entity_t ecs_id(EcsRateFilter);
 
 /** Root scope for builtin flecs entities */
 FLECS_API extern const ecs_entity_t EcsFlecs;
 
-/* Core module scope */
+/** Core module scope */
 FLECS_API extern const ecs_entity_t EcsFlecsCore;
 
-/* Entity associated with world (used for "attaching" components to world) */
+/** Entity associated with world (used for "attaching" components to world) */
 FLECS_API extern const ecs_entity_t EcsWorld;
 
-/* Wildcard entity ("*"). Matches any id, returns all matches. */
+/** Wildcard entity ("*"). Matches any id, returns all matches. */
 FLECS_API extern const ecs_entity_t EcsWildcard;
 
-/* Any entity ("_"). Matches any id, returns only the first. */
+/** Any entity ("_"). Matches any id, returns only the first. */
 FLECS_API extern const ecs_entity_t EcsAny;
 
-/* This entity. Default source for queries. */
+/** This entity. Default source for queries. */
 FLECS_API extern const ecs_entity_t EcsThis;
 
-/* Variable entity ("$"). Used in expressions to prefix variable names */
+/** Variable entity ("$"). Used in expressions to prefix variable names */
 FLECS_API extern const ecs_entity_t EcsVariable;
 
-/* Marks a relationship as transitive. 
+/** Marks a relationship as transitive. 
  * Behavior: 
  *   if R(X, Y) and R(Y, Z) then R(X, Z)
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/* Marks a relatoinship as reflexive.
+/** Marks a relatoinship as reflexive.
  * Behavior: 
  *   R(X, X) == true
  */
@@ -4354,13 +4363,13 @@ FLECS_API extern const ecs_entity_t EcsFinal;
  */
 FLECS_API extern const ecs_entity_t EcsDontInherit;
 
-/* Marks relationship as commutative.
+/** Marks relationship as commutative.
  * Behavior:
  *   if R(X, Y) then R(Y, X)
  */
 FLECS_API extern const ecs_entity_t EcsSymmetric;
 
-/* Can be added to relationship to indicate that the relationship can only occur
+/** Can be added to relationship to indicate that the relationship can only occur
  * once on an entity. Adding a 2nd instance will replace the 1st. 
  *
  * Behavior:
@@ -4368,10 +4377,10 @@ FLECS_API extern const ecs_entity_t EcsSymmetric;
  */
 FLECS_API extern const ecs_entity_t EcsExclusive;
 
-/* Marks a relationship as acyclic. Acyclic relationships may not form cycles. */
+/** Marks a relationship as acyclic. Acyclic relationships may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
 
-/* Ensure that a component always is added together with another component.
+/** Ensure that a component always is added together with another component.
  * 
  * Behavior:
  *   If With(R, O) and R(X) then O(X)
@@ -4379,7 +4388,7 @@ FLECS_API extern const ecs_entity_t EcsAcyclic;
  */
 FLECS_API extern const ecs_entity_t EcsWith;
 
-/* Ensure that relationship target is child of specified entity.
+/** Ensure that relationship target is child of specified entity.
  * 
  * Behavior:
  *   If OneOf(R, O) and R(X, Y), Y must be a child of O
@@ -4387,108 +4396,108 @@ FLECS_API extern const ecs_entity_t EcsWith;
  */
 FLECS_API extern const ecs_entity_t EcsOneOf;
 
-/* Can be added to relationship to indicate that it should never hold data, even
+/** Can be added to relationship to indicate that it should never hold data, even
  * when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
-/* Tag to indicate that relationship is stored as union. Union relationships enable
+/** Tag to indicate that relationship is stored as union. Union relationships enable
  * changing the target of a union without switching tables. Union relationships
  * are also marked as exclusive. */
 FLECS_API extern const ecs_entity_t EcsUnion;
 
-/* Tag to indicate name identifier */
+/** Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
 
-/* Tag to indicate symbol identifier */
+/** Tag to indicate symbol identifier */
 FLECS_API extern const ecs_entity_t EcsSymbol;
 
-/* Tag to indicate alias identifier */
+/** Tag to indicate alias identifier */
 FLECS_API extern const ecs_entity_t EcsAlias;
 
-/* Used to express parent-child relationships. */
+/** Used to express parent-child relationships. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
 
-/* Used to express inheritance relationships. */
+/** Used to express inheritance relationships. */
 FLECS_API extern const ecs_entity_t EcsIsA;
 
-/* Used to express dependency relationships */
+/** Used to express dependency relationships */
 FLECS_API extern const ecs_entity_t EcsDependsOn;
 
-/* Used to express a slot (used with prefab inheritance) */
+/** Used to express a slot (used with prefab inheritance) */
 FLECS_API extern const ecs_entity_t EcsSlotOf;
 
-/* Tag added to module entities */
+/** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
-/* Tag to indicate an entity/component/system is private to a module */
+/** Tag to indicate an entity/component/system is private to a module */
 FLECS_API extern const ecs_entity_t EcsPrivate;
 
-/* Tag added to prefab entities. Any entity with this tag is automatically
+/** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
 
-/* When this tag is added to an entity it is skipped by all queries/filters */
+/** When this tag is added to an entity it is skipped by all queries/filters */
 FLECS_API extern const ecs_entity_t EcsDisabled;
 
-/* Event. Triggers when an id (component, tag, pair) is added to an entity */
+/** Event. Triggers when an id (component, tag, pair) is added to an entity */
 FLECS_API extern const ecs_entity_t EcsOnAdd;
 
-/* Event. Triggers when an id (component, tag, pair) is removed from an entity */
+/** Event. Triggers when an id (component, tag, pair) is removed from an entity */
 FLECS_API extern const ecs_entity_t EcsOnRemove;
 
-/* Event. Triggers when a component is set for an entity */
+/** Event. Triggers when a component is set for an entity */
 FLECS_API extern const ecs_entity_t EcsOnSet;
 
-/* Event. Triggers when a component is unset for an entity */
+/** Event. Triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
-/* Event. Exactly-once observer for when an entity matches/unmatches a filter */
+/** Event. Exactly-once observer for when an entity matches/unmatches a filter */
 FLECS_API extern const ecs_entity_t EcsMonitor;
 
-/* Event. Triggers when an entity is deleted.
+/** Event. Triggers when an entity is deleted.
  * Also used as relationship for defining cleanup behavior, see: 
  * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
  */
 FLECS_API extern const ecs_entity_t EcsOnDelete;
 
-/* Event. Triggers when a table is created. */
+/** Event. Triggers when a table is created. */
 // FLECS_API extern const ecs_entity_t EcsOnCreateTable;
 
-/* Event. Triggers when a table is deleted. */
+/** Event. Triggers when a table is deleted. */
 // FLECS_API extern const ecs_entity_t EcsOnDeleteTable;
 
-/* Event. Triggers when a table becomes empty (doesn't emit on creation). */
+/** Event. Triggers when a table becomes empty (doesn't emit on creation). */
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
-/* Event. Triggers when a table becomes non-empty. */
+/** Event. Triggers when a table becomes non-empty. */
 FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
-/* Relationship used to define what should happen when a target entity (second
+/** Relationship used to define what should happen when a target entity (second
  * element of a pair) is deleted. For details see: 
  * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
  */
 FLECS_API extern const ecs_entity_t EcsOnDeleteTarget;
 
-/* Remove cleanup policy. Must be used as target in pair with EcsOnDelete or
+/** Remove cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsRemove;
 
-/* Delete cleanup policy. Must be used as target in pair with EcsOnDelete or
+/** Delete cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsDelete;
 
-/* Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
+/** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
 
-/* Used like (EcsDefaultChildComponent, Component). When added to an entity,
+/** Used like (EcsDefaultChildComponent, Component). When added to an entity,
  * this informs serialization formats which component to use when a value is
  * assigned to an entity without specifying the component. This is intended as
  * a hint, serialization formats are not required to use it. Adding this 
  * component does not change the behavior of core ECS operations. */
 FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
-/* Tag used to indicate query is empty */
+/** Tag used to indicate query is empty */
 FLECS_API extern const ecs_entity_t EcsEmpty;
 
 /* Pipeline module tags */
@@ -8838,6 +8847,8 @@ int ecs_value_move_ctor(
 
 /**
  * @defgroup flecs_c_table_sorting Table sorting
+ * @brief Convenience macro's for sorting tables.
+ * 
  * @{
  */
 #define ecs_sort_table(id) ecs_id(id##_sort_table)
@@ -8950,6 +8961,8 @@ int ecs_value_move_ctor(
 
 /**
  * @defgroup flecs_c_misc Misc
+ * @brief Misc convenience macro's.
+ * 
  * @{
  */
 
@@ -9755,17 +9768,17 @@ typedef int(*ecs_app_init_action_t)(
 
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
-    ecs_ftime_t target_fps;   /* Target FPS. */
-    ecs_ftime_t delta_time;   /* Frame time increment (0 for measured values) */
-    int32_t threads;          /* Number of threads. */
-    int32_t frames;           /* Number of frames to run (0 for infinite) */
-    bool enable_rest;         /* Allows HTTP clients to access ECS data */
-    bool enable_monitor;      /* Periodically collect statistics */
+    ecs_ftime_t target_fps;   /**< Target FPS. */
+    ecs_ftime_t delta_time;   /**< Frame time increment (0 for measured values) */
+    int32_t threads;          /**< Number of threads. */
+    int32_t frames;           /**< Number of frames to run (0 for infinite) */
+    bool enable_rest;         /**< Allows HTTP clients to access ECS data */
+    bool enable_monitor;      /**< Periodically collect statistics */
 
-    ecs_app_init_action_t init; /* If set, function is ran before starting the
+    ecs_app_init_action_t init; /**< If set, function is ran before starting the
                                  * main loop. */
 
-    void *ctx;                /* Reserved for custom run/frame actions */
+    void *ctx;                /**< Reserved for custom run/frame actions */
 } ecs_app_desc_t;
 
 /** Callback type for run action. */
@@ -9889,12 +9902,12 @@ extern "C" {
 
 #define ECS_REST_DEFAULT_PORT (27750)
 
-/* Component that instantiates the REST API */
+/** Component that instantiates the REST API */
 FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
 
 typedef struct {
-    uint16_t port;        /* Port of server (optional, default = 27750) */
-    char *ipaddr;         /* Interface address (optional, default = 0.0.0.0) */
+    uint16_t port;      /**< Port of server (optional, default = 27750) */
+    char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0) */
     void *impl;
 } EcsRest;
 
@@ -9968,32 +9981,23 @@ void FlecsRestImport(
 extern "C" {
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Components
-////////////////////////////////////////////////////////////////////////////////
-
 /** Component used for one shot/interval timer functionality */
 typedef struct EcsTimer {
-    ecs_ftime_t timeout;         /* Timer timeout period */
-    ecs_ftime_t time;            /* Incrementing time value */
-    int32_t fired_count;         /* Number of times ticked */
-    bool active;                 /* Is the timer active or not */
-    bool single_shot;            /* Is this a single shot timer */
+    ecs_ftime_t timeout;         /**< Timer timeout period */
+    ecs_ftime_t time;            /**< Incrementing time value */
+    int32_t fired_count;         /**< Number of times ticked */
+    bool active;                 /**< Is the timer active or not */
+    bool single_shot;            /**< Is this a single shot timer */
 } EcsTimer;
 
-/* Apply a rate filter to a tick source */
+/** Apply a rate filter to a tick source */
 typedef struct EcsRateFilter {
-    ecs_entity_t src;            /* Source of the rate filter */
-    int32_t rate;                /* Rate of the rate filter */
-    int32_t tick_count;          /* Number of times the rate filter ticked */
-    ecs_ftime_t time_elapsed;    /* Time elapsed since last tick */
+    ecs_entity_t src;            /**< Source of the rate filter */
+    int32_t rate;                /**< Rate of the rate filter */
+    int32_t tick_count;          /**< Number of times the rate filter ticked */
+    ecs_ftime_t time_elapsed;    /**< Time elapsed since last tick */
 } EcsRateFilter;
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Timer API
-////////////////////////////////////////////////////////////////////////////////
 
 /** Set timer timeout.
  * This operation executes any systems associated with the timer after the
@@ -10436,34 +10440,25 @@ void FlecsPipelineImport(
 extern "C" {
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Components
-////////////////////////////////////////////////////////////////////////////////
-
-/* Component used to provide a tick source to systems */
+/** Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
-    bool tick;                   /* True if providing tick */
-    ecs_ftime_t time_elapsed;  /* Time elapsed since last tick */
+    bool tick;                 /**< True if providing tick */
+    ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
-////////////////////////////////////////////////////////////////////////////////
-//// Systems API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Use with ecs_system_init */
+/** Use with ecs_system_init */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
-    /* Existing entity to associate with system (optional) */
+    /** Existing entity to associate with system (optional) */
     ecs_entity_t entity;
 
-    /* System query parameters */
+    /** System query parameters */
     ecs_query_desc_t query;
 
-    /* Callback that is invoked when a system is ran. When left to NULL, the
-     * default system runner is used, which calls the "callback" action for each
-     * result returned from the system's query. 
+    /** Callback that is invoked when a system is ran. 
+     * When left to NULL, the default system runner is used, which calls the 
+     * "callback" action for each result returned from the system's query. 
      * 
      * It should not be assumed that the input iterator can always be iterated
      * with ecs_query_next. When a system is multithreaded and/or paged, the
@@ -10475,41 +10470,41 @@ typedef struct ecs_system_desc_t {
      * testing whether the it->next value is equal to ecs_query_next. */
     ecs_run_action_t run;
 
-    /* Callback that is ran for each result returned by the system's query. This
+    /** Callback that is ran for each result returned by the system's query. This
      * means that this callback can be invoked multiple times per system per
      * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
 
-    /* Context to be passed to callback (as ecs_iter_t::param) */
+    /** Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
-    /* Binding context, for when system is implemented in other language */
+    /** Binding context, for when system is implemented in other language */
     void *binding_ctx;
 
-    /* Functions that are invoked during system cleanup to free context data.
+    /** Functions that are invoked during system cleanup to free context data.
      * When set, functions are called unconditionally, even when the ctx
      * pointers are NULL. */
     ecs_ctx_free_t ctx_free;
     ecs_ctx_free_t binding_ctx_free;
 
-    /* Interval in seconds at which the system should run */
+    /** Interval in seconds at which the system should run */
     ecs_ftime_t interval;
 
-    /* Rate at which the system should run */
+    /** Rate at which the system should run */
     int32_t rate;
 
-    /* External tick soutce that determines when system ticks */
+    /** External tick soutce that determines when system ticks */
     ecs_entity_t tick_source;
 
-    /* If true, system will be ran on multiple threads */
+    /** If true, system will be ran on multiple threads */
     bool multi_threaded;
 
-    /* If true, system will have access to actuall world. Cannot be true at the
+    /** If true, system will have access to actuall world. Cannot be true at the
      * same time as multi_threaded. */
     bool no_readonly;
 } ecs_system_desc_t;
 
-/* Create a system */
+/** Create a system */
 FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
@@ -10663,12 +10658,7 @@ void* ecs_get_system_ctx(
 FLECS_API
 void* ecs_get_system_binding_ctx(
     const ecs_world_t *world,
-    ecs_entity_t system);    
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module
-////////////////////////////////////////////////////////////////////////////////
+    ecs_entity_t system);
 
 FLECS_API
 void FlecsSystemImport(
@@ -10725,7 +10715,7 @@ typedef struct ecs_gauge_t {
 
 /* Monotonically increasing counter */
 typedef struct ecs_counter_t {
-    ecs_gauge_t rate;                          /* Keep track of deltas too */
+    ecs_gauge_t rate;                     /**< Keep track of deltas too */
     double value[ECS_STAT_WINDOW];
 } ecs_counter_t;
 
@@ -10740,39 +10730,39 @@ typedef struct ecs_world_stats_t {
 
     /* Entities */
     struct {
-        ecs_metric_t count;               /* Number of entities */
-        ecs_metric_t not_alive_count;     /* Number of not alive (recyclable) entity ids */
+        ecs_metric_t count;               /**< Number of entities */
+        ecs_metric_t not_alive_count;     /**< Number of not alive (recyclable) entity ids */
     } entities;
 
     /* Components and ids */
     struct {
-        ecs_metric_t count;               /* Number of ids (excluding wildcards) */
-        ecs_metric_t tag_count;           /* Number of tag ids (ids without data) */
-        ecs_metric_t component_count;     /* Number of components ids (ids with data) */
-        ecs_metric_t pair_count;          /* Number of pair ids */
-        ecs_metric_t wildcard_count;      /* Number of wildcard ids */
-        ecs_metric_t type_count;          /* Number of registered types */
-        ecs_metric_t create_count;        /* Number of times id has been created */
-        ecs_metric_t delete_count;        /* Number of times id has been deleted */
+        ecs_metric_t count;               /**< Number of ids (excluding wildcards) */
+        ecs_metric_t tag_count;           /**< Number of tag ids (ids without data) */
+        ecs_metric_t component_count;     /**< Number of components ids (ids with data) */
+        ecs_metric_t pair_count;          /**< Number of pair ids */
+        ecs_metric_t wildcard_count;      /**< Number of wildcard ids */
+        ecs_metric_t type_count;          /**< Number of registered types */
+        ecs_metric_t create_count;        /**< Number of times id has been created */
+        ecs_metric_t delete_count;        /**< Number of times id has been deleted */
     } ids;
 
     /* Tables */
     struct {
-        ecs_metric_t count;                /* Number of tables */
-        ecs_metric_t empty_count;          /* Number of empty tables */
-        ecs_metric_t tag_only_count;       /* Number of tables with only tags */
-        ecs_metric_t trivial_only_count;   /* Number of tables with only trivial components */
-        ecs_metric_t record_count;         /* Number of table cache records */
-        ecs_metric_t storage_count;        /* Number of table storages */
-        ecs_metric_t create_count;         /* Number of times table has been created */
-        ecs_metric_t delete_count;         /* Number of times table has been deleted */
+        ecs_metric_t count;                /**< Number of tables */
+        ecs_metric_t empty_count;          /**< Number of empty tables */
+        ecs_metric_t tag_only_count;       /**< Number of tables with only tags */
+        ecs_metric_t trivial_only_count;   /**< Number of tables with only trivial components */
+        ecs_metric_t record_count;         /**< Number of table cache records */
+        ecs_metric_t storage_count;        /**< Number of table storages */
+        ecs_metric_t create_count;         /**< Number of times table has been created */
+        ecs_metric_t delete_count;         /**< Number of times table has been deleted */
     } tables;
 
     /* Queries & events */
     struct {
-        ecs_metric_t query_count;          /* Number of queries */
-        ecs_metric_t observer_count;       /* Number of observers */
-        ecs_metric_t system_count;         /* Number of systems */
+        ecs_metric_t query_count;          /**< Number of queries */
+        ecs_metric_t observer_count;       /**< Number of observers */
+        ecs_metric_t system_count;         /**< Number of systems */
     } queries;
 
     /* Commands */
@@ -10792,42 +10782,42 @@ typedef struct ecs_world_stats_t {
 
     struct {
         /* Frame data */
-        ecs_metric_t frame_count;          /* Number of frames processed. */
-        ecs_metric_t merge_count;          /* Number of merges executed. */
-        ecs_metric_t rematch_count;        /* Number of query rematches */
-        ecs_metric_t pipeline_build_count; /* Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
-        ecs_metric_t systems_ran;          /* Number of systems ran. */
-        ecs_metric_t observers_ran;        /* Number of times an observer was invoked. */
-        ecs_metric_t event_emit_count;     /* Number of events emitted */
+        ecs_metric_t frame_count;          /**< Number of frames processed. */
+        ecs_metric_t merge_count;          /**< Number of merges executed. */
+        ecs_metric_t rematch_count;        /**< Number of query rematches */
+        ecs_metric_t pipeline_build_count; /**< Number of system pipeline rebuilds (occurs when an inactive system becomes active). */
+        ecs_metric_t systems_ran;          /**< Number of systems ran. */
+        ecs_metric_t observers_ran;        /**< Number of times an observer was invoked. */
+        ecs_metric_t event_emit_count;     /**< Number of events emitted */
     } frame;
 
     struct {
         /* Timing */
-        ecs_metric_t world_time_raw;       /* Actual time passed since simulation start (first time progress() is called) */
-        ecs_metric_t world_time;           /* Simulation time passed since simulation start. Takes into account time scaling */
-        ecs_metric_t frame_time;           /* Time spent processing a frame. Smaller than world_time_total when load is not 100% */
-        ecs_metric_t system_time;          /* Time spent on running systems. */
-        ecs_metric_t emit_time;            /* Time spent on notifying observers. */
-        ecs_metric_t merge_time;           /* Time spent on merging commands. */
-        ecs_metric_t rematch_time;         /* Time spent on rematching. */
-        ecs_metric_t fps;                  /* Frames per second. */
-        ecs_metric_t delta_time;           /* Delta_time. */
+        ecs_metric_t world_time_raw;       /**< Actual time passed since simulation start (first time progress() is called) */
+        ecs_metric_t world_time;           /**< Simulation time passed since simulation start. Takes into account time scaling */
+        ecs_metric_t frame_time;           /**< Time spent processing a frame. Smaller than world_time_total when load is not 100% */
+        ecs_metric_t system_time;          /**< Time spent on running systems. */
+        ecs_metric_t emit_time;            /**< Time spent on notifying observers. */
+        ecs_metric_t merge_time;           /**< Time spent on merging commands. */
+        ecs_metric_t rematch_time;         /**< Time spent on rematching. */
+        ecs_metric_t fps;                  /**< Frames per second. */
+        ecs_metric_t delta_time;           /**< Delta_time. */
     } performance;
 
     struct {
         /* Memory allocation data */
-        ecs_metric_t alloc_count;          /* Allocs per frame */
-        ecs_metric_t realloc_count;        /* Reallocs per frame */
-        ecs_metric_t free_count;           /* Frees per frame */
-        ecs_metric_t outstanding_alloc_count;    /* Difference between allocs & frees */
+        ecs_metric_t alloc_count;          /**< Allocs per frame */
+        ecs_metric_t realloc_count;        /**< Reallocs per frame */
+        ecs_metric_t free_count;           /**< Frees per frame */
+        ecs_metric_t outstanding_alloc_count; /**< Difference between allocs & frees */
 
         /* Memory allocator data */
-        ecs_metric_t block_alloc_count;    /* Block allocations per frame */
-        ecs_metric_t block_free_count;     /* Block frees per frame */
-        ecs_metric_t block_outstanding_alloc_count; /* Difference between allocs & frees */
-        ecs_metric_t stack_alloc_count;    /* Page allocations per frame */
-        ecs_metric_t stack_free_count;     /* Page frees per frame */
-        ecs_metric_t stack_outstanding_alloc_count; /* Difference between allocs & frees */
+        ecs_metric_t block_alloc_count;    /**< Block allocations per frame */
+        ecs_metric_t block_free_count;     /**< Block frees per frame */
+        ecs_metric_t block_outstanding_alloc_count; /**< Difference between allocs & frees */
+        ecs_metric_t stack_alloc_count;    /**< Page allocations per frame */
+        ecs_metric_t stack_free_count;     /**< Page frees per frame */
+        ecs_metric_t stack_outstanding_alloc_count; /**< Difference between allocs & frees */
     } memory;
 
     struct {
@@ -10869,9 +10859,9 @@ typedef struct ecs_world_stats_t {
 /* Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
-    ecs_metric_t matched_table_count;       /* Matched non-empty tables */    
-    ecs_metric_t matched_empty_table_count; /* Matched empty tables */
-    ecs_metric_t matched_entity_count;      /* Number of matched entities */
+    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */    
+    ecs_metric_t matched_empty_table_count; /**< Matched empty tables */
+    ecs_metric_t matched_entity_count;      /**< Number of matched entities */
     int64_t last_;
 
     /** Current position in ringbuffer */
@@ -10881,13 +10871,13 @@ typedef struct ecs_query_stats_t {
 /** Statistics for a single system (use ecs_system_stats_get) */
 typedef struct ecs_system_stats_t {
     int64_t first_;
-    ecs_metric_t time_spent;       /* Time spent processing a system */
-    ecs_metric_t invoke_count;     /* Number of times system is invoked */
-    ecs_metric_t active;           /* Whether system is active (is matched with >0 entities) */
-    ecs_metric_t enabled;          /* Whether system is enabled */
+    ecs_metric_t time_spent;       /**< Time spent processing a system */
+    ecs_metric_t invoke_count;     /**< Number of times system is invoked */
+    ecs_metric_t active;           /**< Whether system is active (is matched with >0 entities) */
+    ecs_metric_t enabled;          /**< Whether system is enabled */
     int64_t last_;
 
-    bool task;                     /* Is system a task */
+    bool task;                     /**< Is system a task */
 
     ecs_query_stats_t query;
 } ecs_system_stats_t;
@@ -10905,9 +10895,9 @@ typedef struct ecs_pipeline_stats_t {
     /** Current position in ringbuffer */
     int32_t t;
 
-    int32_t system_count; /* Number of systems in pipeline */
-    int32_t active_system_count; /* Number of active systems in pipeline */
-    int32_t rebuild_count; /* Number of times pipeline has rebuilt */
+    int32_t system_count; /**< Number of systems in pipeline */
+    int32_t active_system_count; /**< Number of active systems in pipeline */
+    int32_t rebuild_count; /**< Number of times pipeline has rebuilt */
 } ecs_pipeline_stats_t;
 
 /** Get world statistics.
@@ -13761,11 +13751,11 @@ typedef struct {
 
 /** A reply */
 typedef struct {
-    int code;                   /* default = 200 */
-    ecs_strbuf_t body;          /* default = "" */
-    const char* status;         /* default = OK */
-    const char* content_type;   /* default = application/json */
-    ecs_strbuf_t headers;       /* default = "" */
+    int code;                   /**< default = 200 */
+    ecs_strbuf_t body;          /**< default = "" */
+    const char* status;         /**< default = OK */
+    const char* content_type;   /**< default = application/json */
+    ecs_strbuf_t headers;       /**< default = "" */
 } ecs_http_reply_t;
 
 #define ECS_HTTP_REPLY_INIT \
@@ -14240,6 +14230,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_globals API Types & Globals
+ * @brief Types & constants bridged from C API.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -16555,6 +16547,8 @@ namespace _ {
 
 /**
  * @defgroup cpp_pair_type Pair type
+ * @brief Compile time utilities for working with relationship pairs.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -17165,6 +17159,8 @@ struct scoped_world;
 
 /**
  * @defgroup cpp_world World
+ * @brief World operations.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -18585,6 +18581,8 @@ struct scoped_world : world {
 
 /**
  * @defgroup cpp_iterator Iterators
+ * @brief Iterator operations.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -19052,6 +19050,8 @@ namespace flecs
 
 /**
  * @defgroup cpp_ref Refs
+ * @brief Refs are a fast mechanism for referring to a specific entity/component.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -19123,8 +19123,7 @@ private:
 #pragma once
 
 /**
- * @defgroup cpp_entities Entities
- * \ingroup cpp_core
+ * \ingroup cpp_entities
  * @{
  */
 
@@ -20998,6 +20997,8 @@ protected:
 
 /**
  * @defgroup cpp_entities Entities
+ * @brief Entity operations.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -22306,6 +22307,8 @@ worker_iterable<Components...> iterable<Components...>::worker(
 
 /**
  * @defgroup cpp_components Components
+ * @brief Registering and working with components.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -22968,6 +22971,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_types Types
+ * @brief Type operations.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -23037,6 +23042,8 @@ namespace flecs {
 
 /**
  * @defgroup cpp_tables Tables
+ * @brief Table operations.
+ * 
  * \ingroup cpp_core
  * @{
  */
@@ -27236,12 +27243,16 @@ inline flecs::scoped_world world::scope() const {
 
 /**
  * @defgroup cpp_core Core
+ * @brief Core ECS functionality (entities, storage, queries)
+ * 
  * @{
  * @}
  */
 
 /**
  * @defgroup cpp_addons Addons
+ * @brief C++ APIs for addons.
+ * 
  * @{
  * @}
  */

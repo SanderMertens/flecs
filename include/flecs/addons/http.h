@@ -89,11 +89,11 @@ typedef struct {
 
 /** A reply */
 typedef struct {
-    int code;                   /* default = 200 */
-    ecs_strbuf_t body;          /* default = "" */
-    const char* status;         /* default = OK */
-    const char* content_type;   /* default = application/json */
-    ecs_strbuf_t headers;       /* default = "" */
+    int code;                   /**< default = 200 */
+    ecs_strbuf_t body;          /**< default = "" */
+    const char* status;         /**< default = OK */
+    const char* content_type;   /**< default = application/json */
+    ecs_strbuf_t headers;       /**< default = "" */
 } ecs_http_reply_t;
 
 #define ECS_HTTP_REPLY_INIT \
