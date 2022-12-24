@@ -159,6 +159,7 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ## Resources
 
 ### Resources provided by the community :heart:
+- [Unreal Minimum Viable Flecs Project](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
 - [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
