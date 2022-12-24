@@ -3010,47 +3010,47 @@ typedef enum ecs_oper_kind_t {
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
-    ecs_entity_t id;            /* Entity id. If left to 0 and flags does not 
+    ecs_entity_t id;            /**< Entity id. If left to 0 and flags does not 
                                  * specify whether id is an entity or a variable
                                  * the id will be initialized to EcsThis. 
                                  * To explicitly set the id to 0, leave the id
                                  * member to 0 and set EcsIsEntity in flags. */
 
-    char *name;                 /* Name. This can be either the variable name
+    char *name;                 /**< Name. This can be either the variable name
                                  * (when the EcsIsVariable flag is set) or an
                                  * entity name. Entity names are used to 
                                  * initialize the id member during term 
                                  * finalization and will be freed when term.move
                                  * is set to true. */
 
-    ecs_entity_t trav;          /* Relationship to traverse when looking for the
+    ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
                                  * the Acyclic property. Default is IsA. */
 
-    ecs_flags32_t flags;        /* Term flags */
+    ecs_flags32_t flags;        /**< Term flags */
 } ecs_term_id_t;
 
 /** Type that describes a term (single element in a query) */
 struct ecs_term_t {
-    ecs_id_t id;                /* Component id to be matched by term. Can be
+    ecs_id_t id;                /**< Component id to be matched by term. Can be
                                  * set directly, or will be populated from the
                                  * first/second members, which provide more
                                  * flexibility. */
 
-    ecs_term_id_t src;          /* Source of term */
-    ecs_term_id_t first;        /* Component or first element of pair */
-    ecs_term_id_t second;       /* Second element of pair */
+    ecs_term_id_t src;          /**< Source of term */
+    ecs_term_id_t first;        /**< Component or first element of pair */
+    ecs_term_id_t second;       /**< Second element of pair */
     
-    ecs_inout_kind_t inout;     /* Access to contents matched by term */
-    ecs_oper_kind_t oper;       /* Operator of term */
+    ecs_inout_kind_t inout;     /**< Access to contents matched by term */
+    ecs_oper_kind_t oper;       /**< Operator of term */
 
-    ecs_id_t id_flags;          /* Id flags of term id */
-    char *name;                 /* Name of term */
+    ecs_id_t id_flags;          /**< Id flags of term id */
+    char *name;                 /**< Name of term */
 
-    int32_t field_index;        /* Index of field for term in iterator */
-    ecs_id_record_t *idr;       /* Cached pointer to internal index */
+    int32_t field_index;        /**< Index of field for term in iterator */
+    ecs_id_record_t *idr;       /**< Cached pointer to internal index */
 
-    bool move;                  /* Used by internals */
+    bool move;                  /**< Used by internals */
 };
 
 /** Use this variable to initialize user-allocated filter object */
@@ -3060,55 +3060,55 @@ FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
 struct ecs_filter_t {
     ecs_header_t hdr;
     
-    ecs_term_t *terms;         /* Array containing terms for filter */
-    int32_t term_count;        /* Number of elements in terms array */
-    int32_t field_count;       /* Number of fields in iterator for filter */
+    ecs_term_t *terms;         /**< Array containing terms for filter */
+    int32_t term_count;        /**< Number of elements in terms array */
+    int32_t field_count;       /**< Number of fields in iterator for filter */
     
-    bool owned;                /* Is filter object owned by filter */
-    bool terms_owned;          /* Is terms array owned by filter */
+    bool owned;                /**< Is filter object owned by filter */
+    bool terms_owned;          /**< Is terms array owned by filter */
 
-    ecs_flags32_t flags;       /* Filter flags */
+    ecs_flags32_t flags;       /**< Filter flags */
     
-    char *variable_names[1];   /* Array with variable names */
+    char *variable_names[1];   /**< Array with variable names */
 
     /* Mixins */
-    ecs_entity_t entity;       /* Entity associated with filter (optional) */
+    ecs_entity_t entity;       /**< Entity associated with filter (optional) */
     ecs_world_t *world;
-    ecs_iterable_t iterable;   /* Iterable mixin */
-    ecs_poly_dtor_t dtor;      /* Dtor mixin */
+    ecs_iterable_t iterable;   /**< Iterable mixin */
+    ecs_poly_dtor_t dtor;      /**< Dtor mixin */
 };
 
 /* An observer reacts to events matching a filter */
 struct ecs_observer_t {
     ecs_header_t hdr;
     
-    ecs_filter_t filter;
+    ecs_filter_t filter;        /**< Query for observer */
 
     /* Observer events */
     ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;   
     
-    ecs_iter_action_t callback; /* See ecs_observer_desc_t::callback */
-    ecs_run_action_t run;       /* See ecs_observer_desc_t::run */
+    ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
+    ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
 
-    void *ctx;                  /* Callback context */
-    void *binding_ctx;          /* Binding context (for language bindings) */
+    void *ctx;                  /**< Callback context */
+    void *binding_ctx;          /**< Binding context (for language bindings) */
 
-    ecs_ctx_free_t ctx_free;    /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+    ecs_ctx_free_t ctx_free;    /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
 
-    ecs_observable_t *observable; /* Observable for observer */
+    ecs_observable_t *observable; /**< Observable for observer */
 
-    int32_t *last_event_id;     /* Last handled event id */
+    int32_t *last_event_id;     /**< Last handled event id */
 
-    ecs_id_t register_id;       /* Id observer is registered with (single term observers only) */
-    int32_t term_index;         /* Index of the term in parent observer (single term observers only) */
+    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
+    int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
 
-    bool is_monitor;            /* If true, the observer only triggers when the
-                                 * filter did not match with the entity before
-                                 * the event happened. */
+    bool is_monitor;            /**< If true, the observer only triggers when the
+                                 **< filter did not match with the entity before
+                                 **< the event happened. */
 
-    bool is_multi;              /* If true, the observer triggers on more than one term */
+    bool is_multi;              /**< If true, the observer triggers on more than one term */
 
     /* Mixins */
     ecs_poly_dtor_t dtor;
@@ -3121,48 +3121,48 @@ struct ecs_observer_t {
  * \ingroup components
  */
 struct ecs_type_hooks_t {
-    ecs_xtor_t ctor;            /* ctor */
-    ecs_xtor_t dtor;            /* dtor */
-    ecs_copy_t copy;            /* copy assignment */
-    ecs_move_t move;            /* move assignment */
+    ecs_xtor_t ctor;            /**< ctor */
+    ecs_xtor_t dtor;            /**< dtor */
+    ecs_copy_t copy;            /**< copy assignment */
+    ecs_move_t move;            /**< move assignment */
 
-    /* Ctor + copy */
+    /** Ctor + copy */
     ecs_copy_t copy_ctor;
 
-    /* Ctor + move */
+    /** Ctor + move */
     ecs_move_t move_ctor;
 
-    /* Ctor + move + dtor (or move_ctor + dtor).
+    /** Ctor + move + dtor (or move_ctor + dtor).
      * This combination is typically used when a component is moved from one
      * location to a new location, like when it is moved to a new table. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t ctor_move_dtor;
 
-    /* Move + dtor.
+    /** Move + dtor.
      * This combination is typically used when a component is moved from one
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
-    /* Callback that is invoked when an instance of a component is added. This
+    /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
     ecs_iter_action_t on_add;
 
-    /* Callback that is invoked when an instance of the component is set. This
+    /** Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component
      * to respond to changes on itself before others can. */
     ecs_iter_action_t on_set;
 
-    /* Callback that is invoked when an instance of the component is removed. 
+    /** Callback that is invoked when an instance of the component is removed. 
      * This callback is invoked after the triggers are invoked, and before the
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    void *ctx;                       /* User defined context */
-    void *binding_ctx;               /* Language binding context */
+    void *ctx;                       /**< User defined context */
+    void *binding_ctx;               /**< Language binding context */
 
-    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
 };
 
 /** Type that contains component information (passed to ctors/dtors/...) 
@@ -3170,11 +3170,11 @@ struct ecs_type_hooks_t {
  * \ingroup components
  */
 struct ecs_type_info_t {
-    ecs_size_t size;         /* Size of type */
-    ecs_size_t alignment;    /* Alignment of type */
-    ecs_type_hooks_t hooks;  /* Type hooks */
-    ecs_entity_t component;  /* Handle to component (do not set) */
-    const char *name;        /* Type name. */
+    ecs_size_t size;         /**< Size of type */
+    ecs_size_t alignment;    /**< Alignment of type */
+    ecs_type_hooks_t hooks;  /**< Type hooks */
+    ecs_entity_t component;  /**< Handle to component (do not set) */
+    const char *name;        /**< Type name. */
 };
 
 /**
@@ -4231,7 +4231,6 @@ typedef struct EcsPoly {
 typedef ecs_iterable_t EcsIterable;
 
 /** @} */
-
 /** @} */
 
 /* Only include deprecated definitions if deprecated addon is required */
@@ -4515,20 +4514,19 @@ FLECS_API extern const ecs_entity_t EcsOnStore;
 FLECS_API extern const ecs_entity_t EcsPostFrame;
 FLECS_API extern const ecs_entity_t EcsPhase;
 
-/* Value used to quickly check if component is builtin. This is used to quickly
+/** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete) */
 #define EcsLastInternalComponentId (ecs_id(EcsPoly))
 
-/* The first user-defined component starts from this id. Ids up to this number
+/** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
 #define EcsFirstUserComponentId (32)
 
-/* The first user-defined entity starts from this id. Ids up to this number
+/** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
 #define EcsFirstUserEntityId (ECS_HI_COMPONENT_ID + 128)
 
 /** @} */
-
 /** @} */
 
 /**
@@ -11768,9 +11766,13 @@ int ecs_iter_to_json_buf(
 extern "C" {
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-//// Unit prefixes
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup c_addons_units_prefixes Prefixes
+ * @brief Prefixes to indicate unit count (e.g. Kilo, Mega)
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
 
@@ -11804,10 +11806,14 @@ FLECS_API extern ECS_DECLARE(EcsExbi);
 FLECS_API extern ECS_DECLARE(EcsZebi);
 FLECS_API extern ECS_DECLARE(EcsYobi);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Units & quantities
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup c_addons_units_duration Duration
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsDuration);
 FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);
@@ -11819,24 +11825,87 @@ FLECS_API extern     ECS_DECLARE(EcsMinutes);
 FLECS_API extern     ECS_DECLARE(EcsHours);
 FLECS_API extern     ECS_DECLARE(EcsDays);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_time Time
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsTime);
 FLECS_API extern     ECS_DECLARE(EcsDate);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_mass Mass
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsMass);
 FLECS_API extern     ECS_DECLARE(EcsGrams);
 FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_electric_Current Electric Current
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsElectricCurrent);
 FLECS_API extern     ECS_DECLARE(EcsAmpere);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_amount Amount
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsAmount);
 FLECS_API extern     ECS_DECLARE(EcsMole);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_luminous_intensity Luminous Intensity
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsLuminousIntensity);
 FLECS_API extern     ECS_DECLARE(EcsCandela);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_force Force
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsForce);
 FLECS_API extern     ECS_DECLARE(EcsNewton);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_length Length
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsLength);
 FLECS_API extern     ECS_DECLARE(EcsMeters);
@@ -11849,9 +11918,27 @@ FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
 FLECS_API extern     ECS_DECLARE(EcsMiles);
 FLECS_API extern     ECS_DECLARE(EcsPixels);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_pressure Pressure
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsPressure);
 FLECS_API extern     ECS_DECLARE(EcsPascal);
 FLECS_API extern     ECS_DECLARE(EcsBar);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_speed Speed
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsSpeed);
 FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);
@@ -11859,12 +11946,28 @@ FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);
 FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_temperature Temperature
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsTemperature);
 FLECS_API extern     ECS_DECLARE(EcsKelvin);
 FLECS_API extern     ECS_DECLARE(EcsCelsius);
 FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
 
-FLECS_API extern ECS_DECLARE(EcsAcceleration);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_data Data
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsData);
 FLECS_API extern     ECS_DECLARE(EcsBits);
@@ -11879,6 +11982,15 @@ FLECS_API extern         ECS_DECLARE(EcsKibiBytes);
 FLECS_API extern         ECS_DECLARE(EcsMebiBytes);
 FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_datarate Data Rate
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsDataRate);
 FLECS_API extern     ECS_DECLARE(EcsBitsPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloBitsPerSecond);
@@ -11889,14 +12001,27 @@ FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
 
-FLECS_API extern ECS_DECLARE(EcsPercentage);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_duration Duration
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsAngle);
 FLECS_API extern     ECS_DECLARE(EcsRadians);
 FLECS_API extern     ECS_DECLARE(EcsDegrees);
 
-FLECS_API extern ECS_DECLARE(EcsBel);
-FLECS_API extern ECS_DECLARE(EcsDeciBel);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_angle Angle
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsFrequency);
 FLECS_API extern     ECS_DECLARE(EcsHertz);
@@ -11904,10 +12029,26 @@ FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
 FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
 FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_uri Uri
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsUri);
 FLECS_API extern     ECS_DECLARE(EcsUriHyperlink);
 FLECS_API extern     ECS_DECLARE(EcsUriImage);
 FLECS_API extern     ECS_DECLARE(EcsUriFile);
+
+/** @} */
+
+FLECS_API extern ECS_DECLARE(EcsAcceleration);
+FLECS_API extern ECS_DECLARE(EcsPercentage);
+FLECS_API extern ECS_DECLARE(EcsBel);
+FLECS_API extern ECS_DECLARE(EcsDeciBel);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -16096,11 +16237,15 @@ struct units {
  * @{
  */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Unit prefixes
-////////////////////////////////////////////////////////////////////////////////
-
 struct Prefixes { };
+
+/**
+ * @defgroup cpp_addons_units_prefixes Prefixes
+ * @brief Prefixes to indicate unit count (e.g. Kilo, Mega)
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
 
 struct Yocto { };
 struct Zepto { };
@@ -16131,10 +16276,15 @@ struct Exbi { };
 struct Zebi { };
 struct Yobi { };
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Quantities
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup cpp_addons_units_quantities Quantities
+ * @brief Quantities that group units (e.g. Length)
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
 
 struct Duration { };
 struct Time { };
@@ -16153,12 +16303,16 @@ struct Angle { };
 struct Frequency { };
 struct Uri { };
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Units
-////////////////////////////////////////////////////////////////////////////////
+/** @} */
 
 struct duration {
+/**
+ * @defgroup cpp_addons_units_duration Duration
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct PicoSeconds { };
 struct NanoSeconds { };
 struct MicroSeconds { };
@@ -16167,39 +16321,118 @@ struct Seconds { };
 struct Minutes { };
 struct Hours { };
 struct Days { };
+
+/** @} */
 };
 
 struct angle {
+/**
+ * @defgroup cpp_addons_units_angle Angle
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Radians { };
 struct Degrees { };
+
+/** @} */
 };
+
 
 struct time {
+/**
+ * @defgroup cpp_addons_units_time Time
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Date { };
+
+/** @} */
 };
+
 
 struct mass {
+/**
+ * @defgroup cpp_addons_units_mass Mass
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Grams { };
 struct KiloGrams { };
+
+/** @} */
 };
+
 
 struct electric_current {
+/**
+ * @defgroup cpp_addons_units_electric_current Electric Current
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Ampere { };
+
+/** @} */
 };
+
 
 struct amount {
+/**
+ * @defgroup cpp_addons_units_amount Amount
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Mole { };
+
+/** @} */
 };
+
 
 struct luminous_intensity {
+/**
+ * @defgroup cpp_addons_units_luminous_intensity Luminous Intensity
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Candela { };
+
+/** @} */
 };
+
 
 struct force {
+/**
+ * @defgroup cpp_addons_units_force Force
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Newton { };
+
+/** @} */
 };
 
+
 struct length {
+/**
+ * @defgroup cpp_addons_units_length Length
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Meters { };
 struct PicoMeters { };
 struct NanoMeters { };
@@ -16209,27 +16442,67 @@ struct CentiMeters { };
 struct KiloMeters { };
 struct Miles { };
 struct Pixels { };
+
+/** @} */
 };
+
 
 struct pressure {
+/**
+ * @defgroup cpp_addons_units_pressure Pressure
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Pascal { };
 struct Bar { };
+
+/** @} */
 };
 
+
 struct speed {
+/**
+ * @defgroup cpp_addons_units_speed Speed
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct MetersPerSecond { };
 struct KiloMetersPerSecond { };
 struct KiloMetersPerHour { };
 struct MilesPerHour { };
+
+/** @} */
 };
 
+
 struct temperature {
+/**
+ * @defgroup cpp_addons_units_temperature Temperature
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Kelvin { };
 struct Celsius { };
 struct Fahrenheit { };
+
+/** @} */
 };
 
+
 struct data {
+/**
+ * @defgroup cpp_addons_units_data Data
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Bits { };
 struct KiloBits { };
 struct MegaBits { };
@@ -16241,9 +16514,18 @@ struct GigaBytes { };
 struct KibiBytes { };
 struct MebiBytes { };
 struct GibiBytes { };
+
+/** @} */
 };
 
 struct datarate {
+/**
+ * @defgroup cpp_addons_units_datarate Data Rate
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct BitsPerSecond { };
 struct KiloBitsPerSecond { };
 struct MegaBitsPerSecond { };
@@ -16252,20 +16534,43 @@ struct BytesPerSecond { };
 struct KiloBytesPerSecond { };
 struct MegaBytesPerSecond { };
 struct GigaBytesPerSecond { };
+
+/** @} */
 };
 
+
 struct frequency {
+/**
+ * @defgroup cpp_addons_units_frequency Frequency
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Hertz { };
 struct KiloHertz { };
 struct MegaHertz { };
 struct GigaHertz { };
+
+/** @} */
 };
 
+
 struct uri {
+/**
+ * @defgroup cpp_addons_units_uri Uri
+ * 
+ * \ingroup cpp_addons_units
+ * @{
+ */
+
 struct Hyperlink { };
 struct Image { };
 struct File { };
+
+/** @} */
 };
+
 
 struct Percentage { };
 struct Bel { };

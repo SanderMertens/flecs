@@ -41,9 +41,13 @@
 extern "C" {
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-//// Unit prefixes
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup c_addons_units_prefixes Prefixes
+ * @brief Prefixes to indicate unit count (e.g. Kilo, Mega)
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
 
@@ -77,10 +81,14 @@ FLECS_API extern ECS_DECLARE(EcsExbi);
 FLECS_API extern ECS_DECLARE(EcsZebi);
 FLECS_API extern ECS_DECLARE(EcsYobi);
 
+/** @} */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Units & quantities
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @defgroup c_addons_units_duration Duration
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsDuration);
 FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);
@@ -92,24 +100,87 @@ FLECS_API extern     ECS_DECLARE(EcsMinutes);
 FLECS_API extern     ECS_DECLARE(EcsHours);
 FLECS_API extern     ECS_DECLARE(EcsDays);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_time Time
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsTime);
 FLECS_API extern     ECS_DECLARE(EcsDate);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_mass Mass
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsMass);
 FLECS_API extern     ECS_DECLARE(EcsGrams);
 FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_electric_Current Electric Current
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsElectricCurrent);
 FLECS_API extern     ECS_DECLARE(EcsAmpere);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_amount Amount
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsAmount);
 FLECS_API extern     ECS_DECLARE(EcsMole);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_luminous_intensity Luminous Intensity
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsLuminousIntensity);
 FLECS_API extern     ECS_DECLARE(EcsCandela);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_force Force
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsForce);
 FLECS_API extern     ECS_DECLARE(EcsNewton);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_length Length
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsLength);
 FLECS_API extern     ECS_DECLARE(EcsMeters);
@@ -122,9 +193,27 @@ FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
 FLECS_API extern     ECS_DECLARE(EcsMiles);
 FLECS_API extern     ECS_DECLARE(EcsPixels);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_pressure Pressure
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsPressure);
 FLECS_API extern     ECS_DECLARE(EcsPascal);
 FLECS_API extern     ECS_DECLARE(EcsBar);
+
+/** @} */
+
+/**
+ * @defgroup c_addons_units_speed Speed
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsSpeed);
 FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);
@@ -132,12 +221,28 @@ FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);
 FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_temperature Temperature
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsTemperature);
 FLECS_API extern     ECS_DECLARE(EcsKelvin);
 FLECS_API extern     ECS_DECLARE(EcsCelsius);
 FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
 
-FLECS_API extern ECS_DECLARE(EcsAcceleration);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_data Data
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsData);
 FLECS_API extern     ECS_DECLARE(EcsBits);
@@ -152,6 +257,15 @@ FLECS_API extern         ECS_DECLARE(EcsKibiBytes);
 FLECS_API extern         ECS_DECLARE(EcsMebiBytes);
 FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_datarate Data Rate
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsDataRate);
 FLECS_API extern     ECS_DECLARE(EcsBitsPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloBitsPerSecond);
@@ -162,14 +276,27 @@ FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
 
-FLECS_API extern ECS_DECLARE(EcsPercentage);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_duration Duration
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsAngle);
 FLECS_API extern     ECS_DECLARE(EcsRadians);
 FLECS_API extern     ECS_DECLARE(EcsDegrees);
 
-FLECS_API extern ECS_DECLARE(EcsBel);
-FLECS_API extern ECS_DECLARE(EcsDeciBel);
+/** @} */
+
+/**
+ * @defgroup c_addons_units_angle Angle
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
 
 FLECS_API extern ECS_DECLARE(EcsFrequency);
 FLECS_API extern     ECS_DECLARE(EcsHertz);
@@ -177,10 +304,26 @@ FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
 FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
 FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
+/** @} */
+
+/**
+ * @defgroup c_addons_units_uri Uri
+ * 
+ * \ingroup c_addons_units
+ * @{
+ */
+
 FLECS_API extern ECS_DECLARE(EcsUri);
 FLECS_API extern     ECS_DECLARE(EcsUriHyperlink);
 FLECS_API extern     ECS_DECLARE(EcsUriImage);
 FLECS_API extern     ECS_DECLARE(EcsUriFile);
+
+/** @} */
+
+FLECS_API extern ECS_DECLARE(EcsAcceleration);
+FLECS_API extern ECS_DECLARE(EcsPercentage);
+FLECS_API extern ECS_DECLARE(EcsBel);
+FLECS_API extern ECS_DECLARE(EcsDeciBel);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
