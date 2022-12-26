@@ -34,11 +34,10 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v2
         
-      - name: Install Doxygen
-        run: sudo apt-get install doxygen -y
-        
-      - name: Generate docs
-        run: doxygen docs/Doxyfile
+      - name: Doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
+        with:
+          doxyfile-path: 'docs/cfg/Doxyfile'
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1

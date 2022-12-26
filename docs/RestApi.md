@@ -66,7 +66,7 @@ An application with REST enabled can be remotely monitored with the [Flecs Explo
 
 When the connection is successful, the Explorer should look similar to this:
 
-![Remote Explorer](explorer-remote.png)
+![Remote Explorer](img/explorer-remote.png)
 
 The remote icon next to the title should be visible. If the connection is not successful it could be that the explorer did not receive a response fast enough. To force the explorer to connect remotely, add `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
 

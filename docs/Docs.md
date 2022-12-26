@@ -1,18 +1,18 @@
-# Flecs Documentation
+# Documentation
 
 ## Getting Started
-- [FAQ](/flecs/#/docs/FAQ)
-- [Quickstart](/flecs/#/docs/Quickstart)
-- [Designing with Flecs](/flecs/#/docs/DesignWithFlecs)
+- [FAQ](/flecs/docs/api/html/md_docs_FAQ.html)
+- [Quickstart](/flecs/docs/api/html/md_docs_Quickstart.html)
+- [Designing with Flecs](/flecs/docs/api/html/md_docs_DesignWithFlecs.html)
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 
 ## Manuals
-- [Manual](/flecs/#/docs/Manual)
-- [Query Manual](/flecs/#/docs/Queries)
-- [Systems Manual](/flecs/#/docs/Systems)
-- [Relationships Manual](/flecs/#/docs/Relationships)
-- [JSON Format Manual](/flecs/#/docs/JsonFormat)
-- [REST API Manual](/flecs/#/docs/RestApi)
+- [Manual](/flecs/docs/api/html/md_docs_Manual.html)
+- [Query Manual](/flecs/docs/api/html/md_docs_Queries.html)
+- [Systems Manual](/flecs/docs/api/html/md_docs_Systems.html)
+- [Relationships Manual](/flecs/docs/api/html/md_docs_Relationships.html)
+- [JSON Format Manual](/flecs/docs/api/html/md_docs_JsonFormat.html)
+- [REST API Manual](/flecs/docs/api/html/md_docs_RestApi.html)
 
 ## API reference
  - [C API](/flecs/docs/api/html/group__c.html)

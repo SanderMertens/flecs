@@ -1,4 +1,4 @@
-# Systems Manual
+# Systems
 Systems are queries + a function that can be ran manually or get scheduled as part of a pipeline. To use systems, applications must build Flecs with the `FLECS_SYSTEM` addon (enabled by default).
 
 An example of a simple system:

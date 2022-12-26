@@ -1,10 +1,10 @@
-# Flecs Quickstart
+# Quickstart
 This document provides a quick overview of the different features and concepts in Flecs with short examples. This is a good resource if you're just getting started or just want to get a better idea of what kind of features are available in Flecs!
 
 ## Overview
 This shows an overview of all the different concepts in Flecs and how they wire together. The sections in the quickstart go over them in more detail and with code examples.
 
-![Flecs Overview](flecs-quickstart-overview.png)
+![Flecs Overview](img/flecs-quickstart-overview.png)
 
 ## World
 The world is the container for all ECS data. It stores the entities and their components, does queries and runs systems. Typically there is only a single world, but there is no limit on the number of worlds an application can create.

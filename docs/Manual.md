@@ -1,4 +1,4 @@
-# Flecs Manual
+# Manual
 
 ## Introduction
 Nobody likes to read manuals, and you should be able to get up and running with Flecs by using the quickstart, by looking at examples and by checking the documentation in the flecs header files. However, if you truly want to know how something works, or why it works that way, the manual is the right place to go. With that said, the manual is not exhaustive, and it complements the other sources of documentation.
@@ -27,19 +27,19 @@ There are few things as satisfying as building games. If nothing else, Flecs has
 
 ### High level architecture
 This diagram provides an overview of how entities, components, tables, queries, filters and systems are wired together.
-![Architecture diagram](flecs-architecture-overview.png)
+![Architecture diagram](img/flecs-architecture-overview.png)
 
 ### Component add flow
 This diagram provides an overview of the different steps that occur when adding a component to an entity. The diagram shows when component lifecycle callbacks, OnAdd triggers, OnSet systems, UnSet systems and monitors are invoked. Additionally the diagram shows how the defer mechanism is integrated with the listed Flecs operations.
-![Component add flow](flecs-add-component-flow.png)
+![Component add flow](img/flecs-add-component-flow.png)
 
 ### Component remove flow
 This diagram provides an overview of the different steps that occur when removing a component from an entity. The diagram shows when component lifecycle callbacks, OnRemove triggers, OnSet systems, UnSet systems and monitors are invoked. Additionally the diagram shows how the defer mechanism is integrated with the listed Flecs operations.
-![Component remove flow](flecs-remove-component-flow.png)
+![Component remove flow](img/flecs-remove-component-flow.png)
 
 ### Staging flow
 This diagram provides an overview of what happens when an application uses staging. Staging is a lockless mechanism that lets threads concurrently read & perform structural changes on the store. Changes are temporarily stored in a command queue per stage, which can be merged with the store when convenient.
-![Staging flow](flecs-staging-flow.png)
+![Staging flow](img/flecs-staging-flow.png)
 
 ## API design
 

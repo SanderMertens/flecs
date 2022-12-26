@@ -42,26 +42,26 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = flecs
+PROJECT_NAME           = Flecs
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 3.1
+PROJECT_NUMBER         = v3.1
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          =
+PROJECT_BRIEF          = A fast entity component system (ECS) for C & C++
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           =
+PROJECT_LOGO           = 
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
@@ -901,7 +901,16 @@ WARN_LOGFILE           =
 INPUT                  = include/flecs.h \
                          include/flecs/os_api.h \
                          include/flecs/addons \
-                         docs/Docs.md
+                         docs/Docs.md \
+                         docs/Quickstart.md \
+                         docs/FAQ.md \
+                         docs/DesignWithFlecs.md \
+                         docs/Manual.md \
+                         docs/Queries.md \
+                         docs/Systems.md \
+                         docs/Relationships.md \
+                         docs/RestApi.md \
+                         docs/JsonFormat.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1013,7 +1022,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = docs
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -1232,7 +1241,7 @@ HTML_FILE_EXTENSION    = .html
 # of the possible markers and block names see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_HEADER            =
+HTML_HEADER            = docs/cfg/header.html
 
 # The HTML_FOOTER tag can be used to specify a user-defined HTML footer for each
 # generated HTML page. If the tag is left blank doxygen will generate a standard
@@ -1267,7 +1276,10 @@ HTML_STYLESHEET        =
 # list). For an example see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  =
+HTML_EXTRA_STYLESHEET  = docs/cfg/doxygen-awesome.css \
+                         docs/cfg/doxygen-awesome-sidebar-only.css \
+                         docs/cfg/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         docs/cfg/custom.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1277,7 +1289,10 @@ HTML_EXTRA_STYLESHEET  =
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       =
+HTML_EXTRA_FILES       = docs/cfg/doxygen-awesome-darkmode-toggle.js \
+                         docs/cfg/doxygen-awesome-fragment-copy-button.js \
+                         docs/cfg/doxygen-awesome-paragraph-link.js \
+                         docs/cfg/doxygen-awesome-interactive-toc.js
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
 # should be rendered with a dark or light theme. Default setting AUTO_LIGHT
@@ -1294,7 +1309,7 @@ HTML_EXTRA_FILES       =
 # The default value is: AUTO_LIGHT.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_COLORSTYLE        = AUTO_LIGHT
+HTML_COLORSTYLE        = LIGHT
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
@@ -2680,7 +2695,3 @@ GENERATE_LEGEND        = YES
 # The default value is: YES.
 
 DOT_CLEANUP            = YES
-
-# Custom styling
-HTML_EXTRA_STYLESHEET  = docs/css/doxygen-awesome.css \
-                         docs/css/doxygen-awesome-sidebar-only.css
