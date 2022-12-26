@@ -870,6 +870,9 @@ struct world {
 #   ifdef FLECS_SYSTEM
 #   include "mixins/system/mixin.inl"
 #   endif
+#   ifdef FLECS_TIMER
+#   include "mixins/timer/mixin.inl"
+#   endif
 #   ifdef FLECS_RULES
 #   include "mixins/rule/mixin.inl"
 #   endif

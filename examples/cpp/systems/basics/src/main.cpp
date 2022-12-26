@@ -14,7 +14,7 @@ int main(int, char *[]) {
 
     // Create a system for Position, Velocity. Systems are like queries (see
     // queries) with a function that can be ran or scheduled (see pipeline).
-    auto s = ecs.system<Position, const Velocity>()
+    flecs::system s = ecs.system<Position, const Velocity>()
         .each([](flecs::entity e, Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;

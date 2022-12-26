@@ -2037,3 +2037,112 @@ void System_startup_system() {
     test_int(count_a, 1);
     test_int(count_b, 2);
 }
+
+void System_interval_tick_source() {
+    flecs::world ecs;
+
+    flecs::timer t = ecs.timer().interval(2.1);
+
+    int32_t sys_a_invoked = 0, sys_b_invoked = 0;
+
+    ecs.system()
+        .tick_source(t)
+        .iter([&](flecs::iter& it) {
+            sys_a_invoked ++;
+        });
+
+    ecs.system()
+        .tick_source(t)
+        .iter([&](flecs::iter& it) {
+            sys_b_invoked ++;
+        });
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_a_invoked);
+    test_int(1, sys_b_invoked);
+}
+
+void System_rate_tick_source() {
+    flecs::world ecs;
+
+    flecs::timer t = ecs.timer().rate(3);
+
+    int32_t sys_a_invoked = 0, sys_b_invoked = 0;
+
+    ecs.system()
+        .tick_source(t)
+        .iter([&](flecs::iter& it) {
+            sys_a_invoked ++;
+        });
+
+    ecs.system()
+        .tick_source(t)
+        .iter([&](flecs::iter& it) {
+            sys_b_invoked ++;
+        });
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_a_invoked);
+    test_int(1, sys_b_invoked);
+}
+
+void System_nested_rate_tick_source() {
+    flecs::world ecs;
+
+    flecs::timer t_3 = ecs.timer().rate(3);
+    flecs::timer t_6 = ecs.timer().rate(2, t_3);
+
+    int32_t sys_a_invoked = 0, sys_b_invoked = 0;
+
+    ecs.system()
+        .tick_source(t_3)
+        .iter([&](flecs::iter& it) {
+            sys_a_invoked ++;
+        });
+
+    ecs.system()
+        .tick_source(t_6)
+        .iter([&](flecs::iter& it) {
+            sys_b_invoked ++;
+        });
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(0, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_a_invoked);
+    test_int(0, sys_b_invoked);
+
+    ecs.progress(1.0);
+    test_int(2, sys_a_invoked);
+    test_int(1, sys_b_invoked);
+}
