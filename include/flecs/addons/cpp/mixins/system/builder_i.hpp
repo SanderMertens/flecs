@@ -107,6 +107,16 @@ public:
         return *this;
     }
 
+    /** Set tick source.
+     * This operation sets a shared tick source for the system.
+     *
+     * @param tick_source The tick source to use for the system.
+     */
+    Base& tick_source(flecs::entity_t tick_source) {
+        m_desc->tick_source = tick_source;
+        return *this;
+    }
+
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;

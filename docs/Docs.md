@@ -9,6 +9,7 @@
 ## Manuals
 - [Manual](/flecs/#/docs/Manual)
 - [Query Manual](/flecs/#/docs/Queries)
+- [Systems Manual](/flecs/#/docs/Systems)
 - [Relationships Manual](/flecs/#/docs/Relationships)
 - [JSON Format Manual](/flecs/#/docs/JsonFormat)
 - [REST API Manual](/flecs/#/docs/RestApi)
@@ -33,4 +34,3 @@
 - [Why storing state machines in ECS is a bad idea](https://ajmmertens.medium.com/why-storing-state-machines-in-ecs-is-a-bad-idea-742de7a18e59)
 - [Why vanilla ECS is not enough](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5)
 - [ECS: From tool to paradigm](https://ajmmertens.medium.com/ecs-from-tool-to-paradigm-350587cdf216)
-

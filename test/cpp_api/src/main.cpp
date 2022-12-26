@@ -435,6 +435,9 @@ void System_multithread_system_w_query_iter_w_iter(void);
 void System_multithread_system_w_query_iter_w_world(void);
 void System_run_callback(void);
 void System_startup_system(void);
+void System_interval_tick_source(void);
+void System_rate_tick_source(void);
+void System_nested_rate_tick_source(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -2805,6 +2808,18 @@ bake_test_case System_testcases[] = {
     {
         "startup_system",
         System_startup_system
+    },
+    {
+        "interval_tick_source",
+        System_interval_tick_source
+    },
+    {
+        "rate_tick_source",
+        System_rate_tick_source
+    },
+    {
+        "nested_rate_tick_source",
+        System_nested_rate_tick_source
     }
 };
 
@@ -5526,7 +5541,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        61,
+        64,
         System_testcases
     },
     {

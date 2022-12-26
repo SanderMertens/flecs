@@ -18688,6 +18688,22 @@ flecs::system_builder<Components...> system(Args &&... args) const;
 /** @} */
 
 #   endif
+#   ifdef FLECS_TIMER
+/**
+ * @file addons/cpp/mixins/timer/mixin.inl
+ * @brief Timer module mixin.
+ */
+
+/**
+ * \memberof flecs::world
+ * \ingroup cpp_addons_timer
+ */
+
+/** Find or register a timer. */
+template <typename... Args>
+flecs::timer timer(Args &&... args) const;
+
+#   endif
 #   ifdef FLECS_RULES
 /**
  * @file addons/cpp/mixins/rule/mixin.inl
@@ -26176,6 +26192,16 @@ public:
         return *this;
     }
 
+    /** Set tick source.
+     * This operation sets a shared tick source for the system.
+     *
+     * @param tick_source The tick source to use for the system.
+     */
+    Base& tick_source(flecs::entity_t tick_source) {
+        m_desc->tick_source = tick_source;
+        return *this;
+    }
+
     /** Set system context */
     Base& ctx(void *ptr) {
         m_desc->ctx = ptr;
@@ -26585,9 +26611,44 @@ namespace flecs {
 
 // Timer class
 struct timer final : entity {
-    template <typename ... Args>
-    timer(Args&&... args) : entity(FLECS_FWD(args)...) { }
+    using entity::entity;
+
+    timer& interval(ecs_ftime_t interval) {
+        ecs_set_interval(m_world, m_id, interval);
+        return *this;
+    }
+
+    ecs_ftime_t interval() {
+        return ecs_get_interval(m_world, m_id);
+    }
+
+    timer& timeout(ecs_ftime_t timeout) {
+        ecs_set_timeout(m_world, m_id, timeout);
+        return *this;
+    }
+
+    ecs_ftime_t timeout() {
+        return ecs_get_timeout(m_world, m_id);
+    }
+
+    timer& rate(int32_t rate, flecs::entity_t tick_source = 0) {
+        ecs_set_rate(m_world, m_id, rate, tick_source);
+        return *this;
+    }
+
+    void start() {
+        ecs_start_timer(m_world, m_id);
+    }
+
+    void stop() {
+        ecs_stop_timer(m_world, m_id);
+    }
 };
+
+template <typename... Args>
+inline flecs::timer world::timer(Args &&... args) const {
+    return flecs::timer(m_world, FLECS_FWD(args)...);
+}
 
 inline void system::interval(ecs_ftime_t interval) {
     ecs_set_interval(m_world, m_id, interval);

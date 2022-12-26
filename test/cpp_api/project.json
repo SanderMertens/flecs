@@ -452,7 +452,10 @@
                 "multithread_system_w_query_iter_w_iter",
                 "multithread_system_w_query_iter_w_world",
                 "run_callback",
-                "startup_system"
+                "startup_system",
+                "interval_tick_source",
+                "rate_tick_source",
+                "nested_rate_tick_source"
             ]
         }, {
             "id": "Event",
