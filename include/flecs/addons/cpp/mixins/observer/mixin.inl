@@ -3,7 +3,7 @@
  * @brief Observer world mixin.
  */
 
-/** Observer builder
+/** Observer builder.
  * 
  * \memberof flecs::world
  * \ingroup cpp_observers

@@ -3,7 +3,7 @@
  * @brief Enum world mixin.
  */
 
-/** Convert enum constant to entity
+/** Convert enum constant to entity.
  * 
  * \memberof flecs::world
  * \ingroup cpp_entities

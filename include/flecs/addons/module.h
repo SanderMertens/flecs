@@ -87,16 +87,14 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
-/** Register a new module.
- */
+/** Register a new module. */
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
     const char *c_name,
     const ecs_component_desc_t *desc);
 
-/** Define module
- */
+/** Define module. */
 #define ECS_MODULE_DEFINE(world, id)\
     {\
         ecs_component_desc_t desc = {0};\

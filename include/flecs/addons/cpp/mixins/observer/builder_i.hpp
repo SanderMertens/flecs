@@ -9,7 +9,7 @@
 
 namespace flecs {
 
-/** Observer builder interface
+/** Observer builder interface.
  * 
  * \ingroup cpp_observers
  */

@@ -292,14 +292,14 @@ struct term_builder_i : term_id_builder_i<Base> {
         return this->inout_stage(flecs::Out);
     }
 
-    /** Short for inout_stage(flecs::In) 
+    /** Short for inout_stage(flecs::In).
      *   Use when system uses get.
      */
     Base& read() {
         return this->inout_stage(flecs::In);
     }
 
-    /** Short for inout_stage(flecs::InOut) 
+    /** Short for inout_stage(flecs::InOut).
      *   Use when system uses get_mut.
      */
     Base& read_write() {

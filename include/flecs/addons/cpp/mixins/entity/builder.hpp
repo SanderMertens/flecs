@@ -892,7 +892,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (First, this) 
+    /** Entities created in function will have (First, this).
      * This operation is thread safe.
      *
      * @tparam First The first element of the pair
@@ -904,7 +904,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (first, this) 
+    /** Entities created in function will have (first, this).
      *
      * @param first The first element of the pair.
      * @param func The function to call.

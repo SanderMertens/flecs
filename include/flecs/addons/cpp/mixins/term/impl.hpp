@@ -9,7 +9,7 @@
 
 namespace flecs {
 
-/** Class that describes a term
+/** Class that describes a term.
  * 
  * \ingroup cpp_core_filters
  */

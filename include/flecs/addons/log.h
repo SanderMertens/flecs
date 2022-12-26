@@ -338,13 +338,13 @@ void _ecs_parser_errorv(
 #define ecs_log_push() _ecs_log_push(0)
 #define ecs_log_pop() _ecs_log_pop(0)
 
-/** Abort 
+/** Abort.
  * Unconditionally aborts process. */
 #define ecs_abort(error_code, ...)\
     _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
-/** Assert 
+/** Assert. 
  * Aborts if condition is false, disabled in debug mode. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
@@ -360,7 +360,7 @@ void _ecs_parser_errorv(
     ecs_assert(var, error_code, __VA_ARGS__);\
     (void)var
 
-/** Debug assert 
+/** Debug assert.
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
 #ifndef FLECS_NDEBUG
 #define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
@@ -374,7 +374,7 @@ void _ecs_parser_errorv(
         goto error;\
     }
 
-/** Check
+/** Check.
  * goto error if condition is false. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_check(condition, error_code, ...) ecs_dummy_check
@@ -391,7 +391,7 @@ void _ecs_parser_errorv(
 #endif
 #endif // FLECS_NDEBUG
 
-/** Panic
+/** Panic.
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_throw(error_code, ...) ecs_dummy_check

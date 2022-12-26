@@ -16,7 +16,7 @@ namespace _ {
         observer_builder_i, Components ...>;
 }
 
-/** Observer builder
+/** Observer builder.
  * 
  * \ingroup cpp_observers
  */

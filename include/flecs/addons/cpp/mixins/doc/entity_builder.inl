@@ -3,7 +3,7 @@
  * @brief Doc entity builder mixin.
  */
 
-/** Set doc name 
+/** Set doc name.
  * This adds (flecs.doc.Description, flecs.Name) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -14,7 +14,7 @@ Self& set_doc_name(const char *name) {
     return to_base();
 }
 
-/** Set doc brief 
+/** Set doc brief.
  * This adds (flecs.doc.Description, flecs.doc.Brief) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -25,7 +25,7 @@ Self& set_doc_brief(const char *brief) {
     return to_base();
 }
 
-/** Set doc detailed description 
+/** Set doc detailed description.
  * This adds (flecs.doc.Description, flecs.doc.Detail) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -36,7 +36,7 @@ Self& set_doc_detail(const char *detail) {
     return to_base();
 }
 
-/** Set doc link 
+/** Set doc link.
  * This adds (flecs.doc.Description, flecs.doc.Link) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -47,7 +47,7 @@ Self& set_doc_link(const char *link) {
     return to_base();
 }
 
-/** Set doc color 
+/** Set doc color.
  * This adds (flecs.doc.Description, flecs.doc.Color) to the entity.
  * 
  * \memberof flecs::entity_builder

@@ -421,7 +421,7 @@
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
-/** Declare component hooks
+/** Declare component hooks.
  * Example:
  *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
  */

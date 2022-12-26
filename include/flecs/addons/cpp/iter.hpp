@@ -299,7 +299,7 @@ public:
         return ecs_field_size(m_iter, index);
     }
 
-    /** Obtain field source (0 if This)
+    /** Obtain field source (0 if This).
      *
      * @param index The field index.
      */    
