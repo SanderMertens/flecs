@@ -1023,7 +1023,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = docs
+IMAGE_PATH             = docs/img
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -1293,7 +1293,8 @@ HTML_EXTRA_STYLESHEET  = docs/cfg/doxygen-awesome.css \
 HTML_EXTRA_FILES       = docs/cfg/doxygen-awesome-darkmode-toggle.js \
                          docs/cfg/doxygen-awesome-fragment-copy-button.js \
                          docs/cfg/doxygen-awesome-paragraph-link.js \
-                         docs/cfg/doxygen-awesome-interactive-toc.js
+                         docs/cfg/doxygen-awesome-interactive-toc.js \
+                         docs/img/logo_small_dark.png
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
 # should be rendered with a dark or light theme. Default setting AUTO_LIGHT

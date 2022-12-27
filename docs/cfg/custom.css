@@ -84,3 +84,7 @@ code {
 #projectlogo img {
   max-height: calc(var(--title-font-size) * 1.5) !important;
 }
+
+html.light-mode #projectlogo img {
+  content: url(logo_small_dark.png);
+}
