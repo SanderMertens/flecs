@@ -6928,7 +6928,7 @@ void flecs_deferred_add_remove(
         bool defer = true;
         if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
-            if (!desc->id || (name && !name_assigned)) {
+            if (name && (!desc->id || !name_assigned)) {
                 /* New named entities are created by temporarily going out of
                  * readonly mode to ensure no duplicates are created. */
                 defer = false;

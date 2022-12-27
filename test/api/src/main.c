@@ -102,8 +102,10 @@ void Entity_entity_init_w_childof_twice(void);
 void Entity_entity_init_w_childof_nested_name_twice(void);
 void Entity_entity_init_w_childof_and_scope(void);
 void Entity_entity_init_w_childof_and_scope_and_scoped_name(void);
+void Entity_entity_init_w_childof_and_no_name(void);
 void Entity_deferred_entity_init_w_childof_and_scope(void);
 void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void);
+void Entity_deferred_entity_init_w_childof_and_no_name(void);
 void Entity_entity_init_w_empty_string_name(void);
 void Entity_entity_init_w_empty_string_symbol(void);
 void Entity_set_name_w_0_twice(void);
@@ -2694,12 +2696,20 @@ bake_test_case Entity_testcases[] = {
         Entity_entity_init_w_childof_and_scope_and_scoped_name
     },
     {
+        "entity_init_w_childof_and_no_name",
+        Entity_entity_init_w_childof_and_no_name
+    },
+    {
         "deferred_entity_init_w_childof_and_scope",
         Entity_deferred_entity_init_w_childof_and_scope
     },
     {
         "deferred_entity_init_w_childof_and_scope_and_scoped_name",
         Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name
+    },
+    {
+        "deferred_entity_init_w_childof_and_no_name",
+        Entity_deferred_entity_init_w_childof_and_no_name
     },
     {
         "entity_init_w_empty_string_name",
@@ -11300,7 +11310,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        85,
+        87,
         Entity_testcases
     },
     {
