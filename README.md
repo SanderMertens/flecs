@@ -45,6 +45,8 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 ## Getting Started
 To use Flecs, add the [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) files to your project. When importing the files into a C++ project, make sure to compile [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) as C code (for example by using `gcc` and `clang` instead of `g++` and `clang++`).
 
+The ECS core compiles as C99 code and can be compiled with `-std=c99`. Some addons that are enabled by default require functionality that is not part of C99 for things like measuring time and HTTP sockets (for using the explorer), which can throw compiler errors. To fix these, either compile the code with `-std=gnu99` or add `-D_XOPEN_SOURCE=600`.
+
 Flecs can also be built as a standalone library, by using the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake) build files. If you are using a custom build file to compile Flecs as a library, make sure to define `flecs_EXPORTS`, for example by adding `-Dflecs_EXPORTS` to the compiler command.
 
 If you want to use the [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) files to build a standalone library, make sure to remove this line from the top of the [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) file:
