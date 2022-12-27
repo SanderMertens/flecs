@@ -58,12 +58,12 @@ html {
 
 html.dark-mode {
   --primary-color: #42b983;
-  --page-background-color: #1a1d23;
-  --side-nav-background: #242832;
+  --page-background-color: #0f1116;
+  --side-nav-background: #1a1d23;
   --separator-color: rgba(255,255,255,0.07);
-  --tablehead-background: #242832;
-  --code-background: #242832;
-  --fragment-background: #242832;
+  --tablehead-background: #1a1d23;
+  --code-background: #1a1d23;
+  --fragment-background: #1a1d23;
   --fragment-link: #42b983;
   --fragment-keywordflow: #ff7b72;
 }
@@ -79,4 +79,8 @@ div.fragment {
 code {
   border-radius: 0px;
   border: none;
+}
+
+#projectlogo img {
+  max-height: calc(var(--title-font-size) * 1.5) !important;
 }
