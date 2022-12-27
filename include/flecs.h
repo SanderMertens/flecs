@@ -1993,8 +1993,9 @@ FLECS_API
 ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
-/** Create new entity.
- * This operation creates a new entity with a (component) id.
+/** Create new entity with (component) id.
+ * This operation creates a new entity with an optional (component) id. When 0
+ * is passed to the id paramter, no component is added to the new entity.
  * 
  * @param world The world.
  * @param id The component id to initialize the new entity with.

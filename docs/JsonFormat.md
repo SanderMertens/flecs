@@ -1,5 +1,5 @@
 # JSON format
-This document provides an overview of the JSON serializer format. For an overview of how to use the JSON serializer API, [see the JSON addon documentation](https://flecs.docsforge.com/master/api-json/).
+This document provides an overview of the JSON serializer format. For an overview of how to use the JSON serializer API, [see the JSON addon documentation](https://www.flecs.dev/flecs/group__c__addons__json.html).
 
 ## Value kinds
 This section describes value kinds that are used by the JSON serializers.
@@ -15,7 +15,7 @@ A path field returns the path identifier of an entity as returned by `ecs_get_fu
 ### **Label**
 A label field returns the doc name of the entity as returned by `ecs_doc_get_name` or `flecs::entity::doc_name`. The doc name is a user-friendly name for the entity that does not need to be unique and may contain any character.
 
-Serializing labels requires the [doc](https://flecs.docsforge.com/master/api-doc/) addon.
+Serializing labels requires the [doc](https://www.flecs.dev/flecs/group__c__addons__doc.html) addon.
 
 **Example**:
 ```json
@@ -48,7 +48,7 @@ Same as [Id](#id) but with [Label](#label)'s instead of paths.
 ```
 
 ### **Value**
-A JSON object or scalar representing the value of a component. Component values can only be serialized if the component is described in the reflection framework (see the [meta addon](https://flecs.docsforge.com/master/api-meta/)).
+A JSON object or scalar representing the value of a component. Component values can only be serialized if the component is described in the reflection framework (see the [meta addon](https://www.flecs.dev/flecs/group__c__addons__meta.html)).
 
 When a component has no value (e.g. a tag) or is not described by the reflection framework, `0` will be used as placeholder.
 
@@ -226,7 +226,7 @@ Array with paths of sources for each term. A subject indicates the actual entity
 Type: Array([Path](#path)), optional
 
 #### **"variables"**
-Array with variable values for current result (see [query variables](https://flecs.docsforge.com/master/query-manual/#variables)).
+Array with variable values for current result (see [query variables](https://www.flecs.dev/flecs/md_docs_Queries.html/#variables)).
 
 Type: Array([Path](#path)), optional
 
@@ -266,7 +266,7 @@ Array with ids for each term.
 Type: Array(string), optional
 
 #### **"variables"**
-Array with variable names (see [query variables](https://flecs.docsforge.com/master/query-manual/#variables)).
+Array with variable names (see [query variables](https://www.flecs.dev/flecs/md_docs_Queries.html/#variables)).
 
 Type: Array(string), optional
 

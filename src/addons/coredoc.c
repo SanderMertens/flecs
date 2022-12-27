@@ -7,7 +7,7 @@
 
 #ifdef FLECS_COREDOC
 
-#define URL_ROOT "https://flecs.docsforge.com/master/relationships-manual/"
+#define URL_ROOT "https://www.flecs.dev/flecs/md_docs_Relationships.html/"
 
 void FlecsCoreDocImport(
     ecs_world_t *world)

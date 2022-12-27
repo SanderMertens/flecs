@@ -13,7 +13,7 @@ ecs_singleton_set(world, EcsRest, {0});
 world.set<flecs::Rest>({});
 ```
 
-When an application uses the app addon [FLECS_APP](https://flecs.docsforge.com/master/api-app/) the REST interface can be enabled like this:
+When an application uses the app addon [FLECS_APP](https://www.flecs.dev/flecs/group__c__addons__app.html) the REST interface can be enabled like this:
 
 ```c
 // Start application main loop, enable REST interface
@@ -43,7 +43,7 @@ ECS_IMPORT(world, FlecsMonitor);
 world.import<flecs::monitor>();
 ```
 
-When an application uses the app addon [FLECS_APP](https://flecs.docsforge.com/master/api-app/) the monitoring can be enabled like this:
+When an application uses the app addon [FLECS_APP](https://www.flecs.dev/flecs/group__c__addons__app.html) the monitoring can be enabled like this:
 ```c
 // Start application main loop, enable REST interface and monitoring
 ecs_app_run(world, &(ecs_app_desc_t){
@@ -59,7 +59,7 @@ world.app()
   .run();
 ```
 
-For the full C/C++ API reference [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
+For the full C/C++ API reference [see the REST addon documentation](https://www.flecs.dev/flecs/group__c__addons__rest.html).
 
 ## Explorer
 An application with REST enabled can be remotely monitored with the [Flecs Explorer](https://github.com/flecs-hub/explorer). When the application is running with REST enabled, navigate to https://flecs.dev/explorer. This should connect the Explorer to the application.

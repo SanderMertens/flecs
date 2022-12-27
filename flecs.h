@@ -5223,8 +5223,9 @@ FLECS_API
 ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
-/** Create new entity.
- * This operation creates a new entity with a (component) id.
+/** Create new entity with (component) id.
+ * This operation creates a new entity with an optional (component) id. When 0
+ * is passed to the id paramter, no component is added to the new entity.
  * 
  * @param world The world.
  * @param id The component id to initialize the new entity with.
@@ -8773,7 +8774,7 @@ int ecs_value_move_ctor(
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
-/** Declare component hooks
+/** Declare component hooks.
  * Example:
  *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
  */
@@ -9494,13 +9495,13 @@ void _ecs_parser_errorv(
 #define ecs_log_push() _ecs_log_push(0)
 #define ecs_log_pop() _ecs_log_pop(0)
 
-/** Abort 
+/** Abort.
  * Unconditionally aborts process. */
 #define ecs_abort(error_code, ...)\
     _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
-/** Assert 
+/** Assert. 
  * Aborts if condition is false, disabled in debug mode. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
@@ -9516,7 +9517,7 @@ void _ecs_parser_errorv(
     ecs_assert(var, error_code, __VA_ARGS__);\
     (void)var
 
-/** Debug assert 
+/** Debug assert.
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
 #ifndef FLECS_NDEBUG
 #define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
@@ -9530,7 +9531,7 @@ void _ecs_parser_errorv(
         goto error;\
     }
 
-/** Check
+/** Check.
  * goto error if condition is false. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_check(condition, error_code, ...) ecs_dummy_check
@@ -9547,7 +9548,7 @@ void _ecs_parser_errorv(
 #endif
 #endif // FLECS_NDEBUG
 
-/** Panic
+/** Panic.
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_throw(error_code, ...) ecs_dummy_check
@@ -13097,6 +13098,14 @@ const char *ecs_parse_expr_token(
 
 #ifdef FLECS_META_C
 
+/**
+ * @defgroup c_addons_meta_c Meta Utilities
+ * @brief Macro utilities to automatically insert reflection data.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_META
 #define FLECS_META
 #endif
@@ -13111,8 +13120,6 @@ const char *ecs_parse_expr_token(
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Public API */
 
 /* Macro that controls behavior of API. Usually set in module header. When the
  * macro is not defined, it defaults to IMPL. */
@@ -13236,6 +13243,8 @@ int ecs_meta_from_desc(
 #endif
 
 #endif // FLECS_META_C_H
+
+/** @} */
 
 #endif // FLECS_META_C
 
@@ -14146,16 +14155,14 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
-/** Register a new module.
- */
+/** Register a new module. */
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
     const char *c_name,
     const ecs_component_desc_t *desc);
 
-/** Define module
- */
+/** Define module. */
 #define ECS_MODULE_DEFINE(world, id)\
     {\
         ecs_component_desc_t desc = {0};\
@@ -18231,21 +18238,21 @@ flecs::id id() const;
 template <typename ... Args>
 flecs::id id(Args&&... args) const;
 
-/** Get pair id from relationship, object
+/** Get pair id from relationship, object.
  * 
  * \memberof flecs::world
  */
 template <typename First, typename Second>
 flecs::id pair() const;
 
-/** Get pair id from relationship, object
+/** Get pair id from relationship, object.
  * 
  * \memberof flecs::world
  */
 template <typename First>
 flecs::id pair(entity_t o) const;
 
-/** Get pair id from relationship, object
+/** Get pair id from relationship, object.
  * 
  * \memberof flecs::world
  */
@@ -18441,7 +18448,7 @@ void each(flecs::id_t term_id, Func&& func) const;
  * @brief Observer world mixin.
  */
 
-/** Observer builder
+/** Observer builder.
  * 
  * \memberof flecs::world
  * \ingroup cpp_observers
@@ -18501,7 +18508,7 @@ flecs::query_builder<Comps...> query_builder(Args &&... args) const;
  * @brief Enum world mixin.
  */
 
-/** Convert enum constant to entity
+/** Convert enum constant to entity.
  * 
  * \memberof flecs::world
  * \ingroup cpp_entities
@@ -18595,27 +18602,27 @@ bool progress(ecs_ftime_t delta_time = 0.0) const;
  */
 void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const;
 
-/** Set timescale
+/** Set timescale.
  * @see ecs_set_time_scale
  */
 void set_time_scale(ecs_ftime_t mul) const;
 
-/** Get timescale
+/** Get timescale.
  * @see ecs_get_time_scale
  */
 ecs_ftime_t get_time_scale() const;
 
-/** Get tick
+/** Get tick.
  * @return Monotonically increasing frame count.
  */
 int64_t get_tick() const;
 
-/** Set target FPS
+/** Set target FPS.
  * @see ecs_set_target_fps
  */
 void set_target_fps(ecs_ftime_t target_fps) const;
 
-/** Get target FPS
+/** Get target FPS.
  * @return Configured frames per second.
  */
 ecs_ftime_t get_target_fps() const;
@@ -19194,7 +19201,7 @@ public:
         return ecs_field_size(m_iter, index);
     }
 
-    /** Obtain field source (0 if This)
+    /** Obtain field source (0 if This).
      *
      * @param index The field index.
      */    
@@ -21109,7 +21116,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (First, this) 
+    /** Entities created in function will have (First, this).
      * This operation is thread safe.
      *
      * @tparam First The first element of the pair
@@ -21121,7 +21128,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (first, this) 
+    /** Entities created in function will have (first, this).
      *
      * @param first The first element of the pair.
      * @param func The function to call.
@@ -21157,7 +21164,7 @@ struct entity_builder : entity_view {
  * @brief Doc entity builder mixin.
  */
 
-/** Set doc name 
+/** Set doc name.
  * This adds (flecs.doc.Description, flecs.Name) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -21168,7 +21175,7 @@ Self& set_doc_name(const char *name) {
     return to_base();
 }
 
-/** Set doc brief 
+/** Set doc brief.
  * This adds (flecs.doc.Description, flecs.doc.Brief) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -21179,7 +21186,7 @@ Self& set_doc_brief(const char *brief) {
     return to_base();
 }
 
-/** Set doc detailed description 
+/** Set doc detailed description.
  * This adds (flecs.doc.Description, flecs.doc.Detail) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -21190,7 +21197,7 @@ Self& set_doc_detail(const char *detail) {
     return to_base();
 }
 
-/** Set doc link 
+/** Set doc link.
  * This adds (flecs.doc.Description, flecs.doc.Link) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -21201,7 +21208,7 @@ Self& set_doc_link(const char *link) {
     return to_base();
 }
 
-/** Set doc color 
+/** Set doc color.
  * This adds (flecs.doc.Description, flecs.doc.Color) to the entity.
  * 
  * \memberof flecs::entity_builder
@@ -24381,14 +24388,14 @@ struct term_builder_i : term_id_builder_i<Base> {
         return this->inout_stage(flecs::Out);
     }
 
-    /** Short for inout_stage(flecs::In) 
+    /** Short for inout_stage(flecs::In).
      *   Use when system uses get.
      */
     Base& read() {
         return this->inout_stage(flecs::In);
     }
 
-    /** Short for inout_stage(flecs::InOut) 
+    /** Short for inout_stage(flecs::InOut).
      *   Use when system uses get_mut.
      */
     Base& read_write() {
@@ -24509,7 +24516,7 @@ private:
 
 namespace flecs {
 
-/** Class that describes a term
+/** Class that describes a term.
  * 
  * \ingroup cpp_core_filters
  */
@@ -25808,7 +25815,7 @@ private:
 
 namespace flecs {
 
-/** Observer builder interface
+/** Observer builder interface.
  * 
  * \ingroup cpp_observers
  */
@@ -25883,7 +25890,7 @@ namespace _ {
         observer_builder_i, Components ...>;
 }
 
-/** Observer builder
+/** Observer builder.
  * 
  * \ingroup cpp_observers
  */

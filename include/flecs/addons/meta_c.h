@@ -5,6 +5,14 @@
 
 #ifdef FLECS_META_C
 
+/**
+ * @defgroup c_addons_meta_c Meta Utilities
+ * @brief Macro utilities to automatically insert reflection data.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
 #ifndef FLECS_META
 #define FLECS_META
 #endif
@@ -19,8 +27,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Public API */
 
 /* Macro that controls behavior of API. Usually set in module header. When the
  * macro is not defined, it defaults to IMPL. */
@@ -144,5 +150,7 @@ int ecs_meta_from_desc(
 #endif
 
 #endif // FLECS_META_C_H
+
+/** @} */
 
 #endif // FLECS_META_C

@@ -3,16 +3,16 @@
 ## Introduction
 [![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/docs/api/html/index.html)
+[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/md_docs_Docs.html)
 [![actions](https://img.shields.io/github/actions/workflow/status/SanderMertens/flecs/ci.yml?branch=master&style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ACI)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)
 
 Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
 
-- Fast and [portable](#language-bindings) zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
-- Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
-- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
-- Fast native support for [hierarchies](https://www.flecs.dev/flecs/#/docs/Relationships?id=the-childof-relationship) and [prefabs](https://www.flecs.dev/flecs/#/docs/Relationships?id=the-isa-relationship)
+- Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
+- Modern type-safe [C++11 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
+- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_Relationships.html)!
+- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md277) and [prefabs](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md275)
 - Minimal ECS core with optional [addons](#addons)
 - Entire codebase builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
@@ -22,10 +22,10 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
 - Run games on multiple CPU cores with a fast lockless scheduler
 - Compiles warning-free on 8 compilers on all major platforms, with [CI](https://github.com/SanderMertens/flecs/actions) running more than 4000 tests
-- Integrated [reflection framework](https://flecs.docsforge.com/master/api-meta/) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
+- Integrated [reflection framework](https://www.flecs.dev/flecs/group__c__addons__meta.html) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance)
-- [Statistics addon](https://flecs.docsforge.com/master/api-stats/) for profiling ECS performance
+- [Statistics addon](https://www.flecs.dev/flecs/group__c__addons__stats.html) for profiling ECS performance
 - A web-based dashboard ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)) for inspecting entities, running ECS queries and monitoring games:
 
 [![Dashboard image](docs/img/explorer.png)](https://flecs.dev/explorer)
@@ -158,6 +158,9 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 
 ## Resources
 
+### Documentation
+- [Flecs Documentation](https://www.flecs.dev/flecs/index.html)
+
 ### Resources provided by the community :heart:
 - [Unreal Minimum Viable Flecs Project](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
@@ -178,15 +181,6 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 - [Twitter](https://twitter.com/ajmmertens)
 - [Reddit](https://www.reddit.com/r/flecs)
 
-### Articles
-- [Where are my entities and components](https://ajmmertens.medium.com/building-an-ecs-1-where-are-my-entities-and-components-63d07c7da742)
-- [Archetypes and vectorization](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9)
-- [Making the most of entity identifiers](https://ajmmertens.medium.com/doing-a-lot-with-a-little-ecs-identifiers-25a72bd2647)
-- [Building games in ECS with entity relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)
-- [Why storing state machines in ECS is a bad idea](https://ajmmertens.medium.com/why-storing-state-machines-in-ecs-is-a-bad-idea-742de7a18e59)
-- [Why vanilla ECS is not enough](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5)
-- [ECS: From tool to paradigm](https://ajmmertens.medium.com/ecs-from-tool-to-paradigm-350587cdf216)
-
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
 
@@ -205,33 +199,33 @@ The following addons can be configured:
 
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
-[Cpp](https://flecs.docsforge.com/master/api-cpp/)           | C++11 API                                        | FLECS_CPP           |
-[Module](https://flecs.docsforge.com/master/api-module/)     | Organize game logic into reusable modules        | FLECS_MODULE        |
-[System](https://flecs.docsforge.com/master/api-systems/)    | Create & run systems                             | FLECS_SYSTEM        |
-[Pipeline](https://flecs.docsforge.com/master/api-pipeline/) | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
-[Timer](https://flecs.docsforge.com/master/api-timers/)      | Run systems at time intervals or at a rate       | FLECS_TIMER         |
-[Meta](https://flecs.docsforge.com/master/api-meta/)         | Flecs reflection system                          | FLECS_META          |
-[Units](https://flecs.docsforge.com/master/api-units/)       | Builtin unit types                               | FLECS_UNITS         |
-[Meta_C](https://flecs.docsforge.com/master/api-meta-c/)     | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
-[Expr](https://flecs.docsforge.com/master/api-expr/)         | String format optimized for ECS data             | FLECS_EXPR          |
-[JSON](https://flecs.docsforge.com/master/api-json/)         | JSON format                                      | FLECS_JSON          |
-[Doc](https://flecs.docsforge.com/master/api-doc/)           | Add documentation to components, systems & more  | FLECS_DOC           |
-[Coredoc](https://flecs.docsforge.com/master/api-coredoc/)   | Documentation for builtin components & modules   | FLECS_COREDOC       |
-[Http](https://flecs.docsforge.com/master/api-http/)         | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
-[Rest](https://flecs.docsforge.com/master/api-rest/)         | REST API for showing entities in the browser     | FLECS_REST          |
-[Parser](https://flecs.docsforge.com/master/api-parser/)     | Create entities & queries from strings           | FLECS_PARSER        |
-[Plecs](https://flecs.docsforge.com/master/api-plecs/)       | Small utility language for asset/scene loading   | FLECS_PLECS         |
-[Rules](https://flecs.docsforge.com/master/api-rules/)       | Powerful prolog-like query language              | FLECS_RULES         |
-[Snapshot](https://flecs.docsforge.com/master/api-snapshot/) | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
-[Stats](https://flecs.docsforge.com/master/api-stats/)       | See what's happening in a world with statistics  | FLECS_STATS         |
-[Monitor](https://flecs.docsforge.com/master/api-monitor/)   | Periodically collect & store statistics          | FLECS_MONITOR       |
-[Log](https://flecs.docsforge.com/master/api-log/)           | Extended tracing and error logging               | FLECS_LOG           |
-[Journal](https://flecs.docsforge.com/master/api-journal/)   | Journaling of API functions                      | FLECS_JOURNAL       |
-[App](https://flecs.docsforge.com/master/api-app/)           | Flecs application framework                      | FLECS_APP           |
-[OS API Impl](https://flecs.docsforge.com/master/api-os-api-impl/)   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
+[Cpp](/flecs/group__cpp.html)                          | C++11 API                                        | FLECS_CPP           |
+[Module](/flecs/group__c__addons__module.html)     | Organize game logic into reusable modules        | FLECS_MODULE        |
+[System](flecs/group__c__addons__system.html)      | Create & run systems                             | FLECS_SYSTEM        |
+[Pipeline](/flecs/group__c__addons__pipeline.html) | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
+[Timer](/flecs/group__c__addons__timer.html)       | Run systems at time intervals or at a rate       | FLECS_TIMER         |
+[Meta](/flecs/group__c__addons__meta.html)         | Flecs reflection system                          | FLECS_META          |
+[Meta_C](/flecs/group__c__addons__meta_c.html)     | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
+[Units](/flecs/group__c__addons__units.html)       | Builtin unit types                               | FLECS_UNITS         |
+[Expr](/flecs/group__c__addons__expr.html)         | String format optimized for ECS data             | FLECS_EXPR          |
+[JSON](/flecs/group__c__addons__json.html)         | JSON format                                      | FLECS_JSON          |
+[Doc](/flecs/group__c__addons__doc.html)           | Add documentation to components, systems & more  | FLECS_DOC           |
+[Coredoc](/flecs/group__c__addons__coredoc.html)   | Documentation for builtin components & modules   | FLECS_COREDOC       |
+[Http](/flecs/group__c__addons__http.html)         | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
+[Rest](/flecs/group__c__addons__rest.html)         | REST API for showing entities in the browser     | FLECS_REST          |
+[Parser](/flecs/group__c__addons__parser.html)     | Create entities & queries from strings           | FLECS_PARSER        |
+[Plecs](/flecs/group__c__addons__plecs.html)       | Small utility language for asset/scene loading   | FLECS_PLECS         |
+[Rules](/flecs/group__c__addons__rules.html)       | Powerful prolog-like query language              | FLECS_RULES         |
+[Snapshot](/flecs/group__c__addons__snapshot.html) | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
+[Stats](/flecs/group__c__addons__stats.html)       | See what's happening in a world with statistics  | FLECS_STATS         |
+[Monitor](/flecs/group__c__addons__monitor.html)   | Periodically collect & store statistics          | FLECS_MONITOR       |
+[Log](/flecs/group__c__addons__log.html)           | Extended tracing and error logging               | FLECS_LOG           |
+[Journal](/flecs/group__c__addons__journal.html)   | Journaling of API functions                      | FLECS_JOURNAL       |
+[App](/flecs/group__c__addons__app.html)           | Flecs application framework                      | FLECS_APP           |
+[OS API Impl](/flecs/group__c__addons__os__api__impl.html) | Default OS API implementation for Posix/Win32 | FLECS_OS_API_IMPL   |
 
 ## Flecs Hub
-Flecs Hub is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.
+[Flecs Hub](https://github.com/flecs-hub) is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.
 
 Module      | Description      
 ------------|------------------
@@ -244,14 +238,13 @@ Module      | Description
 [flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
 [flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
 [flecs.systems.physics](https://github.com/flecs-hub/flecs-systems-physics) | Systems for moving objects and collision detection
-[flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
 [flecs.game](https://github.com/flecs-hub/flecs-game) | Generic game systems, like a camera controller
 
 ## Language bindings
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
 - [Lua](https://github.com/flecs-hub/flecs-lua)
-- [Zig](https://github.com/prime31/zig-flecs)
+- [Zig #1](https://github.com/foxnne/zig-flecs) [#2](https://github.com/prime31/zig-flecs)
 - [C#](https://github.com/flecs-hub/flecs-cs)
 - [Rust](https://github.com/jazzay/flecs-rs)
 
