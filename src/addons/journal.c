@@ -17,7 +17,12 @@ char* flecs_journal_entitystr(
     if (_path && !strchr(_path, '.')) {
         path = ecs_asprintf("#[blue]%s", _path);
     } else {
-        path = ecs_asprintf("#[normal]_%u", (uint32_t)entity);
+        uint32_t gen = entity >> 32;
+        if (gen) {
+            path = ecs_asprintf("#[normal]_%u_%u", (uint32_t)entity, gen);
+        } else {
+            path = ecs_asprintf("#[normal]_%u", (uint32_t)entity);
+        }
     }
     return path;
 }

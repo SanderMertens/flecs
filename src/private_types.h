@@ -522,6 +522,7 @@ typedef struct ecs_marked_id_t {
     ecs_id_record_t *idr;
     ecs_id_t id;
     ecs_entity_t action; /* Set explicitly for delete_with, remove_all */
+    bool delete_id;
 } ecs_marked_id_t;
 
 typedef struct ecs_store_t {

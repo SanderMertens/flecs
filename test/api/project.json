@@ -1812,7 +1812,9 @@
                 "cache_test_9",
                 "cache_test_10",
                 "cache_test_11",
-                "cache_test_12"
+                "cache_test_12",
+                "cache_test_13",
+                "cache_test_14"
             ]                
         }, {
             "id": "ObserverOnSet",

@@ -4187,3 +4187,75 @@ void Observer_cache_test_12() {
 
     ecs_fini(world);
 }
+
+void Observer_cache_test_13() {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t t0 = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_id(world);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_id(world, e1, t0);
+    ecs_add_id(world, e1, ecs_pair(EcsChildOf, e0));
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_id(world, e2, t0);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_id(world, e3, ecs_pair(EcsChildOf, e2));
+
+    ecs_delete_with(world, t0);
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    test_expect_abort();
+    ecs_add_id(world, e4, ecs_pair(EcsChildOf, e2));
+}
+
+void Observer_cache_test_14() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    {
+        ecs_entity_t e0 = ecs_new_id(world);
+        ecs_add(world, e0, Tag);
+
+        ecs_entity_t e1 = ecs_new_id(world);
+        ecs_add_pair(world, e1, EcsChildOf, e0);
+
+        ecs_entity_t e2 = ecs_new_id(world);
+        ecs_add_pair(world, e2, EcsChildOf, e1);
+
+        ecs_delete_with(world, Tag);
+
+        test_assert(!ecs_is_alive(world, e0));
+        test_assert(!ecs_is_alive(world, e1));
+        test_assert(!ecs_is_alive(world, e2));
+    }
+
+    {
+        ecs_entity_t e0 = ecs_new_id(world);
+        ecs_add(world, e0, Tag);
+
+        ecs_entity_t e1 = ecs_new_id(world);
+        ecs_add_pair(world, e1, EcsChildOf, e0);
+        ecs_add(world, e1, Tag);
+
+        ecs_entity_t e2 = ecs_new_id(world);
+        ecs_add_pair(world, e2, EcsChildOf, e1);
+
+        ecs_remove_all(world, Tag);
+
+        test_assert(ecs_is_alive(world, e0));
+        test_assert(ecs_is_alive(world, e1));
+        test_assert(ecs_is_alive(world, e2));
+
+        test_assert(!ecs_has(world, e0, Tag));
+    }
+
+    ecs_fini(world);
+}
