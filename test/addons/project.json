@@ -423,7 +423,8 @@
                 "2_startup_systems_w_merge",
                 "inactive_last_system_merge_count",
                 "inactive_middle_system_merge_count",
-                "last_no_readonly_system_merge_count"
+                "last_no_readonly_system_merge_count",
+                "2_pipelines_1_system"
             ]
         }, {
             "id": "SystemMisc",

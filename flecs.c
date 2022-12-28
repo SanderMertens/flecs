@@ -17048,13 +17048,28 @@ void ecs_set_threads(
 
 #ifdef FLECS_PIPELINE
 
+static void flecs_pipeline_free(
+    ecs_pipeline_state_t *p) 
+{
+    if (p) {
+        ecs_world_t *world = p->query->filter.world;
+        ecs_allocator_t *a = &world->allocator;
+        ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
+        ecs_vec_fini_t(a, &p->systems, ecs_entity_t);
+        ecs_os_free(p->iters);
+        ecs_query_fini(p->query);
+        ecs_os_free(p);
+    }
+}
+
+static ECS_MOVE(EcsPipeline, dst, src, {
+    flecs_pipeline_free(dst->state);
+    dst->state = src->state;
+    src->state = NULL;
+})
+
 static ECS_DTOR(EcsPipeline, ptr, {
-    ecs_world_t *world = ptr->state->query->filter.world;
-    ecs_allocator_t *a = &world->allocator;
-    ecs_vec_fini_t(a, &ptr->state->ops, ecs_pipeline_op_t);
-    ecs_vec_fini_t(a, &ptr->state->systems, ecs_entity_t);
-    ecs_os_free(ptr->state->iters);
-    ecs_os_free(ptr->state);
+    flecs_pipeline_free(ptr->state);
 })
 
 typedef enum ecs_write_kind_t {
@@ -17865,7 +17880,8 @@ void FlecsPipelineImport(
 
     ecs_set_hooks(world, EcsPipeline, {
         .ctor = ecs_default_ctor,
-        .dtor = ecs_dtor(EcsPipeline)
+        .dtor = ecs_dtor(EcsPipeline),
+        .move = ecs_move(EcsPipeline)
     });
 
     world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){

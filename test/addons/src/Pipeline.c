@@ -2817,3 +2817,48 @@ void Pipeline_last_no_readonly_system_merge_count() {
 
     ecs_fini(world);
 }
+
+void Pipeline_2_pipelines_1_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Phase1);
+    ECS_TAG(world, Phase2);
+
+    ecs_entity_t p1 = ecs_pipeline(world, {
+        .query = {
+            .filter.terms = {
+                { .id = EcsSystem },
+                { .id = Phase1 }
+            }
+        }
+    });
+
+    ecs_entity_t p2 = ecs_pipeline(world, {
+        .query = {
+            .filter.terms = {
+                { .id = EcsSystem },
+                { .id = Phase2 }
+            }
+        }
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = { Phase1 }
+        }),
+        .callback = SysA
+    });
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 0);
+
+    ecs_set_pipeline(world, p1);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_set_pipeline(world, p2);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
