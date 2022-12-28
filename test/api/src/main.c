@@ -124,6 +124,9 @@ void Entity_get_depth(void);
 void Entity_get_depth_non_acyclic(void);
 void Entity_get_depth_empty(void);
 void Entity_get_depth_2_paths(void);
+void Entity_entity_init_w_empty_sep(void);
+void Entity_entity_init_w_empty_sep_from_scope(void);
+void Entity_entity_init_w_empty_sep_w_prefix(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2785,6 +2788,18 @@ bake_test_case Entity_testcases[] = {
     {
         "get_depth_2_paths",
         Entity_get_depth_2_paths
+    },
+    {
+        "entity_init_w_empty_sep",
+        Entity_entity_init_w_empty_sep
+    },
+    {
+        "entity_init_w_empty_sep_from_scope",
+        Entity_entity_init_w_empty_sep_from_scope
+    },
+    {
+        "entity_init_w_empty_sep_w_prefix",
+        Entity_entity_init_w_empty_sep_w_prefix
     }
 };
 
@@ -11325,7 +11340,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        87,
+        90,
         Entity_testcases
     },
     {

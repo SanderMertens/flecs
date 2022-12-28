@@ -3899,7 +3899,10 @@ typedef struct ecs_entity_desc_t {
                           * an entity is provided, the name will be verified
                           * with the existing entity. */
 
-    const char *sep;      /**< Optional custom separator for hierarchical names */
+    const char *sep;      /**< Optional custom separator for hierarchical names.
+                           * Leave to NULL for default ('.') separator. Set to
+                           * an empty string to prevent tokenization of name. */
+
     const char *root_sep; /**< Optional, used for identifiers relative to root */
 
     const char *symbol;  /**< Optional entity symbol. A symbol is an unscoped

@@ -130,7 +130,10 @@
                 "get_depth",
                 "get_depth_non_acyclic",
                 "get_depth_empty",
-                "get_depth_2_paths"
+                "get_depth_2_paths",
+                "entity_init_w_empty_sep",
+                "entity_init_w_empty_sep_from_scope",
+                "entity_init_w_empty_sep_w_prefix"
             ]
         }, {
             "id": "Search",
