@@ -102,6 +102,12 @@ void flecs_journal_begin(
     } else if (kind == EcsJournalDelete) {
         ecs_print(4, "#[cyan]ecs_delete#[reset](world, %s); "
             "#[grey] // delete(%s)", var_id, path);
+    } else if (kind == EcsJournalDeleteWith) {
+        ecs_print(4, "#[cyan]ecs_delete_with#[reset](world, %s); "
+            "#[grey] // delete_with(%s)", var_id, path);
+    } else if (kind == EcsJournalRemoveAll) {
+        ecs_print(4, "#[cyan]ecs_remove_all#[reset](world, %s); "
+            "#[grey] // remove_all(%s)", var_id, path);
     } else if (kind == EcsJournalTableEvents) {
         ecs_print(4, "#[cyan]ecs_run_aperiodic#[reset](world, "
             "EcsAperiodicEmptyTables);");

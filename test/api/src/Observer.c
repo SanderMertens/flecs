@@ -4151,3 +4151,39 @@ void Observer_cache_test_11() {
 
     ecs_fini(world);
 }
+
+void Observer_cache_test_12() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t t0 = ecs_new_id(world); 
+    ecs_entity_t t1 = ecs_new_id(world); 
+    ecs_entity_t t2 = ecs_new_id(world); 
+
+    ecs_entity_t e0 = ecs_new_id(world); 
+    ecs_add_id(world, e0, t0); 
+    ecs_add_id(world, e0, t1); 
+    ecs_add_id(world, e0, t2); 
+
+    ecs_entity_t e1 = ecs_new_id(world); 
+    ecs_add_id(world, e1, t0); 
+    ecs_add_id(world, e1, t1); 
+    ecs_add_id(world, e1, t2); 
+
+    ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e0); 
+    ecs_add_id(world, e3, t0); 
+
+    ecs_entity_t e4 = ecs_new_id(world); 
+    ecs_new_w_pair(world, EcsChildOf, e4); 
+    ecs_remove_all(world, t1); 
+
+    ecs_new_w_pair(world, EcsChildOf, e3); 
+
+    ecs_run_aperiodic(world, 0);
+
+    ecs_remove_all(world, t0); 
+
+    test_assert(true); // ensure cache revalidation didn't assert
+
+    ecs_fini(world);
+}

@@ -9124,6 +9124,8 @@ typedef enum ecs_journal_kind_t {
     EcsJournalMove,
     EcsJournalClear,
     EcsJournalDelete,
+    EcsJournalDeleteWith,
+    EcsJournalRemoveAll,
     EcsJournalTableEvents
 } ecs_journal_kind_t;
 
