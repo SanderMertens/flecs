@@ -944,7 +944,7 @@ ecs_entity_t e = ecs_lookup_path_w_sep(
 char *path = ecs_get_path_w_sep(world, parent, child, "::", "::");
 ```
 
-Note that the path separator is provided twice, once for the prefix and once for the separator. This lets the API correctly handle expressions like `::parent::child::grand_child"`.
+Note that the path separator is provided twice, once for the prefix and once for the separator. This lets the API correctly handle expressions like `::parent::child::grand_child`.
 
 ### Scoping
 Applications can set a default scope with the `ecs_set_scope` function, so that all operations are evaluated relative to a scope. The scope is set on a stage, which makes it thread safe when executed from within a flecs worker thread. This example shows how to set the scope:
