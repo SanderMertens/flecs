@@ -52,7 +52,7 @@ https://github.com/SanderMertens/flecs/tree/master/examples
  - [rules (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/rules)
  - [rules (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules)
 
-## Query Types
+## Types
 Flecs has different query types, which are optimized for different kinds of use cases. This section provides a brief overview of each kind:
 
  ### Filters
@@ -150,7 +150,7 @@ r.each([](Position& p, Velocity& v) {
 
 For more information on how each implementation performs, see [Query Performance](#query-performance).
 
-## Query Creation
+## Creation
 This section explains how to create queries in the different language bindings and the flecs query DSL.
 
 ### Query Descriptors (C)
@@ -268,7 +268,7 @@ flecs::filter<> f = world.filter_builder()
 
 The query DSL requires the `FLECS_PARSER` addon to be included in a build.
 
-## Query Iteration
+## Iteration
 This section describes the different ways queries can be iterated. The code examples use filters, but also apply to cached queries and rules.
 
 ### Iterators (C)
@@ -470,7 +470,7 @@ world.defer_end(); // operations are executed here
 
 Code ran by a system is deferred by default.
 
-## Query Reference
+## Reference
 This section goes over the different features of queries and how they can be expressed by the query descriptor API, query builder API and in the query DSL.
 
 ### Components
@@ -2835,7 +2835,7 @@ Reflexivity in a query is enabled by adding the `Reflexive` property to a relati
 (IsA, Tree)
 ```
 
-## Query Performance
+## Performance
 This section describes performance characteristics for each query type.
 
 ### Filter
