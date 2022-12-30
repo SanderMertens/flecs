@@ -24,6 +24,14 @@
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
+/** Forward declare an entity. */
+#define ECS_ENTITY_DECLARE ECS_DECLARE
+
+/** Define a forward declared entity.
+ * 
+ * Example:
+ *   ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
+ */
 #define ECS_ENTITY_DEFINE(world, id_, ...) \
     { \
         ecs_entity_desc_t desc = {0}; \
@@ -37,19 +45,58 @@
     (void)id_; \
     (void)ecs_id(id_);
 
+/** Declare & define an entity.
+ *
+ * Example:
+ *   ECS_ENTITY(world, MyEntity, Position, Velocity);
+ */
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
     ecs_entity_t id = 0; \
     ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
 
-#define ECS_TAG_DEFINE(world, id)         ECS_ENTITY_DEFINE(world, id, 0)
-#define ECS_TAG(world, id)                ECS_ENTITY(world, id, 0)
+/** Forward declare a tag. */
+#define ECS_TAG_DECLARE ECS_DECLARE
 
+/** Define a forward declared tag.
+ * 
+ * Example:
+ *   ECS_TAG_DEFINE(world, MyTag);
+ */
+#define ECS_TAG_DEFINE(world, id) ECS_ENTITY_DEFINE(world, id, 0)
+
+/** Declare & define a tag.
+ *
+ * Example:
+ *   ECS_TAG(world, MyTag);
+ */
+#define ECS_TAG(world, id) ECS_ENTITY(world, id, 0)
+
+/** Forward declare a prefab. */
+#define ECS_PREFAB_DECLARE ECS_DECLARE
+
+/** Define a forward declared prefab.
+ * 
+ * Example:
+ *   ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
+ */
 #define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
-#define ECS_PREFAB(world, id, ...)        ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
-/* Use for declaring component identifiers */
+/** Declare & define a prefab.
+ *
+ * Example:
+ *   ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ */
+#define ECS_PREFAB(world, id, ...) ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
+
+/** Forward declare a component. */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
+
+/** Define a forward declared component.
+ * 
+ * Example:
+ *   ECS_COMPONENT_DEFINE(world, Position);
+ */
 #define ECS_COMPONENT_DEFINE(world, id_) \
     {\
         ecs_component_desc_t desc = {0}; \
@@ -65,15 +112,24 @@
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
+/** Declare & define a component.
+ *
+ * Example:
+ *   ECS_COMPONENT(world, Position);
+ */
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-/* Use for declaring observer and system identifiers */
-#define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
+/* Forward declare an observer. */
+#define ECS_OBSERVER_DECLARE(id)         ecs_entity_t ecs_id(id)
 
-/* Observers */
+/** Define a forward declared observer.
+ * 
+ * Example:
+ *   ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
+ */
 #define ECS_OBSERVER_DEFINE(world, id_, kind, ...)\
     {\
         ecs_observer_desc_t desc = {0};\
@@ -88,6 +144,11 @@
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
     }
 
+/** Declare & define an observer.
+ *
+ * Example:
+ *   ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ */
 #define ECS_OBSERVER(world, id, kind, ...)\
     ecs_entity_t ecs_id(id) = 0; \
     ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
@@ -95,15 +156,45 @@
     (void)ecs_id(id);\
     (void)id;
 
+/** Shorthand for creating an entity with ecs_entity_init.
+ *
+ * Example:
+ *   ecs_entity(world, {
+ *     .name = "MyEntity"
+ *   });
+ */
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating a filter with ecs_filter_init.
+ *
+ * Example:
+ *   ecs_filter(world, {
+ *     .terms = {{ ecs_id(Position) }}
+ *   });
+ */
 #define ecs_filter(world, ...)\
     ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating a query with ecs_query_init.
+ *
+ * Example:
+ *   ecs_query(world, {
+ *     .filter.terms = {{ ecs_id(Position) }}
+ *   });
+ */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating an observer with ecs_observer_init.
+ *
+ * Example:
+ *   ecs_observer(world, {
+ *     .filter.terms = {{ ecs_id(Position) }},
+ *     .events = { EcsOnAdd },
+ *     .callback = AddPosition
+ *   });
+ */
 #define ecs_observer(world, ...)\
     ecs_observer_init(world, &(ecs_observer_desc_t) __VA_ARGS__ )
 

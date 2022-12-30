@@ -99,6 +99,15 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
+
+/* Forward declare a system. */
+#define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
+
+/** Define a forward declared system.
+ * 
+ * Example:
+ *   ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
+ */
 #define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
@@ -114,12 +123,32 @@ ecs_entity_t ecs_system_init(
     } \
     ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);
 
+/** Declare & define a system.
+ * 
+ * Example:
+ *   ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ */
 #define ECS_SYSTEM(world, id, phase, ...) \
     ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;
 
+/** Shorthand for creating a system with ecs_system_init.
+ *
+ * Example:
+ *   ecs_system(world, {
+ *     .entity = ecs_entity(world, {
+ *       .name = "MyEntity",
+ *       .add = { ecs_dependson(EcsOnUpdate) }
+ *     },
+ *     .query.filter.terms = {
+ *       { ecs_id(Position) },
+ *       { ecs_id(Velocity) }
+ *     },
+ *     .callback = Move
+ *   });
+ */
 #define ecs_system(world, ...)\
     ecs_system_init(world, &(ecs_system_desc_t) __VA_ARGS__ )
 
