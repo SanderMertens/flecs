@@ -48037,6 +48037,8 @@ void ecs_os_fini(void) {
 #define HAVE_EXECINFO 0
 #elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
 #define HAVE_EXECINFO 1
+#else
+#define HAVE_EXECINFO 0
 #endif
 
 #if HAVE_EXECINFO
