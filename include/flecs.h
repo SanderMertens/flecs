@@ -599,8 +599,8 @@ struct ecs_observer_t {
     int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
 
     bool is_monitor;            /**< If true, the observer only triggers when the
-                                 **< filter did not match with the entity before
-                                 **< the event happened. */
+                                 * filter did not match with the entity before
+                                 * the event happened. */
 
     bool is_multi;              /**< If true, the observer triggers on more than one term */
 
