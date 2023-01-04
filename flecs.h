@@ -3105,8 +3105,8 @@ struct ecs_observer_t {
     int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
 
     bool is_monitor;            /**< If true, the observer only triggers when the
-                                 **< filter did not match with the entity before
-                                 **< the event happened. */
+                                 * filter did not match with the entity before
+                                 * the event happened. */
 
     bool is_multi;              /**< If true, the observer triggers on more than one term */
 
@@ -14298,7 +14298,7 @@ ecs_entity_t ecs_module_init(
 
 #define ECS_MODULE(world, id)\
     ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
-    (void)ecs_id(id);\
+    (void)ecs_id(id);
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
