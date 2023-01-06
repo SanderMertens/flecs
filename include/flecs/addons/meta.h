@@ -101,7 +101,7 @@ typedef float ecs_f32_t;
 typedef double ecs_f64_t;
 typedef char* ecs_string_t;
 
-/** Meta module component ids */
+/* Meta module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMetaType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsMetaTypeSerialized);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
@@ -116,7 +116,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
 FLECS_API extern const ecs_entity_t EcsQuantity;
 
-/** Primitive type component ids */
+/* Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_char_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_byte_t);
@@ -253,7 +253,7 @@ typedef struct EcsVector {
 } EcsVector;
 
 
-/** Units */
+/* Units */
 
 /* Helper type to describe translation between two units. Note that this
  * is not intended as a generic approach to unit conversions (e.g. from celsius
@@ -281,7 +281,7 @@ typedef struct EcsUnitPrefix {
 } EcsUnitPrefix;
 
 
-/** Serializer utilities */
+/* Serializer utilities */
 
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpArray,
@@ -333,7 +333,7 @@ typedef struct EcsMetaTypeSerialized {
 } EcsMetaTypeSerialized;
 
 
-/** Deserializer utilities */
+/* Deserializer utilities */
 
 #define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
 
@@ -429,7 +429,7 @@ FLECS_API
 const char* ecs_meta_get_member(
     const ecs_meta_cursor_t *cursor);
 
-/** The set functions assign the field with the specified value. If the value
+/* The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
  * If no valid conversion is available, the operation will fail. */
 
@@ -492,7 +492,7 @@ int ecs_meta_set_value(
     ecs_meta_cursor_t *cursor,
     const ecs_value_t *value);
 
-/** Functions for getting members. */
+/* Functions for getting members. */
 
 /** Get field value as boolean. */
 FLECS_API
@@ -533,7 +533,7 @@ FLECS_API
 ecs_entity_t ecs_meta_get_entity(
     const ecs_meta_cursor_t *cursor);
 
-/** API functions for creating meta types */
+/* API functions for creating meta types */
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
