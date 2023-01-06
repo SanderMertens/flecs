@@ -100,7 +100,7 @@ ecs_entity_t ecs_system_init(
 
 #ifndef FLECS_LEGACY
 
-/* Forward declare a system. */
+/** Forward declare a system. */
 #define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
 
 /** Define a forward declared system.

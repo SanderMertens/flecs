@@ -121,11 +121,11 @@ typedef bool (*ecs_http_reply_action_t)(
 
 /** Used with ecs_http_server_init. */
 typedef struct {
-    ecs_http_reply_action_t callback; /* Function called for each request  */
-    void *ctx;                        /* Passed to callback (optional) */
-    uint16_t port;                    /* HTTP port */
-    const char *ipaddr;               /* Interface to listen on (optional) */
-    int32_t send_queue_wait_ms;       /* Send queue wait time when empty */
+    ecs_http_reply_action_t callback; /**< Function called for each request  */
+    void *ctx;                        /**< Passed to callback (optional) */
+    uint16_t port;                    /**< HTTP port */
+    const char *ipaddr;               /**< Interface to listen on (optional) */
+    int32_t send_queue_wait_ms;       /**< Send queue wait time when empty */
 } ecs_http_server_desc_t;
 
 /** Create server. 
