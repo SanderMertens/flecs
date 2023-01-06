@@ -683,12 +683,12 @@ struct ecs_type_info_t {
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
-    ecs_entity_t id;     /**< Set to modify existing entity (optional) */
+    ecs_entity_t id;      /**< Set to modify existing entity (optional) */
 
-    const char *name;    /**< Name of the entity. If no entity is provided, an 
-                          * entity with this name will be looked up first. When
-                          * an entity is provided, the name will be verified
-                          * with the existing entity. */
+    const char *name;     /**< Name of the entity. If no entity is provided, an
+                           * entity with this name will be looked up first. When
+                           * an entity is provided, the name will be verified
+                           * with the existing entity. */
 
     const char *sep;      /**< Optional custom separator for hierarchical names.
                            * Leave to NULL for default ('.') separator. Set to
@@ -696,19 +696,19 @@ typedef struct ecs_entity_desc_t {
 
     const char *root_sep; /**< Optional, used for identifiers relative to root */
 
-    const char *symbol;  /**< Optional entity symbol. A symbol is an unscoped
-                          * identifier that can be used to lookup an entity. The
-                          * primary use case for this is to associate the entity
-                          * with a language identifier, such as a type or 
-                          * function name, where these identifiers differ from
-                          * the name they are registered with in flecs. For 
-                          * example, C type "EcsPosition" might be registered
-                          * as "flecs.components.transform.Position", with the
-                          * symbol set to "EcsPosition". */
+    const char *symbol;   /**< Optional entity symbol. A symbol is an unscoped
+                           * identifier that can be used to lookup an entity. The
+                           * primary use case for this is to associate the entity
+                           * with a language identifier, such as a type or
+                           * function name, where these identifiers differ from
+                           * the name they are registered with in flecs. For
+                           * example, C type "EcsPosition" might be registered
+                           * as "flecs.components.transform.Position", with the
+                           * symbol set to "EcsPosition". */
 
-    bool use_low_id;     /**< When set to true, a low id (typically reserved for
-                          * components) will be used to create the entity, if
-                          * no id is specified. */
+    bool use_low_id;      /**< When set to true, a low id (typically reserved for
+                           * components) will be used to create the entity, if
+                           * no id is specified. */
 
     /** Array of ids to add to the new or existing entity. */
     ecs_id_t add[ECS_ID_CACHE_SIZE];
@@ -724,12 +724,12 @@ typedef struct ecs_entity_desc_t {
 typedef struct ecs_bulk_desc_t { 
     int32_t _canary;
 
-    ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by 
-                         * the application application must be empty (cannot
-                         * have components). If no entity ids are provided, the
-                         * operation will create 'count' new entities. */
+    ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by
+                             * the application application must be empty (cannot
+                             * have components). If no entity ids are provided, the
+                             * operation will create 'count' new entities. */
 
-    int32_t count;      /**< Number of entities to create/populate */
+    int32_t count;     /**< Number of entities to create/populate */
 
     ecs_id_t ids[ECS_ID_CACHE_SIZE]; /**< Ids to create the entities with */
 
@@ -757,7 +757,8 @@ typedef struct ecs_component_desc_t {
     /** Existing entity to associate with observer (optional) */
     ecs_entity_t entity;
 
-    ecs_type_info_t type; /**< Parameters for type (size, hooks, ...) */
+    /** Parameters for type (size, hooks, ...) */
+    ecs_type_info_t type;
 } ecs_component_desc_t;
 
 /** Used with ecs_filter_init. 

@@ -99,8 +99,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t batched_count;
     } commands;
 
+    /* Frame data */
     struct {
-        /* Frame data */
         ecs_metric_t frame_count;          /**< Number of frames processed. */
         ecs_metric_t merge_count;          /**< Number of merges executed. */
         ecs_metric_t rematch_count;        /**< Number of query rematches */
@@ -110,8 +110,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t event_emit_count;     /**< Number of events emitted */
     } frame;
 
+    /* Timing */
     struct {
-        /* Timing */
         ecs_metric_t world_time_raw;       /**< Actual time passed since simulation start (first time progress() is called) */
         ecs_metric_t world_time;           /**< Simulation time passed since simulation start. Takes into account time scaling */
         ecs_metric_t frame_time;           /**< Time spent processing a frame. Smaller than world_time_total when load is not 100% */
@@ -139,8 +139,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stack_outstanding_alloc_count; /**< Difference between allocs & frees */
     } memory;
 
+    /* REST statistics */
     struct {
-        /* REST statistics */
         ecs_metric_t request_count;
         ecs_metric_t entity_count;
         ecs_metric_t entity_error_count;
@@ -156,8 +156,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stats_error_count;
     } rest;
 
+    /* HTTP statistics */
     struct {
-        /* HTTP statistics */
         ecs_metric_t request_received_count;
         ecs_metric_t request_invalid_count;
         ecs_metric_t request_handled_ok_count;
@@ -214,9 +214,9 @@ typedef struct ecs_pipeline_stats_t {
     /** Current position in ringbuffer */
     int32_t t;
 
-    int32_t system_count; /**< Number of systems in pipeline */
+    int32_t system_count;        /**< Number of systems in pipeline */
     int32_t active_system_count; /**< Number of active systems in pipeline */
-    int32_t rebuild_count; /**< Number of times pipeline has rebuilt */
+    int32_t rebuild_count;       /**< Number of times pipeline has rebuilt */
 } ecs_pipeline_stats_t;
 
 /** Get world statistics.
