@@ -459,7 +459,7 @@ typedef void (*ecs_poly_dtor_t)(
 /** Iterable mixin.
  * Allows its container to be iterated. */
 typedef struct ecs_iterable_t {
-    ecs_iter_init_action_t init; /* Callback that creates iterator. */
+    ecs_iter_init_action_t init; /**< Callback that creates iterator. */
 } ecs_iterable_t;
 
 /** @} */
@@ -472,22 +472,22 @@ typedef struct ecs_iterable_t {
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
-    EcsInOutDefault,  /* InOut for regular terms, In for shared terms */
-    EcsInOutNone,   /* Term is neither read nor written */
-    EcsInOut,         /* Term is both read and written */
-    EcsIn,            /* Term is only read */
-    EcsOut,           /* Term is only written */
+    EcsInOutDefault,  /**< InOut for regular terms, In for shared terms */
+    EcsInOutNone,     /**< Term is neither read nor written */
+    EcsInOut,         /**< Term is both read and written */
+    EcsIn,            /**< Term is only read */
+    EcsOut,           /**< Term is only written */
 } ecs_inout_kind_t;
 
 /** Specify operator for term */
 typedef enum ecs_oper_kind_t {
-    EcsAnd,         /* The term must match */
-    EcsOr,          /* One of the terms in an or chain must match */
-    EcsNot,         /* The term must not match */
-    EcsOptional,    /* The term may match */
-    EcsAndFrom,     /* Term must match all components from term id */
-    EcsOrFrom,      /* Term must match at least one component from term id */
-    EcsNotFrom      /* Term must match none of the components from term id */
+    EcsAnd,           /**< The term must match */
+    EcsOr,            /**< One of the terms in an or chain must match */
+    EcsNot,           /**< The term must not match */
+    EcsOptional,      /**< The term may match */
+    EcsAndFrom,       /**< Term must match all components from term id */
+    EcsOrFrom,        /**< Term must match at least one component from term id */
+    EcsNotFrom,       /**< Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
 #define EcsSelf                       (1u << 1) /**< Match on self */
@@ -4043,39 +4043,39 @@ int32_t ecs_query_entity_count(
  */
 
 typedef struct ecs_event_desc_t {
-    /* The event id. Only triggers for the specified event will be notified */
+    /** The event id. Only triggers for the specified event will be notified */
     ecs_entity_t event;
 
-    /* Component ids. Only triggers with a matching component id will be 
+    /** Component ids. Only triggers with a matching component id will be
      * notified. Observers are guaranteed to get notified once, even if they
      * match more than one id. */
     const ecs_type_t *ids;
 
-    /* The table for which to notify. */
+    /** The table for which to notify. */
     ecs_table_t *table;
 
-    /* Optional 2nd table to notify. This can be used to communicate the
+    /** Optional 2nd table to notify. This can be used to communicate the
      * previous or next table, in case an entity is moved between tables. */
     ecs_table_t *other_table;
 
-    /* Limit notified entities to ones starting from offset (row) in table */
+    /** Limit notified entities to ones starting from offset (row) in table */
     int32_t offset;
 
-    /* Limit number of notified entities to count. offset+count must be less
+    /** Limit number of notified entities to count. offset+count must be less
      * than the total number of entities in the table. If left to 0, it will be
      * automatically determined by doing ecs_table_count(table) - offset. */
     int32_t count;
 
-    /* Single-entity alternative to setting table / offset / count */
+    /** Single-entity alternative to setting table / offset / count */
     ecs_entity_t entity;
 
-    /* Optional context. Assigned to iter param member */
+    /** Optional context. Assigned to iter param member */
     const void *param;
 
-    /* Observable (usually the world) */
+    /** Observable (usually the world) */
     ecs_poly_t *observable;
 
-    /* Event flags */
+    /** Event flags */
     ecs_flags32_t flags;
 } ecs_event_desc_t;
 

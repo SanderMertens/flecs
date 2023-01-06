@@ -149,10 +149,10 @@ typedef enum ecs_type_kind_t {
 /** Component that is automatically added to every type with the right kind. */
 typedef struct EcsMetaType {
     ecs_type_kind_t kind;
-    bool existing;   /* Did the type exist or is it populated from reflection */
-    bool partial;    /* Is the reflection data a partial type description */
-    ecs_size_t size;       /* Computed size */
-    ecs_size_t alignment;  /* Computed alignment */
+    bool existing;         /**< Did the type exist or is it populated from reflection */
+    bool partial;          /**< Is the reflection data a partial type description */
+    ecs_size_t size;       /**< Computed size */
+    ecs_size_t alignment;  /**< Computed alignment */
 } EcsMetaType;
 
 typedef enum ecs_primitive_kind_t {
@@ -187,54 +187,54 @@ typedef struct EcsMember {
     int32_t offset;
 } EcsMember;
 
-/* Element type of members vector in EcsStruct */
+/** Element type of members vector in EcsStruct */
 typedef struct ecs_member_t {
-    /* Must be set when used with ecs_struct_desc_t */
+    /** Must be set when used with ecs_struct_desc_t */
     const char *name;
     ecs_entity_t type;
 
-    /* May be set when used with ecs_struct_desc_t */
+    /** May be set when used with ecs_struct_desc_t */
     int32_t count;
     int32_t offset;
 
-    /* May be set when used with ecs_struct_desc_t, will be auto-populated if
+    /** May be set when used with ecs_struct_desc_t, will be auto-populated if
      * type entity is also a unit */
     ecs_entity_t unit;
 
-    /* Should not be set by ecs_struct_desc_t */
+    /** Should not be set by ecs_struct_desc_t */
     ecs_size_t size;
     ecs_entity_t member;
 } ecs_member_t;
 
 typedef struct EcsStruct {
-    /* Populated from child entities with Member component */
+    /** Populated from child entities with Member component */
     ecs_vector_t *members; /* vector<ecs_member_t> */
 } EcsStruct;
 
 typedef struct ecs_enum_constant_t {
-    /* Must be set when used with ecs_enum_desc_t */
+    /** Must be set when used with ecs_enum_desc_t */
     const char *name;
 
-    /* May be set when used with ecs_enum_desc_t */
+    /** May be set when used with ecs_enum_desc_t */
     int32_t value;
 
-    /* Should not be set by ecs_enum_desc_t */
+    /** Should not be set by ecs_enum_desc_t */
     ecs_entity_t constant;
 } ecs_enum_constant_t;
 
 typedef struct EcsEnum {
-    /* Populated from child entities with Constant component */
+    /** Populated from child entities with Constant component */
     ecs_map_t *constants; /* map<i32_t, ecs_enum_constant_t> */
 } EcsEnum;
 
 typedef struct ecs_bitmask_constant_t {
-    /* Must be set when used with ecs_bitmask_desc_t */
+    /** Must be set when used with ecs_bitmask_desc_t */
     const char *name;
 
-    /* May be set when used with ecs_bitmask_desc_t */
+    /** May be set when used with ecs_bitmask_desc_t */
     ecs_flags32_t value;
 
-    /* Should not be set by ecs_bitmask_desc_t */
+    /** Should not be set by ecs_bitmask_desc_t */
     ecs_entity_t constant;
 } ecs_bitmask_constant_t;
 
@@ -263,21 +263,21 @@ typedef struct EcsVector {
  * Note that power is applied to the factor. When describing a translation of
  * 1000, either use {factor = 1000, power = 1} or {factor = 1, power = 3}. */
 typedef struct ecs_unit_translation_t {
-    int32_t factor; /* Factor to apply (e.g. "1000", "1000000", "1024") */
-    int32_t power; /* Power to apply to factor (e.g. "1", "3", "-9") */
+    int32_t factor; /**< Factor to apply (e.g. "1000", "1000000", "1024") */
+    int32_t power;  /**< Power to apply to factor (e.g. "1", "3", "-9") */
 } ecs_unit_translation_t;
 
 typedef struct EcsUnit {
     char *symbol;
-    ecs_entity_t prefix; /* Order of magnitude prefix relative to derived */
-    ecs_entity_t base; /* Base unit (e.g. "meters") */
-    ecs_entity_t over; /* Over unit (e.g. "per second") */
-    ecs_unit_translation_t translation; /* Translation for derived unit */
+    ecs_entity_t prefix; /**< Order of magnitude prefix relative to derived */
+    ecs_entity_t base;   /**< Base unit (e.g. "meters") */
+    ecs_entity_t over;   /**< Over unit (e.g. "per second") */
+    ecs_unit_translation_t translation; /**< Translation for derived unit */
 } EcsUnit;
 
 typedef struct EcsUnitPrefix {
-    char *symbol;   /* Symbol of prefix (e.g. "K", "M", "Ki") */
-    ecs_unit_translation_t translation; /* Translation of prefix */
+    char *symbol;        /**< Symbol of prefix (e.g. "K", "M", "Ki") */
+    ecs_unit_translation_t translation; /**< Translation of prefix */
 } EcsUnitPrefix;
 
 
@@ -289,12 +289,12 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpPush,
     EcsOpPop,
 
-    EcsOpScope, /* Marks last constant that can open/close a scope */
+    EcsOpScope, /**< Marks last constant that can open/close a scope */
 
     EcsOpEnum,
     EcsOpBitmask,
 
-    EcsOpPrimitive, /* Marks first constant that's a primitive */
+    EcsOpPrimitive, /**< Marks first constant that's a primitive */
 
     EcsOpBool,
     EcsOpChar,
@@ -318,18 +318,18 @@ typedef enum ecs_meta_type_op_kind_t {
 
 typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
-    ecs_size_t offset;      /* Offset of current field */
-    int32_t count;        
-    const char *name;       /* Name of value (only used for struct members) */
-    int32_t op_count;       /* Number of operations until next field or end */
-    ecs_size_t size;        /* Size of type of operation */
+    ecs_size_t offset;      /**< Offset of current field */
+    int32_t count;
+    const char *name;       /**< Name of value (only used for struct members) */
+    int32_t op_count;       /**< Number of operations until next field or end */
+    ecs_size_t size;        /**< Size of type of operation */
     ecs_entity_t type;
     ecs_entity_t unit;
-    ecs_hashmap_t *members; /* string -> member index (structs only) */
+    ecs_hashmap_t *members; /**< string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
 typedef struct EcsMetaTypeSerialized {
-    ecs_vector_t* ops;     /* vector<ecs_meta_type_op_t> */
+    ecs_vector_t* ops;      /**< vector<ecs_meta_type_op_t> */
 } EcsMetaTypeSerialized;
 
 
@@ -338,18 +338,18 @@ typedef struct EcsMetaTypeSerialized {
 #define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
 
 typedef struct ecs_meta_scope_t {
-    ecs_entity_t type;        /* The type being iterated */
-    ecs_meta_type_op_t *ops;  /* The type operations (see ecs_meta_type_op_t) */
-    int32_t op_count;         /* Number of operations in ops array to process */
-    int32_t op_cur;           /* Current operation */
-    int32_t elem_cur;         /* Current element (for collections) */
-    int32_t prev_depth;       /* Depth to restore, in case dotmember was used */
-    void *ptr;                /* Pointer to the value being iterated */
+    ecs_entity_t type;        /**< The type being iterated */
+    ecs_meta_type_op_t *ops;  /**< The type operations (see ecs_meta_type_op_t) */
+    int32_t op_count;         /**< Number of operations in ops array to process */
+    int32_t op_cur;           /**< Current operation */
+    int32_t elem_cur;         /**< Current element (for collections) */
+    int32_t prev_depth;       /**< Depth to restore, in case dotmember was used */
+    void *ptr;                /**< Pointer to the value being iterated */
 
-    const EcsComponent *comp; /* Pointer to component, in case size/alignment is needed */
-    ecs_vector_t **vector;    /* Current vector, in case a vector is iterated */
-    bool is_collection;       /* Is the scope iterating elements? */
-    bool is_inline_array;     /* Is the scope iterating an inline array? */
+    const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
+    ecs_vector_t **vector;    /**< Current vector, in case a vector is iterated */
+    bool is_collection;       /**< Is the scope iterating elements? */
+    bool is_inline_array;     /**< Is the scope iterating an inline array? */
 } ecs_meta_scope_t;
 
 /** Type that enables iterating/populating a value using reflection data */
@@ -358,7 +358,7 @@ typedef struct ecs_meta_cursor_t {
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
     bool valid;
-    bool is_primitive_scope;  /* If in root scope, this allows for a push for primitive types */
+    bool is_primitive_scope;  /**< If in root scope, this allows for a push for primitive types */
 
     /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
     ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
@@ -620,27 +620,27 @@ ecs_entity_t ecs_struct_init(
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
-    /* Existing entity to associate with unit (optional) */
+    /** Existing entity to associate with unit (optional) */
     ecs_entity_t entity;
-    
-    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+
+    /** Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
 
-    /* Unit quantity, e.g. distance, percentage, weight. (optional) */
+    /** Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
 
-    /* Base unit, e.g. "meters" (optional) */
+    /** Base unit, e.g. "meters" (optional) */
     ecs_entity_t base;
 
-    /* Over unit, e.g. "per second" (optional) */
+    /** Over unit, e.g. "per second" (optional) */
     ecs_entity_t over;
 
-    /* Translation to apply to derived unit (optional) */
+    /** Translation to apply to derived unit (optional) */
     ecs_unit_translation_t translation;
 
-    /* Prefix indicating order of magnitude relative to the derived unit. If set
-     * together with "translation", the values must match. If translation is not 
-     * set, setting prefix will autopopulate it. 
+    /** Prefix indicating order of magnitude relative to the derived unit. If set
+     * together with "translation", the values must match. If translation is not
+     * set, setting prefix will autopopulate it.
      * Additionally, setting the prefix will enforce that the symbol (if set)
      * is consistent with the prefix symbol + symbol of the derived unit. If the
      * symbol is not set, it will be auto populated. */
@@ -655,13 +655,13 @@ ecs_entity_t ecs_unit_init(
 
 /** Used with ecs_unit_prefix_init. */
 typedef struct ecs_unit_prefix_desc_t {
-    /* Existing entity to associate with unit prefix (optional) */
+    /** Existing entity to associate with unit prefix (optional) */
     ecs_entity_t entity;
-    
-    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+
+    /** Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
 
-    /* Translation to apply to derived unit (optional) */
+    /** Translation to apply to derived unit (optional) */
     ecs_unit_translation_t translation;
 } ecs_unit_prefix_desc_t;
 

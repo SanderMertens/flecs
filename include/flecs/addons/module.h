@@ -63,8 +63,8 @@ ecs_entity_t ecs_import_c(
     ecs_module_action_t module,
     const char *module_name_c);
 
-/* Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the 
+/** Import a module from a library.
+ * Similar to ecs_import, except that this operation will attempt to load the
  * module from a dynamic library.
  *
  * A library may contain multiple modules, which is why both a library name and

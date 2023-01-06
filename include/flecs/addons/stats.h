@@ -32,13 +32,13 @@ typedef struct ecs_gauge_t {
     ecs_float_t max[ECS_STAT_WINDOW];
 } ecs_gauge_t;
 
-/* Monotonically increasing counter */
+/** Monotonically increasing counter */
 typedef struct ecs_counter_t {
     ecs_gauge_t rate;                     /**< Keep track of deltas too */
     double value[ECS_STAT_WINDOW];
 } ecs_counter_t;
 
-/* Make all metrics the same size, so we can iterate over fields */
+/** Make all metrics the same size, so we can iterate over fields */
 typedef union ecs_metric_t {
     ecs_gauge_t gauge;
     ecs_counter_t counter;
@@ -175,7 +175,7 @@ typedef struct ecs_world_stats_t {
     int32_t t;
 } ecs_world_stats_t;
 
-/* Statistics for a single query (use ecs_query_stats_get) */
+/** Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
     ecs_metric_t matched_table_count;       /**< Matched non-empty tables */    

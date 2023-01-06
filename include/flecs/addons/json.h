@@ -165,18 +165,18 @@ int ecs_type_info_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_entity_to_json_desc_t {
-    bool serialize_path;       /* Serialize full pathname */
-    bool serialize_meta_ids;   /* Serialize 'meta' ids (Name, ChildOf, etc) */
-    bool serialize_label;      /* Serialize doc name */
-    bool serialize_brief;      /* Serialize brief doc description */
-    bool serialize_link;       /* Serialize doc link (URL) */
-    bool serialize_color;      /* Serialize doc color */
-    bool serialize_id_labels;  /* Serialize labels of (component) ids */
-    bool serialize_base;       /* Serialize base components */
-    bool serialize_private;    /* Serialize private components */
-    bool serialize_hidden;     /* Serialize ids hidden by override */
-    bool serialize_values;     /* Serialize component values */
-    bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
+    bool serialize_path;       /**< Serialize full pathname */
+    bool serialize_meta_ids;   /**< Serialize 'meta' ids (Name, ChildOf, etc) */
+    bool serialize_label;      /**< Serialize doc name */
+    bool serialize_brief;      /**< Serialize brief doc description */
+    bool serialize_link;       /**< Serialize doc link (URL) */
+    bool serialize_color;      /**< Serialize doc color */
+    bool serialize_id_labels;  /**< Serialize labels of (component) ids */
+    bool serialize_base;       /**< Serialize base components */
+    bool serialize_private;    /**< Serialize private components */
+    bool serialize_hidden;     /**< Serialize ids hidden by override */
+    bool serialize_values;     /**< Serialize component values */
+    bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
@@ -215,20 +215,20 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;      /* Include term (query) component ids */
-    bool serialize_ids;           /* Include actual (matched) component ids */
-    bool serialize_sources;       /* Include sources */
-    bool serialize_variables;     /* Include variables */
-    bool serialize_is_set;        /* Include is_set (for optional terms) */
-    bool serialize_values;        /* Include component values */
-    bool serialize_entities;      /* Include entities (for This terms) */
-    bool serialize_entity_labels; /* Include doc name for entities */
-    bool serialize_entity_ids;    /* Include numerical ids for entities */
-    bool serialize_variable_labels; /* Include doc name for variables */
-    bool serialize_variable_ids;  /* Include numerical ids for variables */
-    bool serialize_colors;        /* Include doc color for entities */
-    bool measure_eval_duration;   /* Include evaluation duration */
-    bool serialize_type_info;     /* Include type information */
+    bool serialize_term_ids;        /**< Serialize term (query) component ids */
+    bool serialize_ids;             /**< Serialize actual (matched) component ids */
+    bool serialize_sources;         /**< Serialize sources */
+    bool serialize_variables;       /**< Serialize variables */
+    bool serialize_is_set;          /**< Serialize is_set (for optional terms) */
+    bool serialize_values;          /**< Serialize component values */
+    bool serialize_entities;        /**< Serialize entities (for This terms) */
+    bool serialize_entity_labels;   /**< Serialize doc name for entities */
+    bool serialize_entity_ids;      /**< Serialize numerical ids for entities */
+    bool serialize_variable_labels; /**< Serialize doc name for variables */
+    bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
+    bool serialize_colors;          /**< Serialize doc color for entities */
+    bool measure_eval_duration;     /**< Serialize evaluation duration */
+    bool serialize_type_info;       /**< Serialize type information */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
