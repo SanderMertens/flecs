@@ -8,7 +8,7 @@
 namespace flecs
 {
 
-/** Static helper functions to assign a component value */
+/* Static helper functions to assign a component value */
 
 // set(T&&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
