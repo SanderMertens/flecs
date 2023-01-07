@@ -1,0 +1,11 @@
+{
+    "id": "emplace",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "language": "c++"
+    }
+}
