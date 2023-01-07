@@ -17,7 +17,12 @@ namespace flecs {
 namespace _ {
 template <typename E, int Value>
 struct to_constant {
+#if defined(__clang__) && __clang_major__ >= 16
+    // https://reviews.llvm.org/D130058, https://reviews.llvm.org/D131307
+    static constexpr E value = __builtin_bit_cast(E, Value);
+#else
     static constexpr E value = static_cast<E>(Value);
+#endif
 };
 
 template <typename E, int Value>
