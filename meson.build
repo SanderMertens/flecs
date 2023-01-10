@@ -17,6 +17,7 @@ flecs_src = files(
     'src/addons/expr/serialize.c',
     'src/addons/expr/strutil.c',
     'src/addons/expr/vars.c',
+    'src/addons/flecs_cpp.c',
     'src/addons/http.c',
     'src/addons/journal.c',
     'src/addons/json/deserialize.c',

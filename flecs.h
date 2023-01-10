@@ -2965,7 +2965,7 @@ typedef void (*ecs_poly_dtor_t)(
 /** Iterable mixin.
  * Allows its container to be iterated. */
 typedef struct ecs_iterable_t {
-    ecs_iter_init_action_t init; /* Callback that creates iterator. */
+    ecs_iter_init_action_t init; /**< Callback that creates iterator. */
 } ecs_iterable_t;
 
 /** @} */
@@ -2978,22 +2978,22 @@ typedef struct ecs_iterable_t {
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
-    EcsInOutDefault,  /* InOut for regular terms, In for shared terms */
-    EcsInOutNone,   /* Term is neither read nor written */
-    EcsInOut,         /* Term is both read and written */
-    EcsIn,            /* Term is only read */
-    EcsOut,           /* Term is only written */
+    EcsInOutDefault,  /**< InOut for regular terms, In for shared terms */
+    EcsInOutNone,     /**< Term is neither read nor written */
+    EcsInOut,         /**< Term is both read and written */
+    EcsIn,            /**< Term is only read */
+    EcsOut,           /**< Term is only written */
 } ecs_inout_kind_t;
 
 /** Specify operator for term */
 typedef enum ecs_oper_kind_t {
-    EcsAnd,         /* The term must match */
-    EcsOr,          /* One of the terms in an or chain must match */
-    EcsNot,         /* The term must not match */
-    EcsOptional,    /* The term may match */
-    EcsAndFrom,     /* Term must match all components from term id */
-    EcsOrFrom,      /* Term must match at least one component from term id */
-    EcsNotFrom      /* Term must match none of the components from term id */
+    EcsAnd,           /**< The term must match */
+    EcsOr,            /**< One of the terms in an or chain must match */
+    EcsNot,           /**< The term must not match */
+    EcsOptional,      /**< The term may match */
+    EcsAndFrom,       /**< Term must match all components from term id */
+    EcsOrFrom,        /**< Term must match at least one component from term id */
+    EcsNotFrom,       /**< Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
 #define EcsSelf                       (1u << 1) /**< Match on self */
@@ -3892,12 +3892,12 @@ void* _flecs_hashmap_next(
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
-    ecs_entity_t id;     /**< Set to modify existing entity (optional) */
+    ecs_entity_t id;      /**< Set to modify existing entity (optional) */
 
-    const char *name;    /**< Name of the entity. If no entity is provided, an 
-                          * entity with this name will be looked up first. When
-                          * an entity is provided, the name will be verified
-                          * with the existing entity. */
+    const char *name;     /**< Name of the entity. If no entity is provided, an
+                           * entity with this name will be looked up first. When
+                           * an entity is provided, the name will be verified
+                           * with the existing entity. */
 
     const char *sep;      /**< Optional custom separator for hierarchical names.
                            * Leave to NULL for default ('.') separator. Set to
@@ -3905,19 +3905,19 @@ typedef struct ecs_entity_desc_t {
 
     const char *root_sep; /**< Optional, used for identifiers relative to root */
 
-    const char *symbol;  /**< Optional entity symbol. A symbol is an unscoped
-                          * identifier that can be used to lookup an entity. The
-                          * primary use case for this is to associate the entity
-                          * with a language identifier, such as a type or 
-                          * function name, where these identifiers differ from
-                          * the name they are registered with in flecs. For 
-                          * example, C type "EcsPosition" might be registered
-                          * as "flecs.components.transform.Position", with the
-                          * symbol set to "EcsPosition". */
+    const char *symbol;   /**< Optional entity symbol. A symbol is an unscoped
+                           * identifier that can be used to lookup an entity. The
+                           * primary use case for this is to associate the entity
+                           * with a language identifier, such as a type or
+                           * function name, where these identifiers differ from
+                           * the name they are registered with in flecs. For
+                           * example, C type "EcsPosition" might be registered
+                           * as "flecs.components.transform.Position", with the
+                           * symbol set to "EcsPosition". */
 
-    bool use_low_id;     /**< When set to true, a low id (typically reserved for
-                          * components) will be used to create the entity, if
-                          * no id is specified. */
+    bool use_low_id;      /**< When set to true, a low id (typically reserved for
+                           * components) will be used to create the entity, if
+                           * no id is specified. */
 
     /** Array of ids to add to the new or existing entity. */
     ecs_id_t add[ECS_ID_CACHE_SIZE];
@@ -3933,12 +3933,12 @@ typedef struct ecs_entity_desc_t {
 typedef struct ecs_bulk_desc_t { 
     int32_t _canary;
 
-    ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by 
-                         * the application application must be empty (cannot
-                         * have components). If no entity ids are provided, the
-                         * operation will create 'count' new entities. */
+    ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by
+                             * the application application must be empty (cannot
+                             * have components). If no entity ids are provided, the
+                             * operation will create 'count' new entities. */
 
-    int32_t count;      /**< Number of entities to create/populate */
+    int32_t count;     /**< Number of entities to create/populate */
 
     ecs_id_t ids[ECS_ID_CACHE_SIZE]; /**< Ids to create the entities with */
 
@@ -3966,7 +3966,8 @@ typedef struct ecs_component_desc_t {
     /** Existing entity to associate with observer (optional) */
     ecs_entity_t entity;
 
-    ecs_type_info_t type; /**< Parameters for type (size, hooks, ...) */
+    /** Parameters for type (size, hooks, ...) */
+    ecs_type_info_t type;
 } ecs_component_desc_t;
 
 /** Used with ecs_filter_init. 
@@ -7273,39 +7274,39 @@ int32_t ecs_query_entity_count(
  */
 
 typedef struct ecs_event_desc_t {
-    /* The event id. Only triggers for the specified event will be notified */
+    /** The event id. Only triggers for the specified event will be notified */
     ecs_entity_t event;
 
-    /* Component ids. Only triggers with a matching component id will be 
+    /** Component ids. Only triggers with a matching component id will be
      * notified. Observers are guaranteed to get notified once, even if they
      * match more than one id. */
     const ecs_type_t *ids;
 
-    /* The table for which to notify. */
+    /** The table for which to notify. */
     ecs_table_t *table;
 
-    /* Optional 2nd table to notify. This can be used to communicate the
+    /** Optional 2nd table to notify. This can be used to communicate the
      * previous or next table, in case an entity is moved between tables. */
     ecs_table_t *other_table;
 
-    /* Limit notified entities to ones starting from offset (row) in table */
+    /** Limit notified entities to ones starting from offset (row) in table */
     int32_t offset;
 
-    /* Limit number of notified entities to count. offset+count must be less
+    /** Limit number of notified entities to count. offset+count must be less
      * than the total number of entities in the table. If left to 0, it will be
      * automatically determined by doing ecs_table_count(table) - offset. */
     int32_t count;
 
-    /* Single-entity alternative to setting table / offset / count */
+    /** Single-entity alternative to setting table / offset / count */
     ecs_entity_t entity;
 
-    /* Optional context. Assigned to iter param member */
+    /** Optional context. Assigned to iter param member */
     const void *param;
 
-    /* Observable (usually the world) */
+    /** Observable (usually the world) */
     ecs_poly_t *observable;
 
-    /* Event flags */
+    /** Event flags */
     ecs_flags32_t flags;
 } ecs_event_desc_t;
 
@@ -10607,7 +10608,7 @@ ecs_entity_t ecs_system_init(
 
 #ifndef FLECS_LEGACY
 
-/* Forward declare a system. */
+/** Forward declare a system. */
 #define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
 
 /** Define a forward declared system.
@@ -10837,13 +10838,13 @@ typedef struct ecs_gauge_t {
     ecs_float_t max[ECS_STAT_WINDOW];
 } ecs_gauge_t;
 
-/* Monotonically increasing counter */
+/** Monotonically increasing counter */
 typedef struct ecs_counter_t {
     ecs_gauge_t rate;                     /**< Keep track of deltas too */
     double value[ECS_STAT_WINDOW];
 } ecs_counter_t;
 
-/* Make all metrics the same size, so we can iterate over fields */
+/** Make all metrics the same size, so we can iterate over fields */
 typedef union ecs_metric_t {
     ecs_gauge_t gauge;
     ecs_counter_t counter;
@@ -10904,8 +10905,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t batched_count;
     } commands;
 
+    /* Frame data */
     struct {
-        /* Frame data */
         ecs_metric_t frame_count;          /**< Number of frames processed. */
         ecs_metric_t merge_count;          /**< Number of merges executed. */
         ecs_metric_t rematch_count;        /**< Number of query rematches */
@@ -10915,8 +10916,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t event_emit_count;     /**< Number of events emitted */
     } frame;
 
+    /* Timing */
     struct {
-        /* Timing */
         ecs_metric_t world_time_raw;       /**< Actual time passed since simulation start (first time progress() is called) */
         ecs_metric_t world_time;           /**< Simulation time passed since simulation start. Takes into account time scaling */
         ecs_metric_t frame_time;           /**< Time spent processing a frame. Smaller than world_time_total when load is not 100% */
@@ -10944,8 +10945,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stack_outstanding_alloc_count; /**< Difference between allocs & frees */
     } memory;
 
+    /* REST statistics */
     struct {
-        /* REST statistics */
         ecs_metric_t request_count;
         ecs_metric_t entity_count;
         ecs_metric_t entity_error_count;
@@ -10961,8 +10962,8 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stats_error_count;
     } rest;
 
+    /* HTTP statistics */
     struct {
-        /* HTTP statistics */
         ecs_metric_t request_received_count;
         ecs_metric_t request_invalid_count;
         ecs_metric_t request_handled_ok_count;
@@ -10980,7 +10981,7 @@ typedef struct ecs_world_stats_t {
     int32_t t;
 } ecs_world_stats_t;
 
-/* Statistics for a single query (use ecs_query_stats_get) */
+/** Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
     ecs_metric_t matched_table_count;       /**< Matched non-empty tables */    
@@ -11019,9 +11020,9 @@ typedef struct ecs_pipeline_stats_t {
     /** Current position in ringbuffer */
     int32_t t;
 
-    int32_t system_count; /**< Number of systems in pipeline */
+    int32_t system_count;        /**< Number of systems in pipeline */
     int32_t active_system_count; /**< Number of active systems in pipeline */
-    int32_t rebuild_count; /**< Number of times pipeline has rebuilt */
+    int32_t rebuild_count;       /**< Number of times pipeline has rebuilt */
 } ecs_pipeline_stats_t;
 
 /** Get world statistics.
@@ -11717,18 +11718,18 @@ int ecs_type_info_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_entity_to_json_desc_t {
-    bool serialize_path;       /* Serialize full pathname */
-    bool serialize_meta_ids;   /* Serialize 'meta' ids (Name, ChildOf, etc) */
-    bool serialize_label;      /* Serialize doc name */
-    bool serialize_brief;      /* Serialize brief doc description */
-    bool serialize_link;       /* Serialize doc link (URL) */
-    bool serialize_color;      /* Serialize doc color */
-    bool serialize_id_labels;  /* Serialize labels of (component) ids */
-    bool serialize_base;       /* Serialize base components */
-    bool serialize_private;    /* Serialize private components */
-    bool serialize_hidden;     /* Serialize ids hidden by override */
-    bool serialize_values;     /* Serialize component values */
-    bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
+    bool serialize_path;       /**< Serialize full pathname */
+    bool serialize_meta_ids;   /**< Serialize 'meta' ids (Name, ChildOf, etc) */
+    bool serialize_label;      /**< Serialize doc name */
+    bool serialize_brief;      /**< Serialize brief doc description */
+    bool serialize_link;       /**< Serialize doc link (URL) */
+    bool serialize_color;      /**< Serialize doc color */
+    bool serialize_id_labels;  /**< Serialize labels of (component) ids */
+    bool serialize_base;       /**< Serialize base components */
+    bool serialize_private;    /**< Serialize private components */
+    bool serialize_hidden;     /**< Serialize ids hidden by override */
+    bool serialize_values;     /**< Serialize component values */
+    bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
@@ -11767,20 +11768,20 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;      /* Include term (query) component ids */
-    bool serialize_ids;           /* Include actual (matched) component ids */
-    bool serialize_sources;       /* Include sources */
-    bool serialize_variables;     /* Include variables */
-    bool serialize_is_set;        /* Include is_set (for optional terms) */
-    bool serialize_values;        /* Include component values */
-    bool serialize_entities;      /* Include entities (for This terms) */
-    bool serialize_entity_labels; /* Include doc name for entities */
-    bool serialize_entity_ids;    /* Include numerical ids for entities */
-    bool serialize_variable_labels; /* Include doc name for variables */
-    bool serialize_variable_ids;  /* Include numerical ids for variables */
-    bool serialize_colors;        /* Include doc color for entities */
-    bool measure_eval_duration;   /* Include evaluation duration */
-    bool serialize_type_info;     /* Include type information */
+    bool serialize_term_ids;        /**< Serialize term (query) component ids */
+    bool serialize_ids;             /**< Serialize actual (matched) component ids */
+    bool serialize_sources;         /**< Serialize sources */
+    bool serialize_variables;       /**< Serialize variables */
+    bool serialize_is_set;          /**< Serialize is_set (for optional terms) */
+    bool serialize_values;          /**< Serialize component values */
+    bool serialize_entities;        /**< Serialize entities (for This terms) */
+    bool serialize_entity_labels;   /**< Serialize doc name for entities */
+    bool serialize_entity_ids;      /**< Serialize numerical ids for entities */
+    bool serialize_variable_labels; /**< Serialize doc name for variables */
+    bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
+    bool serialize_colors;          /**< Serialize doc color for entities */
+    bool measure_eval_duration;     /**< Serialize evaluation duration */
+    bool serialize_type_info;       /**< Serialize type information */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
@@ -12302,7 +12303,7 @@ typedef float ecs_f32_t;
 typedef double ecs_f64_t;
 typedef char* ecs_string_t;
 
-/** Meta module component ids */
+/* Meta module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMetaType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsMetaTypeSerialized);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
@@ -12317,7 +12318,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
 FLECS_API extern const ecs_entity_t EcsQuantity;
 
-/** Primitive type component ids */
+/* Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_char_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_byte_t);
@@ -12350,10 +12351,10 @@ typedef enum ecs_type_kind_t {
 /** Component that is automatically added to every type with the right kind. */
 typedef struct EcsMetaType {
     ecs_type_kind_t kind;
-    bool existing;   /* Did the type exist or is it populated from reflection */
-    bool partial;    /* Is the reflection data a partial type description */
-    ecs_size_t size;       /* Computed size */
-    ecs_size_t alignment;  /* Computed alignment */
+    bool existing;         /**< Did the type exist or is it populated from reflection */
+    bool partial;          /**< Is the reflection data a partial type description */
+    ecs_size_t size;       /**< Computed size */
+    ecs_size_t alignment;  /**< Computed alignment */
 } EcsMetaType;
 
 typedef enum ecs_primitive_kind_t {
@@ -12388,54 +12389,54 @@ typedef struct EcsMember {
     int32_t offset;
 } EcsMember;
 
-/* Element type of members vector in EcsStruct */
+/** Element type of members vector in EcsStruct */
 typedef struct ecs_member_t {
-    /* Must be set when used with ecs_struct_desc_t */
+    /** Must be set when used with ecs_struct_desc_t */
     const char *name;
     ecs_entity_t type;
 
-    /* May be set when used with ecs_struct_desc_t */
+    /** May be set when used with ecs_struct_desc_t */
     int32_t count;
     int32_t offset;
 
-    /* May be set when used with ecs_struct_desc_t, will be auto-populated if
+    /** May be set when used with ecs_struct_desc_t, will be auto-populated if
      * type entity is also a unit */
     ecs_entity_t unit;
 
-    /* Should not be set by ecs_struct_desc_t */
+    /** Should not be set by ecs_struct_desc_t */
     ecs_size_t size;
     ecs_entity_t member;
 } ecs_member_t;
 
 typedef struct EcsStruct {
-    /* Populated from child entities with Member component */
+    /** Populated from child entities with Member component */
     ecs_vector_t *members; /* vector<ecs_member_t> */
 } EcsStruct;
 
 typedef struct ecs_enum_constant_t {
-    /* Must be set when used with ecs_enum_desc_t */
+    /** Must be set when used with ecs_enum_desc_t */
     const char *name;
 
-    /* May be set when used with ecs_enum_desc_t */
+    /** May be set when used with ecs_enum_desc_t */
     int32_t value;
 
-    /* Should not be set by ecs_enum_desc_t */
+    /** Should not be set by ecs_enum_desc_t */
     ecs_entity_t constant;
 } ecs_enum_constant_t;
 
 typedef struct EcsEnum {
-    /* Populated from child entities with Constant component */
+    /** Populated from child entities with Constant component */
     ecs_map_t *constants; /* map<i32_t, ecs_enum_constant_t> */
 } EcsEnum;
 
 typedef struct ecs_bitmask_constant_t {
-    /* Must be set when used with ecs_bitmask_desc_t */
+    /** Must be set when used with ecs_bitmask_desc_t */
     const char *name;
 
-    /* May be set when used with ecs_bitmask_desc_t */
+    /** May be set when used with ecs_bitmask_desc_t */
     ecs_flags32_t value;
 
-    /* Should not be set by ecs_bitmask_desc_t */
+    /** Should not be set by ecs_bitmask_desc_t */
     ecs_entity_t constant;
 } ecs_bitmask_constant_t;
 
@@ -12454,7 +12455,7 @@ typedef struct EcsVector {
 } EcsVector;
 
 
-/** Units */
+/* Units */
 
 /* Helper type to describe translation between two units. Note that this
  * is not intended as a generic approach to unit conversions (e.g. from celsius
@@ -12464,25 +12465,25 @@ typedef struct EcsVector {
  * Note that power is applied to the factor. When describing a translation of
  * 1000, either use {factor = 1000, power = 1} or {factor = 1, power = 3}. */
 typedef struct ecs_unit_translation_t {
-    int32_t factor; /* Factor to apply (e.g. "1000", "1000000", "1024") */
-    int32_t power; /* Power to apply to factor (e.g. "1", "3", "-9") */
+    int32_t factor; /**< Factor to apply (e.g. "1000", "1000000", "1024") */
+    int32_t power;  /**< Power to apply to factor (e.g. "1", "3", "-9") */
 } ecs_unit_translation_t;
 
 typedef struct EcsUnit {
     char *symbol;
-    ecs_entity_t prefix; /* Order of magnitude prefix relative to derived */
-    ecs_entity_t base; /* Base unit (e.g. "meters") */
-    ecs_entity_t over; /* Over unit (e.g. "per second") */
-    ecs_unit_translation_t translation; /* Translation for derived unit */
+    ecs_entity_t prefix; /**< Order of magnitude prefix relative to derived */
+    ecs_entity_t base;   /**< Base unit (e.g. "meters") */
+    ecs_entity_t over;   /**< Over unit (e.g. "per second") */
+    ecs_unit_translation_t translation; /**< Translation for derived unit */
 } EcsUnit;
 
 typedef struct EcsUnitPrefix {
-    char *symbol;   /* Symbol of prefix (e.g. "K", "M", "Ki") */
-    ecs_unit_translation_t translation; /* Translation of prefix */
+    char *symbol;        /**< Symbol of prefix (e.g. "K", "M", "Ki") */
+    ecs_unit_translation_t translation; /**< Translation of prefix */
 } EcsUnitPrefix;
 
 
-/** Serializer utilities */
+/* Serializer utilities */
 
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpArray,
@@ -12490,12 +12491,12 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpPush,
     EcsOpPop,
 
-    EcsOpScope, /* Marks last constant that can open/close a scope */
+    EcsOpScope, /**< Marks last constant that can open/close a scope */
 
     EcsOpEnum,
     EcsOpBitmask,
 
-    EcsOpPrimitive, /* Marks first constant that's a primitive */
+    EcsOpPrimitive, /**< Marks first constant that's a primitive */
 
     EcsOpBool,
     EcsOpChar,
@@ -12519,38 +12520,38 @@ typedef enum ecs_meta_type_op_kind_t {
 
 typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
-    ecs_size_t offset;      /* Offset of current field */
-    int32_t count;        
-    const char *name;       /* Name of value (only used for struct members) */
-    int32_t op_count;       /* Number of operations until next field or end */
-    ecs_size_t size;        /* Size of type of operation */
+    ecs_size_t offset;      /**< Offset of current field */
+    int32_t count;
+    const char *name;       /**< Name of value (only used for struct members) */
+    int32_t op_count;       /**< Number of operations until next field or end */
+    ecs_size_t size;        /**< Size of type of operation */
     ecs_entity_t type;
     ecs_entity_t unit;
-    ecs_hashmap_t *members; /* string -> member index (structs only) */
+    ecs_hashmap_t *members; /**< string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
 typedef struct EcsMetaTypeSerialized {
-    ecs_vector_t* ops;     /* vector<ecs_meta_type_op_t> */
+    ecs_vector_t* ops;      /**< vector<ecs_meta_type_op_t> */
 } EcsMetaTypeSerialized;
 
 
-/** Deserializer utilities */
+/* Deserializer utilities */
 
 #define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
 
 typedef struct ecs_meta_scope_t {
-    ecs_entity_t type;        /* The type being iterated */
-    ecs_meta_type_op_t *ops;  /* The type operations (see ecs_meta_type_op_t) */
-    int32_t op_count;         /* Number of operations in ops array to process */
-    int32_t op_cur;           /* Current operation */
-    int32_t elem_cur;         /* Current element (for collections) */
-    int32_t prev_depth;       /* Depth to restore, in case dotmember was used */
-    void *ptr;                /* Pointer to the value being iterated */
+    ecs_entity_t type;        /**< The type being iterated */
+    ecs_meta_type_op_t *ops;  /**< The type operations (see ecs_meta_type_op_t) */
+    int32_t op_count;         /**< Number of operations in ops array to process */
+    int32_t op_cur;           /**< Current operation */
+    int32_t elem_cur;         /**< Current element (for collections) */
+    int32_t prev_depth;       /**< Depth to restore, in case dotmember was used */
+    void *ptr;                /**< Pointer to the value being iterated */
 
-    const EcsComponent *comp; /* Pointer to component, in case size/alignment is needed */
-    ecs_vector_t **vector;    /* Current vector, in case a vector is iterated */
-    bool is_collection;       /* Is the scope iterating elements? */
-    bool is_inline_array;     /* Is the scope iterating an inline array? */
+    const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
+    ecs_vector_t **vector;    /**< Current vector, in case a vector is iterated */
+    bool is_collection;       /**< Is the scope iterating elements? */
+    bool is_inline_array;     /**< Is the scope iterating an inline array? */
 } ecs_meta_scope_t;
 
 /** Type that enables iterating/populating a value using reflection data */
@@ -12559,7 +12560,7 @@ typedef struct ecs_meta_cursor_t {
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
     bool valid;
-    bool is_primitive_scope;  /* If in root scope, this allows for a push for primitive types */
+    bool is_primitive_scope;  /**< If in root scope, this allows for a push for primitive types */
 
     /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
     ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
@@ -12630,7 +12631,7 @@ FLECS_API
 const char* ecs_meta_get_member(
     const ecs_meta_cursor_t *cursor);
 
-/** The set functions assign the field with the specified value. If the value
+/* The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
  * If no valid conversion is available, the operation will fail. */
 
@@ -12693,7 +12694,7 @@ int ecs_meta_set_value(
     ecs_meta_cursor_t *cursor,
     const ecs_value_t *value);
 
-/** Functions for getting members. */
+/* Functions for getting members. */
 
 /** Get field value as boolean. */
 FLECS_API
@@ -12734,7 +12735,7 @@ FLECS_API
 ecs_entity_t ecs_meta_get_entity(
     const ecs_meta_cursor_t *cursor);
 
-/** API functions for creating meta types */
+/* API functions for creating meta types */
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
@@ -12821,27 +12822,27 @@ ecs_entity_t ecs_struct_init(
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
-    /* Existing entity to associate with unit (optional) */
+    /** Existing entity to associate with unit (optional) */
     ecs_entity_t entity;
-    
-    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+
+    /** Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
 
-    /* Unit quantity, e.g. distance, percentage, weight. (optional) */
+    /** Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
 
-    /* Base unit, e.g. "meters" (optional) */
+    /** Base unit, e.g. "meters" (optional) */
     ecs_entity_t base;
 
-    /* Over unit, e.g. "per second" (optional) */
+    /** Over unit, e.g. "per second" (optional) */
     ecs_entity_t over;
 
-    /* Translation to apply to derived unit (optional) */
+    /** Translation to apply to derived unit (optional) */
     ecs_unit_translation_t translation;
 
-    /* Prefix indicating order of magnitude relative to the derived unit. If set
-     * together with "translation", the values must match. If translation is not 
-     * set, setting prefix will autopopulate it. 
+    /** Prefix indicating order of magnitude relative to the derived unit. If set
+     * together with "translation", the values must match. If translation is not
+     * set, setting prefix will autopopulate it.
      * Additionally, setting the prefix will enforce that the symbol (if set)
      * is consistent with the prefix symbol + symbol of the derived unit. If the
      * symbol is not set, it will be auto populated. */
@@ -12856,13 +12857,13 @@ ecs_entity_t ecs_unit_init(
 
 /** Used with ecs_unit_prefix_init. */
 typedef struct ecs_unit_prefix_desc_t {
-    /* Existing entity to associate with unit prefix (optional) */
+    /** Existing entity to associate with unit prefix (optional) */
     ecs_entity_t entity;
-    
-    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+
+    /** Unit symbol, e.g. "m", "%", "g". (optional) */
     const char *symbol;
 
-    /* Translation to apply to derived unit (optional) */
+    /** Translation to apply to derived unit (optional) */
     ecs_unit_translation_t translation;
 } ecs_unit_prefix_desc_t;
 
@@ -14058,11 +14059,11 @@ typedef bool (*ecs_http_reply_action_t)(
 
 /** Used with ecs_http_server_init. */
 typedef struct {
-    ecs_http_reply_action_t callback; /* Function called for each request  */
-    void *ctx;                        /* Passed to callback (optional) */
-    uint16_t port;                    /* HTTP port */
-    const char *ipaddr;               /* Interface to listen on (optional) */
-    int32_t send_queue_wait_ms;       /* Send queue wait time when empty */
+    ecs_http_reply_action_t callback; /**< Function called for each request  */
+    void *ctx;                        /**< Passed to callback (optional) */
+    uint16_t port;                    /**< HTTP port */
+    const char *ipaddr;               /**< Interface to listen on (optional) */
+    int32_t send_queue_wait_ms;       /**< Send queue wait time when empty */
 } ecs_http_server_desc_t;
 
 /** Create server. 
@@ -14256,8 +14257,8 @@ ecs_entity_t ecs_import_c(
     ecs_module_action_t module,
     const char *module_name_c);
 
-/* Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the 
+/** Import a module from a library.
+ * Similar to ecs_import, except that this operation will attempt to load the
  * module from a dynamic library.
  *
  * A library may contain multiple modules, which is why both a library name and
@@ -15048,7 +15049,12 @@ namespace flecs {
 namespace _ {
 template <typename E, int Value>
 struct to_constant {
+#if defined(__clang__) && __clang_major__ >= 16
+    // https://reviews.llvm.org/D130058, https://reviews.llvm.org/D131307
+    static constexpr E value = __builtin_bit_cast(E, Value);
+#else
     static constexpr E value = static_cast<E>(Value);
+#endif
 };
 
 template <typename E, int Value>
@@ -17504,7 +17510,7 @@ ecs_move_t move_dtor() {
 namespace flecs
 {
 
-/** Static helper functions to assign a component value */
+/* Static helper functions to assign a component value */
 
 // set(T&&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
