@@ -406,7 +406,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
     ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
-        ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
+        ECS_BIT_IS_SET(o->filter.flags, EcsFilterNoData));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.sources = NULL;

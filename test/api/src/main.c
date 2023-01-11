@@ -1074,6 +1074,10 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd(void);
 void Filter_filter_iter_superset_parent_w_isa(void);
 void Filter_filter_iter_superset_isa_after_remove_parent(void);
 void Filter_filter_iter_superset_isa_create_table_after_iter(void);
+void Filter_filter_iter_superset_2_relations(void);
+void Filter_filter_iter_superset_2_relations_instanced(void);
+void Filter_filter_iter_superset_2_relations_w_component(void);
+void Filter_filter_iter_superset_2_relations_instanced_w_component(void);
 void Filter_filter_iter_not_up_disabled(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
@@ -1351,7 +1355,11 @@ void Query_isa_superset_3_lvls_owned(void);
 void Query_isa_superset_owned_empty_table_after_match(void);
 void Query_isa_self_superset(void);
 void Query_childof_superset(void);
+void Query_superset_2_targets(void);
 void Query_superset_2_relations(void);
+void Query_superset_2_relations_instanced(void);
+void Query_superset_2_relations_w_component(void);
+void Query_superset_2_relations_instanced_w_component(void);
 void Query_parent(void);
 void Query_existing_isa_cascade(void);
 void Query_new_isa_cascade(void);
@@ -6437,6 +6445,22 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_superset_isa_create_table_after_iter
     },
     {
+        "filter_iter_superset_2_relations",
+        Filter_filter_iter_superset_2_relations
+    },
+    {
+        "filter_iter_superset_2_relations_instanced",
+        Filter_filter_iter_superset_2_relations_instanced
+    },
+    {
+        "filter_iter_superset_2_relations_w_component",
+        Filter_filter_iter_superset_2_relations_w_component
+    },
+    {
+        "filter_iter_superset_2_relations_instanced_w_component",
+        Filter_filter_iter_superset_2_relations_instanced_w_component
+    },
+    {
         "filter_iter_not_up_disabled",
         Filter_filter_iter_not_up_disabled
     },
@@ -7535,8 +7559,24 @@ bake_test_case Query_testcases[] = {
         Query_childof_superset
     },
     {
+        "superset_2_targets",
+        Query_superset_2_targets
+    },
+    {
         "superset_2_relations",
         Query_superset_2_relations
+    },
+    {
+        "superset_2_relations_instanced",
+        Query_superset_2_relations_instanced
+    },
+    {
+        "superset_2_relations_w_component",
+        Query_superset_2_relations_w_component
+    },
+    {
+        "superset_2_relations_instanced_w_component",
+        Query_superset_2_relations_instanced_w_component
     },
     {
         "parent",
@@ -11515,7 +11555,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        253,
+        257,
         Filter_testcases
     },
     {
@@ -11529,7 +11569,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        201,
+        205,
         Query_testcases
     },
     {

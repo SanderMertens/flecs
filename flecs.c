@@ -23903,7 +23903,7 @@ ecs_iter_t ecs_rule_iter(
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
     ECS_BIT_COND(result.flags, EcsIterIsFilter, 
-        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsFilter));
+        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterNoData));
 
     flecs_iter_init(world, &result, 
         flecs_iter_cache_ids |
@@ -44697,7 +44697,7 @@ int ecs_filter_finalize(
             ECS_BIT_SET(f->flags, EcsFilterMatchDisabled);
         }
 
-        if (ECS_BIT_IS_SET(f->flags, EcsFilterIsFilter)) {
+        if (ECS_BIT_IS_SET(f->flags, EcsFilterNoData)) {
             term->inout = EcsInOutNone;
         }
 
@@ -44721,7 +44721,7 @@ int ecs_filter_finalize(
     f->field_count = field_count;
 
     if (filter_terms == term_count) {
-        ECS_BIT_SET(f->flags, EcsFilterIsFilter);
+        ECS_BIT_SET(f->flags, EcsFilterNoData);
     }
 
     return 0;
@@ -46065,7 +46065,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     }
 
     ECS_BIT_COND(it.flags, EcsIterIsFilter, 
-        ECS_BIT_IS_SET(filter->flags, EcsFilterIsFilter));
+        ECS_BIT_IS_SET(filter->flags, EcsFilterNoData));
 
     if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         /* Make space for one variable if the filter has terms for This var */ 
@@ -47107,7 +47107,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
     ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
-        ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
+        ECS_BIT_IS_SET(o->filter.flags, EcsFilterNoData));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.sources = NULL;
@@ -50306,7 +50306,6 @@ void flecs_query_fini(
     ecs_poly_free(query, ecs_query_t);
 }
 
-
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -50338,7 +50337,8 @@ ecs_query_t* ecs_query_init(
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
-        observer_desc.filter.flags |= EcsFilterIsFilter;
+        observer_desc.filter.flags |= EcsFilterNoData;
+        observer_desc.filter.instanced = true;
 
         /* ecs_filter_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the filter. */
@@ -50512,7 +50512,7 @@ ecs_iter_t ecs_query_iter(
 
     ecs_flags32_t flags = 0;
     ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterIsFilter));
+        EcsFilterNoData));
     ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterIsInstanced));
 

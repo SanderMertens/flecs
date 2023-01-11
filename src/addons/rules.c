@@ -2995,7 +2995,7 @@ ecs_iter_t ecs_rule_iter(
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
     ECS_BIT_COND(result.flags, EcsIterIsFilter, 
-        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsFilter));
+        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterNoData));
 
     flecs_iter_init(world, &result, 
         flecs_iter_cache_ids |

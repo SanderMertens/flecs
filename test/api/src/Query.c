@@ -6247,7 +6247,7 @@ void Query_childof_superset() {
     ecs_fini(world);
 }
 
-void Query_superset_2_relations() {
+void Query_superset_2_targets() {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, R, EcsAcyclic);
@@ -6295,6 +6295,190 @@ void Query_superset_2_relations() {
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_superset_2_relations() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { .id = TagA, .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = TagA, .src.trav = EcsIsA, .src.flags = EcsUp },
+        }
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(parent, it.sources[0]);
+    test_uint(base, it.sources[1]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_superset_2_relations_instanced() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { .id = TagA, .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = TagA, .src.trav = EcsIsA, .src.flags = EcsUp },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(parent, it.sources[0]);
+    test_uint(base, it.sources[1]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_superset_2_relations_w_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = ecs_id(Position), .src.trav = EcsIsA, .src.flags = EcsUp },
+        }
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_superset_2_relations_instanced_w_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = ecs_id(Position), .src.trav = EcsIsA, .src.flags = EcsUp },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

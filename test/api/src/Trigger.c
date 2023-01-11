@@ -4675,7 +4675,7 @@ void Trigger_on_set_superset_after_filter_observer() {
         .filter.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterIsFilter,
+        .filter.flags = EcsFilterNoData,
         .events = { EcsOnSet },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4720,7 +4720,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add() {
         .filter.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterIsFilter,
+        .filter.flags = EcsFilterNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4765,7 +4765,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set() {
         .filter.terms = {
             { ecs_id(Position), .src.flags = EcsUp }
         },
-        .filter.flags = EcsFilterIsFilter,
+        .filter.flags = EcsFilterNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4815,7 +4815,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2() {
         .filter.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterIsFilter,
+        .filter.flags = EcsFilterNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1

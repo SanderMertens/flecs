@@ -1825,7 +1825,6 @@ void flecs_query_fini(
     ecs_poly_free(query, ecs_query_t);
 }
 
-
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -1857,7 +1856,8 @@ ecs_query_t* ecs_query_init(
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
-        observer_desc.filter.flags |= EcsFilterIsFilter;
+        observer_desc.filter.flags |= EcsFilterNoData;
+        observer_desc.filter.instanced = true;
 
         /* ecs_filter_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the filter. */
@@ -2031,7 +2031,7 @@ ecs_iter_t ecs_query_iter(
 
     ecs_flags32_t flags = 0;
     ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterIsFilter));
+        EcsFilterNoData));
     ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterIsInstanced));
 

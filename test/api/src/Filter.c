@@ -2074,7 +2074,7 @@ void Filter_filter_filter() {
         .terms = {
             {TagA}
         },
-        .flags = EcsFilterIsFilter
+        .flags = EcsFilterNoData
     }));
 
     test_int(f.term_count, 1);
@@ -6514,6 +6514,190 @@ void Filter_filter_iter_superset_isa_create_table_after_iter() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_superset_2_relations() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = TagA, .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = TagA, .src.trav = EcsIsA, .src.flags = EcsUp },
+        }
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(parent, it.sources[0]);
+    test_uint(base, it.sources[1]);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_superset_2_relations_instanced() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = TagA, .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = TagA, .src.trav = EcsIsA, .src.flags = EcsUp },
+        },
+        .instanced = true
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(parent, it.sources[0]);
+    test_uint(base, it.sources[1]);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_superset_2_relations_w_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = ecs_id(Position), .src.trav = EcsIsA, .src.flags = EcsUp },
+        }
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    {
+        test_bool(true, ecs_filter_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    {
+        test_bool(true, ecs_filter_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_superset_2_relations_instanced_w_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.trav = EcsChildOf, .src.flags = EcsUp },
+            { .id = ecs_id(Position), .src.trav = EcsIsA, .src.flags = EcsUp },
+        },
+        .instanced = true
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    {
+        test_bool(true, ecs_filter_next(&it));
+        test_int(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(parent, it.sources[0]);
+        test_uint(base, it.sources[1]);
+        Position *p1 = ecs_field(&it, Position, 1);
+        Position *p2 = ecs_field(&it, Position, 2);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_int(p1->x, 30);
+        test_int(p1->y, 40);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+    }
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_not_up_disabled() {
     ecs_world_t *world = ecs_mini();
 
@@ -7582,7 +7766,7 @@ void Filter_filter_iter_w_filter_term() {
         .terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }}
     }));
 
-    test_bool(f.flags & EcsFilterIsFilter, true);
+    test_bool(f.flags & EcsFilterNoData, true);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
@@ -7720,7 +7904,7 @@ void Filter_filter_iter_2_terms_filter_all() {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         },
-        .flags = EcsFilterIsFilter
+        .flags = EcsFilterNoData
     }));
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
@@ -7764,7 +7948,7 @@ void Filter_filter_iter_2_terms_filter_all_w_out() {
             { .id = ecs_id(Position), .inout = EcsOut },
             { .id = ecs_id(Velocity) }
         },
-        .flags = EcsFilterIsFilter
+        .flags = EcsFilterNoData
     }));
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});

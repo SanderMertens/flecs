@@ -319,7 +319,7 @@ extern "C" {
 #define EcsFilterMatchDisabled         (1u << 4u)  /* Does filter match disabled entities */
 #define EcsFilterMatchEmptyTables      (1u << 5u)  /* Does filter return empty tables */
 #define EcsFilterMatchAnything         (1u << 6u)  /* False if filter has no/only Not terms */
-#define EcsFilterIsFilter              (1u << 7u)  /* When true, data fields won't be populated */
+#define EcsFilterNoData              (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
 
