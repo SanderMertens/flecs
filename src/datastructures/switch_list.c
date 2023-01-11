@@ -68,7 +68,8 @@ ecs_switch_header_t *flecs_switch_ensure_header(
 
     ecs_switch_header_t *node = flecs_switch_get_header(sw, value);
     if (!node) {
-        node = ecs_map_ensure(&sw->hdrs, ecs_switch_header_t, value);
+        node = ecs_map_insert(&sw->hdrs, ecs_switch_header_t, value);
+        node->count = 0;
         node->element = -1;
     }
 

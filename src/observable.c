@@ -25,13 +25,13 @@ void flecs_observable_fini(
 {
     ecs_sparse_t *triggers = observable->events;
 
-    ecs_assert(!ecs_map_is_initialized(&observable->on_add.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_add.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->on_remove.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_remove.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->on_set.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_set.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->un_set.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->un_set.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = flecs_sparse_count(triggers);
@@ -42,7 +42,7 @@ void flecs_observable_fini(
         (void)er;
 
         /* All triggers should've unregistered by now */
-        ecs_assert(!ecs_map_is_initialized(&er->event_ids), 
+        ecs_assert(!ecs_map_is_init(&er->event_ids), 
             ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -90,7 +90,7 @@ ecs_event_record_t* flecs_event_record_get_if(
 
     ecs_event_record_t *er = flecs_event_record_get(o, event);
     if (er) {
-        if (ecs_map_is_initialized(&er->event_ids)) {
+        if (ecs_map_is_init(&er->event_ids)) {
             return er;
         }
         if (er->any) {
@@ -118,7 +118,12 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     if (id == EcsAny)                                  return er->any;
     else if (id == EcsWildcard)                        return er->wildcard;
     else if (id == ecs_pair(EcsWildcard, EcsWildcard)) return er->wildcard_pair;
-    return ecs_map_get_ptr(&er->event_ids, ecs_event_id_record_t*, id);
+    else {
+        if (ecs_map_is_init(&er->event_ids)) {
+            return ecs_map_get_ptr(&er->event_ids, ecs_event_id_record_t*, id);
+        }
+        return NULL;
+    }
 }
 
 static
@@ -159,11 +164,9 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
     }
 
     ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
-    ecs_event_id_record_t **idt = ecs_map_ensure(
+    ecs_event_id_record_t **idt = ecs_map_insert(
         &er->event_ids, ecs_event_id_record_t*, id);
-    if (!idt[0]) {
-        idt[0] = ider;
-    }
+    idt[0] = ider;
 
     return ider;
 }

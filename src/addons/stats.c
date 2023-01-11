@@ -576,7 +576,7 @@ bool ecs_pipeline_stats_get(
         return false;
     }
 
-    if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
+    if (ecs_map_is_init(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
     ecs_map_init_if(&s->system_stats, ecs_system_stats_t, NULL, sys_count);

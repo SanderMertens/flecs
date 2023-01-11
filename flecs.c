@@ -246,13 +246,13 @@ void flecs_bitset_swap(
 
 
 typedef struct ecs_switch_header_t {
-    int32_t element;        /* First element for value */
-    int32_t count;          /* Number of elements for value */
+    int32_t element;    /* First element for value */
+    int32_t count;      /* Number of elements for value */
 } ecs_switch_header_t;
 
 typedef struct ecs_switch_node_t {
-    int32_t next;           /* Next node in list */
-    int32_t prev;           /* Prev node in list */
+    int32_t next;       /* Next node in list */
+    int32_t prev;       /* Prev node in list */
 } ecs_switch_node_t;
 
 struct ecs_switch_t {    
@@ -10583,6 +10583,7 @@ ecs_block_allocator_t* flecs_allocator_get(
         return NULL;
     }
 
+    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size <= flecs_allocator_size(size), ECS_INTERNAL_ERROR, NULL);
     size = flecs_allocator_size(size);
     ecs_size_t hash = flecs_allocator_size_hash(size);
@@ -12155,7 +12156,8 @@ ecs_switch_header_t *flecs_switch_ensure_header(
 
     ecs_switch_header_t *node = flecs_switch_get_header(sw, value);
     if (!node) {
-        node = ecs_map_ensure(&sw->hdrs, ecs_switch_header_t, value);
+        node = ecs_map_insert(&sw->hdrs, ecs_switch_header_t, value);
+        node->count = 0;
         node->element = -1;
     }
 
@@ -14230,7 +14232,7 @@ void* ecs_vec_first(
 
 /* The ratio used to determine whether the map should flecs_map_rehash. If
  * (element_count * LOAD_FACTOR) > bucket_count, bucket count is increased. */
-#define LOAD_FACTOR (1.2f)
+#define LOAD_FACTOR (12)
 #define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
@@ -14251,15 +14253,15 @@ uint8_t ecs_log2(uint32_t v) {
 
 /* Get bucket count for number of elements */
 static
-int32_t get_bucket_count(
-    int32_t element_count)
+int32_t flecs_map_get_bucket_count(
+    int32_t count)
 {
-    return flecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
+    return flecs_next_pow_of_2((int32_t)(count * LOAD_FACTOR * 0.1));
 }
 
 /* Get bucket shift amount for a given bucket count */
 static
-uint8_t get_bucket_shift (
+uint8_t flecs_map_get_bucket_shift (
     int32_t bucket_count)
 {
     return (uint8_t)(64u - ecs_log2((uint32_t)bucket_count));
@@ -14267,7 +14269,7 @@ uint8_t get_bucket_shift (
 
 /* Get bucket index for provided map key */
 static
-int32_t get_bucket_index(
+int32_t flecs_map_get_bucket_index(
     uint16_t bucket_shift,
     ecs_map_key_t key) 
 {
@@ -14281,45 +14283,16 @@ ecs_bucket_t* flecs_map_get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
-    ecs_assert(map->bucket_shift == get_bucket_shift(map->bucket_count),
+    ecs_assert(map->bucket_shift == flecs_map_get_bucket_shift(map->bucket_count),
         ECS_INTERNAL_ERROR, NULL);
-    int32_t bucket_id = get_bucket_index(map->bucket_shift, key);
+    int32_t bucket_id = flecs_map_get_bucket_index(map->bucket_shift, key);
     ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     return &map->buckets[bucket_id];
 }
 
-/* Ensure that map has at least new_count buckets */
-static
-void ensure_buckets(
-    ecs_map_t *map,
-    int32_t new_count)
-{
-    int32_t bucket_count = map->bucket_count;
-    new_count = flecs_next_pow_of_2(new_count);
-    if (new_count < 2) {
-        new_count = 2;
-    }
-
-    if (new_count && new_count > bucket_count) {
-        if (map->allocator) {
-            map->buckets = flecs_realloc_n(map->allocator, ecs_bucket_t,
-                new_count, bucket_count, map->buckets);
-        } else {
-            map->buckets = ecs_os_realloc_n(
-                map->buckets, ecs_bucket_t, new_count);
-        }
-
-        map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
-        map->bucket_count = new_count;
-        map->bucket_shift = get_bucket_shift(new_count);
-        ecs_os_memset_n(ECS_ELEM_T(map->buckets, ecs_bucket_t, bucket_count),
-            0, ecs_bucket_t, (new_count - bucket_count));
-    }
-}
-
 /* Free contents of bucket */
 static
-void clear_bucket(
+void flecs_map_clear_bucket(
     ecs_block_allocator_t *allocator,
     ecs_bucket_entry_t *bucket)
 {
@@ -14330,47 +14303,23 @@ void clear_bucket(
     }
 }
 
-/* Clear all buckets */
-static
-void clear_buckets(
-    ecs_map_t *map)
-{
-    int32_t i, count = map->bucket_count;
-    for (i = 0; i < count; i ++) {
-        clear_bucket(map->entry_allocator, map->buckets[i].first);
-    }
-    if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, count, map->buckets);
-    } else {
-        ecs_os_free(map->buckets);
-    }
-    map->buckets = NULL;
-    map->bucket_count = 0;
-}
-
 /* Add element to bucket */
 static
 void* flecs_map_add_to_bucket(
     ecs_block_allocator_t *allocator,
     ecs_bucket_t *bucket,
-    ecs_size_t elem_size,
-    ecs_map_key_t key,
-    const void *payload)
+    ecs_map_key_t key)
 {
     ecs_bucket_entry_t *new_entry = flecs_balloc(allocator);
     new_entry->key = key;
     new_entry->next = bucket->first;
     bucket->first = new_entry;
-    void *new_payload = ECS_OFFSET(&new_entry->key, ECS_SIZEOF(ecs_map_key_t));
-    if (elem_size && payload) {
-        ecs_os_memcpy(new_payload, payload, elem_size);
-    }
-    return new_payload;
+    return ECS_OFFSET(&new_entry->key, ECS_SIZEOF(ecs_map_key_t));;
 }
 
 /*  Remove element from bucket */
 static
-bool remove_from_bucket(
+bool flecs_map_remove_from_bucket(
     ecs_block_allocator_t *allocator,
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
@@ -14411,31 +14360,32 @@ void* flecs_map_get_from_bucket(
 static
 void flecs_map_rehash(
     ecs_map_t *map,
-    int32_t bucket_count)
+    int32_t count)
 {
-    ecs_assert(bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(bucket_count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
-    
-    int32_t old_count = map->bucket_count;
-    ecs_bucket_t *old_buckets = map->buckets;
-    
-    int32_t new_count = flecs_next_pow_of_2(bucket_count);
-    map->bucket_count = new_count;
-    map->bucket_shift = get_bucket_shift(new_count);
-    if (map->allocator) {
-        map->buckets = flecs_calloc_n(map->allocator, ecs_bucket_t, new_count);
-    } else {
-        map->buckets = ecs_os_calloc_n(ecs_bucket_t, new_count);
+    count = flecs_next_pow_of_2(count);
+    if (count < 2) {
+        count = 2;
     }
-    map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, new_count);
+    ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_bucket_t *buckets = map->buckets, *buckets_end = map->buckets_end, *b;
+    int32_t old_count = map->bucket_count;
+    
+    if (map->allocator) {
+        map->buckets = flecs_calloc_n(map->allocator, ecs_bucket_t, count);
+    } else {
+        map->buckets = ecs_os_calloc_n(ecs_bucket_t, count);
+    }
+    map->bucket_count = count;
+    map->bucket_shift = flecs_map_get_bucket_shift(count);
+    map->buckets_end = ECS_ELEM_T(map->buckets, ecs_bucket_t, count);
 
     /* Remap old bucket entries to new buckets */
-    int32_t index;
-    for (index = 0; index < old_count; ++index) {
+    for (b = buckets; b < buckets_end; b++) {
         ecs_bucket_entry_t* entry;
-        for (entry = old_buckets[index].first; entry;) {
+        for (entry = b->first; entry;) {
             ecs_bucket_entry_t* next = entry->next;
-            int32_t bucket_index = get_bucket_index(
+            int32_t bucket_index = flecs_map_get_bucket_index(
                 map->bucket_shift, entry->key);
             ecs_bucket_t *bucket = &map->buckets[bucket_index];
             entry->next = bucket->first;
@@ -14445,24 +14395,17 @@ void flecs_map_rehash(
     }
 
     if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, old_count, old_buckets);
+        flecs_free_n(map->allocator, ecs_bucket_t, old_count, buckets);
     } else {
-        ecs_os_free(old_buckets);
+        ecs_os_free(buckets);
     }
-}
-
-bool ecs_map_is_initialized(
-    const ecs_map_t *result)
-{
-    return result != NULL && result->bucket_count != 0;
 }
 
 static
 ecs_size_t flecs_map_chunk_size(
     ecs_size_t size)
 {
-    int32_t entry_size = size + ECS_SIZEOF(ecs_bucket_entry_t);
-    return ECS_MAX(entry_size, ECS_SIZEOF(ecs_block_allocator_chunk_header_t));
+    return size + ECS_SIZEOF(ecs_bucket_entry_t);
 }
 
 void _ecs_map_params_init(
@@ -14487,8 +14430,8 @@ void _ecs_map_init_w_params(
     ecs_map_params_t *params)
 {
     ecs_assert(params->size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_zeromem(result);
 
-    result->count = 0;
     result->elem_size = flecs_ito(int16_t, params->size);
     result->allocator = params->allocator;
 
@@ -14500,14 +14443,14 @@ void _ecs_map_init_w_params(
             flecs_map_chunk_size(params->size));
     }
 
-    ensure_buckets(result, get_bucket_count(params->initial_count));
+    flecs_map_rehash(result, params->initial_count);
 }
 
 void _ecs_map_init_w_params_if(
     ecs_map_t *result,
     ecs_map_params_t *params)
 {
-    if (ecs_map_is_initialized(result)) {
+    if (ecs_map_is_init(result)) {
         ecs_assert(params->size == result->elem_size, 
             ECS_INVALID_PARAMETER, NULL);
         return;
@@ -14534,7 +14477,7 @@ void _ecs_map_init_if(
     ecs_allocator_t *allocator,
     int32_t element_count)
 {
-    if (ecs_map_is_initialized(result)) {
+    if (ecs_map_is_init(result)) {
         ecs_assert(elem_size == result->elem_size, ECS_INVALID_PARAMETER, NULL);
         return;
     }
@@ -14548,9 +14491,7 @@ ecs_map_t* _ecs_map_new(
 {
     ecs_map_t *result = ecs_os_calloc_t(ecs_map_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-
     _ecs_map_init(result, elem_size, allocator, element_count);
-
     return result;
 }
 
@@ -14589,10 +14530,9 @@ void ecs_map_fini(
     } else {
         ecs_os_free(map->buckets);
     }
-    map->buckets = NULL;
-    map->buckets_end = NULL;
-    map->bucket_count = 0;
-    ecs_assert(!ecs_map_is_initialized(map), ECS_INTERNAL_ERROR, NULL);
+
+    map->bucket_shift = 0;
+    ecs_assert(!ecs_map_is_init(map), ECS_INTERNAL_ERROR, NULL);
 }
 
 void ecs_map_free(
@@ -14609,17 +14549,9 @@ void* _ecs_map_get(
     ecs_size_t elem_size,
     ecs_map_key_t key)
 {
-    (void)elem_size;
-
-    if (!ecs_map_is_initialized(map)) {
-        return NULL;
-    }
-
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
-
-    return flecs_map_get_from_bucket(bucket, key);
+    (void)elem_size;
+    return flecs_map_get_from_bucket(flecs_map_get_bucket(map, key), key);
 }
 
 void* _ecs_map_get_ptr(
@@ -14635,17 +14567,23 @@ void* _ecs_map_get_ptr(
     }
 }
 
-bool ecs_map_has(
-    const ecs_map_t *map,
+void* _ecs_map_insert(
+    ecs_map_t *map,
+    ecs_size_t elem_size,
     ecs_map_key_t key)
 {
-    if (!ecs_map_is_initialized(map)) {
-        return false;
+    ecs_assert(_ecs_map_get(map, elem_size, key) == NULL, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    int32_t map_count = ++map->count;
+    int32_t target_bucket_count = flecs_map_get_bucket_count(map_count);
+    int32_t map_bucket_count = map->bucket_count;
+    if (target_bucket_count > map_bucket_count) {
+        flecs_map_rehash(map, target_bucket_count);
     }
 
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
-
-    return flecs_map_get_from_bucket(bucket, key) != NULL;
+    return flecs_map_add_to_bucket(map->entry_allocator, bucket, key);
 }
 
 void* _ecs_map_ensure(
@@ -14653,50 +14591,27 @@ void* _ecs_map_ensure(
     ecs_size_t elem_size,
     ecs_map_key_t key)
 {
-    void *result = _ecs_map_get(map, elem_size, key);
-    if (!result) {
-        result = _ecs_map_set(map, elem_size, key, NULL);
-        if (elem_size) {
-            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_os_memset(result, 0, elem_size);
-        }
-    }
-
-    return result;
-}
-
-void* _ecs_map_set(
-    ecs_map_t *map,
-    ecs_size_t elem_size,
-    ecs_map_key_t key,
-    const void *payload)
-{
-    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
-
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
 
     void *elem = flecs_map_get_from_bucket(bucket, key);
     if (!elem) {
-        void *added_data = flecs_map_add_to_bucket(
-            map->entry_allocator, bucket, elem_size, key, payload);
         int32_t map_count = ++map->count;
-        int32_t target_bucket_count = get_bucket_count(map_count);
+        int32_t target_bucket_count = flecs_map_get_bucket_count(map_count);
         int32_t map_bucket_count = map->bucket_count;
 
         if (target_bucket_count > map_bucket_count) {
             flecs_map_rehash(map, target_bucket_count);
             bucket = flecs_map_get_bucket(map, key);
-            added_data = flecs_map_get_from_bucket(bucket, key);
-            ecs_assert(added_data != NULL, ECS_INVALID_PARAMETER, NULL);
+            elem = flecs_map_add_to_bucket(map->entry_allocator, bucket, key);
+            ecs_assert(elem != NULL, ECS_INVALID_PARAMETER, NULL);
+        } else {
+            elem = flecs_map_add_to_bucket(map->entry_allocator, bucket, key);
         }
-        return added_data;
-    } else {
-        if (payload) {
-            ecs_os_memcpy(elem, payload, elem_size);
-        }
-        return elem;
+
+        ecs_os_memset(elem, 0, elem_size);
     }
+
+    return elem;
 }
 
 int32_t ecs_map_remove(
@@ -14706,32 +14621,31 @@ int32_t ecs_map_remove(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
-    if (remove_from_bucket(map->entry_allocator, bucket, key)) {
+    if (flecs_map_remove_from_bucket(map->entry_allocator, bucket, key)) {
         return --map->count;
     }
     
     return map->count;
 }
 
-int32_t ecs_map_count(
-    const ecs_map_t *map)
-{
-    return map ? map->count : 0;
-}
-
-int32_t ecs_map_bucket_count(
-    const ecs_map_t *map)
-{
-    return map ? map->bucket_count : 0;
-}
-
 void ecs_map_clear(
     ecs_map_t *map)
 {
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    clear_buckets(map);
+    int32_t i, count = map->bucket_count;
+    for (i = 0; i < count; i ++) {
+        flecs_map_clear_bucket(map->entry_allocator, map->buckets[i].first);
+    }
+    if (map->allocator) {
+        flecs_free_n(map->allocator, ecs_bucket_t, count, map->buckets);
+    } else {
+        ecs_os_free(map->buckets);
+    }
+    map->buckets = NULL;
+    map->buckets_end = NULL;
+    map->bucket_count = 0;
     map->count = 0;
-    ensure_buckets(map, 2);
+    flecs_map_rehash(map, 2);
 }
 
 ecs_map_iter_t ecs_map_iter(
@@ -14751,7 +14665,7 @@ void* _ecs_map_next(
 {
     (void)elem_size;
     const ecs_map_t *map = iter->map;
-    if (!ecs_map_is_initialized(map)) {
+    if (!ecs_map_is_init(map)) {
         return NULL;
     }
     if (iter->bucket == map->buckets_end) {
@@ -14808,35 +14722,10 @@ void* _ecs_map_next_ptr(
     }
 }
 
-void ecs_map_grow(
-    ecs_map_t *map, 
-    int32_t element_count)
-{
-    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t target_count = map->count + element_count;
-    int32_t bucket_count = get_bucket_count(target_count);
-
-    if (bucket_count > map->bucket_count) {
-        flecs_map_rehash(map, bucket_count);
-    }
-}
-
-void ecs_map_set_size(
-    ecs_map_t *map, 
-    int32_t element_count)
-{    
-    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t bucket_count = get_bucket_count(element_count);
-
-    if (bucket_count) {
-        flecs_map_rehash(map, bucket_count);
-    }
-}
-
 ecs_map_t* ecs_map_copy(
     ecs_map_t *map)
 {
-    if (!ecs_map_is_initialized(map)) {
+    if (!ecs_map_is_init(map)) {
         return NULL;
     }
 
@@ -14849,7 +14738,8 @@ ecs_map_t* ecs_map_copy(
     ecs_map_key_t key;
     void *ptr;
     while ((ptr = _ecs_map_next(&it, elem_size, &key))) {
-        _ecs_map_set(result, elem_size, key, ptr);
+        void *elem = _ecs_map_ensure(result, elem_size, key);
+        ecs_os_memcpy(elem, ptr, elem_size);
     }
 
     return result;
@@ -17150,8 +17040,7 @@ void flecs_pipeline_set_write_state(
         ids = write_state->ids;
     }
 
-    bool value = true;
-    ecs_map_set(ids, id, &value);
+    ecs_map_ensure(ids, bool, id)[0] = true;
 }
 
 static
@@ -26741,7 +26630,7 @@ int add_constant_to_enum(
             &world->allocator, 1);
     }
 
-    c = ecs_map_ensure(ptr->constants, ecs_enum_constant_t, value);
+    c = ecs_map_insert(ptr->constants, ecs_enum_constant_t, value);
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
@@ -26809,7 +26698,7 @@ int add_constant_to_bitmask(
             &world->allocator, 1);
     }
 
-    c = ecs_map_ensure(ptr->constants, ecs_bitmask_constant_t, value);
+    c = ecs_map_insert(ptr->constants, ecs_bitmask_constant_t, value);
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
@@ -31277,7 +31166,7 @@ bool ecs_pipeline_stats_get(
         return false;
     }
 
-    if (ecs_map_is_initialized(&s->system_stats) && !sys_count) {
+    if (ecs_map_is_init(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
     ecs_map_init_if(&s->system_stats, ecs_system_stats_t, NULL, sys_count);
@@ -35874,7 +35763,7 @@ int64_t ecs_rest_stats_error_count = 0;
 
 static
 void flecs_rest_free_reply_cache(ecs_map_t *reply_cache) {
-    if (ecs_map_is_initialized(reply_cache)) {
+    if (ecs_map_is_init(reply_cache)) {
         ecs_map_iter_t it = ecs_map_iter(reply_cache);
         ecs_rest_cached_t *reply;
         while ((reply = ecs_map_next(&it, ecs_rest_cached_t, 0))) {
@@ -36201,7 +36090,7 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        cached = ecs_map_ensure(&impl->reply_cache, ecs_rest_cached_t, q);
+        cached = ecs_map_insert(&impl->reply_cache, ecs_rest_cached_t, q);
     }
 
     /* Cache miss */
@@ -40763,7 +40652,7 @@ void flecs_monitor_mark_dirty(
 
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    if (ecs_map_is_initialized(monitors)) {
+    if (ecs_map_is_init(monitors)) {
         ecs_monitor_t *m = ecs_map_get(monitors, ecs_monitor_t, id);
         if (m) {
             if (!world->monitors.is_dirty) {
@@ -40789,8 +40678,6 @@ void flecs_monitor_register(
     ecs_map_init_if(monitors, ecs_monitor_t, &world->allocator, 1);
 
     ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
-
     ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
@@ -40806,7 +40693,7 @@ void flecs_monitor_unregister(
 
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    if (!ecs_map_is_initialized(monitors)) {
+    if (!ecs_map_is_init(monitors)) {
         return;
     }
 
@@ -41671,7 +41558,7 @@ int ecs_fini(
     ecs_log_pop_1();
 
     /* All queries are cleaned up, so monitors should've been cleaned up too */
-    ecs_assert(!ecs_map_is_initialized(&world->monitors.monitors), 
+    ecs_assert(!ecs_map_is_init(&world->monitors.monitors), 
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_dbg_1("#[bold]cleanup world datastructures");
@@ -42423,13 +42310,13 @@ void flecs_observable_fini(
 {
     ecs_sparse_t *triggers = observable->events;
 
-    ecs_assert(!ecs_map_is_initialized(&observable->on_add.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_add.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->on_remove.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_remove.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->on_set.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->on_set.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_initialized(&observable->un_set.event_ids), 
+    ecs_assert(!ecs_map_is_init(&observable->un_set.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = flecs_sparse_count(triggers);
@@ -42440,7 +42327,7 @@ void flecs_observable_fini(
         (void)er;
 
         /* All triggers should've unregistered by now */
-        ecs_assert(!ecs_map_is_initialized(&er->event_ids), 
+        ecs_assert(!ecs_map_is_init(&er->event_ids), 
             ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -42488,7 +42375,7 @@ ecs_event_record_t* flecs_event_record_get_if(
 
     ecs_event_record_t *er = flecs_event_record_get(o, event);
     if (er) {
-        if (ecs_map_is_initialized(&er->event_ids)) {
+        if (ecs_map_is_init(&er->event_ids)) {
             return er;
         }
         if (er->any) {
@@ -42516,7 +42403,12 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     if (id == EcsAny)                                  return er->any;
     else if (id == EcsWildcard)                        return er->wildcard;
     else if (id == ecs_pair(EcsWildcard, EcsWildcard)) return er->wildcard_pair;
-    return ecs_map_get_ptr(&er->event_ids, ecs_event_id_record_t*, id);
+    else {
+        if (ecs_map_is_init(&er->event_ids)) {
+            return ecs_map_get_ptr(&er->event_ids, ecs_event_id_record_t*, id);
+        }
+        return NULL;
+    }
 }
 
 static
@@ -42557,11 +42449,9 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
     }
 
     ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
-    ecs_event_id_record_t **idt = ecs_map_ensure(
+    ecs_event_id_record_t **idt = ecs_map_insert(
         &er->event_ids, ecs_event_id_record_t*, id);
-    if (!idt[0]) {
-        idt[0] = ider;
-    }
+    idt[0] = ider;
 
     return ider;
 }
@@ -46823,7 +46713,7 @@ void flecs_register_observer_for_id(
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
         ecs_map_init_w_params_if(observers, &world->allocators.ptr);
 
-        ecs_map_ensure(observers, ecs_observer_t*, 
+        ecs_map_insert(observers, ecs_observer_t*, 
             observer->filter.entity)[0] = observer;
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
@@ -47080,7 +46970,7 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav)
 {
-    if (ecs_map_is_initialized(observers)) {
+    if (ecs_map_is_init(observers)) {
         ecs_map_iter_t oit = ecs_map_iter(observers);
         ecs_observer_t *o;
         while ((o = ecs_map_next_ptr(&oit, ecs_observer_t*, NULL))) {
@@ -47790,7 +47680,8 @@ void ecs_table_cache_insert(
     flecs_table_cache_list_insert(cache, result);
 
     if (table) {
-        ecs_map_set_ptr(&cache->index, table->id, result);
+        ecs_map_insert(&cache->index, ecs_table_cache_hdr_t*, table->id)
+            [0] = result;
     }
 
     ecs_assert(empty || cache->tables.first != NULL, 
@@ -47845,7 +47736,11 @@ void* ecs_table_cache_get(
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     if (table) {
-        return ecs_map_get_ptr(&cache->index, ecs_table_cache_hdr_t*, table->id);
+        if (ecs_map_is_init(&cache->index)) {
+            return ecs_map_get_ptr(
+                &cache->index, ecs_table_cache_hdr_t*, table->id);
+        }
+        return NULL;
     } else {
         ecs_table_cache_hdr_t *elem = cache->tables.first;
         ecs_assert(!elem || elem->table == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -47861,7 +47756,7 @@ void* ecs_table_cache_remove(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_map_is_initialized(&cache->index)) {
+    if (!ecs_map_is_init(&cache->index)) {
         return NULL;
     }
 
@@ -48537,18 +48432,18 @@ ecs_query_table_list_t* flecs_query_get_group(
 static
 ecs_query_table_list_t* flecs_query_ensure_group(
     ecs_query_t *query,
-    uint64_t group_id)
+    uint64_t id)
 {
-    bool created = false;
-    if (query->on_group_create) {
-        created = !ecs_map_has(&query->groups, group_id);
-    }
+    ecs_query_table_list_t *group = ecs_map_get(
+        &query->groups, ecs_query_table_list_t, id);
 
-    ecs_query_table_list_t *group = ecs_map_ensure(
-        &query->groups, ecs_query_table_list_t, group_id);
-    if (created) {
-        group->info.ctx = query->on_group_create(
-            query->filter.world, group_id, query->group_by_ctx);
+    if (!group) {
+        group = ecs_map_insert(&query->groups, ecs_query_table_list_t, id);
+        ecs_os_zeromem(group);
+        if (query->on_group_create) {
+            group->info.ctx = query->on_group_create(
+                query->filter.world, id, query->group_by_ctx);
+        }
     }
 
     return group;
@@ -48557,18 +48452,18 @@ ecs_query_table_list_t* flecs_query_ensure_group(
 static
 void flecs_query_remove_group(
     ecs_query_t *query,
-    uint64_t group_id)
+    uint64_t id)
 {
     if (query->on_group_delete) {
         ecs_query_table_list_t *group = ecs_map_get(
-            &query->groups, ecs_query_table_list_t, group_id);
+            &query->groups, ecs_query_table_list_t, id);
         if (group) {
-            query->on_group_delete(
-                query->filter.world, group_id, group->info.ctx, query->group_by_ctx);
+            query->on_group_delete(query->filter.world, id, 
+                group->info.ctx, query->group_by_ctx);
         }
     }
 
-    ecs_map_remove(&query->groups, group_id);
+    ecs_map_remove(&query->groups, id);
 }
 
 static
@@ -49349,7 +49244,7 @@ bool flecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    if (!ecs_map_is_initialized(&query->cache.index)) {
+    if (!ecs_map_is_init(&query->cache.index)) {
         return false;
     }
 
@@ -51455,7 +51350,7 @@ void flecs_table_remove_edge(
     ecs_graph_edge_t *edge)
 {
     ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_map_is_initialized(&edges->hi), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_map_is_init(&edges->hi), ECS_INTERNAL_ERROR, NULL);
     flecs_table_disconnect_edge(world, id, edge);
     ecs_map_remove(&edges->hi, id);
 }
@@ -55515,8 +55410,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= ECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
-        idr_ptr = ecs_map_ensure(&world->id_index_hi, ecs_id_record_t*, hash);
-        ecs_assert(idr_ptr[0] == NULL, ECS_INTERNAL_ERROR, NULL);
+        idr_ptr = ecs_map_insert(&world->id_index_hi, ecs_id_record_t*, hash);
         idr_ptr[0] = idr;
     } else {
         idr = flecs_sparse_ensure_fast(&world->id_index_lo, 

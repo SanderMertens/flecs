@@ -111,8 +111,7 @@ void flecs_pipeline_set_write_state(
         ids = write_state->ids;
     }
 
-    bool value = true;
-    ecs_map_set(ids, id, &value);
+    ecs_map_ensure(ids, bool, id)[0] = true;
 }
 
 static
