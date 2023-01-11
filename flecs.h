@@ -1558,6 +1558,11 @@ FLECS_API
 ecs_block_allocator_t* flecs_ballocator_new(
     ecs_size_t size);
 
+#define flecs_ballocator_new_t(T)\
+    flecs_ballocator_new(ECS_SIZEOF(T))
+#define flecs_ballocator_new_n(T, count)\
+    flecs_ballocator_new(ECS_SIZEOF(T) * count)
+
 FLECS_API
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba);
@@ -1712,10 +1717,6 @@ ecs_map_t* _ecs_map_new(
 #define ecs_map_new(T, allocator, elem_count)\
     _ecs_map_new(ECS_SIZEOF(T), allocator, elem_count)
 
-/** Is map initialized */
-bool ecs_map_is_initialized(
-    const ecs_map_t *result);
-
 /** Get element for key, returns NULL if they key doesn't exist. */
 FLECS_API
 void* _ecs_map_get(
@@ -1738,12 +1739,6 @@ void* _ecs_map_get_ptr(
 #define ecs_map_get_ptr(map, T, key)\
     (T)_ecs_map_get_ptr(map, key)
 
-/** Test if map has key */
-FLECS_API
-bool ecs_map_has(
-    const ecs_map_t *map,
-    ecs_map_key_t key);
-
 /** Get or create element for key. */
 FLECS_API
 void* _ecs_map_ensure(
@@ -1754,19 +1749,15 @@ void* _ecs_map_ensure(
 #define ecs_map_ensure(map, T, key)\
     ((T*)_ecs_map_ensure(map, ECS_SIZEOF(T), (ecs_map_key_t)key))
 
-/** Set element. */
+/** Get or create element for key. */
 FLECS_API
-void* _ecs_map_set(
+void* _ecs_map_insert(
     ecs_map_t *map,
     ecs_size_t elem_size,
-    ecs_map_key_t key,
-    const void *payload);
+    ecs_map_key_t key);
 
-#define ecs_map_set(map, key, payload)\
-    _ecs_map_set(map, ECS_SIZEOF(*payload), (ecs_map_key_t)key, payload)
-
-#define ecs_map_set_ptr(map, key, payload)\
-    _ecs_map_set(map, ECS_SIZEOF(payload), (ecs_map_key_t)key, &payload)
+#define ecs_map_insert(map, T, key)\
+    ((T*)_ecs_map_insert(map, ECS_SIZEOF(T), (ecs_map_key_t)key))
 
 /** Free map. */
 FLECS_API
@@ -1787,14 +1778,10 @@ void ecs_map_clear(
     ecs_map_t *map);
 
 /** Return number of elements in map. */
-FLECS_API
-int32_t ecs_map_count(
-    const ecs_map_t *map);
+#define ecs_map_count(map) ((map) ? (map)->count : 0)
 
-/** Return number of buckets in map. */
-FLECS_API
-int32_t ecs_map_bucket_count(
-    const ecs_map_t *map);
+/** Is map initialized */
+#define ecs_map_is_init(map) ((map) ? (map)->bucket_shift != 0 : false)
 
 /** Return iterator to map contents. */
 FLECS_API
@@ -1819,18 +1806,6 @@ void* _ecs_map_next_ptr(
 
 #define ecs_map_next_ptr(iter, T, key) \
     (T)_ecs_map_next_ptr(iter, key)
-
-/** Grow number of buckets in the map for specified number of elements. */
-FLECS_API
-void ecs_map_grow(
-    ecs_map_t *map,
-    int32_t elem_count);
-
-/** Set number of buckets in the map for specified number of elements. */
-FLECS_API
-void ecs_map_set_size(
-    ecs_map_t *map,
-    int32_t elem_count);
 
 /** Copy map. */
 FLECS_API

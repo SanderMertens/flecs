@@ -568,7 +568,7 @@ int add_constant_to_enum(
             &world->allocator, 1);
     }
 
-    c = ecs_map_ensure(ptr->constants, ecs_enum_constant_t, value);
+    c = ecs_map_insert(ptr->constants, ecs_enum_constant_t, value);
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
@@ -636,7 +636,7 @@ int add_constant_to_bitmask(
             &world->allocator, 1);
     }
 
-    c = ecs_map_ensure(ptr->constants, ecs_bitmask_constant_t, value);
+    c = ecs_map_insert(ptr->constants, ecs_bitmask_constant_t, value);
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;

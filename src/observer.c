@@ -122,7 +122,7 @@ void flecs_register_observer_for_id(
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
         ecs_map_init_w_params_if(observers, &world->allocators.ptr);
 
-        ecs_map_ensure(observers, ecs_observer_t*, 
+        ecs_map_insert(observers, ecs_observer_t*, 
             observer->filter.entity)[0] = observer;
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
@@ -379,7 +379,7 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav)
 {
-    if (ecs_map_is_initialized(observers)) {
+    if (ecs_map_is_init(observers)) {
         ecs_map_iter_t oit = ecs_map_iter(observers);
         ecs_observer_t *o;
         while ((o = ecs_map_next_ptr(&oit, ecs_observer_t*, NULL))) {

@@ -65,9 +65,11 @@
                 "remove",
                 "remove_empty",
                 "remove_unknown",
-                "grow",
-                "set_size_0",
-                "ensure"
+                "remove_twice",
+                "randomized_insert",
+                "randomized_remove",
+                "randomized_insert_large",
+                "randomized_remove_large"
             ]
         }, {
             "id": "Sparse",

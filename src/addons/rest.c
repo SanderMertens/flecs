@@ -48,7 +48,7 @@ int64_t ecs_rest_stats_error_count = 0;
 
 static
 void flecs_rest_free_reply_cache(ecs_map_t *reply_cache) {
-    if (ecs_map_is_initialized(reply_cache)) {
+    if (ecs_map_is_init(reply_cache)) {
         ecs_map_iter_t it = ecs_map_iter(reply_cache);
         ecs_rest_cached_t *reply;
         while ((reply = ecs_map_next(&it, ecs_rest_cached_t, 0))) {
@@ -375,7 +375,7 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        cached = ecs_map_ensure(&impl->reply_cache, ecs_rest_cached_t, q);
+        cached = ecs_map_insert(&impl->reply_cache, ecs_rest_cached_t, q);
     }
 
     /* Cache miss */

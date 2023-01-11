@@ -139,8 +139,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= ECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
-        idr_ptr = ecs_map_ensure(&world->id_index_hi, ecs_id_record_t*, hash);
-        ecs_assert(idr_ptr[0] == NULL, ECS_INTERNAL_ERROR, NULL);
+        idr_ptr = ecs_map_insert(&world->id_index_hi, ecs_id_record_t*, hash);
         idr_ptr[0] = idr;
     } else {
         idr = flecs_sparse_ensure_fast(&world->id_index_lo, 
