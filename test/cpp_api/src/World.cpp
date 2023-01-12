@@ -1652,7 +1652,7 @@ void World_get_ref() {
     flecs::world ecs;
 
     struct Space { int v; };
-    ecs.set<Space>({.v = 12});
+    ecs.set<Space>({12});
 
     Space *space = ecs.get_ref<Space>();
     test_int(12, space->v);
