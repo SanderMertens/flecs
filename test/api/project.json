@@ -2089,7 +2089,8 @@
                 "get_type_info",
                 "get_type_info_after_delete_with",
                 "get_type_info_after_reuse",
-                "no_name_prefix_after_init"
+                "no_name_prefix_after_init",
+                "get_ref"
             ]
         }, {
             "id": "WorldInfo",
