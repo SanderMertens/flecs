@@ -86,6 +86,12 @@ void world::modified() const {
 }
 
 template <typename T>
+ref<T> world::get_ref() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_ref<T>();
+}
+
+template <typename T>
 const T* world::get() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get<T>();
