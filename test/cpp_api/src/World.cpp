@@ -1648,3 +1648,12 @@ void World_reregister_after_reset_w_hooks_and_in_use_implicit() {
     test_int(2, Pod::ctor_invoked);
 }
 
+void World_get_ref() {
+    flecs::world ecs;
+
+    struct Space { int v; };
+    ecs.set<Space>({v = 12});
+
+    Space *space = ecs.get_ref<Space>();
+    test_int(12, space->v);
+}

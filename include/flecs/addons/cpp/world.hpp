@@ -565,6 +565,11 @@ struct world {
     template <typename T>
     void modified() const;
 
+    /** Get ref singleton component.
+     */
+    template <typename T>
+    ref<T> get_ref() const;
+
     /** Get singleton component.
      */
     template <typename T>
