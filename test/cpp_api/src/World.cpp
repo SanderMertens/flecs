@@ -1654,6 +1654,6 @@ void World_get_ref() {
     struct Space { int v; };
     ecs.set<Space>({12});
 
-    Space *space = ecs.get_ref<Space>();
+    auto space = ecs.get_ref<Space>();
     test_int(12, space->v);
 }
