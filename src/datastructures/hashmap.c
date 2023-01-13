@@ -39,7 +39,8 @@ void _flecs_hashmap_init(
     map->value_size = value_size;
     map->hash = hash;
     map->compare = compare;
-    ecs_map_init(&map->impl, ecs_hm_bucket_t, allocator, 0);
+    flecs_ballocator_init_t(&map->bucket_allocator, ecs_hm_bucket_t);
+    ecs_map_init(&map->impl, allocator);
 }
 
 void flecs_hashmap_fini(
@@ -47,34 +48,39 @@ void flecs_hashmap_fini(
 {
     ecs_allocator_t *a = map->impl.allocator;
     ecs_map_iter_t it = ecs_map_iter(&map->impl);
-    ecs_hm_bucket_t *bucket;
-    uint64_t key;
-    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, &key))) {
+
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
+#ifdef FLECS_SANITIZE        
+        flecs_bfree(&map->bucket_allocator, bucket);
+#endif
     }
 
+    flecs_ballocator_fini(&map->bucket_allocator);
     ecs_map_fini(&map->impl);
 }
 
 void flecs_hashmap_copy(
-    const ecs_hashmap_t *src,
-    ecs_hashmap_t *dst)
+    ecs_hashmap_t *dst,
+    const ecs_hashmap_t *src)
 {
-    if (dst != src) {
-        *dst = *src;
-    }
-    
-    ecs_map_t *impl = ecs_map_copy(&dst->impl);
-    ecs_allocator_t *a = impl->allocator;
-    dst->impl = *impl;
-    ecs_os_free(impl);
+    ecs_assert(dst != src, ECS_INVALID_PARAMETER, NULL);
 
+    _flecs_hashmap_init(dst, src->key_size, src->value_size, src->hash, 
+        src->compare, src->impl.allocator);
+    ecs_map_copy(&dst->impl, &src->impl);
+
+    ecs_allocator_t *a = dst->impl.allocator;
     ecs_map_iter_t it = ecs_map_iter(&dst->impl);
-    ecs_hm_bucket_t *bucket;
-    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
-        bucket->keys = ecs_vec_copy(a, &bucket->keys, dst->key_size);
-        bucket->values = ecs_vec_copy(a, &bucket->values, dst->value_size);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t **bucket_ptr = ecs_map_ref(&it, ecs_hm_bucket_t);
+        ecs_hm_bucket_t *src_bucket = bucket_ptr[0];
+        ecs_hm_bucket_t *dst_bucket = flecs_balloc(&dst->bucket_allocator);
+        bucket_ptr[0] = dst_bucket;
+        dst_bucket->keys = ecs_vec_copy(a, &src_bucket->keys, dst->key_size);
+        dst_bucket->values = ecs_vec_copy(a, &src_bucket->values, dst->value_size);
     }
 }
 
@@ -88,7 +94,8 @@ void* _flecs_hashmap_get(
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map->hash(key);
-    ecs_hm_bucket_t *bucket = ecs_map_get(&map->impl, ecs_hm_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get_deref(&map->impl, 
+        ecs_hm_bucket_t, hash);
     if (!bucket) {
         return NULL;
     }
@@ -111,8 +118,11 @@ flecs_hashmap_result_t _flecs_hashmap_ensure(
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map->hash(key);
-    ecs_hm_bucket_t *bucket = ecs_map_ensure(&map->impl, ecs_hm_bucket_t, hash);
-    ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = r[0];
+    if (!bucket) {
+        bucket = r[0] = flecs_bcalloc(&map->bucket_allocator);
+    }
 
     ecs_allocator_t *a = map->impl.allocator;
     void *value_ptr, *key_ptr;
@@ -160,7 +170,7 @@ ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     uint64_t hash)
 {
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_map_get(&map->impl, ecs_hm_bucket_t, hash);
+    return ecs_map_get_deref(&map->impl, ecs_hm_bucket_t, hash);
 }
 
 void flecs_hm_bucket_remove(
@@ -176,7 +186,9 @@ void flecs_hm_bucket_remove(
         ecs_allocator_t *a = map->impl.allocator;
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
-        ecs_map_remove(&map->impl, hash);
+        ecs_hm_bucket_t *b = ecs_map_remove_ptr(&map->impl, hash);
+        ecs_assert(bucket == b, ECS_INTERNAL_ERROR, NULL); (void)b;
+        flecs_bfree(&map->bucket_allocator, bucket);
     }
 }
 
@@ -191,7 +203,8 @@ void _flecs_hashmap_remove_w_hash(
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
     (void)value_size;
 
-    ecs_hm_bucket_t *bucket = ecs_map_get(&map->impl, ecs_hm_bucket_t, hash);
+    ecs_hm_bucket_t *bucket = ecs_map_get_deref(&map->impl, 
+        ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
     }
@@ -234,7 +247,8 @@ void* _flecs_hashmap_next(
     int32_t index = ++ it->index;
     ecs_hm_bucket_t *bucket = it->bucket;
     while (!bucket || it->index >= ecs_vec_count(&bucket->keys)) {
-        bucket = it->bucket = ecs_map_next(&it->it, ecs_hm_bucket_t, NULL);
+        ecs_map_next(&it->it);
+        bucket = it->bucket = ecs_map_ptr(&it->it);
         if (!bucket) {
             return NULL;
         }

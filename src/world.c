@@ -292,8 +292,8 @@ void flecs_eval_component_monitor(
     world->monitors.is_dirty = false;
 
     ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
-    ecs_monitor_t *m;
-    while ((m = ecs_map_next(&it, ecs_monitor_t, NULL))) {
+    while (ecs_map_next(&it)) {
+        ecs_monitor_t *m = ecs_map_ptr(&it);
         if (!m->is_dirty) {
             continue;
         }
@@ -317,7 +317,7 @@ void flecs_monitor_mark_dirty(
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
     if (ecs_map_is_init(monitors)) {
-        ecs_monitor_t *m = ecs_map_get(monitors, ecs_monitor_t, id);
+        ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
         if (m) {
             if (!world->monitors.is_dirty) {
                 world->monitor_generation ++;
@@ -338,10 +338,8 @@ void flecs_monitor_register(
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_t *monitors = &world->monitors.monitors;
-
-    ecs_map_init_if(monitors, ecs_monitor_t, &world->allocator, 1);
-
-    ecs_monitor_t *m = ecs_map_ensure(monitors, ecs_monitor_t, id);
+    ecs_map_init_if(monitors, &world->allocator);
+    ecs_monitor_t *m = ecs_map_ensure_alloc_t(monitors, ecs_monitor_t, id);
     ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
     *q = query;
 }
@@ -356,12 +354,11 @@ void flecs_monitor_unregister(
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_t *monitors = &world->monitors.monitors;
-
     if (!ecs_map_is_init(monitors)) {
         return;
     }
 
-    ecs_monitor_t *m = ecs_map_get(monitors, ecs_monitor_t, id);
+    ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
     if (!m) {
         return;
     }
@@ -378,7 +375,7 @@ void flecs_monitor_unregister(
 
     if (!count) {
         ecs_vector_free(m->queries);
-        ecs_map_remove(monitors, id);
+        ecs_map_remove_free(monitors, id);
     }
 
     if (!ecs_map_count(monitors)) {
@@ -549,9 +546,8 @@ void flecs_world_allocators_init(
 
     flecs_allocator_init(&world->allocator);
 
-    ecs_map_params_init(&a->ptr, &world->allocator, void*);
-    ecs_map_params_init(&a->query_table_list, &world->allocator,
-        ecs_query_table_list_t);
+    ecs_map_params_init(&a->ptr, &world->allocator);
+    ecs_map_params_init(&a->query_table_list, &world->allocator);
 
     flecs_ballocator_init_t(&a->query_table, ecs_query_table_t);
     flecs_ballocator_init_t(&a->query_table_match, ecs_query_table_match_t);

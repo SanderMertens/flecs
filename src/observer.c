@@ -121,9 +121,7 @@ void flecs_register_observer_for_id(
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
         ecs_map_init_w_params_if(observers, &world->allocators.ptr);
-
-        ecs_map_insert(observers, ecs_observer_t*, 
-            observer->filter.entity)[0] = observer;
+        ecs_map_insert_ptr(observers, observer->filter.entity, observer);
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
         if (trav) {
@@ -180,8 +178,8 @@ void flecs_unregister_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *id_observers = ECS_OFFSET(idt, offset);
-
-        if (ecs_map_remove(id_observers, observer->filter.entity) == 0) {
+        ecs_map_remove(id_observers, observer->filter.entity);
+        if (!ecs_map_count(id_observers)) {
             ecs_map_fini(id_observers);
         }
 
@@ -381,8 +379,8 @@ void flecs_observers_invoke(
 {
     if (ecs_map_is_init(observers)) {
         ecs_map_iter_t oit = ecs_map_iter(observers);
-        ecs_observer_t *o;
-        while ((o = ecs_map_next_ptr(&oit, ecs_observer_t*, NULL))) {
+        while (ecs_map_next(&oit)) {
+            ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
         }

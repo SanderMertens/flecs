@@ -39,9 +39,9 @@ typedef enum ecs_write_kind_t {
 } ecs_write_kind_t;
 
 typedef struct ecs_write_state_t {
-    ecs_map_t *ids;
-    ecs_map_t *wildcard_ids;
     bool write_barrier;
+    ecs_map_t ids;
+    ecs_map_t wildcard_ids;
 } ecs_write_state_t;
 
 static
@@ -59,32 +59,30 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
     if (id == EcsWildcard) {
         /* Using a wildcard for id indicates read barrier. Return true if any
          * components could have been staged */
-        if (ecs_map_count(write_state->ids) || 
-            ecs_map_count(write_state->wildcard_ids)) 
+        if (ecs_map_count(&write_state->ids) || 
+            ecs_map_count(&write_state->wildcard_ids)) 
         {
             return WriteStateToStage;
         }
     }
 
     if (!ecs_id_is_wildcard(id)) {
-        if (ecs_map_get(write_state->ids, bool, id)) {
+        if (ecs_map_get(&write_state->ids, id)) {
             result = WriteStateToStage;
         }
     } else {
-        ecs_map_iter_t it = ecs_map_iter(write_state->ids);
-        ecs_id_t write_id;
-        while (ecs_map_next(&it, bool, &write_id)) {
-            if (ecs_id_match(write_id, id)) {
+        ecs_map_iter_t it = ecs_map_iter(&write_state->ids);
+        while (ecs_map_next(&it)) {
+            if (ecs_id_match(ecs_map_key(&it), id)) {
                 return WriteStateToStage;
             }
         }
     }
 
-    if (write_state->wildcard_ids) {
-        ecs_map_iter_t it = ecs_map_iter(write_state->wildcard_ids);
-        ecs_id_t write_id;
-        while (ecs_map_next(&it, bool, &write_id)) {
-            if (ecs_id_match(id, write_id)) {
+    if (ecs_map_count(&write_state->wildcard_ids)) {
+        ecs_map_iter_t it = ecs_map_iter(&write_state->wildcard_ids);
+        while (ecs_map_next(&it)) {
+            if (ecs_id_match(id, ecs_map_key(&it))) {
                 return WriteStateToStage;
             }
         }
@@ -106,20 +104,20 @@ void flecs_pipeline_set_write_state(
 
     ecs_map_t *ids;
     if (ecs_id_is_wildcard(id)) {
-        ids = write_state->wildcard_ids;
+        ids = &write_state->wildcard_ids;
     } else {
-        ids = write_state->ids;
+        ids = &write_state->ids;
     }
 
-    ecs_map_ensure(ids, bool, id)[0] = true;
+    ecs_map_ensure(ids, id)[0] = true;
 }
 
 static
 void flecs_pipeline_reset_write_state(
     ecs_write_state_t *write_state)
 {
-    ecs_map_clear(write_state->ids);
-    ecs_map_clear(write_state->wildcard_ids);
+    ecs_map_clear(&write_state->ids);
+    ecs_map_clear(&write_state->wildcard_ids);
     write_state->write_barrier = false;
 }
 
@@ -262,13 +260,11 @@ bool flecs_pipeline_build(
     world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
 
-    ecs_write_state_t ws = {
-        .ids = ecs_map_new(bool, &world->allocator, ECS_HI_COMPONENT_ID),
-        .wildcard_ids = ecs_map_new(bool, &world->allocator, ECS_HI_COMPONENT_ID)
-    };
-
-    ecs_pipeline_op_t *op = NULL;
     ecs_allocator_t *a = &world->allocator;
+    ecs_pipeline_op_t *op = NULL;
+    ecs_write_state_t ws = {0};
+    ecs_map_init(&ws.ids, a);
+    ecs_map_init(&ws.wildcard_ids, a);
 
     ecs_vec_reset_t(a, &pq->ops, ecs_pipeline_op_t);
     ecs_vec_reset_t(a, &pq->systems, ecs_entity_t);
@@ -365,8 +361,8 @@ bool flecs_pipeline_build(
         ecs_vec_remove_last(&pq->ops);
     }
 
-    ecs_map_free(ws.ids);
-    ecs_map_free(ws.wildcard_ids);
+    ecs_map_fini(&ws.ids);
+    ecs_map_fini(&ws.wildcard_ids);
 
     op = ecs_vec_first_t(&pq->ops, ecs_pipeline_op_t);
 

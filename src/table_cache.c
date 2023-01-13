@@ -120,8 +120,7 @@ void ecs_table_cache_insert(
     flecs_table_cache_list_insert(cache, result);
 
     if (table) {
-        ecs_map_insert(&cache->index, ecs_table_cache_hdr_t*, table->id)
-            [0] = result;
+        ecs_map_insert_ptr(&cache->index, table->id, result);
     }
 
     ecs_assert(empty || cache->tables.first != NULL, 
@@ -135,11 +134,11 @@ void ecs_table_cache_replace(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *elem)
 {
-    ecs_table_cache_hdr_t **oldptr = ecs_map_get(&cache->index, 
-        ecs_table_cache_hdr_t*, table->id);
-    ecs_assert(oldptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_cache_hdr_t **r = ecs_map_get_ref(
+        &cache->index, ecs_table_cache_hdr_t, table->id);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_cache_hdr_t *old = *oldptr;
+    ecs_table_cache_hdr_t *old = *r;
     ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_cache_hdr_t *prev = old->prev, *next = old->next;
@@ -165,7 +164,7 @@ void ecs_table_cache_replace(
         cache->tables.last = elem;
     }
 
-    *oldptr = elem;
+    *r = elem;
     elem->prev = prev;
     elem->next = next;
 }
@@ -177,8 +176,7 @@ void* ecs_table_cache_get(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     if (table) {
         if (ecs_map_is_init(&cache->index)) {
-            return ecs_map_get_ptr(
-                &cache->index, ecs_table_cache_hdr_t*, table->id);
+            return ecs_map_get_deref(&cache->index, void**, table->id);
         }
         return NULL;
     } else {
@@ -201,8 +199,8 @@ void* ecs_table_cache_remove(
     }
 
     if (!elem) {
-        elem = ecs_map_get_ptr(
-            &cache->index, ecs_table_cache_hdr_t*, table->id);
+        elem = ecs_map_get_deref(&cache->index, 
+            ecs_table_cache_hdr_t, table->id);
         if (!elem) {
             return false;
         }
@@ -226,8 +224,8 @@ bool ecs_table_cache_set_empty(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_cache_hdr_t *elem = ecs_map_get_ptr(
-        &cache->index, ecs_table_cache_hdr_t*, table->id);
+    ecs_table_cache_hdr_t *elem = ecs_map_get_deref(&cache->index, 
+        ecs_table_cache_hdr_t, table->id);
     if (!elem) {
         return false;
     }

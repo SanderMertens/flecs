@@ -398,8 +398,8 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
 {
     ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
 
-    ecs_graph_edge_t **ep = ecs_map_ensure(&edges->hi, ecs_graph_edge_t*, id);
-    ecs_graph_edge_t *edge = ep[0];
+    ecs_graph_edge_t **r = ecs_map_ensure_ref(&edges->hi, ecs_graph_edge_t, id);
+    ecs_graph_edge_t *edge = r[0];
     if (edge) {
         return edge;
     }
@@ -410,7 +410,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
         edge = flecs_bcalloc(&world->allocators.graph_edge);
     }
 
-    ep[0] = edge;
+    r[0] = edge;
     return edge;
 }
 
@@ -428,7 +428,6 @@ ecs_graph_edge_t* flecs_table_ensure_edge(
         }
         edge = &edges->lo[id];
     } else {
-        ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
         edge = flecs_table_ensure_hi_edge(world, edges, id);
     }
 
@@ -1148,25 +1147,23 @@ void flecs_table_clear_edges(
     ecs_map_t *add_hi = &node_add->hi;
     ecs_map_t *remove_hi = &node_remove->hi;
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
-    ecs_graph_edge_t *edge;
-    uint64_t key;
 
     /* Cleanup outgoing edges */
     it = ecs_map_iter(add_hi);
-    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        flecs_table_disconnect_edge(world, key, edge);
+    while (ecs_map_next(&it)) {
+        flecs_table_disconnect_edge(world, ecs_map_key(&it), ecs_map_ptr(&it));
     }
 
     it = ecs_map_iter(remove_hi);
-    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        flecs_table_disconnect_edge(world, key, edge);
+    while (ecs_map_next(&it)) {
+        flecs_table_disconnect_edge(world, ecs_map_key(&it), ecs_map_ptr(&it));
     }
 
     /* Cleanup incoming add edges */
     ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
     if (cur) {
         do {
-            edge = (ecs_graph_edge_t*)cur;
+            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->next;
@@ -1178,7 +1175,7 @@ void flecs_table_clear_edges(
     cur = node_refs->prev;
     if (cur) {
         do {
-            edge = (ecs_graph_edge_t*)cur;
+            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->prev;
@@ -1192,6 +1189,7 @@ void flecs_table_clear_edges(
     if (node_remove->lo) {
         flecs_bfree(&world->allocators.graph_edge_lo, node_remove->lo);
     }
+
     ecs_map_fini(add_hi);
     ecs_map_fini(remove_hi);
     table_node->add.lo = NULL;

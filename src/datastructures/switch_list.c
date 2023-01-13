@@ -46,15 +46,14 @@ void flecs_switch_verify_nodes(
 #endif
 
 static
-ecs_switch_header_t *flecs_switch_get_header(
+ecs_switch_header_t* flecs_switch_get_header(
     const ecs_switch_t *sw,
     uint64_t value)
 {
     if (value == 0) {
         return NULL;
     }
-
-    return ecs_map_get(&sw->hdrs, ecs_switch_header_t, value);
+    return (ecs_switch_header_t*)ecs_map_get(&sw->hdrs, value);
 }
 
 static
@@ -62,13 +61,9 @@ ecs_switch_header_t *flecs_switch_ensure_header(
     ecs_switch_t *sw,
     uint64_t value)
 {
-    if (value == 0) {
-        return NULL;
-    }
-
     ecs_switch_header_t *node = flecs_switch_get_header(sw, value);
-    if (!node) {
-        node = ecs_map_insert(&sw->hdrs, ecs_switch_header_t, value);
+    if (!node && (value != 0)) {
+        node = (ecs_switch_header_t*)ecs_map_ensure(&sw->hdrs, value);
         node->count = 0;
         node->element = -1;
     }
@@ -118,7 +113,7 @@ void flecs_switch_init(
     ecs_allocator_t *allocator,
     int32_t elements)
 {
-    ecs_map_init(&sw->hdrs, ecs_switch_header_t, allocator, 1);
+    ecs_map_init(&sw->hdrs, allocator);
     ecs_vec_init_t(allocator, &sw->nodes, ecs_switch_node_t, elements);
     ecs_vec_init_t(allocator, &sw->values, uint64_t, elements);
 
