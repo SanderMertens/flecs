@@ -25,6 +25,10 @@ extern "C" {
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 #endif
 
+#ifndef ECS_HI_ID_RECORD_ID
+#define ECS_HI_ID_RECORD_ID (1024)
+#endif
+
 /** This is the largest possible component id. Components for the most part
  * occupy the same id range as entities, however they are not allowed to overlap
  * with (8) bits reserved for id flags. */

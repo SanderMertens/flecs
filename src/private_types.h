@@ -557,7 +557,7 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_sparse_t id_index_lo;    /* sparse<id, ecs_id_record_t> */
+    ecs_id_record_t *id_index_lo;
     ecs_map_t id_index_hi;       /* map<id, ecs_id_record_t*> */
     ecs_sparse_t type_info;      /* sparse<type_id, type_info_t> */
 

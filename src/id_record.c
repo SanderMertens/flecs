@@ -16,8 +16,6 @@
 
 #include "private_api.h"
 
-#define ECS_HI_ID_RECORD_ID (4096 * 65536)
-
 static
 ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_t *head,
@@ -141,8 +139,7 @@ ecs_id_record_t* flecs_id_record_new(
         idr = flecs_bcalloc(&world->allocators.id_record);
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
     } else {
-        idr = flecs_sparse_ensure_fast(&world->id_index_lo, 
-            ecs_id_record_t, hash);
+        idr = &world->id_index_lo[hash];
         ecs_os_zeromem(idr);
     }
 
@@ -410,8 +407,8 @@ ecs_id_record_t* flecs_id_record_get(
     if (hash >= ECS_HI_ID_RECORD_ID) {
         idr = ecs_map_get_deref(&world->id_index_hi, ecs_id_record_t, hash);
     } else {
-        idr = flecs_sparse_get_any(&world->id_index_lo, ecs_id_record_t, hash);
-        if (idr && !idr->id) {
+        idr = &world->id_index_lo[hash];
+        if (!idr->id) {
             idr = NULL;
         }
     }
@@ -599,10 +596,9 @@ void flecs_fini_id_records(
         flecs_id_record_release(world, ecs_map_ptr(&it));
     }
 
-    int32_t i, count = flecs_sparse_count(&world->id_index_lo);
-    for (i = count - 1; i >= 0; i --) {
-        ecs_id_record_t *idr = flecs_sparse_get_dense(&world->id_index_lo, 
-            ecs_id_record_t, i);
+    int32_t i;
+    for (i = 0; i < ECS_HI_ID_RECORD_ID; i ++) {
+        ecs_id_record_t *idr = &world->id_index_lo[i];
         if (idr->id) {
             flecs_id_record_release(world, idr);
         }
@@ -612,7 +608,7 @@ void flecs_fini_id_records(
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_fini(&world->id_index_hi);
-    flecs_sparse_fini(&world->id_index_lo);
+    ecs_os_free(world->id_index_lo);
     flecs_sparse_free(world->pending_tables);
     flecs_sparse_free(world->pending_buffer);
 }
