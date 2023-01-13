@@ -46,23 +46,31 @@ void Map_count(void);
 void Map_count_empty(void);
 void Map_set_overwrite(void);
 void Map_set_rehash(void);
-void Map_set_zero_buckets(void);
 void Map_get(void);
 void Map_get_all(void);
 void Map_get_empty(void);
 void Map_get_unknown(void);
+void Map_get_0_from_empty(void);
+void Map_get_0_from_populated(void);
+void Map_get_0_after_insert(void);
+void Map_get_0_after_ensure(void);
 void Map_iter(void);
 void Map_iter_empty(void);
-void Map_iter_zero_buckets(void);
 void Map_iter_null(void);
 void Map_remove(void);
 void Map_remove_empty(void);
 void Map_remove_unknown(void);
 void Map_remove_twice(void);
+void Map_clear_empty(void);
+void Map_clear_populated(void);
+void Map_clear_empty_twice(void);
+void Map_clear_populated_twice(void);
+void Map_populate_after_clear(void);
 void Map_randomized_insert(void);
 void Map_randomized_remove(void);
 void Map_randomized_insert_large(void);
 void Map_randomized_remove_large(void);
+void Map_randomized_after_clear(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -252,10 +260,6 @@ bake_test_case Map_testcases[] = {
         Map_set_rehash
     },
     {
-        "set_zero_buckets",
-        Map_set_zero_buckets
-    },
-    {
         "get",
         Map_get
     },
@@ -272,16 +276,28 @@ bake_test_case Map_testcases[] = {
         Map_get_unknown
     },
     {
+        "get_0_from_empty",
+        Map_get_0_from_empty
+    },
+    {
+        "get_0_from_populated",
+        Map_get_0_from_populated
+    },
+    {
+        "get_0_after_insert",
+        Map_get_0_after_insert
+    },
+    {
+        "get_0_after_ensure",
+        Map_get_0_after_ensure
+    },
+    {
         "iter",
         Map_iter
     },
     {
         "iter_empty",
         Map_iter_empty
-    },
-    {
-        "iter_zero_buckets",
-        Map_iter_zero_buckets
     },
     {
         "iter_null",
@@ -304,6 +320,26 @@ bake_test_case Map_testcases[] = {
         Map_remove_twice
     },
     {
+        "clear_empty",
+        Map_clear_empty
+    },
+    {
+        "clear_populated",
+        Map_clear_populated
+    },
+    {
+        "clear_empty_twice",
+        Map_clear_empty_twice
+    },
+    {
+        "clear_populated_twice",
+        Map_clear_populated_twice
+    },
+    {
+        "populate_after_clear",
+        Map_populate_after_clear
+    },
+    {
         "randomized_insert",
         Map_randomized_insert
     },
@@ -318,6 +354,10 @@ bake_test_case Map_testcases[] = {
     {
         "randomized_remove_large",
         Map_randomized_remove_large
+    },
+    {
+        "randomized_after_clear",
+        Map_randomized_after_clear
     }
 };
 
@@ -519,7 +559,7 @@ static bake_test_suite suites[] = {
         "Map",
         Map_setup,
         NULL,
-        21,
+        29,
         Map_testcases
     },
     {

@@ -91,7 +91,7 @@ void Stats_get_pipeline_stats_after_progress_1_system() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
     
     test_assert(ecs_map_count(&stats.system_stats) != 0);
-    ecs_system_stats_t *sys_stats = ecs_map_get(
+    ecs_system_stats_t *sys_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(FooSys));
     test_assert(sys_stats != NULL);
     test_int(sys_stats->query.t, 1);
@@ -126,7 +126,7 @@ void Stats_get_pipeline_stats_after_progress_1_inactive_system() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], 0); /* merge */
     
     test_assert(ecs_map_count(&stats.system_stats) != 0);
-    ecs_system_stats_t *sys_stats = ecs_map_get(
+    ecs_system_stats_t *sys_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(FooSys));
     test_assert(sys_stats != NULL);
     test_int(sys_stats->query.t, 1);
@@ -163,13 +163,13 @@ void Stats_get_pipeline_stats_after_progress_2_systems() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
     
     test_assert(ecs_map_count(&stats.system_stats) != 0);
-    ecs_system_stats_t *sys_foo_stats = ecs_map_get(
+    ecs_system_stats_t *sys_foo_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(FooSys));
     test_assert(sys_foo_stats != NULL);
     test_int(sys_foo_stats->query.t, 1);
     test_int(sys_foo_stats->invoke_count.counter.value[1], 1);
 
-    ecs_system_stats_t *sys_bar_stats = ecs_map_get(
+    ecs_system_stats_t *sys_bar_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(BarSys));
     test_assert(sys_bar_stats != NULL);
     test_int(sys_bar_stats->query.t, 1);
@@ -216,13 +216,13 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], 0); /* merge */
     
     test_assert(ecs_map_count(&stats.system_stats) != 0);
-    ecs_system_stats_t *sys_foo_stats = ecs_map_get(
+    ecs_system_stats_t *sys_foo_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(FooSys));
     test_assert(sys_foo_stats != NULL);
     test_int(sys_foo_stats->query.t, 1);
     test_int(sys_foo_stats->invoke_count.counter.value[1], 1);
 
-    ecs_system_stats_t *sys_bar_stats = ecs_map_get(
+    ecs_system_stats_t *sys_bar_stats = ecs_map_get_deref(
         &stats.system_stats, ecs_system_stats_t, ecs_id(BarSys));
     test_assert(sys_bar_stats != NULL);
     test_int(sys_bar_stats->query.t, 1);
