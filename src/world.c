@@ -718,8 +718,7 @@ ecs_world_t *ecs_mini(void) {
     flecs_sparse_init(&world->type_info, &world->allocator, 
         &world->allocators.sparse_chunk, ecs_type_info_t);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
-    flecs_sparse_init(&world->id_index_lo, NULL, 
-        &world->allocators.id_record_chunk, ecs_id_record_t);
+    world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, ECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = flecs_world_iter_init;
     world->pending_tables = flecs_sparse_new(
