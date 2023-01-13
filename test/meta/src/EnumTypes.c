@@ -17,7 +17,7 @@ void meta_test_enum(
 
     const EcsEnum *et = ecs_get(world, t, EcsEnum);
     test_assert(et != NULL);
-    test_int(ecs_map_count(et->constants), count);
+    test_int(ecs_map_count(&et->constants), count);
 }
 
 static
@@ -35,11 +35,12 @@ void meta_test_constant(
     const EcsEnum *et = ecs_get(world, t, EcsEnum);
     test_assert(et != NULL);
 
-    ecs_map_iter_t it = ecs_map_iter(et->constants);
-    ecs_enum_constant_t *c;
-    ecs_map_key_t key;
+    ecs_map_iter_t it = ecs_map_iter(&et->constants);
     bool constant_found = false;
-    while ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
+    while (ecs_map_next(&it)) {
+        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
+        ecs_map_key_t key = ecs_map_key(&it);
+
         test_int(c->value, key);
         test_assert(c->constant != 0);
         test_str(c->name, ecs_get_name(world, c->constant));

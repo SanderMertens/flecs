@@ -129,11 +129,11 @@ static void flecs_constants_copy(
     ecs_map_iter_t it = ecs_map_iter(dst);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t **r = ecs_map_ref(&it, ecs_enum_constant_t);
-        ecs_enum_constant_t *src = r[0];
-        ecs_enum_constant_t *dst = ecs_os_calloc_t(ecs_enum_constant_t);
-        *dst = *src;
-        dst->name = ecs_os_strdup(dst->name);
-        r[0] = dst;
+        ecs_enum_constant_t *src_c = r[0];
+        ecs_enum_constant_t *dst_c = ecs_os_calloc_t(ecs_enum_constant_t);
+        *dst_c = *src_c;
+        dst_c->name = ecs_os_strdup(dst_c->name);
+        r[0] = dst_c;
     }
 }
 
