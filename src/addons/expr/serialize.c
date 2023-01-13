@@ -8,14 +8,14 @@
 #ifdef FLECS_EXPR
 
 static
-int expr_ser_type(
+int flecs_expr_ser_type(
     const ecs_world_t *world,
     ecs_vector_t *ser, 
     const void *base, 
     ecs_strbuf_t *str);
 
 static
-int expr_ser_type_ops(
+int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -24,20 +24,20 @@ int expr_ser_type_ops(
     int32_t in_array);
 
 static
-int expr_ser_type_op(
+int flecs_expr_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *base,
     ecs_strbuf_t *str);
 
 static
-ecs_primitive_kind_t expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
 /* Serialize a primitive value */
 static
-int expr_ser_primitive(
+int flecs_expr_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
     const void *base, 
@@ -143,7 +143,7 @@ int expr_ser_primitive(
 
 /* Serialize enumeration */
 static
-int expr_ser_enum(
+int flecs_expr_ser_enum(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *base, 
@@ -152,20 +152,20 @@ int expr_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t value = *(int32_t*)base;
+    int32_t val = *(int32_t*)base;
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
-    ecs_enum_constant_t *constant = ecs_map_get(
-        enum_type->constants, ecs_enum_constant_t, value);
-    if (!constant) {
+    ecs_enum_constant_t *c = ecs_map_get_deref(&enum_type->constants, 
+        ecs_enum_constant_t, (ecs_map_key_t)val);
+    if (!c) {
         char *path = ecs_get_fullpath(world, op->type);
-        ecs_err("value %d is not valid for enum type '%s'", value, path);
+        ecs_err("value %d is not valid for enum type '%s'", val, path);
         ecs_os_free(path);
         goto error;
     }
 
-    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
+    ecs_strbuf_appendstr(str, ecs_get_name(world, c->constant));
 
     return 0;
 error:
@@ -174,7 +174,7 @@ error:
 
 /* Serialize bitmask */
 static
-int expr_ser_bitmask(
+int flecs_expr_ser_bitmask(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *ptr, 
@@ -182,21 +182,19 @@ int expr_ser_bitmask(
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
     ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
-
     uint32_t value = *(uint32_t*)ptr;
-    ecs_map_key_t key;
-    ecs_bitmask_constant_t *constant;
-    int count = 0;
 
     ecs_strbuf_list_push(str, "", "|");
 
     /* Multiple flags can be set at a given time. Iterate through all the flags
      * and append the ones that are set. */
-    ecs_map_iter_t it = ecs_map_iter(bitmask_type->constants);
-    while ((constant = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
+    ecs_map_iter_t it = ecs_map_iter(&bitmask_type->constants);
+    int count = 0;
+    while (ecs_map_next(&it)) {
+        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
+        ecs_map_key_t key = ecs_map_key(&it);
         if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, 
-                ecs_get_name(world, constant->constant));
+            ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
             count ++;
             value -= (uint32_t)key;
         }
@@ -241,7 +239,7 @@ int expr_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (expr_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
+        if (flecs_expr_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -318,7 +316,7 @@ int expr_ser_vector(
 
 /* Forward serialization to the different type kinds */
 static
-int expr_ser_type_op(
+int flecs_expr_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *ptr,
@@ -331,12 +329,12 @@ int expr_ser_type_op(
         ecs_throw(ECS_INVALID_PARAMETER, NULL);
         break;
     case EcsOpEnum:
-        if (expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (flecs_expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;
         }
         break;
     case EcsOpBitmask:
-        if (expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (flecs_expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;
         }
         break;
@@ -351,7 +349,7 @@ int expr_ser_type_op(
         }
         break;
     default:
-        if (expr_ser_primitive(world, expr_op_to_primitive_kind(op->kind), 
+        if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
@@ -368,7 +366,7 @@ error:
 
 /* Iterate over a slice of the type ops array */
 static
-int expr_ser_type_ops(
+int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -409,7 +407,7 @@ int expr_ser_type_ops(
             in_array ++;
             break;
         default:
-            if (expr_ser_type_op(world, op, base, str)) {
+            if (flecs_expr_ser_type_op(world, op, base, str)) {
                 goto error;
             }
             break;
@@ -423,7 +421,7 @@ error:
 
 /* Iterate over the type ops of a type */
 static
-int expr_ser_type(
+int flecs_expr_ser_type(
     const ecs_world_t *world,
     ecs_vector_t *v_ops,
     const void *base, 
@@ -431,7 +429,7 @@ int expr_ser_type(
 {
     ecs_meta_type_op_t *ops = ecs_vector_first(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vector_count(v_ops);
-    return expr_ser_type_ops(world, ops, count, base, str, 0);
+    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0);
 }
 
 int ecs_ptr_to_expr_buf(
@@ -449,7 +447,7 @@ int ecs_ptr_to_expr_buf(
         goto error;
     }
 
-    if (expr_ser_type(world, ser->ops, ptr, buf_out)) {
+    if (flecs_expr_ser_type(world, ser->ops, ptr, buf_out)) {
         goto error;
     }
 
@@ -479,7 +477,7 @@ int ecs_primitive_to_expr_buf(
     const void *base, 
     ecs_strbuf_t *str)
 {
-    return expr_ser_primitive(world, kind, base, str);
+    return flecs_expr_ser_primitive(world, kind, base, str);
 }
 
 #endif

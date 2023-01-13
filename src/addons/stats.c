@@ -579,7 +579,7 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_init(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    ecs_map_init_if(&s->system_stats, ecs_system_stats_t, NULL, sys_count);
+    ecs_map_init_if(&s->system_stats, NULL);
 
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
@@ -620,10 +620,10 @@ bool ecs_pipeline_stats_get(
     while (ecs_query_next(&it)) {
         int i;
         for (i = 0; i < it.count; i ++) {
-            ecs_system_stats_t *sys_stats = ecs_map_ensure(
-                    &s->system_stats, ecs_system_stats_t, it.entities[i]);
-            sys_stats->query.t = s->t;
-            ecs_system_stats_get(world, it.entities[i], sys_stats);
+            ecs_system_stats_t *stats = ecs_map_ensure_alloc_t(&s->system_stats, 
+                ecs_system_stats_t, it.entities[i]);
+            stats->query.t = s->t;
+            ecs_system_stats_get(world, it.entities[i], stats);
         }
     }
 
@@ -651,14 +651,14 @@ void ecs_pipeline_stats_reduce(
     ecs_entity_t *src_systems = ecs_vector_first(src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
-    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        NULL, ecs_map_count(&src->system_stats));
+    ecs_map_init_if(&dst->system_stats, NULL);
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    ecs_system_stats_t *sys_src, *sys_dst;
-    ecs_entity_t key;
-    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
-        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+    
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
+        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
+            ecs_system_stats_t, ecs_map_key(&it));
         sys_dst->query.t = dst->t;
         ecs_system_stats_reduce(sys_dst, sys_src);
     }
@@ -670,14 +670,12 @@ void ecs_pipeline_stats_reduce_last(
     const ecs_pipeline_stats_t *src,
     int32_t count)
 {
-    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t,
-        NULL, ecs_map_count(&src->system_stats));
-
+    ecs_map_init_if(&dst->system_stats, NULL);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    ecs_system_stats_t *sys_src, *sys_dst;
-    ecs_entity_t key;
-    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
-        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
+        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
+            ecs_system_stats_t, ecs_map_key(&it));
         sys_dst->query.t = dst->t;
         ecs_system_stats_reduce_last(sys_dst, sys_src, count);
     }
@@ -688,9 +686,8 @@ void ecs_pipeline_stats_repeat_last(
     ecs_pipeline_stats_t *stats)
 {
     ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
-    ecs_system_stats_t *sys;
-    ecs_entity_t key;
-    while ((sys = ecs_map_next(&it, ecs_system_stats_t, &key))) {
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *sys = ecs_map_ptr(&it);
         sys->query.t = stats->t;
         ecs_system_stats_repeat_last(sys);
     }
@@ -701,14 +698,13 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    ecs_map_init_if(&dst->system_stats, ecs_system_stats_t, NULL,
-        ecs_map_count(&src->system_stats));
+    ecs_map_init_if(&dst->system_stats, NULL);
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    ecs_system_stats_t *sys_src, *sys_dst;
-    ecs_entity_t key;
-    while ((sys_src = ecs_map_next(&it, ecs_system_stats_t, &key))) {
-        sys_dst = ecs_map_ensure(&dst->system_stats, ecs_system_stats_t, key);
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
+        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
+            ecs_system_stats_t, ecs_map_key(&it));
         sys_dst->query.t = dst->t;
         ecs_system_stats_copy_last(sys_dst, sys_src);
     }

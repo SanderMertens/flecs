@@ -50,9 +50,10 @@ static
 void flecs_rest_free_reply_cache(ecs_map_t *reply_cache) {
     if (ecs_map_is_init(reply_cache)) {
         ecs_map_iter_t it = ecs_map_iter(reply_cache);
-        ecs_rest_cached_t *reply;
-        while ((reply = ecs_map_next(&it, ecs_rest_cached_t, 0))) {
+        while (ecs_map_next(&it)) {
+            ecs_rest_cached_t *reply = ecs_map_ptr(&it);
             ecs_os_free(reply->content);
+            ecs_os_free(reply);
         }
         ecs_map_fini(reply_cache);
     }
@@ -361,8 +362,8 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
-    ecs_map_init_if(&impl->reply_cache, ecs_rest_cached_t, NULL, 1);
-    ecs_rest_cached_t *cached = ecs_map_get(&impl->reply_cache, 
+    ecs_map_init_if(&impl->reply_cache, NULL);
+    ecs_rest_cached_t *cached = ecs_map_get_deref(&impl->reply_cache, 
         ecs_rest_cached_t, q);
     if (cached) {
         if ((impl->time - cached->time) > FLECS_REST_CACHE_TIMEOUT) {
@@ -375,7 +376,8 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        cached = ecs_map_insert(&impl->reply_cache, ecs_rest_cached_t, q);
+        cached = ecs_map_insert_alloc_t(
+            &impl->reply_cache, ecs_rest_cached_t, q);
     }
 
     /* Cache miss */
@@ -667,8 +669,8 @@ void flecs_pipeline_stats_to_json(
         ecs_strbuf_list_next(reply);
 
         if (id) {
-            ecs_system_stats_t *sys_stats = ecs_map_get(
-                    &stats->stats.system_stats, ecs_system_stats_t, id);
+            ecs_system_stats_t *sys_stats = ecs_map_get_deref(
+                &stats->stats.system_stats, ecs_system_stats_t, id);
             flecs_system_stats_to_json(world, reply, id, sys_stats);
         } else {
             /* Sync point */

@@ -224,7 +224,7 @@ typedef struct ecs_enum_constant_t {
 
 typedef struct EcsEnum {
     /** Populated from child entities with Constant component */
-    ecs_map_t *constants; /* map<i32_t, ecs_enum_constant_t> */
+    ecs_map_t constants; /* map<i32_t, ecs_enum_constant_t> */
 } EcsEnum;
 
 typedef struct ecs_bitmask_constant_t {
@@ -240,7 +240,7 @@ typedef struct ecs_bitmask_constant_t {
 
 typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
-    ecs_map_t *constants; /* map<u32_t, ecs_bitmask_constant_t> */
+    ecs_map_t constants; /* map<u32_t, ecs_bitmask_constant_t> */
 } EcsBitmask;
 
 typedef struct EcsArray {

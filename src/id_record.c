@@ -135,12 +135,11 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr, **idr_ptr, *idr_t = NULL;
+    ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= ECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
-        idr_ptr = ecs_map_insert(&world->id_index_hi, ecs_id_record_t*, hash);
-        idr_ptr[0] = idr;
+        ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
     } else {
         idr = flecs_sparse_ensure_fast(&world->id_index_lo, 
             ecs_id_record_t, hash);
@@ -409,12 +408,7 @@ ecs_id_record_t* flecs_id_record_get(
     ecs_id_t hash = flecs_id_record_hash(id);
     ecs_id_record_t *idr = NULL;
     if (hash >= ECS_HI_ID_RECORD_ID) {
-        ecs_id_record_t **idr_ptr = ecs_map_get(&world->id_index_hi, 
-            ecs_id_record_t*, hash);
-        ecs_assert(!idr_ptr || idr_ptr[0] != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (idr_ptr) {
-            idr = idr_ptr[0];
-        }
+        idr = ecs_map_get_deref(&world->id_index_hi, ecs_id_record_t, hash);
     } else {
         idr = flecs_sparse_get_any(&world->id_index_lo, ecs_id_record_t, hash);
         if (idr && !idr->id) {
@@ -601,14 +595,13 @@ void flecs_fini_id_records(
     ecs_world_t *world)
 {
     ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    ecs_id_record_t *idr;
-    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, NULL))) {
-        flecs_id_record_release(world, idr);
+    while (ecs_map_next(&it)) {
+        flecs_id_record_release(world, ecs_map_ptr(&it));
     }
 
     int32_t i, count = flecs_sparse_count(&world->id_index_lo);
     for (i = count - 1; i >= 0; i --) {
-        idr = flecs_sparse_get_dense(&world->id_index_lo, 
+        ecs_id_record_t *idr = flecs_sparse_get_dense(&world->id_index_lo, 
             ecs_id_record_t, i);
         if (idr->id) {
             flecs_id_record_release(world, idr);

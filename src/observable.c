@@ -120,7 +120,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     else if (id == ecs_pair(EcsWildcard, EcsWildcard)) return er->wildcard_pair;
     else {
         if (ecs_map_is_init(&er->event_ids)) {
-            return ecs_map_get_ptr(&er->event_ids, ecs_event_id_record_t*, id);
+            return ecs_map_get_deref(&er->event_ids, ecs_event_id_record_t, id);
         }
         return NULL;
     }
@@ -164,10 +164,7 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
     }
 
     ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
-    ecs_event_id_record_t **idt = ecs_map_insert(
-        &er->event_ids, ecs_event_id_record_t*, id);
-    idt[0] = ider;
-
+    ecs_map_insert_ptr(&er->event_ids, id, ider);
     return ider;
 }
 
@@ -182,7 +179,8 @@ void flecs_event_id_record_remove(
     } else if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
         er->wildcard_pair = NULL;
     } else {
-        if (ecs_map_remove(&er->event_ids, id) == 0) {
+        ecs_map_remove(&er->event_ids, id);
+        if (!ecs_map_count(&er->event_ids)) {
             ecs_map_fini(&er->event_ids);
         }
     }

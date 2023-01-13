@@ -50,7 +50,7 @@ ecs_query_table_list_t* flecs_query_get_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
-    return ecs_map_get(&query->groups, ecs_query_table_list_t, group_id);
+    return ecs_map_get_deref(&query->groups, ecs_query_table_list_t, group_id);
 }
 
 static
@@ -58,11 +58,12 @@ ecs_query_table_list_t* flecs_query_ensure_group(
     ecs_query_t *query,
     uint64_t id)
 {
-    ecs_query_table_list_t *group = ecs_map_get(
-        &query->groups, ecs_query_table_list_t, id);
+    ecs_query_table_list_t *group = ecs_map_get_deref(&query->groups, 
+        ecs_query_table_list_t, id);
 
     if (!group) {
-        group = ecs_map_insert(&query->groups, ecs_query_table_list_t, id);
+        group = ecs_map_insert_alloc_t(&query->groups, 
+            ecs_query_table_list_t, id);
         ecs_os_zeromem(group);
         if (query->on_group_create) {
             group->info.ctx = query->on_group_create(
@@ -79,15 +80,15 @@ void flecs_query_remove_group(
     uint64_t id)
 {
     if (query->on_group_delete) {
-        ecs_query_table_list_t *group = ecs_map_get(
-            &query->groups, ecs_query_table_list_t, id);
+        ecs_query_table_list_t *group = ecs_map_get_deref(&query->groups, 
+            ecs_query_table_list_t, id);
         if (group) {
             query->on_group_delete(query->filter.world, id, 
                 group->info.ctx, query->group_by_ctx);
         }
     }
 
-    ecs_map_remove(&query->groups, id);
+    ecs_map_remove_free(&query->groups, id);
 }
 
 static
@@ -120,11 +121,13 @@ ecs_query_table_node_t* flecs_query_find_group_insertion_node(
     uint64_t id, closest_id = 0;
 
     /* Find closest smaller group id */
-    while ((list = ecs_map_next(&it, ecs_query_table_list_t, &id))) {
+    while (ecs_map_next(&it)) {
+        id = ecs_map_key(&it);
         if (id >= group_id) {
             continue;
         }
 
+        list = ecs_map_ptr(&it);
         if (!list->last) {
             ecs_assert(list->first == NULL, ECS_INTERNAL_ERROR, NULL);
             continue;
@@ -1119,8 +1122,8 @@ void flecs_query_build_sorted_tables(
                 ecs_query_table_match_t *match = cur->match;
                 ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
                 uint64_t group_id = match->node.group_id;
-                ecs_query_table_list_t *list = ecs_map_get(&query->groups, 
-                    ecs_query_table_list_t, group_id);
+                ecs_query_table_list_t *list = ecs_map_get_deref(
+                    &query->groups, ecs_query_table_list_t, group_id);
                 ecs_assert(list != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 /* Sort tables in current group */
@@ -1786,9 +1789,9 @@ void flecs_query_fini(
     ecs_group_delete_action_t on_delete = query->on_group_delete;
     if (on_delete) {
         ecs_map_iter_t it = ecs_map_iter(&query->groups);
-        ecs_query_table_list_t *group;
-        uint64_t group_id;
-        while ((group = ecs_map_next(&it, ecs_query_table_list_t, &group_id))) {
+        while (ecs_map_next(&it)) {
+            ecs_query_table_list_t *group = ecs_map_ptr(&it);
+            uint64_t group_id = ecs_map_key(&it);
             on_delete(world, group_id, group->info.ctx, query->group_by_ctx);
         }
         query->on_group_delete = NULL;
