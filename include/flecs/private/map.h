@@ -28,14 +28,13 @@ typedef struct ecs_bucket_t {
 } ecs_bucket_t;
 
 typedef struct ecs_map_t {
-    ecs_bucket_t *buckets;
-    ecs_bucket_t *buckets_end;
     uint8_t bucket_shift;
     bool shared_allocator;
+    ecs_bucket_t *buckets;
     int32_t bucket_count;
     int32_t count;
-    struct ecs_allocator_t *allocator;
     struct ecs_block_allocator_t *entry_allocator;
+    struct ecs_allocator_t *allocator;
 } ecs_map_t;
 
 typedef struct ecs_map_iter_t {
@@ -49,8 +48,6 @@ typedef struct ecs_map_params_t {
     struct ecs_allocator_t *allocator;
     struct ecs_block_allocator_t entry_allocator;
 } ecs_map_params_t;
-
-#define ECS_MAP_INIT(T) { .elem_size = ECS_SIZEOF(T) }
 
 /* Function/macro postfixes meaning:
  *   _ptr:    access ecs_map_val_t as void*
