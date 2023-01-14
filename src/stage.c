@@ -36,7 +36,7 @@ ecs_cmd_t* flecs_cmd_new(
 {
     if (e) {
         ecs_vec_t *cmds = &stage->commands;
-        ecs_cmd_entry_t *entry = flecs_sparse_get(
+        ecs_cmd_entry_t *entry = flecs_sparse_get_t(
             &stage->cmd_entries, ecs_cmd_entry_t, e);
         int32_t cur = ecs_vec_count(cmds);
         if (entry) {
@@ -58,7 +58,7 @@ ecs_cmd_t* flecs_cmd_new(
                 }
             }
         } else if (can_batch || is_delete) {
-            entry = flecs_sparse_ensure(&stage->cmd_entries, 
+            entry = flecs_sparse_ensure_t(&stage->cmd_entries, 
                 ecs_cmd_entry_t, e);
             entry->first = cur;
         }
@@ -500,7 +500,7 @@ void flecs_stage_init(
         FLECS_SPARSE_CHUNK_SIZE);
 
     ecs_vec_init_t(&stage->allocator, &stage->commands, ecs_cmd_t, 0);
-    flecs_sparse_init(&stage->cmd_entries, &stage->allocator,
+    flecs_sparse_init_t(&stage->cmd_entries, &stage->allocator,
         &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
 }
 

@@ -609,6 +609,4 @@ void flecs_fini_id_records(
 
     ecs_map_fini(&world->id_index_hi);
     ecs_os_free(world->id_index_lo);
-    flecs_sparse_free(world->pending_tables);
-    flecs_sparse_free(world->pending_buffer);
 }

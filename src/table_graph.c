@@ -539,7 +539,7 @@ ecs_table_t *flecs_create_table(
     flecs_hashmap_result_t table_elem,
     ecs_table_t *prev)
 {
-    ecs_table_t *result = flecs_sparse_add(&world->store.tables, ecs_table_t);
+    ecs_table_t *result = flecs_sparse_add_t(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
     result->id = flecs_sparse_last_id(&world->store.tables);

@@ -12,7 +12,7 @@
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_world_t *world;
-    ecs_sparse_t *entity_index;
+    ecs_sparse_t entity_index;
     ecs_vector_t *tables;
     ecs_entity_t last_id;
     ecs_filter_t filter;
@@ -109,7 +109,7 @@ ecs_snapshot_t* snapshot_create(
      * world, and we can simply copy the entity index as it will be restored
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
-        result->entity_index = flecs_sparse_copy(entity_index);
+        flecs_sparse_copy(&result->entity_index, entity_index);
     }
 
     /* Create vector with as many elements as tables, so we can store the
@@ -133,7 +133,7 @@ ecs_snapshot_t* snapshot_create(
         }
     } else {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = flecs_sparse_get(
+            ecs_table_t *table = flecs_sparse_get_t(
                 &world->store.tables, ecs_table_t, t);
             snapshot_table(world, result, table);
         }
@@ -178,8 +178,8 @@ void restore_unfiltered(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    flecs_sparse_restore(ecs_eis(world), snapshot->entity_index);
-    flecs_sparse_free(snapshot->entity_index);
+    flecs_sparse_restore(ecs_eis(world), &snapshot->entity_index);
+    flecs_sparse_fini(&snapshot->entity_index);
     
     world->info.last_id = snapshot->last_id;
 
@@ -189,7 +189,7 @@ void restore_unfiltered(
     int32_t snapshot_count = ecs_vector_count(snapshot->tables);
 
     for (i = 0; i <= count; i ++) {
-        ecs_table_t *world_table = flecs_sparse_get(
+        ecs_table_t *world_table = flecs_sparse_get_t(
             &world->store.tables, ecs_table_t, (uint32_t)i);
 
         if (world_table && (world_table->flags & EcsTableHasBuiltins)) {
@@ -254,7 +254,7 @@ void restore_unfiltered(
      * state, run OnSet systems */
     int32_t world_count = flecs_sparse_count(&world->store.tables);
     for (i = 0; i < world_count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(
+        ecs_table_t *table = flecs_sparse_get_dense_t(
             &world->store.tables, ecs_table_t, i);
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -335,7 +335,7 @@ void ecs_snapshot_restore(
 {
     ecs_run_aperiodic(world, 0);
     
-    if (snapshot->entity_index) {
+    if (flecs_sparse_count(&snapshot->entity_index)) {
         /* Unfiltered snapshots have a copy of the entity index which is
          * copied back entirely when the snapshot is restored */
         restore_unfiltered(world, snapshot);
@@ -406,7 +406,7 @@ yield:
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot)
 {
-    flecs_sparse_free(snapshot->entity_index);
+    flecs_sparse_fini(&snapshot->entity_index);
 
     ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = ecs_vector_count(snapshot->tables);

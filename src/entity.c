@@ -789,7 +789,7 @@ const ecs_entity_t* flecs_bulk_new(
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = flecs_entities_count(world);
-        entities = flecs_sparse_new_ids(ecs_eis(world), count);
+        entities = flecs_entities_new_ids(world, count);
     }
 
     if (!table) {
@@ -809,18 +809,16 @@ const ecs_entity_t* flecs_bulk_new(
     }
 
     ecs_data_t *data = &table->data;
-    int32_t row = flecs_table_appendn(
-        world, table, data, count, entities);
+    int32_t row = flecs_table_appendn(world, table, data, count, entities);
     
     /* Update entity index. */
     int i;
     ecs_record_t **records = ecs_vec_first(&data->records);
-    for (i = 0; i < count; i ++) { 
-        records[row + i] = flecs_entities_set(world, entities[i], 
-            &(ecs_record_t){
-                .table = table,
-                .row = ECS_ROW_TO_RECORD(row + i, 0)
-            });
+    for (i = 0; i < count; i ++) {
+        ecs_record_t *r = flecs_entities_ensure(world, entities[i]);
+        r->table = table;
+        r->row = ECS_ROW_TO_RECORD(row + i, 0);
+        records[row + i] = r;
     }
 
     flecs_defer_begin(world, &world->stages[0]);
@@ -1080,8 +1078,9 @@ ecs_record_t* flecs_add_flag(
 {
     ecs_record_t *record = flecs_entities_get(world, entity);
     if (!record) {
-        ecs_record_t new_record = {.row = flag, .table = NULL};
-        flecs_entities_set(world, entity, &new_record);
+        ecs_record_t *r = flecs_entities_ensure(world, entity);
+        r->row = flag;
+        r->table = NULL;
     } else {
         if (flag == EcsEntityObservedAcyclic) {
             if (!(record->row & flag)) {
@@ -1179,7 +1178,7 @@ ecs_entity_t ecs_new_id(
         entity = (ecs_entity_t)ecs_os_ainc(
             (int32_t*)&unsafe_world->info.last_id);
     } else {
-        entity = flecs_entities_recycle(unsafe_world);
+        entity = flecs_entities_new_id(unsafe_world);
     }
 
     ecs_assert(!unsafe_world->info.max_id || 
@@ -1282,7 +1281,9 @@ ecs_entity_t ecs_new_w_id(
             return entity;
         }
 
-        flecs_entities_set(world, entity, &(ecs_record_t){ 0 });
+        ecs_record_t *r = flecs_entities_ensure(world, entity);
+        ecs_assert(r->row == 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
     }
     flecs_defer_end(world, stage);
 
