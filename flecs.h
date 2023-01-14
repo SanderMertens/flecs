@@ -538,6 +538,9 @@ typedef uint64_t ecs_flags64_t;
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
 
+/* Allocator type */
+typedef struct ecs_allocator_t ecs_allocator_t;
+
 #define ECS_SIZEOF(T) ECS_CAST(ecs_size_t, sizeof(T))
 
 /* Use alignof in C++, or a trick in C. */
@@ -1208,6 +1211,160 @@ private:
 #endif
 
 /**
+ * @file vec.h
+ * @brief Vector with allocator support.
+ */
+
+#ifndef FLECS_VEC_H
+#define FLECS_VEC_H
+
+/** A component column. */
+typedef struct ecs_vec_t {
+    void *array;
+    int32_t count;
+    int32_t size;
+#ifdef FLECS_DEBUG
+    ecs_size_t elem_size;
+#endif
+} ecs_vec_t;
+
+FLECS_API
+ecs_vec_t* ecs_vec_init(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_vec_init_t(allocator, vec, T, elem_count) \
+    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+void ecs_vec_fini(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_fini_t(allocator, vec, T) \
+    ecs_vec_fini(allocator, vec, ECS_SIZEOF(T))
+
+FLECS_API
+ecs_vec_t* ecs_vec_reset(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_reset_t(allocator, vec, T) \
+    ecs_vec_reset(allocator, vec, ECS_SIZEOF(T))
+
+FLECS_API
+void ecs_vec_clear(
+    ecs_vec_t *vec);
+
+FLECS_API
+void* ecs_vec_append(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_append_t(allocator, vec, T) \
+    ECS_CAST(T*, ecs_vec_append(allocator, vec, ECS_SIZEOF(T)))
+
+FLECS_API
+void ecs_vec_remove(
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem);
+
+#define ecs_vec_remove_t(vec, T, elem) \
+    ecs_vec_remove(vec, ECS_SIZEOF(T), elem)
+
+FLECS_API
+void ecs_vec_remove_last(
+    ecs_vec_t *vec);
+
+FLECS_API
+ecs_vec_t ecs_vec_copy(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_copy_t(allocator, vec, T) \
+    ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
+
+FLECS_API
+void ecs_vec_reclaim(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_reclaim_t(allocator, vec, T) \
+    ecs_vec_reclaim(allocator, vec, ECS_SIZEOF(T))
+
+FLECS_API
+void ecs_vec_set_size(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_vec_set_size_t(allocator, vec, T, elem_count) \
+    ecs_vec_set_size(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+void ecs_vec_set_count(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_vec_set_count_t(allocator, vec, T, elem_count) \
+    ecs_vec_set_count(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+void* ecs_vec_grow(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_vec_grow_t(allocator, vec, T, elem_count) \
+    ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+int32_t ecs_vec_count(
+    const ecs_vec_t *vec);
+
+FLECS_API
+int32_t ecs_vec_size(
+    const ecs_vec_t *vec);
+
+FLECS_API
+void* ecs_vec_get(
+    const ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t index);
+
+#define ecs_vec_get_t(vec, T, index) \
+    ECS_CAST(T*, ecs_vec_get(vec, ECS_SIZEOF(T), index))
+
+FLECS_API
+void* ecs_vec_first(
+    const ecs_vec_t *vec);
+
+#define ecs_vec_first_t(vec, T) \
+    ECS_CAST(T*, ecs_vec_first(vec))
+
+FLECS_API
+void* ecs_vec_last(
+    const ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_last_t(vec, T) \
+    ECS_CAST(T*, ecs_vec_last(vec, ECS_SIZEOF(T)))
+
+#endif 
+
+/**
  * @file sparse.h
  * @brief Sparse set data structure.
  */
@@ -1224,12 +1381,12 @@ extern "C" {
 #define FLECS_SPARSE_CHUNK_SIZE (4096)
 
 typedef struct ecs_sparse_t {
-    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+    ecs_vec_t dense;        /* Dense array with indices to sparse array. The
                                  * dense array stores both alive and not alive
                                  * sparse indices. The 'count' member keeps
                                  * track of which indices are alive. */
 
-    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_vec_t chunks;           /* Chunks with sparse arrays & data */
     ecs_size_t size;            /* Element size */
     int32_t count;              /* Number of alive entries */
     uint64_t max_id_local;      /* Local max index (if no global is set) */
@@ -1805,10 +1962,10 @@ FLECS_DBG_API extern int64_t ecs_block_allocator_free_count;
 FLECS_DBG_API extern int64_t ecs_stack_allocator_alloc_count;
 FLECS_DBG_API extern int64_t ecs_stack_allocator_free_count;
 
-typedef struct ecs_allocator_t {
+struct ecs_allocator_t {
     ecs_block_allocator_t chunks;
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
-} ecs_allocator_t;
+};
 
 FLECS_API
 void flecs_allocator_init(
@@ -3148,9 +3305,6 @@ typedef struct ecs_switch_t ecs_switch_t;
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
-/* Allocator type */
-struct ecs_allocator_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -3520,160 +3674,6 @@ int32_t flecs_table_observed_count(
 #endif
 
 #endif
-
-/**
- * @file vec.h
- * @brief Vector with allocator support.
- */
-
-#ifndef FLECS_VEC_H
-#define FLECS_VEC_H
-
-/** A component column. */
-typedef struct ecs_vec_t {
-    void *array;
-    int32_t count;
-    int32_t size;
-#ifdef FLECS_DEBUG
-    ecs_size_t elem_size;
-#endif
-} ecs_vec_t;
-
-FLECS_API
-ecs_vec_t* ecs_vec_init(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_vec_init_t(allocator, vec, T, elem_count) \
-    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-FLECS_API
-void ecs_vec_fini(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_fini_t(allocator, vec, T) \
-    ecs_vec_fini(allocator, vec, ECS_SIZEOF(T))
-
-FLECS_API
-ecs_vec_t* ecs_vec_reset(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_reset_t(allocator, vec, T) \
-    ecs_vec_reset(allocator, vec, ECS_SIZEOF(T))
-
-FLECS_API
-void ecs_vec_clear(
-    ecs_vec_t *vec);
-
-FLECS_API
-void* ecs_vec_append(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_append_t(allocator, vec, T) \
-    ECS_CAST(T*, ecs_vec_append(allocator, vec, ECS_SIZEOF(T)))
-
-FLECS_API
-void ecs_vec_remove(
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem);
-
-#define ecs_vec_remove_t(vec, T, elem) \
-    ecs_vec_remove(vec, ECS_SIZEOF(T), elem)
-
-FLECS_API
-void ecs_vec_remove_last(
-    ecs_vec_t *vec);
-
-FLECS_API
-ecs_vec_t ecs_vec_copy(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_copy_t(allocator, vec, T) \
-    ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
-
-FLECS_API
-void ecs_vec_reclaim(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_reclaim_t(allocator, vec, T) \
-    ecs_vec_reclaim(allocator, vec, ECS_SIZEOF(T))
-
-FLECS_API
-void ecs_vec_set_size(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_vec_set_size_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_size(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-FLECS_API
-void ecs_vec_set_count(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_vec_set_count_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_count(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-FLECS_API
-void* ecs_vec_grow(
-    ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count);
-
-#define ecs_vec_grow_t(allocator, vec, T, elem_count) \
-    ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-FLECS_API
-int32_t ecs_vec_count(
-    const ecs_vec_t *vec);
-
-FLECS_API
-int32_t ecs_vec_size(
-    const ecs_vec_t *vec);
-
-FLECS_API
-void* ecs_vec_get(
-    const ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t index);
-
-#define ecs_vec_get_t(vec, T, index) \
-    ECS_CAST(T*, ecs_vec_get(vec, ECS_SIZEOF(T), index))
-
-FLECS_API
-void* ecs_vec_first(
-    const ecs_vec_t *vec);
-
-#define ecs_vec_first_t(vec, T) \
-    ECS_CAST(T*, ecs_vec_first(vec))
-
-FLECS_API
-void* ecs_vec_last(
-    const ecs_vec_t *vec,
-    ecs_size_t size);
-
-#define ecs_vec_last_t(vec, T) \
-    ECS_CAST(T*, ecs_vec_last(vec, ECS_SIZEOF(T)))
-
-#endif 
 
 /**
  * @file hashmap.h

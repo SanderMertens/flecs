@@ -56,15 +56,17 @@ chunk_t* flecs_sparse_chunk_new(
     ecs_sparse_t *sparse,
     int32_t chunk_index)
 {
-    int32_t count = ecs_vector_count(sparse->chunks);
+    ecs_allocator_t *a = sparse->allocator;
+    ecs_block_allocator_t *ca = sparse->chunk_allocator;
+    int32_t count = ecs_vec_count(&sparse->chunks);
     chunk_t *chunks;
 
     if (count <= chunk_index) {
-        ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
-        chunks = ecs_vector_first(sparse->chunks, chunk_t);
-        ecs_os_memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
+        ecs_vec_set_count_t(a, &sparse->chunks, chunk_t, chunk_index + 1);
+        chunks = ecs_vec_first_t(&sparse->chunks, chunk_t);
+        ecs_os_memset_n(&chunks[count], 0, chunk_t, (1 + chunk_index - count));
     } else {
-        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+        chunks = ecs_vec_first_t(&sparse->chunks, chunk_t);
     }
 
     ecs_assert(chunks != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -77,21 +79,14 @@ chunk_t* flecs_sparse_chunk_new(
      * sparse element has not been paired with a dense element. Use zero
      * as this means we can take advantage of calloc having a possibly better 
      * performance than malloc + memset. */
-    if (sparse->chunk_allocator) {
-        result->sparse = flecs_bcalloc(sparse->chunk_allocator);
-    } else {
-        result->sparse = ecs_os_calloc_n(int32_t, FLECS_SPARSE_CHUNK_SIZE);
-    }
+    result->sparse = ca ? flecs_bcalloc(ca)
+                        : ecs_os_calloc_n(int32_t, FLECS_SPARSE_CHUNK_SIZE);
 
     /* Initialize the data array with zero's to guarantee that data is 
      * always initialized. When an entry is removed, data is reset back to
      * zero. Initialize now, as this can take advantage of calloc. */
-    if (sparse->allocator) {
-        result->data = flecs_calloc(sparse->allocator,
-            sparse->size * FLECS_SPARSE_CHUNK_SIZE);
-    } else {
-        result->data = ecs_os_calloc(sparse->size * FLECS_SPARSE_CHUNK_SIZE);
-    }
+    result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_CHUNK_SIZE)
+                     : ecs_os_calloc(sparse->size * FLECS_SPARSE_CHUNK_SIZE);
 
     ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -104,14 +99,16 @@ void flecs_sparse_chunk_free(
     ecs_sparse_t *sparse,
     chunk_t *chunk)
 {
-    if (sparse->chunk_allocator) {
-        flecs_bfree(sparse->chunk_allocator, chunk->sparse);
+    ecs_allocator_t *a = sparse->allocator;
+    ecs_block_allocator_t *ca = sparse->chunk_allocator;
+
+    if (ca) {
+        flecs_bfree(ca, chunk->sparse);
     } else {
         ecs_os_free(chunk->sparse);
     }
-    if (sparse->allocator) {
-        flecs_free(sparse->allocator, sparse->size * FLECS_SPARSE_CHUNK_SIZE,
-            chunk->data);
+    if (a) {
+        flecs_free(a, sparse->size * FLECS_SPARSE_CHUNK_SIZE, chunk->data);
     } else {
         ecs_os_free(chunk->data);
     }
@@ -122,16 +119,16 @@ chunk_t* flecs_sparse_get_chunk(
     const ecs_sparse_t *sparse,
     int32_t chunk_index)
 {
-    if (!sparse->chunks) {
+    if (!sparse->chunks.array) {
         return NULL;
     }
-    if (chunk_index >= ecs_vector_count(sparse->chunks)) {
+    if (chunk_index >= ecs_vec_count(&sparse->chunks)) {
         return NULL;
     }
 
     /* If chunk_index is below zero, application used an invalid entity id */
     ecs_assert(chunk_index >= 0, ECS_INVALID_PARAMETER, NULL);
-    chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
+    chunk_t *result = ecs_vec_get_t(&sparse->chunks, chunk_t, chunk_index);
     if (result && !result->sparse) {
         return NULL;
     }
@@ -156,7 +153,7 @@ static
 void flecs_sparse_grow_dense(
     ecs_sparse_t *sparse)
 {
-    ecs_vector_add(&sparse->dense, uint64_t);
+    ecs_vec_append_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
 static
@@ -234,7 +231,7 @@ uint64_t flecs_sparse_create_id(
     chunk_t *chunk = flecs_sparse_get_or_create_chunk(sparse, CHUNK(index));
     ecs_assert(chunk->sparse[OFFSET(index)] == 0, ECS_INTERNAL_ERROR, NULL);
     
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     flecs_sparse_assign_index(chunk, dense_array, index, dense);
     
     return index;
@@ -245,15 +242,13 @@ static
 uint64_t flecs_sparse_new_index(
     ecs_sparse_t *sparse)
 {
-    ecs_vector_t *dense = sparse->dense;
-    int32_t dense_count = ecs_vector_count(dense);
+    int32_t dense_count = ecs_vec_count(&sparse->dense);
     int32_t count = sparse->count ++;
 
     ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
-
     if (count < dense_count) {
         /* If there are unused elements in the dense array, return first */
-        uint64_t *dense_array = ecs_vector_first(dense, uint64_t);
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         return dense_array[count];
     } else {
         return flecs_sparse_create_id(sparse, count);
@@ -298,13 +293,12 @@ void* flecs_sparse_try_sparse(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-    bool in_use = dense && (dense < sparse->count);
-    if (!in_use) {
+    if (!dense || (dense >= sparse->count)) {
         return NULL;
     }
 
     uint64_t gen = flecs_sparse_strip_generation(&index);
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
 
     if (cur_gen != gen) {
@@ -347,7 +341,7 @@ void flecs_sparse_swap_dense(
     int32_t b)
 {
     ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
 
@@ -369,10 +363,13 @@ void _flecs_sparse_init(
     result->allocator = allocator;
     result->chunk_allocator = chunk_allocator;
 
+    ecs_vec_init_t(allocator, &result->chunks, chunk_t, 0);
+    ecs_vec_init_t(allocator, &result->dense, uint64_t, 1);
+    result->dense.count = 1;
+
     /* Consume first value in dense array as 0 is used in the sparse array to
      * indicate that a sparse element hasn't been paired yet. */
-    uint64_t *first = ecs_vector_add(&result->dense, uint64_t);
-    *first = 0;
+    ecs_vec_first_t(&result->dense, uint64_t)[0] = 0;
 
     result->count = 1;
 }
@@ -402,8 +399,8 @@ void flecs_sparse_clear(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t i, count = ecs_vector_count(sparse->chunks);
-    chunk_t *chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    int32_t i, count = ecs_vec_count(&sparse->chunks);
+    chunk_t *chunks = ecs_vec_first_t(&sparse->chunks, chunk_t);
     for (i = 0; i < count; i ++) {
         int32_t *indices = chunks[i].sparse;
         if (indices) {
@@ -411,7 +408,7 @@ void flecs_sparse_clear(
         }
     }
 
-    ecs_vector_set_count(&sparse->dense, uint64_t, 1);
+    ecs_vec_set_count_t(sparse->allocator, &sparse->dense, uint64_t, 1);
 
     sparse->count = 1;
     sparse->max_id_local = 0;
@@ -422,17 +419,14 @@ void _flecs_sparse_fini(
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t i, count = ecs_vector_count(sparse->chunks);
-    chunk_t *chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    int32_t i, count = ecs_vec_count(&sparse->chunks);
+    chunk_t *chunks = ecs_vec_first_t(&sparse->chunks, chunk_t);
     for (i = 0; i < count; i ++) {
         flecs_sparse_chunk_free(sparse, &chunks[i]);
     }
 
-    ecs_vector_free(sparse->chunks);
-    ecs_vector_free(sparse->dense);
-
-    sparse->chunks = NULL;
-    sparse->dense = NULL;
+    ecs_vec_fini_t(sparse->allocator, &sparse->chunks, chunk_t);
+    ecs_vec_fini_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
 void flecs_sparse_free(
@@ -456,7 +450,7 @@ const uint64_t* flecs_sparse_new_ids(
     int32_t new_count)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t dense_count = ecs_vector_count(sparse->dense);
+    int32_t dense_count = ecs_vec_count(&sparse->dense);
     int32_t count = sparse->count;
     int32_t recyclable = dense_count - count;
     int32_t i, to_create = new_count - recyclable;
@@ -470,7 +464,7 @@ const uint64_t* flecs_sparse_new_ids(
 
     sparse->count += new_count;
 
-    return ecs_vector_get(sparse->dense, uint64_t, count);
+    return ecs_vec_get_t(&sparse->dense, uint64_t, count);
 }
 
 void* _flecs_sparse_add(
@@ -489,7 +483,7 @@ uint64_t flecs_sparse_last_id(
     const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     return dense_array[sparse->count - 1];
 }
 
@@ -500,7 +494,7 @@ void* _flecs_sparse_ensure(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
     uint64_t gen = flecs_sparse_strip_generation(&index);
@@ -530,18 +524,16 @@ void* _flecs_sparse_ensure(
          * generations if the provided generation count is 0. This allows for
          * using the ensure function in combination with ids that have their
          * generation stripped. */
-        ecs_vector_t *dense_vector = sparse->dense;
-        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
+#ifdef FLECS_DEBUG
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         ecs_assert(!gen || dense_array[dense] == (index | gen), ECS_INTERNAL_ERROR, NULL);
-        (void)dense_vector;
-        (void)dense_array;
+#endif
     } else {
         /* Element is not paired yet. Must add a new element to dense array */
         flecs_sparse_grow_dense(sparse);
 
-        ecs_vector_t *dense_vector = sparse->dense;
-        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
-        int32_t dense_count = ecs_vector_count(dense_vector) - 1;
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);    
+        int32_t dense_count = ecs_vec_count(&sparse->dense) - 1;
         int32_t count = sparse->count ++;
 
         /* If index is larger than max id, update max id */
@@ -571,7 +563,7 @@ void* _flecs_sparse_ensure_fast(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
     uint32_t index = (uint32_t)index_long;
@@ -582,14 +574,12 @@ void* _flecs_sparse_ensure_fast(
 
     if (!dense) {
         /* Element is not paired yet. Must add a new element to dense array */
-        ecs_vector_t *dense_vector = sparse->dense;
         sparse->count = count + 1;
-        if (count == ecs_vector_count(dense_vector)) {
+        if (count == ecs_vec_count(&sparse->dense)) {
             flecs_sparse_grow_dense(sparse);
-            dense_vector = sparse->dense;
         }
 
-        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         flecs_sparse_assign_index(chunk, dense_array, index, count);
     }
 
@@ -626,7 +616,7 @@ void* _flecs_sparse_remove_get(
     int32_t dense = chunk->sparse[offset];
 
     if (dense) {
-        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
         if (gen != cur_gen) {
             /* Generation doesn't match which means that the provided entity is
@@ -683,8 +673,7 @@ void flecs_sparse_set_generation(
 
     if (dense) {
         /* Increase generation */
-        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
-        dense_array[dense] = index_w_gen;
+        ecs_vec_get_t(&sparse->dense, uint64_t, dense)[0] = index_w_gen;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
@@ -740,7 +729,7 @@ void* _flecs_sparse_get_dense(
 
     dense_index ++;
 
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     return flecs_sparse_get_sparse(sparse, dense_index, dense_array[dense_index]);
 }
 
@@ -762,7 +751,7 @@ uint64_t flecs_sparse_get_alive(
 
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
-    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
 
     /* If dense is 0 (tombstone) this will return 0 */
     return dense_array[dense];
@@ -809,7 +798,7 @@ int32_t flecs_sparse_not_alive_count(
         return 0;
     }
 
-    return ecs_vector_count(sparse->dense) - sparse->count;
+    return ecs_vec_count(&sparse->dense) - sparse->count;
 }
 
 int32_t flecs_sparse_size(
@@ -819,14 +808,14 @@ int32_t flecs_sparse_size(
         return 0;
     }
         
-    return ecs_vector_count(sparse->dense) - 1;
+    return ecs_vec_count(&sparse->dense) - 1;
 }
 
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
+    return &(ecs_vec_first_t(&sparse->dense, uint64_t)[1]);
 }
 
 void flecs_sparse_set_size(
@@ -834,7 +823,7 @@ void flecs_sparse_set_size(
     int32_t elem_count)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
+    ecs_vec_set_size_t(sparse->allocator, &sparse->dense, uint64_t, elem_count);
 }
 
 static

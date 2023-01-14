@@ -16,12 +16,12 @@ extern "C" {
 #define FLECS_SPARSE_CHUNK_SIZE (4096)
 
 typedef struct ecs_sparse_t {
-    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+    ecs_vec_t dense;        /* Dense array with indices to sparse array. The
                                  * dense array stores both alive and not alive
                                  * sparse indices. The 'count' member keeps
                                  * track of which indices are alive. */
 
-    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_vec_t chunks;           /* Chunks with sparse arrays & data */
     ecs_size_t size;            /* Element size */
     int32_t count;              /* Number of alive entries */
     uint64_t max_id_local;      /* Local max index (if no global is set) */
