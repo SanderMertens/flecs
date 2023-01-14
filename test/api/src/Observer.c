@@ -3527,6 +3527,207 @@ void Observer_delete_observed_tgt() {
     ecs_delete(world, Tgt);
 }
 
+static int pair_x = 0;
+static int32_t pair_column = 0;
+
+static
+void OnTagPair(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    pair_column = it->columns[0];
+    probe_iter(it);
+}
+
+static
+void OnPair(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    Position *p = ecs_field(it, Position, 1);
+    pair_x = p->x;
+    pair_column = it->columns[0];
+    probe_iter(it);
+}
+
+void Observer_on_add_2_pairs_w_uni_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+    ECS_OBSERVER(world, OnTagPair, EcsOnAdd, (Rel, *));
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtA));
+    test_int(pair_column, 2);
+
+    ecs_os_zeromem(&ctx);
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtB));
+    test_int(pair_column, 3);
+
+    ecs_os_zeromem(&ctx);
+    ecs_add_pair(world, e, Rel, TgtC);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtC));
+    test_int(pair_column, 4);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_2_pairs_w_multi_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+    ECS_OBSERVER(world, OnTagPair, EcsOnAdd, (Rel, *), Tag);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtA));
+    test_int(pair_column, 2);
+
+    ecs_os_zeromem(&ctx);
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtB));
+    test_int(pair_column, 3);
+
+    ecs_os_zeromem(&ctx);
+    ecs_add_pair(world, e, Rel, TgtC);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnTagPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(Rel, TgtC));
+    test_int(pair_column, 4);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_2_pairs_w_uni_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+    ECS_OBSERVER(world, OnPair, EcsOnSet, (Position, *));
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+    ecs_set_pair(world, e, Position, TgtA, {1});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtA));
+    test_int(pair_column, 2);
+    test_int(pair_x, 1);
+
+    ecs_os_zeromem(&ctx);
+    ecs_set_pair(world, e, Position, TgtB, {2});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtB));
+    test_int(pair_column, 3);
+    test_int(pair_x, 2);
+
+    ecs_os_zeromem(&ctx);
+    ecs_set_pair(world, e, Position, TgtC, {3});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtC));
+    test_int(pair_column, 4);
+    test_int(pair_x, 3);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_2_pairs_w_multi_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, Tag);
+    ECS_OBSERVER(world, OnPair, EcsOnSet, (Position, *), Tag);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+    ecs_set_pair(world, e, Position, TgtA, {1});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtA));
+    test_int(pair_column, 2);
+    test_int(pair_x, 1);
+
+    ecs_os_zeromem(&ctx);
+    ecs_set_pair(world, e, Position, TgtB, {2});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtB));
+    test_int(pair_column, 3);
+    test_int(pair_x, 2);
+
+    ecs_os_zeromem(&ctx);
+    ecs_set_pair(world, e, Position, TgtC, {3});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPair);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtC));
+    test_int(pair_column, 4);
+    test_int(pair_x, 3);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     
@@ -4259,4 +4460,3 @@ void Observer_cache_test_14() {
 
     ecs_fini(world);
 }
-

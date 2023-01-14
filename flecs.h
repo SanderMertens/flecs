@@ -17501,6 +17501,67 @@ ecs_move_t move_dtor() {
 } // flecs
 
 /**
+ * @file addons/cpp/ref.hpp
+ * @brief Class that caches data to speedup get operations.
+ */
+
+#pragma once
+
+namespace flecs
+{
+
+/**
+ * @defgroup cpp_ref Refs
+ * @brief Refs are a fast mechanism for referring to a specific entity/component.
+ * 
+ * \ingroup cpp_core
+ * @{
+ */
+
+/** Component reference.
+ * Reference to a component from a specific entity.
+ */
+template <typename T>
+struct ref {
+    ref(world_t *world, entity_t entity, flecs::id_t id = 0) 
+        : m_world( world )
+        , m_ref() 
+    {
+        if (!id) {
+            id = _::cpp_type<T>::id(world);
+        }
+
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+        m_ref = ecs_ref_init_id(m_world, entity, id);
+    }
+
+    T* operator->() {
+        T* result = static_cast<T*>(ecs_ref_get_id(
+            m_world, &m_ref, this->m_ref.id));
+
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        return result;
+    }
+
+    T* get() {
+        return static_cast<T*>(ecs_ref_get_id(
+            m_world, &m_ref, this->m_ref.id));
+    }
+
+    flecs::entity entity() const;
+
+private:
+    world_t *m_world;
+    flecs::ref_t m_ref;
+};
+
+/** @} */
+
+}
+
+/**
  * @file addons/cpp/world.hpp
  * @brief World class.
  */
@@ -18066,6 +18127,11 @@ struct world {
      */
     template <typename T>
     void modified() const;
+
+    /** Get ref singleton component.
+     */
+    template <typename T>
+    ref<T> get_ref() const;
 
     /** Get singleton component.
      */
@@ -19497,67 +19563,6 @@ private:
 } // namespace flecs
 
 /** @} */
-/**
- * @file addons/cpp/ref.hpp
- * @brief Class that caches data to speedup get operations.
- */
-
-#pragma once
-
-namespace flecs
-{
-
-/**
- * @defgroup cpp_ref Refs
- * @brief Refs are a fast mechanism for referring to a specific entity/component.
- * 
- * \ingroup cpp_core
- * @{
- */
-
-/** Component reference.
- * Reference to a component from a specific entity.
- */
-template <typename T>
-struct ref {
-    ref(world_t *world, entity_t entity, flecs::id_t id = 0) 
-        : m_world( world )
-        , m_ref() 
-    {
-        if (!id) {
-            id = _::cpp_type<T>::id(world);
-        }
-
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-
-        m_ref = ecs_ref_init_id(m_world, entity, id);
-    }
-
-    T* operator->() {
-        T* result = static_cast<T*>(ecs_ref_get_id(
-            m_world, &m_ref, this->m_ref.id));
-
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
-
-        return result;
-    }
-
-    T* get() {
-        return static_cast<T*>(ecs_ref_get_id(
-            m_world, &m_ref, this->m_ref.id));
-    }
-
-    flecs::entity entity() const;
-
-private:
-    world_t *m_world;
-    flecs::ref_t m_ref;
-};
-
-/** @} */
-
-}
-
 /**
  * @file addons/cpp/entity.hpp
  * @brief Entity class.
@@ -27656,6 +27661,12 @@ template <typename T>
 void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.modified<T>();
+}
+
+template <typename T>
+ref<T> world::get_ref() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_ref<T>();
 }
 
 template <typename T>

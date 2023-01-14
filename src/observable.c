@@ -1192,7 +1192,7 @@ repeat_event:
         }
 
         int32_t column = tr->column, storage_i = -1;
-        it.columns[0] = column;
+        it.columns[0] = column + 1;
         it.ptrs[0] = NULL;
         it.sizes[0] = 0;
         it.event_id = id;

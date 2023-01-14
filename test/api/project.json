@@ -1812,6 +1812,10 @@
                 "delete_observed_id",
                 "delete_observed_rel",
                 "delete_observed_tgt",
+                "on_add_2_pairs_w_uni_observer",
+                "on_add_2_pairs_w_multi_observer",
+                "on_set_2_pairs_w_uni_observer",
+                "on_set_2_pairs_w_multi_observer",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
@@ -2122,8 +2126,7 @@
                 "get_type_info",
                 "get_type_info_after_delete_with",
                 "get_type_info_after_reuse",
-                "no_name_prefix_after_init",
-                "get_ref"
+                "no_name_prefix_after_init"
             ]
         }, {
             "id": "WorldInfo",
