@@ -92,52 +92,52 @@ The entity endpoint requests data from an entity. The path is the entity path or
 
 The following parameters can be provided to the endpoint:
 
-#### **path**
+#### path
 Add path (name) for entity.
 
 **Default**: true
 
-#### **label**
+#### label
 Add label (from doc framework) for entity.
 
 **Default**: false
 
-#### **brief**
+#### brief
 Add brief description (from doc framework) for entity.
 
 **Default**: false
 
-#### **link**
+#### link
 Add link (from doc framework) for entity.
 
 **Default**: false
 
-#### **id_labels**
+#### id_labels
 Add labels (from doc framework) for (component) ids.
 
 **Default**: false
 
-#### **base**
+#### base
 Add base components.
 
 **Default**: true
 
-#### **values**
+#### values
 Add component values.
 
 **Default**: false
 
-#### **private**
+#### private
 Add private components.
 
 **Default**: false
 
-#### **type_info**
+#### type_info
 Add reflection data for component types.
 
 **Default**: false
 
-#### **Example**:
+#### Example
 ```
 /entity/my_entity
 /entity/my_entity?values=true
@@ -188,82 +188,82 @@ rules query engine. The reply is formatted as an [JSON serializer Iterator](Json
 
 The following parameters can be provided to the endpoint:
 
-#### **name**
+#### name
 Specify the name of an existing query or system.
 
-#### **offset**
+#### offset
 Skip the first _offset_ number of entities.
 
 **Default**: 0
 
-#### **limit**
+#### limit
 Return at most _limit_ number of entities.
 
 **Default**: 100
 
-#### **term_ids**
+#### term_ids
 Add top-level "ids" array with components as specified by query.
 
 **Default**: true
 
-#### **ids**
+#### ids
 Add result-specific "ids" array with components as matched. Can be different from top-level "ids" array for queries with wildcards.
 
 **Default**: true
 
-#### **sources**
+#### sources
 Add result-specific "sources" array with component source. A 0 element indicates the component is matched on the current (This) entity.
 
 **Default**: true
 
-#### **variables**
+#### variables
 Add result-specific "variables" array with values for variables, if any.
 
 **Default**: true
 
-#### **is_set**
+#### is_set
 Add result-specific "is_set" array with boolean elements indicating whether component was matched (used for optional terms).
 
 **Default**: true
 
-#### **values**
+#### values
 Add result-specific "values" array with component values. A 0 element indicates a component that could not be serialized, which can be either
 because no reflection data was registered, because the component has no
 data, or because the query didn't request it.
 
 **Default**: true
 
-#### **entities**
+#### entities
 Add result-specific "entities" array with matched entities.
 
 **Default**: true
 
-#### **entity_labels**
+#### entity_labels
 Include doc name for entities.
 
 **Default**: false
 
-#### **entity_ids**
+#### entity_ids
 Include numerical ids for entities.
 
 **Default**: false
 
-#### **variable_labels**
+#### variable_labels
 Include doc name for variables.
 
 **Default**: false
 
-#### **variable_ids**
+#### variable_ids
 Include numerical ids for variables.
 
 **Default**: false
 
-#### **duration**
+#### duration
 Include measurement on how long it took to serialize result.
 
 **Default**: false
 
-#### **type_info**
+#### type_info
 Add top-level "type_info" array with reflection data on the type in
 the query. If a query element has a component that has no reflection
 data, a 0 element is added to the array.
