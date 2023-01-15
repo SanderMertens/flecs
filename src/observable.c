@@ -62,7 +62,7 @@ ecs_event_record_t* flecs_event_record_get(
     else if (event == EcsWildcard)  return (ecs_event_record_t*)&o->on_wildcard;
 
     /* User events */
-    return flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
+    return flecs_sparse_try_t(&o->events, ecs_event_record_t, event);
 }
 
 ecs_event_record_t* flecs_event_record_ensure(
@@ -867,7 +867,7 @@ void flecs_emit_forward_up(
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     tgt = flecs_entities_get_current(world, tgt);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_record_t *tgt_record = flecs_entities_get(world, tgt);
+    ecs_record_t *tgt_record = flecs_entities_try(world, tgt);
     ecs_table_t *tgt_table;
     if (!tgt_record || !(tgt_table = tgt_record->table)) {
         return;

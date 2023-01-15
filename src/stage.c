@@ -36,7 +36,7 @@ ecs_cmd_t* flecs_cmd_new(
 {
     if (e) {
         ecs_vec_t *cmds = &stage->commands;
-        ecs_cmd_entry_t *entry = flecs_sparse_get_t(
+        ecs_cmd_entry_t *entry = flecs_sparse_try_t(
             &stage->cmd_entries, ecs_cmd_entry_t, e);
         int32_t cur = ecs_vec_count(cmds);
         if (entry) {

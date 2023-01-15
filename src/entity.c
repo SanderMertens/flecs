@@ -1281,9 +1281,7 @@ ecs_entity_t ecs_new_w_id(
             return entity;
         }
 
-        ecs_record_t *r = flecs_entities_ensure(world, entity);
-        ecs_assert(r->row == 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_entities_ensure(world, entity);
     }
     flecs_defer_end(world, stage);
 
@@ -2429,7 +2427,7 @@ void ecs_delete(
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_record_t *r = flecs_entities_try(world, entity);
     if (r) {
         flecs_journal_begin(world, EcsJournalDelete, entity, NULL, NULL);
 

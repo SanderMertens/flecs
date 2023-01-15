@@ -114,7 +114,7 @@ bool flecs_sparse_is_alive(
 
 /** Return identifier with current generation set. */
 FLECS_DBG_API
-uint64_t flecs_sparse_get_alive(
+uint64_t flecs_sparse_get_current(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
@@ -154,6 +154,16 @@ void* flecs_sparse_get(
 
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
+
+/** Same as flecs_sparse_get, but doesn't assert if id is not alive. */
+FLECS_DBG_API
+void* flecs_sparse_try(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_try_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_try(sparse, ECS_SIZEOF(T), index))
 
 /** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
