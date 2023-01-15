@@ -1709,7 +1709,7 @@ void DeferredActions_register_component_while_staged() {
 
     ecs_entity_t ecs_id(Position) = ecs_component_init(stage, 
         &(ecs_component_desc_t){
-            .entity = ecs_entity(world, {.name = "Position"}),
+            .entity = ecs_entity(stage, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });

@@ -2343,7 +2343,6 @@
                 "get_object_from_stage",
                 "add_to_world_while_readonly",
                 "add_to_world_and_stage_while_readonly",
-                "add_to_world_while_readonly_n_stages",
                 "lookup_after_stage_count_change",
                 "lookup_w_scope_after_stage_count_change",
                 "with_after_stage_count_change"

@@ -662,7 +662,7 @@ bool ecs_readonly_begin(
      * threads. This is a stricter version of readonly mode: while some 
      * mutations like implicit component registration are still allowed in plain
      * readonly mode, no mutations are allowed when multithreaded. */
-    if (count > 1) {
+    if (world->worker_cond) {
         ECS_BIT_SET(world->flags, EcsWorldMultiThreaded);
     }
 

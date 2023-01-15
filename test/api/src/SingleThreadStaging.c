@@ -2812,21 +2812,6 @@ void SingleThreadStaging_add_to_world_and_stage_while_readonly() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_to_world_while_readonly_n_stages() {
-    install_test_abort();
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_set_stage_count(world, 2);
-
-    ecs_entity_t e = ecs_new_id(world);
-
-    ecs_readonly_begin(world);
-    test_expect_abort();
-    ecs_add(world, e, Tag);
-}
-
 void SingleThreadStaging_lookup_after_stage_count_change() {
     ecs_world_t *world = ecs_mini();
 

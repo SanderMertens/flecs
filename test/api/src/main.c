@@ -2252,7 +2252,6 @@ void SingleThreadStaging_get_case_from_stage(void);
 void SingleThreadStaging_get_object_from_stage(void);
 void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
-void SingleThreadStaging_add_to_world_while_readonly_n_stages(void);
 void SingleThreadStaging_lookup_after_stage_count_change(void);
 void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void);
 void SingleThreadStaging_with_after_stage_count_change(void);
@@ -11056,10 +11055,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_add_to_world_and_stage_while_readonly
     },
     {
-        "add_to_world_while_readonly_n_stages",
-        SingleThreadStaging_add_to_world_while_readonly_n_stages
-    },
-    {
         "lookup_after_stage_count_change",
         SingleThreadStaging_lookup_after_stage_count_change
     },
@@ -11694,7 +11689,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        69,
+        68,
         SingleThreadStaging_testcases
     },
     {
