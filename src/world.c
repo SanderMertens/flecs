@@ -189,17 +189,11 @@ ecs_stage_t* flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
-            ECS_INVALID_OPERATION, NULL);
         return &world->stages[0];
-
-    } else if (ecs_poly_is(world, ecs_stage_t)) {
-        ecs_stage_t *stage = (ecs_stage_t*)world;
-        *world_ptr = stage->world;
-        return stage;
     }
-    
-    return NULL;
+
+    *world_ptr = ((ecs_stage_t*)world)->world;
+    return (ecs_stage_t*)world;
 }
 
 ecs_world_t* flecs_suspend_readonly(
@@ -1160,10 +1154,14 @@ ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
-    if (ecs_has_id(world, e, EcsOneOf)) {
-        return e;
+    if (ecs_is_alive(world, e)) {
+        if (ecs_has_id(world, e, EcsOneOf)) {
+            return e;
+        } else {
+            return ecs_get_target(world, e, EcsOneOf, 0);
+        }
     } else {
-        return ecs_get_target(world, e, EcsOneOf, 0);
+        return 0;
     }
 }
 

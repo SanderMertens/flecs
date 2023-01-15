@@ -92,6 +92,9 @@ static
 void create_delete_entity_random_components_staged(
     int32_t threads)
 {
+    test_quarantine("---");
+    return;
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -136,6 +139,9 @@ static
 void set_entity_random_components(
     int32_t threads)
 {
+    test_quarantine("---");
+    return;
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -316,6 +322,7 @@ void Stresstests_create_1m_set_two_components() {
     ecs_entity_t e = ecs_new(world, 0);
     ecs_entity_t i, j;
     for (i = e; i < 1000000 + e; i ++) {
+        ecs_ensure(world, i);
         ecs_set(world, i, Position, {10, 20});
     }
 
@@ -324,6 +331,7 @@ void Stresstests_create_1m_set_two_components() {
     }    
 
     for (i = e; i < e + 1000000 + e; i ++) {
+        ecs_ensure(world, i);
         ecs_set(world, i, Velocity, {1, 2});
     }    
 

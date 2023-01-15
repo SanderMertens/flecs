@@ -2343,7 +2343,7 @@ void flecs_table_merge(
             record = src_records[i];
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         } else {
-            record = flecs_entities_ensure(world, src_entities[i]);
+            record = flecs_entities_get(world, src_entities[i]);
         }
 
         uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);

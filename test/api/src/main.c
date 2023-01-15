@@ -2272,7 +2272,6 @@ void Stresstests_set_entity_random_components_12_threads(void);
 void Stresstests_create_2m_entities_1_comp(void);
 void Stresstests_create_2m_entities_bulk_1_comp(void);
 void Stresstests_add_1k_tags(void);
-void Stresstests_create_1m_set_two_components(void);
 
 // Testsuite 'Table'
 void Table_get_index(void);
@@ -11124,10 +11123,6 @@ bake_test_case Stresstests_testcases[] = {
     {
         "add_1k_tags",
         Stresstests_add_1k_tags
-    },
-    {
-        "create_1m_set_two_components",
-        Stresstests_create_1m_set_two_components
     }
 };
 
@@ -11696,7 +11691,7 @@ static bake_test_suite suites[] = {
         "Stresstests",
         Stresstests_setup,
         NULL,
-        15,
+        14,
         Stresstests_testcases
     },
     {

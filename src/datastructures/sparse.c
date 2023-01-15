@@ -742,17 +742,10 @@ void* flecs_sparse_get(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    int32_t page_index = PAGE(index);
-    if (ecs_vec_count(&sparse->pages) <= page_index) {
-        return NULL;
-    }
-
     ecs_page_t *page = ecs_vec_get_t(&sparse->pages, ecs_page_t, PAGE(index));
     int32_t offset = OFFSET(index);
     int32_t dense = page->sparse[offset];
-    if (!dense) {
-        return NULL;
-    }
+    ecs_assert(dense != 0, ECS_INTERNAL_ERROR, NULL);
 
     uint64_t gen = flecs_sparse_strip_generation(&index);
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);

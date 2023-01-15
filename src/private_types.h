@@ -46,7 +46,6 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinObservable,
     EcsMixinIterable,
     EcsMixinDtor,
-    EcsMixinBase,        /* If mixin can't be found in object, look in base */
     EcsMixinMax
 } ecs_mixin_kind_t;
 
@@ -477,10 +476,10 @@ struct ecs_stage_t {
 
     /* Deferred command queue */
     int32_t defer;
+    bool defer_suspend;         /* Suspend deferring without flushing */
     ecs_vec_t commands;
     ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
     ecs_sparse_t cmd_entries;   /* <entity, op_entry_t> - command combining */
-    bool defer_suspend;         /* Suspend deferring without flushing */
 
     /* Thread context */
     ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */

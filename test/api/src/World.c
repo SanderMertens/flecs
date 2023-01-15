@@ -146,6 +146,8 @@ void World_entity_range_out_of_range_check_disabled() {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_ensure(world, 4999);
+
     ecs_enable_range_check(world, false);
     ecs_set_entity_range(world, 5000, 10000);
 

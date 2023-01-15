@@ -177,6 +177,7 @@ void Lookup_lookup_name_w_digit() {
 void Lookup_lookup_symbol_by_id() {
     ecs_world_t *world = ecs_mini();
 
+    ecs_ensure(world, 1000);
     ecs_entity_t e = ecs_lookup_symbol(world, "1000", true);
     test_int(e, 1000);
 
