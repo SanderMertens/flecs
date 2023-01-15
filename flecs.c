@@ -11206,7 +11206,7 @@ ecs_vector_t* _ecs_vector_copy(
 
 
 /** Compute the page index from an id by stripping the first 12 bits */
-#define CHUNK(index) ((int32_t)((uint32_t)index >> 12))
+#define PAGE(index) ((int32_t)((uint32_t)index >> 12))
 
 /** This computes the offset of an index inside a page */
 #define OFFSET(index) ((int32_t)index & 0xFFF)
@@ -11364,6 +11364,8 @@ static
 uint64_t flecs_sparse_get_id(
     const ecs_sparse_t *sparse)
 {
+    ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sparse->max_id != NULL, ECS_INTERNAL_ERROR, NULL);
     return sparse->max_id[0];
 }
 
@@ -11387,7 +11389,7 @@ uint64_t flecs_sparse_create_id(
     uint64_t index = flecs_sparse_inc_id(sparse);
     flecs_sparse_grow_dense(sparse);
 
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
     ecs_assert(page->sparse[OFFSET(index)] == 0, ECS_INTERNAL_ERROR, NULL);
     
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
@@ -11420,7 +11422,7 @@ void* flecs_sparse_try_sparse(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page || !page->sparse) {
         return NULL;
     }
@@ -11452,7 +11454,7 @@ void* flecs_sparse_get_sparse(
     uint64_t index)
 {
     flecs_sparse_strip_generation(&index);
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page || !page->sparse) {
         return NULL;
     }
@@ -11479,7 +11481,7 @@ void flecs_sparse_swap_dense(
     uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
 
-    ecs_page_t *page_b = flecs_sparse_get_or_create_page(sparse, CHUNK(index_b));
+    ecs_page_t *page_b = flecs_sparse_get_or_create_page(sparse, PAGE(index_b));
     flecs_sparse_assign_index(page_a, dense_array, index_a, b);
     flecs_sparse_assign_index(page_b, dense_array, index_b, a);
 }
@@ -11587,7 +11589,7 @@ void* flecs_sparse_add(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     uint64_t index = flecs_sparse_new_index(sparse);
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     ecs_assert(page != NULL, ECS_INTERNAL_ERROR, NULL);
     return DATA(page->data, size, OFFSET(index));
 }
@@ -11611,7 +11613,7 @@ void* flecs_sparse_ensure(
     (void)size;
 
     uint64_t gen = flecs_sparse_strip_generation(&index);
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
     int32_t offset = OFFSET(index);
     int32_t dense = page->sparse[offset];
 
@@ -11658,7 +11660,7 @@ void* flecs_sparse_ensure(
             /* If there are unused elements in the list, move the first unused
              * element to the end of the list */
             uint64_t unused = dense_array[count];
-            ecs_page_t *unused_page = flecs_sparse_get_or_create_page(sparse, CHUNK(unused));
+            ecs_page_t *unused_page = flecs_sparse_get_or_create_page(sparse, PAGE(unused));
             flecs_sparse_assign_index(unused_page, dense_array, unused, dense_count);
         }
 
@@ -11680,7 +11682,7 @@ void* flecs_sparse_ensure_fast(
     (void)size;
 
     uint32_t index = (uint32_t)index_long;
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
     int32_t offset = OFFSET(index);
     int32_t dense = page->sparse[offset];
     int32_t count = sparse->count;
@@ -11708,7 +11710,7 @@ void flecs_sparse_remove(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return;
     }
@@ -11757,7 +11759,7 @@ void flecs_sparse_set_generation(
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
     
     uint64_t index_w_gen = index;
     flecs_sparse_strip_generation(&index);
@@ -11777,7 +11779,7 @@ bool flecs_sparse_exists(
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return false;
     }
@@ -11794,7 +11796,7 @@ bool flecs_sparse_is_valid(
     uint64_t index)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return true; /* Doesn't exist yet, so is valid */
     }
@@ -11830,7 +11832,7 @@ bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return false;
     }
@@ -11857,7 +11859,7 @@ uint64_t flecs_sparse_get_current(
     const ecs_sparse_t *sparse,
     uint64_t index)
 {
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return 0;
     }
@@ -11878,7 +11880,7 @@ void* flecs_sparse_try(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page) {
         return NULL;
     }
@@ -11908,7 +11910,13 @@ void* flecs_sparse_get(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
-    ecs_page_t *page = ecs_vec_get_t(&sparse->pages, ecs_page_t, CHUNK(index));
+
+    int32_t page_index = PAGE(index);
+    if (ecs_vec_count(&sparse->pages) <= page_index) {
+        return NULL;
+    }
+
+    ecs_page_t *page = ecs_vec_get_t(&sparse->pages, ecs_page_t, PAGE(index));
     int32_t offset = OFFSET(index);
     int32_t dense = page->sparse[offset];
     if (!dense) {
@@ -11936,7 +11944,7 @@ void* flecs_sparse_get_any(
     (void)size;
     
     flecs_sparse_strip_generation(&index);
-    ecs_page_t *page = flecs_sparse_get_page(sparse, CHUNK(index));
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
     if (!page || !page->sparse) {
         return NULL;
     }
@@ -11955,7 +11963,7 @@ void* flecs_sparse_get_any(
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse)
 {
-    if (!sparse) {
+    if (!sparse || !sparse->count) {
         return 0;
     }
 
@@ -11986,7 +11994,11 @@ const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    return &(ecs_vec_first_t(&sparse->dense, uint64_t)[1]);
+    if (sparse->dense.array) {
+        return &(ecs_vec_first_t(&sparse->dense, uint64_t)[1]);
+    } else {
+        return NULL;
+    }
 }
 
 void flecs_sparse_set_size(
@@ -11998,7 +12010,7 @@ void flecs_sparse_set_size(
 }
 
 static
-void sparse_copy(
+void flecs_sparse_copy_intern(
     ecs_sparse_t * dst,
     const ecs_sparse_t * src)
 {
@@ -12030,7 +12042,7 @@ void flecs_sparse_copy(
     }
 
     flecs_sparse_init(dst, src->allocator, src->page_allocator, src->size);
-    sparse_copy(dst, src);
+    flecs_sparse_copy_intern(dst, src);
 }
 
 void flecs_sparse_restore(
@@ -12040,7 +12052,7 @@ void flecs_sparse_restore(
     ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
     dst->count = 1;
     if (src) {
-        sparse_copy(dst, src);
+        flecs_sparse_copy_intern(dst, src);
     }
 }
 
@@ -32432,7 +32444,6 @@ struct ecs_snapshot_t {
     ecs_sparse_t entity_index;
     ecs_vector_t *tables;
     ecs_entity_t last_id;
-    ecs_filter_t filter;
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -32716,7 +32727,7 @@ void restore_filtered(
             &snapshot_table->data->entities);
         for (i = 0; i < entity_count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = flecs_entities_get(world, e);
+            ecs_record_t *r = flecs_entities_try(world, e);
             if (r && r->table) {
                 flecs_table_delete(world, r->table, 
                     ECS_RECORD_TO_ROW(r->row), true);
@@ -44824,7 +44835,7 @@ void ecs_filter_move(
 }
 
 static
-void filter_str_add_id(
+void flecs_filter_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_term_id_t *id,
@@ -44886,7 +44897,7 @@ void filter_str_add_id(
 }
 
 static
-void term_str_w_strbuf(
+void flecs_term_str_w_strbuf(
     const ecs_world_t *world,
     const ecs_term_t *term,
     ecs_strbuf_t *buf)
@@ -44918,12 +44929,14 @@ void term_str_w_strbuf(
     }
 
     if (!subj_set) {
-        filter_str_add_id(world, buf, &term->first, false, def_first_mask);
+        flecs_filter_str_add_id(world, buf, &term->first, false, 
+            def_first_mask);
         if (!obj_set) {
             ecs_strbuf_appendlit(buf, "()");
         } else {
             ecs_strbuf_appendlit(buf, "(0,");
-            filter_str_add_id(world, buf, &term->second, false, def_second_mask);
+            flecs_filter_str_add_id(world, buf, &term->second, false, 
+                def_second_mask);
             ecs_strbuf_appendlit(buf, ")");
         }
     } else if (ecs_term_match_this(term) && 
@@ -44933,10 +44946,10 @@ void term_str_w_strbuf(
             if (obj_set) {
                 ecs_strbuf_appendlit(buf, "(");
             }
-            filter_str_add_id(world, buf, &term->first, false, def_first_mask);   
+            flecs_filter_str_add_id(world, buf, &term->first, false, def_first_mask);   
             if (obj_set) {
                 ecs_strbuf_appendlit(buf, ",");
-                filter_str_add_id(
+                flecs_filter_str_add_id(
                     world, buf, &term->second, false, def_second_mask);
                 ecs_strbuf_appendlit(buf, ")");
             }
@@ -44951,16 +44964,16 @@ void term_str_w_strbuf(
             ecs_strbuf_appendch(buf, '|');
         }
 
-        filter_str_add_id(world, buf, &term->first, false, def_first_mask);
+        flecs_filter_str_add_id(world, buf, &term->first, false, def_first_mask);
         ecs_strbuf_appendlit(buf, "(");
         if (term->src.flags & EcsIsEntity && term->src.id == term->first.id) {
             ecs_strbuf_appendlit(buf, "$");
         } else {
-            filter_str_add_id(world, buf, &term->src, true, def_src_mask);
+            flecs_filter_str_add_id(world, buf, &term->src, true, def_src_mask);
         }
         if (obj_set) {
             ecs_strbuf_appendlit(buf, ",");
-            filter_str_add_id(world, buf, &term->second, false, def_second_mask);
+            flecs_filter_str_add_id(world, buf, &term->second, false, def_second_mask);
         }
         ecs_strbuf_appendlit(buf, ")");
     }
@@ -44971,7 +44984,7 @@ char* ecs_term_str(
     const ecs_term_t *term)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    term_str_w_strbuf(world, term, &buf);
+    flecs_term_str_w_strbuf(world, term, &buf);
     return ecs_strbuf_get(&buf);
 }
 
@@ -45030,7 +45043,7 @@ char* flecs_filter_str(
             or_count ++;
         }
 
-        term_str_w_strbuf(world, term, &buf);
+        flecs_term_str_w_strbuf(world, term, &buf);
     }
 
     return ecs_strbuf_get(&buf);
@@ -50831,9 +50844,6 @@ int32_t ecs_query_entity_count(
  */
 
 
-/* Marker object used to differentiate a component vs. a tag edge */
-static ecs_table_diff_t ecs_table_edge_is_component;
-
 /* Id sequence (type) utilities */
 
 static
@@ -51278,7 +51288,7 @@ void flecs_table_disconnect_edge(
 
     /* Remove data associated with edge */
     ecs_table_diff_t *diff = edge->diff;
-    if (diff && diff != &ecs_table_edge_is_component) {
+    if (diff) {
         flecs_table_diff_free(world, diff);
     }
 
@@ -51525,12 +51535,7 @@ void flecs_compute_table_diff(
         !ecs_id_is_wildcard(id);
 
     if (trivial_edge) {
-        /* If edge is trivial there's no need to create a diff element for it.
-         * Store whether the id is a tag or not, so that we can still tell 
-         * whether an UnSet handler should be called or not. */
-        if (node->storage_table != next->storage_table) {
-            edge->diff = &ecs_table_edge_is_component;
-        }
+        /* If edge is trivial there's no need to create a diff element for it */
         return;
     }
 
@@ -51833,36 +51838,6 @@ ecs_table_t* flecs_create_edge_for_add(
     return to;
 }
 
-static
-void flecs_table_populate_diff( 
-    ecs_graph_edge_t *edge,
-    ecs_id_t *add_ptr,
-    ecs_id_t *remove_ptr,
-    ecs_table_diff_t *out)
-{
-    if (out) {
-        ecs_table_diff_t *diff = edge->diff;
-
-        if (diff && diff != &ecs_table_edge_is_component) {
-            *out = *diff;
-        } else {
-            if (add_ptr) {
-                out->added.array = add_ptr;
-                out->added.count = 1;
-            } else {
-                out->added.count = 0;
-            }
-
-            if (remove_ptr) {
-                out->removed.array = remove_ptr;
-                out->removed.count = 1;
-            } else {
-                out->removed.count = 0;
-            }
-        }
-    }
-}
-
 ecs_table_t* flecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -51888,7 +51863,13 @@ ecs_table_t* flecs_table_traverse_remove(
     }
 
     if (node != to) {
-        flecs_table_populate_diff(edge, NULL, id_ptr, diff);
+        if (edge->diff) {
+            *diff = *edge->diff;
+        } else {
+            diff->added.count = 0;
+            diff->removed.array = id_ptr;
+            diff->removed.count = 1;
+        }
     }
 
     return to;
@@ -51903,6 +51884,7 @@ ecs_table_t* flecs_table_traverse_add(
     ecs_table_diff_t *diff)
 {
     ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
     node = node ? node : &world->store.root;
 
@@ -51921,7 +51903,13 @@ ecs_table_t* flecs_table_traverse_add(
     }
 
     if (node != to || edge->diff) {
-        flecs_table_populate_diff(edge, id_ptr, NULL, diff);
+        if (edge->diff) {
+            *diff = *edge->diff;
+        } else {
+            diff->added.array = id_ptr;
+            diff->added.count = 1;
+            diff->removed.count = 0;
+        }
     }
 
     return to;
@@ -52025,7 +52013,8 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    return flecs_table_traverse_add(world, table, &id, NULL);
+    ecs_table_diff_t diff;
+    return flecs_table_traverse_add(world, table, &id, &diff);
 }
 
 ecs_table_t* ecs_table_remove_id(
@@ -52033,7 +52022,8 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    return flecs_table_traverse_remove(world, table, &id, NULL);
+    ecs_table_diff_t diff;
+    return flecs_table_traverse_remove(world, table, &id, &diff);
 }
 
 /**

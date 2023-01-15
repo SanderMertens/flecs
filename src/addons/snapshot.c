@@ -15,7 +15,6 @@ struct ecs_snapshot_t {
     ecs_sparse_t entity_index;
     ecs_vector_t *tables;
     ecs_entity_t last_id;
-    ecs_filter_t filter;
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -299,7 +298,7 @@ void restore_filtered(
             &snapshot_table->data->entities);
         for (i = 0; i < entity_count; i ++) {
             ecs_entity_t e = entities[i];
-            ecs_record_t *r = flecs_entities_get(world, e);
+            ecs_record_t *r = flecs_entities_try(world, e);
             if (r && r->table) {
                 flecs_table_delete(world, r->table, 
                     ECS_RECORD_TO_ROW(r->row), true);
