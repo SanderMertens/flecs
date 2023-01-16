@@ -409,3 +409,15 @@ void Sparse_count_of_null() {
 void Sparse_size_of_null() {
     test_int(flecs_sparse_size(NULL), 0);
 }
+
+void Sparse_try_low_after_ensure_high() {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000);
+    test_assert(ptr_1 != NULL);
+
+    int *ptr_2 = flecs_sparse_try_t(sp, int, 100);
+    test_assert(ptr_2 == NULL);
+
+    flecs_sparse_free(sp);
+}

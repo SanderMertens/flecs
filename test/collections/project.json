@@ -103,7 +103,8 @@
                 "create_delete",
                 "create_delete_2",
                 "count_of_null",
-                "size_of_null"
+                "size_of_null",
+                "try_low_after_ensure_high"
             ]
         }, {
             "id": "Strbuf",

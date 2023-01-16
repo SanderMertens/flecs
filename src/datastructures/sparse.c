@@ -683,7 +683,7 @@ void* flecs_sparse_try(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return NULL;
     }
 

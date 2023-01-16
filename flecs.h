@@ -1601,8 +1601,8 @@ void ecs_sparse_init(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
 
-#define ecs_sparse_init_t(T)\
-    ecs_sparse_init(ECS_SIZEOF(T))
+#define ecs_sparse_init_t(sparse, T)\
+    ecs_sparse_init(sparse, ECS_SIZEOF(T))
 
 FLECS_API
 void* ecs_sparse_add(
@@ -1908,7 +1908,6 @@ void ecs_map_copy(
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
 #define ecs_map_get_deref(m, T, k) ECS_CAST(T*, _ecs_map_get_deref(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
-#define ecs_map_ensure_deref(m, T, k) ECS_CAST(T*, ecs_map_ensure_ref(m, k)[0])
 
 #define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, v))
 #define ecs_map_insert_alloc_t(m, T, k) ECS_CAST(T*, ecs_map_insert_alloc(m, ECS_SIZEOF(T), k))

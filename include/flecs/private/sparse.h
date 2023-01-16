@@ -236,8 +236,8 @@ void ecs_sparse_init(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
 
-#define ecs_sparse_init_t(T)\
-    ecs_sparse_init(ECS_SIZEOF(T))
+#define ecs_sparse_init_t(sparse, T)\
+    ecs_sparse_init(sparse, ECS_SIZEOF(T))
 
 FLECS_API
 void* ecs_sparse_add(
