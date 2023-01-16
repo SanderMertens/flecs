@@ -22,7 +22,6 @@ void flecs_stage_merge_post_frame(
     ecs_stage_t *stage);  
 
 bool flecs_defer_cmd(
-    ecs_world_t *world,
     ecs_stage_t *stage);
 
 bool flecs_defer_begin(
@@ -73,18 +72,16 @@ bool flecs_defer_enable(
     bool enable);    
 
 bool flecs_defer_add(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id);
 
 bool flecs_defer_remove(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id);
 
-bool flecs_defer_set(
+void* flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_cmd_kind_t op_kind,
@@ -92,8 +89,7 @@ bool flecs_defer_set(
     ecs_entity_t component,
     ecs_size_t size,
     void *value,
-    void **value_out,
-    bool emplace);
+    bool need_value);
 
 bool flecs_defer_end(
     ecs_world_t *world,
