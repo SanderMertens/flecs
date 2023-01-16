@@ -95,7 +95,6 @@ void Sparse_create_delete(void);
 void Sparse_create_delete_2(void);
 void Sparse_count_of_null(void);
 void Sparse_size_of_null(void);
-void Sparse_copy_null(void);
 
 // Testsuite 'Strbuf'
 void Strbuf_setup(void);
@@ -445,10 +444,6 @@ bake_test_case Sparse_testcases[] = {
     {
         "size_of_null",
         Sparse_size_of_null
-    },
-    {
-        "copy_null",
-        Sparse_copy_null
     }
 };
 
@@ -566,7 +561,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        22,
+        21,
         Sparse_testcases
     },
     {

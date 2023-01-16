@@ -36,9 +36,6 @@ typedef struct ecs_switch_t ecs_switch_t;
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
-/* Allocator type */
-struct ecs_allocator_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +56,7 @@ struct ecs_observable_t {
     ecs_event_record_t on_set;
     ecs_event_record_t un_set;
     ecs_event_record_t on_wildcard;
-    ecs_sparse_t *events;  /* sparse<event, ecs_event_record_t> */
+    ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
 };
 
 /** Record for entity index */

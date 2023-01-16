@@ -15,7 +15,11 @@ ecs_vec_t* ecs_vec_init(
     v->array = NULL;
     v->count = 0;
     if (elem_count) {
-        v->array = flecs_alloc(allocator, size * elem_count);
+        if (allocator) {
+            v->array = flecs_alloc(allocator, size * elem_count);
+        } else {
+            v->array = ecs_os_malloc(size * elem_count);
+        }
     }
     v->size = elem_count;
 #ifdef FLECS_DEBUG
@@ -31,7 +35,11 @@ void ecs_vec_fini(
 {
     if (v->array) {
         ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
-        flecs_free(allocator, size * v->size, v->array);
+        if (allocator) {
+            flecs_free(allocator, size * v->size, v->array);
+        } else {
+            ecs_os_free(v->array);
+        }
         v->array = NULL;
         v->count = 0;
         v->size = 0;
@@ -64,10 +72,16 @@ ecs_vec_t ecs_vec_copy(
     ecs_size_t size)
 {
     ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    void *array;
+    if (allocator) {
+        array = flecs_dup(allocator, size * v->size, v->array);
+    } else {
+        array = ecs_os_memdup(v->array, size * v->size);
+    }
     return (ecs_vec_t) {
         .count = v->count,
         .size = v->size,
-        .array = flecs_dup(allocator, size * v->size, v->array)
+        .array = array
 #ifdef FLECS_DEBUG
         , .elem_size = size
 #endif
@@ -83,8 +97,12 @@ void ecs_vec_reclaim(
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
-            v->array = flecs_realloc(
-                allocator, size * count, size * v->size, v->array);
+            if (allocator) {
+                v->array = flecs_realloc(
+                    allocator, size * count, size * v->size, v->array);
+            } else {
+                v->array = ecs_os_realloc(v->array, size * count);
+            }
             v->size = count;
         } else {
             ecs_vec_fini(allocator, v, size);
@@ -109,8 +127,12 @@ void ecs_vec_set_size(
             elem_count = 2;
         }
         if (elem_count != v->size) {
-            v->array = flecs_realloc(
-                allocator, size * elem_count, size * v->size, v->array);
+            if (allocator) {
+                v->array = flecs_realloc(
+                    allocator, size * elem_count, size * v->size, v->array);
+            } else {
+                v->array = ecs_os_realloc(v->array, size * elem_count);
+            }
             v->size = elem_count;
         }
     }

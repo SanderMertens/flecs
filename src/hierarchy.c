@@ -24,7 +24,7 @@ bool flecs_path_append(
     const char *name = NULL;
     ecs_size_t name_len = 0;
 
-    if (ecs_is_valid(world, child)) {
+    if (child && ecs_is_alive(world, child)) {
         cur = ecs_get_target(world, child, EcsChildOf, 0);
         if (cur) {
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
@@ -297,7 +297,7 @@ ecs_entity_t ecs_lookup_child(
 
     if (flecs_is_string_number(name)) {
         ecs_entity_t result = flecs_name_to_id(world, name);
-        if (result) {
+        if (result && ecs_is_alive(world, result)) {
             if (parent && !ecs_has_pair(world, result, EcsChildOf, parent)) {
                 return 0;
             }

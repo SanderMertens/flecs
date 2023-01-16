@@ -18,7 +18,7 @@ typedef struct ecs_vec_t {
 
 FLECS_API
 ecs_vec_t* ecs_vec_init(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
     int32_t elem_count);
@@ -28,7 +28,7 @@ ecs_vec_t* ecs_vec_init(
 
 FLECS_API
 void ecs_vec_fini(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size);
 
@@ -37,7 +37,7 @@ void ecs_vec_fini(
 
 FLECS_API
 ecs_vec_t* ecs_vec_reset(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size);
 
@@ -50,7 +50,7 @@ void ecs_vec_clear(
 
 FLECS_API
 void* ecs_vec_append(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size);
 
@@ -72,7 +72,7 @@ void ecs_vec_remove_last(
 
 FLECS_API
 ecs_vec_t ecs_vec_copy(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size);
 
@@ -81,7 +81,7 @@ ecs_vec_t ecs_vec_copy(
 
 FLECS_API
 void ecs_vec_reclaim(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size);
 
@@ -90,7 +90,7 @@ void ecs_vec_reclaim(
 
 FLECS_API
 void ecs_vec_set_size(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
     int32_t elem_count);
@@ -100,7 +100,7 @@ void ecs_vec_set_size(
 
 FLECS_API
 void ecs_vec_set_count(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
     int32_t elem_count);
@@ -110,7 +110,7 @@ void ecs_vec_set_count(
 
 FLECS_API
 void* ecs_vec_grow(
-    ecs_allocator_t *allocator,
+    struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
     int32_t elem_count);
