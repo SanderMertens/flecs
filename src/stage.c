@@ -168,7 +168,6 @@ bool flecs_defer_cmd(
 }
 
 bool flecs_defer_modified(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -186,7 +185,6 @@ bool flecs_defer_modified(
 }
 
 bool flecs_defer_clone(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t src,
@@ -206,7 +204,6 @@ bool flecs_defer_clone(
 }
 
 bool flecs_defer_delete(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
@@ -222,7 +219,6 @@ bool flecs_defer_delete(
 }
 
 bool flecs_defer_clear(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {
@@ -238,7 +234,6 @@ bool flecs_defer_clear(
 }
 
 bool flecs_defer_on_delete_action(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_id_t id,
     ecs_entity_t action)
@@ -254,7 +249,6 @@ bool flecs_defer_on_delete_action(
 }
 
 bool flecs_defer_enable(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id,

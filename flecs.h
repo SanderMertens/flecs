@@ -1550,6 +1550,14 @@ void* flecs_sparse_ensure(
 #define flecs_sparse_ensure_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
 
+void* flecs_sparse_try_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index);
+
+#define flecs_sparse_try_ensure_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_try_ensure(sparse, ECS_SIZEOF(T), index))
+
 /** Fast version of ensure, no liveliness checking */
 FLECS_DBG_API
 void* flecs_sparse_ensure_fast(

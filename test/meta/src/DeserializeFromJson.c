@@ -843,6 +843,10 @@ void DeserializeFromJson_struct_i32_array_3() {
 
     T value = {0};
 
+    ecs_ensure(world, 10);
+    ecs_ensure(world, 20);
+    ecs_ensure(world, 30);
+
     const char *ptr = ecs_parse_json(world, "{\"x\": [10, 20, 30]}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');

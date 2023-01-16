@@ -1486,14 +1486,15 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    if (world->flags & EcsWorldFini) {
+    if (world->flags & EcsWorldQuit) {
         /* If world is in the final teardown stages, cleanup policies are no
          * longer applied and it can't be guaranteed that a component is not
          * deleted before entities that use it. The remaining type info elements
          * will be deleted after the store is finalized. */
         return;
     }
-    ecs_type_info_t *ti = flecs_sparse_get_t(&world->type_info, 
+
+    ecs_type_info_t *ti = flecs_sparse_try_t(&world->type_info, 
         ecs_type_info_t, component);
     if (ti) {
         flecs_type_info_fini(ti);

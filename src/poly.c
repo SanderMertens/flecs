@@ -73,37 +73,6 @@ ecs_mixins_t ecs_filter_t_mixins = {
 };
 
 static
-void* get_mixin(
-    const ecs_poly_t *poly,
-    ecs_mixin_kind_t kind)
-{
-    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
-    
-    const ecs_header_t *hdr = poly;
-    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_mixins_t *mixins = hdr->mixins;
-    if (!mixins) {
-        /* Object has no mixins */
-        goto not_found;
-    }
-
-    ecs_size_t offset = mixins->elems[kind];
-    if (offset == 0) {
-        /* Object has mixins but not the requested one */
-        goto not_found;
-    }
-
-    /* Object has mixin, return its address */
-    return ECS_OFFSET(hdr, offset);
-not_found:
-    /* Mixin wasn't found for poly */
-    return NULL;
-}
-
-static
 void* assert_mixin(
     const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)

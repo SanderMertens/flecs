@@ -29,13 +29,11 @@ bool flecs_defer_begin(
     ecs_stage_t *stage);
 
 bool flecs_defer_modified(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t component);
 
 bool flecs_defer_clone(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t src,
@@ -49,23 +47,19 @@ bool flecs_defer_bulk_new(
     const ecs_entity_t **ids_out);
 
 bool flecs_defer_delete(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
 bool flecs_defer_clear(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
 bool flecs_defer_on_delete_action(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_id_t id,
     ecs_entity_t action);
 
 bool flecs_defer_enable(
-    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t component,

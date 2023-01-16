@@ -24,7 +24,7 @@ bool flecs_path_append(
     const char *name = NULL;
     ecs_size_t name_len = 0;
 
-    if (ecs_is_valid(world, child)) {
+    if (child && ecs_is_alive(world, child)) {
         cur = ecs_get_target(world, child, EcsChildOf, 0);
         if (cur) {
             ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
