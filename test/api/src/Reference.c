@@ -310,3 +310,25 @@ void Reference_get_ref_w_low_id_tag_after_add() {
 
     ecs_fini(world);
 }
+
+void Reference_get_ref_with_stage() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    Position *real_p = ecs_get_mut(world, e, Position);
+
+    ecs_world_t *stage = ecs_async_stage_new(world);
+
+    ecs_ref_t p_ref = ecs_ref_init(stage, e, Position);
+    const Position *p = ecs_ref_get(stage, &p_ref, Position);
+    test_assert(p == real_p);
+
+    ecs_ref_t v_ref = ecs_ref_init(stage, e, Velocity);
+    const Velocity *v = ecs_ref_get(stage, &v_ref, Velocity);
+    test_assert(v == NULL);
+
+    ecs_fini(world);
+}
