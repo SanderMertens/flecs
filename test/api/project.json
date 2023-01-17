@@ -546,8 +546,7 @@
                 "get_ref_monitored",
                 "get_ref_w_low_id_tag",
                 "get_ref_w_low_id_tag_after_add",
-                "get_nonexisting",
-                "get_ref_with_stage"
+                "get_nonexisting"
             ]
         }, {
             "id": "Delete",

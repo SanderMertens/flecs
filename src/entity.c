@@ -2795,12 +2795,7 @@ void* ecs_ref_get_id(
 
     ecs_table_record_t *tr = ref->tr;
     if (!tr || tr->hdr.table != table) {
-        /* the world provided may actually be a stage if we're running inside a
-         * deferred system.  So let's grab the current stage and use it's
-         * pointer to the world for the call to flecs_table_record_get() */
-        const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-
-        tr = ref->tr = flecs_table_record_get(stage->world, table, id);
+        tr = ref->tr = flecs_table_record_get(world, table, id);
         if (!tr) {
             return NULL;
         }
