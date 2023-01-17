@@ -938,7 +938,8 @@
                 "non_const_ref",
                 "pair_ref",
                 "pair_ref_w_entity",
-                "pair_ref_second"
+                "pair_ref_second",
+                "from_stage"
             ]
         }, {
             "id": "Module",
