@@ -1713,13 +1713,19 @@ bool flecs_filter_match_table(
     }
 
     for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_oper_kind_t oper = term->oper;
         if (i == skip_term) {
-            continue;
+            if (oper == EcsOr) {
+                is_or = true;
+                or_result = true;
+            }
+            if (oper != EcsAndFrom && oper != EcsOrFrom && oper != EcsNotFrom) {
+                continue;
+            }
         }
 
-        ecs_term_t *term = &terms[i];
         ecs_term_id_t *src = &term->src;
-        ecs_oper_kind_t oper = term->oper;
         const ecs_table_t *match_table = table;
         int32_t t_i = term->field_index;
 

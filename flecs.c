@@ -45195,13 +45195,19 @@ bool flecs_filter_match_table(
     }
 
     for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_oper_kind_t oper = term->oper;
         if (i == skip_term) {
-            continue;
+            if (oper == EcsOr) {
+                is_or = true;
+                or_result = true;
+            }
+            if (oper != EcsAndFrom && oper != EcsOrFrom && oper != EcsNotFrom) {
+                continue;
+            }
         }
 
-        ecs_term_t *term = &terms[i];
         ecs_term_id_t *src = &term->src;
-        ecs_oper_kind_t oper = term->oper;
         const ecs_table_t *match_table = table;
         int32_t t_i = term->field_index;
 
@@ -46153,6 +46159,7 @@ bool flecs_type_can_inherit_id(
     const ecs_id_record_t *idr,
     ecs_id_t id)
 {
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     if (idr->flags & EcsIdDontInherit) {
         return false;
     }
@@ -46289,7 +46296,7 @@ int32_t flecs_search_relation_w_idr(
 
     flags = flags ? flags : (EcsSelf|EcsUp);
 
-    if (!idr && !offset) {
+    if (!idr) {
         idr = flecs_query_id_record_get(world, id);
         if (!idr) {
             return -1;
@@ -46873,9 +46880,10 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
 
     user_it.columns[0] = 0;
     user_it.columns[pivot_term] = column;
+    user_it.sources[pivot_term] = it->sources[0];
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.sources, NULL, NULL, false, -1, 
+        user_it.columns, user_it.sources, NULL, NULL, false, pivot_term, 
         user_it.flags))
     {
         /* Monitor observers only invoke when the filter matches for the first
@@ -46897,10 +46905,14 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
                 user_it.columns, user_it.sources, NULL, NULL, false, -1, 
                 user_it.flags | EcsFilterPopulate);
         }
-
+        
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
 
+        if (it->ptrs) {
+            user_it.ptrs[pivot_term] = it->ptrs[0];
+            user_it.sizes[pivot_term] = it->sizes[0];
+        }
         user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->filter.entity;
         user_it.term_index = pivot_term;

@@ -1816,6 +1816,8 @@
                 "on_add_2_pairs_w_multi_observer",
                 "on_set_2_pairs_w_uni_observer",
                 "on_set_2_pairs_w_multi_observer",
+                "on_remove_target_from_base_at_offset",
+                "on_remove_target_component_from_base_at_offset",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

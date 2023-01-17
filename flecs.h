@@ -17439,10 +17439,13 @@ namespace flecs
  */
 template <typename T>
 struct ref {
-    ref(world_t *world, entity_t entity, flecs::id_t id = 0) 
-        : m_world( world )
-        , m_ref() 
+    ref(world_t *world, entity_t entity, flecs::id_t id = 0)
+        : m_ref()
     {
+        // the world we were called with may be a stage; convert it to a world
+        // here if that is the case
+        m_world = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
+            : nullptr;
         if (!id) {
             id = _::cpp_type<T>::id(world);
         }

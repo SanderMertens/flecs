@@ -68,6 +68,7 @@ bool flecs_type_can_inherit_id(
     const ecs_id_record_t *idr,
     ecs_id_t id)
 {
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     if (idr->flags & EcsIdDontInherit) {
         return false;
     }
@@ -204,7 +205,7 @@ int32_t flecs_search_relation_w_idr(
 
     flags = flags ? flags : (EcsSelf|EcsUp);
 
-    if (!idr && !offset) {
+    if (!idr) {
         idr = flecs_query_id_record_get(world, id);
         if (!idr) {
             return -1;

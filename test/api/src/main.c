@@ -1747,6 +1747,8 @@ void Observer_on_add_2_pairs_w_uni_observer(void);
 void Observer_on_add_2_pairs_w_multi_observer(void);
 void Observer_on_set_2_pairs_w_uni_observer(void);
 void Observer_on_set_2_pairs_w_multi_observer(void);
+void Observer_on_remove_target_from_base_at_offset(void);
+void Observer_on_remove_target_component_from_base_at_offset(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9109,6 +9111,14 @@ bake_test_case Observer_testcases[] = {
         Observer_on_set_2_pairs_w_multi_observer
     },
     {
+        "on_remove_target_from_base_at_offset",
+        Observer_on_remove_target_from_base_at_offset
+    },
+    {
+        "on_remove_target_component_from_base_at_offset",
+        Observer_on_remove_target_component_from_base_at_offset
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11607,7 +11617,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        102,
+        104,
         Observer_testcases
     },
     {

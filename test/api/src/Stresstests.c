@@ -92,7 +92,7 @@ static
 void create_delete_entity_random_components_staged(
     int32_t threads)
 {
-    test_quarantine("---");
+    test_quarantine("16 Jan 2023");
     return;
 
     ecs_world_t *world = ecs_init();
@@ -139,7 +139,7 @@ static
 void set_entity_random_components(
     int32_t threads)
 {
-    test_quarantine("---");
+    test_quarantine("16 Jan 2023");
     return;
 
     ecs_world_t *world = ecs_init();

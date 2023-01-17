@@ -3728,6 +3728,98 @@ void Observer_on_set_2_pairs_w_multi_observer() {
     ecs_fini(world);
 }
 
+void Observer_on_remove_target_from_base_at_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t R = ecs_new_id(world);
+    ecs_entity_t T1 = ecs_new_id(world);
+    ecs_entity_t T2 = ecs_new_id(world);
+    ecs_entity_t C = ecs_new_id(world);
+
+    Probe ctx = { 0 };
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_pair(R, EcsWildcard), .src.flags = EcsUp },
+            { .id = C },
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_pair(world, base, R, T1);
+    ecs_add_pair(world, base, R, T2);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add_id(world, e, C);
+
+    test_int(ctx.invoked, 0);
+    ecs_delete(world, T2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.event_id, ecs_pair(R, T2));
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+static void Observer_base_component(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    Position *p = ecs_field(it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+}
+
+void Observer_on_remove_target_component_from_base_at_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t T1 = ecs_new_id(world);
+    ecs_entity_t T2 = ecs_new_id(world);
+    ecs_entity_t C = ecs_new_id(world);
+
+    Probe ctx = { 0 };
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_pair(ecs_id(Position), EcsWildcard), .src.flags = EcsUp },
+            { .id = C },
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer_base_component,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_set_pair(world, base, Position, T1, {10, 20});
+    ecs_set_pair(world, base, Position, T2, {30, 40});
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add_id(world, e, C);
+
+    test_int(ctx.invoked, 0);
+    ecs_delete(world, T2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.event_id, ecs_pair(ecs_id(Position), T2));
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     
