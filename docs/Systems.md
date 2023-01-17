@@ -391,19 +391,6 @@ Phases can also be disabled when using the builtin pipeline, which excludes all 
 
 When the parent of a system is disabled, it will also be excluded from the builin pipeline. This makes it possible to disable all systems in a module with a single operation.
 
-```c
-ECS_SYSTEM(world, Move, 0, Position, Velocity);
-
-ecs_add(world, Move, Foo);
-```
-```cpp
-auto s = world.system()
-  .kind(0) // prevents adding default `EcsOnUpdate` phase
-  .each(...);
-
-s.add(Foo);
-```
-
 ## Staging
 When calling `progress()` the world enters a readonly state in which all ECS operations like `add`, `remove`, `set` etc. are enqueued as commands (called "staging"). This makes sure that it is safe for systems to iterate component arrays while enqueueing operations. Without staging, component storage arrays could be reallocated to a different memory location, which could cause system code to crash. Additionally, enqueueing operations makes it safe for multiple threads to iterate the same world without taking locks as thread gets its own command queue.
 

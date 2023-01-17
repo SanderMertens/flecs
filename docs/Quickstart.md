@@ -1,12 +1,110 @@
-# Quickstart
+# Flecs Quickstart
 This document provides a quick overview of the different features and concepts in Flecs with short examples. This is a good resource if you're just getting started or just want to get a better idea of what kind of features are available in Flecs!
 
-## Overview
-This shows an overview of all the different concepts in Flecs and how they wire together. The sections in the quickstart go over them in more detail and with code examples.
+## Building Flecs
+To use Flecs, copy the [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) and [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) files from the repository root to your project's source folder. When building, make sure your build system is setup to do the following:
+
+- If it is a C++ project, make sure to compile [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) as C code, for example by using `gcc`/`clang` instead of `g++`/`clang++`.
+
+- If you are building on Windows and you're not using the Microsoft Visual Studio compiler, make sure to add `-lWs2_32` to the linker command. The socket API is used for connecting to Flecs explorer.
+
+- When compiling Flecs with `gcc`/`clang`, add `-std=gnu99` to the compiler command. This ensures that addons that rely on time & socket functions are compiled correctly.
+
+- C++ files that use Flecs must be compiled with `-std=c++0x` (C++11) or higher.
+
+### Dynamic linking
+To build Flecs as a dynamic library, remove this line from the top of the [flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.h) file:
+
+```c
+#define flecs_STATIC
+```
+
+When compiling [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c), make sure to define `flecs_EXPORTS`, for example by adding `-Dflecs_EXPORTS` to the compiler command.
+
+Alternatively Flecs can also be built as a dynamic library with the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake) build files provided in the repository. These use the files from `src` to build as opposed to the amalgamated files, which is better suited for development.
+
+### Running tests
+To run the Flecs test suite, first make sure you have [bake](https://github.com/SanderMertens/bake) installed (see the bake repository for instructions). 
+
+Run the following commands to run all tests (use `-j` to specify the number of threads):
+
+```bash
+# Core test suite
+bake run test/api -- -j 4
+
+# Addon tests
+bake run test/addons -- -j 4
+
+# Reflection tests
+bake run test/meta -- -j 4
+
+# C++ tests
+bake run test/cpp_api -- -j 4
+```
+
+To run tests with asan enabled, add `--cfg sanitize` to the command:
+
+```bash
+bake run --cfg sanitize test/api -- -j 4
+```
+
+### Emscripten
+When building for emscripten, add the following command line options to the `emcc` link command:
+```bash 
+-s ALLOW_MEMORY_GROWTH=1 
+-s EXPORTED_RUNTIME_METHODS=cwrap 
+-s MODULARIZE=true 
+-s EXPORT_NAME="my_app"
+```
+
+### Addons
+Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
+
+```c
+#define FLECS_CUSTOM_BUILD  // Don't build all addons
+#define FLECS_SYSTEM        // Build FLECS_SYSTEM
+```
+
+Additionally, you can also specify addons to exclude from a build by adding `NO` to the define:
+
+```c
+#define FLECS_NO_LOG
+```
+
+The following addons can be configured:
+
+Addon         | Description                                      | Define              |
+--------------|--------------------------------------------------|---------------------|
+[Cpp](https://flecs.docsforge.com/master/api-cpp/)           | C++11 API                                        | FLECS_CPP           |
+[Module](https://flecs.docsforge.com/master/api-module/)     | Organize game logic into reusable modules        | FLECS_MODULE        |
+[System](https://flecs.docsforge.com/master/api-systems/)    | Create & run systems                             | FLECS_SYSTEM        |
+[Pipeline](https://flecs.docsforge.com/master/api-pipeline/) | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
+[Timer](https://flecs.docsforge.com/master/api-timers/)      | Run systems at time intervals or at a rate       | FLECS_TIMER         |
+[Meta](https://flecs.docsforge.com/master/api-meta/)         | Flecs reflection system                          | FLECS_META          |
+[Units](https://flecs.docsforge.com/master/api-units/)       | Builtin unit types                               | FLECS_UNITS         |
+[Meta_C](https://flecs.docsforge.com/master/api-meta-c/)     | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
+[Expr](https://flecs.docsforge.com/master/api-expr/)         | String format optimized for ECS data             | FLECS_EXPR          |
+[JSON](https://flecs.docsforge.com/master/api-json/)         | JSON format                                      | FLECS_JSON          |
+[Doc](https://flecs.docsforge.com/master/api-doc/)           | Add documentation to components, systems & more  | FLECS_DOC           |
+[Coredoc](https://flecs.docsforge.com/master/api-coredoc/)   | Documentation for builtin components & modules   | FLECS_COREDOC       |
+[Http](https://flecs.docsforge.com/master/api-http/)         | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
+[Rest](https://flecs.docsforge.com/master/api-rest/)         | REST API for showing entities in the browser     | FLECS_REST          |
+[Parser](https://flecs.docsforge.com/master/api-parser/)     | Create entities & queries from strings           | FLECS_PARSER        |
+[Plecs](https://flecs.docsforge.com/master/api-plecs/)       | Small utility language for asset/scene loading   | FLECS_PLECS         |
+[Rules](https://flecs.docsforge.com/master/api-rules/)       | Powerful prolog-like query language              | FLECS_RULES         |
+[Snapshot](https://flecs.docsforge.com/master/api-snapshot/) | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
+[Stats](https://flecs.docsforge.com/master/api-stats/)       | See what's happening in a world with statistics  | FLECS_STATS         |
+[Monitor](https://flecs.docsforge.com/master/api-monitor/)   | Periodically collect & store statistics          | FLECS_MONITOR       |
+[Log](https://flecs.docsforge.com/master/api-log/)           | Extended tracing and error logging               | FLECS_LOG           |
+[App](https://flecs.docsforge.com/master/api-app/)           | Flecs application framework                      | FLECS_APP           |
+[OS API Impl](https://flecs.docsforge.com/master/api-os-api-impl/)   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
+
+## Concepts
+This section contains an overview of all the different concepts in Flecs and how they wire together. The sections in the quickstart go over them in more detail and with code examples.
 
 ![Flecs Overview](img/flecs-quickstart-overview.png)
 
-## World
+### World
 The world is the container for all ECS data. It stores the entities and their components, does queries and runs systems. Typically there is only a single world, but there is no limit on the number of worlds an application can create.
 
 ```c
@@ -22,7 +120,7 @@ flecs::world world;
 // Do the ECS stuff
 ```
 
-## Entity
+### Entity
 An entity is a unique thing in the world, and is represented by a 64 bit id. Entities can be created and deleted. If an entity is deleted it is no longer considered "alive". A world can contain up to 4 billion(!) alive entities. Entity identifiers contain a few bits that make it possible to check whether an entity is alive or not.
 
 ```c
@@ -62,12 +160,12 @@ ecs_entity_t e = ecs_lookup(world, "Bob");
 auto e = world.lookup("Bob");
 ```
 
-## Id
+### Id
 An id is a 64 bit number that can encode anything that can be added to an entity. In flecs this can be either a component, tag or a pair. A component is data that can be added to an entity. A tag is an "empty" component. A pair is a combination of two component/tag ids which is used to encode entity relationships. All entity/component/tag identifiers are valid ids, but not all ids are valid entity identifier.
 
 The following sections describe components, tags and pairs in more detail.
 
-## Component
+### Component
 A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. In C++ this happens automatically.
 
 ```c
@@ -149,7 +247,7 @@ std::cout << "Component size: " << c->size << std::endl;
 
 Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relationship cleanup properties](Relationships.md#cleanup-properties).
 
-## Tag
+### Tag
 A tag is a component that does not have any data. In Flecs tags can be either empty types (in C++) or regular entities (C & C++) that do not have the `EcsComponent` component (or have an `EcsComponent` component with size 0). Tags can be added & removed using the same APIs as adding & removing components, but because tags have no data, they cannot be assigned a value. Because tags (like components) are regular entities, they can be created & deleted at runtime.
 
 ```c
@@ -192,7 +290,7 @@ Note that both options in the C++ example achieve the same effect. The only diff
 
 When a tag is deleted, the same rules apply as for components (see [Relationship cleanup properties](Relationships.md#cleanup-properties)).
 
-## Pair
+### Pair
 A pair is a combination of two entity ids. Pairs can be used to store entity relationships, where the first id represents the relationship kind and the second id represents the relationship target (called "object"). This is best explained by an example:
 
 ```c
@@ -282,7 +380,7 @@ auto o = Alice.target<Likes>(); // Returns Bob
 
 Entity relationships enable lots of interesting patterns and possibilities. Make sure to check out the [Relationships manual](Relationships.md).
 
-## Hierarchies
+### Hierarchies
 Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `flecs::ChildOf`, in C++) relationship. A hierarchy can be created with the regular relationship API, or with the `child_of` shortcut in C++:
 
 ```c
@@ -363,7 +461,7 @@ q.each([](Position& p, Position& p_parent) {
 });
 ```
 
-## Instancing
+### Instancing
 Flecs has builtin support for instancing (sharing a single component with multiple entities) through the builtin `EcsIsA` relationship (`flecs::IsA` in C++). An entity with an `IsA` relationship to a base entity "inherits" all entities from that base:
 
 ```c
@@ -395,7 +493,7 @@ e.add<Triangle>();
 
 Instancing can be used to build modular prefab hierarchies, as the foundation of a batched renderer with instancing support, or just to reduce memory footprint by sharing common data across entities.
 
-## Type
+### Type
 The type (often referred to as "archetype") is the list of ids an entity has. Types can be used for introspection which is useful when debugging, or when for example building an entity editor. The most common thing to do with a type is to convert it to text and print it:
 
 ```c
@@ -436,7 +534,7 @@ e.each([&](flecs:id id) {
 }
 ```
 
-## Singleton
+### Singleton
 A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:
 
 ```c
@@ -469,31 +567,8 @@ pos_e.set<Position>({10, 20});
 const Position *p = pos_e.get<Position>();
 ```
 
-## Term
-A term is the simplest kind of query in Flecs, and enables finding all entities for a single specific component, tag or pair. The following examples show how to find & iterate over all entities that have the `Position` component:
-
-```c
-// Create an iterator that finds all entities that have Position
-ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_id(Position) });
-while (ecs_term_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-
-    // Iterate the entities & their Position components
-    for (int i = 0; i < it.count; i++) {
-        printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]),
-            p[i].x, p[i].y);
-    }
-}
-```
-```cpp
-// Iterate the entities & their Position components
-world.each([](flecs::entity e, Position& p) {
-    std::cout << e.name() << ": {" << p.x << ", " << p.y << "}" << std::endl;
-});
-```
-
-## Filter
-A filter is a list of terms that are matched against entities. Filters are cheap to create and match entities as iteration takes place. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, a typical use case for this being runtime tags. Another advantage of filters is that while they can be reused, their cheap creation time doesn't require it. The following example shows a simple filter:
+### Filter
+Filters are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
 
 ```c
 // Initialize a filter with 2 terms on the stack
@@ -547,8 +622,6 @@ f.iter([](flecs::iter& it, Position *p) {
 });
 ```
 
-The time complexity of a filter is roughly `O(n)`, where `n` is the number of archetypes matched by the term with the smallest number of matching archetypes. Each subsequent term adds a constant-time check per archetype, which makes the average time complexity `O(n)`.
-
 Filters can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
 
 The following example shows a filter that matches all entities with a parent that do not have `Position`:
@@ -572,10 +645,10 @@ auto f = world.filter_builder<>()
 // Iteration code is the same
 ```
 
-## Query
-A query is like a filter in that it is a list of terms that is matched with entities. The difference with a filter is that queries cache their results, which makes them more expensive to create, but cheaper to iterate. Because a query caches a list of archetypes rather than a list of entities, the cache stabilizes fast as new archetypes are only created for new component combinations. This makes queries an attractive option for scenarios where an application knows in advance which things to query for (such as with systems), as over the lifespan of an application approximately no time is spent on finding the right entities.
+### Query
+Queries are cached versions of filters. They are slower to create than filters, but much faster to iterate since this just means iterating their cache.
 
-The API for queries looks very similar to filters:
+The API for queries is similar to filters:
 
 ```c
 // Create a query with 2 terms
@@ -600,15 +673,17 @@ auto q = world.query_builder<Position>()
 // Iteration is the same as filters
 ```
 
-Queries support additional features, such as breadth-first sorting based on relationship (the `cascade` modifier) and sorting by component values. See the [query manual](Queries.md) for more details.
+When using queries, make sure to reuse a query object instead of creating a new one each time you need it. Query creation is expensive, and many of the performance benefits of queries are lost when they are created in loops.
 
-## System
+See the [query manual](Queries.md) for more details.
+
+### System
 A system is a query combined with a callback. Systems can be either ran manually or ran as part of an ECS-managed main loop (see [Pipeline](#pipeline)). The system API looks similar to queries:
 
 ```c
 // Option 1, use the ECS_SYSTEM convenience macro
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
-ecs_run(world, ecs_id(Move), delta_time, NULL); // Run system
+ecs_run(world, Move, delta_time, NULL); // Run system
 
 // Option 2, use the ecs_system_init function
 ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t){
@@ -661,7 +736,7 @@ move_sys.add(flecs::OnUpdate);
 move_sys.destruct();
 ```
 
-## Pipeline
+### Pipeline
 A pipeline is a list of tags that when matched, produces a list of systems to run. These tags are also referred to as a system "phase". Flecs comes with a default pipeline that has the following phases:
 
 ```c
@@ -685,15 +760,6 @@ flecs::PreStore
 flecs::OnStore
 ```
 
-In addition, Flecs has a phase for systems that are only ran during startup:
-
-```c
-EcsOnStart
-```
-```cpp
-flecs::OnStart
-```
-
 When a pipeline is executed, systems are ran in the order of the phases. This makes pipelines and phases the primary mechanism for defining ordering between systems. The following code shows how to assign systems to a pipeline, and how to run the pipeline with the `progress()` function:
 
 ```c
@@ -711,34 +777,19 @@ world.system<Transform, Mesh>("Render").kind(flecs::OnStore).each( ... );
 world.progress();
 ```
 
-Inside a phase, systems are guaranteed to be ran in their declaration order.
-
-### Custom Pipeline
-Under the hood a pipeline is a query that finds all the systems to run in a pipeline. To customize how and which systems are matched by a pipeline, applications can create custom pipelines:
-
+Because phases are just tags that are added to systems, applications can use the regular API to add/remove systems to a phase:
 ```c
-// Create a pipeline that matches systems with the "Foo" tag
-ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-    .entity = { .name = "CustomPipeline" },
-    .query.filter.terms = {
-        { .id = ecs_id(EcsSystem) }, // mandatory, pipeline must match systems
-        { .id = Foo }
-    }
-});
-
-ecs_set_pipeline(world, pipeline);
+ecs_remove_id(world, Move, EcsOnUpdate);
+ecs_add_id(world, Move, EcsPostUpdate);
 ```
 ```cpp
-// Create a pipeline that matches systems with the "Foo" tag
-auto pipeline = world.pipeline()
-    .term(flecs::System)
-    .term(Foo)
-    .build();
-
-world.set_pipeline(pipeline);
+move_sys.add(flecs::OnUpdate);
+move_sys.remove(flecs::PostUpdate);
 ```
 
-## Observer
+Inside a phase, systems are guaranteed to be ran in their declaration order.
+
+### Observer
 Observers are callbacks that are invoked when one or more events matches the query of an observer. Events can be either user defined or builtin. Examples of builtin events are `OnAdd`, `OnRemove` and `OnSet`.
 
 When an observer has a query with more than one component, the observer will not be invoked until the entity for which the event is emitted satisfies the entire query.
@@ -768,7 +819,7 @@ e.set<Velocity>({1, 2});   // Invokes the observer
 e.set<Position>({20, 30}); // Invokes the observer
 ```
 
-## Module
+### Module
 A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relationship. The following examples show how to define a module in C and C++:
 
 ```c
