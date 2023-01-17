@@ -8514,7 +8514,7 @@ ecs_entity_t ecs_get_target(
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_table_t *table;
     if (!r || !(table = r->table)) {
-        return 0;
+        goto not_found;
     }
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
@@ -8531,15 +8531,35 @@ ecs_entity_t ecs_get_target(
                 
             }
         }
-        return 0;
+        goto look_in_base;
     }
 
     if (index >= tr->count) {
-        return 0;
+        index -= tr->count;
+        goto look_in_base;
     }
 
-    ecs_id_t *ids = table->type.array;
-    return ecs_pair_second(world, ids[tr->column + index]);
+    return ecs_pair_second(world, table->type.array[tr->column + index]);
+look_in_base:
+    if (table->flags & EcsTableHasIsA) {
+        const ecs_table_record_t *isa_tr = flecs_id_record_get_table(
+            world->idr_isa_wildcard, table);
+        ecs_assert(isa_tr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_id_t *ids = table->type.array;
+        int32_t i = isa_tr->column, end = (i + isa_tr->count);
+        for (; i < end; i ++) {
+            ecs_id_t isa_pair = ids[i];
+            ecs_entity_t base = ecs_pair_second(world, isa_pair);
+            ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_entity_t t = ecs_get_target(world, base, rel, index);
+            if (t) {
+                return t;
+            }
+        }
+    }
+
+not_found:
 error:
     return 0;
 }

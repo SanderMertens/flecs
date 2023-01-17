@@ -1495,16 +1495,19 @@ void Pairs_get_tag_pair_w_obj_comp(void);
 void Pairs_get_tag_pair_w_rel_obj_comp(void);
 void Pairs_tag_pair_w_childof_w_comp(void);
 void Pairs_tag_pair_w_isa_w_comp(void);
-void Pairs_get_1_object(void);
-void Pairs_get_1_object_not_found(void);
-void Pairs_get_n_objects(void);
-void Pairs_get_object_for_id_from_self(void);
-void Pairs_get_object_for_id_from_base(void);
-void Pairs_get_object_for_id_from_nested_base(void);
-void Pairs_get_object_for_id_not_found(void);
-void Pairs_get_object_for_wildcard_from_self(void);
-void Pairs_get_object_for_wildcard_from_base(void);
-void Pairs_get_object_for_wildcard_from_nested_base(void);
+void Pairs_get_1_target(void);
+void Pairs_get_1_target_not_found(void);
+void Pairs_get_n_targets(void);
+void Pairs_get_target_from_base(void);
+void Pairs_get_target_from_2nd_base(void);
+void Pairs_get_target_from_base_w_pair_on_instance(void);
+void Pairs_get_target_for_id_from_self(void);
+void Pairs_get_target_for_id_from_base(void);
+void Pairs_get_target_for_id_from_nested_base(void);
+void Pairs_get_target_for_id_not_found(void);
+void Pairs_get_target_for_wildcard_from_self(void);
+void Pairs_get_target_for_wildcard_from_base(void);
+void Pairs_get_target_for_wildcard_from_nested_base(void);
 void Pairs_ignore_childof_from_base(void);
 void Pairs_add_exclusive_relation_twice(void);
 void Pairs_add_same_exclusive_relation_twice(void);
@@ -8113,44 +8116,56 @@ bake_test_case Pairs_testcases[] = {
         Pairs_tag_pair_w_isa_w_comp
     },
     {
-        "get_1_object",
-        Pairs_get_1_object
+        "get_1_target",
+        Pairs_get_1_target
     },
     {
-        "get_1_object_not_found",
-        Pairs_get_1_object_not_found
+        "get_1_target_not_found",
+        Pairs_get_1_target_not_found
     },
     {
-        "get_n_objects",
-        Pairs_get_n_objects
+        "get_n_targets",
+        Pairs_get_n_targets
     },
     {
-        "get_object_for_id_from_self",
-        Pairs_get_object_for_id_from_self
+        "get_target_from_base",
+        Pairs_get_target_from_base
     },
     {
-        "get_object_for_id_from_base",
-        Pairs_get_object_for_id_from_base
+        "get_target_from_2nd_base",
+        Pairs_get_target_from_2nd_base
     },
     {
-        "get_object_for_id_from_nested_base",
-        Pairs_get_object_for_id_from_nested_base
+        "get_target_from_base_w_pair_on_instance",
+        Pairs_get_target_from_base_w_pair_on_instance
     },
     {
-        "get_object_for_id_not_found",
-        Pairs_get_object_for_id_not_found
+        "get_target_for_id_from_self",
+        Pairs_get_target_for_id_from_self
     },
     {
-        "get_object_for_wildcard_from_self",
-        Pairs_get_object_for_wildcard_from_self
+        "get_target_for_id_from_base",
+        Pairs_get_target_for_id_from_base
     },
     {
-        "get_object_for_wildcard_from_base",
-        Pairs_get_object_for_wildcard_from_base
+        "get_target_for_id_from_nested_base",
+        Pairs_get_target_for_id_from_nested_base
     },
     {
-        "get_object_for_wildcard_from_nested_base",
-        Pairs_get_object_for_wildcard_from_nested_base
+        "get_target_for_id_not_found",
+        Pairs_get_target_for_id_not_found
+    },
+    {
+        "get_target_for_wildcard_from_self",
+        Pairs_get_target_for_wildcard_from_self
+    },
+    {
+        "get_target_for_wildcard_from_base",
+        Pairs_get_target_for_wildcard_from_base
+    },
+    {
+        "get_target_for_wildcard_from_nested_base",
+        Pairs_get_target_for_wildcard_from_nested_base
     },
     {
         "ignore_childof_from_base",
@@ -11603,7 +11618,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        100,
+        103,
         Pairs_testcases
     },
     {
