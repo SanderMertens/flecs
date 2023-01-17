@@ -115,3 +115,12 @@ void Refs_pair_ref_second() {
 
     test_int(e.get_second<Position>(tag)->x, 11);
 }
+
+void Refs_from_stage() {
+    flecs::world world;
+    flecs::world stage = world.get_stage(0); // get default stage
+    flecs::entity e = stage.entity().set<Position>({10, 20});
+    auto ref = e.get_ref<Position>();
+    test_int(ref->x, 10);
+    test_int(ref->y, 20);
+}
