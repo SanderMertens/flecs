@@ -2432,7 +2432,6 @@ void MutableTest(ecs_iter_t *it) {
         Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
-        test_assert(v_mut != v);
 
         // Even though component is added to stage, is_added should only be true
         // if the component is added for the first time, which requires the app
@@ -2441,6 +2440,7 @@ void MutableTest(ecs_iter_t *it) {
             test_bool(is_added, true);
         } else {
             test_bool(is_added, false);
+            test_assert(v_mut == v);
         }
 
         if (is_added) {
@@ -2450,12 +2450,6 @@ void MutableTest(ecs_iter_t *it) {
 
         v_mut->x ++;
         v_mut->y ++;
-
-        // Make sure we didn't update the main stage
-        if (v) {
-            test_assert(v->x == v_mut->x - 1);
-            test_assert(v->y == v_mut->y - 1);
-        }
     }
 }
 
@@ -2534,6 +2528,8 @@ void MutableTest_w_Add(ecs_iter_t *it) {
         bool is_added = !ecs_has(world, it->entities[i], Velocity);
         Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
 
+        test_assert(v_mut != NULL);
+
         // Even though component is added to stage, is_added should only be true
         // if the component is added for the first time, which requires the app
         // to init the component value.
@@ -2541,6 +2537,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
             test_bool(is_added, true);
         } else {
             test_bool(is_added, false);
+            test_assert(v_mut == v);
         }
 
         if (is_added) {
@@ -2550,12 +2547,6 @@ void MutableTest_w_Add(ecs_iter_t *it) {
 
         v_mut->x ++;
         v_mut->y ++;
-
-        // Make sure we didn't update the main stage
-        if (v) {
-            test_assert(v->x == v_mut->x - 1);
-            test_assert(v->y == v_mut->y - 1);
-        }
     }
 }
 
