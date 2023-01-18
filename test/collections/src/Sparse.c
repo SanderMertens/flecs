@@ -421,3 +421,50 @@ void Sparse_try_low_after_ensure_high() {
 
     flecs_sparse_free(sp);
 }
+
+void Sparse_is_alive_low_after_ensure_high() {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000);
+    test_assert(ptr_1 != NULL);
+
+    bool v = flecs_sparse_is_alive(sp, 100);
+    test_bool(v, false);
+
+    flecs_sparse_free(sp);
+}
+
+void Sparse_get_current_low_after_ensure_high() {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000);
+    test_assert(ptr_1 != NULL);
+
+    uint64_t v = flecs_sparse_get_current(sp, 100);
+    test_uint(v, 0);
+
+    flecs_sparse_free(sp);
+}
+
+void Sparse_remove_low_after_ensure_high() {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000);
+    test_assert(ptr_1 != NULL);
+
+    flecs_sparse_remove_t(sp, int, 100);
+
+    flecs_sparse_free(sp);
+}
+
+void Sparse_exists_low_after_ensure_high() {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000);
+    test_assert(ptr_1 != NULL);
+
+    bool v = flecs_sparse_exists(sp, 100);
+    test_bool(v, false);
+
+    flecs_sparse_free(sp);
+}

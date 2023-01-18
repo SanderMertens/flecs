@@ -104,7 +104,11 @@
                 "create_delete_2",
                 "count_of_null",
                 "size_of_null",
-                "try_low_after_ensure_high"
+                "try_low_after_ensure_high",
+                "is_alive_low_after_ensure_high",
+                "get_current_low_after_ensure_high",
+                "remove_low_after_ensure_high",
+                "exists_low_after_ensure_high"
             ]
         }, {
             "id": "Strbuf",

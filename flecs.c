@@ -11621,7 +11621,7 @@ void flecs_sparse_remove(
     (void)size;
 
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return;
     }
 
@@ -11690,7 +11690,7 @@ bool flecs_sparse_exists(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return false;
     }
     
@@ -11707,7 +11707,7 @@ bool flecs_sparse_is_valid(
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return true; /* Doesn't exist yet, so is valid */
     }
     
@@ -11743,7 +11743,7 @@ bool flecs_sparse_is_alive(
     uint64_t index)
 {
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return false;
     }
 
@@ -11770,7 +11770,7 @@ uint64_t flecs_sparse_get_current(
     uint64_t index)
 {
     ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
-    if (!page) {
+    if (!page || !page->sparse) {
         return 0;
     }
 
