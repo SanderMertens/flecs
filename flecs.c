@@ -31096,6 +31096,11 @@ error:
 void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats)
 {
+    ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *elem = ecs_map_ptr(&it);
+        ecs_os_free(elem);
+    }
     ecs_map_fini(&stats->system_stats);
     ecs_vector_free(stats->systems);
 }
