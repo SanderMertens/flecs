@@ -414,6 +414,8 @@ void Pipeline_inactive_last_system_merge_count(void);
 void Pipeline_inactive_middle_system_merge_count(void);
 void Pipeline_last_no_readonly_system_merge_count(void);
 void Pipeline_2_pipelines_1_system(void);
+void Pipeline_builtin_pipeline_w_self_system_term(void);
+void Pipeline_custom_pipeline_w_self_system_term(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2581,6 +2583,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "2_pipelines_1_system",
         Pipeline_2_pipelines_1_system
+    },
+    {
+        "builtin_pipeline_w_self_system_term",
+        Pipeline_builtin_pipeline_w_self_system_term
+    },
+    {
+        "custom_pipeline_w_self_system_term",
+        Pipeline_custom_pipeline_w_self_system_term
     }
 };
 
@@ -4725,7 +4735,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        67,
+        69,
         Pipeline_testcases
     },
     {

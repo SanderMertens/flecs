@@ -2862,3 +2862,46 @@ void Pipeline_2_pipelines_1_system() {
 
     ecs_fini(world);
 }
+
+void Pipeline_builtin_pipeline_w_self_system_term() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t pipeline = ecs_get_pipeline(world);
+    test_assert(pipeline != 0);
+
+    const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
+    test_assert(p != NULL);
+    test_assert(ecs_poly_is(p->poly, ecs_query_t));
+
+    ecs_query_t *q = p->poly;
+    const ecs_filter_t *f = ecs_query_get_filter(q);
+    test_assert(f != NULL);
+    test_assert((f->terms[0].src.flags & EcsTraverseFlags) == EcsSelf);
+
+    ecs_fini(world);
+}
+
+void Pipeline_custom_pipeline_w_self_system_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t pipeline = ecs_pipeline(world, {
+        .query.filter.terms = {
+            { EcsSystem },
+            { Tag }
+        }
+    });
+    test_assert(pipeline != 0);
+
+    const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
+    test_assert(p != NULL);
+    test_assert(ecs_poly_is(p->poly, ecs_query_t));
+
+    ecs_query_t *q = p->poly;
+    const ecs_filter_t *f = ecs_query_get_filter(q);
+    test_assert(f != NULL);
+    test_assert((f->terms[0].src.flags & EcsTraverseFlags) == EcsSelf);
+
+    ecs_fini(world);
+}

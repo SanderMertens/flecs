@@ -424,7 +424,9 @@
                 "inactive_last_system_merge_count",
                 "inactive_middle_system_merge_count",
                 "last_no_readonly_system_merge_count",
-                "2_pipelines_1_system"
+                "2_pipelines_1_system",
+                "builtin_pipeline_w_self_system_term",
+                "custom_pipeline_w_self_system_term"
             ]
         }, {
             "id": "SystemMisc",

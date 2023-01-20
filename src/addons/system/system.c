@@ -347,6 +347,11 @@ void FlecsSystemImport(
 
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
+
+    /* Make sure to never inherit system component. This makes sure that any
+     * term created for the System component will default to 'self' traversal,
+     * which improves efficiency of the query. */
+    ecs_add_id(world, EcsSystem, EcsDontInherit);
 }
 
 #endif
