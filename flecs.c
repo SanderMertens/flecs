@@ -33112,12 +33112,6 @@ void FlecsSystemImport(
 
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
-
-    /* Put following tags in flecs.core so they can be looked up
-     * without using the flecs.systems prefix. */
-    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    flecs_bootstrap_tag(world, EcsMonitor);
-    ecs_set_scope(world, old_scope);
 }
 
 #endif
@@ -54304,6 +54298,7 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
+    flecs_bootstrap_entity(world, EcsMonitor, "EcsMonitor", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
 
