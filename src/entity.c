@@ -2971,7 +2971,14 @@ void flecs_copy_ptr_w_id(
             world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
     }
 
-    if (!deferred) {
+    if (deferred) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpAdd;
+            cmd->id = id;
+            cmd->entity = entity;
+        }
+    } else {
         flecs_defer_end(world, stage);
     }
 error:

@@ -2849,3 +2849,137 @@ void DeferredActions_defer_2_sets_w_multi_observer() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_exists_remove_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    ecs_set(world, e, Position, {5, 6});
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_absent_remove_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    ecs_set(world, e, Position, {5, 6});
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_absent_set_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {5, 6});
+    ecs_remove(world, e, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_exists_set_modify() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_defer_begin(world);
+    {
+        ecs_set(world, e, Position, {5, 6});
+        Position *p = ecs_get_mut(world, e, Position);
+        p->x = 11;
+    }
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_absent_set_invoke_on_set() {
+    ecs_world_t *world = ecs_mini();
+    on_set_invoked = 0;
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    /* create the component */
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {1, 2});
+
+    /* OnSet should not be run until defer has completed */
+    test_int(on_set_invoked, 0);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(on_set_invoked, 1);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_exists_set_invoke_on_set() {
+    ecs_world_t *world = ecs_mini();
+    on_set_invoked = 0;
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    /* create the component */
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {5, 6});
+
+    /* handler should run immediately */
+    test_int(on_set_invoked, 1);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(on_set_invoked, 1);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}

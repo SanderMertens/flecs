@@ -529,7 +529,8 @@
                 "get_1_from_2_add_in_progress",
                 "get_both_from_2_add_in_progress",
                 "get_both_from_2_add_remove_in_progress",
-                "get_childof_component"
+                "get_childof_component",
+                "get_mut_equal_get"
             ]
         }, {
             "id": "Reference",
@@ -2277,7 +2278,13 @@
                 "clear_after_add_to_nonempty",
                 "remove_after_add_to_nonempty",
                 "register_while_deferred_with_n_stages",
-                "defer_2_sets_w_multi_observer"
+                "defer_2_sets_w_multi_observer",
+                "exists_remove_set",
+                "absent_remove_set",
+                "absent_set_remove",
+                "exists_set_modify",
+                "absent_set_invoke_on_set",
+                "exists_set_invoke_on_set"
             ]
         }, {
             "id": "SingleThreadStaging",

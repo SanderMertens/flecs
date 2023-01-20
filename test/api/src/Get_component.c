@@ -209,3 +209,18 @@ void Get_component_get_childof_component() {
     test_expect_abort();
     ecs_get(world, ecs_pair(EcsChildOf, ecs_id(Position)), EcsComponent);
 }
+
+void Get_component_get_mut_equal_get() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+    test_assert(e != 0);
+
+    test_assert(ecs_get_mut(world, e, Position) == ecs_get(world, e,
+                Position));
+
+    ecs_fini(world);
+}

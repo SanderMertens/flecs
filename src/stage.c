@@ -27,7 +27,6 @@ ecs_cmd_t* flecs_cmd_alloc(
     return cmd;
 }
 
-static
 ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage, 
     ecs_entity_t e, 
