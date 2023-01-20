@@ -2960,20 +2960,20 @@ void DeferredActions_absent_set_invoke_on_set() {
 
 void DeferredActions_exists_set_invoke_on_set() {
     ecs_world_t *world = ecs_mini();
-    on_set_invoked = 0;
 
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_set(world, e, Position, {1, 2});
+    on_set_invoked = 0;
 
     /* create the component */
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {5, 6});
 
-    /* handler should run immediately */
-    test_int(on_set_invoked, 1);
+    /* OnSet should not be run until defer has completed */
+    test_int(on_set_invoked, 0);
     ecs_defer_end(world);
 
     const Position *p = ecs_get(world, e, Position);

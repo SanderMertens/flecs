@@ -2964,13 +2964,11 @@ void flecs_copy_ptr_w_id(
 
     flecs_table_mark_dirty(world, r->table, id);
 
-    ecs_table_t *table = r->table;
-    if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
-        ecs_type_t ids = { .array = &id, .count = 1 };
-        flecs_notify_on_set(
-            world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
-    }
-
+    /* if we're deferred, we need to add two commands to the queue.
+     *  - EcsOpAdd: this ensures that `remove; set` does not remove the
+     *    newly set component
+     *  - EcsOpModified: this triggers any OnSet hooks for the component
+     */
     if (deferred) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
@@ -2978,7 +2976,22 @@ void flecs_copy_ptr_w_id(
             cmd->id = id;
             cmd->entity = entity;
         }
+
+        cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpModified;
+            cmd->id = id;
+            cmd->entity = entity;
+        }
+
+    /* we're not deferred, so notify any OnSet hooks */
     } else {
+        ecs_table_t *table = r->table;
+        if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
+            ecs_type_t ids = { .array = &id, .count = 1 };
+            flecs_notify_on_set(
+                    world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+        }
         flecs_defer_end(world, stage);
     }
 error:
