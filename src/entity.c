@@ -10,7 +10,6 @@
  * located here so it can call functions private to the compilation unit.
  */
 
-#include "flecs/private/api_defines.h"
 #include "private_api.h"
 #include <ctype.h>
 
