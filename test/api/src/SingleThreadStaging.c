@@ -2412,7 +2412,9 @@ void SingleThreadStaging_clear_stage_after_merge() {
     ecs_set(world, e, Position, {30, 40});
     ecs_defer_end(world);  
 
-    test_int(move_position, 2);
+    /* move will only happen the first time ecs_set() is called when the
+     * component is created while deferred */
+    test_int(move_position, 1);
     p = ecs_get(world, e, Position);
     test_int(p->x, 30);
     test_int(p->y, 40);      

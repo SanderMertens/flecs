@@ -10,6 +10,7 @@
  * located here so it can call functions private to the compilation unit.
  */
 
+#include "flecs/private/api_defines.h"
 #include "private_api.h"
 #include <ctype.h>
 
@@ -2924,16 +2925,32 @@ void flecs_copy_ptr_w_id(
     size_t size,
     void *ptr)
 {
-    if (flecs_defer_cmd(stage)) {
-        flecs_defer_set(world, stage, EcsOpSet, entity, id, 
+    flecs_component_ptr_t dst = {0};
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* lookup the component pointer if the entity exists */
+    if (r->table) {
+        dst = flecs_get_component_ptr(
+                world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+    }
+
+    /* if the component doesn't exist, and we're deferred, copy the new
+     * component to a temporary component on the command queue */
+    bool deferred = flecs_defer_cmd(stage);
+    if (dst.ptr == NULL && deferred) {
+        flecs_defer_set(world, stage, EcsOpSet, entity, id,
             flecs_utosize(size), ptr, false);
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r);
+    /* we're not deferred, and the component doesn't exist, so create it now */
+    if (dst.ptr == NULL) {
+        dst = flecs_get_mut(world, entity, id, r);
+        ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
     const ecs_type_info_t *ti = dst.ti;
-    ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
         ecs_copy_t copy = ti->hooks.copy;
@@ -2955,7 +2972,9 @@ void flecs_copy_ptr_w_id(
             world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
     }
 
-    flecs_defer_end(world, stage);
+    if (!deferred) {
+        flecs_defer_end(world, stage);
+    }
 error:
     return;
 }

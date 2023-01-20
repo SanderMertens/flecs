@@ -232,21 +232,22 @@ void DeferredActions_defer_set() {
 
     ecs_defer_begin(world);
     
+    /* set will not be deferred if the component exists */
     ecs_set(world, e, Position, {3, 4});
 
     test_assert(ecs_has(world, e, Position));
     p = ecs_get(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 1);
-    test_int(p->y, 2);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
 
     ecs_defer_end(world);
 
     test_assert(ecs_has(world, e, Position));  
     p = ecs_get(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 1);
-    test_int(p->y, 2);  
+    test_int(p->x, 3);
+    test_int(p->y, 4);  
 
     ecs_defer_end(world);
 
