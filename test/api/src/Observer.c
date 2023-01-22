@@ -4552,3 +4552,24 @@ void Observer_cache_test_14() {
 
     ecs_fini(world);
 }
+
+void Observer_cache_test_15() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_id(world);
+
+    ecs_add_pair(world, e1, r, e0);
+    ecs_add_pair(world, e0, EcsChildOf, e1);
+
+    ecs_run_aperiodic(world, 0);
+
+    ecs_delete(world, e1);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e0));
+    test_assert(ecs_is_alive(world, r));
+
+    ecs_fini(world);
+}
