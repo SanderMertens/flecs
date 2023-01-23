@@ -21,12 +21,6 @@ void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);  
 
-ecs_cmd_t* flecs_cmd_new(
-    ecs_stage_t *stage,
-    ecs_entity_t e,
-    bool is_delete,
-    bool can_batch);
-
 bool flecs_defer_cmd(
     ecs_stage_t *stage);
 

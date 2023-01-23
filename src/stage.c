@@ -27,6 +27,7 @@ ecs_cmd_t* flecs_cmd_alloc(
     return cmd;
 }
 
+static
 ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage, 
     ecs_entity_t e, 
@@ -386,8 +387,24 @@ void* flecs_defer_set(
     ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
     size = ti->size;
 
-    ecs_stack_t *stack = &stage->defer_stack;
-    void *op_value = flecs_stack_alloc(stack, size, ti->alignment);
+    void *op_value = NULL;
+
+    /* flag to denote this is an EcsOpSet command for a component that already
+     * exists on the entity */
+    bool set_existing = false;
+
+    /* If this is EcsOpSet, try to use the existing value for the component if
+     * it exists */
+    if (cmd_kind == EcsOpSet) {
+        /* casting away const here because we do want to modify the value */
+        op_value = (void *)ecs_get_id(world, entity, id);
+        set_existing = (op_value != NULL);
+    }
+
+    if (!op_value) {
+        ecs_stack_t *stack = &stage->defer_stack;
+        op_value = flecs_stack_alloc(stack, size, ti->alignment);
+    }
 
     bool emplace = cmd_kind == EcsOpEmplace;
     if (!value && !emplace) {
@@ -432,15 +449,33 @@ void* flecs_defer_set(
         cmd = flecs_cmd_alloc(stage);
     }
 
-    cmd->kind = cmd_kind;
-    cmd->id = id;
-    cmd->idr = idr;
-    cmd->entity = entity;
-    cmd->is._1.size = size;
-    cmd->is._1.value = op_value;
+    if (!set_existing) {
+        cmd->kind = cmd_kind;
+        cmd->id = id;
+        cmd->idr = idr;
+        cmd->entity = entity;
+        cmd->is._1.size = size;
+        cmd->is._1.value = op_value;
+    } else {
+        /* if EcsSetCmd was used for a component that already existed, we're
+         * going to insert two commands:
+         *  - EcsOpAdd: this ensures that `remove; set` does not remove the
+         *    newly set component
+         *  - EcsOpModified: this triggers any OnSet hooks for the component
+         */
+        cmd->kind = EcsOpAdd;
+        cmd->id = id;
+        cmd->entity = entity;
+
+        cmd = flecs_cmd_new(stage, entity, false, true);
+        if (cmd) {
+            cmd->kind = EcsOpModified;
+            cmd->id = id;
+            cmd->entity = entity;
+        }
+    }
 
     return op_value;
-
 error:
     return NULL;
 }
