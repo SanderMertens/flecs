@@ -497,6 +497,7 @@ void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 void Get_component_get_childof_component(void);
+void Get_component_get_mut_equal_get(void);
 
 // Testsuite 'Reference'
 void Reference_setup(void);
@@ -2189,6 +2190,14 @@ void DeferredActions_clear_after_add_to_nonempty(void);
 void DeferredActions_remove_after_add_to_nonempty(void);
 void DeferredActions_register_while_deferred_with_n_stages(void);
 void DeferredActions_defer_2_sets_w_multi_observer(void);
+void DeferredActions_exists_remove_set(void);
+void DeferredActions_absent_remove_set(void);
+void DeferredActions_absent_set_remove(void);
+void DeferredActions_exists_set_modify(void);
+void DeferredActions_absent_set_invoke_on_set(void);
+void DeferredActions_exists_set_invoke_on_set(void);
+void DeferredActions_defer_get_mut_no_on_set(void);
+void DeferredActions_defer_existing_get_mut_no_on_set(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4218,6 +4227,10 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_childof_component",
         Get_component_get_childof_component
+    },
+    {
+        "get_mut_equal_get",
+        Get_component_get_mut_equal_get
     }
 };
 
@@ -10814,6 +10827,38 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_2_sets_w_multi_observer",
         DeferredActions_defer_2_sets_w_multi_observer
+    },
+    {
+        "exists_remove_set",
+        DeferredActions_exists_remove_set
+    },
+    {
+        "absent_remove_set",
+        DeferredActions_absent_remove_set
+    },
+    {
+        "absent_set_remove",
+        DeferredActions_absent_set_remove
+    },
+    {
+        "exists_set_modify",
+        DeferredActions_exists_set_modify
+    },
+    {
+        "absent_set_invoke_on_set",
+        DeferredActions_absent_set_invoke_on_set
+    },
+    {
+        "exists_set_invoke_on_set",
+        DeferredActions_exists_set_invoke_on_set
+    },
+    {
+        "defer_get_mut_no_on_set",
+        DeferredActions_defer_get_mut_no_on_set
+    },
+    {
+        "defer_existing_get_mut_no_on_set",
+        DeferredActions_defer_existing_get_mut_no_on_set
     }
 };
 
@@ -11506,7 +11551,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        10,
+        11,
         Get_component_testcases
     },
     {
@@ -11702,7 +11747,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        95,
+        103,
         DeferredActions_testcases
     },
     {

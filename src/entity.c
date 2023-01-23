@@ -4100,6 +4100,12 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
+        case EcsOpAddModified:
+            /* Add is batched, but keep Modified */
+            cmd->kind = EcsOpModified;
+            kind = EcsOpAdd;
+
+            /* fallthrough */
         case EcsOpAdd:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
@@ -4288,6 +4294,12 @@ bool flecs_defer_end(
                     break;
                 case EcsOpModified:
                     flecs_modified_id_if(world, e, id);
+                    world->info.cmd.modified_count ++;
+                    break;
+                case EcsOpAddModified:
+                    flecs_add_id(world, e, id);
+                    flecs_modified_id_if(world, e, id);
+                    world->info.cmd.add_count ++;
                     world->info.cmd.modified_count ++;
                     break;
                 case EcsOpDelete: {

@@ -348,7 +348,7 @@ void* flecs_defer_set(
     if (!cmd) {
         if (need_value) {
             /* Entity is deleted by a previous command, but we still need to 
-                * return a temporary storage to the application. */
+             * return a temporary storage to the application. */
             cmd_kind = EcsOpSkip;
         } else {
             /* No value needs to be returned, we can drop the command */
@@ -356,24 +356,25 @@ void* flecs_defer_set(
         }
     }
 
+    /* Find type info for id */
     const ecs_type_info_t *ti = NULL;
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         /* If idr doesn't exist yet, create it but only if the 
-            * application is not multithreaded. */
+         * application is not multithreaded. */
         if (stage->async || (world->flags & EcsWorldMultiThreaded)) {
             ti = ecs_get_type_info(world, id);
             ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
-                * create the id record. */
+             * create the id record. */
             idr = flecs_id_record_ensure(world, id);
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             
             /* Get type_info from id record. We could have called 
-                * ecs_get_type_info directly, but since this function can be
-                * expensive for pairs, creating the id record ensures we can
-                * find the type_info quickly for subsequent operations. */
+             * ecs_get_type_info directly, but since this function can be
+             * expensive for pairs, creating the id record ensures we can
+             * find the type_info quickly for subsequent operations. */
             ti = idr->type_info;
         }
     } else {
@@ -387,95 +388,90 @@ void* flecs_defer_set(
     ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
     size = ti->size;
 
-    void *op_value = NULL;
-
-    /* flag to denote this is an EcsOpSet command for a component that already
-     * exists on the entity */
-    bool set_existing = false;
-
-    /* If this is EcsOpSet, try to use the existing value for the component if
-     * it exists */
-    if (cmd_kind == EcsOpSet) {
-        /* casting away const here because we do want to modify the value */
-        op_value = (void *)ecs_get_id(world, entity, id);
-        set_existing = (op_value != NULL);
-    }
-
-    if (!op_value) {
-        ecs_stack_t *stack = &stage->defer_stack;
-        op_value = flecs_stack_alloc(stack, size, ti->alignment);
-    }
-
+    /* Get existing value from storage */
+    void *cmd_value = NULL, *existing = (void*)ecs_get_id(world, entity, id);
     bool emplace = cmd_kind == EcsOpEmplace;
-    if (!value && !emplace) {
-        /* Const cast is safe, value will only be moved when this is an 
-            * emplace op */
-        value = (void*)ecs_get_id(world, entity, id);
-    }
 
-    if (value) {
-        if (emplace) {
-            ecs_move_t move;
-            if ((move = ti->hooks.move_ctor)) {
-                move(op_value, value, 1, ti);
+    /* If the component does not yet exist, create a temporary value. This is
+     * necessary so we can store a component value in the deferred command,
+     * without adding the component to the entity which is not allowed in 
+     * deferred mode. */
+    if (!existing) {
+        ecs_stack_t *stack = &stage->defer_stack;
+        cmd_value = flecs_stack_alloc(stack, size, ti->alignment);
+
+        /* If the component doesn't yet exist, construct it and move the 
+         * provided value into the component, if provided. Don't construct if
+         * this is an emplace operation, in which case the application is
+         * responsible for constructing. */
+        if (value) {
+            if (emplace) {
+                ecs_move_t move = ti->hooks.move_ctor;
+                if (move) {
+                    move(cmd_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(cmd_value, value, size);
+                }
             } else {
-                ecs_os_memcpy(op_value, value, size);
+                ecs_copy_t copy = ti->hooks.copy_ctor;
+                if (copy) {
+                    copy(cmd_value, value, 1, ti);
+                } else {
+                    ecs_os_memcpy(cmd_value, value, size);
+                }
             }
-        } else {
-            ecs_copy_t copy;
-            if ((copy = ti->hooks.copy_ctor)) {
-                copy(op_value, value, 1, ti);
-            } else {
-                ecs_os_memcpy(op_value, value, size);
+        } else if (!emplace) {
+            /* If the command is not an emplace, construct the temp storage */
+            ecs_xtor_t ctor = ti->hooks.ctor;
+            if (ctor) {
+                ctor(cmd_value, 1, ti);
             }
         }
-    } else if (!emplace) {
-        ecs_xtor_t ctor;
-        if ((ctor = ti->hooks.ctor)) {
-            ctor(op_value, 1, ti);
+    } else if (value) {
+        /* If component exists and value is provided, copy */
+        ecs_copy_t copy = ti->hooks.copy;
+        if (copy) {
+            copy(existing, value, 1, ti);
+        } else {
+            ecs_os_memcpy(existing, value, size);
         }
     }
 
     if (!cmd) {
-        /* If op is NULL, entity was already deleted. Check if we need to
-            * insert an operation into the queue */
+        /* If cmd is NULL, entity was already deleted. Check if we need to
+         * insert a command into the queue. */
         if (!ti->hooks.dtor) {
             /* If temporary memory does not need to be destructed, it'll get 
-                * freed when the stack allocator is reset. This prevents us
-                * from having to insert an operation when the entity was 
-                * already deleted. */
-            return op_value;
+             * freed when the stack allocator is reset. This prevents us
+             * from having to insert a command when the entity was 
+             * already deleted. */
+            return cmd_value;
         }
         cmd = flecs_cmd_alloc(stage);
     }
 
-    if (!set_existing) {
+    if (!existing) {
+        /* If component didn't exist yet, insert command that will create it */
         cmd->kind = cmd_kind;
         cmd->id = id;
         cmd->idr = idr;
         cmd->entity = entity;
         cmd->is._1.size = size;
-        cmd->is._1.value = op_value;
+        cmd->is._1.value = cmd_value;
     } else {
-        /* if EcsSetCmd was used for a component that already existed, we're
-         * going to insert two commands:
-         *  - EcsOpAdd: this ensures that `remove; set` does not remove the
-         *    newly set component
-         *  - EcsOpModified: this triggers any OnSet hooks for the component
-         */
-        cmd->kind = EcsOpAdd;
+        /* If component already exists, still insert an Add command to ensure
+         * that any preceding remove commands won't remove the component. If the
+         * operation is a set, also insert a Modified command. */
+        if (cmd_kind == EcsOpSet) {
+            cmd->kind = EcsOpAddModified; 
+        } else {
+            cmd->kind = EcsOpAdd;
+        }
         cmd->id = id;
         cmd->entity = entity;
-
-        cmd = flecs_cmd_new(stage, entity, false, true);
-        if (cmd) {
-            cmd->kind = EcsOpModified;
-            cmd->id = id;
-            cmd->entity = entity;
-        }
     }
 
-    return op_value;
+    return cmd_value;
 error:
     return NULL;
 }

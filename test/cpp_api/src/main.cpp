@@ -899,6 +899,7 @@ void Refs_non_const_ref(void);
 void Refs_pair_ref(void);
 void Refs_pair_ref_w_entity(void);
 void Refs_pair_ref_second(void);
+void Refs_from_stage(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -4609,6 +4610,10 @@ bake_test_case Refs_testcases[] = {
     {
         "pair_ref_second",
         Refs_pair_ref_second
+    },
+    {
+        "from_stage",
+        Refs_from_stage
     }
 };
 
@@ -5618,7 +5623,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        10,
+        11,
         Refs_testcases
     },
     {

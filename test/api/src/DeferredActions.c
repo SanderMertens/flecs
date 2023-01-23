@@ -2983,3 +2983,59 @@ void DeferredActions_exists_set_invoke_on_set() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_get_mut_no_on_set() {
+    ecs_world_t *world = ecs_mini();
+    on_set_invoked = 0;
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    /* create the component */
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        p->x = 1;
+        p->y = 2;
+    }
+    test_assert(!ecs_has(world, e, Position));
+    test_int(on_set_invoked, 0);
+    ecs_defer_end(world);
+    test_int(on_set_invoked, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_existing_get_mut_no_on_set() {
+    ecs_world_t *world = ecs_mini();
+    on_set_invoked = 0;
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    /* create the component */
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        p->x = 1;
+        p->y = 2;
+    }
+    test_assert(ecs_has(world, e, Position));
+    test_int(on_set_invoked, 0);
+    ecs_defer_end(world);
+    test_int(on_set_invoked, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}

@@ -2284,7 +2284,9 @@
                 "absent_set_remove",
                 "exists_set_modify",
                 "absent_set_invoke_on_set",
-                "exists_set_invoke_on_set"
+                "exists_set_invoke_on_set",
+                "defer_get_mut_no_on_set",
+                "defer_existing_get_mut_no_on_set"
             ]
         }, {
             "id": "SingleThreadStaging",
