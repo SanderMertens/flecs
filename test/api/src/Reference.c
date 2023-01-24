@@ -135,12 +135,13 @@ void Reference_get_ref_staged() {
 
     ecs_defer_begin(world);
 
+    /* ecs_set() makes immediate changes */
     ecs_set(world, e, Position, {30, 40});
 
     p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
 
     ecs_defer_end(world);
 
@@ -169,12 +170,13 @@ void Reference_get_ref_after_new_in_stage() {
 
     ecs_new(world, Position);
 
+    /* ecs_set() makes immediate changes */
     ecs_set(world, e, Position, {30, 40});
 
     p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
 
     ecs_defer_end(world);
 

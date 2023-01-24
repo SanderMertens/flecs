@@ -2610,9 +2610,10 @@ void* ecs_get_mut_id(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     void *result = flecs_get_mut(world, entity, id, r).ptr;
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
-    
+
     flecs_defer_end(world, stage);
     return result;
 error:
@@ -4089,6 +4090,12 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
+        case EcsOpAddModified:
+            /* Add is batched, but keep Modified */
+            cmd->kind = EcsOpModified;
+            kind = EcsOpAdd;
+
+            /* fallthrough */
         case EcsOpAdd:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
@@ -4277,6 +4284,12 @@ bool flecs_defer_end(
                     break;
                 case EcsOpModified:
                     flecs_modified_id_if(world, e, id);
+                    world->info.cmd.modified_count ++;
+                    break;
+                case EcsOpAddModified:
+                    flecs_add_id(world, e, id);
+                    flecs_modified_id_if(world, e, id);
+                    world->info.cmd.add_count ++;
                     world->info.cmd.modified_count ++;
                     break;
                 case EcsOpDelete: {

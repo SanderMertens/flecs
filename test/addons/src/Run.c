@@ -1084,12 +1084,12 @@ void AddVelocity(ecs_iter_t *it) {
         
         ecs_set(world, e, Position, {x + 1, y + 2});
         const Position *p_stage = ecs_get(world, e, Position);
-        test_int(p_stage->x, x);
-        test_int(p_stage->y, y);
+        test_int(p_stage->x, x + 1);
+        test_int(p_stage->y, y + 2);
 
-        /* Main stage isn't updated until after merge */
-        test_int(p[i].x, x);
-        test_int(p[i].y, y);
+        /* Main stage is updated immediately */
+        test_int(p[i].x, x + 1);
+        test_int(p[i].y, y + 2);
 
         ecs_set(world, e, Velocity, {1, 2});
         const Velocity *v = ecs_get(world, e, Velocity);
