@@ -3357,7 +3357,6 @@ error:
     return 0;
 }
 
-
 ecs_entity_t ecs_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,

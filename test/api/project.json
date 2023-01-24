@@ -133,7 +133,9 @@
                 "get_depth_2_paths",
                 "entity_init_w_empty_sep",
                 "entity_init_w_empty_sep_from_scope",
-                "entity_init_w_empty_sep_w_prefix"
+                "entity_init_w_empty_sep_w_prefix",
+                "set_name_w_same_ptr",
+                "set_name_w_overlapping_ptr"
             ]
         }, {
             "id": "Search",

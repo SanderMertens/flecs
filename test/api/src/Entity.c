@@ -1891,3 +1891,35 @@ void Entity_entity_init_w_empty_sep_w_prefix() {
 
     ecs_fini(world);
 }
+
+void Entity_set_name_w_same_ptr() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    const char *name = ecs_get_name(world, e);
+    test_assert(name != NULL);
+    test_str(name, "foo");
+
+    ecs_set_name(world, e, name);
+    name = ecs_get_name(world, e); 
+    test_assert(name != NULL);
+    test_str(name, "foo");
+
+    ecs_fini(world);
+}
+
+void Entity_set_name_w_overlapping_ptr() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    const char *name = ecs_get_name(world, e);
+    test_assert(name != NULL);
+    test_str(name, "foo");
+
+    ecs_set_name(world, e, &name[1]);
+    name = ecs_get_name(world, e); 
+    test_assert(name != NULL);
+    test_str(name, "oo");
+
+    ecs_fini(world);
+}

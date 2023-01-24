@@ -8692,7 +8692,6 @@ error:
     return 0;
 }
 
-
 ecs_entity_t ecs_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -48130,6 +48129,12 @@ char* ecs_os_api_strdup(const char *str) {
     } else {
         return NULL;
     }
+}
+
+void ecs_os_strset(char **str, const char *value) {
+    char *old = str[0];
+    str[0] = ecs_os_strdup(value);
+    ecs_os_free(old);
 }
 
 /* Replace dots with underscores */

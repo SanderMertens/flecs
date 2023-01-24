@@ -127,6 +127,8 @@ void Entity_get_depth_2_paths(void);
 void Entity_entity_init_w_empty_sep(void);
 void Entity_entity_init_w_empty_sep_from_scope(void);
 void Entity_entity_init_w_empty_sep_w_prefix(void);
+void Entity_set_name_w_same_ptr(void);
+void Entity_set_name_w_overlapping_ptr(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2830,6 +2832,14 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_w_empty_sep_w_prefix",
         Entity_entity_init_w_empty_sep_w_prefix
+    },
+    {
+        "set_name_w_same_ptr",
+        Entity_set_name_w_same_ptr
+    },
+    {
+        "set_name_w_overlapping_ptr",
+        Entity_set_name_w_overlapping_ptr
     }
 };
 
@@ -11490,7 +11500,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        90,
+        92,
         Entity_testcases
     },
     {
