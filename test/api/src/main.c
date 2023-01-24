@@ -2192,8 +2192,13 @@ void DeferredActions_register_while_deferred_with_n_stages(void);
 void DeferredActions_defer_2_sets_w_multi_observer(void);
 void DeferredActions_exists_remove_set(void);
 void DeferredActions_absent_remove_set(void);
+void DeferredActions_exists_set_remove(void);
 void DeferredActions_absent_set_remove(void);
-void DeferredActions_exists_set_modify(void);
+void DeferredActions_exists_remove_get_mut(void);
+void DeferredActions_absent_remove_get_mut(void);
+void DeferredActions_exists_get_mut_remove(void);
+void DeferredActions_absent_get_mut_remove(void);
+void DeferredActions_exists_set_w_get_mut(void);
 void DeferredActions_absent_set_invoke_on_set(void);
 void DeferredActions_exists_set_invoke_on_set(void);
 void DeferredActions_defer_get_mut_no_on_set(void);
@@ -10837,12 +10842,32 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_absent_remove_set
     },
     {
+        "exists_set_remove",
+        DeferredActions_exists_set_remove
+    },
+    {
         "absent_set_remove",
         DeferredActions_absent_set_remove
     },
     {
-        "exists_set_modify",
-        DeferredActions_exists_set_modify
+        "exists_remove_get_mut",
+        DeferredActions_exists_remove_get_mut
+    },
+    {
+        "absent_remove_get_mut",
+        DeferredActions_absent_remove_get_mut
+    },
+    {
+        "exists_get_mut_remove",
+        DeferredActions_exists_get_mut_remove
+    },
+    {
+        "absent_get_mut_remove",
+        DeferredActions_absent_get_mut_remove
+    },
+    {
+        "exists_set_w_get_mut",
+        DeferredActions_exists_set_w_get_mut
     },
     {
         "absent_set_invoke_on_set",
@@ -11747,7 +11772,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        103,
+        108,
         DeferredActions_testcases
     },
     {

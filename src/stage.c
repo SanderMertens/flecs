@@ -389,7 +389,7 @@ void* flecs_defer_set(
     size = ti->size;
 
     /* Get existing value from storage */
-    void *cmd_value = NULL, *existing = (void*)ecs_get_id(world, entity, id);
+    void *existing = (void*)ecs_get_id(world, entity, id), *cmd_value = existing;
     bool emplace = cmd_kind == EcsOpEmplace;
 
     /* If the component does not yet exist, create a temporary value. This is

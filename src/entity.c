@@ -2605,22 +2605,13 @@ void* ecs_get_mut_id(
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (r->table) {
-        flecs_component_ptr_t dst = {0};
-        dst = flecs_get_component_ptr(
-                world, r->table, ECS_RECORD_TO_ROW(r->row), id);
-        if (dst.ptr) {
-            return dst.ptr;
-        }
-    }
-
     if (flecs_defer_cmd(stage)) {
         return flecs_defer_set(
             world, stage, EcsOpMut, entity, id, 0, NULL, true);
     }
 
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     void *result = flecs_get_mut(world, entity, id, r).ptr;
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
 

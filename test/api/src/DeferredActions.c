@@ -2891,6 +2891,25 @@ void DeferredActions_absent_remove_set() {
     ecs_fini(world);
 }
 
+void DeferredActions_exists_set_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {5, 6});
+    ecs_remove(world, e, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
+
 void DeferredActions_absent_set_remove() {
     ecs_world_t *world = ecs_mini();
 
@@ -2909,7 +2928,7 @@ void DeferredActions_absent_set_remove() {
     ecs_fini(world);
 }
 
-void DeferredActions_exists_set_modify() {
+void DeferredActions_exists_set_w_get_mut() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2929,6 +2948,106 @@ void DeferredActions_exists_set_modify() {
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_exists_remove_get_mut() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 5;
+        p->y = 6;
+    }
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_absent_remove_get_mut() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 5;
+        p->y = 6;
+    }
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_exists_get_mut_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 5;
+        p->y = 6;
+    }
+    ecs_remove(world, e, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_absent_get_mut_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 5;
+        p->y = 6;
+    }
+    test_assert(!ecs_has(world, e, Position));
+    ecs_remove(world, e, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p == NULL);
 
     ecs_fini(world);
 }
