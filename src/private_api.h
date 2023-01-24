@@ -90,6 +90,13 @@ void flecs_instantiate(
     int32_t row,
     int32_t count);
 
+void* flecs_get_base_component(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_record_t *table_index,
+    int32_t recur_depth);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////

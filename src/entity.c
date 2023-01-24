@@ -86,7 +86,6 @@ void* flecs_get_component(
     return flecs_get_component_ptr(world, table, row, id).ptr;
 }
 
-static
 void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,

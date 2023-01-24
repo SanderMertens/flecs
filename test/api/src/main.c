@@ -2206,6 +2206,8 @@ void DeferredActions_absent_set_invoke_on_set(void);
 void DeferredActions_exists_set_invoke_on_set(void);
 void DeferredActions_defer_get_mut_no_on_set(void);
 void DeferredActions_defer_existing_get_mut_no_on_set(void);
+void DeferredActions_get_mut_override(void);
+void DeferredActions_set_override(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10899,6 +10901,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_existing_get_mut_no_on_set",
         DeferredActions_defer_existing_get_mut_no_on_set
+    },
+    {
+        "get_mut_override",
+        DeferredActions_get_mut_override
+    },
+    {
+        "set_override",
+        DeferredActions_set_override
     }
 };
 
@@ -11787,7 +11797,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        108,
+        110,
         DeferredActions_testcases
     },
     {

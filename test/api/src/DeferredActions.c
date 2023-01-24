@@ -3158,3 +3158,70 @@ void DeferredActions_defer_existing_get_mut_no_on_set() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_get_mut_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+        p->x = 5;
+        p->y = 6;
+    }
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    const Position *bp = ecs_get(world, base, Position);
+    test_assert(p != bp);
+    test_int(bp->x, 1);
+    test_int(bp->y, 2);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_set_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_defer_begin(world);
+    {
+        ecs_set(world, e, Position, {5, 6});
+    }
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    const Position *bp = ecs_get(world, base, Position);
+    test_assert(p != bp);
+    test_int(bp->x, 1);
+    test_int(bp->y, 2);
+
+    ecs_fini(world);
+}

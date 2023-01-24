@@ -381,6 +381,26 @@ void* flecs_defer_set(
         ti = idr->type_info;
     }
 
+    /* Find existing component. Make sure it's owned, so that we won't use the
+     * component of a prefab. */
+    void *existing = NULL;
+    ecs_table_t *table = NULL;
+    if (idr) {
+        /* Entity can only have existing component if id record exists */
+        ecs_record_t *r = flecs_entities_get(world, entity);
+        table = r->table;
+        if (r && table) {
+            const ecs_table_record_t *tr = flecs_id_record_get_table(
+                idr, table->storage_table);
+            if (tr) {
+                /* Entity has the component */
+                ecs_vec_t *column = &table->data.columns[tr->column];
+                existing = ecs_vec_get(column, ti->size, 
+                    ECS_RECORD_TO_ROW(r->row));
+            }
+        }
+    }
+
     /* If the id isn't associated with a type, we can't set anything */
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -389,7 +409,7 @@ void* flecs_defer_set(
     size = ti->size;
 
     /* Get existing value from storage */
-    void *existing = (void*)ecs_get_id(world, entity, id), *cmd_value = existing;
+    void *cmd_value = existing;
     bool emplace = cmd_kind == EcsOpEmplace;
 
     /* If the component does not yet exist, create a temporary value. This is
@@ -422,9 +442,27 @@ void* flecs_defer_set(
             }
         } else if (!emplace) {
             /* If the command is not an emplace, construct the temp storage */
-            ecs_xtor_t ctor = ti->hooks.ctor;
-            if (ctor) {
-                ctor(cmd_value, 1, ti);
+
+            /* Check if entity inherits component */
+            void *base = NULL;
+            if (table && (table->flags & EcsTableHasIsA)) {
+                base = flecs_get_base_component(world, table, id, idr, 0);
+            }
+
+            if (!base) {
+                /* Normal ctor */
+                ecs_xtor_t ctor = ti->hooks.ctor;
+                if (ctor) {
+                    ctor(cmd_value, 1, ti);
+                }
+            } else {
+                /* Override */
+                ecs_copy_t copy = ti->hooks.copy_ctor;
+                if (copy) {
+                    copy(cmd_value, base, 1, ti);
+                } else {
+                    ecs_os_memcpy(cmd_value, base, size);
+                }
             }
         }
     } else if (value) {

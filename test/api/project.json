@@ -2294,7 +2294,9 @@
                 "absent_set_invoke_on_set",
                 "exists_set_invoke_on_set",
                 "defer_get_mut_no_on_set",
-                "defer_existing_get_mut_no_on_set"
+                "defer_existing_get_mut_no_on_set",
+                "get_mut_override",
+                "set_override"
             ]
         }, {
             "id": "SingleThreadStaging",
