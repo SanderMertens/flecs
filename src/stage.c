@@ -381,6 +381,13 @@ void* flecs_defer_set(
         ti = idr->type_info;
     }
 
+    /* If the id isn't associated with a type, we can't set anything */
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure the size of the value equals the type size */
+    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+    size = ti->size;
+
     /* Find existing component. Make sure it's owned, so that we won't use the
      * component of a prefab. */
     void *existing = NULL;
@@ -395,18 +402,10 @@ void* flecs_defer_set(
             if (tr) {
                 /* Entity has the component */
                 ecs_vec_t *column = &table->data.columns[tr->column];
-                existing = ecs_vec_get(column, ti->size, 
-                    ECS_RECORD_TO_ROW(r->row));
+                existing = ecs_vec_get(column, size, ECS_RECORD_TO_ROW(r->row));
             }
         }
     }
-
-    /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
-    size = ti->size;
 
     /* Get existing value from storage */
     void *cmd_value = existing;

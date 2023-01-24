@@ -958,24 +958,22 @@ flecs_component_ptr_t flecs_get_mut(
     if (r->table) {
         dst = flecs_get_component_ptr(
             world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+        if (dst.ptr) {
+            return dst;
+        }
     }
 
-    if (!dst.ptr) {
-        /* If entity didn't have component yet, add it */
-        flecs_add_id_w_record(world, entity, r, id, true);
+    /* If entity didn't have component yet, add it */
+    flecs_add_id_w_record(world, entity, r, id, true);
 
-        /* Flush commands so the pointer we're fetching is stable */
-        flecs_defer_end(world, &world->stages[0]);
-        flecs_defer_begin(world, &world->stages[0]);
+    /* Flush commands so the pointer we're fetching is stable */
+    flecs_defer_end(world, &world->stages[0]);
+    flecs_defer_begin(world, &world->stages[0]);
 
-        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(r->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
-        dst = flecs_get_component_ptr(
-            world, r->table, ECS_RECORD_TO_ROW(r->row), id);
-
-        return dst;
-    }
-
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    dst = flecs_get_component_ptr(
+        world, r->table, ECS_RECORD_TO_ROW(r->row), id);
 error:
     return dst;
 }
