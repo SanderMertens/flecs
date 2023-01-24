@@ -6,7 +6,7 @@ To use Flecs, copy the [flecs.c](https://raw.githubusercontent.com/SanderMertens
 
 - If it is a C++ project, make sure to compile [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/flecs.c) as C code, for example by using `gcc`/`clang` instead of `g++`/`clang++`.
 
-- If you are building on Windows and you're not using the Microsoft Visual Studio compiler, make sure to add `-lWs2_32` to the linker command. The socket API is used for connecting to Flecs explorer.
+- If you are building on Windows and you're not using the Microsoft Visual Studio compiler, make sure to add `-lWs2_32` to **the end(!)** of the linker command. The socket API is used for connecting to Flecs explorer.
 
 - When compiling Flecs with `gcc`/`clang`, add `-std=gnu99` to the compiler command. This ensures that addons that rely on time & socket functions are compiled correctly.
 
