@@ -37,7 +37,7 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
+    T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
 
     dst = FLECS_MOV(value);
 

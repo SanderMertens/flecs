@@ -310,6 +310,7 @@ void Pairs_deref_pair(void);
 void Pairs_deref_const_pair(void);
 void Pairs_deref_pair_obj(void);
 void Pairs_deref_const_pair_obj(void);
+void Pairs_set_R_existing_value(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -2329,6 +2330,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "deref_const_pair_obj",
         Pairs_deref_const_pair_obj
+    },
+    {
+        "set_R_existing_value",
+        Pairs_set_R_existing_value
     }
 };
 
@@ -5518,7 +5523,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        66,
+        67,
         Pairs_testcases
     },
     {

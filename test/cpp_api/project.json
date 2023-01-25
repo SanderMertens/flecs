@@ -319,7 +319,8 @@
                 "deref_pair",
                 "deref_const_pair",
                 "deref_pair_obj",
-                "deref_const_pair_obj"
+                "deref_const_pair_obj",
+                "set_R_existing_value"
             ]
         }, {
             "id": "Enum",

@@ -1214,3 +1214,15 @@ void Pairs_deref_const_pair_obj() {
     test_int(pos.x, 10);
     test_int(pos.y, 20);
 }
+
+void Pairs_set_R_existing_value() {
+    flecs::world ecs;
+    
+    Position p{10, 20};
+    flecs::entity e = ecs.entity().set<Position, Tag>(p);
+
+    const Position *ptr = e.get<Position, Tag>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
