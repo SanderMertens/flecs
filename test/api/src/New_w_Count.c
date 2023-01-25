@@ -661,3 +661,29 @@ void New_w_Count_recycle_2_of_3() {
 
   ecs_fini(world);
 }
+
+void New_w_Count_bulk_init_w_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Tag);
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+
+    test_assert(entities != NULL);
+    test_assert(ecs_has(world, entities[0], Tag));
+    test_assert(ecs_has(world, entities[1], Tag));
+    test_assert(ecs_has(world, entities[2], Tag));
+    test_assert(ecs_get_table(world, entities[0]) == table);
+    test_assert(ecs_get_table(world, entities[1]) == table);
+    test_assert(ecs_get_table(world, entities[2]) == table);
+    test_int(3, ecs_count(world, Tag));
+
+    ecs_delete_with(world, Tag);
+    test_int(0, ecs_count(world, Tag));
+
+    ecs_fini(world);
+}
