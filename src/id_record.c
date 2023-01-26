@@ -302,8 +302,12 @@ void flecs_id_record_free(
     ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
-    ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
-        ECS_ID_IN_USE, "cannot delete id that is in use");
+
+    if (!(world->flags & EcsWorldQuit)) {
+        /* Id is still in use by a filter, query, rule or observer */
+        ecs_assert((idr->keep_alive == 0), 
+            ECS_ID_IN_USE, "cannot delete id that is queried for");
+    }
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);

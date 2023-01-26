@@ -2425,14 +2425,14 @@ void ecs_delete(
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
         ecs_table_t *table;
         if (row_flags) {
-            if (row_flags & EcsEntityObservedId) {
-                flecs_on_delete(world, entity, 0, true);
-                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
-            }
             if (row_flags & EcsEntityObservedTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
                 r->idr = NULL;
+            }
+            if (row_flags & EcsEntityObservedId) {
+                flecs_on_delete(world, entity, 0, true);
+                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
             }
             if (row_flags & EcsEntityObservedAcyclic) {
                 table = r->table;

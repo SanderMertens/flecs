@@ -2896,3 +2896,31 @@ void OnDelete_delete_with_inherited_tag_w_observer() {
 
     ecs_fini(world);
 }
+
+void OnDelete_delete_symmetric_relation() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, EcsSymmetric);
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    // Ensures internal observers are cleaned up before relationship id
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_observed_symmetric_relation() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, EcsTag);
+
+    ecs_add_id(world, e, EcsSymmetric);
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    // Ensures internal observers are cleaned up before relationship id
+
+    ecs_fini(world);
+}

@@ -7767,14 +7767,14 @@ void ecs_delete(
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
         ecs_table_t *table;
         if (row_flags) {
-            if (row_flags & EcsEntityObservedId) {
-                flecs_on_delete(world, entity, 0, true);
-                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
-            }
             if (row_flags & EcsEntityObservedTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
                 r->idr = NULL;
+            }
+            if (row_flags & EcsEntityObservedId) {
+                flecs_on_delete(world, entity, 0, true);
+                flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
             }
             if (row_flags & EcsEntityObservedAcyclic) {
                 table = r->table;
@@ -53973,7 +53973,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
         /* Create observer that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_observer_init(world, &(ecs_observer_desc_t){
-            .entity = ecs_entity(world, {.add = {ecs_childof(EcsFlecsInternals)}}),
+            .entity = ecs_entity(world, {.add = {ecs_childof(r)}}),
             .filter.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = flecs_on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
@@ -55524,8 +55524,12 @@ void flecs_id_record_free(
     ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
-    ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
-        ECS_ID_IN_USE, "cannot delete id that is in use");
+
+    if (!(world->flags & EcsWorldQuit)) {
+        /* Id is still in use by a filter, query, rule or observer */
+        ecs_assert((idr->keep_alive == 0), 
+            ECS_ID_IN_USE, "cannot delete id that is queried for");
+    }
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);

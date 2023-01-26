@@ -693,7 +693,9 @@
                 "create_after_delete_with",
                 "delete_with_inherited_tag",
                 "delete_with_inherited_tag_w_query",
-                "delete_with_inherited_tag_w_observer"
+                "delete_with_inherited_tag_w_observer",
+                "delete_symmetric_relation",
+                "delete_observed_symmetric_relation"
             ]
         }, {
             "id": "Set",

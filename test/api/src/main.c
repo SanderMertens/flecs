@@ -655,6 +655,8 @@ void OnDelete_create_after_delete_with(void);
 void OnDelete_delete_with_inherited_tag(void);
 void OnDelete_delete_with_inherited_tag_w_query(void);
 void OnDelete_delete_with_inherited_tag_w_observer(void);
+void OnDelete_delete_symmetric_relation(void);
+void OnDelete_delete_observed_symmetric_relation(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4850,6 +4852,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_inherited_tag_w_observer",
         OnDelete_delete_with_inherited_tag_w_observer
+    },
+    {
+        "delete_symmetric_relation",
+        OnDelete_delete_symmetric_relation
+    },
+    {
+        "delete_observed_symmetric_relation",
+        OnDelete_delete_observed_symmetric_relation
     }
 };
 
@@ -11642,7 +11652,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        101,
+        103,
         OnDelete_testcases
     },
     {
