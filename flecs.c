@@ -10113,14 +10113,14 @@ void* flecs_defer_set(
     /* Find existing component. Make sure it's owned, so that we won't use the
      * component of a prefab. */
     void *existing = NULL;
-    ecs_table_t *table = NULL;
+    ecs_table_t *table = NULL, *storage_table;
     if (idr) {
         /* Entity can only have existing component if id record exists */
         ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
-        if (r && table) {
+        if (r && table && (storage_table = table->storage_table)) {
             const ecs_table_record_t *tr = flecs_id_record_get_table(
-                idr, table->storage_table);
+                idr, storage_table);
             if (tr) {
                 /* Entity has the component */
                 ecs_vec_t *column = &table->data.columns[tr->column];
@@ -54028,13 +54028,10 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_table_t *other_table = it->other_table, *table = it->table;
 
-    int32_t col = ecs_search(it->real_world, table, 
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0);
-    bool has_name = col != -1;
-    bool other_has_name = ecs_search(it->real_world, other_table,
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0) != -1;
-
-    if (!has_name && !other_has_name) {
+    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
+        table, EcsIdentifier, EcsName, it->offset);
+    bool has_name = names != NULL;
+    if (!has_name) {
         /* If tables don't have names, index does not need to be updated */
         return;
     }
@@ -54046,6 +54043,8 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_search(it->real_world, other_table,
         ecs_pair(EcsChildOf, EcsWildcard), &from_pair);
 
+    bool other_has_name = ecs_search(it->real_world, other_table,
+        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0) != -1;
     bool to_has_name = has_name, from_has_name = other_has_name;
     if (it->event == EcsOnRemove) {
         if (from_pair != ecs_childof(0)) {
@@ -54064,10 +54063,6 @@ void flecs_on_parent_change(ecs_iter_t *it) {
         to_has_name = other_has_name;
         from_has_name = has_name;
     }
-
-    /* Get the table column with names */
-    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
-        table, EcsIdentifier, EcsName, it->offset);
 
     ecs_hashmap_t *from_index = 0;
     if (from_has_name) {

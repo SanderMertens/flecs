@@ -1942,3 +1942,43 @@ void Hierarchies_lookup_after_delete_from_parent() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_defer_batch_remove_name_w_add_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    test_assert(e != 0);
+    test_str("e", ecs_get_name(world, e));
+    test_assert(ecs_lookup_fullpath(world, "e") == e);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_defer_begin(world);
+    ecs_clear(world, e);
+    ecs_add_pair(world, e, EcsChildOf, parent);
+    ecs_defer_end(world);
+
+    test_assert(ecs_lookup_fullpath(world, "e") == 0);
+    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(ecs_get_name(world, e) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_defer_batch_remove_childof_w_add_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(e != 0);
+    
+    ecs_defer_begin(world);
+    ecs_clear(world, e);
+    ecs_set_name(world, e, "e");
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_name(world, e) != NULL);
+    test_assert(ecs_lookup_fullpath(world, "e") == e);
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
+
+    ecs_fini(world);
+}

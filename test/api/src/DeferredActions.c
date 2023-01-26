@@ -3225,3 +3225,31 @@ void DeferredActions_set_override() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_absent_get_mut_for_entity_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    test_assert(e != 0);
+    
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}

@@ -464,6 +464,8 @@ void Hierarchies_lookup_after_clear_from_root(void);
 void Hierarchies_lookup_after_clear_from_parent(void);
 void Hierarchies_lookup_after_delete_from_root(void);
 void Hierarchies_lookup_after_delete_from_parent(void);
+void Hierarchies_defer_batch_remove_name_w_add_childof(void);
+void Hierarchies_defer_batch_remove_childof_w_add_name(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -2209,6 +2211,7 @@ void DeferredActions_defer_get_mut_no_on_set(void);
 void DeferredActions_defer_existing_get_mut_no_on_set(void);
 void DeferredActions_get_mut_override(void);
 void DeferredActions_set_override(void);
+void DeferredActions_absent_get_mut_for_entity_w_tag(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4125,6 +4128,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "lookup_after_delete_from_parent",
         Hierarchies_lookup_after_delete_from_parent
+    },
+    {
+        "defer_batch_remove_name_w_add_childof",
+        Hierarchies_defer_batch_remove_name_w_add_childof
+    },
+    {
+        "defer_batch_remove_childof_w_add_name",
+        Hierarchies_defer_batch_remove_childof_w_add_name
     }
 };
 
@@ -10914,6 +10925,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "set_override",
         DeferredActions_set_override
+    },
+    {
+        "absent_get_mut_for_entity_w_tag",
+        DeferredActions_absent_get_mut_for_entity_w_tag
     }
 };
 
@@ -11585,7 +11600,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        98,
+        100,
         Hierarchies_testcases
     },
     {
@@ -11802,7 +11817,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        110,
+        111,
         DeferredActions_testcases
     },
     {

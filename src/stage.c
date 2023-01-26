@@ -391,14 +391,14 @@ void* flecs_defer_set(
     /* Find existing component. Make sure it's owned, so that we won't use the
      * component of a prefab. */
     void *existing = NULL;
-    ecs_table_t *table = NULL;
+    ecs_table_t *table = NULL, *storage_table;
     if (idr) {
         /* Entity can only have existing component if id record exists */
         ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
-        if (r && table) {
+        if (r && table && (storage_table = table->storage_table)) {
             const ecs_table_record_t *tr = flecs_id_record_get_table(
-                idr, table->storage_table);
+                idr, storage_table);
             if (tr) {
                 /* Entity has the component */
                 ecs_vec_t *column = &table->data.columns[tr->column];
