@@ -2361,12 +2361,13 @@ void ecs_ref_update(
     ecs_ref_t *ref);
 
 /** Get a mutable pointer to a component.
- * This operation is similar to ecs_get_id but it returns a mutable 
- * pointer. If this operation is invoked from inside a system, the entity will
- * be staged and a pointer to the staged component will be returned.
- *
- * If the entity did not yet have the component, the component will be added by
- * this operation. In this case the is_added out parameter will be set to true.
+ * This operation returns a mutable pointer to a component. If the component did
+ * not yet exist, it will be added.
+ * 
+ * If get_mut is called when the world is in deferred/readonly mode, the 
+ * function will:
+ * - return a pointer to a temp storage if the component does not yet exist, or
+ * - return a pointer to the existing component if it exists
  *
  * @param world The world.
  * @param entity The entity.
