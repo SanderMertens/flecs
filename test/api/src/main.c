@@ -132,6 +132,7 @@ void Entity_set_name_w_overlapping_ptr(void);
 void Entity_ensure_from_stage(void);
 void Entity_ensure_after_deleted_1_entity(void);
 void Entity_ensure_after_deleted_2_entities(void);
+void Entity_defer_entity_init_w_set_name_w_add_childof(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2217,6 +2218,7 @@ void DeferredActions_defer_existing_get_mut_no_on_set(void);
 void DeferredActions_get_mut_override(void);
 void DeferredActions_set_override(void);
 void DeferredActions_absent_get_mut_for_entity_w_tag(void);
+void DeferredActions_on_set_hook_before_on_add_for_existing_component(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -2863,6 +2865,10 @@ bake_test_case Entity_testcases[] = {
     {
         "ensure_after_deleted_2_entities",
         Entity_ensure_after_deleted_2_entities
+    },
+    {
+        "defer_entity_init_w_set_name_w_add_childof",
+        Entity_defer_entity_init_w_set_name_w_add_childof
     }
 };
 
@@ -10954,6 +10960,10 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "absent_get_mut_for_entity_w_tag",
         DeferredActions_absent_get_mut_for_entity_w_tag
+    },
+    {
+        "on_set_hook_before_on_add_for_existing_component",
+        DeferredActions_on_set_hook_before_on_add_for_existing_component
     }
 };
 
@@ -11555,7 +11565,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        95,
+        96,
         Entity_testcases
     },
     {
@@ -11842,7 +11852,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        111,
+        112,
         DeferredActions_testcases
     },
     {

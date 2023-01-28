@@ -1970,3 +1970,21 @@ void Entity_ensure_after_deleted_2_entities() {
 
     ecs_fini(world);
 }
+
+void Entity_defer_entity_init_w_set_name_w_add_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+
+    ecs_defer_begin(world);
+    ecs_entity(world, { .id = e, .name = "Foo" });
+    ecs_set_name(world, e, "FooBar");
+    ecs_add_pair(world, e, EcsChildOf, parent);
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e), "FooBar");
+    test_assert(e == ecs_lookup_fullpath(world, "parent.FooBar"));
+
+    ecs_fini(world);
+}

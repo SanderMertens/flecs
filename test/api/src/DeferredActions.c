@@ -3253,3 +3253,49 @@ void DeferredActions_absent_get_mut_for_entity_w_tag() {
 
     ecs_fini(world);
 }
+
+static int set_position_invoked = 0;
+static int add_tag_invoked = 0;
+
+static void set_position_hook(ecs_iter_t *it) {
+    set_position_invoked ++;
+}
+
+static void add_tag(ecs_iter_t *it) {
+    test_int(set_position_invoked, 1);
+    add_tag_invoked ++;
+}
+
+void DeferredActions_on_set_hook_before_on_add_for_existing_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = set_position_hook
+    });
+
+    ecs_observer(world, {
+        .filter.terms[0].id = TagA,
+        .events = { EcsOnAdd },
+        .callback = add_tag
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, TagB); /* 2 add commands, to trigger batching */
+    ecs_modified(world, e, Position);
+    ecs_add(world, e, TagA);
+
+    test_int(set_position_invoked, 0);
+    test_int(add_tag_invoked, 0);
+    ecs_defer_end(world);
+
+    test_assert(set_position_invoked != 0);
+    test_int(add_tag_invoked, 1);
+
+    ecs_fini(world);
+}

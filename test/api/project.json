@@ -138,7 +138,8 @@
                 "set_name_w_overlapping_ptr",
                 "ensure_from_stage",
                 "ensure_after_deleted_1_entity",
-                "ensure_after_deleted_2_entities"
+                "ensure_after_deleted_2_entities",
+                "defer_entity_init_w_set_name_w_add_childof"
             ]
         }, {
             "id": "Search",
@@ -2305,7 +2306,8 @@
                 "defer_existing_get_mut_no_on_set",
                 "get_mut_override",
                 "set_override",
-                "absent_get_mut_for_entity_w_tag"
+                "absent_get_mut_for_entity_w_tag",
+                "on_set_hook_before_on_add_for_existing_component"
             ]
         }, {
             "id": "SingleThreadStaging",
