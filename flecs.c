@@ -11634,6 +11634,7 @@ void* flecs_sparse_ensure(
         } else if (dense > count) {
             /* If dense is not alive, swap it with the first unused element. */
             flecs_sparse_swap_dense(sparse, page, dense, count);
+            dense = count;
 
             /* First unused element is now last used element */
             sparse->count ++;

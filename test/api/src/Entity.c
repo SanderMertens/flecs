@@ -1934,3 +1934,39 @@ void Entity_ensure_from_stage() {
 
     ecs_fini(world);
 }
+
+void Entity_ensure_after_deleted_1_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_delete(world, e1);
+    e1 = ecs_new_id(world);
+    ecs_delete(world, e1);
+
+    test_assert(!ecs_is_alive(world, e1));
+    ecs_ensure(world, e1);
+    test_assert(ecs_is_alive(world, e1));
+
+    ecs_fini(world);
+}
+
+void Entity_ensure_after_deleted_2_entities() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_delete(world, e1);
+    e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    test_assert(!ecs_is_alive(world, e1));
+    ecs_ensure(world, e1);
+    test_assert(ecs_is_alive(world, e1));
+
+    test_assert(!ecs_is_alive(world, e2));
+    ecs_ensure(world, e2);
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
