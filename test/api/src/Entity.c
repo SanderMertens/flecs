@@ -1923,3 +1923,14 @@ void Entity_set_name_w_overlapping_ptr() {
 
     ecs_fini(world);
 }
+
+void Entity_ensure_from_stage() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(!ecs_is_alive(world, 1000));
+    ecs_ensure(stage, 1000);
+    test_assert(ecs_is_alive(world, 1000));
+
+    ecs_fini(world);
+}

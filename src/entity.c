@@ -3498,8 +3498,16 @@ void ecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_poly_assert(world, ecs_world_t); /* Cannot be a stage */
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Const cast is safe, function checks for threading */
+    world = (ecs_world_t*)ecs_get_world(world);
+
+    /* The entity index can be mutated while in staged/readonly mode, as long as
+     * the world is not multithreaded. */
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
+        ECS_INVALID_OPERATION, NULL);
 
     /* Check if a version of the provided id is alive */
     ecs_entity_t any = ecs_get_alive(world, ecs_strip_generation(entity));
