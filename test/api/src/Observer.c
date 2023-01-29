@@ -45,7 +45,8 @@ void Observer_w_filter_term(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    test_assert(it->ptrs == NULL);
+    /* Not guaranteed to be NULL */
+    // test_assert(it->ptrs == NULL);
 }
 
 static
@@ -57,7 +58,8 @@ void Observer_w_1_filter_term(ecs_iter_t *it) {
     test_assert(it->entities[0] != 0);
 
     test_assert(it->ptrs != NULL);
-    test_assert(it->ptrs[0] == NULL);
+    /* Not guaranteed to be NULL */
+    // test_assert(it->ptrs[0] == NULL);
     test_assert(it->ptrs[1] != NULL);
 
     Velocity *v = ecs_field(it, Velocity, 2);
@@ -76,8 +78,9 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     test_assert(it->ptrs != NULL);
     test_assert(it->sizes != NULL);
 
-    test_assert(it->ptrs[0] == NULL);
-    test_assert(it->ptrs[1] == NULL);
+    /* Not guaranteed to be NULL */
+    // test_assert(it->ptrs[0] == NULL);
+    // test_assert(it->ptrs[1] == NULL);
     test_assert(it->ptrs[2] != NULL);
 
     Mass *m = ecs_field(it, Mass, 3);

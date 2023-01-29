@@ -218,35 +218,36 @@ void flecs_unregister_observer(
     }
 }
 
-
 static
 bool flecs_ignore_observer(
     ecs_world_t *world,
     ecs_observer_t *observer,
     ecs_table_t *table)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     int32_t *last_event_id = observer->last_event_id;
     if (last_event_id && last_event_id[0] == world->event_id) {
         return true;
     }
 
-    if (!table) {
-        return false;
-    }
-    
-    ecs_filter_t *filter = &observer->filter;
-    if (!(filter->flags & EcsFilterMatchPrefab) && 
-        (table->flags & EcsTableIsPrefab)) 
-    {
-        return true;
-    }
-    if (!(filter->flags & EcsFilterMatchDisabled) && 
-        (table->flags & EcsTableIsDisabled)) 
-    {
-        return true;
-    }
-    
-    return false;
+    ecs_flags32_t table_flags = table->flags, filter_flags = observer->filter.flags;
+
+    bool result = (table_flags & EcsTableIsPrefab) &&
+        !(filter_flags & EcsFilterMatchPrefab);
+    result = result || ((table_flags & EcsTableIsDisabled) &&
+        !(filter_flags & EcsFilterMatchDisabled));
+
+    return result;
+}
+
+static
+bool flecs_is_simple_result(
+    ecs_iter_t *it)
+{
+    return (it->count == 1) || (it->sizes[0] == 0) || (it->sources[0] == 0);
 }
 
 static
@@ -255,12 +256,11 @@ void flecs_observer_invoke(
     ecs_iter_t *it,
     ecs_observer_t *observer,
     ecs_iter_action_t callback,
-    ecs_table_t *table,
-    int32_t term_index) 
+    int32_t term_index,
+    bool simple_result) 
 {
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_table_lock(it->world, table);
     if (ecs_should_log_3()) {
         char *path = ecs_get_fullpath(world, it->system);
         ecs_dbg_3("observer: invoke %s", path);
@@ -274,27 +274,24 @@ void flecs_observer_invoke(
     ecs_filter_t *filter = &observer->filter;
     ecs_assert(term_index < filter->term_count, ECS_INTERNAL_ERROR, NULL);
     ecs_term_t *term = &filter->terms[term_index];
-    ecs_entity_t observer_src = term->src.id;
-    if (observer_src && !(term->src.flags & EcsIsEntity)) {
-        observer_src = 0;
-    }
-
     if (term->oper != EcsNot) {
-        ecs_assert((it->offset + it->count) <= ecs_table_count(table), 
+        ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
             ECS_INTERNAL_ERROR, NULL);
     }
 
-    int32_t i, count = it->count;
-    ecs_size_t size = it->sizes[0];
-    ecs_entity_t src = it->sources[0];
     bool instanced = filter->flags & EcsFilterIsInstanced;
-
-    if (!observer_src && ((count == 1) || (size == 0) || (src == 0) || instanced)) {
-        ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
+    bool match_this = filter->flags & EcsFilterMatchThis;
+    if (match_this && (simple_result || instanced)) {
         callback(it);
     } else {
-        ECS_BIT_CLEAR(it->flags, EcsIterIsInstanced);
+        ecs_entity_t observer_src = term->src.id;
+        if (observer_src && !(term->src.flags & EcsIsEntity)) {
+            observer_src = 0;
+        }
+
         ecs_entity_t *entities = it->entities;
+        int32_t i, count = it->count;
+        ecs_entity_t src = it->sources[0];
         it->count = 1;
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
@@ -317,7 +314,24 @@ void flecs_observer_invoke(
     }
 
     ecs_log_pop_3();
-    ecs_table_unlock(it->world, table);
+}
+
+static
+void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    it->ctx = o->ctx;
+    it->callback = o->callback;
+
+    if (ecs_should_log_3()) {
+        char *path = ecs_get_fullpath(it->world, it->system);
+        ecs_dbg_3("observer %s", path);
+        ecs_os_free(path);
+    }
+
+    ecs_log_push_3();
+    flecs_observer_invoke(it->real_world, it, o, o->callback, 0,
+        flecs_is_simple_result(it));
+    ecs_log_pop_3();
 }
 
 static
@@ -326,7 +340,8 @@ void flecs_uni_observer_invoke(
     ecs_observer_t *observer,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav)
+    ecs_entity_t trav,
+    bool simple_result)
 {
     ecs_filter_t *filter = &observer->filter;
     ecs_term_t *term = &filter->terms[0];
@@ -335,7 +350,6 @@ void flecs_uni_observer_invoke(
     }
 
     ecs_assert(trav == 0 || it->sources[0] != 0, ECS_INTERNAL_ERROR, NULL);
-
     if (trav && term->src.trav != trav) {
         return;
     }
@@ -350,10 +364,6 @@ void flecs_uni_observer_invoke(
 
     ecs_entity_t event = it->event;
     it->event = flecs_get_observer_event(term, event);
-    void *ptrs = it->ptrs;
-    if (is_filter) {
-        it->ptrs = NULL;
-    }
 
     if (observer->run) {
         it->next = flecs_default_observer_next_callback;
@@ -363,11 +373,10 @@ void flecs_uni_observer_invoke(
     } else {
         ecs_iter_action_t callback = observer->callback;
         it->callback = callback;
-        flecs_observer_invoke(world, it, observer, callback, table, 0);
+        flecs_observer_invoke(world, it, observer, callback, 0, simple_result);
     }
 
     it->event = event;
-    it->ptrs = ptrs;
 }
 
 void flecs_observers_invoke(
@@ -378,12 +387,17 @@ void flecs_observers_invoke(
     ecs_entity_t trav)
 {
     if (ecs_map_is_init(observers)) {
+        ecs_table_lock(it->world, table);
+
+        bool simple_result = flecs_is_simple_result(it);
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
-            flecs_uni_observer_invoke(world, o, it, table, trav);
+            flecs_uni_observer_invoke(world, o, it, table, trav, simple_result);
         }
+
+        ecs_table_unlock(it->world, table);
     }
 }
 
@@ -478,7 +492,10 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         user_it.callback = o->callback;
         
         flecs_iter_validate(&user_it);
-        flecs_observer_invoke(world, &user_it, o, o->callback, table, pivot_term);
+        ecs_table_lock(it->world, table);
+        flecs_observer_invoke(world, &user_it, o, o->callback, 
+            pivot_term, flecs_is_simple_result(&user_it));
+        ecs_table_unlock(it->world, table);
         ecs_iter_fini(&user_it);
         return true;
     }
@@ -494,7 +511,10 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
         return flecs_multi_observer_invoke(it);
     } else {
         it->ctx = o->ctx;
-        flecs_observer_invoke(it->real_world, it, o, o->callback, it->table, 0);
+        ecs_table_lock(it->world, it->table);
+        flecs_observer_invoke(it->real_world, it, o, o->callback, 0,
+            flecs_is_simple_result(it));
+        ecs_table_unlock(it->world, it->table);
         return true;
     }
 }
@@ -502,22 +522,6 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
 static
 void flecs_default_multi_observer_run_callback(ecs_iter_t *it) {
     flecs_multi_observer_invoke(it);
-}
-
-void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
-    ecs_observer_t *o = it->ctx;
-    it->ctx = o->ctx;
-    it->callback = o->callback;
-
-    if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(it->world, it->system);
-        ecs_dbg_3("observer %s", path);
-        ecs_os_free(path);
-    }
-
-    ecs_log_push_3();
-    flecs_observer_invoke(it->real_world, it, o, o->callback, it->table, 0);
-    ecs_log_pop_3();
 }
 
 /* For convenience, so applications can (in theory) use a single run callback 

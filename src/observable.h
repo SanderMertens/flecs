@@ -62,9 +62,6 @@ void flecs_emit(
 bool flecs_default_observer_next_callback(
     ecs_iter_t *it);
 
-void flecs_default_uni_observer_run_callback(
-    ecs_iter_t *it);
-
 void flecs_observers_invoke(
     ecs_world_t *world,
     ecs_map_t *observers,
