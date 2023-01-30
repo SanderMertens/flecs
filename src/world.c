@@ -88,8 +88,8 @@ const ecs_entity_t EcsOnRemove =              ECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsOnSet =                 ECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsUnSet =                 ECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnCreateTable =         ECS_HI_COMPONENT_ID + 38;
-const ecs_entity_t EcsOnDeleteTable =         ECS_HI_COMPONENT_ID + 39;
+const ecs_entity_t EcsOnTableCreate =         ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableDelete =         ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 41;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 42;
@@ -1643,47 +1643,6 @@ const ecs_world_info_t* ecs_get_world_info(
 {
     world = ecs_get_world(world);
     return &world->info;
-}
-
-void flecs_notify_queries(
-    ecs_world_t *world,
-    ecs_query_event_t *event)
-{
-    ecs_poly_assert(world, ecs_world_t); 
-
-    ecs_id_record_t *idr = flecs_id_record_get(world, 
-        ecs_pair(ecs_id(EcsPoly), EcsQuery));
-    if (!idr) {
-        return;
-    }
-    
-    ecs_table_cache_iter_t it;
-    const ecs_table_record_t *tr;
-    if (flecs_table_cache_all_iter(&idr->cache, &it)) {
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-            int32_t i, count = ecs_table_count(table);
-            if (!count) {
-                continue;
-            }
-
-            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
-            for (i = 0; i < count; i ++) {
-                ecs_query_t *query = queries[i].poly;
-                if (!ecs_poly_is(query, ecs_query_t)) {
-                    /* EcsQuery can also contain filters or rules */
-                    continue;
-                }
-
-                if (query->flags & EcsQueryIsSubquery) {
-                    continue;
-                }
-
-                ecs_poly_assert(query, ecs_query_t);
-                flecs_query_notify(world, query, event);
-            }
-        }
-    }    
 }
 
 void flecs_delete_table(

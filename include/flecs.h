@@ -595,6 +595,7 @@ struct ecs_observer_t {
     ecs_observable_t *observable; /**< Observable for observer */
 
     int32_t *last_event_id;     /**< Last handled event id */
+    int32_t last_event_id_storage;
 
     ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
     int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
@@ -1235,10 +1236,10 @@ FLECS_API extern const ecs_entity_t EcsMonitor;
 FLECS_API extern const ecs_entity_t EcsOnDelete;
 
 /** Event. Triggers when a table is created. */
-// FLECS_API extern const ecs_entity_t EcsOnCreateTable;
+FLECS_API extern const ecs_entity_t EcsOnTableCreate;
 
 /** Event. Triggers when a table is deleted. */
-// FLECS_API extern const ecs_entity_t EcsOnDeleteTable;
+FLECS_API extern const ecs_entity_t EcsOnTableDelete;
 
 /** Event. Triggers when a table becomes empty (doesn't emit on creation). */
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;

@@ -659,6 +659,7 @@ void flecs_table_records_unregister(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    uint64_t table_id = table->id;
     int32_t i, count = table->record_count;
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &table->records[i];
@@ -671,7 +672,7 @@ void flecs_table_records_unregister(
             ECS_INTERNAL_ERROR, NULL);
         (void)id;
 
-        ecs_table_cache_remove(cache, table, &tr->hdr);
+        ecs_table_cache_remove(cache, table_id, &tr->hdr);
         flecs_id_record_release(world, (ecs_id_record_t*)cache);
     }
 
@@ -1073,12 +1074,14 @@ void flecs_table_free(
 
     ecs_assert(table->refcount == 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (!is_root) {
-        flecs_notify_queries(
-            world, &(ecs_query_event_t){
-                .kind = EcsQueryTableUnmatch,
-                .table = table
-            });
+    if (!is_root && !(world->flags & EcsWorldQuit)) {
+        flecs_emit(world, world, &(ecs_event_desc_t) {
+            .ids = &table->type,
+            .event = EcsOnTableDelete,
+            .table = table,
+            .flags = EcsEventTableOnly,
+            .observable = world
+        });
     }
 
     if (ecs_should_log_2()) {
