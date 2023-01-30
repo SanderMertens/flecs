@@ -25,7 +25,7 @@ void ecs_table_cache_replace(
 
 void* ecs_table_cache_remove(
     ecs_table_cache_t *cache,
-    const ecs_table_t *table,
+    uint64_t table_id,
     ecs_table_cache_hdr_t *elem);
 
 void* ecs_table_cache_get(
