@@ -806,12 +806,12 @@ const ecs_entity_t* flecs_bulk_new(
 
     ecs_data_t *data = &table->data;
     int32_t row = flecs_table_appendn(world, table, data, count, entities);
-    
+
     /* Update entity index. */
     int i;
     ecs_record_t **records = ecs_vec_first(&data->records);
     for (i = 0; i < count; i ++) {
-        ecs_record_t *r = flecs_entities_ensure(world, entities[i]);
+        ecs_record_t *r = flecs_entities_get(world, entities[i]);
         r->table = table;
         r->row = ECS_ROW_TO_RECORD(row + i, 0);
         records[row + i] = r;
@@ -822,9 +822,6 @@ const ecs_entity_t* flecs_bulk_new(
         (component_data == NULL) ? 0 : EcsEventNoOnSet);
 
     if (component_data) {
-        /* Set components that we're setting in the component mask so the init
-         * actions won't call OnSet triggers for them. This ensures we won't
-         * call OnSet triggers multiple times for the same component */
         int32_t c_i;
         ecs_table_t *storage_table = table->storage_table;
         for (c_i = 0; c_i < component_ids->count; c_i ++) {
