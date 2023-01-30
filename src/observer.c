@@ -642,6 +642,9 @@ int flecs_uni_observer_init(
 {
     ecs_term_t *term = &observer->filter.terms[0];
     observer->last_event_id = desc->last_event_id;    
+    if (!observer->last_event_id) {
+        observer->last_event_id = &observer->last_event_id_storage;
+    }
     observer->register_id = flecs_from_public_id(world, term->id);
     term->field_index = desc->term_index;
 
@@ -949,7 +952,6 @@ void flecs_observer_fini(
     ecs_observer_t *observer)
 {
     if (observer->is_multi) {
-        /* Child observers get deleted up by entity cleanup logic */
         ecs_os_free(observer->last_event_id);
     } else {
         if (observer->filter.term_count) {
