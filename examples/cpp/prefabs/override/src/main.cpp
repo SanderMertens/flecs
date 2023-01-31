@@ -29,7 +29,7 @@ int main() {
     // Attack and Damage are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't
     // have to copy the values of Attack and Defense to private components.
-    flecs::entity SpaceShip = ecs.entity("SpaceShip")
+    flecs::entity SpaceShip = ecs.prefab("SpaceShip")
         .set<Attack>({ 75 })
         .set<Defense>({ 100 });
 
