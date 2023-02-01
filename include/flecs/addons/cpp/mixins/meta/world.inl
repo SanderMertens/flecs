@@ -39,11 +39,11 @@ flecs::meta::cursor cursor(void *ptr) {
 flecs::entity primitive(flecs::primitive_kind_t kind);
 
 /** Create array type. */
-flecs::entity array(flecs::entity_t elem_id, int32_t count);
+flecs::entity array(flecs::entity_t elem_id, int32_t array_count);
 
 /** Create array type. */
 template <typename T>
-flecs::entity array(int32_t count);
+flecs::entity array(int32_t array_count);
 
 /** Create vector type. */
 flecs::entity vector(flecs::entity_t elem_id);

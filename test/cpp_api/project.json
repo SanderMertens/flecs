@@ -1151,7 +1151,19 @@
                 "unit_w_quantity",
                 "unit_w_prefix",
                 "unit_w_over",
-                "bitmask"
+                "bitmask",
+                "custom_i32_to_json",
+                "custom_std_string_to_json",
+                "custom_std_vector_i32_to_json",
+                "custom_std_vector_std_string_to_json",
+                "type_w_std_vector",
+                "type_w_std_string",
+                "type_w_std_vector_std_string",
+                "type_w_std_string_std_vector",
+                "type_w_std_string_std_string",
+                "type_w_std_vector_std_vector",
+                "type_w_std_vector_std_string_std_vector",
+                "type_w_std_vector_std_vector_std_string"
             ]
         }, {
             "id": "Table",

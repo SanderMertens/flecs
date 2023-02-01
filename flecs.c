@@ -6520,8 +6520,6 @@ ecs_entity_t ecs_new_id(
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
-    ecs_assert(ecs_get_type(world, entity) == NULL, ECS_INTERNAL_ERROR, NULL);
-
     flecs_journal(world, EcsJournalNew, entity, 0, 0);
 
     return entity;
@@ -40515,16 +40513,10 @@ const ecs_entity_t ecs_id(EcsIdentifier) =                          2;
 const ecs_entity_t ecs_id(EcsIterable) =                            3;
 const ecs_entity_t ecs_id(EcsPoly) =                                4;
 
+/* Poly target components */
 const ecs_entity_t EcsQuery =                                       5;
-const ecs_entity_t EcsObserver =                                    7;
-
-/* System module component ids */
-const ecs_entity_t EcsSystem =                                      10;
-const ecs_entity_t ecs_id(EcsTickSource) =                          11;
-
-/** Timer module component ids */
-const ecs_entity_t ecs_id(EcsTimer) =                               13;
-const ecs_entity_t ecs_id(EcsRateFilter) =                          14;
+const ecs_entity_t EcsObserver =                                    6;
+const ecs_entity_t EcsSystem =                                      7;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                         ECS_HI_COMPONENT_ID + 0;
@@ -40582,6 +40574,11 @@ const ecs_entity_t EcsOnDeleteTrigger =               ECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteObservable =            ECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnComponentHooks =              ECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnDeleteTarget =                ECS_HI_COMPONENT_ID + 46;
+
+/* Timers */
+const ecs_entity_t ecs_id(EcsTickSource) =            ECS_HI_COMPONENT_ID + 47;
+const ecs_entity_t ecs_id(EcsTimer) =                 ECS_HI_COMPONENT_ID + 48;
+const ecs_entity_t ecs_id(EcsRateFilter) =            ECS_HI_COMPONENT_ID + 49;
 
 /* Actions */
 const ecs_entity_t EcsRemove =                        ECS_HI_COMPONENT_ID + 50;

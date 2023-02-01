@@ -287,3 +287,249 @@ void Meta_bitmask() {
     const Sandwich *ptr = e.get<Sandwich>();
     test_str(ecs.to_expr(ptr).c_str(), "{toppings: Lettuce|Bacon}");
 }
+
+struct Int {
+    int32_t v;
+};
+
+struct TVector {
+    std::vector<int> v;
+};
+
+struct TString {
+    std::string v;
+};
+
+struct TVectorString {
+    std::vector<int> v;
+    std::string s;
+};
+
+struct TStringVector {
+    std::string s;
+    std::vector<int> v;
+};
+
+struct TStringString {
+    std::string s1;
+    std::string s2;
+};
+
+struct TVectorVector {
+    std::vector<int> v1;
+    std::vector<int> v2;
+};
+
+struct TVectorVectorString {
+    std::vector<int> v1;
+    std::vector<int> v2;
+    std::string s;
+};
+
+struct TVectorStringVector {
+    std::vector<int> v1;
+    std::string s;
+    std::vector<int> v2;
+};
+
+static
+int Int_serialize(const flecs::meta::serializer_t *s, const void *ptr) {
+    const Int *data = static_cast<const Int*>(ptr);
+    return s->value(data->v);
+}
+
+static
+int String_serialize(const flecs::meta::serializer_t *s, const void *ptr) {
+    const std::string *data = static_cast<const std::string*>(ptr);
+    const char *str = data->c_str();
+    return s->value(flecs::String, &str);
+}
+
+template <typename Elem>
+int Vector_serialize(const flecs::meta::serializer_t *ser, const void *ptr) {
+    using T = std::vector<Elem>;
+    const T *data = static_cast<const T*>(ptr);
+
+    for (const auto& el : *data) {
+        if (ser->value(el)) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+void Meta_custom_i32_to_json() {
+    flecs::world ecs;
+
+    ecs.component<Int>().custom_type(Int_serialize, flecs::I32);
+
+    Int v = {10};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "10");
+}
+
+void Meta_custom_std_string_to_json() {
+    flecs::world ecs;
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    std::string v = {"Hello World"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "\"Hello World\"");
+}
+
+void Meta_custom_std_vector_i32_to_json() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    std::vector<int> v = {1, 2, 3};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "[1, 2, 3]");
+}
+
+void Meta_custom_std_vector_std_string_to_json() {
+    flecs::world ecs;
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<std::vector<std::string>>()
+        .custom_type(Vector_serialize<std::string>, ecs.vector(flecs::String));
+
+    std::vector<std::string> v = {"hello", "world", "foo"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "[\"hello\", \"world\", \"foo\"]");
+}
+
+void Meta_type_w_std_vector() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<TVector>()
+        .member<std::vector<int>>("v");
+
+    TVector v = {{1, 2, 3}};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v\":[1, 2, 3]}");
+}
+
+void Meta_type_w_std_string() {
+    flecs::world ecs;
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TString>()
+        .member<std::string>("v");
+
+    TString v = {"hello world"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v\":\"hello world\"}");
+}
+
+void Meta_type_w_std_vector_std_string() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TVectorString>()
+        .member<std::vector<int>>("v")
+        .member<std::string>("s");
+
+    TVectorString v = {{1, 2, 3}, "hello world"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v\":[1, 2, 3], \"s\":\"hello world\"}");
+}
+
+void Meta_type_w_std_string_std_vector() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TStringVector>()
+        .member<std::string>("s")
+        .member<std::vector<int>>("v");
+
+    TStringVector v = {"hello world", {1, 2, 3}};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"s\":\"hello world\", \"v\":[1, 2, 3]}");
+}
+
+void Meta_type_w_std_string_std_string() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TStringString>()
+        .member<std::string>("s1")
+        .member<std::string>("s2");
+
+    TStringString v = {"hello world", "foo bar"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"s1\":\"hello world\", \"s2\":\"foo bar\"}");
+}
+
+void Meta_type_w_std_vector_std_vector() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TVectorVector>()
+        .member<std::vector<int>>("v1")
+        .member<std::vector<int>>("v2");
+
+    TVectorVector v = {{1, 2, 3}, {4, 5, 6}};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v1\":[1, 2, 3], \"v2\":[4, 5, 6]}");
+}
+
+void Meta_type_w_std_vector_std_string_std_vector() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TVectorStringVector>()
+        .member<std::vector<int>>("v1")
+        .member<std::string>("s")
+        .member<std::vector<int>>("v2");
+
+    TVectorStringVector v = {{1, 2, 3}, "hello world", {4, 5, 6}};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v1\":[1, 2, 3], \"s\":\"hello world\", \"v2\":[4, 5, 6]}");
+}
+
+void Meta_type_w_std_vector_std_vector_std_string() {
+    flecs::world ecs;
+
+    ecs.component<std::vector<int>>()
+        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+
+    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+
+    ecs.component<TVectorVectorString>()
+        .member<std::vector<int>>("v1")
+        .member<std::vector<int>>("v2")
+        .member<std::string>("s");
+
+    TVectorVectorString v = {{1, 2, 3}, {4, 5, 6}, "hello world"};
+    flecs::string json = ecs.to_json(&v);
+    test_str(json, "{\"v1\":[1, 2, 3], \"v2\":[4, 5, 6], \"s\":\"hello world\"}");
+}

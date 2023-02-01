@@ -4442,7 +4442,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserComponentId (16)
+#define EcsFirstUserComponentId (8)
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -19009,11 +19009,11 @@ flecs::meta::cursor cursor(void *ptr) {
 flecs::entity primitive(flecs::primitive_kind_t kind);
 
 /** Create array type. */
-flecs::entity array(flecs::entity_t elem_id, int32_t count);
+flecs::entity array(flecs::entity_t elem_id, int32_t array_count);
 
 /** Create array type. */
 template <typename T>
-flecs::entity array(int32_t count);
+flecs::entity array(int32_t array_count);
 
 /** Create vector type. */
 flecs::entity vector(flecs::entity_t elem_id);
@@ -27282,10 +27282,10 @@ inline flecs::entity world::primitive(flecs::primitive_kind_t kind) {
 }
 
 /** Create array type. */
-inline flecs::entity world::array(flecs::entity_t elem_id, int32_t count) {
+inline flecs::entity world::array(flecs::entity_t elem_id, int32_t array_count) {
     ecs_array_desc_t desc = {};
     desc.type = elem_id;
-    desc.count = count;
+    desc.count = array_count;
     flecs::entity_t eid = ecs_array_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
     return flecs::entity(m_world, eid);
@@ -27293,8 +27293,8 @@ inline flecs::entity world::array(flecs::entity_t elem_id, int32_t count) {
 
 /** Create array type. */
 template <typename T>
-inline flecs::entity world::array(int32_t count) {
-    return this->array(_::cpp_type<T>::id(m_world), count);
+inline flecs::entity world::array(int32_t array_count) {
+    return this->array(_::cpp_type<T>::id(m_world), array_count);
 }
 
 inline flecs::entity world::vector(flecs::entity_t elem_id) {
@@ -27312,12 +27312,12 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
-int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
+inline int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
 
 template <typename T>
-int ecs_meta_serializer_t::value(const T& v) const {
+inline int ecs_meta_serializer_t::value(const T& v) const {
     return this->value(flecs::_::cpp_type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
 }
