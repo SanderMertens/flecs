@@ -4442,7 +4442,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserComponentId (32)
+#define EcsFirstUserComponentId (16)
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -12232,6 +12232,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
+FLECS_API extern const ecs_entity_t ecs_id(EcsMetaCustomType);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
@@ -12264,6 +12265,7 @@ typedef enum ecs_type_kind_t {
     EcsStructType,
     EcsArrayType,
     EcsVectorType,
+    EcsCustomType,
     EcsTypeKindLast = EcsVectorType
 } ecs_type_kind_t;
 
@@ -12374,6 +12376,30 @@ typedef struct EcsVector {
 } EcsVector;
 
 
+/* Custom type support */
+
+/** Serializer interface */
+typedef struct ecs_serializer_t {
+    /* Serialize value */
+    int (*value)(
+        const struct ecs_serializer_t *ser, /**< Serializer */
+        ecs_entity_t type,              /**< Type of the value to serialize */
+        const void *value);             /**< Pointer to the value to serialize */
+
+    void *ctx;
+} ecs_serializer_t;
+
+/** Callback invoked for a custom type. */
+typedef int (*ecs_meta_serialize_t)(
+    const ecs_serializer_t *ser,
+    const void *src);                  /**< Pointer to value to serialize */
+
+typedef struct EcsMetaCustomType {
+    ecs_entity_t type;                 /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;    /**< Serialize action */
+} EcsMetaCustomType;
+
+
 /* Units */
 
 /* Helper type to describe translation between two units. Note that this
@@ -12407,6 +12433,7 @@ typedef struct EcsUnitPrefix {
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpArray,
     EcsOpVector,
+    EcsOpCustomType,
     EcsOpPush,
     EcsOpPop,
 
@@ -12658,8 +12685,7 @@ ecs_entity_t ecs_meta_get_entity(
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
-    /* Existing entity to associate with primitive (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_primitive_kind_t kind;
 } ecs_primitive_desc_t;
 
@@ -12671,8 +12697,7 @@ ecs_entity_t ecs_primitive_init(
 
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {
-    /* Existing entity to associate with enum (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_enum_desc_t;
 
@@ -12685,8 +12710,7 @@ ecs_entity_t ecs_enum_init(
 
 /** Used with ecs_bitmask_init. */
 typedef struct ecs_bitmask_desc_t {
-    /* Existing entity to associate with bitmask (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_bitmask_desc_t;
 
@@ -12699,8 +12723,7 @@ ecs_entity_t ecs_bitmask_init(
 
 /** Used with ecs_array_init. */
 typedef struct ecs_array_desc_t {
-    /* Existing entity to associate with array (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_entity_t type;
     int32_t count;
 } ecs_array_desc_t;
@@ -12714,8 +12737,7 @@ ecs_entity_t ecs_array_init(
 
 /** Used with ecs_vector_init. */
 typedef struct ecs_vector_desc_t {
-    /* Existing entity to associate with vector (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_entity_t type;
 } ecs_vector_desc_t;
 
@@ -12728,8 +12750,7 @@ ecs_entity_t ecs_vector_init(
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {
-    /* Existing entity to associate with struct (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_member_t members[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_struct_desc_t;
 
@@ -12738,6 +12759,19 @@ FLECS_API
 ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
+
+/** Used with ecs_custom_type_init. */
+typedef struct ecs_custom_type_desc_t {
+    ecs_entity_t entity;
+    ecs_entity_t type;                 /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;    /**< Serialize action */
+} ecs_custom_type_desc_t;
+
+/** Create a new custom type */
+FLECS_API
+ecs_entity_t ecs_custom_type_init(
+    ecs_world_t *world,
+    const ecs_custom_type_desc_t *desc);
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
@@ -12814,6 +12848,9 @@ ecs_entity_t ecs_quantity_init(
 
 #define ecs_vector(world, ...)\
     ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
+
+#define ecs_custom_type(world, ...)\
+    ecs_custom_type_init(world, &(ecs_custom_type_desc_t) __VA_ARGS__ )
 
 #define ecs_struct(world, ...)\
     ecs_struct_init(world, &(ecs_struct_desc_t) __VA_ARGS__ )

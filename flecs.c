@@ -6520,6 +6520,8 @@ ecs_entity_t ecs_new_id(
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
+    ecs_assert(ecs_get_type(world, entity) == NULL, ECS_INTERNAL_ERROR, NULL);
+
     flecs_journal(world, EcsJournalNew, entity, 0, 0);
 
     return entity;
@@ -6556,6 +6558,8 @@ ecs_entity_t ecs_new_low_id(
     } else {
         flecs_entities_ensure(world, id);
     }
+
+    ecs_assert(ecs_get_type(world, id) == NULL, ECS_INTERNAL_ERROR, NULL);
 
     return id;
 error: 
@@ -25696,6 +25700,23 @@ ecs_entity_t ecs_struct_init(
     return t;
 }
 
+ecs_entity_t ecs_custom_type_init(
+    ecs_world_t *world,
+    const ecs_custom_type_desc_t *desc)
+{
+    ecs_entity_t t = desc->entity;
+    if (!t) {
+        t = ecs_new_low_id(world);
+    }
+
+    ecs_set(world, t, EcsMetaCustomType, {
+        .type = desc->type,
+        .serialize = desc->serialize
+    });
+
+    return t;
+}
+
 ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
@@ -25927,6 +25948,23 @@ ecs_vector_t* serialize_vector(
 }
 
 static
+ecs_vector_t* serialize_custom_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpCustomType);
+    op->offset = offset;
+    op->type = type;
+    op->size = type_size(world, type);
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -26020,6 +26058,10 @@ ecs_vector_t* serialize_type(
 
     case EcsVectorType:
         ops = serialize_vector(world, type, offset, ops);
+        break;
+
+    case EcsCustomType:
+        ops = serialize_custom_type(world, type, offset, ops);
         break;
     }
 
@@ -26896,6 +26938,34 @@ void flecs_set_vector(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_set_custom_type(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsMetaCustomType *custom_type = ecs_field(it, EcsMetaCustomType, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t elem_type = custom_type[i].type;
+
+        if (!elem_type) {
+            ecs_err("custom type '%s' has no mapping type", ecs_get_name(world, e));
+            continue;
+        }
+
+        const EcsComponent *comp = ecs_get(world, e, EcsComponent);
+        if (!comp->size || !comp->alignment) {
+            ecs_err("custom type '%s' has no size/alignment, register as component first",
+                ecs_get_name(world, e));
+            continue;
+        }
+
+        if (flecs_init_type(world, e, EcsCustomType, comp->size, comp->alignment)) {
+            continue;
+        }
+    }
+}
+
 bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
@@ -27093,6 +27163,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
+    flecs_bootstrap_component(world, EcsMetaCustomType);
     flecs_bootstrap_component(world, EcsUnit);
     flecs_bootstrap_component(world, EcsUnitPrefix);
 
@@ -27197,6 +27268,12 @@ void FlecsMetaImport(
         .filter.terms[0] = { .id = ecs_id(EcsVector), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_vector
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsMetaCustomType), .src.flags = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = flecs_set_custom_type
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -27353,6 +27430,14 @@ void FlecsMetaImport(
         .entity = ecs_id(EcsVector),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsMetaCustomType),
+        .members = {
+            { .name = (char*)"type", .type = ecs_id(ecs_entity_t) },
+            { .name = (char*)"serialize", .type = ecs_id(ecs_uptr_t) }
         }
     });
 
@@ -33714,6 +33799,74 @@ int json_ser_vector(
     return json_ser_type_elements(world, v->type, array, count, str);
 }
 
+typedef struct json_serializer_ctx_t {
+    const ecs_world_t *world;
+    ecs_strbuf_t *str;
+    bool is_primitive;
+} json_serializer_ctx_t;
+
+static
+int json_ser_custom_value(
+    const ecs_serializer_t *ser,
+    ecs_entity_t type,
+    const void *value)
+{
+    json_serializer_ctx_t *json_ser = ser->ctx;
+    if (!json_ser->is_primitive) {
+        ecs_strbuf_list_next(json_ser->str);
+    }
+    return ecs_ptr_to_json_buf(json_ser->world, type, value, json_ser->str);
+}
+
+static
+int json_ser_custom_type(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_strbuf_t *str)
+{
+    const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
+    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(ct->type != 0, ECS_INVALID_OPERATION, NULL);
+
+    const EcsMetaType *pt = ecs_get(world, ct->type, EcsMetaType);
+    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
+
+    ecs_type_kind_t kind = pt->kind;
+    bool is_primitive = true;
+
+    if (kind == EcsStructType) {
+        flecs_json_object_push(str);
+        is_primitive = false;
+    } else if (kind == EcsArrayType || kind == EcsVectorType) {
+        flecs_json_array_push(str);
+        is_primitive = false;
+    }
+
+    json_serializer_ctx_t json_ser = {
+        .world = world,
+        .str = str,
+        .is_primitive = is_primitive
+    };
+
+    ecs_serializer_t ser = {
+        .value = json_ser_custom_value,
+        .ctx = &json_ser
+    };
+
+    if (ct->serialize(&ser, base)) {
+        return -1;
+    }
+
+    if (kind == EcsStructType) {
+        flecs_json_object_pop(str);
+    } else if (kind == EcsArrayType || kind == EcsVectorType) {
+        flecs_json_array_pop(str);
+    }
+
+    return 0;
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_ser_type_op(
@@ -33753,6 +33906,11 @@ int json_ser_type_op(
         break;
     case EcsOpVector:
         if (json_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpCustomType:
+        if (json_ser_custom_type(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;
         }
         break;
@@ -33944,7 +34102,7 @@ char* ecs_ptr_to_json(
 }
 
 static
-bool skip_id(
+bool flecs_json_skip_id(
     const ecs_world_t *world,
     ecs_id_t id,
     const ecs_entity_to_json_desc_t *desc,
@@ -34033,7 +34191,7 @@ int flecs_json_append_type_labels(
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t pred = 0, obj = 0, role = 0;
-        if (skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
+        if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
             continue;
         }
 
@@ -34090,7 +34248,7 @@ int flecs_json_append_type_values(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -34153,7 +34311,7 @@ int flecs_json_append_type_info(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -34209,7 +34367,7 @@ int flecs_json_append_type_hidden(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -34247,7 +34405,7 @@ int flecs_json_append_type(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t pred = 0, obj = 0, role = 0;
-        if (skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
+        if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
             continue;
         }
 
@@ -40363,132 +40521,133 @@ const ecs_entity_t ecs_id(EcsTickSource) =                          11;
 const ecs_entity_t ecs_id(EcsTimer) =                               13;
 const ecs_entity_t ecs_id(EcsRateFilter) =                          14;
 
-/** Meta module component ids */
-const ecs_entity_t ecs_id(EcsMetaType) =                            15;
-const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =                  16;
-const ecs_entity_t ecs_id(EcsPrimitive) =                           17;
-const ecs_entity_t ecs_id(EcsEnum) =                                18;
-const ecs_entity_t ecs_id(EcsBitmask) =                             19;
-const ecs_entity_t ecs_id(EcsMember) =                              20;
-const ecs_entity_t ecs_id(EcsStruct) =                              21;
-const ecs_entity_t ecs_id(EcsArray) =                               22;
-const ecs_entity_t ecs_id(EcsVector) =                              23;
-const ecs_entity_t ecs_id(EcsUnit) =                                24;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =                          25;
-
 /* Core scopes & entities */
-const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
-const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
-const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
-const ecs_entity_t EcsFlecsInternals =        ECS_HI_COMPONENT_ID + 3;
-const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
-const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
-const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
+const ecs_entity_t EcsWorld =                         ECS_HI_COMPONENT_ID + 0;
+const ecs_entity_t EcsFlecs =                         ECS_HI_COMPONENT_ID + 1;
+const ecs_entity_t EcsFlecsCore =                     ECS_HI_COMPONENT_ID + 2;
+const ecs_entity_t EcsFlecsInternals =                ECS_HI_COMPONENT_ID + 3;
+const ecs_entity_t EcsModule =                        ECS_HI_COMPONENT_ID + 4;
+const ecs_entity_t EcsPrivate =                       ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsPrefab =                        ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsDisabled =                      ECS_HI_COMPONENT_ID + 7;
 
-const ecs_entity_t EcsSlotOf =                  ECS_HI_COMPONENT_ID + 8;
-const ecs_entity_t EcsFlag =                  ECS_HI_COMPONENT_ID + 9;
+const ecs_entity_t EcsSlotOf =                        ECS_HI_COMPONENT_ID + 8;
+const ecs_entity_t EcsFlag =                          ECS_HI_COMPONENT_ID + 9;
 
 /* Relationship properties */
-const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
-const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
-const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsVariable =              ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsWildcard =                      ECS_HI_COMPONENT_ID + 10;
+const ecs_entity_t EcsAny =                           ECS_HI_COMPONENT_ID + 11;
+const ecs_entity_t EcsThis =                          ECS_HI_COMPONENT_ID + 12;
+const ecs_entity_t EcsVariable =                      ECS_HI_COMPONENT_ID + 13;
 
-const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 14;
-const ecs_entity_t EcsReflexive =             ECS_HI_COMPONENT_ID + 15;
-const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 17;
-const ecs_entity_t EcsDontInherit =           ECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsUnion =                 ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsTransitive =                    ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsReflexive =                     ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsSymmetric =                     ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsFinal =                         ECS_HI_COMPONENT_ID + 17;
+const ecs_entity_t EcsDontInherit =                   ECS_HI_COMPONENT_ID + 18;
+const ecs_entity_t EcsTag =                           ECS_HI_COMPONENT_ID + 19;
+const ecs_entity_t EcsUnion =                         ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsExclusive =                     ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsAcyclic =                       ECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 24;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsDependsOn =             ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 27;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsAlias =                 ECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsName =                          ECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsSymbol =                        ECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsAlias =                         ECS_HI_COMPONENT_ID + 32;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                 ECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsOnRemove =              ECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsOnSet =                 ECS_HI_COMPONENT_ID + 35;
-const ecs_entity_t EcsUnSet =                 ECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableCreate =         ECS_HI_COMPONENT_ID + 38;
-const ecs_entity_t EcsOnTableDelete =         ECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 40;
-const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 42;
-const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 43;
-const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 44;
-const ecs_entity_t EcsOnComponentHooks =      ECS_HI_COMPONENT_ID + 45;
-const ecs_entity_t EcsOnDeleteTarget =        ECS_HI_COMPONENT_ID + 46;
+const ecs_entity_t EcsOnAdd =                         ECS_HI_COMPONENT_ID + 33;
+const ecs_entity_t EcsOnRemove =                      ECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsOnSet =                         ECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsUnSet =                         ECS_HI_COMPONENT_ID + 36;
+const ecs_entity_t EcsOnDelete =                      ECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsOnTableCreate =                 ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableDelete =                 ECS_HI_COMPONENT_ID + 39;
+const ecs_entity_t EcsOnTableEmpty =                  ECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnTableFill =                   ECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnCreateTrigger =               ECS_HI_COMPONENT_ID + 42;
+const ecs_entity_t EcsOnDeleteTrigger =               ECS_HI_COMPONENT_ID + 43;
+const ecs_entity_t EcsOnDeleteObservable =            ECS_HI_COMPONENT_ID + 44;
+const ecs_entity_t EcsOnComponentHooks =              ECS_HI_COMPONENT_ID + 45;
+const ecs_entity_t EcsOnDeleteTarget =                ECS_HI_COMPONENT_ID + 46;
 
 /* Actions */
-const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
-const ecs_entity_t EcsDelete =                ECS_HI_COMPONENT_ID + 51;
-const ecs_entity_t EcsPanic =                 ECS_HI_COMPONENT_ID + 52;
+const ecs_entity_t EcsRemove =                        ECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsDelete =                        ECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
-const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsEmpty =                 ECS_HI_COMPONENT_ID + 62;
-const ecs_entity_t ecs_id(EcsPipeline) =      ECS_HI_COMPONENT_ID + 63;
-const ecs_entity_t EcsOnStart =               ECS_HI_COMPONENT_ID + 64;
-const ecs_entity_t EcsPreFrame =              ECS_HI_COMPONENT_ID + 65;
-const ecs_entity_t EcsOnLoad =                ECS_HI_COMPONENT_ID + 66;
-const ecs_entity_t EcsPostLoad =              ECS_HI_COMPONENT_ID + 67;
-const ecs_entity_t EcsPreUpdate =             ECS_HI_COMPONENT_ID + 68;
-const ecs_entity_t EcsOnUpdate =              ECS_HI_COMPONENT_ID + 69;
-const ecs_entity_t EcsOnValidate =            ECS_HI_COMPONENT_ID + 70;
-const ecs_entity_t EcsPostUpdate =            ECS_HI_COMPONENT_ID + 71;
-const ecs_entity_t EcsPreStore =              ECS_HI_COMPONENT_ID + 72;
-const ecs_entity_t EcsOnStore =               ECS_HI_COMPONENT_ID + 73;
-const ecs_entity_t EcsPostFrame =             ECS_HI_COMPONENT_ID + 74;
+const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;
+const ecs_entity_t EcsEmpty =                         ECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t ecs_id(EcsPipeline) =              ECS_HI_COMPONENT_ID + 63;
+const ecs_entity_t EcsOnStart =                       ECS_HI_COMPONENT_ID + 64;
+const ecs_entity_t EcsPreFrame =                      ECS_HI_COMPONENT_ID + 65;
+const ecs_entity_t EcsOnLoad =                        ECS_HI_COMPONENT_ID + 66;
+const ecs_entity_t EcsPostLoad =                      ECS_HI_COMPONENT_ID + 67;
+const ecs_entity_t EcsPreUpdate =                     ECS_HI_COMPONENT_ID + 68;
+const ecs_entity_t EcsOnUpdate =                      ECS_HI_COMPONENT_ID + 69;
+const ecs_entity_t EcsOnValidate =                    ECS_HI_COMPONENT_ID + 70;
+const ecs_entity_t EcsPostUpdate =                    ECS_HI_COMPONENT_ID + 71;
+const ecs_entity_t EcsPreStore =                      ECS_HI_COMPONENT_ID + 72;
+const ecs_entity_t EcsOnStore =                       ECS_HI_COMPONENT_ID + 73;
+const ecs_entity_t EcsPostFrame =                     ECS_HI_COMPONENT_ID + 74;
 
-const ecs_entity_t EcsPhase =                 ECS_HI_COMPONENT_ID + 75;
+const ecs_entity_t EcsPhase =                         ECS_HI_COMPONENT_ID + 75;
 
 /* Meta primitive components (don't use low ids to save id space) */
-const ecs_entity_t ecs_id(ecs_bool_t) =       ECS_HI_COMPONENT_ID + 80;
-const ecs_entity_t ecs_id(ecs_char_t) =       ECS_HI_COMPONENT_ID + 81;
-const ecs_entity_t ecs_id(ecs_byte_t) =       ECS_HI_COMPONENT_ID + 82;
-const ecs_entity_t ecs_id(ecs_u8_t) =         ECS_HI_COMPONENT_ID + 83;
-const ecs_entity_t ecs_id(ecs_u16_t) =        ECS_HI_COMPONENT_ID + 84;
-const ecs_entity_t ecs_id(ecs_u32_t) =        ECS_HI_COMPONENT_ID + 85;
-const ecs_entity_t ecs_id(ecs_u64_t) =        ECS_HI_COMPONENT_ID + 86;
-const ecs_entity_t ecs_id(ecs_uptr_t) =       ECS_HI_COMPONENT_ID + 87;
-const ecs_entity_t ecs_id(ecs_i8_t) =         ECS_HI_COMPONENT_ID + 88;
-const ecs_entity_t ecs_id(ecs_i16_t) =        ECS_HI_COMPONENT_ID + 89;
-const ecs_entity_t ecs_id(ecs_i32_t) =        ECS_HI_COMPONENT_ID + 90;
-const ecs_entity_t ecs_id(ecs_i64_t) =        ECS_HI_COMPONENT_ID + 91;
-const ecs_entity_t ecs_id(ecs_iptr_t) =       ECS_HI_COMPONENT_ID + 92;
-const ecs_entity_t ecs_id(ecs_f32_t) =        ECS_HI_COMPONENT_ID + 93;
-const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 94;
-const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 95;
-const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 96;
-const ecs_entity_t EcsConstant =              ECS_HI_COMPONENT_ID + 97;
-const ecs_entity_t EcsQuantity =              ECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(ecs_bool_t) =               ECS_HI_COMPONENT_ID + 80;
+const ecs_entity_t ecs_id(ecs_char_t) =               ECS_HI_COMPONENT_ID + 81;
+const ecs_entity_t ecs_id(ecs_byte_t) =               ECS_HI_COMPONENT_ID + 82;
+const ecs_entity_t ecs_id(ecs_u8_t) =                 ECS_HI_COMPONENT_ID + 83;
+const ecs_entity_t ecs_id(ecs_u16_t) =                ECS_HI_COMPONENT_ID + 84;
+const ecs_entity_t ecs_id(ecs_u32_t) =                ECS_HI_COMPONENT_ID + 85;
+const ecs_entity_t ecs_id(ecs_u64_t) =                ECS_HI_COMPONENT_ID + 86;
+const ecs_entity_t ecs_id(ecs_uptr_t) =               ECS_HI_COMPONENT_ID + 87;
+const ecs_entity_t ecs_id(ecs_i8_t) =                 ECS_HI_COMPONENT_ID + 88;
+const ecs_entity_t ecs_id(ecs_i16_t) =                ECS_HI_COMPONENT_ID + 89;
+const ecs_entity_t ecs_id(ecs_i32_t) =                ECS_HI_COMPONENT_ID + 90;
+const ecs_entity_t ecs_id(ecs_i64_t) =                ECS_HI_COMPONENT_ID + 91;
+const ecs_entity_t ecs_id(ecs_iptr_t) =               ECS_HI_COMPONENT_ID + 92;
+const ecs_entity_t ecs_id(ecs_f32_t) =                ECS_HI_COMPONENT_ID + 93;
+const ecs_entity_t ecs_id(ecs_f64_t) =                ECS_HI_COMPONENT_ID + 94;
+const ecs_entity_t ecs_id(ecs_string_t) =             ECS_HI_COMPONENT_ID + 95;
+const ecs_entity_t ecs_id(ecs_entity_t) =             ECS_HI_COMPONENT_ID + 96;
+
+/** Meta module component ids */
+const ecs_entity_t ecs_id(EcsMetaType) =              ECS_HI_COMPONENT_ID + 97;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =    ECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(EcsPrimitive) =             ECS_HI_COMPONENT_ID + 99;
+const ecs_entity_t ecs_id(EcsEnum) =                  ECS_HI_COMPONENT_ID + 100;
+const ecs_entity_t ecs_id(EcsBitmask) =               ECS_HI_COMPONENT_ID + 101;
+const ecs_entity_t ecs_id(EcsMember) =                ECS_HI_COMPONENT_ID + 102;
+const ecs_entity_t ecs_id(EcsStruct) =                ECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t ecs_id(EcsArray) =                 ECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsVector) =                ECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsMetaCustomType) =        ECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsUnit) =                  ECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =            ECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t EcsConstant =                      ECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t EcsQuantity =                      ECS_HI_COMPONENT_ID + 110;
 
 /* Doc module components */
-const ecs_entity_t ecs_id(EcsDocDescription) =ECS_HI_COMPONENT_ID + 100;
-const ecs_entity_t EcsDocBrief =              ECS_HI_COMPONENT_ID + 101;
-const ecs_entity_t EcsDocDetail =             ECS_HI_COMPONENT_ID + 102;
-const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t EcsDocColor =              ECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsDocDescription) =        ECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t EcsDocBrief =                      ECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsDocDetail =                     ECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsDocLink =                       ECS_HI_COMPONENT_ID + 114;
+const ecs_entity_t EcsDocColor =                      ECS_HI_COMPONENT_ID + 115;
 
 /* REST module components */
-const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsRest) =                  ECS_HI_COMPONENT_ID + 116;
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };

@@ -788,6 +788,14 @@
                 "add_int_shift_left_int_add_int",
                 "mul_int_shift_left_int_mul_int"
             ]
+        }, {
+            "id": "CustomTypes",
+            "testcases": [
+                "custom_i32_type_to_json",
+                "custom_string_type_to_json",
+                "custom_vec_i32_type_to_json",
+                "custom_vec_string_type_to_json"
+            ]
         }]
     }
 }

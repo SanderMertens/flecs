@@ -1181,6 +1181,8 @@ ecs_entity_t ecs_new_id(
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
+    ecs_assert(ecs_get_type(world, entity) == NULL, ECS_INTERNAL_ERROR, NULL);
+
     flecs_journal(world, EcsJournalNew, entity, 0, 0);
 
     return entity;
@@ -1217,6 +1219,8 @@ ecs_entity_t ecs_new_low_id(
     } else {
         flecs_entities_ensure(world, id);
     }
+
+    ecs_assert(ecs_get_type(world, id) == NULL, ECS_INTERNAL_ERROR, NULL);
 
     return id;
 error: 

@@ -749,6 +749,12 @@ void DeserExprOperators_mul_int_shift_left_int(void);
 void DeserExprOperators_add_int_shift_left_int_add_int(void);
 void DeserExprOperators_mul_int_shift_left_int_mul_int(void);
 
+// Testsuite 'CustomTypes'
+void CustomTypes_custom_i32_type_to_json(void);
+void CustomTypes_custom_string_type_to_json(void);
+void CustomTypes_custom_vec_i32_type_to_json(void);
+void CustomTypes_custom_vec_string_type_to_json(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -3623,6 +3629,25 @@ bake_test_case DeserExprOperators_testcases[] = {
     }
 };
 
+bake_test_case CustomTypes_testcases[] = {
+    {
+        "custom_i32_type_to_json",
+        CustomTypes_custom_i32_type_to_json
+    },
+    {
+        "custom_string_type_to_json",
+        CustomTypes_custom_string_type_to_json
+    },
+    {
+        "custom_vec_i32_type_to_json",
+        CustomTypes_custom_vec_i32_type_to_json
+    },
+    {
+        "custom_vec_string_type_to_json",
+        CustomTypes_custom_vec_string_type_to_json
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -3749,9 +3774,16 @@ static bake_test_suite suites[] = {
         NULL,
         91,
         DeserExprOperators_testcases
+    },
+    {
+        "CustomTypes",
+        NULL,
+        NULL,
+        4,
+        CustomTypes_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 18);
+    return bake_test_run("meta", argc, argv, suites, 19);
 }

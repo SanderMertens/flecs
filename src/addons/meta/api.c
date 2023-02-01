@@ -194,6 +194,23 @@ ecs_entity_t ecs_struct_init(
     return t;
 }
 
+ecs_entity_t ecs_custom_type_init(
+    ecs_world_t *world,
+    const ecs_custom_type_desc_t *desc)
+{
+    ecs_entity_t t = desc->entity;
+    if (!t) {
+        t = ecs_new_low_id(world);
+    }
+
+    ecs_set(world, t, EcsMetaCustomType, {
+        .type = desc->type,
+        .serialize = desc->serialize
+    });
+
+    return t;
+}
+
 ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)

@@ -28,132 +28,133 @@ const ecs_entity_t ecs_id(EcsTickSource) =                          11;
 const ecs_entity_t ecs_id(EcsTimer) =                               13;
 const ecs_entity_t ecs_id(EcsRateFilter) =                          14;
 
-/** Meta module component ids */
-const ecs_entity_t ecs_id(EcsMetaType) =                            15;
-const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =                  16;
-const ecs_entity_t ecs_id(EcsPrimitive) =                           17;
-const ecs_entity_t ecs_id(EcsEnum) =                                18;
-const ecs_entity_t ecs_id(EcsBitmask) =                             19;
-const ecs_entity_t ecs_id(EcsMember) =                              20;
-const ecs_entity_t ecs_id(EcsStruct) =                              21;
-const ecs_entity_t ecs_id(EcsArray) =                               22;
-const ecs_entity_t ecs_id(EcsVector) =                              23;
-const ecs_entity_t ecs_id(EcsUnit) =                                24;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =                          25;
-
 /* Core scopes & entities */
-const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
-const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
-const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
-const ecs_entity_t EcsFlecsInternals =        ECS_HI_COMPONENT_ID + 3;
-const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
-const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
-const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
+const ecs_entity_t EcsWorld =                         ECS_HI_COMPONENT_ID + 0;
+const ecs_entity_t EcsFlecs =                         ECS_HI_COMPONENT_ID + 1;
+const ecs_entity_t EcsFlecsCore =                     ECS_HI_COMPONENT_ID + 2;
+const ecs_entity_t EcsFlecsInternals =                ECS_HI_COMPONENT_ID + 3;
+const ecs_entity_t EcsModule =                        ECS_HI_COMPONENT_ID + 4;
+const ecs_entity_t EcsPrivate =                       ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsPrefab =                        ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsDisabled =                      ECS_HI_COMPONENT_ID + 7;
 
-const ecs_entity_t EcsSlotOf =                  ECS_HI_COMPONENT_ID + 8;
-const ecs_entity_t EcsFlag =                  ECS_HI_COMPONENT_ID + 9;
+const ecs_entity_t EcsSlotOf =                        ECS_HI_COMPONENT_ID + 8;
+const ecs_entity_t EcsFlag =                          ECS_HI_COMPONENT_ID + 9;
 
 /* Relationship properties */
-const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
-const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
-const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsVariable =              ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsWildcard =                      ECS_HI_COMPONENT_ID + 10;
+const ecs_entity_t EcsAny =                           ECS_HI_COMPONENT_ID + 11;
+const ecs_entity_t EcsThis =                          ECS_HI_COMPONENT_ID + 12;
+const ecs_entity_t EcsVariable =                      ECS_HI_COMPONENT_ID + 13;
 
-const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 14;
-const ecs_entity_t EcsReflexive =             ECS_HI_COMPONENT_ID + 15;
-const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 17;
-const ecs_entity_t EcsDontInherit =           ECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsUnion =                 ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsTransitive =                    ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsReflexive =                     ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsSymmetric =                     ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsFinal =                         ECS_HI_COMPONENT_ID + 17;
+const ecs_entity_t EcsDontInherit =                   ECS_HI_COMPONENT_ID + 18;
+const ecs_entity_t EcsTag =                           ECS_HI_COMPONENT_ID + 19;
+const ecs_entity_t EcsUnion =                         ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsExclusive =                     ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsAcyclic =                       ECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 24;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsDependsOn =             ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 27;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsAlias =                 ECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsName =                          ECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsSymbol =                        ECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsAlias =                         ECS_HI_COMPONENT_ID + 32;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                 ECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsOnRemove =              ECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsOnSet =                 ECS_HI_COMPONENT_ID + 35;
-const ecs_entity_t EcsUnSet =                 ECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableCreate =         ECS_HI_COMPONENT_ID + 38;
-const ecs_entity_t EcsOnTableDelete =         ECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 40;
-const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 42;
-const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 43;
-const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 44;
-const ecs_entity_t EcsOnComponentHooks =      ECS_HI_COMPONENT_ID + 45;
-const ecs_entity_t EcsOnDeleteTarget =        ECS_HI_COMPONENT_ID + 46;
+const ecs_entity_t EcsOnAdd =                         ECS_HI_COMPONENT_ID + 33;
+const ecs_entity_t EcsOnRemove =                      ECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsOnSet =                         ECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsUnSet =                         ECS_HI_COMPONENT_ID + 36;
+const ecs_entity_t EcsOnDelete =                      ECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsOnTableCreate =                 ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableDelete =                 ECS_HI_COMPONENT_ID + 39;
+const ecs_entity_t EcsOnTableEmpty =                  ECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnTableFill =                   ECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnCreateTrigger =               ECS_HI_COMPONENT_ID + 42;
+const ecs_entity_t EcsOnDeleteTrigger =               ECS_HI_COMPONENT_ID + 43;
+const ecs_entity_t EcsOnDeleteObservable =            ECS_HI_COMPONENT_ID + 44;
+const ecs_entity_t EcsOnComponentHooks =              ECS_HI_COMPONENT_ID + 45;
+const ecs_entity_t EcsOnDeleteTarget =                ECS_HI_COMPONENT_ID + 46;
 
 /* Actions */
-const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
-const ecs_entity_t EcsDelete =                ECS_HI_COMPONENT_ID + 51;
-const ecs_entity_t EcsPanic =                 ECS_HI_COMPONENT_ID + 52;
+const ecs_entity_t EcsRemove =                        ECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsDelete =                        ECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
-const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsEmpty =                 ECS_HI_COMPONENT_ID + 62;
-const ecs_entity_t ecs_id(EcsPipeline) =      ECS_HI_COMPONENT_ID + 63;
-const ecs_entity_t EcsOnStart =               ECS_HI_COMPONENT_ID + 64;
-const ecs_entity_t EcsPreFrame =              ECS_HI_COMPONENT_ID + 65;
-const ecs_entity_t EcsOnLoad =                ECS_HI_COMPONENT_ID + 66;
-const ecs_entity_t EcsPostLoad =              ECS_HI_COMPONENT_ID + 67;
-const ecs_entity_t EcsPreUpdate =             ECS_HI_COMPONENT_ID + 68;
-const ecs_entity_t EcsOnUpdate =              ECS_HI_COMPONENT_ID + 69;
-const ecs_entity_t EcsOnValidate =            ECS_HI_COMPONENT_ID + 70;
-const ecs_entity_t EcsPostUpdate =            ECS_HI_COMPONENT_ID + 71;
-const ecs_entity_t EcsPreStore =              ECS_HI_COMPONENT_ID + 72;
-const ecs_entity_t EcsOnStore =               ECS_HI_COMPONENT_ID + 73;
-const ecs_entity_t EcsPostFrame =             ECS_HI_COMPONENT_ID + 74;
+const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;
+const ecs_entity_t EcsEmpty =                         ECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t ecs_id(EcsPipeline) =              ECS_HI_COMPONENT_ID + 63;
+const ecs_entity_t EcsOnStart =                       ECS_HI_COMPONENT_ID + 64;
+const ecs_entity_t EcsPreFrame =                      ECS_HI_COMPONENT_ID + 65;
+const ecs_entity_t EcsOnLoad =                        ECS_HI_COMPONENT_ID + 66;
+const ecs_entity_t EcsPostLoad =                      ECS_HI_COMPONENT_ID + 67;
+const ecs_entity_t EcsPreUpdate =                     ECS_HI_COMPONENT_ID + 68;
+const ecs_entity_t EcsOnUpdate =                      ECS_HI_COMPONENT_ID + 69;
+const ecs_entity_t EcsOnValidate =                    ECS_HI_COMPONENT_ID + 70;
+const ecs_entity_t EcsPostUpdate =                    ECS_HI_COMPONENT_ID + 71;
+const ecs_entity_t EcsPreStore =                      ECS_HI_COMPONENT_ID + 72;
+const ecs_entity_t EcsOnStore =                       ECS_HI_COMPONENT_ID + 73;
+const ecs_entity_t EcsPostFrame =                     ECS_HI_COMPONENT_ID + 74;
 
-const ecs_entity_t EcsPhase =                 ECS_HI_COMPONENT_ID + 75;
+const ecs_entity_t EcsPhase =                         ECS_HI_COMPONENT_ID + 75;
 
 /* Meta primitive components (don't use low ids to save id space) */
-const ecs_entity_t ecs_id(ecs_bool_t) =       ECS_HI_COMPONENT_ID + 80;
-const ecs_entity_t ecs_id(ecs_char_t) =       ECS_HI_COMPONENT_ID + 81;
-const ecs_entity_t ecs_id(ecs_byte_t) =       ECS_HI_COMPONENT_ID + 82;
-const ecs_entity_t ecs_id(ecs_u8_t) =         ECS_HI_COMPONENT_ID + 83;
-const ecs_entity_t ecs_id(ecs_u16_t) =        ECS_HI_COMPONENT_ID + 84;
-const ecs_entity_t ecs_id(ecs_u32_t) =        ECS_HI_COMPONENT_ID + 85;
-const ecs_entity_t ecs_id(ecs_u64_t) =        ECS_HI_COMPONENT_ID + 86;
-const ecs_entity_t ecs_id(ecs_uptr_t) =       ECS_HI_COMPONENT_ID + 87;
-const ecs_entity_t ecs_id(ecs_i8_t) =         ECS_HI_COMPONENT_ID + 88;
-const ecs_entity_t ecs_id(ecs_i16_t) =        ECS_HI_COMPONENT_ID + 89;
-const ecs_entity_t ecs_id(ecs_i32_t) =        ECS_HI_COMPONENT_ID + 90;
-const ecs_entity_t ecs_id(ecs_i64_t) =        ECS_HI_COMPONENT_ID + 91;
-const ecs_entity_t ecs_id(ecs_iptr_t) =       ECS_HI_COMPONENT_ID + 92;
-const ecs_entity_t ecs_id(ecs_f32_t) =        ECS_HI_COMPONENT_ID + 93;
-const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 94;
-const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 95;
-const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 96;
-const ecs_entity_t EcsConstant =              ECS_HI_COMPONENT_ID + 97;
-const ecs_entity_t EcsQuantity =              ECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(ecs_bool_t) =               ECS_HI_COMPONENT_ID + 80;
+const ecs_entity_t ecs_id(ecs_char_t) =               ECS_HI_COMPONENT_ID + 81;
+const ecs_entity_t ecs_id(ecs_byte_t) =               ECS_HI_COMPONENT_ID + 82;
+const ecs_entity_t ecs_id(ecs_u8_t) =                 ECS_HI_COMPONENT_ID + 83;
+const ecs_entity_t ecs_id(ecs_u16_t) =                ECS_HI_COMPONENT_ID + 84;
+const ecs_entity_t ecs_id(ecs_u32_t) =                ECS_HI_COMPONENT_ID + 85;
+const ecs_entity_t ecs_id(ecs_u64_t) =                ECS_HI_COMPONENT_ID + 86;
+const ecs_entity_t ecs_id(ecs_uptr_t) =               ECS_HI_COMPONENT_ID + 87;
+const ecs_entity_t ecs_id(ecs_i8_t) =                 ECS_HI_COMPONENT_ID + 88;
+const ecs_entity_t ecs_id(ecs_i16_t) =                ECS_HI_COMPONENT_ID + 89;
+const ecs_entity_t ecs_id(ecs_i32_t) =                ECS_HI_COMPONENT_ID + 90;
+const ecs_entity_t ecs_id(ecs_i64_t) =                ECS_HI_COMPONENT_ID + 91;
+const ecs_entity_t ecs_id(ecs_iptr_t) =               ECS_HI_COMPONENT_ID + 92;
+const ecs_entity_t ecs_id(ecs_f32_t) =                ECS_HI_COMPONENT_ID + 93;
+const ecs_entity_t ecs_id(ecs_f64_t) =                ECS_HI_COMPONENT_ID + 94;
+const ecs_entity_t ecs_id(ecs_string_t) =             ECS_HI_COMPONENT_ID + 95;
+const ecs_entity_t ecs_id(ecs_entity_t) =             ECS_HI_COMPONENT_ID + 96;
+
+/** Meta module component ids */
+const ecs_entity_t ecs_id(EcsMetaType) =              ECS_HI_COMPONENT_ID + 97;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =    ECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(EcsPrimitive) =             ECS_HI_COMPONENT_ID + 99;
+const ecs_entity_t ecs_id(EcsEnum) =                  ECS_HI_COMPONENT_ID + 100;
+const ecs_entity_t ecs_id(EcsBitmask) =               ECS_HI_COMPONENT_ID + 101;
+const ecs_entity_t ecs_id(EcsMember) =                ECS_HI_COMPONENT_ID + 102;
+const ecs_entity_t ecs_id(EcsStruct) =                ECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t ecs_id(EcsArray) =                 ECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsVector) =                ECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsMetaCustomType) =        ECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsUnit) =                  ECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =            ECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t EcsConstant =                      ECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t EcsQuantity =                      ECS_HI_COMPONENT_ID + 110;
 
 /* Doc module components */
-const ecs_entity_t ecs_id(EcsDocDescription) =ECS_HI_COMPONENT_ID + 100;
-const ecs_entity_t EcsDocBrief =              ECS_HI_COMPONENT_ID + 101;
-const ecs_entity_t EcsDocDetail =             ECS_HI_COMPONENT_ID + 102;
-const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t EcsDocColor =              ECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsDocDescription) =        ECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t EcsDocBrief =                      ECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsDocDetail =                     ECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsDocLink =                       ECS_HI_COMPONENT_ID + 114;
+const ecs_entity_t EcsDocColor =                      ECS_HI_COMPONENT_ID + 115;
 
 /* REST module components */
-const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsRest) =                  ECS_HI_COMPONENT_ID + 116;
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
