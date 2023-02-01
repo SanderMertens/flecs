@@ -794,7 +794,10 @@
                 "custom_i32_type_to_json",
                 "custom_string_type_to_json",
                 "custom_vec_i32_type_to_json",
-                "custom_vec_string_type_to_json"
+                "custom_vec_string_type_to_json",
+                "custom_struct_1_member",
+                "custom_struct_2_members",
+                "custom_struct_3_members"
             ]
         }]
     }

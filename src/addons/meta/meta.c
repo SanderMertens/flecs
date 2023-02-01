@@ -1248,7 +1248,8 @@ void FlecsMetaImport(
             {.name = "EnumType"},
             {.name = "StructType"},
             {.name = "ArrayType"},
-            {.name = "VectorType"}
+            {.name = "VectorType"},
+            {.name = "CustomType"}
         }
     });
 

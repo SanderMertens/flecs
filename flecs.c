@@ -27365,7 +27365,8 @@ void FlecsMetaImport(
             {.name = "EnumType"},
             {.name = "StructType"},
             {.name = "ArrayType"},
-            {.name = "VectorType"}
+            {.name = "VectorType"},
+            {.name = "CustomType"}
         }
     });
 
@@ -37491,6 +37492,9 @@ void http_enqueue_request(
             req->pub.conn = (ecs_http_connection_t*)conn;
             req->pub.method = frag->method;
             req->pub.path = res + 1;
+            
+            http_decode_url_str(req->pub.path);
+
             if (frag->body_offset) {
                 req->pub.body = &res[frag->body_offset];
             }
@@ -40508,15 +40512,15 @@ const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_id_t ECS_AND =                                           (1ull << 60);
 
 /** Builtin component ids */
-const ecs_entity_t ecs_id(EcsComponent) =                           1;
-const ecs_entity_t ecs_id(EcsIdentifier) =                          2;
-const ecs_entity_t ecs_id(EcsIterable) =                            3;
-const ecs_entity_t ecs_id(EcsPoly) =                                4;
+const ecs_entity_t ecs_id(EcsComponent) =                                   1;
+const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
+const ecs_entity_t ecs_id(EcsIterable) =                                    3;
+const ecs_entity_t ecs_id(EcsPoly) =                                        4;
 
 /* Poly target components */
-const ecs_entity_t EcsQuery =                                       5;
-const ecs_entity_t EcsObserver =                                    6;
-const ecs_entity_t EcsSystem =                                      7;
+const ecs_entity_t EcsQuery =                                               5;
+const ecs_entity_t EcsObserver =                                            6;
+const ecs_entity_t EcsSystem =                                              7;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                         ECS_HI_COMPONENT_ID + 0;
