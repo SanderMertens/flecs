@@ -33,7 +33,7 @@ inline flecs::entity id::second() const {
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {
-        return flecs::entity(m_world, e);
+        return flecs::entity(e);
     }
 }
 
