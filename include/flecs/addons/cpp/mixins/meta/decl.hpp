@@ -75,6 +75,9 @@ static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
+using serializer_t = ecs_meta_serializer_t;
+using serialize_t = ecs_meta_serialize_t;
+
 /** Class for reading/writing dynamic values.
  * 
  * \ingroup cpp_addons_meta

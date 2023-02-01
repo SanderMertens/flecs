@@ -82,4 +82,53 @@ inline flecs::entity cursor::get_entity() const {
 }
 
 } // namespace meta
+
+/** Create primitive type */
+inline flecs::entity world::primitive(flecs::primitive_kind_t kind) {
+    ecs_primitive_desc_t desc = {};
+    desc.kind = kind;
+    flecs::entity_t eid = ecs_primitive_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+/** Create array type. */
+inline flecs::entity world::array(flecs::entity_t elem_id, int32_t count) {
+    ecs_array_desc_t desc = {};
+    desc.type = elem_id;
+    desc.count = count;
+    flecs::entity_t eid = ecs_array_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+/** Create array type. */
+template <typename T>
+inline flecs::entity world::array(int32_t count) {
+    return this->array(_::cpp_type<T>::id(m_world), count);
+}
+
+inline flecs::entity world::vector(flecs::entity_t elem_id) {
+    ecs_vector_desc_t desc = {};
+    desc.type = elem_id;
+    flecs::entity_t eid = ecs_vector_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+template <typename T>
+inline flecs::entity world::vector() {
+    return this->vector(_::cpp_type<T>::id());
+}
+
 } // namespace flecs
+
+int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
+    return this->value_(this, type, v);
+}
+
+template <typename T>
+int ecs_meta_serializer_t::value(const T& v) const {
+    return this->value(flecs::_::cpp_type<T>::id(
+        const_cast<flecs::world_t*>(this->world)), &v);
+}

@@ -248,11 +248,7 @@
 #include "../addons/flecs_cpp.h"
 
 #ifdef __cplusplus
-}
-
 #include "../addons/cpp/flecs.hpp"
-
-extern "C" {
 #endif // __cplusplus
 
 #endif // FLECS_CPP

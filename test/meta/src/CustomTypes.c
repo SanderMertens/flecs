@@ -17,7 +17,7 @@ typedef struct StringVec {
 
 // Custom serializer functions
 static
-int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
+int Int32_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_i32_t), ptr);
@@ -27,7 +27,7 @@ int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
 }
 
 static
-int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
+int String_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_string_t), ptr);
@@ -36,7 +36,7 @@ int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+int IntVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -50,7 +50,7 @@ int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+int StringVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -71,7 +71,7 @@ void CustomTypes_custom_i32_type_to_json() {
 
     ecs_custom_type(world, {
         .entity = ecs_id(Int32),
-        .type = ecs_primitive(world, { .kind = EcsI32 }),
+        .as_type = ecs_primitive(world, { .kind = EcsI32 }),
         .serialize = Int32_serialize
     });
 
@@ -94,7 +94,7 @@ void CustomTypes_custom_string_type_to_json() {
 
     ecs_custom_type(world, {
         .entity = ecs_id(String),
-        .type = ecs_primitive(world, { .kind = EcsString }),
+        .as_type = ecs_primitive(world, { .kind = EcsString }),
         .serialize = String_serialize
     });
 
@@ -117,7 +117,7 @@ void CustomTypes_custom_vec_i32_type_to_json() {
 
     ecs_custom_type(world, {
         .entity = ecs_id(IntVec),
-        .type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
         .serialize = IntVec_serialize
     });
 
@@ -140,7 +140,7 @@ void CustomTypes_custom_vec_string_type_to_json() {
 
     ecs_custom_type(world, {
         .entity = ecs_id(StringVec),
-        .type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
         .serialize = StringVec_serialize
     });
 

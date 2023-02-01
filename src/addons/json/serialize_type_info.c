@@ -205,6 +205,12 @@ int json_typeinfo_ser_type_op(
     case EcsOpVector:
         json_typeinfo_ser_vector(world, op->type, str);
         break;
+    case EcsOpCustomType: {
+        const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
+        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
+        json_typeinfo_ser_type(world, ct->as_type, str);
+        break;
+    }
     default:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))

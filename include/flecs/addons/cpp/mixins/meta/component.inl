@@ -105,4 +105,14 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Add custom reflection. */
+untyped_component& custom_type(flecs::meta::serialize_t serialize, flecs::id_t as_type) {
+    ecs_custom_type_desc_t desc = {};
+    desc.entity = m_id;
+    desc.as_type = as_type;
+    desc.serialize = serialize;
+    ecs_custom_type_init(m_world, &desc);
+    return *this;
+}
+
 /** @} */

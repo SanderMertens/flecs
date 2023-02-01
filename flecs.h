@@ -8999,6 +8999,11 @@ int ecs_value_move_ctor(
 
 #endif // FLECS_C_
 
+
+#ifdef __cplusplus
+}
+#endif
+
 /**
  * @file addons.h
  * @brief Include enabled addons.
@@ -12378,24 +12383,53 @@ typedef struct EcsVector {
 
 /* Custom type support */
 
+#if !defined(__cplusplus) || !defined(FLECS_CPP)
+
 /** Serializer interface */
-typedef struct ecs_serializer_t {
+typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
-        const struct ecs_serializer_t *ser, /**< Serializer */
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
         ecs_entity_t type,              /**< Type of the value to serialize */
         const void *value);             /**< Pointer to the value to serialize */
 
+    const ecs_world_t *world;
     void *ctx;
-} ecs_serializer_t;
+} ecs_meta_serializer_t;
+
+#elif defined(__cplusplus)
+
+} /* extern "C" { */
+
+/** Serializer interface (same layout as C, but with convenience methods) */
+typedef struct ecs_meta_serializer_t {
+    /* Serialize value */
+    int (*value_)(
+        const struct ecs_meta_serializer_t *ser,
+        ecs_entity_t type,
+        const void *value);
+
+    /* Serialize value */
+    int value(ecs_entity_t type, const void *value) const;
+    
+    /* Serialize value */
+    template <typename T>
+    int value(const T& value) const;
+
+    const ecs_world_t *world;
+    void *ctx;
+} ecs_meta_serializer_t;
+
+extern "C" {
+#endif
 
 /** Callback invoked for a custom type. */
 typedef int (*ecs_meta_serialize_t)(
-    const ecs_serializer_t *ser,
+    const ecs_meta_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
 typedef struct EcsMetaCustomType {
-    ecs_entity_t type;                 /**< Type that describes the serialized output */
+    ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
 } EcsMetaCustomType;
 
@@ -12763,8 +12797,8 @@ ecs_entity_t ecs_struct_init(
 /** Used with ecs_custom_type_init. */
 typedef struct ecs_custom_type_desc_t {
     ecs_entity_t entity;
-    ecs_entity_t type;                 /**< Type that describes the serialized output */
-    ecs_meta_serialize_t serialize;    /**< Serialize action */
+    ecs_entity_t as_type;            /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;  /**< Serialize action */
 } ecs_custom_type_desc_t;
 
 /** Create a new custom type */
@@ -14404,8 +14438,6 @@ int32_t ecs_cpp_reset_count_inc(void);
 
 
 #ifdef __cplusplus
-}
-
 /**
  * @file addons/cpp/flecs.hpp
  * @brief Flecs C++11 API.
@@ -16165,6 +16197,9 @@ static const flecs::entity_t Constant = EcsConstant;
 static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
+
+using serializer_t = ecs_meta_serializer_t;
+using serialize_t = ecs_meta_serialize_t;
 
 /** Class for reading/writing dynamic values.
  * 
@@ -18945,26 +18980,47 @@ int plecs_from_file(const char *filename) const {
  * @{
  */
 
+/** Convert value to string */
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(m_world, tid, value);
     return flecs::string(expr);
 }
 
+/** Convert value to string */
 template <typename T>
 flecs::string to_expr(const T* value) {
     flecs::entity_t tid = _::cpp_type<T>::id(m_world);
     return to_expr(tid, value);
 }
 
+/** Return meta cursor to value */
 flecs::meta::cursor cursor(flecs::entity_t tid, void *ptr) {
     return flecs::meta::cursor(m_world, tid, ptr);
 }
 
+/** Return meta cursor to value */
 template <typename T>
 flecs::meta::cursor cursor(void *ptr) {
     flecs::entity_t tid = _::cpp_type<T>::id(m_world);
     return cursor(tid, ptr);
 }
+
+/** Create primitive type */
+flecs::entity primitive(flecs::primitive_kind_t kind);
+
+/** Create array type. */
+flecs::entity array(flecs::entity_t elem_id, int32_t count);
+
+/** Create array type. */
+template <typename T>
+flecs::entity array(int32_t count);
+
+/** Create vector type. */
+flecs::entity vector(flecs::entity_t elem_id);
+
+/** Create vector type. */
+template <typename T>
+flecs::entity vector();
 
 /** @} */
 
@@ -23179,6 +23235,16 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Add custom reflection. */
+untyped_component& custom_type(flecs::meta::serialize_t serialize, flecs::id_t as_type) {
+    ecs_custom_type_desc_t desc = {};
+    desc.entity = m_id;
+    desc.as_type = as_type;
+    desc.serialize = serialize;
+    ecs_custom_type_init(m_world, &desc);
+    return *this;
+}
+
 /** @} */
 #   endif
 };
@@ -27205,7 +27271,56 @@ inline flecs::entity cursor::get_entity() const {
 }
 
 } // namespace meta
+
+/** Create primitive type */
+inline flecs::entity world::primitive(flecs::primitive_kind_t kind) {
+    ecs_primitive_desc_t desc = {};
+    desc.kind = kind;
+    flecs::entity_t eid = ecs_primitive_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+/** Create array type. */
+inline flecs::entity world::array(flecs::entity_t elem_id, int32_t count) {
+    ecs_array_desc_t desc = {};
+    desc.type = elem_id;
+    desc.count = count;
+    flecs::entity_t eid = ecs_array_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+/** Create array type. */
+template <typename T>
+inline flecs::entity world::array(int32_t count) {
+    return this->array(_::cpp_type<T>::id(m_world), count);
+}
+
+inline flecs::entity world::vector(flecs::entity_t elem_id) {
+    ecs_vector_desc_t desc = {};
+    desc.type = elem_id;
+    flecs::entity_t eid = ecs_vector_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, eid);
+}
+
+template <typename T>
+inline flecs::entity world::vector() {
+    return this->vector(_::cpp_type<T>::id());
+}
+
 } // namespace flecs
+
+int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
+    return this->value_(this, type, v);
+}
+
+template <typename T>
+int ecs_meta_serializer_t::value(const T& v) const {
+    return this->value(flecs::_::cpp_type<T>::id(
+        const_cast<flecs::world_t*>(this->world)), &v);
+}
 
 #endif
 #ifdef FLECS_UNITS
@@ -27735,18 +27850,12 @@ inline flecs::scoped_world world::scope() const {
 
 /** @} */
 
-
-extern "C" {
 #endif // __cplusplus
 
 #endif // FLECS_CPP
 
 #endif
 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

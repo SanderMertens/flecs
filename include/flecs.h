@@ -5129,10 +5129,11 @@ int ecs_value_move_ctor(
  */
 
 #include "flecs/addons/flecs_c.h"
-#include "flecs/private/addons.h"
 
 #ifdef __cplusplus
 }
 #endif
+
+#include "flecs/private/addons.h"
 
 #endif

@@ -204,7 +204,7 @@ ecs_entity_t ecs_custom_type_init(
     }
 
     ecs_set(world, t, EcsMetaCustomType, {
-        .type = desc->type,
+        .as_type = desc->as_type,
         .serialize = desc->serialize
     });
 

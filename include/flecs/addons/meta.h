@@ -257,24 +257,53 @@ typedef struct EcsVector {
 
 /* Custom type support */
 
+#if !defined(__cplusplus) || !defined(FLECS_CPP)
+
 /** Serializer interface */
-typedef struct ecs_serializer_t {
+typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
-        const struct ecs_serializer_t *ser, /**< Serializer */
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
         ecs_entity_t type,              /**< Type of the value to serialize */
         const void *value);             /**< Pointer to the value to serialize */
 
+    const ecs_world_t *world;
     void *ctx;
-} ecs_serializer_t;
+} ecs_meta_serializer_t;
+
+#elif defined(__cplusplus)
+
+} /* extern "C" { */
+
+/** Serializer interface (same layout as C, but with convenience methods) */
+typedef struct ecs_meta_serializer_t {
+    /* Serialize value */
+    int (*value_)(
+        const struct ecs_meta_serializer_t *ser,
+        ecs_entity_t type,
+        const void *value);
+
+    /* Serialize value */
+    int value(ecs_entity_t type, const void *value) const;
+    
+    /* Serialize value */
+    template <typename T>
+    int value(const T& value) const;
+
+    const ecs_world_t *world;
+    void *ctx;
+} ecs_meta_serializer_t;
+
+extern "C" {
+#endif
 
 /** Callback invoked for a custom type. */
 typedef int (*ecs_meta_serialize_t)(
-    const ecs_serializer_t *ser,
+    const ecs_meta_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
 typedef struct EcsMetaCustomType {
-    ecs_entity_t type;                 /**< Type that describes the serialized output */
+    ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
 } EcsMetaCustomType;
 
@@ -642,8 +671,8 @@ ecs_entity_t ecs_struct_init(
 /** Used with ecs_custom_type_init. */
 typedef struct ecs_custom_type_desc_t {
     ecs_entity_t entity;
-    ecs_entity_t type;                 /**< Type that describes the serialized output */
-    ecs_meta_serialize_t serialize;    /**< Serialize action */
+    ecs_entity_t as_type;            /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;  /**< Serialize action */
 } ecs_custom_type_desc_t;
 
 /** Create a new custom type */

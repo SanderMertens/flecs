@@ -25710,7 +25710,7 @@ ecs_entity_t ecs_custom_type_init(
     }
 
     ecs_set(world, t, EcsMetaCustomType, {
-        .type = desc->type,
+        .as_type = desc->as_type,
         .serialize = desc->serialize
     });
 
@@ -26946,7 +26946,7 @@ void flecs_set_custom_type(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t elem_type = custom_type[i].type;
+        ecs_entity_t elem_type = custom_type[i].as_type;
 
         if (!elem_type) {
             ecs_err("custom type '%s' has no mapping type", ecs_get_name(world, e));
@@ -33800,14 +33800,13 @@ int json_ser_vector(
 }
 
 typedef struct json_serializer_ctx_t {
-    const ecs_world_t *world;
     ecs_strbuf_t *str;
     bool is_primitive;
 } json_serializer_ctx_t;
 
 static
 int json_ser_custom_value(
-    const ecs_serializer_t *ser,
+    const ecs_meta_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
 {
@@ -33815,7 +33814,7 @@ int json_ser_custom_value(
     if (!json_ser->is_primitive) {
         ecs_strbuf_list_next(json_ser->str);
     }
-    return ecs_ptr_to_json_buf(json_ser->world, type, value, json_ser->str);
+    return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
 }
 
 static
@@ -33827,9 +33826,9 @@ int json_ser_custom_type(
 {
     const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
     ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->type != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
 
-    const EcsMetaType *pt = ecs_get(world, ct->type, EcsMetaType);
+    const EcsMetaType *pt = ecs_get(world, ct->as_type, EcsMetaType);
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
 
     ecs_type_kind_t kind = pt->kind;
@@ -33844,12 +33843,12 @@ int json_ser_custom_type(
     }
 
     json_serializer_ctx_t json_ser = {
-        .world = world,
         .str = str,
         .is_primitive = is_primitive
     };
 
-    ecs_serializer_t ser = {
+    ecs_meta_serializer_t ser = {
+        .world = world,
         .value = json_ser_custom_value,
         .ctx = &json_ser
     };
@@ -35367,6 +35366,12 @@ int json_typeinfo_ser_type_op(
     case EcsOpVector:
         json_typeinfo_ser_vector(world, op->type, str);
         break;
+    case EcsOpCustomType: {
+        const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
+        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
+        json_typeinfo_ser_type(world, ct->as_type, str);
+        break;
+    }
     default:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))

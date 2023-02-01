@@ -198,14 +198,13 @@ int json_ser_vector(
 }
 
 typedef struct json_serializer_ctx_t {
-    const ecs_world_t *world;
     ecs_strbuf_t *str;
     bool is_primitive;
 } json_serializer_ctx_t;
 
 static
 int json_ser_custom_value(
-    const ecs_serializer_t *ser,
+    const ecs_meta_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
 {
@@ -213,7 +212,7 @@ int json_ser_custom_value(
     if (!json_ser->is_primitive) {
         ecs_strbuf_list_next(json_ser->str);
     }
-    return ecs_ptr_to_json_buf(json_ser->world, type, value, json_ser->str);
+    return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
 }
 
 static
@@ -225,9 +224,9 @@ int json_ser_custom_type(
 {
     const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
     ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->type != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
 
-    const EcsMetaType *pt = ecs_get(world, ct->type, EcsMetaType);
+    const EcsMetaType *pt = ecs_get(world, ct->as_type, EcsMetaType);
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
 
     ecs_type_kind_t kind = pt->kind;
@@ -242,12 +241,12 @@ int json_ser_custom_type(
     }
 
     json_serializer_ctx_t json_ser = {
-        .world = world,
         .str = str,
         .is_primitive = is_primitive
     };
 
-    ecs_serializer_t ser = {
+    ecs_meta_serializer_t ser = {
+        .world = world,
         .value = json_ser_custom_value,
         .ctx = &json_ser
     };

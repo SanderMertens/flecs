@@ -827,7 +827,7 @@ void flecs_set_custom_type(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t elem_type = custom_type[i].type;
+        ecs_entity_t elem_type = custom_type[i].as_type;
 
         if (!elem_type) {
             ecs_err("custom type '%s' has no mapping type", ecs_get_name(world, e));
