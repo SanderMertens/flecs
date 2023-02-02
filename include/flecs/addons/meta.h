@@ -111,6 +111,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
+FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
@@ -143,6 +144,7 @@ typedef enum ecs_type_kind_t {
     EcsStructType,
     EcsArrayType,
     EcsVectorType,
+    EcsOpaqueType,
     EcsTypeKindLast = EcsVectorType
 } ecs_type_kind_t;
 
@@ -253,6 +255,72 @@ typedef struct EcsVector {
 } EcsVector;
 
 
+/* Opaque type support */
+
+#if !defined(__cplusplus) || !defined(FLECS_CPP)
+
+/** Serializer interface */
+typedef struct ecs_meta_serializer_t {
+    /* Serialize value */
+    int (*value)(
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        ecs_entity_t type,            /**< Type of the value to serialize */
+        const void *value);           /**< Pointer to the value to serialize */
+
+    /* Serialize member */
+    int (*member)(
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const char *member);           /**< Member name */
+
+    const ecs_world_t *world;
+    void *ctx;
+} ecs_meta_serializer_t;
+
+#elif defined(__cplusplus)
+
+} /* extern "C" { */
+
+/** Serializer interface (same layout as C, but with convenience methods) */
+typedef struct ecs_meta_serializer_t {
+    /* Serialize value */
+    int (*value_)(
+        const struct ecs_meta_serializer_t *ser,
+        ecs_entity_t type,
+        const void *value);
+
+    /* Serialize member */
+    int (*member_)(
+        const struct ecs_meta_serializer_t *ser,
+        const char *name);
+
+    /* Serialize value */
+    int value(ecs_entity_t type, const void *value) const;
+    
+    /* Serialize value */
+    template <typename T>
+    int value(const T& value) const;
+
+    /* Serialize member */
+    int member(const char *name) const;
+
+    const ecs_world_t *world;
+    void *ctx;
+} ecs_meta_serializer_t;
+
+extern "C" {
+#endif
+
+/** Callback invoked serializing an opaque type. */
+typedef int (*ecs_meta_serialize_t)(
+    const ecs_meta_serializer_t *ser,
+    const void *src);                  /**< Pointer to value to serialize */
+
+typedef struct EcsOpaque {
+    ecs_entity_t as_type;              /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;    /**< Serialize action */
+} EcsOpaque;
+
+
 /* Units */
 
 /* Helper type to describe translation between two units. Note that this
@@ -286,6 +354,7 @@ typedef struct EcsUnitPrefix {
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpArray,
     EcsOpVector,
+    EcsOpOpaque,
     EcsOpPush,
     EcsOpPop,
 
@@ -537,8 +606,7 @@ ecs_entity_t ecs_meta_get_entity(
 
 /** Used with ecs_primitive_init. */
 typedef struct ecs_primitive_desc_t {
-    /* Existing entity to associate with primitive (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_primitive_kind_t kind;
 } ecs_primitive_desc_t;
 
@@ -550,8 +618,7 @@ ecs_entity_t ecs_primitive_init(
 
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {
-    /* Existing entity to associate with enum (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_enum_desc_t;
 
@@ -564,8 +631,7 @@ ecs_entity_t ecs_enum_init(
 
 /** Used with ecs_bitmask_init. */
 typedef struct ecs_bitmask_desc_t {
-    /* Existing entity to associate with bitmask (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_bitmask_desc_t;
 
@@ -578,8 +644,7 @@ ecs_entity_t ecs_bitmask_init(
 
 /** Used with ecs_array_init. */
 typedef struct ecs_array_desc_t {
-    /* Existing entity to associate with array (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_entity_t type;
     int32_t count;
 } ecs_array_desc_t;
@@ -593,8 +658,7 @@ ecs_entity_t ecs_array_init(
 
 /** Used with ecs_vector_init. */
 typedef struct ecs_vector_desc_t {
-    /* Existing entity to associate with vector (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_entity_t type;
 } ecs_vector_desc_t;
 
@@ -607,8 +671,7 @@ ecs_entity_t ecs_vector_init(
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {
-    /* Existing entity to associate with struct (optional) */
-    ecs_entity_t entity;
+    ecs_entity_t entity; /**< Existing entity to use for type (optional) */
     ecs_member_t members[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_struct_desc_t;
 
@@ -617,6 +680,36 @@ FLECS_API
 ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
+
+/** Used with ecs_opaque_init. */
+typedef struct ecs_opaque_desc_t {
+    ecs_entity_t entity;
+    ecs_entity_t as_type;            /**< Type that describes the serialized output */
+    ecs_meta_serialize_t serialize;  /**< Serialize action */
+} ecs_opaque_desc_t;
+
+/** Create a new opaque type.
+ * Opaque types are types of which the layout doesn't match what can be modelled
+ * with the primitives of the meta framework, but which have a structure
+ * that can be described with meta primitives. Typical examples are STL types
+ * such as std::string or std::vector, types with a nontrivial layout, and types
+ * that only expose getter/setter methods.
+ * 
+ * An opaque type is a combination of a serialization function, and a handle to
+ * a meta type which describes the structure of the serialized output. For
+ * example, an opaque type for std::string would have a serializer function that
+ * accesses .c_str(), and with type ecs_string_t.
+ * 
+ * The serializer callback accepts a serializer object and a pointer to the 
+ * value of the opaque type to be serialized. The serializer has two methods:
+ * 
+ * - value, which serializes a value (such as .c_str())
+ * - member, which specifies a member to be serialized (in the case of a struct)
+ */
+FLECS_API
+ecs_entity_t ecs_opaque_init(
+    ecs_world_t *world,
+    const ecs_opaque_desc_t *desc);
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
@@ -693,6 +786,9 @@ ecs_entity_t ecs_quantity_init(
 
 #define ecs_vector(world, ...)\
     ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
+
+#define ecs_opaque(world, ...)\
+    ecs_opaque_init(world, &(ecs_opaque_desc_t) __VA_ARGS__ )
 
 #define ecs_struct(world, ...)\
     ecs_struct_init(world, &(ecs_struct_desc_t) __VA_ARGS__ )

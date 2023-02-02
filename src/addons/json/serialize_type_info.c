@@ -185,6 +185,13 @@ int json_typeinfo_ser_type_op(
     ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str) 
 {
+    if (op->kind == EcsOpOpaque) {
+        const EcsOpaque *ct = ecs_get(world, op->type, 
+            EcsOpaque);
+        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
+        return json_typeinfo_ser_type(world, ct->as_type, str);
+    }
+
     flecs_json_array_push(str);
 
     switch(op->kind) {
@@ -204,6 +211,10 @@ int json_typeinfo_ser_type_op(
         break;
     case EcsOpVector:
         json_typeinfo_ser_vector(world, op->type, str);
+        break;
+    case EcsOpOpaque:
+        /* Can't happen, already handled above */
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         break;
     default:
         if (json_typeinfo_ser_primitive( 
@@ -248,15 +259,15 @@ int json_typeinfo_ser_type_ops(
             if (op->name) {
                 flecs_json_member(str, op->name);
             }
+        }
 
-            int32_t elem_count = op->count;
-            if (elem_count > 1 && op != ops) {
-                flecs_json_array_push(str);
-                json_typeinfo_ser_array(world, op->type, op->count, str);
-                flecs_json_array_pop(str);
-                i += op->op_count - 1;
-                continue;
-            }
+        int32_t elem_count = op->count;
+        if (elem_count > 1) {
+            flecs_json_array_push(str);
+            json_typeinfo_ser_array(world, op->type, op->count, str);
+            flecs_json_array_pop(str);
+            i += op->op_count - 1;
+            continue;
         }
         
         switch(op->kind) {

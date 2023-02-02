@@ -1296,7 +1296,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserComponentId (32)
+#define EcsFirstUserComponentId (8)
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -5129,10 +5129,11 @@ int ecs_value_move_ctor(
  */
 
 #include "flecs/addons/flecs_c.h"
-#include "flecs/private/addons.h"
 
 #ifdef __cplusplus
 }
 #endif
+
+#include "flecs/private/addons.h"
 
 #endif

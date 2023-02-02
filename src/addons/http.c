@@ -478,6 +478,9 @@ void http_enqueue_request(
             req->pub.conn = (ecs_http_connection_t*)conn;
             req->pub.method = frag->method;
             req->pub.path = res + 1;
+            
+            http_decode_url_str(req->pub.path);
+
             if (frag->body_offset) {
                 req->pub.body = &res[frag->body_offset];
             }

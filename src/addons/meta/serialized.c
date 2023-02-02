@@ -154,6 +154,23 @@ ecs_vector_t* serialize_vector(
 }
 
 static
+ecs_vector_t* serialize_custom_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpOpaque);
+    op->offset = offset;
+    op->type = type;
+    op->size = type_size(world, type);
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -247,6 +264,10 @@ ecs_vector_t* serialize_type(
 
     case EcsVectorType:
         ops = serialize_vector(world, type, offset, ops);
+        break;
+
+    case EcsOpaqueType:
+        ops = serialize_custom_type(world, type, offset, ops);
         break;
     }
 

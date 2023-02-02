@@ -197,6 +197,91 @@ int json_ser_vector(
     return json_ser_type_elements(world, v->type, array, count, str);
 }
 
+typedef struct json_serializer_ctx_t {
+    ecs_strbuf_t *str;
+    bool is_collection;
+    bool is_struct;
+} json_serializer_ctx_t;
+
+static
+int json_ser_custom_value(
+    const ecs_meta_serializer_t *ser,
+    ecs_entity_t type,
+    const void *value)
+{
+    json_serializer_ctx_t *json_ser = ser->ctx;
+    if (json_ser->is_collection) {
+        ecs_strbuf_list_next(json_ser->str);
+    }
+    return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
+}
+
+static
+int json_ser_custom_member(
+    const ecs_meta_serializer_t *ser,
+    const char *name)
+{
+    json_serializer_ctx_t *json_ser = ser->ctx;
+    if (!json_ser->is_struct) {
+        ecs_err("serializer::member can only be called for structs");
+        return -1;
+    }
+    flecs_json_member(json_ser->str, name);
+    return 0;
+}
+
+static
+int json_ser_custom_type(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_strbuf_t *str)
+{
+    const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
+    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
+
+    const EcsMetaType *pt = ecs_get(world, ct->as_type, EcsMetaType);
+    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
+
+    ecs_type_kind_t kind = pt->kind;
+    bool is_collection = false;
+    bool is_struct = false;
+
+    if (kind == EcsStructType) {
+        flecs_json_object_push(str);
+        is_struct = true;
+    } else if (kind == EcsArrayType || kind == EcsVectorType) {
+        flecs_json_array_push(str);
+        is_collection = true;
+    }
+
+    json_serializer_ctx_t json_ser = {
+        .str = str,
+        .is_struct = is_struct,
+        .is_collection = is_collection
+    };
+
+    ecs_meta_serializer_t ser = {
+        .world = world,
+        .value = json_ser_custom_value,
+        .member = json_ser_custom_member,
+        .ctx = &json_ser
+    };
+
+    if (ct->serialize(&ser, base)) {
+        return -1;
+    }
+
+    if (kind == EcsStructType) {
+        flecs_json_object_pop(str);
+    } else if (kind == EcsArrayType || kind == EcsVectorType) {
+        flecs_json_array_pop(str);
+    }
+
+    return 0;
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_ser_type_op(
@@ -236,6 +321,11 @@ int json_ser_type_op(
         break;
     case EcsOpVector:
         if (json_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpOpaque:
+        if (json_ser_custom_type(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;
         }
         break;
@@ -427,7 +517,7 @@ char* ecs_ptr_to_json(
 }
 
 static
-bool skip_id(
+bool flecs_json_skip_id(
     const ecs_world_t *world,
     ecs_id_t id,
     const ecs_entity_to_json_desc_t *desc,
@@ -516,7 +606,7 @@ int flecs_json_append_type_labels(
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t pred = 0, obj = 0, role = 0;
-        if (skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
+        if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
             continue;
         }
 
@@ -573,7 +663,7 @@ int flecs_json_append_type_values(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -636,7 +726,7 @@ int flecs_json_append_type_info(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -692,7 +782,7 @@ int flecs_json_append_type_hidden(
         bool hidden;
         ecs_entity_t pred = 0, obj = 0, role = 0;
         ecs_id_t id = ids[i];
-        if (skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
+        if (flecs_json_skip_id(world, id, desc, ent, inst, &pred, &obj, &role, 
             &hidden)) 
         {
             continue;
@@ -730,7 +820,7 @@ int flecs_json_append_type(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t pred = 0, obj = 0, role = 0;
-        if (skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
+        if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
             continue;
         }
 

@@ -1218,6 +1218,8 @@ ecs_entity_t ecs_new_low_id(
         flecs_entities_ensure(world, id);
     }
 
+    ecs_assert(ecs_get_type(world, id) == NULL, ECS_INTERNAL_ERROR, NULL);
+
     return id;
 error: 
     return 0;

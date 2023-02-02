@@ -194,6 +194,28 @@ ecs_entity_t ecs_struct_init(
     return t;
 }
 
+ecs_entity_t ecs_opaque_init(
+    ecs_world_t *world,
+    const ecs_opaque_desc_t *desc)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->as_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->serialize != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t t = desc->entity;
+    if (!t) {
+        t = ecs_new_low_id(world);
+    }
+
+    ecs_set(world, t, EcsOpaque, {
+        .as_type = desc->as_type,
+        .serialize = desc->serialize
+    });
+
+    return t;
+}
+
 ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)

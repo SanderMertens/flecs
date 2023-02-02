@@ -1096,6 +1096,21 @@ void Meta_unit_w_quantity(void);
 void Meta_unit_w_prefix(void);
 void Meta_unit_w_over(void);
 void Meta_bitmask(void);
+void Meta_custom_i32_to_json(void);
+void Meta_custom_std_string_to_json(void);
+void Meta_custom_std_vector_i32_to_json(void);
+void Meta_custom_std_vector_std_string_to_json(void);
+void Meta_type_w_std_vector(void);
+void Meta_type_w_std_string(void);
+void Meta_type_w_std_vector_std_string(void);
+void Meta_type_w_std_string_std_vector(void);
+void Meta_type_w_std_string_std_string(void);
+void Meta_type_w_std_vector_std_vector(void);
+void Meta_type_w_std_vector_std_string_std_vector(void);
+void Meta_type_w_std_vector_std_vector_std_string(void);
+void Meta_primitive_type(void);
+void Meta_array_type(void);
+void Meta_vector_type(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5355,6 +5370,66 @@ bake_test_case Meta_testcases[] = {
     {
         "bitmask",
         Meta_bitmask
+    },
+    {
+        "custom_i32_to_json",
+        Meta_custom_i32_to_json
+    },
+    {
+        "custom_std_string_to_json",
+        Meta_custom_std_string_to_json
+    },
+    {
+        "custom_std_vector_i32_to_json",
+        Meta_custom_std_vector_i32_to_json
+    },
+    {
+        "custom_std_vector_std_string_to_json",
+        Meta_custom_std_vector_std_string_to_json
+    },
+    {
+        "type_w_std_vector",
+        Meta_type_w_std_vector
+    },
+    {
+        "type_w_std_string",
+        Meta_type_w_std_string
+    },
+    {
+        "type_w_std_vector_std_string",
+        Meta_type_w_std_vector_std_string
+    },
+    {
+        "type_w_std_string_std_vector",
+        Meta_type_w_std_string_std_vector
+    },
+    {
+        "type_w_std_string_std_string",
+        Meta_type_w_std_string_std_string
+    },
+    {
+        "type_w_std_vector_std_vector",
+        Meta_type_w_std_vector_std_vector
+    },
+    {
+        "type_w_std_vector_std_string_std_vector",
+        Meta_type_w_std_vector_std_string_std_vector
+    },
+    {
+        "type_w_std_vector_std_vector_std_string",
+        Meta_type_w_std_vector_std_vector_std_string
+    },
+    {
+        "primitive_type",
+        Meta_primitive_type
+    },
+    {
+        "array_type",
+        Meta_array_type
+    },
+    {
+        "vector_type",
+        Meta_vector_type
     }
 };
 
@@ -5684,7 +5759,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        10,
+        25,
         Meta_testcases
     },
     {

@@ -264,6 +264,37 @@ void SerializeTypeInfoToJson_nested_struct() {
     ecs_fini(world);
 }
 
+void SerializeTypeInfoToJson_array_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t at = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    char *str = ecs_type_info_to_json(world, at);
+    test_assert(str != NULL);
+    test_str(str, "[\"array\", [\"int\"], 3]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_vector_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t at = ecs_vector(world, {
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    char *str = ecs_type_info_to_json(world, at);
+    test_assert(str != NULL);
+    test_str(str, "[\"vector\", [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void SerializeTypeInfoToJson_struct_array_i32_2() {
     ecs_world_t *world = ecs_init();
 
@@ -325,6 +356,118 @@ void SerializeTypeInfoToJson_struct_array_type() {
     char *str = ecs_type_info_to_json(world, t);
     test_assert(str != NULL);
     test_str(str, "{\"a\":[\"array\", [\"int\"], 3]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_vector_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"a", a}
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, t);
+    test_assert(str != NULL);
+    test_str(str, "{\"a\":[\"vector\", [\"int\"]]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+static
+int DummySerialize(const ecs_meta_serializer_t *s, const void *ptr) {
+    return 0;
+}
+
+void SerializeTypeInfoToJson_custom_primitive_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ct = ecs_opaque(world, {
+        .entity = ecs_component(world, {
+            .type.size = 4,
+            .type.alignment = 4
+        }),
+        .as_type = ecs_id(ecs_i32_t),
+        .serialize = DummySerialize
+    });
+
+    char *str = ecs_type_info_to_json(world, ct);
+    test_assert(str != NULL);
+    test_str(str, "[\"int\"]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_custom_array_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t at = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    char *str = ecs_type_info_to_json(world, at);
+    test_assert(str != NULL);
+    test_str(str, "[\"array\", [\"int\"], 3]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_custom_vector_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ct = ecs_opaque(world, {
+        .entity = ecs_component(world, {
+            .type.size = 4,
+            .type.alignment = 4
+        }),
+        .as_type = ecs_vector(world, {
+            .type = ecs_id(ecs_i32_t)
+        }),
+        .serialize = DummySerialize
+    });
+
+    char *str = ecs_type_info_to_json(world, ct);
+    test_assert(str != NULL);
+    test_str(str, "[\"vector\", [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_custom_struct_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t ct = ecs_opaque(world, {
+        .entity = ecs_component(world, {
+            .type.size = 4,
+            .type.alignment = 4
+        }),
+        .as_type = s,
+        .serialize = DummySerialize
+    });
+
+    char *str = ecs_type_info_to_json(world, ct);
+    test_assert(str != NULL);
+    test_str(str, "{\"x\":[\"int\"], \"y\":[\"int\"]}");
     ecs_os_free(str);
 
     ecs_fini(world);

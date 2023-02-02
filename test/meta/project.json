@@ -650,9 +650,16 @@
                 "bitmask",
                 "struct",
                 "nested_struct",
+                "array_type",
+                "vector_type",
                 "struct_array_i32_2",
                 "struct_array_struct_2",
-                "struct_array_type"
+                "struct_array_type",
+                "struct_vector_type",
+                "custom_primitive_type",
+                "custom_array_type",
+                "custom_vector_type",
+                "custom_struct_type"
             ]
         }, {
             "id": "MetaUtils",
@@ -787,6 +794,17 @@
                 "mul_int_shift_left_int",
                 "add_int_shift_left_int_add_int",
                 "mul_int_shift_left_int_mul_int"
+            ]
+        }, {
+            "id": "CustomTypes",
+            "testcases": [
+                "custom_i32_type_to_json",
+                "custom_string_type_to_json",
+                "custom_vec_i32_type_to_json",
+                "custom_vec_string_type_to_json",
+                "custom_struct_1_member",
+                "custom_struct_2_members",
+                "custom_struct_3_members"
             ]
         }]
     }

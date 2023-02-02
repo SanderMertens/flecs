@@ -819,6 +819,34 @@ void flecs_set_vector(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_set_custom_type(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t elem_type = serialize[i].as_type;
+
+        if (!elem_type) {
+            ecs_err("custom type '%s' has no mapping type", ecs_get_name(world, e));
+            continue;
+        }
+
+        const EcsComponent *comp = ecs_get(world, e, EcsComponent);
+        if (!comp || !comp->size || !comp->alignment) {
+            ecs_err("custom type '%s' has no size/alignment, register as component first",
+                ecs_get_name(world, e));
+            continue;
+        }
+
+        if (flecs_init_type(world, e, EcsOpaqueType, comp->size, comp->alignment)) {
+            continue;
+        }
+    }
+}
+
 bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
@@ -1016,6 +1044,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
+    flecs_bootstrap_component(world, EcsOpaque);
     flecs_bootstrap_component(world, EcsUnit);
     flecs_bootstrap_component(world, EcsUnitPrefix);
 
@@ -1123,6 +1152,12 @@ void FlecsMetaImport(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0] = { .id = ecs_id(EcsOpaque), .src.flags = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = flecs_set_custom_type
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms[0] = { .id = ecs_id(EcsUnit), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_unit
@@ -1213,7 +1248,8 @@ void FlecsMetaImport(
             {.name = "EnumType"},
             {.name = "StructType"},
             {.name = "ArrayType"},
-            {.name = "VectorType"}
+            {.name = "VectorType"},
+            {.name = "CustomType"}
         }
     });
 
@@ -1276,6 +1312,14 @@ void FlecsMetaImport(
         .entity = ecs_id(EcsVector),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsOpaque),
+        .members = {
+            { .name = (char*)"type", .type = ecs_id(ecs_entity_t) },
+            { .name = (char*)"serialize", .type = ecs_id(ecs_uptr_t) }
         }
     });
 
