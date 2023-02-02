@@ -33,7 +33,7 @@ int main(int, char *[]) {
         .member<double>("x")
         .member<double>("y");
 
-    // Register serialization support for std::string
+    // Register serialization support for opaque type
     ecs.component<OpaqueType>()
         .serialize(
             as_struct,    // Describes what the serialized output looks like

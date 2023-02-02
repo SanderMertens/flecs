@@ -211,6 +211,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
+    flecs_rest_bool_param(req, "serialize_table", &desc->serialize_table);
 }
 
 static
@@ -238,6 +239,17 @@ bool flecs_rest_reply_entity(
     flecs_rest_parse_json_ser_entity_params(&desc, req);
 
     ecs_entity_to_json_buf(world, e, &reply->body, &desc);
+    return true;
+}
+
+static
+bool flecs_rest_reply_world(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)req;
+    ecs_world_to_json_buf(world, &reply->body);
     return true;
 }
 
@@ -851,6 +863,10 @@ bool flecs_rest_reply(
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
             return flecs_rest_reply_query(world, impl, req, reply);
+
+        /* World endpoint */
+        } else if (!ecs_os_strcmp(req->path, "world")) {
+            return flecs_rest_reply_world(world, req, reply);
 
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
