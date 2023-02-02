@@ -69,7 +69,7 @@ void CustomTypes_custom_i32_type_to_json() {
 
     ECS_COMPONENT(world, Int32);
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(Int32),
         .as_type = ecs_primitive(world, { .kind = EcsI32 }),
         .serialize = Int32_serialize
@@ -92,7 +92,7 @@ void CustomTypes_custom_string_type_to_json() {
 
     ECS_COMPONENT(world, String);
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(String),
         .as_type = ecs_primitive(world, { .kind = EcsString }),
         .serialize = String_serialize
@@ -115,7 +115,7 @@ void CustomTypes_custom_vec_i32_type_to_json() {
 
     ECS_COMPONENT(world, IntVec);
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(IntVec),
         .as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
         .serialize = IntVec_serialize
@@ -138,7 +138,7 @@ void CustomTypes_custom_vec_string_type_to_json() {
 
     ECS_COMPONENT(world, StringVec);
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(StringVec),
         .as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
         .serialize = StringVec_serialize
@@ -242,7 +242,7 @@ void CustomTypes_custom_struct_1_member() {
         }
     });
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(Struct_1_member),
         .as_type = s,
         .serialize = Struct_1_member_serialize
@@ -272,7 +272,7 @@ void CustomTypes_custom_struct_2_members() {
         }
     });
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(Struct_2_member),
         .as_type = s,
         .serialize = Struct_2_member_serialize
@@ -303,7 +303,7 @@ void CustomTypes_custom_struct_3_members() {
         }
     });
 
-    ecs_custom_type(world, {
+    ecs_opaque(world, {
         .entity = ecs_id(Struct_3_member),
         .as_type = s,
         .serialize = Struct_3_member_serialize

@@ -5,8 +5,8 @@
 
 #pragma once
 
-FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
-FLECS_ENUM_LAST(flecs::primitive_kind_t, EcsPrimitiveKindLast)
+FLECS_ENUM_LAST(flecs::meta::type_kind_t, flecs::meta::TypeKindLast)
+FLECS_ENUM_LAST(flecs::meta::primitive_kind_t, flecs::meta::PrimitiveKindLast)
 
 namespace flecs {
 namespace meta {
@@ -84,7 +84,7 @@ inline flecs::entity cursor::get_entity() const {
 } // namespace meta
 
 /** Create primitive type */
-inline flecs::entity world::primitive(flecs::primitive_kind_t kind) {
+inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
     ecs_primitive_desc_t desc = {};
     desc.kind = kind;
     flecs::entity_t eid = ecs_primitive_init(m_world, &desc);

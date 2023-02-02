@@ -185,9 +185,9 @@ int json_typeinfo_ser_type_op(
     ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str) 
 {
-    if (op->kind == EcsOpCustomType) {
-        const EcsMetaCustomType *ct = ecs_get(world, op->type, 
-            EcsMetaCustomType);
+    if (op->kind == EcsOpOpaque) {
+        const EcsOpaque *ct = ecs_get(world, op->type, 
+            EcsOpaque);
         ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
         return json_typeinfo_ser_type(world, ct->as_type, str);
     }
@@ -212,7 +212,7 @@ int json_typeinfo_ser_type_op(
     case EcsOpVector:
         json_typeinfo_ser_vector(world, op->type, str);
         break;
-    case EcsOpCustomType:
+    case EcsOpOpaque:
         /* Can't happen, already handled above */
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
         break;

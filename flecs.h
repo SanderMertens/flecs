@@ -12248,7 +12248,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
-FLECS_API extern const ecs_entity_t ecs_id(EcsMetaCustomType);
+FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
@@ -12281,7 +12281,7 @@ typedef enum ecs_type_kind_t {
     EcsStructType,
     EcsArrayType,
     EcsVectorType,
-    EcsCustomType,
+    EcsOpaqueType,
     EcsTypeKindLast = EcsVectorType
 } ecs_type_kind_t;
 
@@ -12392,7 +12392,7 @@ typedef struct EcsVector {
 } EcsVector;
 
 
-/* Custom type support */
+/* Opaque type support */
 
 #if !defined(__cplusplus) || !defined(FLECS_CPP)
 
@@ -12447,15 +12447,15 @@ typedef struct ecs_meta_serializer_t {
 extern "C" {
 #endif
 
-/** Callback invoked for a custom type. */
+/** Callback invoked serializing an opaque type. */
 typedef int (*ecs_meta_serialize_t)(
     const ecs_meta_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
-typedef struct EcsMetaCustomType {
+typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
-} EcsMetaCustomType;
+} EcsOpaque;
 
 
 /* Units */
@@ -12491,7 +12491,7 @@ typedef struct EcsUnitPrefix {
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpArray,
     EcsOpVector,
-    EcsOpCustomType,
+    EcsOpOpaque,
     EcsOpPush,
     EcsOpPop,
 
@@ -12818,18 +12818,35 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
 
-/** Used with ecs_custom_type_init. */
-typedef struct ecs_custom_type_desc_t {
+/** Used with ecs_opaque_init. */
+typedef struct ecs_opaque_desc_t {
     ecs_entity_t entity;
     ecs_entity_t as_type;            /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;  /**< Serialize action */
-} ecs_custom_type_desc_t;
+} ecs_opaque_desc_t;
 
-/** Create a new custom type */
+/** Create a new opaque type.
+ * Opaque types are types of which the layout doesn't match what can be modelled
+ * with the primitives of the meta framework, but which have a structure
+ * that can be described with meta primitives. Typical examples are STL types
+ * such as std::string or std::vector, types with a nontrivial layout, and types
+ * that only expose getter/setter methods.
+ * 
+ * An opaque type is a combination of a serialization function, and a handle to
+ * a meta type which describes the structure of the serialized output. For
+ * example, an opaque type for std::string would have a serializer function that
+ * accesses .c_str(), and with type ecs_string_t.
+ * 
+ * The serializer callback accepts a serializer object and a pointer to the 
+ * value of the opaque type to be serialized. The serializer has two methods:
+ * 
+ * - value, which serializes a value (such as .c_str())
+ * - member, which specifies a member to be serialized (in the case of a struct)
+ */
 FLECS_API
-ecs_entity_t ecs_custom_type_init(
+ecs_entity_t ecs_opaque_init(
     ecs_world_t *world,
-    const ecs_custom_type_desc_t *desc);
+    const ecs_opaque_desc_t *desc);
 
 /** Used with ecs_unit_init. */
 typedef struct ecs_unit_desc_t {
@@ -12907,8 +12924,8 @@ ecs_entity_t ecs_quantity_init(
 #define ecs_vector(world, ...)\
     ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
 
-#define ecs_custom_type(world, ...)\
-    ecs_custom_type_init(world, &(ecs_custom_type_desc_t) __VA_ARGS__ )
+#define ecs_opaque(world, ...)\
+    ecs_opaque_init(world, &(ecs_opaque_desc_t) __VA_ARGS__ )
 
 #define ecs_struct(world, ...)\
     ecs_struct_init(world, &(ecs_struct_desc_t) __VA_ARGS__ )
@@ -16177,8 +16194,6 @@ using iptr_t = ecs_iptr_t;
 using f32_t = ecs_f32_t;
 using f64_t = ecs_f64_t;
 
-using type_kind_t = ecs_type_kind_t;
-using primitive_kind_t = ecs_primitive_kind_t;
 using member_t = ecs_member_t;
 using enum_constant_t = ecs_enum_constant_t;
 using bitmask_constant_t = ecs_bitmask_constant_t;
@@ -16222,8 +16237,40 @@ static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
-using serializer_t = ecs_meta_serializer_t;
+using serializer = ecs_meta_serializer_t;
 using serialize_t = ecs_meta_serialize_t;
+
+/* Type kinds supported by reflection system */
+using type_kind_t = ecs_type_kind_t;
+static const type_kind_t PrimitiveType = EcsPrimitiveType;
+static const type_kind_t BitmaskType = EcsBitmaskType;
+static const type_kind_t EnumType = EcsEnumType;
+static const type_kind_t StructType = EcsStructType;
+static const type_kind_t ArrayType = EcsArrayType;
+static const type_kind_t VectorType = EcsVectorType;
+static const type_kind_t CustomType = EcsOpaqueType;
+static const type_kind_t TypeKindLast = EcsTypeKindLast;
+
+/* Primitive type kinds supported by reflection system */
+using primitive_kind_t = ecs_primitive_kind_t;
+static const primitive_kind_t Bool = EcsBool;
+static const primitive_kind_t Char = EcsChar;
+static const primitive_kind_t Byte = EcsByte;
+static const primitive_kind_t U8 = EcsU8;
+static const primitive_kind_t U16 = EcsU16;
+static const primitive_kind_t U32 = EcsU32;
+static const primitive_kind_t U64 = EcsU64;
+static const primitive_kind_t I8 = EcsI8;
+static const primitive_kind_t I16 = EcsI16;
+static const primitive_kind_t I32 = EcsI32;
+static const primitive_kind_t I64 = EcsI64;
+static const primitive_kind_t F32 = EcsF32;
+static const primitive_kind_t F64 = EcsF64;
+static const primitive_kind_t UPtr = EcsUPtr;
+static const primitive_kind_t IPtr = EcsIPtr;
+static const primitive_kind_t String = EcsString;
+static const primitive_kind_t Entity = EcsEntity;
+static const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
 
 /** Class for reading/writing dynamic values.
  * 
@@ -19030,7 +19077,7 @@ flecs::meta::cursor cursor(void *ptr) {
 }
 
 /** Create primitive type */
-flecs::entity primitive(flecs::primitive_kind_t kind);
+flecs::entity primitive(flecs::meta::primitive_kind_t kind);
 
 /** Create array type. */
 flecs::entity array(flecs::entity_t elem_id, int32_t array_count);
@@ -23260,16 +23307,17 @@ untyped_component& bit(const char *name, uint32_t value) {
 }
 
 /** Add custom reflection. */
-untyped_component& custom_type(flecs::meta::serialize_t serialize, flecs::id_t as_type) {
-    ecs_custom_type_desc_t desc = {};
+untyped_component& serialize(flecs::meta::serialize_t serialize, flecs::id_t as_type) {
+    ecs_opaque_desc_t desc = {};
     desc.entity = m_id;
     desc.as_type = as_type;
     desc.serialize = serialize;
-    ecs_custom_type_init(m_world, &desc);
+    ecs_opaque_init(m_world, &desc);
     return *this;
 }
 
 /** @} */
+
 #   endif
 };
 
@@ -27218,8 +27266,8 @@ inline rule_base::operator rule<>() const {
 
 #pragma once
 
-FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
-FLECS_ENUM_LAST(flecs::primitive_kind_t, EcsPrimitiveKindLast)
+FLECS_ENUM_LAST(flecs::meta::type_kind_t, flecs::meta::TypeKindLast)
+FLECS_ENUM_LAST(flecs::meta::primitive_kind_t, flecs::meta::PrimitiveKindLast)
 
 namespace flecs {
 namespace meta {
@@ -27297,7 +27345,7 @@ inline flecs::entity cursor::get_entity() const {
 } // namespace meta
 
 /** Create primitive type */
-inline flecs::entity world::primitive(flecs::primitive_kind_t kind) {
+inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
     ecs_primitive_desc_t desc = {};
     desc.kind = kind;
     flecs::entity_t eid = ecs_primitive_init(m_world, &desc);

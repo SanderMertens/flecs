@@ -36,7 +36,7 @@ flecs::meta::cursor cursor(void *ptr) {
 }
 
 /** Create primitive type */
-flecs::entity primitive(flecs::primitive_kind_t kind);
+flecs::entity primitive(flecs::meta::primitive_kind_t kind);
 
 /** Create array type. */
 flecs::entity array(flecs::entity_t elem_id, int32_t array_count);

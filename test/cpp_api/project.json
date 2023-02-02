@@ -1163,7 +1163,10 @@
                 "type_w_std_string_std_string",
                 "type_w_std_vector_std_vector",
                 "type_w_std_vector_std_string_std_vector",
-                "type_w_std_vector_std_vector_std_string"
+                "type_w_std_vector_std_vector_std_string",
+                "primitive_type",
+                "array_type",
+                "vector_type"
             ]
         }, {
             "id": "Table",

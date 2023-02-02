@@ -162,7 +162,7 @@ ecs_vector_t* serialize_custom_type(
 {
     (void)world;
 
-    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpCustomType);
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpOpaque);
     op->offset = offset;
     op->type = type;
     op->size = type_size(world, type);
@@ -266,7 +266,7 @@ ecs_vector_t* serialize_type(
         ops = serialize_vector(world, type, offset, ops);
         break;
 
-    case EcsCustomType:
+    case EcsOpaqueType:
         ops = serialize_custom_type(world, type, offset, ops);
         break;
     }

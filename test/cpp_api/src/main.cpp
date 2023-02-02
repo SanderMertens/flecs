@@ -1108,6 +1108,9 @@ void Meta_type_w_std_string_std_string(void);
 void Meta_type_w_std_vector_std_vector(void);
 void Meta_type_w_std_vector_std_string_std_vector(void);
 void Meta_type_w_std_vector_std_vector_std_string(void);
+void Meta_primitive_type(void);
+void Meta_array_type(void);
+void Meta_vector_type(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5415,6 +5418,18 @@ bake_test_case Meta_testcases[] = {
     {
         "type_w_std_vector_std_vector_std_string",
         Meta_type_w_std_vector_std_vector_std_string
+    },
+    {
+        "primitive_type",
+        Meta_primitive_type
+    },
+    {
+        "array_type",
+        Meta_array_type
+    },
+    {
+        "vector_type",
+        Meta_vector_type
     }
 };
 
@@ -5744,7 +5759,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        22,
+        25,
         Meta_testcases
     },
     {

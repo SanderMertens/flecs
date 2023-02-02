@@ -333,20 +333,20 @@ struct TVectorStringVector {
 };
 
 static
-int Int_serialize(const flecs::meta::serializer_t *s, const void *ptr) {
+int Int_serialize(const flecs::meta::serializer *s, const void *ptr) {
     const Int *data = static_cast<const Int*>(ptr);
     return s->value(data->v);
 }
 
 static
-int String_serialize(const flecs::meta::serializer_t *s, const void *ptr) {
+int String_serialize(const flecs::meta::serializer *s, const void *ptr) {
     const std::string *data = static_cast<const std::string*>(ptr);
     const char *str = data->c_str();
     return s->value(flecs::String, &str);
 }
 
 template <typename Elem>
-int Vector_serialize(const flecs::meta::serializer_t *ser, const void *ptr) {
+int Vector_serialize(const flecs::meta::serializer *ser, const void *ptr) {
     using T = std::vector<Elem>;
     const T *data = static_cast<const T*>(ptr);
 
@@ -362,7 +362,7 @@ int Vector_serialize(const flecs::meta::serializer_t *ser, const void *ptr) {
 void Meta_custom_i32_to_json() {
     flecs::world ecs;
 
-    ecs.component<Int>().custom_type(Int_serialize, flecs::I32);
+    ecs.component<Int>().serialize(Int_serialize, flecs::I32);
 
     Int v = {10};
     flecs::string json = ecs.to_json(&v);
@@ -372,7 +372,7 @@ void Meta_custom_i32_to_json() {
 void Meta_custom_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     std::string v = {"Hello World"};
     flecs::string json = ecs.to_json(&v);
@@ -383,7 +383,7 @@ void Meta_custom_std_vector_i32_to_json() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
     std::vector<int> v = {1, 2, 3};
     flecs::string json = ecs.to_json(&v);
@@ -393,10 +393,10 @@ void Meta_custom_std_vector_i32_to_json() {
 void Meta_custom_std_vector_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<std::vector<std::string>>()
-        .custom_type(Vector_serialize<std::string>, ecs.vector(flecs::String));
+        .serialize(Vector_serialize<std::string>, ecs.vector(flecs::String));
 
     std::vector<std::string> v = {"hello", "world", "foo"};
     flecs::string json = ecs.to_json(&v);
@@ -407,7 +407,7 @@ void Meta_type_w_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
     ecs.component<TVector>()
         .member<std::vector<int>>("v");
@@ -420,7 +420,7 @@ void Meta_type_w_std_vector() {
 void Meta_type_w_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TString>()
         .member<std::string>("v");
@@ -434,9 +434,9 @@ void Meta_type_w_std_vector_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TVectorString>()
         .member<std::vector<int>>("v")
@@ -451,9 +451,9 @@ void Meta_type_w_std_string_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TStringVector>()
         .member<std::string>("s")
@@ -468,9 +468,9 @@ void Meta_type_w_std_string_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TStringString>()
         .member<std::string>("s1")
@@ -485,9 +485,9 @@ void Meta_type_w_std_vector_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TVectorVector>()
         .member<std::vector<int>>("v1")
@@ -502,9 +502,9 @@ void Meta_type_w_std_vector_std_string_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TVectorStringVector>()
         .member<std::vector<int>>("v1")
@@ -520,9 +520,9 @@ void Meta_type_w_std_vector_std_vector_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .custom_type(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(Vector_serialize<int>, ecs.vector<int>());
 
-    ecs.component<std::string>().custom_type(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(String_serialize, flecs::String);
 
     ecs.component<TVectorVectorString>()
         .member<std::vector<int>>("v1")
@@ -532,4 +532,77 @@ void Meta_type_w_std_vector_std_vector_std_string() {
     TVectorVectorString v = {{1, 2, 3}, {4, 5, 6}, "hello world"};
     flecs::string json = ecs.to_json(&v);
     test_str(json, "{\"v1\":[1, 2, 3], \"v2\":[4, 5, 6], \"s\":\"hello world\"}");
+}
+
+void Meta_primitive_type() {
+    flecs::world ecs;
+
+    flecs::entity t = ecs.primitive(flecs::meta::I32);
+    test_assert(t != 0);
+
+    test_assert(t.has<flecs::Component>());
+    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Primitive>());
+
+    const flecs::Component *c = t.get<flecs::Component>();
+    test_assert(c != nullptr);
+    test_int(c->size, 4);
+    test_int(c->alignment, 4);
+
+    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::PrimitiveType);
+
+    const flecs::Primitive *pt = t.get<flecs::Primitive>();
+    test_assert(pt != nullptr);
+    test_assert(pt->kind == flecs::meta::I32);
+}
+
+void Meta_array_type() {
+    flecs::world ecs;
+
+    flecs::entity t = ecs.array(flecs::I32, 3);
+    test_assert(t != 0);
+
+    test_assert(t.has<flecs::Component>());
+    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Array>());
+
+    const flecs::Component *c = t.get<flecs::Component>();
+    test_assert(c != nullptr);
+    test_int(c->size, 3 * 4);
+    test_int(c->alignment, 4);
+
+    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::ArrayType);
+
+    const flecs::Array *at = t.get<flecs::Array>();
+    test_assert(at != nullptr);
+    test_assert(at->type == ecs.id<int32_t>());
+    test_int(at->count, 3);
+}
+
+void Meta_vector_type() {
+    flecs::world ecs;
+
+    flecs::entity t = ecs.vector(flecs::I32);
+    test_assert(t != 0);
+
+    test_assert(t.has<flecs::Component>());
+    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Vector>());
+
+    const flecs::Component *c = t.get<flecs::Component>();
+    test_assert(c != nullptr);
+    test_int(c->size, 8);
+    test_int(c->alignment, 8);
+
+    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::VectorType);
+
+    const flecs::Vector *vt = t.get<flecs::Vector>();
+    test_assert(vt != nullptr);
+    test_assert(vt->type == ecs.id<int32_t>());
 }

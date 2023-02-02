@@ -391,7 +391,7 @@ int DummySerialize(const ecs_meta_serializer_t *s, const void *ptr) {
 void SerializeTypeInfoToJson_custom_primitive_type() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ct = ecs_custom_type(world, {
+    ecs_entity_t ct = ecs_opaque(world, {
         .entity = ecs_component(world, {
             .type.size = 4,
             .type.alignment = 4
@@ -427,7 +427,7 @@ void SerializeTypeInfoToJson_custom_array_type() {
 void SerializeTypeInfoToJson_custom_vector_type() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ct = ecs_custom_type(world, {
+    ecs_entity_t ct = ecs_opaque(world, {
         .entity = ecs_component(world, {
             .type.size = 4,
             .type.alignment = 4
@@ -456,7 +456,7 @@ void SerializeTypeInfoToJson_custom_struct_type() {
         }
     });
 
-    ecs_entity_t ct = ecs_custom_type(world, {
+    ecs_entity_t ct = ecs_opaque(world, {
         .entity = ecs_component(world, {
             .type.size = 4,
             .type.alignment = 4

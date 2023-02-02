@@ -237,7 +237,7 @@ int json_ser_custom_type(
     const void *base, 
     ecs_strbuf_t *str)
 {
-    const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
+    const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
     ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
 
@@ -324,7 +324,7 @@ int json_ser_type_op(
             goto error;
         }
         break;
-    case EcsOpCustomType:
+    case EcsOpOpaque:
         if (json_ser_custom_type(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;
         }
