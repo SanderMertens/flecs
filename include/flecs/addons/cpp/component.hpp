@@ -350,7 +350,7 @@ struct untyped_component : entity {
     using entity::entity;
     
 #   ifdef FLECS_META
-#   include "mixins/meta/component.inl"
+#   include "mixins/meta/untyped_component.inl"
 #   endif
 };
 
@@ -490,6 +490,10 @@ struct component : untyped_component {
         ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
+
+#   ifdef FLECS_META
+#   include "mixins/meta/component.inl"
+#   endif
 
 private:
     using BindingCtx = _::component_binding_ctx;

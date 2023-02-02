@@ -1,0 +1,11 @@
+{
+    "id": "ser_opaque_type",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

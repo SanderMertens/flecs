@@ -12401,8 +12401,8 @@ typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
         const struct ecs_meta_serializer_t *ser, /**< Serializer */
-        ecs_entity_t type,             /**< Type of the value to serialize */
-        const void *value);            /**< Pointer to the value to serialize */
+        ecs_entity_t type,            /**< Type of the value to serialize */
+        const void *value);           /**< Pointer to the value to serialize */
 
     /* Serialize member */
     int (*member)(
@@ -16179,6 +16179,7 @@ namespace flecs {
  * @{
  */
 
+/* Primitive type aliases */
 using bool_t = ecs_bool_t;
 using char_t = ecs_char_t;
 using u8_t = ecs_u8_t;
@@ -16194,10 +16195,12 @@ using iptr_t = ecs_iptr_t;
 using f32_t = ecs_f32_t;
 using f64_t = ecs_f64_t;
 
+/* Embedded type aliases */
 using member_t = ecs_member_t;
 using enum_constant_t = ecs_enum_constant_t;
 using bitmask_constant_t = ecs_bitmask_constant_t;
 
+/* Components */
 using MetaType = EcsMetaType;
 using MetaTypeSerialized = EcsMetaTypeSerialized;
 using Primitive = EcsPrimitive;
@@ -16214,6 +16217,7 @@ struct bitmask {
     uint32_t value;
 };
 
+/* Handles to builtin reflection types */
 static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
 static const flecs::entity_t Char = ecs_id(ecs_char_t);
 static const flecs::entity_t Byte = ecs_id(ecs_byte_t);
@@ -16231,14 +16235,20 @@ static const flecs::entity_t F32 = ecs_id(ecs_f32_t);
 static const flecs::entity_t F64 = ecs_id(ecs_f64_t);
 static const flecs::entity_t String = ecs_id(ecs_string_t);
 static const flecs::entity_t Entity = ecs_id(ecs_entity_t);
-
 static const flecs::entity_t Constant = EcsConstant;
 static const flecs::entity_t Quantity = EcsQuantity;
 
-namespace meta {
-
+/** Serializer object, used for serializing opaque types */
 using serializer = ecs_meta_serializer_t;
+
+/** Serializer function, used to serialize opaque types */
 using serialize_t = ecs_meta_serialize_t;
+
+/** Type safe variant of serializer function */
+template <typename T>
+using serialize = int(*)(const serializer *, const T*);
+
+namespace meta {
 
 /* Type kinds supported by reflection system */
 using type_kind_t = ecs_type_kind_t;
@@ -23306,16 +23316,6 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
-/** Add custom reflection. */
-untyped_component& serialize(flecs::meta::serialize_t serialize, flecs::id_t as_type) {
-    ecs_opaque_desc_t desc = {};
-    desc.entity = m_id;
-    desc.as_type = as_type;
-    desc.serialize = serialize;
-    ecs_opaque_init(m_world, &desc);
-    return *this;
-}
-
 /** @} */
 
 #   endif
@@ -23457,6 +23457,22 @@ struct component : untyped_component {
         ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
+
+#   ifdef FLECS_META
+
+/** Register custom reflection function for component. */
+component& serialize(flecs::id_t as_type, flecs::serialize<T> ser) {
+    ecs_opaque_desc_t desc = {};
+
+    /* Safe cast, from a function with a T* arg to a void* arg */
+    desc.serialize = reinterpret_cast<flecs::serialize_t>(ser);
+    desc.entity = m_id;
+    desc.as_type = as_type;
+    ecs_opaque_init(m_world, &desc);
+    return *this;
+}
+
+#   endif
 
 private:
     using BindingCtx = _::component_binding_ctx;

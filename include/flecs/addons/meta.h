@@ -264,8 +264,8 @@ typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
         const struct ecs_meta_serializer_t *ser, /**< Serializer */
-        ecs_entity_t type,             /**< Type of the value to serialize */
-        const void *value);            /**< Pointer to the value to serialize */
+        ecs_entity_t type,            /**< Type of the value to serialize */
+        const void *value);           /**< Pointer to the value to serialize */
 
     /* Serialize member */
     int (*member)(

@@ -333,23 +333,18 @@ struct TVectorStringVector {
 };
 
 static
-int Int_serialize(const flecs::meta::serializer *s, const void *ptr) {
-    const Int *data = static_cast<const Int*>(ptr);
+int Int_serialize(const flecs::serializer *s, const Int *data) {
     return s->value(data->v);
 }
 
 static
-int String_serialize(const flecs::meta::serializer *s, const void *ptr) {
-    const std::string *data = static_cast<const std::string*>(ptr);
+int String_serialize(const flecs::serializer *s, const std::string *data) {
     const char *str = data->c_str();
     return s->value(flecs::String, &str);
 }
 
 template <typename Elem>
-int Vector_serialize(const flecs::meta::serializer *ser, const void *ptr) {
-    using T = std::vector<Elem>;
-    const T *data = static_cast<const T*>(ptr);
-
+int Vector_serialize(const flecs::serializer *ser, const std::vector<Elem> *data) {
     for (const auto& el : *data) {
         if (ser->value(el)) {
             return -1;
@@ -362,7 +357,7 @@ int Vector_serialize(const flecs::meta::serializer *ser, const void *ptr) {
 void Meta_custom_i32_to_json() {
     flecs::world ecs;
 
-    ecs.component<Int>().serialize(Int_serialize, flecs::I32);
+    ecs.component<Int>().serialize(flecs::I32, Int_serialize);
 
     Int v = {10};
     flecs::string json = ecs.to_json(&v);
@@ -372,7 +367,7 @@ void Meta_custom_i32_to_json() {
 void Meta_custom_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     std::string v = {"Hello World"};
     flecs::string json = ecs.to_json(&v);
@@ -383,7 +378,7 @@ void Meta_custom_std_vector_i32_to_json() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
     std::vector<int> v = {1, 2, 3};
     flecs::string json = ecs.to_json(&v);
@@ -393,10 +388,10 @@ void Meta_custom_std_vector_i32_to_json() {
 void Meta_custom_std_vector_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<std::vector<std::string>>()
-        .serialize(Vector_serialize<std::string>, ecs.vector(flecs::String));
+        .serialize(ecs.vector(flecs::String), Vector_serialize<std::string>);
 
     std::vector<std::string> v = {"hello", "world", "foo"};
     flecs::string json = ecs.to_json(&v);
@@ -407,7 +402,7 @@ void Meta_type_w_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
     ecs.component<TVector>()
         .member<std::vector<int>>("v");
@@ -420,7 +415,7 @@ void Meta_type_w_std_vector() {
 void Meta_type_w_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TString>()
         .member<std::string>("v");
@@ -434,9 +429,9 @@ void Meta_type_w_std_vector_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TVectorString>()
         .member<std::vector<int>>("v")
@@ -451,9 +446,9 @@ void Meta_type_w_std_string_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TStringVector>()
         .member<std::string>("s")
@@ -468,9 +463,9 @@ void Meta_type_w_std_string_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TStringString>()
         .member<std::string>("s1")
@@ -485,9 +480,9 @@ void Meta_type_w_std_vector_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TVectorVector>()
         .member<std::vector<int>>("v1")
@@ -502,9 +497,9 @@ void Meta_type_w_std_vector_std_string_std_vector() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TVectorStringVector>()
         .member<std::vector<int>>("v1")
@@ -520,9 +515,9 @@ void Meta_type_w_std_vector_std_vector_std_string() {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>()
-        .serialize(Vector_serialize<int>, ecs.vector<int>());
+        .serialize(ecs.vector<int>(), Vector_serialize<int>);
 
-    ecs.component<std::string>().serialize(String_serialize, flecs::String);
+    ecs.component<std::string>().serialize(flecs::String, String_serialize);
 
     ecs.component<TVectorVectorString>()
         .member<std::vector<int>>("v1")
