@@ -25702,6 +25702,11 @@ ecs_entity_t ecs_custom_type_init(
     ecs_world_t *world,
     const ecs_custom_type_desc_t *desc)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->as_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->serialize != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -26952,7 +26957,7 @@ void flecs_set_custom_type(ecs_iter_t *it) {
         }
 
         const EcsComponent *comp = ecs_get(world, e, EcsComponent);
-        if (!comp->size || !comp->alignment) {
+        if (!comp || !comp->size || !comp->alignment) {
             ecs_err("custom type '%s' has no size/alignment, register as component first",
                 ecs_get_name(world, e));
             continue;
@@ -33800,7 +33805,8 @@ int json_ser_vector(
 
 typedef struct json_serializer_ctx_t {
     ecs_strbuf_t *str;
-    bool is_primitive;
+    bool is_collection;
+    bool is_struct;
 } json_serializer_ctx_t;
 
 static
@@ -33810,10 +33816,24 @@ int json_ser_custom_value(
     const void *value)
 {
     json_serializer_ctx_t *json_ser = ser->ctx;
-    if (!json_ser->is_primitive) {
+    if (json_ser->is_collection) {
         ecs_strbuf_list_next(json_ser->str);
     }
     return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
+}
+
+static
+int json_ser_custom_member(
+    const ecs_meta_serializer_t *ser,
+    const char *name)
+{
+    json_serializer_ctx_t *json_ser = ser->ctx;
+    if (!json_ser->is_struct) {
+        ecs_err("serializer::member can only be called for structs");
+        return -1;
+    }
+    flecs_json_member(json_ser->str, name);
+    return 0;
 }
 
 static
@@ -33831,24 +33851,27 @@ int json_ser_custom_type(
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
 
     ecs_type_kind_t kind = pt->kind;
-    bool is_primitive = true;
+    bool is_collection = false;
+    bool is_struct = false;
 
     if (kind == EcsStructType) {
         flecs_json_object_push(str);
-        is_primitive = false;
+        is_struct = true;
     } else if (kind == EcsArrayType || kind == EcsVectorType) {
         flecs_json_array_push(str);
-        is_primitive = false;
+        is_collection = true;
     }
 
     json_serializer_ctx_t json_ser = {
         .str = str,
-        .is_primitive = is_primitive
+        .is_struct = is_struct,
+        .is_collection = is_collection
     };
 
     ecs_meta_serializer_t ser = {
         .world = world,
         .value = json_ser_custom_value,
+        .member = json_ser_custom_member,
         .ctx = &json_ser
     };
 
@@ -35345,6 +35368,13 @@ int json_typeinfo_ser_type_op(
     ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str) 
 {
+    if (op->kind == EcsOpCustomType) {
+        const EcsMetaCustomType *ct = ecs_get(world, op->type, 
+            EcsMetaCustomType);
+        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
+        return json_typeinfo_ser_type(world, ct->as_type, str);
+    }
+
     flecs_json_array_push(str);
 
     switch(op->kind) {
@@ -35365,12 +35395,10 @@ int json_typeinfo_ser_type_op(
     case EcsOpVector:
         json_typeinfo_ser_vector(world, op->type, str);
         break;
-    case EcsOpCustomType: {
-        const EcsMetaCustomType *ct = ecs_get(world, op->type, EcsMetaCustomType);
-        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
-        json_typeinfo_ser_type(world, ct->as_type, str);
+    case EcsOpCustomType:
+        /* Can't happen, already handled above */
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         break;
-    }
     default:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))
@@ -35414,15 +35442,15 @@ int json_typeinfo_ser_type_ops(
             if (op->name) {
                 flecs_json_member(str, op->name);
             }
+        }
 
-            int32_t elem_count = op->count;
-            if (elem_count > 1 && op != ops) {
-                flecs_json_array_push(str);
-                json_typeinfo_ser_array(world, op->type, op->count, str);
-                flecs_json_array_pop(str);
-                i += op->op_count - 1;
-                continue;
-            }
+        int32_t elem_count = op->count;
+        if (elem_count > 1) {
+            flecs_json_array_push(str);
+            json_typeinfo_ser_array(world, op->type, op->count, str);
+            flecs_json_array_pop(str);
+            i += op->op_count - 1;
+            continue;
         }
         
         switch(op->kind) {

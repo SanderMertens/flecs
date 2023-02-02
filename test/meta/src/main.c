@@ -617,9 +617,16 @@ void SerializeTypeInfoToJson_enum(void);
 void SerializeTypeInfoToJson_bitmask(void);
 void SerializeTypeInfoToJson_struct(void);
 void SerializeTypeInfoToJson_nested_struct(void);
+void SerializeTypeInfoToJson_array_type(void);
+void SerializeTypeInfoToJson_vector_type(void);
 void SerializeTypeInfoToJson_struct_array_i32_2(void);
 void SerializeTypeInfoToJson_struct_array_struct_2(void);
 void SerializeTypeInfoToJson_struct_array_type(void);
+void SerializeTypeInfoToJson_struct_vector_type(void);
+void SerializeTypeInfoToJson_custom_primitive_type(void);
+void SerializeTypeInfoToJson_custom_array_type(void);
+void SerializeTypeInfoToJson_custom_vector_type(void);
+void SerializeTypeInfoToJson_custom_struct_type(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -754,6 +761,9 @@ void CustomTypes_custom_i32_type_to_json(void);
 void CustomTypes_custom_string_type_to_json(void);
 void CustomTypes_custom_vec_i32_type_to_json(void);
 void CustomTypes_custom_vec_string_type_to_json(void);
+void CustomTypes_custom_struct_1_member(void);
+void CustomTypes_custom_struct_2_members(void);
+void CustomTypes_custom_struct_3_members(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -3119,6 +3129,14 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
         SerializeTypeInfoToJson_nested_struct
     },
     {
+        "array_type",
+        SerializeTypeInfoToJson_array_type
+    },
+    {
+        "vector_type",
+        SerializeTypeInfoToJson_vector_type
+    },
+    {
         "struct_array_i32_2",
         SerializeTypeInfoToJson_struct_array_i32_2
     },
@@ -3129,6 +3147,26 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_array_type",
         SerializeTypeInfoToJson_struct_array_type
+    },
+    {
+        "struct_vector_type",
+        SerializeTypeInfoToJson_struct_vector_type
+    },
+    {
+        "custom_primitive_type",
+        SerializeTypeInfoToJson_custom_primitive_type
+    },
+    {
+        "custom_array_type",
+        SerializeTypeInfoToJson_custom_array_type
+    },
+    {
+        "custom_vector_type",
+        SerializeTypeInfoToJson_custom_vector_type
+    },
+    {
+        "custom_struct_type",
+        SerializeTypeInfoToJson_custom_struct_type
     }
 };
 
@@ -3645,6 +3683,18 @@ bake_test_case CustomTypes_testcases[] = {
     {
         "custom_vec_string_type_to_json",
         CustomTypes_custom_vec_string_type_to_json
+    },
+    {
+        "custom_struct_1_member",
+        CustomTypes_custom_struct_1_member
+    },
+    {
+        "custom_struct_2_members",
+        CustomTypes_custom_struct_2_members
+    },
+    {
+        "custom_struct_3_members",
+        CustomTypes_custom_struct_3_members
     }
 };
 
@@ -3751,7 +3801,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        24,
+        31,
         SerializeTypeInfoToJson_testcases
     },
     {
@@ -3779,7 +3829,7 @@ static bake_test_suite suites[] = {
         "CustomTypes",
         NULL,
         NULL,
-        4,
+        7,
         CustomTypes_testcases
     }
 };

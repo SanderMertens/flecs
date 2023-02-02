@@ -166,6 +166,17 @@
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating a component with ecs_component_init.
+ *
+ * Example:
+ *   ecs_component(world, {
+ *     .type.size = 4,
+ *     .type.alignment = 4
+ *   });
+ */
+#define ecs_component(world, ...)\
+    ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
+
 /** Shorthand for creating a filter with ecs_filter_init.
  *
  * Example:

@@ -650,9 +650,16 @@
                 "bitmask",
                 "struct",
                 "nested_struct",
+                "array_type",
+                "vector_type",
                 "struct_array_i32_2",
                 "struct_array_struct_2",
-                "struct_array_type"
+                "struct_array_type",
+                "struct_vector_type",
+                "custom_primitive_type",
+                "custom_array_type",
+                "custom_vector_type",
+                "custom_struct_type"
             ]
         }, {
             "id": "MetaUtils",

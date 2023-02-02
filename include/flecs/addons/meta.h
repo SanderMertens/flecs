@@ -264,8 +264,13 @@ typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
         const struct ecs_meta_serializer_t *ser, /**< Serializer */
-        ecs_entity_t type,              /**< Type of the value to serialize */
-        const void *value);             /**< Pointer to the value to serialize */
+        ecs_entity_t type,             /**< Type of the value to serialize */
+        const void *value);            /**< Pointer to the value to serialize */
+
+    /* Serialize member */
+    int (*member)(
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const char *member);           /**< Member name */
 
     const ecs_world_t *world;
     void *ctx;
@@ -283,12 +288,20 @@ typedef struct ecs_meta_serializer_t {
         ecs_entity_t type,
         const void *value);
 
+    /* Serialize member */
+    int (*member_)(
+        const struct ecs_meta_serializer_t *ser,
+        const char *name);
+
     /* Serialize value */
     int value(ecs_entity_t type, const void *value) const;
     
     /* Serialize value */
     template <typename T>
     int value(const T& value) const;
+
+    /* Serialize member */
+    int member(const char *name) const;
 
     const ecs_world_t *world;
     void *ctx;

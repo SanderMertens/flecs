@@ -199,7 +199,8 @@ int json_ser_vector(
 
 typedef struct json_serializer_ctx_t {
     ecs_strbuf_t *str;
-    bool is_primitive;
+    bool is_collection;
+    bool is_struct;
 } json_serializer_ctx_t;
 
 static
@@ -209,10 +210,24 @@ int json_ser_custom_value(
     const void *value)
 {
     json_serializer_ctx_t *json_ser = ser->ctx;
-    if (!json_ser->is_primitive) {
+    if (json_ser->is_collection) {
         ecs_strbuf_list_next(json_ser->str);
     }
     return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
+}
+
+static
+int json_ser_custom_member(
+    const ecs_meta_serializer_t *ser,
+    const char *name)
+{
+    json_serializer_ctx_t *json_ser = ser->ctx;
+    if (!json_ser->is_struct) {
+        ecs_err("serializer::member can only be called for structs");
+        return -1;
+    }
+    flecs_json_member(json_ser->str, name);
+    return 0;
 }
 
 static
@@ -230,24 +245,27 @@ int json_ser_custom_type(
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
 
     ecs_type_kind_t kind = pt->kind;
-    bool is_primitive = true;
+    bool is_collection = false;
+    bool is_struct = false;
 
     if (kind == EcsStructType) {
         flecs_json_object_push(str);
-        is_primitive = false;
+        is_struct = true;
     } else if (kind == EcsArrayType || kind == EcsVectorType) {
         flecs_json_array_push(str);
-        is_primitive = false;
+        is_collection = true;
     }
 
     json_serializer_ctx_t json_ser = {
         .str = str,
-        .is_primitive = is_primitive
+        .is_struct = is_struct,
+        .is_collection = is_collection
     };
 
     ecs_meta_serializer_t ser = {
         .world = world,
         .value = json_ser_custom_value,
+        .member = json_ser_custom_member,
         .ctx = &json_ser
     };
 

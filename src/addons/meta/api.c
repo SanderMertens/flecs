@@ -198,6 +198,11 @@ ecs_entity_t ecs_custom_type_init(
     ecs_world_t *world,
     const ecs_custom_type_desc_t *desc)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->as_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->serialize != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);

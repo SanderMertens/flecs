@@ -8442,6 +8442,17 @@ int ecs_value_move_ctor(
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating a component with ecs_component_init.
+ *
+ * Example:
+ *   ecs_component(world, {
+ *     .type.size = 4,
+ *     .type.alignment = 4
+ *   });
+ */
+#define ecs_component(world, ...)\
+    ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
+
 /** Shorthand for creating a filter with ecs_filter_init.
  *
  * Example:
@@ -12390,8 +12401,13 @@ typedef struct ecs_meta_serializer_t {
     /* Serialize value */
     int (*value)(
         const struct ecs_meta_serializer_t *ser, /**< Serializer */
-        ecs_entity_t type,              /**< Type of the value to serialize */
-        const void *value);             /**< Pointer to the value to serialize */
+        ecs_entity_t type,             /**< Type of the value to serialize */
+        const void *value);            /**< Pointer to the value to serialize */
+
+    /* Serialize member */
+    int (*member)(
+        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const char *member);           /**< Member name */
 
     const ecs_world_t *world;
     void *ctx;
@@ -12409,12 +12425,20 @@ typedef struct ecs_meta_serializer_t {
         ecs_entity_t type,
         const void *value);
 
+    /* Serialize member */
+    int (*member_)(
+        const struct ecs_meta_serializer_t *ser,
+        const char *name);
+
     /* Serialize value */
     int value(ecs_entity_t type, const void *value) const;
     
     /* Serialize value */
     template <typename T>
     int value(const T& value) const;
+
+    /* Serialize member */
+    int member(const char *name) const;
 
     const ecs_world_t *world;
     void *ctx;
@@ -27320,6 +27344,10 @@ template <typename T>
 inline int ecs_meta_serializer_t::value(const T& v) const {
     return this->value(flecs::_::cpp_type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
+}
+
+inline int ecs_meta_serializer_t::member(const char *name) const {
+    return this->member_(this, name);
 }
 
 #endif

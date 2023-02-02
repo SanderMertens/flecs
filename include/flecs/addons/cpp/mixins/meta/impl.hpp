@@ -132,3 +132,7 @@ inline int ecs_meta_serializer_t::value(const T& v) const {
     return this->value(flecs::_::cpp_type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
 }
+
+inline int ecs_meta_serializer_t::member(const char *name) const {
+    return this->member_(this, name);
+}
