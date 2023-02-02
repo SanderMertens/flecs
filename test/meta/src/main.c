@@ -595,6 +595,7 @@ void SerializeToJson_serialize_paged_iterator_w_optional_component(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_tag(void);
 void SerializeToJson_serialize_paged_iterator_w_vars(void);
 void SerializeToJson_serialize_table(void);
+void SerializeToJson_serialize_world(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -3045,6 +3046,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_table",
         SerializeToJson_serialize_table
+    },
+    {
+        "serialize_world",
+        SerializeToJson_serialize_world
     }
 };
 
@@ -3799,7 +3804,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        120,
+        121,
         SerializeToJson_testcases
     },
     {

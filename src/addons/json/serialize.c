@@ -1667,4 +1667,32 @@ char* ecs_iter_to_json(
     return ecs_strbuf_get(&buf);
 }
 
+int ecs_world_to_json_buf(
+    ecs_world_t *world,
+    ecs_strbuf_t *buf_out)
+{
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_filter(world, {
+        .terms = {{ .id = EcsAny }},
+        .storage = &f
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_to_json_desc_t json_desc = { .serialize_table = true };
+    return ecs_iter_to_json_buf(world, &it, buf_out, &json_desc);
+}
+
+char* ecs_world_to_json(
+    ecs_world_t *world)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (ecs_world_to_json_buf(world, &buf)) {
+        ecs_strbuf_reset(&buf);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
 #endif

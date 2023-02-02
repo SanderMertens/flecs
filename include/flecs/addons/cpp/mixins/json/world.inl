@@ -23,3 +23,12 @@ flecs::string to_json(const T* value) {
     flecs::entity_t tid = _::cpp_type<T>::id(m_world);
     return to_json(tid, value);
 }
+
+/** Serialize world to JSON.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+flecs::string to_json() {
+    return flecs::string( ecs_world_to_json(m_world) );
+}

@@ -279,6 +279,37 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_iter_to_json_desc_t *desc);
 
+/** Serialize world into JSON string.
+ * This operation iterates the contents of the world to JSON. The operation is
+ * equivalent to the following code:
+ * 
+ * ecs_filter_t *f = ecs_filter(world, {
+ *   .terms = {{ .id = EcsAny }}
+ * });
+ * 
+ * ecs_iter_t it = ecs_filter_init(world, &f);
+ * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
+ * ecs_iter_to_json(world, iter, &desc);
+ * 
+ * @param world The world to serialize.
+ * @return A JSON string with the serialized iterator data, or NULL if failed.
+ */
+FLECS_API
+char* ecs_world_to_json(
+    ecs_world_t *world);
+
+/** Serialize world into JSON string buffer.
+ * Same as ecs_world_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_world_to_json_buf(
+    ecs_world_t *world,
+    ecs_strbuf_t *buf_out);
+
 #ifdef __cplusplus
 }
 #endif

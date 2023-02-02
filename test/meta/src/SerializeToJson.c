@@ -4267,3 +4267,24 @@ void SerializeToJson_serialize_table() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_world() {
+    ecs_world_t *world = ecs_init();
+
+    /* We can't test if the output for an exact value as this would change any
+     * time something is added/removed to the world. */
+
+    char *json_1 = ecs_world_to_json(world);
+    test_assert(json_1 != NULL);
+
+    char *json_2 = ecs_world_to_json(world);
+    test_assert(json_2 != NULL);
+
+    test_assert(json_1 != json_2);
+    test_str(json_1, json_2);
+
+    ecs_os_free(json_1);
+    ecs_os_free(json_2);
+
+    ecs_fini(world);
+}

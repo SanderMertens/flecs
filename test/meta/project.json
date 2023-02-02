@@ -625,7 +625,8 @@
                 "serialize_paged_iterator_w_optional_component",
                 "serialize_paged_iterator_w_optional_tag",
                 "serialize_paged_iterator_w_vars",
-                "serialize_table"
+                "serialize_table",
+                "serialize_world"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",
