@@ -6394,7 +6394,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  * @return Whether the provided id is a tag.
  */
 FLECS_API
-ecs_entity_t ecs_id_is_tag(
+bool ecs_id_is_tag(
     const ecs_world_t *world,
     ecs_id_t id);
 

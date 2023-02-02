@@ -3669,7 +3669,7 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_id_is_tag(
+bool ecs_id_is_tag(
     const ecs_world_t *world,
     ecs_id_t id)
 {
