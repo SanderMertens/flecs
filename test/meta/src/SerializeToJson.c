@@ -4187,3 +4187,83 @@ void SerializeToJson_serialize_paged_iterator_w_vars() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_set(world, e2, Velocity, {1, 1});
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = ecs_id(Position) }
+        }
+    });
+    
+    ecs_iter_t it = ecs_filter_iter(world, f);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{\"results\":["
+        "{"
+            "\"ids\":[\"Position\", \"Foo\", \"(Identifier,Name)\"], "
+            "\"entities\":[\"e1\"], "
+            "\"values\":[[{\"x\":10, \"y\":20}], 0, 0]"
+        "}, {"
+            "\"ids\":[\"Position\", \"Velocity\", \"Foo\", \"Bar\", \"(Identifier,Name)\"], "
+            "\"entities\":[\"e2\"], "
+            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0, 0]"
+        "}, {"
+            "\"ids\":[\"Position\", \"Mass\", \"(Identifier,Name)\"], "
+            "\"entities\":[\"e3\"], "
+            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}], 0]}]"
+        "}");
+    
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

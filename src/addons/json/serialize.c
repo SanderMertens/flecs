@@ -1132,7 +1132,29 @@ void flecs_json_serialize_iter_result_ids(
 
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
-        flecs_json_serialize_id(world,  ecs_field_id(it, i + 1), buf);
+        flecs_json_serialize_id(world, ecs_field_id(it, i + 1), buf);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_iter_result_table_type(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    if (!it->table) {
+        return;
+    }
+
+    flecs_json_memberl(buf, "ids");
+    flecs_json_array_push(buf);
+
+    ecs_type_t *type = &it->table->type;
+    for (int i = 0; i < type->count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_serialize_id(world, type->array[i], buf);
     }
 
     flecs_json_array_pop(buf);
@@ -1440,6 +1462,63 @@ void flecs_json_serialize_iter_result_values(
 }
 
 static
+void flecs_json_serialize_iter_result_columns(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    ecs_table_t *table = it->table;
+    if (!table || !table->storage_table) {
+        return;
+    }
+
+    flecs_json_memberl(buf, "values");
+    flecs_json_array_push(buf);
+
+    ecs_type_t *type = &table->type;
+    int32_t *storage_map = table->storage_map;
+    ecs_assert(storage_map != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    for (int i = 0; i < type->count; i ++) {
+        int32_t storage_column = -1;
+        if (storage_map) {
+            storage_column = storage_map[i];
+        }
+
+        ecs_strbuf_list_next(buf);
+
+        if (storage_column == -1) {
+            ecs_strbuf_appendch(buf, '0');
+            continue;
+        }
+
+        ecs_entity_t typeid = table->type_info[storage_column]->component;
+        if (!typeid) {
+            ecs_strbuf_appendch(buf, '0');
+            continue;
+        }
+
+        const EcsComponent *comp = ecs_get(world, typeid, EcsComponent);
+        if (!comp) {
+            ecs_strbuf_appendch(buf, '0');
+            continue;
+        }
+
+        const EcsMetaTypeSerialized *ser = ecs_get(
+            world, typeid, EcsMetaTypeSerialized);
+        if (!ser) {
+            ecs_strbuf_appendch(buf, '0');
+            continue;
+        }
+
+        void *ptr = ecs_vec_first(&table->data.columns[storage_column]);
+        array_to_json_buf_w_type_data(world, ptr, it->count, buf, comp, ser);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
 void flecs_json_serialize_iter_result(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
@@ -1451,12 +1530,16 @@ void flecs_json_serialize_iter_result(
 
     /* Each result can be matched with different component ids. Add them to
      * the result so clients know with which component an entity was matched */
-    if (!desc || desc->serialize_ids) {
-        flecs_json_serialize_iter_result_ids(world, it, buf);
+    if (desc && desc->serialize_table) {
+        flecs_json_serialize_iter_result_table_type(world, it, buf);
+    } else {
+        if (!desc || desc->serialize_ids) {
+            flecs_json_serialize_iter_result_ids(world, it, buf);
+        }
     }
 
     /* Include information on which entity the term is matched with */
-    if (!desc || desc->serialize_ids) {
+    if (!desc || (desc->serialize_sources && !desc->serialize_table)) {
         flecs_json_serialize_iter_result_sources(world, it, buf);
     }
 
@@ -1476,12 +1559,12 @@ void flecs_json_serialize_iter_result(
     }
 
     /* Include information on which terms are set, to support optional terms */
-    if (!desc || desc->serialize_is_set) {
+    if (!desc || (desc->serialize_is_set && !desc->serialize_table)) {
         flecs_json_serialize_iter_result_is_set(it, buf);
     }
 
     /* Write entity ids for current result (for queries with This terms) */
-    if (!desc || desc->serialize_entities) {
+    if (!desc || desc->serialize_entities || desc->serialize_table) {
         flecs_json_serialize_iter_result_entities(world, it, buf);
     }
 
@@ -1501,8 +1584,12 @@ void flecs_json_serialize_iter_result(
     }
 
     /* Serialize component values */
-    if (!desc || desc->serialize_values) {
-        flecs_json_serialize_iter_result_values(world, it, buf);
+    if (desc && desc->serialize_table) {
+        flecs_json_serialize_iter_result_columns(world, it, buf);
+    } else {
+        if (!desc || desc->serialize_values) {
+            flecs_json_serialize_iter_result_values(world, it, buf);
+        }
     }
 
     flecs_json_object_pop(buf);
@@ -1540,6 +1627,12 @@ int ecs_iter_to_json_buf(
 
     /* Use instancing for improved performance */
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
+
+    /* If serializing entire table, don't bother letting the iterator populate
+     * data fields as we'll be iterating all columns. */
+    if (desc && desc->serialize_table) {
+        ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    }
 
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {

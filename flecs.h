@@ -11717,6 +11717,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_colors;          /**< Serialize doc color for entities */
     bool measure_eval_duration;     /**< Serialize evaluation duration */
     bool serialize_type_info;       /**< Serialize type information */
+    bool serialize_table;           /**< Serialize entire table vs. matched components */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
@@ -11733,7 +11734,8 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_variable_ids =    false, \
     .serialize_colors =          false, \
     .measure_eval_duration =     false, \
-    .serialize_type_info =       false  \
+    .serialize_type_info =       false, \
+    .serialize_table =           false  \
 }
 
 /** Serialize iterator into JSON string.
@@ -23929,7 +23931,7 @@ inline flecs::entity id::second() const {
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {
-        return flecs::entity(m_world, e);
+        return flecs::entity(e);
     }
 }
 

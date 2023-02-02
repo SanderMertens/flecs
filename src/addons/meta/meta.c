@@ -1249,7 +1249,7 @@ void FlecsMetaImport(
             {.name = "StructType"},
             {.name = "ArrayType"},
             {.name = "VectorType"},
-            {.name = "CustomType"}
+            {.name = "OpaqueType"}
         }
     });
 
@@ -1318,7 +1318,7 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsOpaque),
         .members = {
-            { .name = (char*)"type", .type = ecs_id(ecs_entity_t) },
+            { .name = (char*)"as_type", .type = ecs_id(ecs_entity_t) },
             { .name = (char*)"serialize", .type = ecs_id(ecs_uptr_t) }
         }
     });

@@ -41,8 +41,7 @@ int main(int, char *[]) {
 
     // Create dummy value & serialize it
     OpaqueType v = {10, 20};
-    auto json = ecs.to_json(&v);
-    std::cout << json << std::endl;
+    std::cout << ecs.to_json(&v) << std::endl;
 
     // Output:
     //   {"x":10, "y":20}

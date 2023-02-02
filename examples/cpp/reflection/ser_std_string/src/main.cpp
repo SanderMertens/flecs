@@ -12,8 +12,7 @@ struct StringComponent {
 // Serializer function for std::string
 int std_string_ser(const flecs::serializer *s, const std::string *data) {
     const char *str = data->c_str();
-    s->value(flecs::String, &str); // Serializer-specific string serialization
-    return 0;
+    return s->value(flecs::String, &str); // Serializer-specific string serialization
 }
 
 int main(int, char *[]) {
@@ -32,8 +31,7 @@ int main(int, char *[]) {
 
     // Create dummy value & serialize it
     StringComponent v = {"foo", "bar"};
-    auto json = ecs.to_json(&v);
-    std::cout << json << std::endl;
+    std::cout <<  ecs.to_json(&v) << std::endl;
 
     // Output:
     //   {"a": "foo", "b": "bar"}
