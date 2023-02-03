@@ -1206,7 +1206,8 @@
                 "range_get_pair_R_t",
                 "range_get_pair_R_T",
                 "get_depth",
-                "get_depth_w_type"
+                "get_depth_w_type",
+                "iter_type"
             ]
         }, {
             "id": "Doc",

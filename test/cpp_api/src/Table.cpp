@@ -646,3 +646,20 @@ void Table_get_depth_w_type() {
     test_int(2, e3.table().depth<Rel>());
     test_int(3, e4.table().depth<Rel>());
 }
+
+void Table_iter_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .add<Position>()
+        .add<Velocity>();
+
+    auto table = e.table();
+
+    int32_t count = 0;
+    for (const auto id : table.type()) {
+        count ++;
+        test_assert(id == ecs.id<Position>() || id == ecs.id<Velocity>());
+    }
+    test_int(count, 2);
+}

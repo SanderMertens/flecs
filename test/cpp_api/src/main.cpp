@@ -1149,6 +1149,7 @@ void Table_range_get_pair_R_t(void);
 void Table_range_get_pair_R_T(void);
 void Table_get_depth(void);
 void Table_get_depth_w_type(void);
+void Table_iter_type(void);
 
 // Testsuite 'Doc'
 void Doc_set_brief(void);
@@ -5583,6 +5584,10 @@ bake_test_case Table_testcases[] = {
     {
         "get_depth_w_type",
         Table_get_depth_w_type
+    },
+    {
+        "iter_type",
+        Table_iter_type
     }
 };
 
@@ -5796,7 +5801,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        30,
+        31,
         Table_testcases
     },
     {

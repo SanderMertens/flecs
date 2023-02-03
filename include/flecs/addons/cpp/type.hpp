@@ -55,6 +55,14 @@ struct type {
         }
         return flecs::id(m_world, m_type->array[index]);
     }
+    
+    flecs::id_t* begin() const {
+        return m_type->array;
+    }
+
+    flecs::id_t* end() const {
+        return &m_type->array[m_type->count];
+    }
 
     /** Implicit conversion to type_t */
     operator const type_t*() const {
