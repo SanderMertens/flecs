@@ -284,10 +284,10 @@ bool flecs_rest_set(
     }
 
     const char *data = ecs_http_get_param(req, "data");
-    ecs_parse_json_desc_t desc = {0};
+    ecs_from_json_desc_t desc = {0};
     desc.expr = data;
     desc.name = path;
-    if (ecs_parse_json_values(world, e, data, &desc) == NULL) {
+    if (ecs_entity_from_json(world, e, data, &desc) == NULL) {
         flecs_reply_error(reply, "invalid request");
         reply->code = 400;
         ecs_os_linc(&ecs_rest_set_error_count);

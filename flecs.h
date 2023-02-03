@@ -11517,43 +11517,49 @@ void FlecsDocImport(
 extern "C" {
 #endif
 
-/** Used with ecs_parse_json. */
-typedef struct ecs_parse_json_desc_t {
+/** Used with ecs_ptr_from_json, ecs_entity_from_json. */
+typedef struct ecs_from_json_desc_t {
     const char *name; /* Name of expression (used for logging) */
     const char *expr; /* Full expression (used for logging) */
-} ecs_parse_json_desc_t;
+} ecs_from_json_desc_t;
 
 /** Parse JSON string into value.
  * This operation parses a JSON expression into the provided pointer. The
  * memory pointed to must be large enough to contain a value of the used type.
  * 
  * @param world The world.
- * @param ptr The pointer to the expression to parse.
  * @param type The type of the expression to parse.
- * @param data_out Pointer to the memory to write to.
+ * @param ptr Pointer to the memory to write to.
+ * @param json The JSON expression to parse.
  * @param desc Configuration parameters for deserializer.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
-const char* ecs_parse_json(
+const char* ecs_ptr_from_json(
     const ecs_world_t *world,
-    const char *ptr,
     ecs_entity_t type,
-    void *data_out,
-    const ecs_parse_json_desc_t *desc);
+    void *ptr,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
 
 /** Parse JSON object with multiple component values into entity. The format
  * is the same as the one outputted by ecs_entity_to_json, but at the moment
- * only supports the "ids" and "values" member.
+ * only supports the "ids" and "values" member. 
+ * 
+ * @param world The world.
+ * @param entity The entity to serialize to.
+ * @param json The JSON expression to parse (see entity in JSON format manual).
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
-const char* ecs_parse_json_values(
+const char* ecs_entity_from_json(
     ecs_world_t *world,
-    ecs_entity_t e,
+    ecs_entity_t entity,
     const char *ptr,
-    const ecs_parse_json_desc_t *desc);
+    const ecs_from_json_desc_t *desc);
 
-/** Serialize value into JSON string.
+/** Serialize array into JSON string.
  * This operation serializes a value of the provided type to a JSON string. The 
  * memory pointed to must be large enough to contain a value of the used type.
  * 
@@ -11574,7 +11580,7 @@ char* ecs_array_to_json(
     const void *data,
     int32_t count);
 
-/** Serialize value into JSON string buffer.
+/** Serialize array into JSON string buffer.
  * Same as ecs_array_to_json_buf, but serializes to an ecs_strbuf_t instance.
  * 
  * @param world The world.

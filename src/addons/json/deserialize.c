@@ -7,12 +7,12 @@
 
 #ifdef FLECS_JSON
 
-const char* ecs_parse_json(
+const char* ecs_ptr_from_json(
     const ecs_world_t *world,
-    const char *ptr,
     ecs_entity_t type,
-    void *data_out,
-    const ecs_parse_json_desc_t *desc)
+    void *ptr,
+    const char *json,
+    const ecs_from_json_desc_t *desc)
 {
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
@@ -20,9 +20,9 @@ const char* ecs_parse_json(
     const char *name = NULL;
     const char *expr = NULL;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    json = ecs_parse_fluff(json, NULL);
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, ptr);
     if (cur.valid == false) {
         return NULL;
     }
@@ -32,9 +32,9 @@ const char* ecs_parse_json(
         expr = desc->expr;
     }
 
-    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
+    while ((json = ecs_parse_expr_token(name, expr, json, token))) {
 
-        ptr = ecs_parse_fluff(ptr, NULL);
+        json = ecs_parse_fluff(json, NULL);
 
         if (!ecs_os_strcmp(token, "{")) {
             depth ++;
@@ -43,7 +43,7 @@ const char* ecs_parse_json(
             }
 
             if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '['");
+                ecs_parser_error(name, expr, json - expr, "expected '['");
                 return NULL;
             }
         }
@@ -52,7 +52,7 @@ const char* ecs_parse_json(
             depth --;
 
             if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected ']'");
+                ecs_parser_error(name, expr, json - expr, "expected ']'");
                 return NULL;
             }
 
@@ -68,7 +68,7 @@ const char* ecs_parse_json(
             }
 
             if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+                ecs_parser_error(name, expr, json - expr, "expected '{'");
                 return NULL;
             }
         }
@@ -77,7 +77,7 @@ const char* ecs_parse_json(
             depth --;
 
             if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '}'");
+                ecs_parser_error(name, expr, json - expr, "expected '}'");
                 return NULL;
             }
 
@@ -99,14 +99,14 @@ const char* ecs_parse_json(
         }
 
         else if (token[0] == '\"') {
-            if (ptr[0] == ':') {
+            if (json[0] == ':') {
                 /* Member assignment */
-                ptr ++;
+                json ++;
 
                 /* Strip trailing " */
                 ecs_size_t len = ecs_os_strlen(token);
                 if (token[len - 1] != '"') {
-                    ecs_parser_error(name, expr, ptr - expr, "expected \"");
+                    ecs_parser_error(name, expr, json - expr, "expected \"");
                     return NULL;
                 } else {
                     token[len - 1] = '\0';
@@ -133,7 +133,7 @@ const char* ecs_parse_json(
         }
     }
 
-    return ptr;
+    return json;
 error:
     return NULL;
 }
@@ -180,15 +180,15 @@ error:
     return NULL;
 }
 
-const char* ecs_parse_json_values(
+const char* ecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t e,
-    const char *ptr,
-    const ecs_parse_json_desc_t *desc)
+    const char *json,
+    const ecs_from_json_desc_t *desc)
 {
     char token[ECS_MAX_TOKEN_SIZE];
     const char *name = NULL;
-    const char *expr = ptr;
+    const char *expr = json;
     if (desc) {
         name = desc->name;
         expr = desc->expr;
@@ -196,35 +196,35 @@ const char* ecs_parse_json_values(
 
     const char *ids = NULL, *values = NULL;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
-    if (ptr[0] != '{') {
-        ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+    json = ecs_parse_fluff(json, NULL);
+    if (json[0] != '{') {
+        ecs_parser_error(name, expr, json - expr, "expected '{'");
         goto error;
     }
 
     /* Find start of ids array */
-    ptr = ecs_parse_fluff(ptr + 1, NULL);
-    if (ecs_os_strncmp(ptr, "\"ids\"", 5)) {
-        ecs_parser_error(name, expr, ptr - expr, "expected '\"ids\"'");
+    json = ecs_parse_fluff(json + 1, NULL);
+    if (ecs_os_strncmp(json, "\"ids\"", 5)) {
+        ecs_parser_error(name, expr, json - expr, "expected '\"ids\"'");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr + 5, NULL);
-    if (ptr[0] != ':') {
-        ecs_parser_error(name, expr, ptr - expr, "expected ':'");
+    json = ecs_parse_fluff(json + 5, NULL);
+    if (json[0] != ':') {
+        ecs_parser_error(name, expr, json - expr, "expected ':'");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr + 1, NULL);
-    if (ptr[0] != '[') {
-        ecs_parser_error(name, expr, ptr - expr, "expected '['");
+    json = ecs_parse_fluff(json + 1, NULL);
+    if (json[0] != '[') {
+        ecs_parser_error(name, expr, json - expr, "expected '['");
         goto error;
     }
 
-    ids = ecs_parse_fluff(ptr + 1, NULL);
+    ids = ecs_parse_fluff(json + 1, NULL);
 
     /* Find start of values array */
-    const char *vptr = ptr;
+    const char *vptr = json;
     int32_t bracket_depth = 0;
     while (vptr[0]) {
         if (vptr[0] == '[') {
@@ -240,41 +240,41 @@ const char* ecs_parse_json_values(
     }
 
     if (!vptr[0]) {
-        ecs_parser_error(name, expr, ptr - expr, 
+        ecs_parser_error(name, expr, json - expr, 
             "found end of string while looking for values");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(vptr + 1, NULL);
-    if (ptr[0] == '}') {
+    json = ecs_parse_fluff(vptr + 1, NULL);
+    if (json[0] == '}') {
         /* String doesn't contain values, which is valid */
-        return ptr + 1;
+        return json + 1;
     }
 
-    if (ptr[0] != ',') {
-        ecs_parser_error(name, expr, ptr - expr, "expected ','");
+    if (json[0] != ',') {
+        ecs_parser_error(name, expr, json - expr, "expected ','");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr + 1, NULL);
-    if (ecs_os_strncmp(ptr, "\"values\"", 8)) {
-        ecs_parser_error(name, expr, ptr - expr, "expected '\"values\"'");
+    json = ecs_parse_fluff(json + 1, NULL);
+    if (ecs_os_strncmp(json, "\"values\"", 8)) {
+        ecs_parser_error(name, expr, json - expr, "expected '\"values\"'");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr + 8, NULL);
-    if (ptr[0] != ':') {
-        ecs_parser_error(name, expr, ptr - expr, "expected ':'");
+    json = ecs_parse_fluff(json + 8, NULL);
+    if (json[0] != ':') {
+        ecs_parser_error(name, expr, json - expr, "expected ':'");
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr + 1, NULL);
-    if (ptr[0] != '[') {
-        ecs_parser_error(name, expr, ptr - expr, "expected '['");
+    json = ecs_parse_fluff(json + 1, NULL);
+    if (json[0] != '[') {
+        ecs_parser_error(name, expr, json - expr, "expected '['");
         goto error;
     }
 
-    values = ptr;
+    values = json;
 
     /* Parse ids & values */
     while (ids[0]) {
@@ -286,7 +286,7 @@ const char* ecs_parse_json_values(
             if (values[0] != ']') {
                 ecs_parser_error(name, expr, values - expr, "expected ']'");
             }
-            ptr = values;
+            json = values;
             break;
         } else if (ids[0] == '[') {
             ids = ecs_parse_fluff(ids + 1, NULL);
@@ -342,35 +342,35 @@ const char* ecs_parse_json_values(
         void *comp_ptr = ecs_get_mut_id(world, e, id);
         if (!comp_ptr) {
             char *idstr = ecs_id_str(world, id);
-            ecs_parser_error(name, expr, ptr - expr, 
+            ecs_parser_error(name, expr, json - expr, 
                 "id '%s' is not a valid component", idstr);
             ecs_os_free(idstr);
             goto error;
         }
 
-        ecs_parse_json_desc_t parse_desc = {
+        ecs_from_json_desc_t parse_desc = {
             .name = name,
             .expr = expr,
         };
-        values = ecs_parse_json(world, values + 1, type_id, comp_ptr, &parse_desc);
+        values = ecs_ptr_from_json(world, type_id, comp_ptr, values + 1, &parse_desc);
         if (!values) {
             goto error;
         }
 
         if (values[0] != ']' && values[0] != ',') {
-            ecs_parser_error(name, expr, ptr - expr, "expected ',' or ']'");
+            ecs_parser_error(name, expr, json - expr, "expected ',' or ']'");
             goto error;
         }
 
         ecs_modified_id(world, e, id);
     }
 
-    ptr = ecs_parse_fluff(ptr + 1, NULL);
-    if (ptr[0] != '}') {
-        ecs_parser_error(name, expr, ptr - expr, "expected '}'");
+    json = ecs_parse_fluff(json + 1, NULL);
+    if (json[0] != '}') {
+        ecs_parser_error(name, expr, json - expr, "expected '}'");
     }
 
-    return ptr + 1;
+    return json + 1;
 error:
     return NULL;
 }

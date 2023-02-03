@@ -1166,7 +1166,16 @@
                 "type_w_std_vector_std_vector_std_string",
                 "primitive_type",
                 "array_type",
-                "vector_type"
+                "vector_type",
+                "i32_from_json",
+                "i32_from_json_w_expr",
+                "i32_from_json_w_expr_w_var",
+                "struct_from_json",
+                "struct_from_json_w_expr",
+                "struct_from_json_w_expr_w_var",
+                "entity_from_json_no_values",
+                "entity_from_json_w_1_value",
+                "entity_from_json_w_2_values"
             ]
         }, {
             "id": "Table",

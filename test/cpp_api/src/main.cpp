@@ -1111,6 +1111,15 @@ void Meta_type_w_std_vector_std_vector_std_string(void);
 void Meta_primitive_type(void);
 void Meta_array_type(void);
 void Meta_vector_type(void);
+void Meta_i32_from_json(void);
+void Meta_i32_from_json_w_expr(void);
+void Meta_i32_from_json_w_expr_w_var(void);
+void Meta_struct_from_json(void);
+void Meta_struct_from_json_w_expr(void);
+void Meta_struct_from_json_w_expr_w_var(void);
+void Meta_entity_from_json_no_values(void);
+void Meta_entity_from_json_w_1_value(void);
+void Meta_entity_from_json_w_2_values(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5430,6 +5439,42 @@ bake_test_case Meta_testcases[] = {
     {
         "vector_type",
         Meta_vector_type
+    },
+    {
+        "i32_from_json",
+        Meta_i32_from_json
+    },
+    {
+        "i32_from_json_w_expr",
+        Meta_i32_from_json_w_expr
+    },
+    {
+        "i32_from_json_w_expr_w_var",
+        Meta_i32_from_json_w_expr_w_var
+    },
+    {
+        "struct_from_json",
+        Meta_struct_from_json
+    },
+    {
+        "struct_from_json_w_expr",
+        Meta_struct_from_json_w_expr
+    },
+    {
+        "struct_from_json_w_expr_w_var",
+        Meta_struct_from_json_w_expr_w_var
+    },
+    {
+        "entity_from_json_no_values",
+        Meta_entity_from_json_no_values
+    },
+    {
+        "entity_from_json_w_1_value",
+        Meta_entity_from_json_w_1_value
+    },
+    {
+        "entity_from_json_w_2_values",
+        Meta_entity_from_json_w_2_values
     }
 };
 
@@ -5759,7 +5804,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        25,
+        34,
         Meta_testcases
     },
     {

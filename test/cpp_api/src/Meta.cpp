@@ -601,3 +601,44 @@ void Meta_vector_type() {
     test_assert(vt != nullptr);
     test_assert(vt->type == ecs.id<int32_t>());
 }
+
+void Meta_i32_from_json() {
+    flecs::world ecs;
+
+    int32_t v = 0;
+    int ret = ecs.from_json(&v, "10");
+    test_int(ret, 0);
+    test_int(v, 10);
+}
+
+void Meta_i32_from_json_w_expr() {
+    // Implement testcase
+}
+
+void Meta_i32_from_json_w_expr_w_var() {
+    // Implement testcase
+}
+
+void Meta_struct_from_json() {
+    // Implement testcase
+}
+
+void Meta_struct_from_json_w_expr() {
+    // Implement testcase
+}
+
+void Meta_struct_from_json_w_expr_w_var() {
+    // Implement testcase
+}
+
+void Meta_entity_from_json_no_values() {
+    // Implement testcase
+}
+
+void Meta_entity_from_json_w_1_value() {
+    // Implement testcase
+}
+
+void Meta_entity_from_json_w_2_values() {
+    // Implement testcase
+}
