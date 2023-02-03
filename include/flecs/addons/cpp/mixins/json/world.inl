@@ -32,3 +32,24 @@ flecs::string to_json(const T* value) {
 flecs::string to_json() {
     return flecs::string( ecs_world_to_json(m_world) );
 }
+
+/** Deserialize value from JSON.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+template <typename T>
+const char* from_json(flecs::entity_t tid, void* value, const char *json) {
+    return ecs_ptr_from_json(m_world, tid, value, json, nullptr);
+}
+
+/** Deserialize value from JSON.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+template <typename T>
+const char* from_json(T* value, const char *json) {
+    return ecs_ptr_from_json(m_world, _::cpp_type<T>::id(m_world),
+        value, json, NULL);
+}

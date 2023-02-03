@@ -287,6 +287,10 @@ struct entity : entity_builder<entity>
     flecs::entity null() {
         return flecs::entity();
     }
+
+#   ifdef FLECS_JSON
+#   include "mixins/json/entity.inl"
+#   endif
 };
 
 } // namespace flecs

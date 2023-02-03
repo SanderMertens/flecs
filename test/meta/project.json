@@ -501,7 +501,12 @@
                 "deser_entity_1_component_composite_member",
                 "deser_entity_1_component_nested_member",
                 "deser_entity_1_pair",
-                "deser_entity_2_pairs"
+                "deser_entity_2_pairs",
+                "deser_entity_empty",
+                "deser_entity_w_path",
+                "deser_entity_w_path_and_ids",
+                "deser_entity_w_path_and_ids_and_values",
+                "deser_entity_w_ids"
             ]
         }, {
             "id": "SerializeToJson",

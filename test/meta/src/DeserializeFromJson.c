@@ -1474,3 +1474,81 @@ void DeserializeFromJson_deser_entity_2_pairs() {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_entity_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    const char *r = ecs_entity_from_json(world, e, "{}", NULL);
+    test_str(r, "");
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_w_path() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    const char *r = ecs_entity_from_json(world, e, "{\"path\":\"ent\"}", NULL);
+    test_str(r, "");
+    test_str(ecs_get_name(world, e), "ent");
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_w_path_and_ids() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+    const char *r = ecs_entity_from_json(world, e, 
+        "{\"path\":\"ent\", \"ids\":[[\"Position\"]]}", NULL);
+    test_str(r, "");
+    test_str(ecs_get_name(world, e), "ent");
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_w_path_and_ids_and_values() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", .type = ecs_id(ecs_i32_t) },
+            { "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    const char *r = ecs_entity_from_json(world, e, 
+        "{\"path\":\"ent\", \"ids\":[[\"Position\"]], \"values\":[{\"x\":10, \"y\":20}]}", NULL);
+    test_str(r, "");
+    test_str(ecs_get_name(world, e), "ent");
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_w_ids() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+    const char *r = ecs_entity_from_json(world, e, 
+        "{\"ids\":[[\"Position\"]]}", NULL);
+    test_str(r, "");
+    test_str(ecs_get_name(world, e), NULL);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

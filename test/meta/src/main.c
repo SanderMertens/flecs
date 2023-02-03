@@ -473,6 +473,11 @@ void DeserializeFromJson_deser_entity_1_component_composite_member(void);
 void DeserializeFromJson_deser_entity_1_component_nested_member(void);
 void DeserializeFromJson_deser_entity_1_pair(void);
 void DeserializeFromJson_deser_entity_2_pairs(void);
+void DeserializeFromJson_deser_entity_empty(void);
+void DeserializeFromJson_deser_entity_w_path(void);
+void DeserializeFromJson_deser_entity_w_path_and_ids(void);
+void DeserializeFromJson_deser_entity_w_path_and_ids_and_values(void);
+void DeserializeFromJson_deser_entity_w_ids(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -2563,6 +2568,26 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_entity_2_pairs",
         DeserializeFromJson_deser_entity_2_pairs
+    },
+    {
+        "deser_entity_empty",
+        DeserializeFromJson_deser_entity_empty
+    },
+    {
+        "deser_entity_w_path",
+        DeserializeFromJson_deser_entity_w_path
+    },
+    {
+        "deser_entity_w_path_and_ids",
+        DeserializeFromJson_deser_entity_w_path_and_ids
+    },
+    {
+        "deser_entity_w_path_and_ids_and_values",
+        DeserializeFromJson_deser_entity_w_path_and_ids_and_values
+    },
+    {
+        "deser_entity_w_ids",
+        DeserializeFromJson_deser_entity_w_ids
     }
 };
 
@@ -3797,7 +3822,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        43,
+        48,
         DeserializeFromJson_testcases
     },
     {

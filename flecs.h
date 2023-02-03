@@ -11556,7 +11556,7 @@ FLECS_API
 const char* ecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t entity,
-    const char *ptr,
+    const char *json,
     const ecs_from_json_desc_t *desc);
 
 /** Serialize array into JSON string.
@@ -19181,6 +19181,27 @@ flecs::string to_json() {
     return flecs::string( ecs_world_to_json(m_world) );
 }
 
+/** Deserialize value from JSON.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+template <typename T>
+const char* from_json(flecs::entity_t tid, void* value, const char *json) {
+    return ecs_ptr_from_json(m_world, tid, value, json, nullptr);
+}
+
+/** Deserialize value from JSON.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+template <typename T>
+const char* from_json(T* value, const char *json) {
+    return ecs_ptr_from_json(m_world, _::cpp_type<T>::id(m_world),
+        value, json, NULL);
+}
+
 #   endif
 #   ifdef FLECS_APP
 /**
@@ -21882,6 +21903,20 @@ struct entity : entity_builder<entity>
     flecs::entity null() {
         return flecs::entity();
     }
+
+#   ifdef FLECS_JSON
+
+/** Deserialize entity to JSON.
+ * 
+ * \memberof flecs::entity
+ * \ingroup cpp_addons_json
+ */
+const char* from_json(const char *json) {
+    return ecs_entity_from_json(m_world, m_id, json, nullptr);
+}
+
+
+#   endif
 };
 
 } // namespace flecs

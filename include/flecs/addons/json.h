@@ -68,7 +68,7 @@ FLECS_API
 const char* ecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t entity,
-    const char *ptr,
+    const char *json,
     const ecs_from_json_desc_t *desc);
 
 /** Serialize array into JSON string.

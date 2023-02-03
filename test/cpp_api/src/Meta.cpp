@@ -606,39 +606,88 @@ void Meta_i32_from_json() {
     flecs::world ecs;
 
     int32_t v = 0;
-    int ret = ecs.from_json(&v, "10");
-    test_int(ret, 0);
+    const char *r = ecs.from_json(&v, "10");
+    test_str(r, "");
     test_int(v, 10);
 }
 
-void Meta_i32_from_json_w_expr() {
-    // Implement testcase
-}
-
-void Meta_i32_from_json_w_expr_w_var() {
-    // Implement testcase
-}
-
 void Meta_struct_from_json() {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    Position v = {};
+    const char *r = ecs.from_json(&v, "{\"x\":10, \"y\":20}");
+    test_str(r, "");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
 }
 
-void Meta_struct_from_json_w_expr() {
-    // Implement testcase
+void Meta_entity_from_json_empty() {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity();
+
+    const char *r = e.from_json("{}");
+    test_str(r, "");
 }
 
-void Meta_struct_from_json_w_expr_w_var() {
-    // Implement testcase
+void Meta_entity_from_json_w_path() {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity();
+
+    const char *r = e.from_json("{\"path\":\"ent\"}");
+    test_str(r, "");
+
+    test_assert(e != 0);
+    test_str(e.name(), "ent");
 }
 
-void Meta_entity_from_json_no_values() {
-    // Implement testcase
+void Meta_entity_from_json_w_ids() {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity();
+
+    const char *r = e.from_json("{\"path\":\"ent\", \"ids\":[[\"Position\"]]}");
+    test_str(r, "");
+
+    test_assert(e != 0);
+    test_str(e.name(), "ent");
+    test_assert(e.has<Position>());
 }
 
-void Meta_entity_from_json_w_1_value() {
-    // Implement testcase
-}
+void Meta_entity_from_json_w_values() {
+    flecs::world ecs;
 
-void Meta_entity_from_json_w_2_values() {
-    // Implement testcase
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity();
+
+    const char *r = e.from_json("{\"path\":\"ent\", \"ids\":[[\"Position\"]], \"values\":[{\"x\":10, \"y\":20}]}");
+    test_str(r, "");
+
+    test_assert(e != 0);
+    test_str(e.name(), "ent");
+    test_assert(e.has<Position>());
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }
