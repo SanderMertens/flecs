@@ -520,7 +520,7 @@ typedef struct ecs_term_id_t {
 
     ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
-                                 * the Acyclic property. Default is IsA. */
+                                 * the Traversable property. Default is IsA. */
 
     ecs_flags32_t flags;        /**< Term flags */
 } ecs_term_id_t;
@@ -1154,6 +1154,10 @@ FLECS_API extern const ecs_entity_t EcsExclusive;
 
 /** Marks a relationship as acyclic. Acyclic relationships may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
+
+/** Marks a relationship as traversable. Traversable relationships may be 
+ * traversed with "up" queries. Traversable relatinoships are acyclic. */
+FLECS_API extern const ecs_entity_t EcsTraversable;
 
 /** Ensure that a component always is added together with another component.
  * 

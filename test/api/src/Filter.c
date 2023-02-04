@@ -345,7 +345,7 @@ void Filter_filter_1_term_acyclic_same_subj_obj() {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -360,7 +360,7 @@ void Filter_filter_1_term_acyclic_same_subj_obj() {
 void Filter_filter_1_term_acyclic_reflexive_same_subj_obj() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Acyclic, Reflexive);
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
     ECS_TAG(world, Foo);
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -429,7 +429,7 @@ void Filter_filter_1_term_acyclic_same_subj_obj_var() {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -447,7 +447,7 @@ void Filter_filter_1_term_acyclic_same_subj_obj_var() {
 void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Acyclic, Reflexive);
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_t *r = ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -5902,7 +5902,7 @@ void Filter_filter_iter_superset_2_rel_instances() {
     ECS_TAG(world, TagC);
     ECS_TAG(world, Rel);
 
-    ecs_add_id(world, Rel, EcsAcyclic);
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_entity_t b1 = ecs_new(world, TagA);
     ecs_entity_t b2 = ecs_new(world, TagA);
@@ -5945,7 +5945,7 @@ void Filter_filter_iter_superset_2_rel_instances_match_2nd() {
     ECS_TAG(world, TagC);
     ECS_TAG(world, Rel);
 
-    ecs_add_id(world, Rel, EcsAcyclic);
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_entity_t b1 = ecs_new(world, TagA);
     ecs_entity_t b2 = ecs_new(world, TagA);
@@ -6017,7 +6017,7 @@ void Filter_filter_iter_superset_2_levels() {
 void Filter_filter_iter_superset_only_w_owned() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsAcyclic);
+    ECS_ENTITY(world, R, EcsTraversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
@@ -6287,7 +6287,7 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances() {
     ECS_TAG(world, TagC);
     ECS_TAG(world, Rel);
 
-    ecs_add_id(world, Rel, EcsAcyclic);
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_entity_t b1 = ecs_new(world, TagA);
     ecs_entity_t b2 = ecs_new(world, TagA);
@@ -6334,7 +6334,7 @@ void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd() {
     ECS_TAG(world, TagC);
     ECS_TAG(world, Rel);
 
-    ecs_add_id(world, Rel, EcsAcyclic);
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_entity_t b1 = ecs_new(world, TagA);
     ecs_entity_t b2 = ecs_new(world, TagA);

@@ -853,8 +853,8 @@ void OnDelete_2_acyclic_relations_w_cycle() {
     
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t r1 = ecs_new_w_id(world, EcsAcyclic);
-    ecs_entity_t r2 = ecs_new_w_id(world, EcsAcyclic);
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
@@ -2665,7 +2665,7 @@ void OnDelete_delete_tree_w_query() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query_new(world, "Tag(up(Rel))");

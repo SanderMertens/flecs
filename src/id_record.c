@@ -81,7 +81,7 @@ void flecs_insert_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         flecs_id_record_elem_insert(widr, idr, &idr->second);
 
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             flecs_id_record_elem_insert(widr, idr, &idr->acyclic);
         }
     }
@@ -103,7 +103,7 @@ void flecs_remove_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         flecs_id_record_elem_remove(idr, &idr->second);
 
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             flecs_id_record_elem_remove(idr, &idr->acyclic);
         }
     }
@@ -226,7 +226,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
         flecs_add_flag(world, tgt, EcsEntityObservedTarget);
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             ecs_record_t *r = flecs_add_flag(

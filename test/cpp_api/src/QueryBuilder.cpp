@@ -1877,7 +1877,7 @@ void QueryBuilder_up_w_type() {
 
     struct Rel { };
 
-    ecs.component<Rel>().add(flecs::Acyclic);
+    ecs.component<Rel>().add(flecs::Traversable);
 
     auto q = ecs.query_builder<Self>()
         .term<Other>().src().up<Rel>()
@@ -1911,7 +1911,7 @@ void QueryBuilder_cascade_w_type() {
 
     struct Rel { };
 
-    ecs.component<Rel>().add(flecs::Acyclic);
+    ecs.component<Rel>().add(flecs::Traversable);
 
     auto Tag = ecs.entity();
     auto Foo = ecs.entity();

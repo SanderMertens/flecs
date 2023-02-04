@@ -291,8 +291,8 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
 
 static
 void flecs_register_acyclic(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdAcyclic, 
-        EcsIdAcyclic, 0);
+    flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdTraversable, 
+        EcsIdTraversable, 0);
 }
 
 static
@@ -586,10 +586,10 @@ ecs_table_t* flecs_bootstrap_component_table(
      * can no longer be done after they are in use. */
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdAcyclic | EcsIdTag;
+        EcsIdTraversable | EcsIdTag;
     idr = flecs_id_record_ensure(world, ecs_pair(EcsChildOf, EcsWildcard));
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdAcyclic | EcsIdTag | EcsIdExclusive;
+        EcsIdTraversable | EcsIdTag | EcsIdExclusive;
 
     idr = flecs_id_record_ensure(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
@@ -788,6 +788,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
+    flecs_bootstrap_tag(world, EcsTraversable);
     flecs_bootstrap_tag(world, EcsWith);
     flecs_bootstrap_tag(world, EcsOneOf);
 
@@ -833,6 +834,7 @@ void flecs_bootstrap(
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
+    ecs_add_id(world, EcsChildOf, EcsTraversable);
     ecs_add_id(world, EcsChildOf, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
 
@@ -945,16 +947,19 @@ void flecs_bootstrap(
     /* Set scope back to flecs core */
     ecs_set_scope(world, EcsFlecsCore);
 
-    /* Acyclic components */
-    ecs_add_id(world, EcsIsA, EcsAcyclic);
-    ecs_add_id(world, EcsDependsOn, EcsAcyclic);
+    /* Acyclic/Traversable components */
+    ecs_add_id(world, EcsIsA, EcsTraversable);
+    ecs_add_id(world, EcsDependsOn, EcsTraversable);
     ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* DontInherit components */
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
-    /* Transitive relationships are always Acyclic */
-    ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
+    /* Traversable relationships are always acyclic */
+    ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
+
+    /* Transitive relationships are always Traversable */
+    ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
 
     /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);

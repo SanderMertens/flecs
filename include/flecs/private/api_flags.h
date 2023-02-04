@@ -63,7 +63,7 @@ extern "C" {
 
 #define EcsIdExclusive                 (1u << 6)
 #define EcsIdDontInherit               (1u << 7)
-#define EcsIdAcyclic                   (1u << 8)
+#define EcsIdTraversable                   (1u << 8)
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
 #define EcsIdUnion                     (1u << 11)

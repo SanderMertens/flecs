@@ -1104,7 +1104,7 @@ repeat_event:
             idr = flecs_query_id_record_get(world, id);
             ecs_flags32_t idr_flags = idr->flags;
 
-            if (is_pair && (idr_flags & EcsIdAcyclic)) {
+            if (is_pair && (idr_flags & EcsIdTraversable)) {
                 ecs_event_record_t *er_fwd = NULL;
                 if (ECS_PAIR_FIRST(id) == EcsIsA) {
                     if (event == EcsOnAdd) {

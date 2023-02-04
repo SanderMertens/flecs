@@ -6250,7 +6250,7 @@ void Query_childof_superset() {
 void Query_superset_2_targets() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsAcyclic);
+    ECS_ENTITY(world, R, EcsTraversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
@@ -6661,7 +6661,7 @@ void Query_existing_custom_rel_cascade() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -6700,7 +6700,7 @@ void Query_new_custom_rel_cascade() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -6739,7 +6739,7 @@ void Query_cascade_w_2_depths() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -6782,7 +6782,7 @@ void Query_cascade_w_3_depths() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -7379,7 +7379,7 @@ void Query_cascade_rematch_2_lvls() {
 void Query_cascade_rematch_2_lvls_2_relations() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsAcyclic);
+    ECS_ENTITY(world, R, EcsTraversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
@@ -7431,7 +7431,7 @@ void Query_cascade_rematch_2_lvls_2_relations() {
 void Query_cascade_topological() {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, R, Acyclic);
+    ECS_ENTITY(world, R, Traversable);
     ECS_TAG(world, Tag);
 
     ecs_entity_t e1 = ecs_new(world, Tag);

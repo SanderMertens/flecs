@@ -24,10 +24,10 @@ typedef struct ecs_rule_pair_t {
     } second;
     int32_t reg_mask; /* bit 1 = predicate, bit 2 = object */
 
-    bool transitive; /* Is predicate transitive */
-    bool final;      /* Is predicate final */
-    bool reflexive;  /* Is predicate reflexive */
-    bool acyclic;    /* Is predicate acyclic */
+    bool transitive;  /* Is predicate transitive */
+    bool final;       /* Is predicate final */
+    bool reflexive;   /* Is predicate reflexive */
+    bool traversable; /* Is predicate traversable */
     bool second_0;
 } ecs_rule_pair_t;
 
@@ -800,8 +800,8 @@ ecs_rule_pair_t term_to_pair(
             result.reflexive = true;
         }
 
-        if (ecs_has_id(rule->filter.world, pred_id, EcsAcyclic)) {
-            result.acyclic = true;
+        if (ecs_has_id(rule->filter.world, pred_id, EcsTraversable)) {
+            result.traversable = true;
         }
     }
 
@@ -2249,9 +2249,9 @@ void insert_term_2(
     }
 
     if (same_obj_subj) {
-        /* Can't have relationship with same variables that is acyclic and not
+        /* Can't have relationship with same variables that is traversable and not
          * reflexive, this should've been caught earlier. */
-        ecs_assert(!filter->acyclic || filter->reflexive, 
+        ecs_assert(!filter->traversable || filter->reflexive, 
             ECS_INTERNAL_ERROR, NULL);
 
         /* If relationship is reflexive and entity has an instance of R, no checks

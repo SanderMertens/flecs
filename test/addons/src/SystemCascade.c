@@ -419,7 +419,7 @@ void SystemCascade_custom_relation_cascade_depth_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -486,7 +486,7 @@ void SystemCascade_custom_relation_cascade_depth_2() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -568,7 +568,7 @@ void SystemCascade_custom_relation_add_after_match() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -646,7 +646,7 @@ void SystemCascade_custom_relation_adopt_after_match() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_ENTITY(world, Rel, Traversable);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);

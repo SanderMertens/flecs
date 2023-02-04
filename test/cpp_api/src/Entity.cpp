@@ -4187,7 +4187,7 @@ void Entity_get_depth_w_type() {
     flecs::world world;
 
     struct Rel { };
-    world.component<Rel>().add(flecs::Acyclic);
+    world.component<Rel>().add(flecs::Traversable);
 
     flecs::entity e1 = world.entity();
     flecs::entity e2 = world.entity().add<Rel>(e1);

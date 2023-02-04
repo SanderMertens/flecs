@@ -1632,7 +1632,7 @@ The arrows in this diagram indicate the direction in which the query is traversi
 
 Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the [Query Performance](#query-performance) section for more details.
 
-Any relationship used for traversal must have the [Acyclic](Relationships.md#acyclic-property) property. Attempting to create a query that traverses a relationship that does not have the `Acyclic` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
+Any relationship used for traversal must have the [Traversable](Relationships.md#traversable-property) property. Attempting to create a query that traverses a relationship that does not have the `Traversable` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
 
 Components that have the [DontInherit](Relationships.md#dontinherit-property) property cannot be matched through traversal. Examples of builtin components that have the `DontInherit` property are `Prefab` (instances of prefabs should not be considered prefabs) and `ChildOf` (a child of a parent is not a child of the parent's parent).
 

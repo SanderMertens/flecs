@@ -546,10 +546,10 @@ int flecs_term_verify(
     }
 
     if (term->src.trav) {
-        if (!ecs_has_id(world, term->src.trav, EcsAcyclic)) {
+        if (!ecs_has_id(world, term->src.trav, EcsTraversable)) {
             char *r_str = ecs_get_fullpath(world, term->src.trav);
             flecs_filter_error(ctx, 
-                "cannot traverse non-Acyclic relationship '%s'", r_str);
+                "cannot traverse non-traversable relationship '%s'", r_str);
             ecs_os_free(r_str);
             return -1;
         }

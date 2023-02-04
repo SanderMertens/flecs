@@ -113,6 +113,7 @@ static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Union = EcsUnion;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
+static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;

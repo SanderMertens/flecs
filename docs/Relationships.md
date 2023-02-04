@@ -1079,18 +1079,14 @@ LocatedIn(SanFrancisco, SanFrancisco)
 In these examples, `IsA` is a reflexive relationship, whereas `LocatedIn` is not.
 
 ### Acyclic property
-A relationship can be marked with the `Acyclic` property to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic.
-
-Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident. A number of features are only available for acyclic relationships, such as event propagation and query substitution. For example, the following query is only valid if `LocatedIn` is acyclic:
-
-```c
-// Find Position by traversing LocatedIn relationship upwards
-Position(superset(LocatedIn))
-```
-
-The same goes for observers/triggers that subscribe for events propagated through a relationship. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Acyclic`, as this could cause infinite loops.
+A relationship can be marked with the `Acyclic` property to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic. Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident.
 
 Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
+
+### Traversable property
+Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` (upwards traversal, see query traversal flags). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
+
+Events are propagated along the edges of traversable relationships. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Traversable`.
 
 ### Exclusive property
 The `Exclusive` property enforces that an entity can only have a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relationship with the `Exclusive` property is the builtin `ChildOf` relationship:

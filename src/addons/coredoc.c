@@ -59,6 +59,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relationship property");
     ecs_doc_set_brief(world, EcsTag, "Tag relationship property");
     ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relationship property");
+    ecs_doc_set_brief(world, EcsTraversable, "Traversable relationship property");
     ecs_doc_set_brief(world, EcsExclusive, "Exclusive relationship property");
     ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relationship property");
     ecs_doc_set_brief(world, EcsWith, "With relationship property");
@@ -82,6 +83,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsDontInherit, URL_ROOT "#dontinherit-property");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-property");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-property");
+    ecs_doc_set_link(world, EcsTraversable, URL_ROOT "#traversable-property");
     ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-property");
     ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
     ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");

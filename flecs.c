@@ -20838,10 +20838,10 @@ typedef struct ecs_rule_pair_t {
     } second;
     int32_t reg_mask; /* bit 1 = predicate, bit 2 = object */
 
-    bool transitive; /* Is predicate transitive */
-    bool final;      /* Is predicate final */
-    bool reflexive;  /* Is predicate reflexive */
-    bool acyclic;    /* Is predicate acyclic */
+    bool transitive;  /* Is predicate transitive */
+    bool final;       /* Is predicate final */
+    bool reflexive;   /* Is predicate reflexive */
+    bool traversable; /* Is predicate traversable */
     bool second_0;
 } ecs_rule_pair_t;
 
@@ -21614,8 +21614,8 @@ ecs_rule_pair_t term_to_pair(
             result.reflexive = true;
         }
 
-        if (ecs_has_id(rule->filter.world, pred_id, EcsAcyclic)) {
-            result.acyclic = true;
+        if (ecs_has_id(rule->filter.world, pred_id, EcsTraversable)) {
+            result.traversable = true;
         }
     }
 
@@ -23063,9 +23063,9 @@ void insert_term_2(
     }
 
     if (same_obj_subj) {
-        /* Can't have relationship with same variables that is acyclic and not
+        /* Can't have relationship with same variables that is traversable and not
          * reflexive, this should've been caught earlier. */
-        ecs_assert(!filter->acyclic || filter->reflexive, 
+        ecs_assert(!filter->traversable || filter->reflexive, 
             ECS_INTERNAL_ERROR, NULL);
 
         /* If relationship is reflexive and entity has an instance of R, no checks
@@ -37155,6 +37155,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relationship property");
     ecs_doc_set_brief(world, EcsTag, "Tag relationship property");
     ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relationship property");
+    ecs_doc_set_brief(world, EcsTraversable, "Traversable relationship property");
     ecs_doc_set_brief(world, EcsExclusive, "Exclusive relationship property");
     ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relationship property");
     ecs_doc_set_brief(world, EcsWith, "With relationship property");
@@ -37178,6 +37179,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsDontInherit, URL_ROOT "#dontinherit-property");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-property");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-property");
+    ecs_doc_set_link(world, EcsTraversable, URL_ROOT "#traversable-property");
     ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-property");
     ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
     ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");
@@ -40770,13 +40772,14 @@ const ecs_entity_t EcsTag =                           ECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsUnion =                         ECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsExclusive =                     ECS_HI_COMPONENT_ID + 21;
 const ecs_entity_t EcsAcyclic =                       ECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsTraversable =                   ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 25;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 28;
 
 /* Identifier tags */
 const ecs_entity_t EcsName =                          ECS_HI_COMPONENT_ID + 30;
@@ -43733,7 +43736,7 @@ repeat_event:
             idr = flecs_query_id_record_get(world, id);
             ecs_flags32_t idr_flags = idr->flags;
 
-            if (is_pair && (idr_flags & EcsIdAcyclic)) {
+            if (is_pair && (idr_flags & EcsIdTraversable)) {
                 ecs_event_record_t *er_fwd = NULL;
                 if (ECS_PAIR_FIRST(id) == EcsIsA) {
                     if (event == EcsOnAdd) {
@@ -44525,10 +44528,10 @@ int flecs_term_verify(
     }
 
     if (term->src.trav) {
-        if (!ecs_has_id(world, term->src.trav, EcsAcyclic)) {
+        if (!ecs_has_id(world, term->src.trav, EcsTraversable)) {
             char *r_str = ecs_get_fullpath(world, term->src.trav);
             flecs_filter_error(ctx, 
-                "cannot traverse non-Acyclic relationship '%s'", r_str);
+                "cannot traverse non-traversable relationship '%s'", r_str);
             ecs_os_free(r_str);
             return -1;
         }
@@ -54304,8 +54307,8 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
 
 static
 void flecs_register_acyclic(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdAcyclic, 
-        EcsIdAcyclic, 0);
+    flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdTraversable, 
+        EcsIdTraversable, 0);
 }
 
 static
@@ -54599,10 +54602,10 @@ ecs_table_t* flecs_bootstrap_component_table(
      * can no longer be done after they are in use. */
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdAcyclic | EcsIdTag;
+        EcsIdTraversable | EcsIdTag;
     idr = flecs_id_record_ensure(world, ecs_pair(EcsChildOf, EcsWildcard));
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdAcyclic | EcsIdTag | EcsIdExclusive;
+        EcsIdTraversable | EcsIdTag | EcsIdExclusive;
 
     idr = flecs_id_record_ensure(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
@@ -54801,6 +54804,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
+    flecs_bootstrap_tag(world, EcsTraversable);
     flecs_bootstrap_tag(world, EcsWith);
     flecs_bootstrap_tag(world, EcsOneOf);
 
@@ -54846,6 +54850,7 @@ void flecs_bootstrap(
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
+    ecs_add_id(world, EcsChildOf, EcsTraversable);
     ecs_add_id(world, EcsChildOf, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
 
@@ -54958,16 +54963,19 @@ void flecs_bootstrap(
     /* Set scope back to flecs core */
     ecs_set_scope(world, EcsFlecsCore);
 
-    /* Acyclic components */
-    ecs_add_id(world, EcsIsA, EcsAcyclic);
-    ecs_add_id(world, EcsDependsOn, EcsAcyclic);
+    /* Acyclic/Traversable components */
+    ecs_add_id(world, EcsIsA, EcsTraversable);
+    ecs_add_id(world, EcsDependsOn, EcsTraversable);
     ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* DontInherit components */
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
-    /* Transitive relationships are always Acyclic */
-    ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
+    /* Traversable relationships are always acyclic */
+    ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
+
+    /* Transitive relationships are always Traversable */
+    ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
 
     /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);
@@ -55735,7 +55743,7 @@ void flecs_insert_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         flecs_id_record_elem_insert(widr, idr, &idr->second);
 
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             flecs_id_record_elem_insert(widr, idr, &idr->acyclic);
         }
     }
@@ -55757,7 +55765,7 @@ void flecs_remove_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         flecs_id_record_elem_remove(idr, &idr->second);
 
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             flecs_id_record_elem_remove(idr, &idr->acyclic);
         }
     }
@@ -55880,7 +55888,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
         flecs_add_flag(world, tgt, EcsEntityObservedTarget);
-        if (idr->flags & EcsIdAcyclic) {
+        if (idr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             ecs_record_t *r = flecs_add_flag(
