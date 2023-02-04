@@ -44599,7 +44599,7 @@ int flecs_term_finalize(
             first->trav = 0;
         }
         /* Don't traverse ids that cannot be inherited */
-        if (ecs_has_id(world, first_id, EcsDontInherit)) {
+        if (ecs_has_id(world, first_id, EcsDontInherit) && src->trav == EcsIsA) {
             if (src_flags & (EcsUp | EcsDown)) {
                 flecs_filter_error(ctx, 
                     "traversing not allowed for id that can't be inherited");
@@ -46716,10 +46716,10 @@ int32_t flecs_type_search_relation(
                 return -1;
             }
             idr_r = world->idr_isa_wildcard;
-        }
 
-        if (!flecs_type_can_inherit_id(world, table, idr, id)) {
-            return -1;
+            if (!flecs_type_can_inherit_id(world, table, idr, id)) {
+                return -1;
+            }
         }
 
         if (!idr_r) {

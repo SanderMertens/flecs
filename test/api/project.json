@@ -164,7 +164,6 @@
                 "search_relation_dont_inherit",
                 "search_relation_dont_inherit_from_parent",
                 "search_relation_exclusive",
-                "search_relation_exclusive_from_parent",
                 "search_relation_union",
                 "search_relation_union_wildcard",
                 "search_relation_union_pair"

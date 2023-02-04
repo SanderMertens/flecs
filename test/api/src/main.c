@@ -155,7 +155,6 @@ void Search_search_relation_inherit_from_parent(void);
 void Search_search_relation_dont_inherit(void);
 void Search_search_relation_dont_inherit_from_parent(void);
 void Search_search_relation_exclusive(void);
-void Search_search_relation_exclusive_from_parent(void);
 void Search_search_relation_union(void);
 void Search_search_relation_union_wildcard(void);
 void Search_search_relation_union_pair(void);
@@ -2952,10 +2951,6 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_exclusive",
         Search_search_relation_exclusive
-    },
-    {
-        "search_relation_exclusive_from_parent",
-        Search_search_relation_exclusive_from_parent
     },
     {
         "search_relation_union",
@@ -11572,7 +11567,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        24,
+        23,
         Search_testcases
     },
     {

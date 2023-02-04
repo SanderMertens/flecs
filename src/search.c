@@ -125,10 +125,10 @@ int32_t flecs_type_search_relation(
                 return -1;
             }
             idr_r = world->idr_isa_wildcard;
-        }
 
-        if (!flecs_type_can_inherit_id(world, table, idr, id)) {
-            return -1;
+            if (!flecs_type_can_inherit_id(world, table, idr, id)) {
+                return -1;
+            }
         }
 
         if (!idr_r) {
