@@ -82,7 +82,7 @@ void flecs_insert_id_elem(
         flecs_id_record_elem_insert(widr, idr, &idr->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_insert(widr, idr, &idr->acyclic);
+            flecs_id_record_elem_insert(widr, idr, &idr->trav);
         }
     }
 }
@@ -104,7 +104,7 @@ void flecs_remove_id_elem(
         flecs_id_record_elem_remove(idr, &idr->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_remove(idr, &idr->acyclic);
+            flecs_id_record_elem_remove(idr, &idr->trav);
         }
     }
 }
@@ -222,15 +222,15 @@ ecs_id_record_t* flecs_id_record_new(
      * won't contain any tables with deleted ids. */
 
     /* Flag for OnDelete policies */
-    flecs_add_flag(world, rel, EcsEntityObservedId);
+    flecs_add_flag(world, rel, EcsEntityIsId);
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
-        flecs_add_flag(world, tgt, EcsEntityObservedTarget);
+        flecs_add_flag(world, tgt, EcsEntityIsTarget);
         if (idr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             ecs_record_t *r = flecs_add_flag(
-                world, tgt, EcsEntityObservedAcyclic);
+                world, tgt, EcsEntityIsTraversable);
 
             /* Add reference to (*, tgt) id record to entity record */
             r->idr = idr_t;

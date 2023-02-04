@@ -10,7 +10,7 @@
 // same matching logic as queries: if a query with upwards traversal matches an
 // entity, so will an observer.
 //
-// Events are only propagated along acyclic relationship edges.
+// Events are only propagated along traversable relationship edges.
 
 typedef struct {
     double x, y;

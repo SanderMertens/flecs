@@ -1108,7 +1108,7 @@ struct ecs_id_record_t {
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
     ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t acyclic; /* (*, O) with only acyclic relationships */
+    ecs_id_record_elem_t trav; /* (*, O) with only traversable relationships */
 };
 
 /* Get id record for id */
@@ -3251,7 +3251,7 @@ void flecs_dtor_all_components(
     (void)records;
 
     if (is_delete && table->observed_count) {
-        /* If table contains monitored entities with acyclic relationships,
+        /* If table contains monitored entities with traversable relationships,
          * make sure to invalidate observer cache */
         flecs_emit_propagate_invalidate(world, table, row, count);
     }
@@ -6052,7 +6052,7 @@ void flecs_commit(
     if (record) {
         src_table = record->table;
         row_flags = record->row & ECS_ROW_FLAGS_MASK;
-        observed = (row_flags & EcsEntityObservedAcyclic) != 0;
+        observed = (row_flags & EcsEntityIsTraversable) != 0;
     }
 
     if (src_table == dst_table) {
@@ -6417,7 +6417,7 @@ ecs_record_t* flecs_add_flag(
         r->row = flag;
         r->table = NULL;
     } else {
-        if (flag == EcsEntityObservedAcyclic) {
+        if (flag == EcsEntityIsTraversable) {
             if (!(record->row & flag)) {
                 ecs_table_t *table = record->table;
                 if (table) {
@@ -7275,7 +7275,7 @@ void ecs_clear(
         flecs_delete_entity(world, r, &diff);
         r->table = NULL;
 
-        if (r->row & EcsEntityObservedAcyclic) {
+        if (r->row & EcsEntityIsTraversable) {
             flecs_table_observer_add(table, -1);
         }
     }    
@@ -7342,12 +7342,12 @@ void flecs_targets_mark_for_delete(
         /* If entity is not used as id or as relationship target, there won't
          * be any tables with a reference to it. */
         ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityObservedId|EcsEntityObservedTarget))) {
+        if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
             continue;
         }
 
         ecs_entity_t e = entities[i];
-        if (flags & EcsEntityObservedId) {
+        if (flags & EcsEntityIsId) {
             if ((idr = flecs_id_record_get(world, e))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE(idr->flags), true);
@@ -7357,7 +7357,7 @@ void flecs_targets_mark_for_delete(
                     ECS_ID_ON_DELETE(idr->flags), true);
             }
         }
-        if (flags & EcsEntityObservedTarget) {
+        if (flags & EcsEntityIsTarget) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE_OBJECT(idr->flags), true);
@@ -7777,16 +7777,16 @@ void ecs_delete(
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
         ecs_table_t *table;
         if (row_flags) {
-            if (row_flags & EcsEntityObservedTarget) {
+            if (row_flags & EcsEntityIsTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
                 r->idr = NULL;
             }
-            if (row_flags & EcsEntityObservedId) {
+            if (row_flags & EcsEntityIsId) {
                 flecs_on_delete(world, entity, 0, true);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
             }
-            if (row_flags & EcsEntityObservedAcyclic) {
+            if (row_flags & EcsEntityIsTraversable) {
                 table = r->table;
                 if (table) {
                     flecs_table_observer_add(table, -1);
@@ -41192,7 +41192,7 @@ void flecs_fini_roots(ecs_world_t *world) {
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityObservedTarget)) {
+            if (!(flags & EcsEntityIsTarget)) {
                 continue; /* Filter out entities that aren't objects */
             }
 
@@ -42885,9 +42885,9 @@ void flecs_emit_propagate(
     }
     ecs_log_push_3();
 
-    /* Propagate to records of acyclic relationships */
+    /* Propagate to records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->acyclic.next)) {
+    while ((cur = cur->trav.next)) {
         cur->reachable.generation ++; /* Invalidate cache */
 
         ecs_table_cache_iter_t idt;
@@ -42941,7 +42941,7 @@ void flecs_emit_propagate(
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
-                     * acyclic relationships */
+                     * traversable relationships */
                     flecs_emit_propagate(world, it, idr, idr_t,
                         iders, ider_count);
                 }
@@ -42965,9 +42965,9 @@ void flecs_emit_propagate_invalidate_tables(
         ecs_os_free(idstr);
     }
 
-    /* Invalidate records of acyclic relationships */
+    /* Invalidate records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->acyclic.next)) {
+    while ((cur = cur->trav.next)) {
         ecs_reachable_cache_t *rc = &cur->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
@@ -42995,7 +42995,7 @@ void flecs_emit_propagate_invalidate_tables(
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
-                     * acyclic relationships */
+                     * traversable relationships */
                     flecs_emit_propagate_invalidate_tables(world, idr_t);
                 }
             }
@@ -43022,7 +43022,7 @@ void flecs_emit_propagate_invalidate(
 
         ecs_id_record_t *idr_t = record->idr;
         if (idr_t) {
-            /* Event is used as target in acyclic relationship, propagate */
+            /* Event is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, idr_t);
         }
     }
@@ -43689,7 +43689,7 @@ void flecs_emit(
     bool can_override = count && (table_flags & EcsTableHasIsA) && (
         (event == EcsOnAdd) || (event == EcsOnRemove));
 
-    /* When a new (acyclic) relationship is added (emitting an OnAdd/OnRemove
+    /* When a new (traversable) relationship is added (emitting an OnAdd/OnRemove
      * event) this will cause the components of the target entity to be 
      * propagated to the source entity. This makes it possible for observers to
      * get notified of any new reachable components though the relationship. */
@@ -43730,8 +43730,8 @@ repeat_event:
         void *override_ptr = NULL;
         ecs_entity_t base = 0;
 
-        /* Check if this id is a pair of an acyclic relationship. If so, we may
-         * have to forward ids from the pair's target. */
+        /* Check if this id is a pair of an traversable relationship. If so, we 
+         * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || can_override) {
             idr = flecs_query_id_record_get(world, id);
             ecs_flags32_t idr_flags = idr->flags;
@@ -43894,7 +43894,7 @@ repeat_event:
         propagated = true;
 
         /* The table->observed_count value indicates if the table contains any
-         * entities that are used as targets of acyclic relationships. If the
+         * entities that are used as targets of traversable relationships. If the
          * entity/entities for which the event was generated is used as such a
          * target, events must be propagated downwards. */
         ecs_entity_t *entities = it.entities;
@@ -43912,7 +43912,7 @@ repeat_event:
 
             ecs_id_record_t *idr_t = record->idr;
             if (idr_t) {
-                /* Entity is used as target in acyclic pairs, propagate */
+                /* Entity is used as target in traversable pairs, propagate */
                 ecs_entity_t e = entities[r];
                 it.sources[0] = e;
 
@@ -50068,12 +50068,6 @@ int flecs_query_process_signature(
             ecs_assert(query->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
             query->cascade_by = i + 1;
         }
-
-        if ((src->flags & EcsTraverseFlags) == EcsSelf) {
-            if (src->flags & EcsIsEntity) {
-                flecs_add_flag(world, term->src.id, EcsEntityObserved);
-            }
-        }
     }
 
     query->flags |= (ecs_flags32_t)(flecs_query_has_refs(query) * EcsQueryHasRefs);
@@ -54293,7 +54287,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
-        EcsEntityObservedId);
+        EcsEntityIsId);
 }
 
 static
@@ -54302,11 +54296,11 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
-        EcsEntityObservedId);  
+        EcsEntityIsId);  
 }
 
 static
-void flecs_register_acyclic(ecs_iter_t *it) {
+void flecs_register_traversable(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdTraversable, 
         EcsIdTraversable, 0);
 }
@@ -54783,7 +54777,7 @@ void flecs_bootstrap(
     ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->row & EcsEntityObservedAcyclic, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->row & EcsEntityIsTraversable, ECS_INTERNAL_ERROR, NULL);
     (void)r;
 
     /* Initialize builtin entities */
@@ -54900,11 +54894,11 @@ void flecs_bootstrap(
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
-            { .id = EcsAcyclic, .src.flags = EcsSelf },
+            { .id = EcsTraversable, .src.flags = EcsSelf },
             match_prefab
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_acyclic
+        .callback = flecs_register_traversable
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -55744,7 +55738,7 @@ void flecs_insert_id_elem(
         flecs_id_record_elem_insert(widr, idr, &idr->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_insert(widr, idr, &idr->acyclic);
+            flecs_id_record_elem_insert(widr, idr, &idr->trav);
         }
     }
 }
@@ -55766,7 +55760,7 @@ void flecs_remove_id_elem(
         flecs_id_record_elem_remove(idr, &idr->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_remove(idr, &idr->acyclic);
+            flecs_id_record_elem_remove(idr, &idr->trav);
         }
     }
 }
@@ -55884,15 +55878,15 @@ ecs_id_record_t* flecs_id_record_new(
      * won't contain any tables with deleted ids. */
 
     /* Flag for OnDelete policies */
-    flecs_add_flag(world, rel, EcsEntityObservedId);
+    flecs_add_flag(world, rel, EcsEntityIsId);
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
-        flecs_add_flag(world, tgt, EcsEntityObservedTarget);
+        flecs_add_flag(world, tgt, EcsEntityIsTarget);
         if (idr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             ecs_record_t *r = flecs_add_flag(
-                world, tgt, EcsEntityObservedAcyclic);
+                world, tgt, EcsEntityIsTraversable);
 
             /* Add reference to (*, tgt) id record to entity record */
             r->idr = idr_t;

@@ -853,7 +853,7 @@ void flecs_dtor_all_components(
     (void)records;
 
     if (is_delete && table->observed_count) {
-        /* If table contains monitored entities with acyclic relationships,
+        /* If table contains monitored entities with traversable relationships,
          * make sure to invalidate observer cache */
         flecs_emit_propagate_invalidate(world, table, row, count);
     }

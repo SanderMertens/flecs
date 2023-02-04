@@ -277,7 +277,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
-        EcsEntityObservedId);
+        EcsEntityIsId);
 }
 
 static
@@ -286,11 +286,11 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
-        EcsEntityObservedId);  
+        EcsEntityIsId);  
 }
 
 static
-void flecs_register_acyclic(ecs_iter_t *it) {
+void flecs_register_traversable(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsAcyclic, EcsIdTraversable, 
         EcsIdTraversable, 0);
 }
@@ -767,7 +767,7 @@ void flecs_bootstrap(
     ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->row & EcsEntityObservedAcyclic, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->row & EcsEntityIsTraversable, ECS_INTERNAL_ERROR, NULL);
     (void)r;
 
     /* Initialize builtin entities */
@@ -884,11 +884,11 @@ void flecs_bootstrap(
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {
-            { .id = EcsAcyclic, .src.flags = EcsSelf },
+            { .id = EcsTraversable, .src.flags = EcsSelf },
             match_prefab
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_acyclic
+        .callback = flecs_register_traversable
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){

@@ -253,9 +253,9 @@ void flecs_emit_propagate(
     }
     ecs_log_push_3();
 
-    /* Propagate to records of acyclic relationships */
+    /* Propagate to records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->acyclic.next)) {
+    while ((cur = cur->trav.next)) {
         cur->reachable.generation ++; /* Invalidate cache */
 
         ecs_table_cache_iter_t idt;
@@ -309,7 +309,7 @@ void flecs_emit_propagate(
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
-                     * acyclic relationships */
+                     * traversable relationships */
                     flecs_emit_propagate(world, it, idr, idr_t,
                         iders, ider_count);
                 }
@@ -333,9 +333,9 @@ void flecs_emit_propagate_invalidate_tables(
         ecs_os_free(idstr);
     }
 
-    /* Invalidate records of acyclic relationships */
+    /* Invalidate records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->acyclic.next)) {
+    while ((cur = cur->trav.next)) {
         ecs_reachable_cache_t *rc = &cur->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
@@ -363,7 +363,7 @@ void flecs_emit_propagate_invalidate_tables(
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
-                     * acyclic relationships */
+                     * traversable relationships */
                     flecs_emit_propagate_invalidate_tables(world, idr_t);
                 }
             }
@@ -390,7 +390,7 @@ void flecs_emit_propagate_invalidate(
 
         ecs_id_record_t *idr_t = record->idr;
         if (idr_t) {
-            /* Event is used as target in acyclic relationship, propagate */
+            /* Event is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, idr_t);
         }
     }
@@ -1057,7 +1057,7 @@ void flecs_emit(
     bool can_override = count && (table_flags & EcsTableHasIsA) && (
         (event == EcsOnAdd) || (event == EcsOnRemove));
 
-    /* When a new (acyclic) relationship is added (emitting an OnAdd/OnRemove
+    /* When a new (traversable) relationship is added (emitting an OnAdd/OnRemove
      * event) this will cause the components of the target entity to be 
      * propagated to the source entity. This makes it possible for observers to
      * get notified of any new reachable components though the relationship. */
@@ -1098,8 +1098,8 @@ repeat_event:
         void *override_ptr = NULL;
         ecs_entity_t base = 0;
 
-        /* Check if this id is a pair of an acyclic relationship. If so, we may
-         * have to forward ids from the pair's target. */
+        /* Check if this id is a pair of an traversable relationship. If so, we 
+         * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || can_override) {
             idr = flecs_query_id_record_get(world, id);
             ecs_flags32_t idr_flags = idr->flags;
@@ -1262,7 +1262,7 @@ repeat_event:
         propagated = true;
 
         /* The table->observed_count value indicates if the table contains any
-         * entities that are used as targets of acyclic relationships. If the
+         * entities that are used as targets of traversable relationships. If the
          * entity/entities for which the event was generated is used as such a
          * target, events must be propagated downwards. */
         ecs_entity_t *entities = it.entities;
@@ -1280,7 +1280,7 @@ repeat_event:
 
             ecs_id_record_t *idr_t = record->idr;
             if (idr_t) {
-                /* Entity is used as target in acyclic pairs, propagate */
+                /* Entity is used as target in traversable pairs, propagate */
                 ecs_entity_t e = entities[r];
                 it.sources[0] = e;
 

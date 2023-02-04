@@ -1339,12 +1339,6 @@ int flecs_query_process_signature(
             ecs_assert(query->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
             query->cascade_by = i + 1;
         }
-
-        if ((src->flags & EcsTraverseFlags) == EcsSelf) {
-            if (src->flags & EcsIsEntity) {
-                flecs_add_flag(world, term->src.id, EcsEntityObserved);
-            }
-        }
     }
 
     query->flags |= (ecs_flags32_t)(flecs_query_has_refs(query) * EcsQueryHasRefs);

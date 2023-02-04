@@ -470,7 +470,7 @@ void flecs_fini_roots(ecs_world_t *world) {
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityObservedTarget)) {
+            if (!(flags & EcsEntityIsTarget)) {
                 continue; /* Filter out entities that aren't objects */
             }
 

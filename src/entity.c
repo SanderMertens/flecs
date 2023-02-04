@@ -713,7 +713,7 @@ void flecs_commit(
     if (record) {
         src_table = record->table;
         row_flags = record->row & ECS_ROW_FLAGS_MASK;
-        observed = (row_flags & EcsEntityObservedAcyclic) != 0;
+        observed = (row_flags & EcsEntityIsTraversable) != 0;
     }
 
     if (src_table == dst_table) {
@@ -1078,7 +1078,7 @@ ecs_record_t* flecs_add_flag(
         r->row = flag;
         r->table = NULL;
     } else {
-        if (flag == EcsEntityObservedAcyclic) {
+        if (flag == EcsEntityIsTraversable) {
             if (!(record->row & flag)) {
                 ecs_table_t *table = record->table;
                 if (table) {
@@ -1936,7 +1936,7 @@ void ecs_clear(
         flecs_delete_entity(world, r, &diff);
         r->table = NULL;
 
-        if (r->row & EcsEntityObservedAcyclic) {
+        if (r->row & EcsEntityIsTraversable) {
             flecs_table_observer_add(table, -1);
         }
     }    
@@ -2003,12 +2003,12 @@ void flecs_targets_mark_for_delete(
         /* If entity is not used as id or as relationship target, there won't
          * be any tables with a reference to it. */
         ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityObservedId|EcsEntityObservedTarget))) {
+        if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
             continue;
         }
 
         ecs_entity_t e = entities[i];
-        if (flags & EcsEntityObservedId) {
+        if (flags & EcsEntityIsId) {
             if ((idr = flecs_id_record_get(world, e))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE(idr->flags), true);
@@ -2018,7 +2018,7 @@ void flecs_targets_mark_for_delete(
                     ECS_ID_ON_DELETE(idr->flags), true);
             }
         }
-        if (flags & EcsEntityObservedTarget) {
+        if (flags & EcsEntityIsTarget) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
                     ECS_ID_ON_DELETE_OBJECT(idr->flags), true);
@@ -2438,16 +2438,16 @@ void ecs_delete(
         ecs_flags32_t row_flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
         ecs_table_t *table;
         if (row_flags) {
-            if (row_flags & EcsEntityObservedTarget) {
+            if (row_flags & EcsEntityIsTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
                 r->idr = NULL;
             }
-            if (row_flags & EcsEntityObservedId) {
+            if (row_flags & EcsEntityIsId) {
                 flecs_on_delete(world, entity, 0, true);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true);
             }
-            if (row_flags & EcsEntityObservedAcyclic) {
+            if (row_flags & EcsEntityIsTraversable) {
                 table = r->table;
                 if (table) {
                     flecs_table_observer_add(table, -1);
