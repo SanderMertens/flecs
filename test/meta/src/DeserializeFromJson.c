@@ -1234,7 +1234,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces() {
 
     ecs_entity_t e = ecs_new_id(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        " { \"ids\" : [ [ \"Position\" ] ] , \"values\" : [ { \"x\" :10 } ] }", NULL);
+        " { \"ids\" : [ [ \"Position\" ] ] , \"values\" : [ { \"x\" : 10 } ] }", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 

@@ -7,6 +7,60 @@
 
 #ifdef FLECS_JSON
 
+/* Deserialize from JSON */
+typedef enum ecs_json_token_t {
+    JsonObjectOpen,
+    JsonObjectClose,
+    JsonArrayOpen,
+    JsonArrayClose,
+    JsonColon,
+    JsonComma,
+    JsonNumber,
+    JsonString,
+    JsonTrue,
+    JsonFalse,
+    JsonNull,
+    JsonInvalid
+} ecs_json_token_t;
+
+const char* flecs_json_parse(
+    const char *json,
+    ecs_json_token_t *token_kind,
+    char *token);
+
+const char* flecs_json_expect(
+    const char *name,
+    const char *expr,
+    const char *json,
+    ecs_json_token_t token_kind,
+    char *token);
+
+const char* flecs_json_expect_member(
+    const char *name,
+    const char *expr,
+    const char *json,
+    char *token);
+
+const char* flecs_json_expect_member_name(
+    const char *name,
+    const char *expr,
+    const char *json,
+    char *token,
+    const char *member_name);
+
+const char* flecs_json_skip_object(
+    const char *name,
+    const char *expr,
+    const char *json,
+    char *token);
+
+const char* flecs_json_skip_array(
+    const char *name,
+    const char *expr,
+    const char *json,
+    char *token);
+
+/* Serialize to JSON */
 void flecs_json_next(
     ecs_strbuf_t *buf);
 
