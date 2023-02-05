@@ -249,7 +249,7 @@ bool flecs_rest_reply_world(
     ecs_http_reply_t *reply)
 {
     (void)req;
-    ecs_world_to_json_buf(world, &reply->body);
+    ecs_world_to_json_buf(world, &reply->body, NULL);
     return true;
 }
 
@@ -992,6 +992,8 @@ void FlecsRestImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsRest);
+
+    ECS_IMPORT(world, FlecsPipeline);
 
     ecs_set_name_prefix(world, "Ecs");
 

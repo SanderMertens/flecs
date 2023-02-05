@@ -1669,13 +1669,36 @@ char* ecs_iter_to_json(
 
 int ecs_world_to_json_buf(
     ecs_world_t *world,
-    ecs_strbuf_t *buf_out)
+    ecs_strbuf_t *buf_out,
+    const ecs_world_to_json_desc_t *desc)
 {
     ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter(world, {
-        .terms = {{ .id = EcsAny }},
-        .storage = &f
-    });
+    ecs_filter_desc_t filter_desc = {0};
+    filter_desc.storage = &f;
+
+    if (desc && desc->serialize_builtin && desc->serialize_modules) {
+        filter_desc.terms[0].id = EcsAny;
+    } else {
+        bool serialize_builtin = desc && desc->serialize_builtin;
+        bool serialize_modules = desc && desc->serialize_modules;
+        int32_t term_id = 0;
+
+        if (!serialize_builtin) {
+            filter_desc.terms[term_id].id = ecs_pair(EcsChildOf, EcsFlecs);
+            filter_desc.terms[term_id].oper = EcsNot;
+            filter_desc.terms[term_id].src.flags = EcsSelf | EcsParent;
+            term_id ++;
+        }
+        if (!serialize_modules) {
+            filter_desc.terms[term_id].id = EcsModule;
+            filter_desc.terms[term_id].oper = EcsNot;
+            filter_desc.terms[term_id].src.flags = EcsSelf | EcsParent;
+        }
+    }
+
+    if (ecs_filter_init(world, &filter_desc) == NULL) {
+        return -1;
+    }
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
     ecs_iter_to_json_desc_t json_desc = { .serialize_table = true };
@@ -1683,11 +1706,12 @@ int ecs_world_to_json_buf(
 }
 
 char* ecs_world_to_json(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    const ecs_world_to_json_desc_t *desc)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    if (ecs_world_to_json_buf(world, &buf)) {
+    if (ecs_world_to_json_buf(world, &buf, desc)) {
         ecs_strbuf_reset(&buf);
         return NULL;
     }

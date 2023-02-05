@@ -30,7 +30,7 @@ flecs::string to_json(const T* value) {
  * \ingroup cpp_addons_json
  */
 flecs::string to_json() {
-    return flecs::string( ecs_world_to_json(m_world) );
+    return flecs::string( ecs_world_to_json(m_world, nullptr) );
 }
 
 /** Deserialize value from JSON.

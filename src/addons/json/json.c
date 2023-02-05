@@ -152,6 +152,9 @@ const char* flecs_json_expect_member_name(
     const char *member_name)
 {
     json = flecs_json_expect_member(name, expr, json, token);
+    if (!json) {
+        return NULL;
+    }
     if (ecs_os_strcmp(token, member_name)) {
         ecs_parser_error(name, expr, json - expr, "expected member '%s'",
             member_name);

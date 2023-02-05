@@ -1552,3 +1552,121 @@ void DeserializeFromJson_deser_entity_w_ids() {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_ser_deser_mini() {
+    ecs_world_t *world = ecs_mini();
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_init() {
+    ecs_world_t *world = ecs_init();
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_mini_serialize_builtin() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_builtin = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_mini_serialize_modules() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_modules = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_mini_serialize_builtin_modules() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_builtin = true;
+    desc.serialize_modules = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_init_serialize_builtin() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_builtin = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_init_serialize_modules() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_modules = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_init_serialize_builtin_modules() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_builtin = true;
+    desc.serialize_modules = true;
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

@@ -478,6 +478,14 @@ void DeserializeFromJson_deser_entity_w_path(void);
 void DeserializeFromJson_deser_entity_w_path_and_ids(void);
 void DeserializeFromJson_deser_entity_w_path_and_ids_and_values(void);
 void DeserializeFromJson_deser_entity_w_ids(void);
+void DeserializeFromJson_ser_deser_mini(void);
+void DeserializeFromJson_ser_deser_init(void);
+void DeserializeFromJson_ser_deser_mini_serialize_builtin(void);
+void DeserializeFromJson_ser_deser_mini_serialize_modules(void);
+void DeserializeFromJson_ser_deser_mini_serialize_builtin_modules(void);
+void DeserializeFromJson_ser_deser_init_serialize_builtin(void);
+void DeserializeFromJson_ser_deser_init_serialize_modules(void);
+void DeserializeFromJson_ser_deser_init_serialize_builtin_modules(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -2588,6 +2596,38 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_entity_w_ids",
         DeserializeFromJson_deser_entity_w_ids
+    },
+    {
+        "ser_deser_mini",
+        DeserializeFromJson_ser_deser_mini
+    },
+    {
+        "ser_deser_init",
+        DeserializeFromJson_ser_deser_init
+    },
+    {
+        "ser_deser_mini_serialize_builtin",
+        DeserializeFromJson_ser_deser_mini_serialize_builtin
+    },
+    {
+        "ser_deser_mini_serialize_modules",
+        DeserializeFromJson_ser_deser_mini_serialize_modules
+    },
+    {
+        "ser_deser_mini_serialize_builtin_modules",
+        DeserializeFromJson_ser_deser_mini_serialize_builtin_modules
+    },
+    {
+        "ser_deser_init_serialize_builtin",
+        DeserializeFromJson_ser_deser_init_serialize_builtin
+    },
+    {
+        "ser_deser_init_serialize_modules",
+        DeserializeFromJson_ser_deser_init_serialize_modules
+    },
+    {
+        "ser_deser_init_serialize_builtin_modules",
+        DeserializeFromJson_ser_deser_init_serialize_builtin_modules
     }
 };
 
@@ -3822,7 +3862,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        48,
+        56,
         DeserializeFromJson_testcases
     },
     {

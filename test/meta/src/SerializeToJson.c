@@ -4274,10 +4274,10 @@ void SerializeToJson_serialize_world() {
     /* We can't test if the output for an exact value as this would change any
      * time something is added/removed to the world. */
 
-    char *json_1 = ecs_world_to_json(world);
+    char *json_1 = ecs_world_to_json(world, NULL);
     test_assert(json_1 != NULL);
 
-    char *json_2 = ecs_world_to_json(world);
+    char *json_2 = ecs_world_to_json(world, NULL);
     test_assert(json_2 != NULL);
 
     test_assert(json_1 != json_2);

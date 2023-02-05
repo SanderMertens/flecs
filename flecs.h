@@ -5161,6 +5161,18 @@ ecs_entity_t ecs_new_w_id(
     ecs_world_t *world,
     ecs_id_t id);
 
+/** Create new entity in table.
+ * This operation creates a new entity in the specified table.
+ * 
+ * @param world The world.
+ * @param table The table to which to add the new entity.
+ * @return The new entity.
+ */
+FLECS_API
+ecs_entity_t ecs_new_w_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /** Find or create an entity. 
  * This operation creates a new entity, or modifies an existing one. When a name
  * is set in the ecs_entity_desc_t::name field and ecs_entity_desc_t::entity is
@@ -11562,6 +11574,18 @@ const char* ecs_entity_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc);
 
+/** Parse JSON object with multiple entities into the world. The format is the
+ * same as the one outputted by ecs_world_to_json. 
+ * 
+ * @param world The world.
+ * @param json The JSON expression to parse (see iterator in JSON format manual).
+ */
+FLECS_API
+const char* ecs_world_from_json(
+    ecs_world_t *world,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
+
 /** Serialize array into JSON string.
  * This operation serializes a value of the provided type to a JSON string. The 
  * memory pointed to must be large enough to contain a value of the used type.
@@ -11776,6 +11800,12 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_iter_to_json_desc_t *desc);
 
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_world_to_json_desc_t {
+    bool serialize_builtin;    /* Exclude flecs modules & contents */
+    bool serialize_modules;    /* Exclude modules & contents */
+} ecs_world_to_json_desc_t;
+
 /** Serialize world into JSON string.
  * This operation iterates the contents of the world to JSON. The operation is
  * equivalent to the following code:
@@ -11793,7 +11823,8 @@ int ecs_iter_to_json_buf(
  */
 FLECS_API
 char* ecs_world_to_json(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    const ecs_world_to_json_desc_t *desc);
 
 /** Serialize world into JSON string buffer.
  * Same as ecs_world_to_json, but serializes to an ecs_strbuf_t instance.
@@ -11805,7 +11836,8 @@ char* ecs_world_to_json(
 FLECS_API
 int ecs_world_to_json_buf(
     ecs_world_t *world,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf_out,
+    const ecs_world_to_json_desc_t *desc);
 
 #ifdef __cplusplus
 }
@@ -19171,7 +19203,7 @@ flecs::string to_json(const T* value) {
  * \ingroup cpp_addons_json
  */
 flecs::string to_json() {
-    return flecs::string( ecs_world_to_json(m_world) );
+    return flecs::string( ecs_world_to_json(m_world, nullptr) );
 }
 
 /** Deserialize value from JSON.
