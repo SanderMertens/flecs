@@ -54,18 +54,17 @@ const ecs_id_t ECS_NOT =                                           (1ull << 58);
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
 
-const char* ecs_parse_eol_and_whitespace(
+const char* ecs_parse_ws_eol(
     const char *ptr)
 {
     while (isspace(*ptr)) {
         ptr ++;
     }
 
-    return ptr;    
+    return ptr;
 }
 
-/** Skip spaces when parsing signature */
-const char* ecs_parse_whitespace(
+const char* ecs_parse_ws(
     const char *ptr)
 {
     while ((*ptr != '\n') && isspace(*ptr)) {
@@ -102,50 +101,6 @@ const char* ecs_parse_digit(
 
     tptr[0] = '\0';
     
-    return ptr;
-}
-
-static
-bool flecs_is_newline_comment(
-    const char *ptr)
-{
-    if (ptr[0] == '/' && ptr[1] == '/') {
-        return true;
-    }
-    return false;
-}
-
-const char* ecs_parse_fluff(
-    const char *ptr,
-    char **last_comment)
-{
-    const char *last_comment_start = NULL;
-
-    do {
-        /* Skip whitespaces before checking for a comment */
-        ptr = ecs_parse_whitespace(ptr);
-
-        /* Newline comment, skip until newline character */
-        if (flecs_is_newline_comment(ptr)) {
-            ptr += 2;
-            last_comment_start = ptr;
-
-            while (ptr[0] && ptr[0] != TOK_NEWLINE) {
-                ptr ++;
-            }
-        }
-
-        /* If a newline character is found, skip it */
-        if (ptr[0] == TOK_NEWLINE) {
-            ptr ++;
-        }
-
-    } while (isspace(ptr[0]) || flecs_is_newline_comment(ptr));
-
-    if (last_comment) {
-        *last_comment = (char*)last_comment_start;
-    }
-
     return ptr;
 }
 
@@ -215,7 +170,7 @@ const char* ecs_parse_token(
 {
     int64_t column = ptr - expr;
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     char *tptr = token_out, ch = ptr[0];
 
     if (!flecs_valid_token_start_char(ch)) {
@@ -271,7 +226,7 @@ const char* ecs_parse_token(
         return NULL;
     }
 
-    const char *next_ptr = ecs_parse_whitespace(ptr);
+    const char *next_ptr = ecs_parse_ws(ptr);
     if (next_ptr[0] == ':' && next_ptr != ptr) {
         /* Whitespace between token and : is significant */
         ptr = next_ptr - 1;
@@ -379,7 +334,7 @@ const char* flecs_parse_annotation(
         *inout_kind_out = EcsInOutNone;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
         ecs_parser_error(name, sig, column, "expected ]");
@@ -462,7 +417,7 @@ const char* flecs_parse_term_flags(
                 }
 
                 if (ptr[0] == TOK_AND) {
-                    ptr = ecs_parse_whitespace(ptr + 1);
+                    ptr = ecs_parse_ws(ptr + 1);
                 } else if (ptr[0] != TOK_PAREN_CLOSE) {
                     ecs_parser_error(name, expr, column, 
                         "expected ',' or ')'");
@@ -475,7 +430,7 @@ const char* flecs_parse_term_flags(
                     ptr[0]);
                 return NULL;                
             } else {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
@@ -547,7 +502,7 @@ const char* flecs_parse_arguments(
                     return NULL;
                 }
 
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                     NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
@@ -575,12 +530,12 @@ const char* flecs_parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
 
                 term->id_flags = ECS_PAIR;
 
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 break;
 
             } else {
@@ -629,7 +584,7 @@ const char* flecs_parse_term(
     char token[ECS_MAX_TOKEN_SIZE] = {0};
     ecs_term_t term = { .move = true /* parser never owns resources */ };
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_BRACKET_OPEN) {
@@ -637,12 +592,12 @@ const char* flecs_parse_term(
         if (!ptr) {
             goto error;
         }
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
     }
 
     if (flecs_valid_operator_char(ptr[0])) {
         term.oper = flecs_parse_operator(ptr[0]);
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
     }
 
     /* If next token is the start of an identifier, it could be either a type
@@ -683,7 +638,7 @@ flecs_parse_role:
         goto error;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     /* If next token is the source token, this is an empty source */
     if (flecs_valid_token_start_char(ptr[0])) {
@@ -712,14 +667,14 @@ parse_predicate:
 
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
             &term.first, TOK_COLON);
         if (!ptr) {
             goto error;
         }
 
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
 
         if (ptr[0] == TOK_AND || !ptr[0]) {
             goto parse_done;
@@ -731,9 +686,9 @@ parse_predicate:
             goto error;
         }
 
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
     } else {
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
     }
 
     if (ptr[0] == TOK_PAREN_OPEN) {
@@ -742,7 +697,7 @@ parse_predicate:
             term.src.flags = EcsIsEntity;
             term.src.id = 0;
             ptr ++;
-            ptr = ecs_parse_whitespace(ptr);
+            ptr = ecs_parse_ws(ptr);
         } else {
             ptr = flecs_parse_arguments(
                 world, name, expr, (ptr - expr), ptr, token, &term);
@@ -760,7 +715,7 @@ parse_pair:
     }
 
     if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
             NULL, &term.first, TOK_PAREN_CLOSE);
         if (!ptr) {
@@ -789,7 +744,7 @@ parse_pair_predicate:
         goto error;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     if (flecs_valid_token_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
@@ -797,7 +752,7 @@ parse_pair_predicate:
         }
 
         if (ptr[0] == TOK_COLON) {
-            ptr = ecs_parse_whitespace(ptr + 1);
+            ptr = ecs_parse_ws(ptr + 1);
             ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                 NULL, &term.second, TOK_PAREN_CLOSE);
             if (!ptr) {
@@ -840,7 +795,7 @@ parse_pair_object:
         term.id_flags = ECS_PAIR;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     goto parse_done;
 
 parse_done:
@@ -900,7 +855,7 @@ char* ecs_parse_term(
         }
     }
     
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     if (!ptr[0]) {
         *term = (ecs_term_t){0};
         return (char*)ptr;
@@ -1020,7 +975,7 @@ char* ecs_parse_term(
         term->id_flags = 0;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     return (char*)ptr;
 error:

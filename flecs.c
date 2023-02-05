@@ -19546,6 +19546,43 @@ typedef struct {
 } plecs_state_t;
 
 static
+bool plecs_is_newline_comment(
+    const char *ptr)
+{
+    if (ptr[0] == '/' && ptr[1] == '/') {
+        return true;
+    }
+    return false;
+}
+
+static
+const char* plecs_parse_fluff(
+    const char *ptr)
+{
+    do {
+        /* Skip whitespaces before checking for a comment */
+        ptr = ecs_parse_ws(ptr);
+
+        /* Newline comment, skip until newline character */
+        if (plecs_is_newline_comment(ptr)) {
+            ptr += 2;
+
+            while (ptr[0] && ptr[0] != TOK_NEWLINE) {
+                ptr ++;
+            }
+        }
+
+        /* If a newline character is found, skip it */
+        if (ptr[0] == TOK_NEWLINE) {
+            ptr ++;
+        }
+
+    } while (isspace(ptr[0]) || plecs_is_newline_comment(ptr));
+
+    return ptr;
+}
+
+static
 ecs_entity_t plecs_lookup(
     const ecs_world_t *world,
     const char *path,
@@ -19714,7 +19751,7 @@ static
 char* plecs_trim_annot(
     char *annot)
 {
-    annot = (char*)ecs_parse_whitespace(annot);
+    annot = (char*)ecs_parse_ws(annot);
     int32_t len = ecs_os_strlen(annot) - 1;
     while (isspace(annot[len]) && (len > 0)) {
         annot[len] = '\0';
@@ -20369,7 +20406,7 @@ const char* plecs_parse_annotation(
         state->annot[state->annot_count] = annot;
         state->annot_count ++;
 
-        ptr = ecs_parse_fluff(ptr, NULL);
+        ptr = plecs_parse_fluff(ptr);
     } while (ptr[0] == '@');
 
     return ptr;
@@ -20409,20 +20446,20 @@ const char* plecs_parse_stmt(
 
     plecs_clear_annotations(state);
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     char ch = ptr[0];
 
     if (!ch) {
         goto done;
     } else if (ch == '{') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         goto scope_open;
     } else if (ch == '}') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         goto scope_close;
     } else if (ch == '-') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         state->assign_to = ecs_get_scope(world);
         state->scope_assign_stmt = true;
         goto assign_stmt;
@@ -20458,7 +20495,7 @@ term_expr:
         goto error;
     }
 
-    const char *tptr = ecs_parse_whitespace(ptr);
+    const char *tptr = ecs_parse_ws(ptr);
     if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
             ecs_parser_error(name, expr, (ptr - expr), 
@@ -20468,23 +20505,23 @@ term_expr:
         goto decl_stmt;
     }
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     if (!state->using_stmt) {
         if (ptr[0] == ':' && ptr[1] == '-') {
-            ptr = ecs_parse_fluff(ptr + 2, NULL);
+            ptr = plecs_parse_fluff(ptr + 2);
             goto assign_stmt;
         } else if (ptr[0] == ':') {
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
+            ptr = plecs_parse_fluff(ptr + 1);
             goto inherit_stmt;
         } else if (ptr[0] == ',') {
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
+            ptr = plecs_parse_fluff(ptr + 1);
             goto term_expr;
         } else if (ptr[0] == '{') {
             if (state->assign_stmt) {
                 goto assign_expr;
             } else {
-                ptr = ecs_parse_fluff(ptr + 1, NULL);
+                ptr = plecs_parse_fluff(ptr + 1);
                 goto scope_open;
             }
         }
@@ -20508,7 +20545,7 @@ assign_stmt:
     ptr = plecs_parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     /* Assignment without a preceding component */
     if (ptr[0] == '{') {
@@ -20522,7 +20559,7 @@ assign_expr:
     ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
     if (ptr[0] == ',') {
         ptr ++;
         goto term_expr;
@@ -30287,7 +30324,7 @@ const char* flecs_binary_expr_parse(
             return NULL;
         }
 
-        ptr = ecs_parse_fluff(ptr, NULL);
+        ptr = ecs_parse_ws_eol(ptr);
 
         ecs_value_t rvalue = {0};
         const char *rptr = flecs_parse_expr(world, stack, ptr, &rvalue, op, desc);
@@ -30344,13 +30381,13 @@ const char* flecs_parse_expr(
     const char *expr = desc ? desc->expr : NULL;
     expr = expr ? expr : ptr;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = ecs_parse_ws_eol(ptr);
 
     /* Check for postfix operators */
     ecs_expr_oper_t unary_op = EcsExprOperUnknown;
     if (ptr[0] == '-' && !isdigit(ptr[1])) {
         unary_op = EcsMin;
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = ecs_parse_ws_eol(ptr + 1);
     }
 
     /* Initialize storage and cursor. If expression starts with a '(' storage
@@ -30402,7 +30439,7 @@ const char* flecs_parse_expr(
                     "missing closing parenthesis");
                 return NULL;
             }
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
+            ptr = ecs_parse_ws_eol(ptr + 1);
             is_lvalue = true;
 
         } else if (!ecs_os_strcmp(token, "{")) {
@@ -30522,7 +30559,7 @@ const char* flecs_parse_expr(
             is_lvalue = true;
 
         } else {
-            const char *tptr = ecs_parse_fluff(ptr, NULL);
+            const char *tptr = ecs_parse_ws_eol(ptr);
             for (; ptr != tptr; ptr ++) {
                 if (ptr[0] == '\n') {
                     newline = true;
@@ -30615,7 +30652,7 @@ const char* flecs_parse_expr(
             break;
         }
 
-        ptr = ecs_parse_fluff(ptr, NULL);
+        ptr = ecs_parse_ws_eol(ptr);
     }
 
     if (!value->ptr) {
@@ -35664,7 +35701,7 @@ const char* ecs_ptr_from_json(
     const char *name = NULL;
     const char *expr = NULL;
 
-    json = ecs_parse_fluff(json, NULL);
+    json = ecs_parse_ws_eol(json);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, ptr);
     if (cur.valid == false) {
@@ -35678,7 +35715,7 @@ const char* ecs_ptr_from_json(
 
     while ((json = ecs_parse_expr_token(name, expr, json, token))) {
 
-        json = ecs_parse_fluff(json, NULL);
+        json = ecs_parse_ws_eol(json);
 
         if (!ecs_os_strcmp(token, "{")) {
             depth ++;
@@ -35837,7 +35874,7 @@ const char* flecs_parse_json_path(
 
     *out = result;
 
-    return ecs_parse_fluff(ptr, NULL);
+    return ecs_parse_ws_eol(ptr);
 error:
     return NULL;
 }
@@ -35858,21 +35895,21 @@ const char* ecs_entity_from_json(
 
     const char *ids = NULL, *values = NULL;
 
-    json = ecs_parse_fluff(json, NULL);
+    json = ecs_parse_ws_eol(json);
     if (json[0] != '{') {
         ecs_parser_error(name, expr, json - expr, "expected '{'");
         goto error;
     }
 
     /* Find start of ids array */
-    json = ecs_parse_fluff(json + 1, NULL);
+    json = ecs_parse_ws_eol(json + 1);
     if (json[0] == '}') {
         /* End of expression */
         return &json[1];
     }
 
     if (!ecs_os_strncmp(json, "\"path\"", 6)) {
-        json = ecs_parse_fluff(json + 6, NULL);
+        json = ecs_parse_ws_eol(json + 6);
         if (json[0] != ':') {
             ecs_parser_error(name, expr, json - expr, "expected ':'");
             goto error;
@@ -35895,7 +35932,7 @@ const char* ecs_entity_from_json(
             goto error;
         }
 
-        json = ecs_parse_fluff(json + 1, NULL);
+        json = ecs_parse_ws_eol(json + 1);
     }
 
     if (ecs_os_strncmp(json, "\"ids\"", 5)) {
@@ -35903,19 +35940,19 @@ const char* ecs_entity_from_json(
         goto error;
     }
 
-    json = ecs_parse_fluff(json + 5, NULL);
+    json = ecs_parse_ws_eol(json + 5);
     if (json[0] != ':') {
         ecs_parser_error(name, expr, json - expr, "expected ':'");
         goto error;
     }
 
-    json = ecs_parse_fluff(json + 1, NULL);
+    json = ecs_parse_ws_eol(json + 1);
     if (json[0] != '[') {
         ecs_parser_error(name, expr, json - expr, "expected '['");
         goto error;
     }
 
-    ids = ecs_parse_fluff(json + 1, NULL);
+    ids = ecs_parse_ws_eol(json + 1);
 
     /* Find start of values array */
     const char *vptr = json;
@@ -35939,7 +35976,7 @@ const char* ecs_entity_from_json(
         goto error;
     }
 
-    json = ecs_parse_fluff(vptr + 1, NULL);
+    json = ecs_parse_ws_eol(vptr + 1);
     if (json[0] == '}') {
         values = NULL;
     } else {
@@ -35948,19 +35985,19 @@ const char* ecs_entity_from_json(
             goto error;
         }
 
-        json = ecs_parse_fluff(json + 1, NULL);
+        json = ecs_parse_ws_eol(json + 1);
         if (ecs_os_strncmp(json, "\"values\"", 8)) {
             ecs_parser_error(name, expr, json - expr, "expected '\"values\"'");
             goto error;
         }
 
-        json = ecs_parse_fluff(json + 8, NULL);
+        json = ecs_parse_ws_eol(json + 8);
         if (json[0] != ':') {
             ecs_parser_error(name, expr, json - expr, "expected ':'");
             goto error;
         }
 
-        json = ecs_parse_fluff(json + 1, NULL);
+        json = ecs_parse_ws_eol(json + 1);
         if (json[0] != '[') {
             ecs_parser_error(name, expr, json - expr, "expected '['");
             goto error;
@@ -35986,7 +36023,7 @@ const char* ecs_entity_from_json(
             }
             break;
         } else if (ids[0] == '[') {
-            ids = ecs_parse_fluff(ids + 1, NULL);
+            ids = ecs_parse_ws_eol(ids + 1);
             ids = flecs_parse_json_path(world, name, expr, ids, token, &first);
             if (!ids) {
                 goto error;
@@ -35994,7 +36031,7 @@ const char* ecs_entity_from_json(
 
             if (ids[0] == ',') {
                 /* Id is a pair*/
-                ids = ecs_parse_fluff(ids + 1, NULL);
+                ids = ecs_parse_ws_eol(ids + 1);
                 ids = flecs_parse_json_path(world, name, expr, ids, token, 
                     &second);
                 if (!ids) {
@@ -36009,10 +36046,10 @@ const char* ecs_entity_from_json(
                 goto error;
             }
 
-            ids = ecs_parse_fluff(ids + 1, NULL);
+            ids = ecs_parse_ws_eol(ids + 1);
             if (ids[0] == ',') {
                 /* Next id */
-                ids = ecs_parse_fluff(ids + 1, NULL);
+                ids = ecs_parse_ws_eol(ids + 1);
             } else if (ids[0] != ']') {
                 /* End of ids array */
                 ecs_parser_error(name, expr, ids - expr, "expected ',' or ']'");
@@ -36064,7 +36101,7 @@ const char* ecs_entity_from_json(
         }
     }
 
-    json = ecs_parse_fluff(json + 1, NULL);
+    json = ecs_parse_ws_eol(json + 1);
     if (json[0] != '}') {
         ecs_parser_error(name, expr, json - expr, "expected '}'");
     }
@@ -38803,18 +38840,17 @@ const ecs_id_t ECS_NOT =                                           (1ull << 58);
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
 
-const char* ecs_parse_eol_and_whitespace(
+const char* ecs_parse_ws_eol(
     const char *ptr)
 {
     while (isspace(*ptr)) {
         ptr ++;
     }
 
-    return ptr;    
+    return ptr;
 }
 
-/** Skip spaces when parsing signature */
-const char* ecs_parse_whitespace(
+const char* ecs_parse_ws(
     const char *ptr)
 {
     while ((*ptr != '\n') && isspace(*ptr)) {
@@ -38851,50 +38887,6 @@ const char* ecs_parse_digit(
 
     tptr[0] = '\0';
     
-    return ptr;
-}
-
-static
-bool flecs_is_newline_comment(
-    const char *ptr)
-{
-    if (ptr[0] == '/' && ptr[1] == '/') {
-        return true;
-    }
-    return false;
-}
-
-const char* ecs_parse_fluff(
-    const char *ptr,
-    char **last_comment)
-{
-    const char *last_comment_start = NULL;
-
-    do {
-        /* Skip whitespaces before checking for a comment */
-        ptr = ecs_parse_whitespace(ptr);
-
-        /* Newline comment, skip until newline character */
-        if (flecs_is_newline_comment(ptr)) {
-            ptr += 2;
-            last_comment_start = ptr;
-
-            while (ptr[0] && ptr[0] != TOK_NEWLINE) {
-                ptr ++;
-            }
-        }
-
-        /* If a newline character is found, skip it */
-        if (ptr[0] == TOK_NEWLINE) {
-            ptr ++;
-        }
-
-    } while (isspace(ptr[0]) || flecs_is_newline_comment(ptr));
-
-    if (last_comment) {
-        *last_comment = (char*)last_comment_start;
-    }
-
     return ptr;
 }
 
@@ -38964,7 +38956,7 @@ const char* ecs_parse_token(
 {
     int64_t column = ptr - expr;
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     char *tptr = token_out, ch = ptr[0];
 
     if (!flecs_valid_token_start_char(ch)) {
@@ -39020,7 +39012,7 @@ const char* ecs_parse_token(
         return NULL;
     }
 
-    const char *next_ptr = ecs_parse_whitespace(ptr);
+    const char *next_ptr = ecs_parse_ws(ptr);
     if (next_ptr[0] == ':' && next_ptr != ptr) {
         /* Whitespace between token and : is significant */
         ptr = next_ptr - 1;
@@ -39128,7 +39120,7 @@ const char* flecs_parse_annotation(
         *inout_kind_out = EcsInOutNone;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
         ecs_parser_error(name, sig, column, "expected ]");
@@ -39211,7 +39203,7 @@ const char* flecs_parse_term_flags(
                 }
 
                 if (ptr[0] == TOK_AND) {
-                    ptr = ecs_parse_whitespace(ptr + 1);
+                    ptr = ecs_parse_ws(ptr + 1);
                 } else if (ptr[0] != TOK_PAREN_CLOSE) {
                     ecs_parser_error(name, expr, column, 
                         "expected ',' or ')'");
@@ -39224,7 +39216,7 @@ const char* flecs_parse_term_flags(
                     ptr[0]);
                 return NULL;                
             } else {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
@@ -39296,7 +39288,7 @@ const char* flecs_parse_arguments(
                     return NULL;
                 }
 
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                     NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
@@ -39324,12 +39316,12 @@ const char* flecs_parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
 
                 term->id_flags = ECS_PAIR;
 
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
-                ptr = ecs_parse_whitespace(ptr + 1);
+                ptr = ecs_parse_ws(ptr + 1);
                 break;
 
             } else {
@@ -39378,7 +39370,7 @@ const char* flecs_parse_term(
     char token[ECS_MAX_TOKEN_SIZE] = {0};
     ecs_term_t term = { .move = true /* parser never owns resources */ };
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_BRACKET_OPEN) {
@@ -39386,12 +39378,12 @@ const char* flecs_parse_term(
         if (!ptr) {
             goto error;
         }
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
     }
 
     if (flecs_valid_operator_char(ptr[0])) {
         term.oper = flecs_parse_operator(ptr[0]);
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
     }
 
     /* If next token is the start of an identifier, it could be either a type
@@ -39432,7 +39424,7 @@ flecs_parse_role:
         goto error;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     /* If next token is the source token, this is an empty source */
     if (flecs_valid_token_start_char(ptr[0])) {
@@ -39461,14 +39453,14 @@ parse_predicate:
 
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
             &term.first, TOK_COLON);
         if (!ptr) {
             goto error;
         }
 
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
 
         if (ptr[0] == TOK_AND || !ptr[0]) {
             goto parse_done;
@@ -39480,9 +39472,9 @@ parse_predicate:
             goto error;
         }
 
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
     } else {
-        ptr = ecs_parse_whitespace(ptr);
+        ptr = ecs_parse_ws(ptr);
     }
 
     if (ptr[0] == TOK_PAREN_OPEN) {
@@ -39491,7 +39483,7 @@ parse_predicate:
             term.src.flags = EcsIsEntity;
             term.src.id = 0;
             ptr ++;
-            ptr = ecs_parse_whitespace(ptr);
+            ptr = ecs_parse_ws(ptr);
         } else {
             ptr = flecs_parse_arguments(
                 world, name, expr, (ptr - expr), ptr, token, &term);
@@ -39509,7 +39501,7 @@ parse_pair:
     }
 
     if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_whitespace(ptr + 1);
+        ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
             NULL, &term.first, TOK_PAREN_CLOSE);
         if (!ptr) {
@@ -39538,7 +39530,7 @@ parse_pair_predicate:
         goto error;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     if (flecs_valid_token_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
@@ -39546,7 +39538,7 @@ parse_pair_predicate:
         }
 
         if (ptr[0] == TOK_COLON) {
-            ptr = ecs_parse_whitespace(ptr + 1);
+            ptr = ecs_parse_ws(ptr + 1);
             ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                 NULL, &term.second, TOK_PAREN_CLOSE);
             if (!ptr) {
@@ -39589,7 +39581,7 @@ parse_pair_object:
         term.id_flags = ECS_PAIR;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
     goto parse_done;
 
 parse_done:
@@ -39649,7 +39641,7 @@ char* ecs_parse_term(
         }
     }
     
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     if (!ptr[0]) {
         *term = (ecs_term_t){0};
         return (char*)ptr;
@@ -39769,7 +39761,7 @@ char* ecs_parse_term(
         term->id_flags = 0;
     }
 
-    ptr = ecs_parse_whitespace(ptr);
+    ptr = ecs_parse_ws(ptr);
 
     return (char*)ptr;
 error:
@@ -39875,7 +39867,7 @@ const char* parse_c_digit(
     int64_t *value_out)
 {
     char token[24];
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     ptr = ecs_parse_digit(ptr, token);
     if (!ptr) {
         goto error;
@@ -39883,7 +39875,7 @@ const char* parse_c_digit(
 
     *value_out = strtol(token, NULL, 0);
 
-    return ecs_parse_eol_and_whitespace(ptr);
+    return ecs_parse_ws_eol(ptr);
 error:
     return NULL;
 }
@@ -39906,7 +39898,7 @@ const char* parse_c_identifier(
     }
 
     /* Ignore whitespaces */
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     ch = *ptr;
 
     if (!isalpha(ch) && (ch != '_')) {
@@ -39954,7 +39946,7 @@ const char * meta_open_scope(
     meta_parse_ctx_t *ctx)    
 {
     /* Skip initial whitespaces */
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
 
     /* Is this the start of the type definition? */
     if (ctx->desc == ptr) {
@@ -39964,7 +39956,7 @@ const char * meta_open_scope(
         }
 
         ptr ++;
-        ptr = ecs_parse_eol_and_whitespace(ptr);
+        ptr = ecs_parse_ws_eol(ptr);
     }
 
     /* Is this the end of the type definition? */
@@ -39975,7 +39967,7 @@ const char * meta_open_scope(
 
     /* Is this the end of the type definition? */
     if (*ptr == '}') {
-        ptr = ecs_parse_eol_and_whitespace(ptr + 1);
+        ptr = ecs_parse_ws_eol(ptr + 1);
         if (*ptr) {
             ecs_meta_error(ctx, ptr, 
                 "stray characters after struct definition");
@@ -40008,7 +40000,7 @@ const char* meta_parse_constant(
         return NULL;
     }
 
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     if (!ptr) {
         return NULL;
     }
@@ -40045,7 +40037,7 @@ const char* meta_parse_type(
     token->is_ptr = false;
     token->is_const = false;
 
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
 
     /* Parse token, expect type identifier or ECS_PROPERTY */
     ptr = parse_c_identifier(ptr, token->type, token->params, ctx);
@@ -40068,7 +40060,7 @@ const char* meta_parse_type(
     }
 
     /* Check if type is a pointer */
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     if (*ptr == '*') {
         token->is_ptr = true;
         ptr ++;
@@ -40108,7 +40100,7 @@ const char* meta_parse_member(
     }
 
     /* Skip whitespace between member and [ or ; */
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
 
     /* Check if this is an array */
     char *array_start = strchr(token->name, '[');
@@ -40163,7 +40155,7 @@ int meta_parse_desc(
     token->is_key_value = false;
     token->is_fixed_size = false;
 
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
     if (*ptr != '(' && *ptr != '<') {
         ecs_meta_error(ctx, ptr, 
             "expected '(' at start of collection definition");
@@ -40178,11 +40170,11 @@ int meta_parse_desc(
         goto error;
     }
 
-    ptr = ecs_parse_eol_and_whitespace(ptr);
+    ptr = ecs_parse_ws_eol(ptr);
 
     /* If next token is a ',' the first type was a key type */
     if (*ptr == ',') {
-        ptr = ecs_parse_eol_and_whitespace(ptr + 1);
+        ptr = ecs_parse_ws_eol(ptr + 1);
         
         if (isdigit(*ptr)) {
             int64_t value;
@@ -40198,7 +40190,7 @@ int meta_parse_desc(
 
             /* Parse element type */
             ptr = meta_parse_type(ptr, &token->type, ctx);
-            ptr = ecs_parse_eol_and_whitespace(ptr);
+            ptr = ecs_parse_ws_eol(ptr);
 
             token->is_key_value = true;
         }

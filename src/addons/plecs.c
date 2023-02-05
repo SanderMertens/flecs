@@ -59,6 +59,43 @@ typedef struct {
 } plecs_state_t;
 
 static
+bool plecs_is_newline_comment(
+    const char *ptr)
+{
+    if (ptr[0] == '/' && ptr[1] == '/') {
+        return true;
+    }
+    return false;
+}
+
+static
+const char* plecs_parse_fluff(
+    const char *ptr)
+{
+    do {
+        /* Skip whitespaces before checking for a comment */
+        ptr = ecs_parse_ws(ptr);
+
+        /* Newline comment, skip until newline character */
+        if (plecs_is_newline_comment(ptr)) {
+            ptr += 2;
+
+            while (ptr[0] && ptr[0] != TOK_NEWLINE) {
+                ptr ++;
+            }
+        }
+
+        /* If a newline character is found, skip it */
+        if (ptr[0] == TOK_NEWLINE) {
+            ptr ++;
+        }
+
+    } while (isspace(ptr[0]) || plecs_is_newline_comment(ptr));
+
+    return ptr;
+}
+
+static
 ecs_entity_t plecs_lookup(
     const ecs_world_t *world,
     const char *path,
@@ -227,7 +264,7 @@ static
 char* plecs_trim_annot(
     char *annot)
 {
-    annot = (char*)ecs_parse_whitespace(annot);
+    annot = (char*)ecs_parse_ws(annot);
     int32_t len = ecs_os_strlen(annot) - 1;
     while (isspace(annot[len]) && (len > 0)) {
         annot[len] = '\0';
@@ -882,7 +919,7 @@ const char* plecs_parse_annotation(
         state->annot[state->annot_count] = annot;
         state->annot_count ++;
 
-        ptr = ecs_parse_fluff(ptr, NULL);
+        ptr = plecs_parse_fluff(ptr);
     } while (ptr[0] == '@');
 
     return ptr;
@@ -922,20 +959,20 @@ const char* plecs_parse_stmt(
 
     plecs_clear_annotations(state);
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     char ch = ptr[0];
 
     if (!ch) {
         goto done;
     } else if (ch == '{') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         goto scope_open;
     } else if (ch == '}') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         goto scope_close;
     } else if (ch == '-') {
-        ptr = ecs_parse_fluff(ptr + 1, NULL);
+        ptr = plecs_parse_fluff(ptr + 1);
         state->assign_to = ecs_get_scope(world);
         state->scope_assign_stmt = true;
         goto assign_stmt;
@@ -971,7 +1008,7 @@ term_expr:
         goto error;
     }
 
-    const char *tptr = ecs_parse_whitespace(ptr);
+    const char *tptr = ecs_parse_ws(ptr);
     if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
             ecs_parser_error(name, expr, (ptr - expr), 
@@ -981,23 +1018,23 @@ term_expr:
         goto decl_stmt;
     }
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     if (!state->using_stmt) {
         if (ptr[0] == ':' && ptr[1] == '-') {
-            ptr = ecs_parse_fluff(ptr + 2, NULL);
+            ptr = plecs_parse_fluff(ptr + 2);
             goto assign_stmt;
         } else if (ptr[0] == ':') {
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
+            ptr = plecs_parse_fluff(ptr + 1);
             goto inherit_stmt;
         } else if (ptr[0] == ',') {
-            ptr = ecs_parse_fluff(ptr + 1, NULL);
+            ptr = plecs_parse_fluff(ptr + 1);
             goto term_expr;
         } else if (ptr[0] == '{') {
             if (state->assign_stmt) {
                 goto assign_expr;
             } else {
-                ptr = ecs_parse_fluff(ptr + 1, NULL);
+                ptr = plecs_parse_fluff(ptr + 1);
                 goto scope_open;
             }
         }
@@ -1021,7 +1058,7 @@ assign_stmt:
     ptr = plecs_parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
 
     /* Assignment without a preceding component */
     if (ptr[0] == '{') {
@@ -1035,7 +1072,7 @@ assign_expr:
     ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr, NULL);
+    ptr = plecs_parse_fluff(ptr);
     if (ptr[0] == ',') {
         ptr ++;
         goto term_expr;

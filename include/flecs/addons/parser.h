@@ -30,7 +30,7 @@ extern "C" {
  * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
-const char* ecs_parse_whitespace(
+const char* ecs_parse_ws(
     const char *ptr);
 
 /** Skip whitespace and newline characters.
@@ -40,7 +40,7 @@ const char* ecs_parse_whitespace(
  * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
-const char* ecs_parse_eol_and_whitespace(
+const char* ecs_parse_ws_eol(
     const char *ptr);
 
 /** Parse digit.
@@ -55,17 +55,6 @@ FLECS_API
 const char* ecs_parse_digit(
     const char *ptr,
     char *token);
-
-/** Skip whitespaces and comments.
- * This function skips whitespace characters and comments (single line, //).
- * 
- * @param ptr pointer to (potential) whitespaces/comments to skip.
- * @return pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_fluff(
-    const char *ptr,
-    char **last_comment);
 
 /** Parse a single token.
  * This function can be used as simple tokenizer by other parsers.
