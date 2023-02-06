@@ -1553,6 +1553,71 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world() {
     ecs_fini(world);
 }
 
+static void invalid_ctor(void *ptr, int count, const ecs_type_info_t *ti) {
+    test_assert(false);
+}
+
+void ComponentLifecycle_emplace_grow_w_existing_component() {
+    test_quarantine("5 Feb 2023");
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = invalid_ctor,
+        .copy = ecs_copy(Position),
+        .move = ecs_move(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Velocity);
+    ecs_entity_t e2 = ecs_new(world, Velocity);
+    ecs_entity_t e3 = ecs_new(world, Velocity);
+
+    {
+        Position *p = ecs_emplace(world, e1, Position);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Position *p = ecs_emplace(world, e2, Position);
+        p->x = 30;
+        p->y = 40;
+    }
+    {
+        Position *p = ecs_emplace(world, e3, Position);
+        p->x = 50;
+        p->y = 60;
+    }
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e3, Position));
+
+    {
+        const Position *p = ecs_get(world, e1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Position *p = ecs_get(world, e2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+    {
+        const Position *p = ecs_get(world, e3, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+    }
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_dtor_on_fini() {
     ecs_world_t *world = ecs_mini();
 

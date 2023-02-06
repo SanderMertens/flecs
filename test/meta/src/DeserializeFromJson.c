@@ -3995,3 +3995,113 @@ void DeserializeFromJson_ser_deser_3_entities_after_delete_with() {
 
     ecs_fini(world);
 }
+
+typedef struct StringType {
+    char *value;
+} StringType;
+
+static int StringType_ctor_invoked = 0;
+
+ECS_CTOR(StringType, ptr, {
+    ptr->value = NULL;
+    StringType_ctor_invoked ++;
+})
+
+ECS_DTOR(StringType, ptr, {
+    ecs_os_free(ptr->value);
+})
+
+ECS_MOVE(StringType, dst, src, {
+    if (dst->value) {
+        ecs_os_free(dst->value);
+    }
+    dst->value = src->value;
+    src->value = NULL;
+})
+
+ECS_COPY(StringType, dst, src, {
+    if (dst->value) {
+        ecs_os_free(dst->value);
+    }
+    dst->value = ecs_os_strdup(src->value);
+})
+
+void DeserializeFromJson_ser_deser_w_hooks() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StringType);
+    ecs_struct(world, {
+        .entity = ecs_id(StringType),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_set_hooks(world, StringType, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(StringType),
+        .move = ecs_move(StringType),
+        .copy = ecs_copy(StringType)
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, StringType, {"foo"});
+    ecs_entity_t e2 = ecs_set(world, 0, StringType, {"bar"});
+    ecs_entity_t e3 = ecs_set(world, 0, StringType, {"hello"});
+    ecs_entity_t e4 = ecs_set(world, 0, StringType, {"world"});
+
+    ecs_set_name(world, e1, "e1");
+    ecs_set_name(world, e2, "e2");
+    ecs_set_name(world, e3, "e3");
+    ecs_set_name(world, e4, "e4");
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_remove(world, e1, StringType);
+    ecs_set(world, e2, StringType, { NULL });
+    ecs_set(world, e3, StringType, { "zoo" });
+    ecs_delete(world, e4);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    test_assert(ecs_lookup_fullpath(world, "e1") == e1);
+    test_assert(ecs_lookup_fullpath(world, "e2") == e2);
+    test_assert(ecs_lookup_fullpath(world, "e3") == e3);
+    e4 = ecs_lookup_fullpath(world, "e4");
+    test_assert(e4 != 0);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
+
+    test_assert(ecs_has(world, e1, StringType));
+    test_assert(ecs_has(world, e2, StringType));
+    test_assert(ecs_has(world, e3, StringType));
+    test_assert(ecs_has(world, e4, StringType));
+
+    {
+        const StringType *st = ecs_get(world, e1, StringType);
+        test_assert(st != NULL);
+        test_str(st->value, "foo");
+    }
+    {
+        const StringType *st = ecs_get(world, e2, StringType);
+        test_assert(st != NULL);
+        test_str(st->value, "bar");
+    }
+    {
+        const StringType *st = ecs_get(world, e3, StringType);
+        test_assert(st != NULL);
+        test_str(st->value, "hello");
+    }
+    {
+        const StringType *st = ecs_get(world, e4, StringType);
+        test_assert(st != NULL);
+        test_str(st->value, "world");
+    }
+
+    ecs_fini(world);
+}

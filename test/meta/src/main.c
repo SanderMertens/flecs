@@ -530,6 +530,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities_2_restored(void);
 void DeserializeFromJson_ser_deser_on_set_3_entities_1_restored(void);
 void DeserializeFromJson_ser_deser_3_entities_after_remove_all(void);
 void DeserializeFromJson_ser_deser_3_entities_after_delete_with(void);
+void DeserializeFromJson_ser_deser_w_hooks(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -2848,6 +2849,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_3_entities_after_delete_with",
         DeserializeFromJson_ser_deser_3_entities_after_delete_with
+    },
+    {
+        "ser_deser_w_hooks",
+        DeserializeFromJson_ser_deser_w_hooks
     }
 };
 
@@ -4082,7 +4087,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        100,
+        101,
         DeserializeFromJson_testcases
     },
     {

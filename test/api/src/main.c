@@ -815,6 +815,7 @@ void ComponentLifecycle_on_add_w_emplace_existing(void);
 void ComponentLifecycle_on_add_w_emplace_defer(void);
 void ComponentLifecycle_merge_async_stage_w_emplace(void);
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void);
+void ComponentLifecycle_emplace_grow_w_existing_component(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
@@ -5458,6 +5459,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "merge_async_stage_w_emplace_to_deferred_world",
         ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world
+    },
+    {
+        "emplace_grow_w_existing_component",
+        ComponentLifecycle_emplace_grow_w_existing_component
     },
     {
         "dtor_on_fini",
@@ -11714,7 +11719,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        77,
+        78,
         ComponentLifecycle_testcases
     },
     {

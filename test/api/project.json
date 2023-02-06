@@ -866,6 +866,7 @@
                 "on_add_w_emplace_defer",
                 "merge_async_stage_w_emplace",
                 "merge_async_stage_w_emplace_to_deferred_world",
+                "emplace_grow_w_existing_component",
                 "dtor_on_fini",
                 "valid_type_in_dtor_on_fini",
                 "valid_other_type_of_entity_in_dtor_on_fini",
