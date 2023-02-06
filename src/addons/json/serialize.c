@@ -1067,6 +1067,28 @@ void flecs_json_serialize_iter_ids(
 }
 
 static
+void flecs_json_serialize_id_str(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_appendch(buf, '"');
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_first(world, id);
+        ecs_strbuf_appendch(buf, '(');
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        ecs_get_path_w_sep_buf(
+            world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+    }
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
 void flecs_json_serialize_type_info(
     const ecs_world_t *world,
     const ecs_iter_t *it, 
@@ -1084,15 +1106,11 @@ void flecs_json_serialize_type_info(
         flecs_json_next(buf);
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
-            ecs_strbuf_appendch(buf, '"');
-            ecs_id_str_buf(world, typeid, buf);
-            ecs_strbuf_appendch(buf, '"');
+            flecs_json_serialize_id_str(world, typeid, buf);
             ecs_strbuf_appendch(buf, ':');
             ecs_type_info_to_json_buf(world, typeid, buf);
         } else {
-            ecs_strbuf_appendch(buf, '"');
-            ecs_id_str_buf(world, it->terms[i].id, buf);
-            ecs_strbuf_appendch(buf, '"');
+            flecs_json_serialize_id_str(world, it->terms[i].id, buf);
             ecs_strbuf_appendlit(buf, ":0");
         }
     }
