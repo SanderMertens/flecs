@@ -11536,6 +11536,12 @@ extern "C" {
 typedef struct ecs_from_json_desc_t {
     const char *name; /* Name of expression (used for logging) */
     const char *expr; /* Full expression (used for logging) */
+
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*, 
+        const char *value, 
+        void *ctx);
+    void *lookup_ctx;
 } ecs_from_json_desc_t;
 
 /** Parse JSON string into value.
@@ -11745,6 +11751,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entities;        /**< Serialize entities (for This terms) */
     bool serialize_entity_labels;   /**< Serialize doc name for entities */
     bool serialize_entity_ids;      /**< Serialize numerical ids for entities */
+    bool serialize_entity_names;    /**< Serialize names (not paths) for entities */
     bool serialize_variable_labels; /**< Serialize doc name for variables */
     bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
     bool serialize_colors;          /**< Serialize doc color for entities */
@@ -11763,6 +11770,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_entities =        true,  \
     .serialize_entity_labels =   false, \
     .serialize_entity_ids =      false, \
+    .serialize_entity_names =    false, \
     .serialize_variable_labels = false, \
     .serialize_variable_ids =    false, \
     .serialize_colors =          false, \

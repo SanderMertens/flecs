@@ -2179,7 +2179,7 @@ void SerializeToJson_serialize_iterator_1_comps_empty() {
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_assert(json != NULL);
-    test_str(json, "{\"ids\":[\"Position\"], \"results\":[]}");
+    test_str(json, "{\"ids\":[[\"Position\"]], \"results\":[]}");
 
     ecs_os_free(json);
 
@@ -2211,9 +2211,9 @@ void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\"], "
+        "\"ids\":[[\"Position\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\"], "
+            "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2267,9 +2267,9 @@ void SerializeToJson_serialize_iterator_2_comps_2_ents_same_table() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Mass\"], "
+        "\"ids\":[[\"Position\"], [\"Mass\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Mass\"], "
+            "\"ids\":[[\"Position\"], [\"Mass\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2307,9 +2307,9 @@ void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"MyTag\"], "
+        "\"ids\":[[\"MyTag\"]], "
         "\"results\":[{"
-            "\"ids\":[\"MyTag\"], "
+            "\"ids\":[[\"MyTag\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2353,9 +2353,9 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"MyTag\"], "
+        "\"ids\":[[\"Position\"], [\"MyTag\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"MyTag\"], "
+            "\"ids\":[[\"Position\"], [\"MyTag\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2413,9 +2413,9 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"TagA\"], "
+        "\"ids\":[[\"Position\"], [\"TagA\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"TagA\"], "
+            "\"ids\":[[\"Position\"], [\"TagA\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2426,7 +2426,7 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
                 "{\"x\":30, \"y\":40}"
             "], 0]"
         "}, {"
-            "\"ids\":[\"Position\", \"TagA\"], "
+            "\"ids\":[[\"Position\"], [\"TagA\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2482,9 +2482,9 @@ void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Mass\"], "
+        "\"ids\":[[\"Position\"], [\"Mass\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Mass\"], "
+            "\"ids\":[[\"Position\"], [\"Mass\"]], "
             "\"sources\":[0, \"Base\"], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2523,9 +2523,9 @@ void SerializeToJson_serialize_iterator_w_pair_wildcard() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"(Rel,*)\"], "
+        "\"ids\":[[\"Rel\",\"*\"]], "
         "\"results\":[{"
-            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"ids\":[[\"Rel\",\"ObjA\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2533,7 +2533,7 @@ void SerializeToJson_serialize_iterator_w_pair_wildcard() {
             "], "
             "\"values\":[0]"
         "}, {"
-            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2570,10 +2570,10 @@ void SerializeToJson_serialize_iterator_w_var() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"(Rel,*)\"], "
+        "\"ids\":[[\"Rel\",\"*\"]], "
         "\"vars\":[\"X\"], "
         "\"results\":[{"
-            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"ids\":[[\"Rel\",\"ObjA\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjA\"], "
             "\"is_set\":[true], "
@@ -2582,7 +2582,7 @@ void SerializeToJson_serialize_iterator_w_var() {
             "], "
             "\"values\":[0]"
         "}, {"
-            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjB\"], "
             "\"is_set\":[true], "
@@ -2629,10 +2629,10 @@ void SerializeToJson_serialize_iterator_w_2_vars() {
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
     "{"
-        "\"ids\":[\"(RelX,*)\", \"(RelY,*)\"], "
+        "\"ids\":[[\"RelX\",\"*\"], [\"RelY\",\"*\"]], "
         "\"vars\":[\"X\", \"Y\"], "
         "\"results\":[{"
-            "\"ids\":[\"(RelX,ObjA)\", \"(RelY,ObjC)\"], "
+            "\"ids\":[[\"RelX\",\"ObjA\"], [\"RelY\",\"ObjC\"]], "
             "\"sources\":[0, 0], "
             "\"vars\":[\"ObjA\", \"ObjC\"], "
             "\"is_set\":[true, true], "
@@ -2641,7 +2641,7 @@ void SerializeToJson_serialize_iterator_w_2_vars() {
             "], "
             "\"values\":[0, 0]"
         "}, {"
-            "\"ids\":[\"(RelX,ObjB)\", \"(RelY,ObjD)\"], "
+            "\"ids\":[[\"RelX\",\"ObjB\"], [\"RelY\",\"ObjD\"]], "
             "\"sources\":[0, 0], "
             "\"vars\":[\"ObjB\", \"ObjD\"], "
             "\"is_set\":[true, true], "
@@ -2679,10 +2679,10 @@ void SerializeToJson_serialize_iterator_type_info_1_tags() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"TagA\"], "
+        "\"ids\":[[\"TagA\"]], "
         "\"type_info\":{\"TagA\":0}, "
         "\"results\":[{"
-            "\"ids\":[\"TagA\"], "
+            "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2720,10 +2720,10 @@ void SerializeToJson_serialize_iterator_type_info_2_tags() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"TagA\", \"TagB\"], "
+        "\"ids\":[[\"TagA\"], [\"TagB\"]], "
         "\"type_info\":{\"TagA\":0, \"TagB\":0}, "
         "\"results\":[{"
-            "\"ids\":[\"TagA\", \"TagB\"], "
+            "\"ids\":[[\"TagA\"], [\"TagB\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2758,10 +2758,10 @@ void SerializeToJson_serialize_iterator_type_info_1_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\"], "
+        "\"ids\":[[\"Position\"]], "
         "\"type_info\":{\"Position\":0}, "
         "\"results\":[{"
-            "\"ids\":[\"Position\"], "
+            "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2800,10 +2800,10 @@ void SerializeToJson_serialize_iterator_type_info_2_components() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"type_info\":{\"Position\":0, \"Velocity\":0}, "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2848,10 +2848,10 @@ void SerializeToJson_serialize_iterator_type_info_1_struct() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\"], "
+        "\"ids\":[[\"Position\"]], "
         "\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
         "\"results\":[{"
-            "\"ids\":[\"Position\"], "
+            "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -2903,13 +2903,13 @@ void SerializeToJson_serialize_iterator_type_info_1_component_1_struct() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"type_info\":{"
             "\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, "
             "\"Velocity\":0"
         "}, "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -2969,13 +2969,13 @@ void SerializeToJson_serialize_iterator_type_info_2_structs() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"type_info\":{"
             "\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, "
             "\"Velocity\":{\"x\":[\"int\"], \"y\":[\"int\"]}"
         "}, "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3032,14 +3032,14 @@ void SerializeToJson_serialize_iterator_type_info_w_unit() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"T\"], "
+        "\"ids\":[[\"T\"]], "
         "\"type_info\":{"
             "\"T\":{\"value\":[\"int\", {"
                 "\"unit\":\"celsius\", \"symbol\":\"°\"}]"
             "}"
         "}, "
         "\"results\":[{"
-            "\"ids\":[\"T\"], "
+            "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3099,14 +3099,14 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_quantity() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"T\"], "
+        "\"ids\":[[\"T\"]], "
         "\"type_info\":{"
             "\"T\":{\"value\":[\"int\", {"
                 "\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]"
             "}"
         "}, "
         "\"results\":[{"
-            "\"ids\":[\"T\"], "
+            "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3173,14 +3173,14 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"T\"], "
+        "\"ids\":[[\"T\"]], "
         "\"type_info\":{"
             "\"T\":{\"value\":[\"int\", {"
                 "\"unit\":\"meters_per_second\", \"symbol\":\"m/s\"}]"
             "}"
         "}, "
         "\"results\":[{"
-            "\"ids\":[\"T\"], "
+            "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3219,9 +3219,9 @@ void SerializeToJson_serialize_iterator_w_entity_label() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Tag\"], "
+        "\"ids\":[[\"Tag\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Tag\"], "
+            "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3232,7 +3232,7 @@ void SerializeToJson_serialize_iterator_w_entity_label() {
             "], "
             "\"values\":[0]"
         "}, {"
-            "\"ids\":[\"Tag\"], "
+            "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3277,10 +3277,10 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"(Rel,*)\"], "
+        "\"ids\":[[\"Rel\",\"*\"]], "
         "\"vars\":[\"X\"], "
         "\"results\":[{"
-            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"ids\":[[\"Rel\",\"ObjA\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjA\"], "
             "\"var_labels\":[\"Object A\"], "
@@ -3290,7 +3290,7 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
             "], "
             "\"values\":[0]"
         "}, {"
-            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjB\"], "
             "\"var_labels\":[\"ObjB\"], "
@@ -3330,9 +3330,9 @@ void SerializeToJson_serialize_iterator_color() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Tag\"], "
+        "\"ids\":[[\"Tag\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Tag\"], "
+            "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3343,7 +3343,7 @@ void SerializeToJson_serialize_iterator_color() {
             "], "
             "\"values\":[0]"
         "}, {"
-            "\"ids\":[\"Tag\"], "
+            "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3392,10 +3392,10 @@ void SerializeToJson_serialize_iterator_w_var_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"(Rel,*)\", \"T\"], "
+        "\"ids\":[[\"Rel\",\"*\"], [\"T\"]], "
         "\"vars\":[\"X\"], "
         "\"results\":[{"
-            "\"ids\":[\"(Rel,Obj)\", \"T\"], "
+            "\"ids\":[[\"Rel\",\"Obj\"], [\"T\"]], "
             "\"sources\":[0, \"Obj\"], "
             "\"vars\":[\"Obj\"], "
             "\"is_set\":[true, true], "
@@ -3433,9 +3433,9 @@ void SerializeToJson_serialize_iterator_w_optional_tag() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"TagA\", \"TagB\"], "
+        "\"ids\":[[\"TagA\"], [\"TagB\"]], "
         "\"results\":[{"
-            "\"ids\":[\"TagA\", \"TagB\"], "
+            "\"ids\":[[\"TagA\"], [\"TagB\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3443,7 +3443,7 @@ void SerializeToJson_serialize_iterator_w_optional_tag() {
             "], "
             "\"values\":[0, 0]"
         "}, {"
-            "\"ids\":[\"TagA\", \"TagB\"], "
+            "\"ids\":[[\"TagA\"], [\"TagB\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, false], "
             "\"entities\":["
@@ -3478,9 +3478,9 @@ void SerializeToJson_serialize_iterator_w_optional_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3488,7 +3488,7 @@ void SerializeToJson_serialize_iterator_w_optional_component() {
             "], "
             "\"values\":[0, 0]"
         "}, {"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, false], "
             "\"entities\":["
@@ -3536,9 +3536,9 @@ void SerializeToJson_serialize_iterator_w_optional_reflected_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3546,7 +3546,7 @@ void SerializeToJson_serialize_iterator_w_optional_reflected_component() {
             "], "
             "\"values\":[[{\"x\":10, \"y\":20}], [{\"x\":1, \"y\":2}]]"
         "}, {"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, false], "
             "\"entities\":["
@@ -3577,9 +3577,9 @@ void SerializeToJson_serialize_iterator_w_inout_filter_tag() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"TagA\"], "
+        "\"ids\":[[\"TagA\"]], "
         "\"results\":[{"
-            "\"ids\":[\"TagA\"], "
+            "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3620,9 +3620,9 @@ void SerializeToJson_serialize_iterator_w_inout_filter_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3671,9 +3671,9 @@ void SerializeToJson_serialize_iterator_w_inout_filter_reflected_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3704,9 +3704,9 @@ void SerializeToJson_serialize_iterator_w_inout_out_tag() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"TagA\"], "
+        "\"ids\":[[\"TagA\"]], "
         "\"results\":[{"
-            "\"ids\":[\"TagA\"], "
+            "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
             "\"is_set\":[true], "
             "\"entities\":["
@@ -3747,9 +3747,9 @@ void SerializeToJson_serialize_iterator_w_inout_out_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3798,9 +3798,9 @@ void SerializeToJson_serialize_iterator_w_inout_out_reflected_component() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\", \"Velocity\"], "
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
         "\"results\":[{"
-            "\"ids\":[\"Position\", \"Velocity\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, true], "
             "\"entities\":["
@@ -3840,10 +3840,10 @@ void SerializeToJson_serialize_iterator_component_from_var() {
 
     test_str(json, 
     "{"
-        "\"ids\":[\"Position\"], "
+        "\"ids\":[[\"Position\"]], "
         "\"vars\":[\"E\"], "
         "\"results\":[{"
-            "\"ids\":[\"Position\"], "
+            "\"ids\":[[\"Position\"]], "
             "\"sources\":[\"e1\"], "
             "\"vars\":[\"e1\"], "
             "\"is_set\":[true], "
@@ -3879,7 +3879,7 @@ void SerializeToJson_serialize_iterator_ids() {
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
-        "{\"ids\":[\"Tag\"], \"results\":[{\"entities\":[\"e\"], \"entity_ids\":[%u]}]}",
+        "{\"ids\":[[\"Tag\"]], \"results\":[{\"entities\":[\"e\"], \"entity_ids\":[%u]}]}",
         (uint32_t)e);
     test_str(json, expect);
 
@@ -3913,7 +3913,7 @@ void SerializeToJson_serialize_iterator_ids_2_entities() {
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
-        "{\"ids\":[\"Tag\"], \"results\":[{\"entities\":[\"e1\", \"e2\"], \"entity_ids\":[%u, %u]}]}",
+        "{\"ids\":[[\"Tag\"]], \"results\":[{\"entities\":[\"e1\", \"e2\"], \"entity_ids\":[%u, %u]}]}",
         (uint32_t)e1, (uint32_t)e2);
     test_str(json, expect);
 
@@ -3944,7 +3944,7 @@ void SerializeToJson_serialize_iterator_variable_ids() {
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
-        "{\"ids\":[\"Tag\"], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e\"], \"var_ids\":[%u]}]}",
+        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e\"], \"var_ids\":[%u]}]}",
         (uint32_t)e);
     test_str(json, expect);
 
@@ -3980,7 +3980,7 @@ void SerializeToJson_serialize_iterator_variable_ids_2_entities() {
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
-        "{\"ids\":[\"Tag\"], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e1\"], \"var_ids\":[%u]}, {\"vars\":[\"e2\"], \"var_ids\":[%u]}]}",
+        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e1\"], \"var_ids\":[%u]}, {\"vars\":[\"e2\"], \"var_ids\":[%u]}]}",
         (uint32_t)e1, (uint32_t)e2);
     test_str(json, expect);
 
@@ -4240,25 +4240,26 @@ void SerializeToJson_serialize_table() {
             { .id = ecs_id(Position) }
         }
     });
-    
+
     ecs_iter_t it = ecs_filter_iter(world, f);
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_table = true;
+    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 
     test_str(json, "{\"results\":["
         "{"
-            "\"ids\":[\"Position\", \"Foo\", \"(Identifier,Name)\"], "
+            "\"ids\":[[\"Position\"], [\"Foo\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
             "\"entities\":[\"e1\"], "
             "\"values\":[[{\"x\":10, \"y\":20}], 0, 0]"
         "}, {"
-            "\"ids\":[\"Position\", \"Velocity\", \"Foo\", \"Bar\", \"(Identifier,Name)\"], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"], [\"Foo\"], [\"Bar\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
             "\"entities\":[\"e2\"], "
             "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0, 0]"
         "}, {"
-            "\"ids\":[\"Position\", \"Mass\", \"(Identifier,Name)\"], "
+            "\"ids\":[[\"Position\"], [\"Mass\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
             "\"entities\":[\"e3\"], "
             "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}], 0]}]"
         "}");

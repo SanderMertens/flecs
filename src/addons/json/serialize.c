@@ -1084,11 +1084,15 @@ void flecs_json_serialize_type_info(
         flecs_json_next(buf);
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
-            flecs_json_serialize_id(world, typeid, buf);
+            ecs_strbuf_appendch(buf, '"');
+            ecs_id_str_buf(world, typeid, buf);
+            ecs_strbuf_appendch(buf, '"');
             ecs_strbuf_appendch(buf, ':');
             ecs_type_info_to_json_buf(world, typeid, buf);
         } else {
-            flecs_json_serialize_id(world, it->terms[i].id, buf);
+            ecs_strbuf_appendch(buf, '"');
+            ecs_id_str_buf(world, it->terms[i].id, buf);
+            ecs_strbuf_appendch(buf, '"');
             ecs_strbuf_appendlit(buf, ":0");
         }
     }
@@ -1363,6 +1367,33 @@ void flecs_json_serialize_iter_result_entity_ids(
 }
 
 static
+void flecs_json_serialize_iter_result_entity_names(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    EcsIdentifier *names = ecs_table_get_id(it->world, it->table, 
+        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0);
+    if (!names) {
+        return;
+    }
+
+    flecs_json_memberl(buf, "entity_names");
+    flecs_json_array_push(buf);
+
+    for (int i = 0; i < count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_string(buf, names[i].value);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
 void flecs_json_serialize_iter_result_colors(
     const ecs_world_t *world,
     const ecs_iter_t *it,
@@ -1564,13 +1595,18 @@ void flecs_json_serialize_iter_result(
     }
 
     /* Write entity ids for current result (for queries with This terms) */
-    if (!desc || desc->serialize_entities || desc->serialize_table) {
+    if (!desc || desc->serialize_entities) {
         flecs_json_serialize_iter_result_entities(world, it, buf);
     }
 
     /* Write labels for entities */
     if (desc && desc->serialize_entity_labels) {
         flecs_json_serialize_iter_result_entity_labels(world, it, buf);
+    }
+
+    /* Write ids for entities */
+    if (desc && desc->serialize_entity_names) {
+        flecs_json_serialize_iter_result_entity_names(it, buf);
     }
 
     /* Write ids for entities */
@@ -1701,7 +1737,11 @@ int ecs_world_to_json_buf(
     }
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_iter_to_json_desc_t json_desc = { .serialize_table = true };
+    ecs_iter_to_json_desc_t json_desc = { 
+        .serialize_table = true,
+        .serialize_entities = true
+    };
+
     return ecs_iter_to_json_buf(world, &it, buf_out, &json_desc);
 }
 
