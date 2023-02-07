@@ -1,5 +1,67 @@
 #include <cpp_api.h>
 
+flecs::opaque<std::string> std_string_support(flecs::world&) {
+    flecs::opaque<std::string> ts;
+
+    // Let reflection framework know what kind of type this is
+    ts.as_type = flecs::String;
+
+    // Forward std::string value to (JSON/...) serializer
+    ts.serialize = [](const flecs::serializer *s, const std::string *data) {
+        const char *value = data->c_str();
+        return s->value(flecs::String, &value);
+    };
+
+    // Serialize string into std::string
+    ts.assign_string = [](std::string *data, const char *value) {
+        *data = value;
+    };
+
+    return ts;
+}
+
+template <typename T> 
+flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) {
+    flecs::opaque<std::vector<T>, T> ts;
+
+    // Let reflection framework know what kind of type this is
+    ts.as_type = world.vector<T>();
+
+    // Forward elements of std::vector value to (JSON/...) serializer
+    ts.serialize = [](const flecs::serializer *s, const std::vector<T> *data) {
+        for (const auto& el : *data) {
+            s->value(el);
+        }
+        return 0;
+    };
+
+    // Return vector count
+    ts.count = [](std::vector<T> *data) {
+        printf("count = %p, size = %d\n", data);
+        return data->size();
+    };
+
+    // Ensure element exists, return
+    ts.ensure_element = [](std::vector<T> *data, size_t elem) {
+        printf("data = %p, elem = %d\n", data, elem);
+        if (data->size() <= elem) {
+            data->resize(elem + 1);
+        }
+
+        return &data->data()[elem];
+    };
+
+    // Resize contents of vector
+    ts.resize = [](std::vector<T> *data, size_t size) {
+        printf("resize = %p, size = %d\n", data, size);
+        data->resize(size);
+        printf("resize done\n");
+    };
+
+    return ts;
+}
+
+
 void Meta_struct() {
     flecs::world ecs;
 
@@ -690,4 +752,78 @@ void Meta_entity_from_json_w_values() {
     const Position *p = e.get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
+}
+
+void Meta_ser_deser_std_string() {
+    flecs::world world;
+
+    world.component<std::string>()
+        .opaque(std_string_support);
+
+    std::string v = "hello world";
+    test_str(world.to_json(&v).c_str(), "\"hello world\"");
+
+    world.from_json(&v, "\"foo bar\"");
+    test_str(world.to_json(&v).c_str(), "\"foo bar\"");
+}
+
+void Meta_ser_deser_std_vector_int() {
+    flecs::world world;
+
+    world.component<std::vector<int>>()
+        .opaque(std_vector_support<int>);
+
+    std::vector<int> v = {1, 2, 3};
+    test_str(world.to_json(&v).c_str(), "[1, 2, 3]");
+
+    world.from_json(&v, "[4, 5, 6]");
+    test_str(world.to_json(&v).c_str(), "[4, 5, 6]");
+}
+
+void Meta_ser_deser_std_vector_std_string() {
+    flecs::world world;
+
+    world.component<std::string>()
+        .opaque(std_string_support);
+
+
+    world.component<std::vector<std::string>>()
+        .opaque(std_vector_support<std::string>);
+
+    std::vector<std::string> v = {"foo", "bar"};
+    test_str(world.to_json(&v).c_str(), "[\"foo\", \"bar\"]");
+
+    world.from_json(&v, "[\"hello\", \"world\"]");
+    test_str(world.to_json(&v).c_str(), "[\"hello\", \"world\"]");
+}
+
+struct CppTypes {
+    std::string s;
+    std::vector<std::string> v;
+};
+
+void Meta_ser_deser_type_w_std_string_std_vector_std_string() {
+    flecs::world world;
+
+    world.component<std::string>()
+        .opaque(std_string_support);
+
+    world.component<std::vector<std::string>>()
+        .opaque(std_vector_support<std::string>);
+
+    world.component<CppTypes>()
+        .member<std::string>("s")
+        .member<std::vector<std::string>>("v");
+
+
+    CppTypes v = {"hello", {"world"}};
+
+    test_str(world.to_json(&v).c_str(), "{\"s\":\"hello\", \"v\":[\"world\"]}");
+
+    printf("v.s = %p\n", &v.s);
+    printf("v.v = %p\n", &v.v);
+
+    world.from_json(&v, "{\"s\":\"foo\", \"v\":[\"bar\"]}");
+
+    test_str(world.to_json(&v).c_str(), "{\"s\":\"foo\", \"v\":[\"bar\"]}");
 }

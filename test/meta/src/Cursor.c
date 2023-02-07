@@ -3355,3 +3355,397 @@ void Cursor_opaque_set_char_to_uint() {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    OpaqueStruct foo;
+    OpaqueStruct bar;
+} Struct_w_OpaqueStruct;
+
+void Cursor_struct_w_2_opaque_structs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+    ECS_COMPONENT(world, Struct_w_OpaqueStruct);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = ecs_struct(world, {
+            .members = {
+                {"x", .type = ecs_id(ecs_i32_t)},
+                {"y", .type = ecs_id(ecs_i32_t)}
+            }
+        }),
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_OpaqueStruct),
+        .members = {
+            {"foo", ecs_id(OpaqueStruct)},
+            {"bar", ecs_id(OpaqueStruct)},
+        }
+    });
+
+    Struct_w_OpaqueStruct v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_OpaqueStruct), &v);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_member(&cur, "x"));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_member(&cur, "y"));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_member(&cur, "x"));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(0, ecs_meta_member(&cur, "y"));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.x, 10);
+    test_int(v.foo.y, 20);
+    test_int(v.bar.x, 30);
+    test_int(v.bar.y, 40);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    IntVec foo;
+    IntVec bar;
+} Struct_w_IntVec;
+
+void Cursor_struct_w_2_opaque_vectors() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+    ECS_COMPONENT(world, Struct_w_IntVec);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_IntVec),
+        .members = {
+            {"foo", ecs_id(IntVec)},
+            {"bar", ecs_id(IntVec)},
+        }
+    });
+
+    Struct_w_IntVec v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_IntVec), &v);
+
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.count, 3);
+    test_int(v.foo.array[0], 10);
+    test_int(v.foo.array[1], 20);
+    test_int(v.foo.array[2], 30);
+
+    test_int(v.bar.count, 3);
+    test_int(v.bar.array[0], 40);
+    test_int(v.bar.array[1], 50);
+    test_int(v.bar.array[2], 60);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    OpaqueArray foo;
+    OpaqueArray bar;
+} Struct_w_OpaqueArray;
+
+void Cursor_struct_w_2_opaque_arrays() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueArray);
+    ECS_COMPONENT(world, Struct_w_OpaqueArray);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueArray),
+        .type.as_type = ecs_array(world, { .type = ecs_id(ecs_i32_t), .count = 3 }),
+        .type.ensure_element = OpaqueArray_ensure
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_OpaqueArray),
+        .members = {
+            {"foo", ecs_id(OpaqueArray)},
+            {"bar", ecs_id(OpaqueArray)},
+        }
+    });
+
+    Struct_w_OpaqueArray v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_OpaqueArray), &v);
+
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.el_1, 10);
+    test_int(v.foo.el_2, 20);
+    test_int(v.foo.el_3, 30);
+
+    test_int(v.bar.el_1, 40);
+    test_int(v.bar.el_2, 50);
+    test_int(v.bar.el_3, 60);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    OpaqueStruct foo;
+    OpaqueStruct bar;
+    OpaqueStruct zoo;
+} Struct_w_3_OpaqueStructs;
+
+void Cursor_struct_w_3_opaque_structs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+    ECS_COMPONENT(world, Struct_w_3_OpaqueStructs);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = ecs_struct(world, {
+            .members = {
+                {"x", .type = ecs_id(ecs_i32_t)},
+                {"y", .type = ecs_id(ecs_i32_t)}
+            }
+        }),
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_3_OpaqueStructs),
+        .members = {
+            {"foo", ecs_id(OpaqueStruct)},
+            {"bar", ecs_id(OpaqueStruct)},
+            {"zoo", ecs_id(OpaqueStruct)},
+        }
+    });
+
+    Struct_w_3_OpaqueStructs v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_3_OpaqueStructs), &v);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_member(&cur, "x"));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_member(&cur, "y"));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_member(&cur, "x"));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(0, ecs_meta_member(&cur, "y"));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "zoo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_member(&cur, "x"));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_member(&cur, "y"));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.x, 10);
+    test_int(v.foo.y, 20);
+    test_int(v.bar.x, 30);
+    test_int(v.bar.y, 40);
+    test_int(v.zoo.x, 50);
+    test_int(v.zoo.y, 60);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    IntVec foo;
+    IntVec bar;
+    IntVec zoo;
+} Struct_w_3_IntVecs;
+
+void Cursor_struct_w_3_opaque_vectors() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+    ECS_COMPONENT(world, Struct_w_3_IntVecs);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_3_IntVecs),
+        .members = {
+            {"foo", ecs_id(IntVec)},
+            {"bar", ecs_id(IntVec)},
+            {"zoo", ecs_id(IntVec)},
+        }
+    });
+
+    Struct_w_3_IntVecs v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_3_IntVecs), &v);
+
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "zoo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 70));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 80));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 90));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.count, 3);
+    test_int(v.foo.array[0], 10);
+    test_int(v.foo.array[1], 20);
+    test_int(v.foo.array[2], 30);
+
+    test_int(v.bar.count, 3);
+    test_int(v.bar.array[0], 40);
+    test_int(v.bar.array[1], 50);
+    test_int(v.bar.array[2], 60);
+
+    test_int(v.zoo.count, 3);
+    test_int(v.zoo.array[0], 70);
+    test_int(v.zoo.array[1], 80);
+    test_int(v.zoo.array[2], 90);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    OpaqueArray foo;
+    OpaqueArray bar;
+    OpaqueArray zoo;
+} Struct_w_3_OpaqueArrays;
+
+void Cursor_struct_w_3_opaque_arrays() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueArray);
+    ECS_COMPONENT(world, Struct_w_3_OpaqueArrays);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueArray),
+        .type.as_type = ecs_array(world, { .type = ecs_id(ecs_i32_t), .count = 3 }),
+        .type.ensure_element = OpaqueArray_ensure
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_3_OpaqueArrays),
+        .members = {
+            {"foo", ecs_id(OpaqueArray)},
+            {"bar", ecs_id(OpaqueArray)},
+            {"zoo", ecs_id(OpaqueArray)},
+        }
+    });
+
+    Struct_w_3_OpaqueArrays v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Struct_w_3_OpaqueArrays), &v);
+
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "zoo"));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 70));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 80));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 90));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(v.foo.el_1, 10);
+    test_int(v.foo.el_2, 20);
+    test_int(v.foo.el_3, 30);
+
+    test_int(v.bar.el_1, 40);
+    test_int(v.bar.el_2, 50);
+    test_int(v.bar.el_3, 60);
+
+    test_int(v.zoo.el_1, 70);
+    test_int(v.zoo.el_2, 80);
+    test_int(v.zoo.el_3, 90);
+
+    ecs_fini(world);
+}

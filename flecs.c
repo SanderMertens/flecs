@@ -27688,19 +27688,21 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
                 return NULL;
             }
             scope->is_empty_scope = false;
+
             void *opaque_ptr = opaque->ensure_element(
-                scope[-1].ptr, flecs_ito(size_t, scope->elem_cur));
+                scope->ptr, flecs_ito(size_t, scope->elem_cur));
             ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
                 "ensure_element returned NULL");
             return opaque_ptr;
         } else if (op->name) {
-            if (!scope->ptr) {
+            if (!opaque->ensure_member) {
                 char *str = ecs_get_fullpath(world, scope->type);
-                ecs_err("no member selected from opaque type %s", str);
+                ecs_err("missing ensure_member for opaque type %s", str);
                 ecs_os_free(str);
                 return NULL;
             }
-            return scope->ptr;
+            ecs_assert(scope->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            return opaque->ensure_member(scope->ptr, op->name);
         } else {
             ecs_err("invalid operation for opaque type");
             return NULL;
@@ -27852,7 +27854,8 @@ int ecs_meta_member(
             ecs_err("missing ensure_member for opaque type %s", str);
             ecs_os_free(str);
         }
-        scope->ptr = opaque->ensure_member(scope[-1].ptr, name);
+
+        // scope->ptr = opaque->ensure_member(scope[-1].ptr, name);
     }
 
     return 0;
@@ -28087,6 +28090,7 @@ int ecs_meta_push(
             break;
         }
 
+        next_scope->ptr = ptr;
         next_scope->opaque = type_ptr;
         break;
     }
@@ -28159,11 +28163,11 @@ int ecs_meta_pop(
                         /* If no values were serialized for scope, resize 
                         * collection to 0 elements. */
                         ecs_assert(!scope->elem_cur, ECS_INTERNAL_ERROR, NULL);
-                        opaque->resize(scope[-1].ptr, 0);
+                        opaque->resize(scope->ptr, 0);
                     } else {
                         /* Otherwise resize collection to the index of the last
                         * deserialized element + 1 */
-                        opaque->resize(scope[-1].ptr, 
+                        opaque->resize(scope->ptr, 
                             flecs_ito(size_t, scope->elem_cur + 1));
                     }
                 }

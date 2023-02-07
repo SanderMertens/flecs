@@ -375,7 +375,13 @@
                 "opaque_set_int_to_char",
                 "opaque_set_uint_to_char",
                 "opaque_set_char_to_int",
-                "opaque_set_char_to_uint"
+                "opaque_set_char_to_uint",
+                "struct_w_2_opaque_structs",
+                "struct_w_2_opaque_vectors",
+                "struct_w_2_opaque_arrays",
+                "struct_w_3_opaque_structs",
+                "struct_w_3_opaque_vectors",
+                "struct_w_3_opaque_arrays"
             ]
         }, {
             "id": "DeserializeFromExpr",
