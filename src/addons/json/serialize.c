@@ -240,6 +240,7 @@ int json_ser_custom_type(
     const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
     ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
     ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION, NULL);
 
     const EcsMetaType *pt = ecs_get(world, ct->as_type, EcsMetaType);
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);

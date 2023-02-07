@@ -16406,6 +16406,80 @@ using serialize_t = ecs_meta_serialize_t;
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
+/** Type safe interface for opaque types */
+template <typename T>
+struct opaque {
+    /** Type that describes the type kind/structure of the opaque type */
+    flecs::id_t as_type = 0;
+
+    /** Serialize function */
+    flecs::serialize<T> serialize = nullptr;
+
+    /* Deserializer interface */
+
+    /** Assign bool value */
+    void (*assign_bool)(
+        T *dst, 
+        bool value) = nullptr;
+
+    /** Assign char value */
+    void (*assign_char)(
+        T *dst, 
+        char value) = nullptr;
+
+    /** Assign int value */
+    void (*assign_int)(
+        T *dst, 
+        int64_t value) = nullptr;
+
+    /** Assign unsigned int value */
+    void (*assign_uint)(
+        T *dst, 
+        uint64_t value) = nullptr;
+
+    /** Assign float value */
+    void (*assign_float)(
+        T *dst, 
+        double value) = nullptr;
+
+    /** Assign string value */
+    void (*assign_string)(
+        T *dst, 
+        const char *value) = nullptr;
+
+    /** Assign entity value */
+    void (*assign_entity)(
+        T *dst,
+        ecs_entity_t entity) = nullptr;
+
+    /** Assign null value */
+    void (*assign_null)(
+        T *dst) = nullptr;
+
+    /** Clear collection elements */
+    void (*clear)(
+        T *dst) = nullptr;
+
+    /** Ensure & get collection element */
+    void* (*ensure_element)(
+        T *dst, 
+        int32_t elem) = nullptr;
+
+    /** Ensure & get element */
+    void* (*ensure_member)(
+        T *dst, 
+        const char *member) = nullptr;
+
+    /** Return number of elements */
+    int32_t (*count)(
+        T *dst) = nullptr;
+    
+    /** Resize to number of elements */
+    void (*resize)(
+        T *dst, 
+        int32_t count) = nullptr;
+};
+
 namespace meta {
 
 /* Type kinds supported by reflection system */
@@ -23662,14 +23736,56 @@ struct component : untyped_component {
 
 #   ifdef FLECS_META
 
-/** Register custom reflection function for component. */
+/** Register custom reflection function for opaque type. */
 component& serialize(flecs::id_t as_type, flecs::serialize<T> ser) {
     ecs_opaque_desc_t desc = {};
 
     /* Safe cast, from a function with a T* arg to a void* arg */
     desc.entity = m_id;
-    desc.type.serialize = reinterpret_cast<flecs::serialize_t>(ser);
-    desc.type.as_type = as_type;
+    desc.type.serialize = 
+        reinterpret_cast<flecs::serialize_t>(ser);desc.type.as_type = as_type;
+    ecs_opaque_init(m_world, &desc);
+    return *this;
+}
+
+/** Register opaque type interface */
+template <typename Func>
+component& opaque(const Func& type_support) {
+    flecs::world world(m_world);
+    flecs::opaque<T> opaque = type_support(world);
+
+    ecs_opaque_desc_t desc = {};
+    desc.entity = m_id;
+    desc.type.as_type = opaque.as_type;
+    desc.type.serialize = 
+        reinterpret_cast<flecs::serialize_t>(opaque.serialize);
+    desc.type.assign_bool = 
+        reinterpret_cast<decltype(desc.type.assign_bool)>(opaque.assign_bool);
+    desc.type.assign_char = 
+        reinterpret_cast<decltype(desc.type.assign_char)>(opaque.assign_char);
+    desc.type.assign_int = 
+        reinterpret_cast<decltype(desc.type.assign_int)>(opaque.assign_int);
+    desc.type.assign_uint = 
+        reinterpret_cast<decltype(desc.type.assign_uint)>(opaque.assign_uint);
+    desc.type.assign_float = 
+        reinterpret_cast<decltype(desc.type.assign_float)>(opaque.assign_float);
+    desc.type.assign_string = 
+        reinterpret_cast<decltype(desc.type.assign_string)>(opaque.assign_string);
+    desc.type.assign_entity = 
+        reinterpret_cast<decltype(desc.type.assign_entity)>(opaque.assign_entity);
+    desc.type.assign_null = 
+        reinterpret_cast<decltype(desc.type.assign_null)>(opaque.assign_null);
+    desc.type.clear = 
+        reinterpret_cast<decltype(desc.type.clear)>(opaque.clear);
+    desc.type.ensure_element = 
+        reinterpret_cast<decltype(desc.type.ensure_element)>(opaque.ensure_element);
+    desc.type.ensure_member = 
+        reinterpret_cast<decltype(desc.type.ensure_member)>(opaque.ensure_member);
+    desc.type.count = 
+        reinterpret_cast<decltype(desc.type.count)>(opaque.count);
+    desc.type.resize = 
+        reinterpret_cast<decltype(desc.type.resize)>(opaque.resize);
+
     ecs_opaque_init(m_world, &desc);
     return *this;
 }

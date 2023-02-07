@@ -84,6 +84,80 @@ using serialize_t = ecs_meta_serialize_t;
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
+/** Type safe interface for opaque types */
+template <typename T>
+struct opaque {
+    /** Type that describes the type kind/structure of the opaque type */
+    flecs::id_t as_type = 0;
+
+    /** Serialize function */
+    flecs::serialize<T> serialize = nullptr;
+
+    /* Deserializer interface */
+
+    /** Assign bool value */
+    void (*assign_bool)(
+        T *dst, 
+        bool value) = nullptr;
+
+    /** Assign char value */
+    void (*assign_char)(
+        T *dst, 
+        char value) = nullptr;
+
+    /** Assign int value */
+    void (*assign_int)(
+        T *dst, 
+        int64_t value) = nullptr;
+
+    /** Assign unsigned int value */
+    void (*assign_uint)(
+        T *dst, 
+        uint64_t value) = nullptr;
+
+    /** Assign float value */
+    void (*assign_float)(
+        T *dst, 
+        double value) = nullptr;
+
+    /** Assign string value */
+    void (*assign_string)(
+        T *dst, 
+        const char *value) = nullptr;
+
+    /** Assign entity value */
+    void (*assign_entity)(
+        T *dst,
+        ecs_entity_t entity) = nullptr;
+
+    /** Assign null value */
+    void (*assign_null)(
+        T *dst) = nullptr;
+
+    /** Clear collection elements */
+    void (*clear)(
+        T *dst) = nullptr;
+
+    /** Ensure & get collection element */
+    void* (*ensure_element)(
+        T *dst, 
+        int32_t elem) = nullptr;
+
+    /** Ensure & get element */
+    void* (*ensure_member)(
+        T *dst, 
+        const char *member) = nullptr;
+
+    /** Return number of elements */
+    int32_t (*count)(
+        T *dst) = nullptr;
+    
+    /** Resize to number of elements */
+    void (*resize)(
+        T *dst, 
+        int32_t count) = nullptr;
+};
+
 namespace meta {
 
 /* Type kinds supported by reflection system */
