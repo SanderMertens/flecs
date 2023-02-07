@@ -396,8 +396,8 @@ void SerializeTypeInfoToJson_custom_primitive_type() {
             .type.size = 4,
             .type.alignment = 4
         }),
-        .as_type = ecs_id(ecs_i32_t),
-        .serialize = DummySerialize
+        .type.as_type = ecs_id(ecs_i32_t),
+        .type.serialize = DummySerialize
     });
 
     char *str = ecs_type_info_to_json(world, ct);
@@ -432,10 +432,10 @@ void SerializeTypeInfoToJson_custom_vector_type() {
             .type.size = 4,
             .type.alignment = 4
         }),
-        .as_type = ecs_vector(world, {
+        .type.as_type = ecs_vector(world, {
             .type = ecs_id(ecs_i32_t)
         }),
-        .serialize = DummySerialize
+        .type.serialize = DummySerialize
     });
 
     char *str = ecs_type_info_to_json(world, ct);
@@ -461,8 +461,8 @@ void SerializeTypeInfoToJson_custom_struct_type() {
             .type.size = 4,
             .type.alignment = 4
         }),
-        .as_type = s,
-        .serialize = DummySerialize
+        .type.as_type = s,
+        .type.serialize = DummySerialize
     });
 
     char *str = ecs_type_info_to_json(world, ct);

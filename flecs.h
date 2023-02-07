@@ -8468,6 +8468,22 @@ int ecs_value_move_ctor(
 #define ecs_component(world, ...)\
     ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
 
+/** Shorthand for creating a component from a type.
+ *
+ * Example:
+ *   ecs_component_t(world, Position);
+ */
+#define ecs_component_t(world, T)\
+    ecs_component_init(world, &(ecs_component_desc_t) { \
+        .entity = ecs_entity(world, { \
+            .name = #T, \
+            .symbol = #T, \
+            .use_low_id = true \
+        }), \
+        .type.size = ECS_SIZEOF(T), \
+        .type.alignment = ECS_ALIGNOF(T) \
+    })
+
 /** Shorthand for creating a filter with ecs_filter_init.
  *
  * Example:
@@ -12537,6 +12553,74 @@ typedef int (*ecs_meta_serialize_t)(
 typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
+
+    /* Deserializer interface 
+     * Only override the callbacks that are valid for the opaque type. If a
+     * deserializer attempts to assign a value type that is not supported by the
+     * interface, a conversion error is thrown.
+     */
+
+    /** Assign bool value */
+    void (*assign_bool)(
+        void *dst, 
+        bool value);
+
+    /** Assign char value */
+    void (*assign_char)(
+        void *dst, 
+        char value);
+
+    /** Assign int value */
+    void (*assign_int)(
+        void *dst, 
+        int64_t value);
+
+    /** Assign unsigned int value */
+    void (*assign_uint)(
+        void *dst, 
+        uint64_t value);
+
+    /** Assign float value */
+    void (*assign_float)(
+        void *dst, 
+        double value);
+
+    /** Assign string value */
+    void (*assign_string)(
+        void *dst, 
+        const char *value);
+
+    /** Assign entity value */
+    void (*assign_entity)(
+        void *dst,
+        ecs_entity_t entity);
+
+    /** Assign null value */
+    void (*assign_null)(
+        void *dst);
+
+    /** Clear collection elements */
+    void (*clear)(
+        void *dst);
+
+    /** Ensure & get collection element */
+    void* (*ensure_element)(
+        void *dst, 
+        int32_t elem);
+
+    /** Ensure & get element */
+    void* (*ensure_member)(
+        void *dst, 
+        const char *member);
+
+    /** Return number of elements */
+    int32_t (*count)(
+        void *dst);
+    
+    /** Resize to number of elements */
+    void (*resize)(
+        void *dst, 
+        int32_t count);
 } EcsOpaque;
 
 
@@ -12635,9 +12719,12 @@ typedef struct ecs_meta_scope_t {
     void *ptr;                /**< Pointer to the value being iterated */
 
     const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
+    const EcsOpaque *opaque;  /**< Opaque type interface */ 
     ecs_vector_t **vector;    /**< Current vector, in case a vector is iterated */
+    ecs_hashmap_t *members;   /**< string -> member index */
     bool is_collection;       /**< Is the scope iterating elements? */
     bool is_inline_array;     /**< Is the scope iterating an inline array? */
+    bool is_empty_scope;      /**< Was scope populated (for collections) */
 } ecs_meta_scope_t;
 
 /** Type that enables iterating/populating a value using reflection data */
@@ -12903,8 +12990,7 @@ ecs_entity_t ecs_struct_init(
 /** Used with ecs_opaque_init. */
 typedef struct ecs_opaque_desc_t {
     ecs_entity_t entity;
-    ecs_entity_t as_type;            /**< Type that describes the serialized output */
-    ecs_meta_serialize_t serialize;  /**< Serialize action */
+    EcsOpaque type;
 } ecs_opaque_desc_t;
 
 /** Create a new opaque type.
@@ -23581,9 +23667,9 @@ component& serialize(flecs::id_t as_type, flecs::serialize<T> ser) {
     ecs_opaque_desc_t desc = {};
 
     /* Safe cast, from a function with a T* arg to a void* arg */
-    desc.serialize = reinterpret_cast<flecs::serialize_t>(ser);
     desc.entity = m_id;
-    desc.as_type = as_type;
+    desc.type.serialize = reinterpret_cast<flecs::serialize_t>(ser);
+    desc.type.as_type = as_type;
     ecs_opaque_init(m_world, &desc);
     return *this;
 }

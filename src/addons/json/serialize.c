@@ -797,7 +797,6 @@ int flecs_json_append_type_hidden(
     return 0;
 }
 
-
 static
 int flecs_json_append_type(
     const ecs_world_t *world, 

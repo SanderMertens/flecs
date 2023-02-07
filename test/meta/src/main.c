@@ -321,6 +321,38 @@ void Cursor_struct_w_2_array_type_struct(void);
 void Cursor_array_move_primitive(void);
 void Cursor_array_move_struct(void);
 void Cursor_array_move_out_of_range(void);
+void Cursor_opaque_set_bool(void);
+void Cursor_opaque_set_char(void);
+void Cursor_opaque_set_int(void);
+void Cursor_opaque_set_uint(void);
+void Cursor_opaque_set_float(void);
+void Cursor_opaque_set_string(void);
+void Cursor_opaque_set_entity(void);
+void Cursor_opaque_set_int_vec(void);
+void Cursor_opaque_set_int_vec_empty(void);
+void Cursor_opaque_set_int_vec_resize_smaller(void);
+void Cursor_opaque_set_int_vec_resize_larger(void);
+void Cursor_opaque_set_int_vec_resize_empty(void);
+void Cursor_opaque_set_opaque_int_vec(void);
+void Cursor_opaque_set_struct(void);
+void Cursor_opaque_set_nested_struct(void);
+void Cursor_opaque_set_nested_opaque_struct(void);
+void Cursor_opaque_set_array(void);
+void Cursor_opaque_set_array_2_of_3_elems(void);
+void Cursor_opaque_set_array_empty(void);
+void Cursor_opaque_set_int_to_uint(void);
+void Cursor_opaque_set_uint_to_int(void);
+void Cursor_opaque_set_float_to_int(void);
+void Cursor_opaque_set_float_to_uint(void);
+void Cursor_opaque_set_int_to_float(void);
+void Cursor_opaque_set_uint_to_float(void);
+void Cursor_opaque_set_int_to_uint(void);
+void Cursor_opaque_set_uint_to_int(void);
+void Cursor_opaque_set_string_to_char(void);
+void Cursor_opaque_set_int_to_char(void);
+void Cursor_opaque_set_uint_to_char(void);
+void Cursor_opaque_set_char_to_int(void);
+void Cursor_opaque_set_char_to_uint(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -816,14 +848,21 @@ void DeserExprOperators_mul_int_shift_left_int(void);
 void DeserExprOperators_add_int_shift_left_int_add_int(void);
 void DeserExprOperators_mul_int_shift_left_int_mul_int(void);
 
-// Testsuite 'CustomTypes'
-void CustomTypes_custom_i32_type_to_json(void);
-void CustomTypes_custom_string_type_to_json(void);
-void CustomTypes_custom_vec_i32_type_to_json(void);
-void CustomTypes_custom_vec_string_type_to_json(void);
-void CustomTypes_custom_struct_1_member(void);
-void CustomTypes_custom_struct_2_members(void);
-void CustomTypes_custom_struct_3_members(void);
+// Testsuite 'OpaqueTypes'
+void OpaqueTypes_ser_i32_type_to_json(void);
+void OpaqueTypes_ser_string_type_to_json(void);
+void OpaqueTypes_ser_vec_i32_type_to_json(void);
+void OpaqueTypes_ser_vec_string_type_to_json(void);
+void OpaqueTypes_ser_struct_1_member(void);
+void OpaqueTypes_ser_struct_2_members(void);
+void OpaqueTypes_ser_struct_3_members(void);
+void OpaqueTypes_deser_bool_from_json(void);
+void OpaqueTypes_deser_char_from_json(void);
+void OpaqueTypes_deser_int_from_json(void);
+void OpaqueTypes_deser_uint_from_json(void);
+void OpaqueTypes_deser_float_from_json(void);
+void OpaqueTypes_deser_string_from_json(void);
+void OpaqueTypes_deser_entity_from_json(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -2028,6 +2067,134 @@ bake_test_case Cursor_testcases[] = {
     {
         "array_move_out_of_range",
         Cursor_array_move_out_of_range
+    },
+    {
+        "opaque_set_bool",
+        Cursor_opaque_set_bool
+    },
+    {
+        "opaque_set_char",
+        Cursor_opaque_set_char
+    },
+    {
+        "opaque_set_int",
+        Cursor_opaque_set_int
+    },
+    {
+        "opaque_set_uint",
+        Cursor_opaque_set_uint
+    },
+    {
+        "opaque_set_float",
+        Cursor_opaque_set_float
+    },
+    {
+        "opaque_set_string",
+        Cursor_opaque_set_string
+    },
+    {
+        "opaque_set_entity",
+        Cursor_opaque_set_entity
+    },
+    {
+        "opaque_set_int_vec",
+        Cursor_opaque_set_int_vec
+    },
+    {
+        "opaque_set_int_vec_empty",
+        Cursor_opaque_set_int_vec_empty
+    },
+    {
+        "opaque_set_int_vec_resize_smaller",
+        Cursor_opaque_set_int_vec_resize_smaller
+    },
+    {
+        "opaque_set_int_vec_resize_larger",
+        Cursor_opaque_set_int_vec_resize_larger
+    },
+    {
+        "opaque_set_int_vec_resize_empty",
+        Cursor_opaque_set_int_vec_resize_empty
+    },
+    {
+        "opaque_set_opaque_int_vec",
+        Cursor_opaque_set_opaque_int_vec
+    },
+    {
+        "opaque_set_struct",
+        Cursor_opaque_set_struct
+    },
+    {
+        "opaque_set_nested_struct",
+        Cursor_opaque_set_nested_struct
+    },
+    {
+        "opaque_set_nested_opaque_struct",
+        Cursor_opaque_set_nested_opaque_struct
+    },
+    {
+        "opaque_set_array",
+        Cursor_opaque_set_array
+    },
+    {
+        "opaque_set_array_2_of_3_elems",
+        Cursor_opaque_set_array_2_of_3_elems
+    },
+    {
+        "opaque_set_array_empty",
+        Cursor_opaque_set_array_empty
+    },
+    {
+        "opaque_set_int_to_uint",
+        Cursor_opaque_set_int_to_uint
+    },
+    {
+        "opaque_set_uint_to_int",
+        Cursor_opaque_set_uint_to_int
+    },
+    {
+        "opaque_set_float_to_int",
+        Cursor_opaque_set_float_to_int
+    },
+    {
+        "opaque_set_float_to_uint",
+        Cursor_opaque_set_float_to_uint
+    },
+    {
+        "opaque_set_int_to_float",
+        Cursor_opaque_set_int_to_float
+    },
+    {
+        "opaque_set_uint_to_float",
+        Cursor_opaque_set_uint_to_float
+    },
+    {
+        "opaque_set_int_to_uint",
+        Cursor_opaque_set_int_to_uint
+    },
+    {
+        "opaque_set_uint_to_int",
+        Cursor_opaque_set_uint_to_int
+    },
+    {
+        "opaque_set_string_to_char",
+        Cursor_opaque_set_string_to_char
+    },
+    {
+        "opaque_set_int_to_char",
+        Cursor_opaque_set_int_to_char
+    },
+    {
+        "opaque_set_uint_to_char",
+        Cursor_opaque_set_uint_to_char
+    },
+    {
+        "opaque_set_char_to_int",
+        Cursor_opaque_set_char_to_int
+    },
+    {
+        "opaque_set_char_to_uint",
+        Cursor_opaque_set_char_to_uint
     }
 };
 
@@ -3967,34 +4134,62 @@ bake_test_case DeserExprOperators_testcases[] = {
     }
 };
 
-bake_test_case CustomTypes_testcases[] = {
+bake_test_case OpaqueTypes_testcases[] = {
     {
-        "custom_i32_type_to_json",
-        CustomTypes_custom_i32_type_to_json
+        "ser_i32_type_to_json",
+        OpaqueTypes_ser_i32_type_to_json
     },
     {
-        "custom_string_type_to_json",
-        CustomTypes_custom_string_type_to_json
+        "ser_string_type_to_json",
+        OpaqueTypes_ser_string_type_to_json
     },
     {
-        "custom_vec_i32_type_to_json",
-        CustomTypes_custom_vec_i32_type_to_json
+        "ser_vec_i32_type_to_json",
+        OpaqueTypes_ser_vec_i32_type_to_json
     },
     {
-        "custom_vec_string_type_to_json",
-        CustomTypes_custom_vec_string_type_to_json
+        "ser_vec_string_type_to_json",
+        OpaqueTypes_ser_vec_string_type_to_json
     },
     {
-        "custom_struct_1_member",
-        CustomTypes_custom_struct_1_member
+        "ser_struct_1_member",
+        OpaqueTypes_ser_struct_1_member
     },
     {
-        "custom_struct_2_members",
-        CustomTypes_custom_struct_2_members
+        "ser_struct_2_members",
+        OpaqueTypes_ser_struct_2_members
     },
     {
-        "custom_struct_3_members",
-        CustomTypes_custom_struct_3_members
+        "ser_struct_3_members",
+        OpaqueTypes_ser_struct_3_members
+    },
+    {
+        "deser_bool_from_json",
+        OpaqueTypes_deser_bool_from_json
+    },
+    {
+        "deser_char_from_json",
+        OpaqueTypes_deser_char_from_json
+    },
+    {
+        "deser_int_from_json",
+        OpaqueTypes_deser_int_from_json
+    },
+    {
+        "deser_uint_from_json",
+        OpaqueTypes_deser_uint_from_json
+    },
+    {
+        "deser_float_from_json",
+        OpaqueTypes_deser_float_from_json
+    },
+    {
+        "deser_string_from_json",
+        OpaqueTypes_deser_string_from_json
+    },
+    {
+        "deser_entity_from_json",
+        OpaqueTypes_deser_entity_from_json
     }
 };
 
@@ -4066,7 +4261,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        75,
+        107,
         Cursor_testcases
     },
     {
@@ -4126,11 +4321,11 @@ static bake_test_suite suites[] = {
         DeserExprOperators_testcases
     },
     {
-        "CustomTypes",
+        "OpaqueTypes",
         NULL,
         NULL,
-        7,
-        CustomTypes_testcases
+        14,
+        OpaqueTypes_testcases
     }
 };
 

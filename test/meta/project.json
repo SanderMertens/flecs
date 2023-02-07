@@ -343,7 +343,39 @@
                 "struct_w_2_array_type_struct",
                 "array_move_primitive",
                 "array_move_struct",
-                "array_move_out_of_range"
+                "array_move_out_of_range",
+                "opaque_set_bool",
+                "opaque_set_char",
+                "opaque_set_int",
+                "opaque_set_uint",
+                "opaque_set_float",
+                "opaque_set_string",
+                "opaque_set_entity",
+                "opaque_set_int_vec",
+                "opaque_set_int_vec_empty",
+                "opaque_set_int_vec_resize_smaller",
+                "opaque_set_int_vec_resize_larger",
+                "opaque_set_int_vec_resize_empty",
+                "opaque_set_opaque_int_vec",
+                "opaque_set_struct",
+                "opaque_set_nested_struct",
+                "opaque_set_nested_opaque_struct",
+                "opaque_set_array",
+                "opaque_set_array_2_of_3_elems",
+                "opaque_set_array_empty",
+                "opaque_set_int_to_uint",
+                "opaque_set_uint_to_int",
+                "opaque_set_float_to_int",
+                "opaque_set_float_to_uint",
+                "opaque_set_int_to_float",
+                "opaque_set_uint_to_float",
+                "opaque_set_int_to_uint",
+                "opaque_set_uint_to_int",
+                "opaque_set_string_to_char",
+                "opaque_set_int_to_char",
+                "opaque_set_uint_to_char",
+                "opaque_set_char_to_int",
+                "opaque_set_char_to_uint"
             ]
         }, {
             "id": "DeserializeFromExpr",
@@ -856,15 +888,22 @@
                 "mul_int_shift_left_int_mul_int"
             ]
         }, {
-            "id": "CustomTypes",
+            "id": "OpaqueTypes",
             "testcases": [
-                "custom_i32_type_to_json",
-                "custom_string_type_to_json",
-                "custom_vec_i32_type_to_json",
-                "custom_vec_string_type_to_json",
-                "custom_struct_1_member",
-                "custom_struct_2_members",
-                "custom_struct_3_members"
+                "ser_i32_type_to_json",
+                "ser_string_type_to_json",
+                "ser_vec_i32_type_to_json",
+                "ser_vec_string_type_to_json",
+                "ser_struct_1_member",
+                "ser_struct_2_members",
+                "ser_struct_3_members",
+                "deser_bool_from_json",
+                "deser_char_from_json",
+                "deser_int_from_json",
+                "deser_uint_from_json",
+                "deser_float_from_json",
+                "deser_string_from_json",
+                "deser_entity_from_json"
             ]
         }]
     }

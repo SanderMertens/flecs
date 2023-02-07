@@ -64,15 +64,15 @@ int StringVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-void CustomTypes_custom_i32_type_to_json() {
+void OpaqueTypes_ser_i32_type_to_json() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Int32);
 
     ecs_opaque(world, {
         .entity = ecs_id(Int32),
-        .as_type = ecs_primitive(world, { .kind = EcsI32 }),
-        .serialize = Int32_serialize
+        .type.as_type = ecs_primitive(world, { .kind = EcsI32 }),
+        .type.serialize = Int32_serialize
     });
 
     Int32 v = 10;
@@ -87,15 +87,15 @@ void CustomTypes_custom_i32_type_to_json() {
     ecs_fini(world);
 }
 
-void CustomTypes_custom_string_type_to_json() {
+void OpaqueTypes_ser_string_type_to_json() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, String);
 
     ecs_opaque(world, {
         .entity = ecs_id(String),
-        .as_type = ecs_primitive(world, { .kind = EcsString }),
-        .serialize = String_serialize
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.serialize = String_serialize
     });
 
     String v = "Hello World";
@@ -110,15 +110,15 @@ void CustomTypes_custom_string_type_to_json() {
     ecs_fini(world);
 }
 
-void CustomTypes_custom_vec_i32_type_to_json() {
+void OpaqueTypes_ser_vec_i32_type_to_json() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
 
     ecs_opaque(world, {
         .entity = ecs_id(IntVec),
-        .as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
-        .serialize = IntVec_serialize
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.serialize = IntVec_serialize
     });
 
     IntVec v = {3, (int[]){1, 2, 3}};
@@ -133,15 +133,15 @@ void CustomTypes_custom_vec_i32_type_to_json() {
     ecs_fini(world);
 }
 
-void CustomTypes_custom_vec_string_type_to_json() {
+void OpaqueTypes_ser_vec_string_type_to_json() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, StringVec);
 
     ecs_opaque(world, {
         .entity = ecs_id(StringVec),
-        .as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
-        .serialize = StringVec_serialize
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .type.serialize = StringVec_serialize
     });
 
     StringVec v = {2, (String[]){"Hello", "World"}};
@@ -231,7 +231,7 @@ int Struct_3_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr)
     return 0;
 }
 
-void CustomTypes_custom_struct_1_member() {
+void OpaqueTypes_ser_struct_1_member() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_1_member);
@@ -244,8 +244,8 @@ void CustomTypes_custom_struct_1_member() {
 
     ecs_opaque(world, {
         .entity = ecs_id(Struct_1_member),
-        .as_type = s,
-        .serialize = Struct_1_member_serialize
+        .type.as_type = s,
+        .type.serialize = Struct_1_member_serialize
     });
 
     Struct_1_member v = { 1 };
@@ -260,7 +260,7 @@ void CustomTypes_custom_struct_1_member() {
     ecs_fini(world);
 }
 
-void CustomTypes_custom_struct_2_members() {
+void OpaqueTypes_ser_struct_2_members() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_2_member);
@@ -274,8 +274,8 @@ void CustomTypes_custom_struct_2_members() {
 
     ecs_opaque(world, {
         .entity = ecs_id(Struct_2_member),
-        .as_type = s,
-        .serialize = Struct_2_member_serialize
+        .type.as_type = s,
+        .type.serialize = Struct_2_member_serialize
     });
 
     Struct_2_member v = { 1, 2 };
@@ -290,7 +290,7 @@ void CustomTypes_custom_struct_2_members() {
     ecs_fini(world);
 }
 
-void CustomTypes_custom_struct_3_members() {
+void OpaqueTypes_ser_struct_3_members() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_3_member);
@@ -305,8 +305,8 @@ void CustomTypes_custom_struct_3_members() {
 
     ecs_opaque(world, {
         .entity = ecs_id(Struct_3_member),
-        .as_type = s,
-        .serialize = Struct_3_member_serialize
+        .type.as_type = s,
+        .type.serialize = Struct_3_member_serialize
     });
 
     Struct_3_member v = { 1, 2, 3 };
@@ -317,6 +317,214 @@ void CustomTypes_custom_struct_3_members() {
     ecs_os_free(json);
 
     test_int(serialize_invoked, 1);
+
+    ecs_fini(world);
+}
+
+typedef const char* const_string_t;
+
+#define OpaqueType(t)\
+    typedef struct { \
+        t value; \
+    } Opaque_##t; \
+    \
+    static void t##_set(void *ptr, t value) { \
+        ((Opaque_##t*)ptr)->value = value; \
+    }
+
+OpaqueType(bool)
+OpaqueType(char)
+OpaqueType(int64_t)
+OpaqueType(uint64_t)
+OpaqueType(double)
+OpaqueType(const_string_t)
+OpaqueType(ecs_entity_t)
+
+void OpaqueTypes_deser_bool_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_bool);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_bool),
+        .type.as_type = ecs_id(ecs_bool_t),
+        .type.assign_bool = bool_set
+    });
+
+    Opaque_bool v = { false };
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_bool), &v, "true", NULL);
+        test_str(r, "");
+        test_bool(v.value, true);
+    }
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_bool), &v, "false", NULL);
+        test_str(r, "");
+        test_bool(v.value, false);
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_char_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_char);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_char),
+        .type.as_type = ecs_id(ecs_char_t),
+        .type.assign_char = char_set
+    });
+
+    Opaque_char v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_char), &v, "\"a\"", NULL);
+        test_str(r, "");
+        test_int(v.value, 'a');
+    }
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_char), &v, "\"b\"", NULL);
+        test_str(r, "");
+        test_int(v.value, 'b');
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_int_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_int64_t);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_int64_t),
+        .type.as_type = ecs_id(ecs_i64_t),
+        .type.assign_int = int64_t_set
+    });
+
+    Opaque_int64_t v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_int64_t), &v, "10", NULL);
+        test_str(r, "");
+        test_int(v.value, 10);
+    }
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_int64_t), &v, "20", NULL);
+        test_str(r, "");
+        test_int(v.value, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_uint_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_uint64_t);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_uint64_t),
+        .type.as_type = ecs_id(ecs_u64_t),
+        .type.assign_uint = uint64_t_set
+    });
+
+    Opaque_uint64_t v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_uint64_t), &v, "10", NULL);
+        test_str(r, "");
+        test_int(v.value, 10);
+    }
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_uint64_t), &v, "20", NULL);
+        test_str(r, "");
+        test_int(v.value, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_float_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_double);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_double),
+        .type.as_type = ecs_id(ecs_f64_t),
+        .type.assign_float = double_set
+    });
+
+    Opaque_double v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_double), &v, "10.5", NULL);
+        test_str(r, "");
+        test_int(v.value, 10); // avoid floating point comparison
+    }
+    {
+        const char *r = ecs_ptr_from_json(world, ecs_id(Opaque_double), &v, "20.5", NULL);
+        test_str(r, "");
+        test_int(v.value, 20); // avoid floating point comparison
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_string_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_const_string_t);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_const_string_t),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_string = const_string_t_set
+    });
+
+    Opaque_const_string_t v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(
+            world, ecs_id(Opaque_const_string_t), &v, "\"Hello World\"", NULL);
+        test_str(r, "");
+        test_str(v.value, "Hello World"); // avoid floating point comparison
+    }
+    {
+        const char *r = ecs_ptr_from_json(
+            world, ecs_id(Opaque_const_string_t), &v, "\"Foo Bar\"", NULL);
+        test_str(r, "");
+        test_str(v.value, "Foo Bar"); // avoid floating point comparison
+    }
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_deser_entity_from_json() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_ecs_entity_t);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_ecs_entity_t),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_entity = ecs_entity_t_set
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    Opaque_ecs_entity_t v = { 0 };
+    {
+        const char *r = ecs_ptr_from_json(
+            world, ecs_id(Opaque_ecs_entity_t), &v, "\"e1\"", NULL);
+        test_str(r, "");
+        test_uint(v.value, e1);
+    }
+    {
+        const char *r = ecs_ptr_from_json(
+            world, ecs_id(Opaque_ecs_entity_t), &v, "\"e2\"", NULL);
+        test_str(r, "");
+        test_uint(v.value, e2);
+    }
 
     ecs_fini(world);
 }
