@@ -17078,6 +17078,7 @@ namespace flecs {
  * @{
  */
 
+using from_json_desc_t = ecs_from_json_desc_t;
 using entity_to_json_desc_t = ecs_entity_to_json_desc_t;
 using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
 
@@ -19380,8 +19381,8 @@ flecs::string to_json() {
  * \ingroup cpp_addons_json
  */
 template <typename T>
-const char* from_json(flecs::entity_t tid, void* value, const char *json) {
-    return ecs_ptr_from_json(m_world, tid, value, json, nullptr);
+const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
+    return ecs_ptr_from_json(m_world, tid, value, json, desc);
 }
 
 /** Deserialize value from JSON.
@@ -19390,9 +19391,18 @@ const char* from_json(flecs::entity_t tid, void* value, const char *json) {
  * \ingroup cpp_addons_json
  */
 template <typename T>
-const char* from_json(T* value, const char *json) {
+const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_ptr_from_json(m_world, _::cpp_type<T>::id(m_world),
-        value, json, NULL);
+        value, json, desc);
+}
+
+/** Deserialize JSON into world.
+ * 
+ * \memberof flecs::world
+ * \ingroup cpp_addons_json
+ */
+const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr) {
+    return ecs_world_from_json(m_world, json, desc);
 }
 
 #   endif
