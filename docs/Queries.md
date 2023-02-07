@@ -2950,11 +2950,11 @@ q.each([](Position& p, Velocity& v) {
 });
 ```
 
-The scenarios described so far are in the sweet spot of cached queries, where their performance is amongst the fastest of any ECS implementation. To build games that perform well however, it also helps to know when cached queries perform badly:
+The scenarios described so far are best case scenarios for cached queries, where their performance is amongst the fastest of any ECS implementation. To build games that perform well however, it also helps to know when cached queries perform badly:
 
-- Cached queries do not perform well when they are repeatedly created and destroyed, or when they are only used a handful of times. The overhead of initializing the query cache and the cost of keeping it up to date would be many times higher than using a filter.
+- Cached queries do not perform well when they are repeatedly created and destroyed in loops, or when they are only used a handful of times. The overhead of initializing the query cache and the cost of keeping it up to date could in those cases be higher than using a filter.
 
-- Large numbers of cached queries (>1000s) can become a bottleneck. When this happens in combination with large table turnover, matching each new table with all queries can become expensive.
+- The cost of table creation/deletion increases with the number of queries in the world. Queries use observers to get notified of new tables. That means that for each table event, the number of queries notified is the number of queries with at least one component in common with the table.
 
 - ECS operations can cause matched tables to no longer match. A simple example is that of a query matching `Position` on a parent entity, where the component is removed from the parent. This triggers cache revalidation, where a query reevaluates its filter to correct invalid entries. When this happens for a large number of queries and tables, this can be time consuming.
 
