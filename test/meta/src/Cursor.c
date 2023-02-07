@@ -2441,16 +2441,16 @@ void Cursor_opaque_set_entity() {
 }
 
 typedef struct {
-    int32_t count;
+    size_t count;
     int32_t *array;
 } IntVec;
 
-static int32_t IntVec_count(void *ptr) {
+static size_t IntVec_count(void *ptr) {
     IntVec *data = ptr;
     return data->count;
 }
 
-static void* IntVec_ensure(void *ptr, int32_t index) {
+static void* IntVec_ensure(void *ptr, size_t index) {
     IntVec *data = ptr;
     if (data->count <= index) {
         data->count = index + 1;
@@ -2459,7 +2459,7 @@ static void* IntVec_ensure(void *ptr, int32_t index) {
     return &data->array[index];
 }
 
-static void IntVec_resize(void *ptr, int32_t size) {
+static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     if (data->count != size) {
         data->count = size;
@@ -2665,7 +2665,7 @@ typedef struct {
 } Int;
 
 typedef struct {
-    int32_t count;
+    size_t count;
     Int *array;
 } BoxedIntVec;
 
@@ -2674,12 +2674,12 @@ static void Int_assign_int(void *ptr, int64_t value) {
     data->value = value;
 }
 
-static int32_t BoxedIntVec_count(void *ptr) {
+static size_t BoxedIntVec_count(void *ptr) {
     BoxedIntVec *data = ptr;
     return data->count;
 }
 
-static void* BoxedIntVec_ensure(void *ptr, int32_t index) {
+static void* BoxedIntVec_ensure(void *ptr, size_t index) {
     BoxedIntVec *data = ptr;
     if (data->count <= index) {
         data->count = index + 1;
@@ -2688,7 +2688,7 @@ static void* BoxedIntVec_ensure(void *ptr, int32_t index) {
     return &data->array[index];
 }
 
-static void BoxedIntVec_resize(void *ptr, int32_t size) {
+static void BoxedIntVec_resize(void *ptr, size_t size) {
     BoxedIntVec *data = ptr;
     if (data->count != size) {
         data->count = size;
@@ -2995,7 +2995,7 @@ typedef struct {
     int32_t _dummy_3;
 } OpaqueArray;
 
-static void* OpaqueArray_ensure(void *ptr, int32_t index) {
+static void* OpaqueArray_ensure(void *ptr, size_t index) {
     OpaqueArray *data = ptr;
     switch(index) {
     case 0: return &data->el_1;

@@ -12606,7 +12606,7 @@ typedef struct EcsOpaque {
     /** Ensure & get collection element */
     void* (*ensure_element)(
         void *dst, 
-        int32_t elem);
+        size_t elem);
 
     /** Ensure & get element */
     void* (*ensure_member)(
@@ -12614,13 +12614,13 @@ typedef struct EcsOpaque {
         const char *member);
 
     /** Return number of elements */
-    int32_t (*count)(
+    size_t (*count)(
         void *dst);
     
     /** Resize to number of elements */
     void (*resize)(
         void *dst, 
-        int32_t count);
+        size_t count);
 } EcsOpaque;
 
 
@@ -16407,7 +16407,7 @@ template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
 /** Type safe interface for opaque types */
-template <typename T>
+template <typename T, typename ElemType = void>
 struct opaque {
     /** Type that describes the type kind/structure of the opaque type */
     flecs::id_t as_type = 0;
@@ -16461,9 +16461,9 @@ struct opaque {
         T *dst) = nullptr;
 
     /** Ensure & get collection element */
-    void* (*ensure_element)(
+    ElemType* (*ensure_element)(
         T *dst, 
-        int32_t elem) = nullptr;
+        size_t elem) = nullptr;
 
     /** Ensure & get element */
     void* (*ensure_member)(
@@ -16471,13 +16471,13 @@ struct opaque {
         const char *member) = nullptr;
 
     /** Return number of elements */
-    int32_t (*count)(
+    size_t (*count)(
         T *dst) = nullptr;
     
     /** Resize to number of elements */
     void (*resize)(
         T *dst, 
-        int32_t count) = nullptr;
+        size_t count) = nullptr;
 };
 
 namespace meta {
@@ -23752,7 +23752,7 @@ component& serialize(flecs::id_t as_type, flecs::serialize<T> ser) {
 template <typename Func>
 component& opaque(const Func& type_support) {
     flecs::world world(m_world);
-    flecs::opaque<T> opaque = type_support(world);
+    auto opaque = type_support(world);
 
     ecs_opaque_desc_t desc = {};
     desc.entity = m_id;

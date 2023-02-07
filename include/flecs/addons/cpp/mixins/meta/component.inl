@@ -15,7 +15,7 @@ component& serialize(flecs::id_t as_type, flecs::serialize<T> ser) {
 template <typename Func>
 component& opaque(const Func& type_support) {
     flecs::world world(m_world);
-    flecs::opaque<T> opaque = type_support(world);
+    auto opaque = type_support(world);
 
     ecs_opaque_desc_t desc = {};
     desc.entity = m_id;

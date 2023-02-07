@@ -371,7 +371,7 @@ typedef struct EcsOpaque {
     /** Ensure & get collection element */
     void* (*ensure_element)(
         void *dst, 
-        int32_t elem);
+        size_t elem);
 
     /** Ensure & get element */
     void* (*ensure_member)(
@@ -379,13 +379,13 @@ typedef struct EcsOpaque {
         const char *member);
 
     /** Return number of elements */
-    int32_t (*count)(
+    size_t (*count)(
         void *dst);
     
     /** Resize to number of elements */
     void (*resize)(
         void *dst, 
-        int32_t count);
+        size_t count);
 } EcsOpaque;
 
 

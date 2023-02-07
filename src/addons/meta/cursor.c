@@ -131,7 +131,7 @@ int32_t get_elem_count(
     if (scope->vector) {
         return ecs_vector_count(*(scope->vector));
     } else if (opaque && opaque->count) {
-        return opaque->count(scope[-1].ptr);
+        return flecs_uto(int32_t, opaque->count(scope[-1].ptr));
     }
 
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
@@ -162,7 +162,8 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
                 return NULL;
             }
             scope->is_empty_scope = false;
-            void *opaque_ptr = opaque->ensure_element(scope[-1].ptr, scope->elem_cur);
+            void *opaque_ptr = opaque->ensure_element(
+                scope[-1].ptr, flecs_ito(size_t, scope->elem_cur));
             ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
                 "ensure_element returned NULL");
             return opaque_ptr;
@@ -636,7 +637,8 @@ int ecs_meta_pop(
                     } else {
                         /* Otherwise resize collection to the index of the last
                         * deserialized element + 1 */
-                        opaque->resize(scope[-1].ptr, scope->elem_cur + 1);
+                        opaque->resize(scope[-1].ptr, 
+                            flecs_ito(size_t, scope->elem_cur + 1));
                     }
                 }
             } else {
