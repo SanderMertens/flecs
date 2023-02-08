@@ -69,18 +69,6 @@ error:
     return;
 }
 
-/* Get previous scope */
-static
-ecs_meta_scope_t* get_prev_scope(
-    ecs_meta_cursor_t *cursor)
-{
-    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(cursor->depth > 0, ECS_INVALID_PARAMETER, NULL);
-    return &cursor->scope[cursor->depth - 1];
-error:
-    return NULL;
-}
-
 /* Get current operation for scope */
 static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
@@ -328,8 +316,6 @@ int ecs_meta_member(
             ecs_err("missing ensure_member for opaque type %s", str);
             ecs_os_free(str);
         }
-
-        // scope->ptr = opaque->ensure_member(scope[-1].ptr, name);
     }
 
     return 0;
@@ -425,7 +411,6 @@ int ecs_meta_push(
 
         /* With 'is_inline_array' set to true we ensure that we can never push
          * the same inline array twice */
-
         return 0;
     }
 
@@ -810,7 +795,7 @@ case EcsOpBool:\
     break
 
 static
-void conversion_error(
+void flecs_meta_conversion_error(
     ecs_meta_cursor_t *cursor,
     ecs_meta_type_op_t *op,
     const char *from)
@@ -838,8 +823,9 @@ int ecs_meta_set_bool(
             break;
         }
     }
+    /* fall through */
     default:
-        conversion_error(cursor, op, "bool");
+        flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
     }
 
@@ -872,8 +858,9 @@ int ecs_meta_set_char(
             break;
         }
     }
+    /* fall through */
     default:
-        conversion_error(cursor, op, "char");
+        flecs_meta_conversion_error(cursor, op, "char");
         return -1;
     }
 
@@ -901,7 +888,7 @@ int ecs_meta_set_int(
             opaque->assign_int(ptr, value);
             break;
         } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, value);
+            opaque->assign_float(ptr, (double)value);
             break;
         } else if (opaque->assign_uint && (value > 0)) {
             opaque->assign_uint(ptr, flecs_ito(uint64_t, value));
@@ -911,9 +898,10 @@ int ecs_meta_set_int(
             break;
         }
     }
+    /* fall through */
     default: {
         if(!value) return ecs_meta_set_null(cursor);
-        conversion_error(cursor, op, "int");
+        flecs_meta_conversion_error(cursor, op, "int");
         return -1;
     }
     }
@@ -942,7 +930,7 @@ int ecs_meta_set_uint(
             opaque->assign_uint(ptr, value);
             break;
         } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, value);
+            opaque->assign_float(ptr, (double)value);
             break;
         } else if (opaque->assign_int && (value < INT64_MAX)) {
             opaque->assign_int(ptr, flecs_uto(int64_t, value));
@@ -952,9 +940,10 @@ int ecs_meta_set_uint(
             break;
         }
     }
+    /* fall through */
     default:
         if(!value) return ecs_meta_set_null(cursor);
-        conversion_error(cursor, op, "uint");
+        flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
     }
 
@@ -982,7 +971,7 @@ int ecs_meta_set_float(
             opaque->assign_float(ptr, value);
             break;
         } else if (opaque->assign_int && /* most expressive */
-            (value <= INT64_MAX) && (value >= INT64_MIN)) 
+            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN)) 
         {
             opaque->assign_int(ptr, (int64_t)value);
             break;
@@ -991,8 +980,9 @@ int ecs_meta_set_float(
             break;
         }
     }
+    /* fall through */
     default:
-        conversion_error(cursor, op, "float");
+        flecs_meta_conversion_error(cursor, op, "float");
         return -1;
     }
 
@@ -1049,7 +1039,7 @@ int ecs_meta_set_value(
         void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
         if (op->type != value->type) {
             char *type_str = ecs_get_fullpath(cursor->world, value->type);
-            conversion_error(cursor, op, type_str);
+            flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
         }
@@ -1062,7 +1052,7 @@ error:
 }
 
 static
-int add_bitmask_constant(
+int flecs_meta_add_bitmask_constant(
     ecs_meta_cursor_t *cursor,
     ecs_meta_type_op_t *op,
     void *out,
@@ -1097,7 +1087,7 @@ int add_bitmask_constant(
 }
 
 static
-int parse_bitmask(
+int flecs_meta_parse_bitmask(
     ecs_meta_cursor_t *cursor,
     ecs_meta_type_op_t *op,
     void *out,
@@ -1112,7 +1102,7 @@ int parse_bitmask(
     while ((ptr = strchr(ptr, '|'))) {
         ecs_os_memcpy(token, prev, ptr - prev);
         token[ptr - prev] = '\0';
-        if (add_bitmask_constant(cursor, op, out, token) != 0) {
+        if (flecs_meta_add_bitmask_constant(cursor, op, out, token) != 0) {
             return -1;
         }
 
@@ -1120,7 +1110,7 @@ int parse_bitmask(
         prev = ptr;
     }
 
-    if (add_bitmask_constant(cursor, op, out, prev) != 0) {
+    if (flecs_meta_add_bitmask_constant(cursor, op, out, prev) != 0) {
         return -1;
     }
 
@@ -1234,7 +1224,7 @@ int ecs_meta_set_string(
         break;
     }
     case EcsOpBitmask:
-        if (parse_bitmask(cursor, op, ptr, value) != 0) {
+        if (flecs_meta_parse_bitmask(cursor, op, ptr, value) != 0) {
             return -1;
         }
         break;
@@ -1267,6 +1257,7 @@ int ecs_meta_set_string(
             break;
         }
     }
+    /* fall through */
     default:
         ecs_err("unsupported conversion from string '%s' to '%s'",
             value, flecs_meta_op_kind_str(op->kind));
@@ -1338,8 +1329,9 @@ int ecs_meta_set_entity(
             break;
         }
     }
+    /* fall through */
     default:
-        conversion_error(cursor, op, "entity");
+        flecs_meta_conversion_error(cursor, op, "entity");
         return -1;
     }
 
@@ -1365,8 +1357,9 @@ int ecs_meta_set_null(
             break;
         }
     }
+    /* fall through */
     default:
-        conversion_error(cursor, op, "null");
+        flecs_meta_conversion_error(cursor, op, "null");
         return -1;
     }
 

@@ -528,3 +528,30 @@ void OpaqueTypes_deser_entity_from_json() {
 
     ecs_fini(world);
 }
+
+void OpaqueTypes_ser_deser_world_w_ser_opaque() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Int32);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Int32),
+        .type.as_type = ecs_id(ecs_i32_t),
+        .type.serialize = Int32_serialize
+    });
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    {
+        Int32 v = { 10 };
+        char *json = ecs_ptr_to_json(world, ecs_id(Int32), &v);
+        test_assert(json != NULL);
+        test_str(json, "10");
+    }
+
+    ecs_fini(world);
+}

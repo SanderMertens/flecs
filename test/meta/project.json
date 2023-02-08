@@ -909,7 +909,8 @@
                 "deser_uint_from_json",
                 "deser_float_from_json",
                 "deser_string_from_json",
-                "deser_entity_from_json"
+                "deser_entity_from_json",
+                "ser_deser_world_w_ser_opaque"
             ]
         }]
     }
