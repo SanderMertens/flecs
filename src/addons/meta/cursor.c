@@ -978,6 +978,9 @@ int ecs_meta_set_float(
         } else if (opaque->assign_uint && (value >= 0)) {
             opaque->assign_uint(ptr, (uint64_t)value);
             break;
+        } else if (opaque->assign_entity && (value >= 0)) {
+            opaque->assign_entity(ptr, (ecs_entity_t)value);
+            break;
         }
     }
     /* fall through */

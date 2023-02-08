@@ -562,3 +562,70 @@ void OpaqueTypes_ser_deser_world_w_ser_opaque() {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    ecs_entity_t entity;
+} Entity;
+
+int Entity_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+    const Entity *data = ptr;
+    return ser->value(ser, ecs_id(ecs_entity_t), &data->entity);
+}
+
+void Entity_assign(void *ptr, ecs_entity_t value) {
+    Entity *data = ptr;
+    data->entity = value;
+}
+
+void OpaqueTypes_ser_deser_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Entity);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Entity),
+        .type.as_type = ecs_id(ecs_entity_t),
+        .type.serialize = Entity_serialize,
+        .type.assign_entity = Entity_assign
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "ent1");
+    ecs_entity_t e2 = ecs_new_entity(world, "ent2");
+
+    Entity v = { e1 };
+    char *json = ecs_ptr_to_json(world, ecs_id(Entity), &v);
+    test_assert(json != NULL);
+    test_str(json, "\"ent1\"");
+
+    const char *r = ecs_ptr_from_json(world, ecs_id(Entity), &v, "\"ent2\"", NULL);
+    test_str(r, "");
+    test_assert(v.entity == e2);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_deser_0_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Entity);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Entity),
+        .type.as_type = ecs_id(ecs_entity_t),
+        .type.serialize = Entity_serialize,
+        .type.assign_entity = Entity_assign
+    });
+
+    Entity v = { 0 };
+    char *json = ecs_ptr_to_json(world, ecs_id(Entity), &v);
+    test_assert(json != NULL);
+    test_str(json, "0");
+
+    const char *r = ecs_ptr_from_json(world, ecs_id(Entity), &v, json, NULL);
+    test_str(r, "");
+    test_assert(v.entity == 0);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

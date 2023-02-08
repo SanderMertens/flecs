@@ -1,5 +1,25 @@
 #include <cpp_api.h>
 
+flecs::opaque<flecs::entity> flecs_entity_support(flecs::world&) {
+    flecs::opaque<flecs::entity> ts;
+
+    // Let reflection framework know what kind of type this is
+    ts.as_type = flecs::String;
+
+    // Forward flecs::entity value to (JSON/...) serializer
+    ts.serialize = [](const flecs::serializer *s, const flecs::entity *data) {
+        flecs::entity_t id = *data;
+        return s->value(flecs::Entity, &id);
+    };
+
+    // Serialize string into std::string
+    ts.assign_entity = [](flecs::entity *data, flecs::entity_t value) {
+        *data = flecs::entity(data->world(), value);
+    };
+
+    return ts;
+}
+
 flecs::opaque<std::string> std_string_support(flecs::world&) {
     flecs::opaque<std::string> ts;
 
@@ -37,13 +57,11 @@ flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) {
 
     // Return vector count
     ts.count = [](std::vector<T> *data) {
-        printf("count = %p, size = %d\n", data);
         return data->size();
     };
 
     // Ensure element exists, return
     ts.ensure_element = [](std::vector<T> *data, size_t elem) {
-        printf("data = %p, elem = %d\n", data, elem);
         if (data->size() <= elem) {
             data->resize(elem + 1);
         }
@@ -53,9 +71,7 @@ flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) {
 
     // Resize contents of vector
     ts.resize = [](std::vector<T> *data, size_t size) {
-        printf("resize = %p, size = %d\n", data, size);
         data->resize(size);
-        printf("resize done\n");
     };
 
     return ts;
@@ -815,15 +831,147 @@ void Meta_ser_deser_type_w_std_string_std_vector_std_string() {
         .member<std::string>("s")
         .member<std::vector<std::string>>("v");
 
-
     CppTypes v = {"hello", {"world"}};
 
     test_str(world.to_json(&v).c_str(), "{\"s\":\"hello\", \"v\":[\"world\"]}");
 
-    printf("v.s = %p\n", &v.s);
-    printf("v.v = %p\n", &v.v);
-
     world.from_json(&v, "{\"s\":\"foo\", \"v\":[\"bar\"]}");
 
     test_str(world.to_json(&v).c_str(), "{\"s\":\"foo\", \"v\":[\"bar\"]}");
+}
+
+void Meta_ser_deser_flecs_entity() {
+    flecs::world world;
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    flecs::entity e1 = world.entity("ent1");
+    flecs::entity e2 = world.entity("ent2");
+
+    flecs::entity v = e1;
+    test_str(world.to_json(&v).c_str(), "\"ent1\"");
+
+    world.from_json(&v, "\"ent2\"");
+    test_str(world.to_json(&v).c_str(), "\"ent2\"");
+    test_assert(v == e2);
+}
+
+struct CppEntity {
+    flecs::entity entity;
+};
+
+void Meta_world_ser_deser_flecs_entity() {
+    flecs::world world;
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    world.component<CppEntity>()
+        .member<flecs::entity>("entity");
+
+    flecs::entity e1 = world.entity("ent1");
+    flecs::entity e2 = world.entity("ent2").set<CppEntity>({e1});
+
+    {
+        const CppEntity *ptr = e2.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
+    }
+
+    auto json = world.to_json();
+    world.from_json(json);
+
+    test_assert(e1.is_alive());
+    test_assert(e2.is_alive());
+
+    {
+        const CppEntity *ptr = e2.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
+    }
+}
+
+void Meta_new_world_ser_deser_flecs_entity() {
+    flecs::world world;
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    world.component<CppEntity>()
+        .member<flecs::entity>("entity");
+
+    flecs::entity e1 = world.entity("ent1");
+    flecs::entity e2 = world.entity("ent2").set<CppEntity>({e1});
+
+    {
+        const CppEntity *ptr = e2.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
+    }
+
+    auto json = world.to_json();
+
+    flecs::world world2;
+    world2.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    world2.component<CppEntity>()
+        .member<flecs::entity>("entity");
+
+    world2.from_json(json);
+    
+    e1 = world2.lookup("ent1");
+    test_assert(e1 != 0);
+    e2 = world2.lookup("ent2");
+    test_assert(e2 != 0);
+
+    test_assert(e1.is_alive());
+    test_assert(e2.is_alive());
+
+    {
+        const CppEntity *ptr = e2.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world2.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
+    }
+}
+
+void Meta_new_world_ser_deser_empty_flecs_entity() {
+    flecs::world world;
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    world.component<CppEntity>()
+        .member<flecs::entity>("entity");
+
+    flecs::entity e1 = world.entity("ent1").set<CppEntity>({});
+
+    {
+        const CppEntity *ptr = e1.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world.to_json(ptr).c_str(), "{\"entity\":0}");
+    }
+
+    auto json = world.to_json();
+
+    flecs::world world2;
+    world2.component<flecs::entity>()
+        .opaque(flecs_entity_support);
+
+    world2.component<CppEntity>()
+        .member<flecs::entity>("entity");
+
+    world2.from_json(json);
+    
+    e1 = world2.lookup("ent1");
+    test_assert(e1 != 0);
+
+    test_assert(e1.is_alive());
+
+    {
+        const CppEntity *ptr = e1.get<CppEntity>();
+        test_assert(ptr != nullptr);
+        test_str(world2.to_json(ptr).c_str(), "{\"entity\":0}");
+    }
 }

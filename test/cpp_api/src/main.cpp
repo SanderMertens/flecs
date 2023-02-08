@@ -1121,6 +1121,10 @@ void Meta_ser_deser_std_string(void);
 void Meta_ser_deser_std_vector_int(void);
 void Meta_ser_deser_std_vector_std_string(void);
 void Meta_ser_deser_type_w_std_string_std_vector_std_string(void);
+void Meta_ser_deser_flecs_entity(void);
+void Meta_world_ser_deser_flecs_entity(void);
+void Meta_new_world_ser_deser_flecs_entity(void);
+void Meta_new_world_ser_deser_empty_flecs_entity(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5481,6 +5485,22 @@ bake_test_case Meta_testcases[] = {
     {
         "ser_deser_type_w_std_string_std_vector_std_string",
         Meta_ser_deser_type_w_std_string_std_vector_std_string
+    },
+    {
+        "ser_deser_flecs_entity",
+        Meta_ser_deser_flecs_entity
+    },
+    {
+        "world_ser_deser_flecs_entity",
+        Meta_world_ser_deser_flecs_entity
+    },
+    {
+        "new_world_ser_deser_flecs_entity",
+        Meta_new_world_ser_deser_flecs_entity
+    },
+    {
+        "new_world_ser_deser_empty_flecs_entity",
+        Meta_new_world_ser_deser_empty_flecs_entity
     }
 };
 
@@ -5814,7 +5834,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        35,
+        39,
         Meta_testcases
     },
     {
