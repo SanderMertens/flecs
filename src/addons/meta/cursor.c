@@ -851,7 +851,7 @@ int ecs_meta_set_char(
             opaque->assign_char(ptr, value);
             break;
         } else if (opaque->assign_uint) {
-            opaque->assign_uint(ptr, flecs_ito(uint64_t, value));
+            opaque->assign_uint(ptr, (uint64_t)value);
             break;
         } else if (opaque->assign_int) {
             opaque->assign_int(ptr, value);
@@ -1229,7 +1229,7 @@ int ecs_meta_set_string(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e;
+        ecs_entity_t e = 0;
         if (flecs_meta_cursor_lookup(cursor, value, &e)) {
             return -1;
         }
@@ -1249,7 +1249,7 @@ int ecs_meta_set_string(
             opaque->assign_char(ptr, value[0]);
             break;
         } else if (opaque->assign_entity) {
-            ecs_entity_t e;
+            ecs_entity_t e = 0;
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
                 return -1;
             }

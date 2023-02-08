@@ -321,8 +321,6 @@ void OpaqueTypes_ser_struct_3_members() {
     ecs_fini(world);
 }
 
-typedef const char* const_string_t;
-
 #define OpaqueType(t)\
     typedef struct { \
         t value; \
@@ -337,8 +335,15 @@ OpaqueType(char)
 OpaqueType(int64_t)
 OpaqueType(uint64_t)
 OpaqueType(double)
-OpaqueType(const_string_t)
 OpaqueType(ecs_entity_t)
+
+typedef struct {
+    char *value;
+} Opaque_string;
+
+static void Opaque_string_set(void *ptr, const char *value) {
+    ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
+}
 
 void OpaqueTypes_deser_bool_from_json() {
     ecs_world_t *world = ecs_init();
@@ -473,26 +478,28 @@ void OpaqueTypes_deser_float_from_json() {
 void OpaqueTypes_deser_string_from_json() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Opaque_const_string_t);
+    ECS_COMPONENT(world, Opaque_string);
 
     ecs_opaque(world, {
-        .entity = ecs_id(Opaque_const_string_t),
+        .entity = ecs_id(Opaque_string),
         .type.as_type = ecs_id(ecs_string_t),
-        .type.assign_string = const_string_t_set
+        .type.assign_string = Opaque_string_set
     });
 
-    Opaque_const_string_t v = { 0 };
+    Opaque_string v = { 0 };
     {
         const char *r = ecs_ptr_from_json(
-            world, ecs_id(Opaque_const_string_t), &v, "\"Hello World\"", NULL);
+            world, ecs_id(Opaque_string), &v, "\"Hello World\"", NULL);
         test_str(r, "");
-        test_str(v.value, "Hello World"); // avoid floating point comparison
+        test_str(v.value, "Hello World");
+        ecs_os_free(v.value);
     }
     {
         const char *r = ecs_ptr_from_json(
-            world, ecs_id(Opaque_const_string_t), &v, "\"Foo Bar\"", NULL);
+            world, ecs_id(Opaque_string), &v, "\"Foo Bar\"", NULL);
         test_str(r, "");
-        test_str(v.value, "Foo Bar"); // avoid floating point comparison
+        test_str(v.value, "Foo Bar");
+        ecs_os_free(v.value);
     }
 
     ecs_fini(world);
