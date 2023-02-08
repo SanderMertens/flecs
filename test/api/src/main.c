@@ -133,6 +133,9 @@ void Entity_ensure_from_stage(void);
 void Entity_ensure_after_deleted_1_entity(void);
 void Entity_ensure_after_deleted_2_entities(void);
 void Entity_defer_entity_init_w_set_name_w_add_childof(void);
+void Entity_entity_w_digit_name(void);
+void Entity_entity_w_existing_digit_name(void);
+void Entity_entity_w_conflicting_digit_name(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2869,6 +2872,18 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_entity_init_w_set_name_w_add_childof",
         Entity_defer_entity_init_w_set_name_w_add_childof
+    },
+    {
+        "entity_w_digit_name",
+        Entity_entity_w_digit_name
+    },
+    {
+        "entity_w_existing_digit_name",
+        Entity_entity_w_existing_digit_name
+    },
+    {
+        "entity_w_conflicting_digit_name",
+        Entity_entity_w_conflicting_digit_name
     }
 };
 
@@ -11565,7 +11580,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        96,
+        99,
         Entity_testcases
     },
     {
