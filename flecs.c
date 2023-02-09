@@ -2377,6 +2377,13 @@ int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2);
 
+bool flecs_name_is_id(
+    const char *name);
+
+ecs_entity_t flecs_name_to_id(
+    const ecs_world_t *world,
+    const char *name);
+
 /* Convert floating point to string */
 char * ecs_ftoa(
     double f, 
@@ -6972,6 +6979,7 @@ ecs_entity_t ecs_entity_init(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = stage->scope;
     ecs_id_t with = ecs_get_with(world);
+    ecs_entity_t result = desc->id;
 
     const char *name = desc->name;
     const char *sep = desc->sep;
@@ -6979,8 +6987,21 @@ ecs_entity_t ecs_entity_init(
         sep = ".";
     }
 
-    if (name && !name[0]) {
-        name = NULL;
+    if (name) {
+        if (!name[0]) {
+            name = NULL;
+        } else if (flecs_name_is_id(name)){
+            ecs_entity_t id = flecs_name_to_id(world, name);
+            if (!id) {
+                return 0;
+            }
+            if (result && (id != result)) {
+                ecs_err("name id conflicts with provided id");
+                return 0;
+            }
+            name = NULL;
+            result = id;
+        }
     }
 
     const char *root_sep = desc->root_sep;
@@ -7009,7 +7030,6 @@ ecs_entity_t ecs_entity_init(
     }
 
     /* Find or create entity */
-    ecs_entity_t result = desc->id;
     if (!result) {
         if (name) {
             /* If add array contains a ChildOf pair, use it as scope instead */
@@ -53654,6 +53674,18 @@ ecs_table_t* ecs_table_remove_id(
     return flecs_table_traverse_remove(world, table, &id, &diff);
 }
 
+ecs_table_t* ecs_table_find(
+    ecs_world_t *world,
+    const ecs_id_t *ids,
+    int32_t id_count)
+{
+    ecs_type_t type = {
+        .array = (ecs_id_t*)ids,
+        .count = id_count
+    };
+    return flecs_table_ensure(world, &type, false, NULL);
+}
+
 /**
  * @file iter.c
  * @brief Iterator API.
@@ -56240,7 +56272,6 @@ bool flecs_path_append(
     return cur != 0;
 }
 
-static
 bool flecs_name_is_id(
     const char *name)
 {
@@ -56262,7 +56293,6 @@ bool flecs_name_is_id(
     return i >= length;
 }
 
-static 
 ecs_entity_t flecs_name_to_id(
     const ecs_world_t *world,
     const char *name)

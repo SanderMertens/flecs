@@ -7884,6 +7884,22 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id);
 
+/** Find table from id array. 
+ * This operation finds or creates a table with the specified array of 
+ * (component) ids. The ids in the array must be sorted, and it may not contain
+ * duplicate elements.
+ * 
+ * @param world The world.
+ * @param ids The id array.
+ * @param id_count The number of elements in the id array.
+ * @return The table with the specified (component) ids.
+ */
+FLECS_API
+ecs_table_t* ecs_table_find(
+    ecs_world_t *world,
+    const ecs_id_t *ids,
+    int32_t id_count);
+
 /** Get table that has all components of current table minus the specified id.
  * If the provided table doesn't have the provided id, the operation will return
  * the provided table.
