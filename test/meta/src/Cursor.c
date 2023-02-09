@@ -2501,6 +2501,8 @@ void Cursor_opaque_set_int_vec() {
     test_int(v.array[1], 20);
     test_int(v.array[2], 30);
 
+    ecs_os_free(v.array);
+
     ecs_fini(world);
 }
 
@@ -2569,6 +2571,8 @@ void Cursor_opaque_set_int_vec_resize_smaller() {
     test_int(v.array[0], 40);
     test_int(v.array[1], 50);
 
+    ecs_os_free(v.array);
+
     ecs_fini(world);
 }
 
@@ -2617,6 +2621,8 @@ void Cursor_opaque_set_int_vec_resize_larger() {
     test_int(v.array[1], 50);
     test_int(v.array[2], 60);
     test_int(v.array[3], 70);
+
+    ecs_os_free(v.array);
 
     ecs_fini(world);
 }
@@ -2735,6 +2741,8 @@ void Cursor_opaque_set_opaque_int_vec() {
     test_int(v.array[0].value, 10);
     test_int(v.array[1].value, 20);
     test_int(v.array[2].value, 30);
+    
+    ecs_os_free(v.array);
 
     ecs_fini(world);
 }
@@ -3472,6 +3480,9 @@ void Cursor_struct_w_2_opaque_vectors() {
     test_int(v.bar.array[1], 50);
     test_int(v.bar.array[2], 60);
 
+    ecs_os_free(v.foo.array);
+    ecs_os_free(v.bar.array);
+
     ecs_fini(world);
 }
 
@@ -3674,6 +3685,10 @@ void Cursor_struct_w_3_opaque_vectors() {
     test_int(v.zoo.array[0], 70);
     test_int(v.zoo.array[1], 80);
     test_int(v.zoo.array[2], 90);
+    
+    ecs_os_free(v.foo.array);
+    ecs_os_free(v.bar.array);
+    ecs_os_free(v.zoo.array);
 
     ecs_fini(world);
 }
@@ -3883,6 +3898,8 @@ void Cursor_opaque_vec_w_opaque_elem() {
     test_int(v.array[0], 10);
     test_int(v.array[1], 20);
     test_int(v.array[2], 30);
+    
+    ecs_os_free(v.array);
 
     ecs_fini(world);
 }

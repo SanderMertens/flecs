@@ -558,6 +558,7 @@ void OpaqueTypes_ser_deser_world_w_ser_opaque() {
         char *json = ecs_ptr_to_json(world, ecs_id(Int32), &v);
         test_assert(json != NULL);
         test_str(json, "10");
+        ecs_os_free(json);
     }
 
     ecs_fini(world);

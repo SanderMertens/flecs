@@ -4266,6 +4266,8 @@ void SerializeToJson_serialize_table() {
     
     ecs_os_free(json);
 
+    ecs_filter_fini(f);
+
     ecs_fini(world);
 }
 

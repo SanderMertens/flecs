@@ -1761,7 +1761,9 @@ int ecs_world_to_json_buf(
         .serialize_entities = true
     };
 
-    return ecs_iter_to_json_buf(world, &it, buf_out, &json_desc);
+    int ret = ecs_iter_to_json_buf(world, &it, buf_out, &json_desc);
+    ecs_filter_fini(&f);
+    return ret;
 }
 
 char* ecs_world_to_json(
