@@ -26636,6 +26636,14 @@ int flecs_add_member_to_struct(
             elem->size = member_size;
             elem->offset = size;
 
+            /* Synchronize offset with Member component */
+            if (elem->member == member) {
+                m->offset = elem->offset;
+            } else {
+                EcsMember *other = ecs_get_mut(world, elem->member, EcsMember);
+                other->offset = elem->offset;
+            }
+
             size += member_size;
 
             if (member_alignment > alignment) {
