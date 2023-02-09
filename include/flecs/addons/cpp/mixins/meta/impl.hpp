@@ -69,6 +69,9 @@ inline void init(flecs::world& world) {
 
 } // namespace _
 
+} // namespace meta
+
+
 inline flecs::entity cursor::get_type() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
 }
@@ -80,8 +83,6 @@ inline flecs::entity cursor::get_unit() const {
 inline flecs::entity cursor::get_entity() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
 }
-
-} // namespace meta
 
 /** Create primitive type */
 inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {

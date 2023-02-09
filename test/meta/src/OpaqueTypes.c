@@ -335,7 +335,14 @@ OpaqueType(char)
 OpaqueType(int64_t)
 OpaqueType(uint64_t)
 OpaqueType(double)
-OpaqueType(ecs_entity_t)
+
+typedef struct {
+    ecs_entity_t value;
+} Opaque_entity;
+
+static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value) {
+    ((Opaque_entity*)ptr)->value = value;
+}
 
 typedef struct {
     char *value;
@@ -508,27 +515,27 @@ void OpaqueTypes_deser_string_from_json() {
 void OpaqueTypes_deser_entity_from_json() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Opaque_ecs_entity_t);
+    ECS_COMPONENT(world, Opaque_entity);
 
     ecs_opaque(world, {
-        .entity = ecs_id(Opaque_ecs_entity_t),
+        .entity = ecs_id(Opaque_entity),
         .type.as_type = ecs_id(ecs_string_t),
-        .type.assign_entity = ecs_entity_t_set
+        .type.assign_entity = Opaque_entity_set
     });
 
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_entity_t e2 = ecs_new_entity(world, "e2");
 
-    Opaque_ecs_entity_t v = { 0 };
+    Opaque_entity v = { 0 };
     {
         const char *r = ecs_ptr_from_json(
-            world, ecs_id(Opaque_ecs_entity_t), &v, "\"e1\"", NULL);
+            world, ecs_id(Opaque_entity), &v, "\"e1\"", NULL);
         test_str(r, "");
         test_uint(v.value, e1);
     }
     {
         const char *r = ecs_ptr_from_json(
-            world, ecs_id(Opaque_ecs_entity_t), &v, "\"e2\"", NULL);
+            world, ecs_id(Opaque_entity), &v, "\"e2\"", NULL);
         test_str(r, "");
         test_uint(v.value, e2);
     }
@@ -573,7 +580,7 @@ int Entity_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     return ser->value(ser, ecs_id(ecs_entity_t), &data->entity);
 }
 
-void Entity_assign(void *ptr, ecs_entity_t value) {
+void Entity_assign(void *ptr, ecs_world_t *world, ecs_entity_t value) {
     Entity *data = ptr;
     data->entity = value;
 }

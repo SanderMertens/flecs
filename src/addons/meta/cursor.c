@@ -979,7 +979,8 @@ int ecs_meta_set_float(
             opaque->assign_uint(ptr, (uint64_t)value);
             break;
         } else if (opaque->assign_entity && (value >= 0)) {
-            opaque->assign_entity(ptr, (ecs_entity_t)value);
+            opaque->assign_entity(
+                ptr, (ecs_world_t*)cursor->world, (ecs_entity_t)value);
             break;
         }
     }
@@ -1256,7 +1257,7 @@ int ecs_meta_set_string(
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
                 return -1;
             }
-            opaque->assign_entity(ptr, e);
+            opaque->assign_entity(ptr, (ecs_world_t*)cursor->world, e);
             break;
         }
     }
@@ -1326,9 +1327,9 @@ int ecs_meta_set_entity(
         set_T(ecs_entity_t, ptr, value);
         break;
     case EcsOpOpaque: {
-        const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
-        if (ot && ot->assign_entity) {
-            ot->assign_entity(ptr, value);
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if (opaque && opaque->assign_entity) {
+            opaque->assign_entity(ptr, (ecs_world_t*)cursor->world, value);
             break;
         }
     }

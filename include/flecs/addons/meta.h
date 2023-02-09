@@ -358,6 +358,7 @@ typedef struct EcsOpaque {
     /** Assign entity value */
     void (*assign_entity)(
         void *dst,
+        ecs_world_t *world,
         ecs_entity_t entity);
 
     /** Assign null value */
@@ -380,7 +381,7 @@ typedef struct EcsOpaque {
 
     /** Return number of elements */
     size_t (*count)(
-        void *dst);
+        const void *dst);
     
     /** Resize to number of elements */
     void (*resize)(

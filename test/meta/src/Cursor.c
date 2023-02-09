@@ -2284,7 +2284,14 @@ OpaqueType(int64_t)
 OpaqueType(uint64_t)
 OpaqueType(double)
 OpaqueType(const_string_t)
-OpaqueType(ecs_entity_t)
+
+typedef struct {
+    ecs_entity_t value;
+} Opaque_entity;
+
+static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value) {
+    ((Opaque_entity*)ptr)->value = value;
+}
 
 void Cursor_opaque_set_bool() {
     ecs_world_t *world = ecs_init();
@@ -2419,19 +2426,19 @@ void Cursor_opaque_set_string() {
 void Cursor_opaque_set_entity() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Opaque_ecs_entity_t);
+    ECS_COMPONENT(world, Opaque_entity);
 
     ecs_opaque(world, {
-        .entity = ecs_id(Opaque_ecs_entity_t),
+        .entity = ecs_id(Opaque_entity),
         .type.as_type = ecs_id(ecs_entity_t),
-        .type.assign_entity = ecs_entity_t_set
+        .type.assign_entity = Opaque_entity_set
     });
 
-    Opaque_ecs_entity_t v = { 0 };
+    Opaque_entity v = { 0 };
     ecs_entity_t e1 = ecs_new_id(world);
     ecs_entity_t e2 = ecs_new_id(world);
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_ecs_entity_t), &v);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_entity), &v);
     test_int(0, ecs_meta_set_entity(&cur, e1));
     test_uint(v.value, e1);
     test_int(0, ecs_meta_set_entity(&cur, e2));
@@ -2445,8 +2452,8 @@ typedef struct {
     int32_t *array;
 } IntVec;
 
-static size_t IntVec_count(void *ptr) {
-    IntVec *data = ptr;
+static size_t IntVec_count(const void *ptr) {
+    const IntVec *data = ptr;
     return data->count;
 }
 
@@ -2680,8 +2687,8 @@ static void Int_assign_int(void *ptr, int64_t value) {
     data->value = value;
 }
 
-static size_t BoxedIntVec_count(void *ptr) {
-    BoxedIntVec *data = ptr;
+static size_t BoxedIntVec_count(const void *ptr) {
+    const BoxedIntVec *data = ptr;
     return data->count;
 }
 
