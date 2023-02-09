@@ -359,6 +359,8 @@ void Cursor_struct_w_2_opaque_arrays(void);
 void Cursor_struct_w_3_opaque_structs(void);
 void Cursor_struct_w_3_opaque_vectors(void);
 void Cursor_struct_w_3_opaque_arrays(void);
+void Cursor_opaque_struct_w_opaque_vec(void);
+void Cursor_opaque_vec_w_opaque_elem(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -2228,6 +2230,14 @@ bake_test_case Cursor_testcases[] = {
     {
         "struct_w_3_opaque_arrays",
         Cursor_struct_w_3_opaque_arrays
+    },
+    {
+        "opaque_struct_w_opaque_vec",
+        Cursor_opaque_struct_w_opaque_vec
+    },
+    {
+        "opaque_vec_w_opaque_elem",
+        Cursor_opaque_vec_w_opaque_elem
     }
 };
 
@@ -4306,7 +4316,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        113,
+        115,
         Cursor_testcases
     },
     {

@@ -381,7 +381,9 @@
                 "struct_w_2_opaque_arrays",
                 "struct_w_3_opaque_structs",
                 "struct_w_3_opaque_vectors",
-                "struct_w_3_opaque_arrays"
+                "struct_w_3_opaque_arrays",
+                "opaque_struct_w_opaque_vec",
+                "opaque_vec_w_opaque_elem"
             ]
         }, {
             "id": "DeserializeFromExpr",

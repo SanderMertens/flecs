@@ -28115,7 +28115,7 @@ int ecs_meta_push(
     }
     }
 
-    if (scope->is_collection) {
+    if (scope->is_collection && !scope->opaque) {
         next_scope->ptr = ECS_OFFSET(next_scope->ptr,
             scope->elem_cur * get_size(world, scope));
     }
