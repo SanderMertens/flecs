@@ -14,7 +14,7 @@ namespace _ {
 
 /* Type support for entity wrappers */
 template <typename EntityType>
-inline flecs::opaque<EntityType> flecs_entity_support(flecs::world& world) {
+inline flecs::opaque<EntityType> flecs_entity_support(flecs::world&) {
     return flecs::opaque<EntityType>()
         .as_type(flecs::Entity)
         .serialize([](const flecs::serializer *ser, const EntityType *data) {
@@ -146,16 +146,16 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
-inline int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
+inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
 
 template <typename T>
-inline int ecs_meta_serializer_t::value(const T& v) const {
+inline int ecs_serializer_t::value(const T& v) const {
     return this->value(flecs::_::cpp_type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
 }
 
-inline int ecs_meta_serializer_t::member(const char *name) const {
+inline int ecs_serializer_t::member(const char *name) const {
     return this->member_(this, name);
 }

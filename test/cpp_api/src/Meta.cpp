@@ -415,8 +415,7 @@ int Vector_serialize(const flecs::serializer *ser, const std::vector<Elem> *data
 void Meta_custom_i32_to_json() {
     flecs::world ecs;
 
-    ecs.component<Int>().opaque()
-        .as_type(flecs::I32)
+    ecs.component<Int>().opaque(flecs::I32)
         .serialize(Int_serialize);
 
     Int v = {10};
@@ -427,8 +426,7 @@ void Meta_custom_i32_to_json() {
 void Meta_custom_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     std::string v = {"Hello World"};
@@ -439,8 +437,7 @@ void Meta_custom_std_string_to_json() {
 void Meta_custom_std_vector_i32_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
     std::vector<int> v = {1, 2, 3};
@@ -451,12 +448,10 @@ void Meta_custom_std_vector_i32_to_json() {
 void Meta_custom_std_vector_std_string_to_json() {
     flecs::world ecs;
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
-    ecs.component<std::vector<std::string>>().opaque()
-        .as_type(ecs.vector(flecs::String))
+    ecs.component<std::vector<std::string>>().opaque(ecs.vector(flecs::String))
         .serialize(Vector_serialize<std::string>);
 
     std::vector<std::string> v = {"hello", "world", "foo"};
@@ -467,8 +462,7 @@ void Meta_custom_std_vector_std_string_to_json() {
 void Meta_type_w_std_vector() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
     ecs.component<TVector>()
@@ -482,8 +476,7 @@ void Meta_type_w_std_vector() {
 void Meta_type_w_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TString>()
@@ -497,12 +490,10 @@ void Meta_type_w_std_string() {
 void Meta_type_w_std_vector_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TVectorString>()
@@ -517,12 +508,10 @@ void Meta_type_w_std_vector_std_string() {
 void Meta_type_w_std_string_std_vector() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TStringVector>()
@@ -537,12 +526,10 @@ void Meta_type_w_std_string_std_vector() {
 void Meta_type_w_std_string_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TStringString>()
@@ -557,12 +544,10 @@ void Meta_type_w_std_string_std_string() {
 void Meta_type_w_std_vector_std_vector() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TVectorVector>()
@@ -577,12 +562,10 @@ void Meta_type_w_std_vector_std_vector() {
 void Meta_type_w_std_vector_std_string_std_vector() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TVectorStringVector>()
@@ -598,12 +581,10 @@ void Meta_type_w_std_vector_std_string_std_vector() {
 void Meta_type_w_std_vector_std_vector_std_string() {
     flecs::world ecs;
 
-    ecs.component<std::vector<int>>().opaque()
-        .as_type(ecs.vector<int>())
+    ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
         .serialize(Vector_serialize<int>);
 
-    ecs.component<std::string>().opaque()
-        .as_type(flecs::String)
+    ecs.component<std::string>().opaque(flecs::String)
         .serialize(String_serialize);
 
     ecs.component<TVectorVectorString>()
@@ -972,8 +953,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity() {
 void Meta_opaque_vector_w_builder() {
     flecs::world world;
 
-    world.component<std::vector<int>>().opaque<int>()
-        .as_type(world.vector<int>())
+    world.component<std::vector<int>>().opaque<int>(world.vector<int>())
         .serialize([](const flecs::serializer *s, const std::vector<int> *data) {
             for (const auto& el : *data) {
                 s->value(el);

@@ -9,13 +9,20 @@ component& opaque(const Func& type_support) {
     return *this;
 }
 
-/** Return opaque type builder */
-flecs::opaque<T> opaque() {
-    return flecs::opaque<T>(m_world);
+flecs::opaque<T> opaque(flecs::entity_t as_type) {
+    return flecs::opaque<T>(m_world).as_type(as_type);
+}
+
+flecs::opaque<T> opaque(flecs::entity as_type) {
+    return this->opaque(as_type.id());
+}
+
+flecs::opaque<T> opaque(flecs::untyped_component as_type) {
+    return this->opaque(as_type.id());
 }
 
 /** Return opaque type builder for collection type */
 template <typename ElemType>
-flecs::opaque<T, ElemType> opaque() {
-    return flecs::opaque<T, ElemType>(m_world);
+flecs::opaque<T, ElemType> opaque(flecs::id_t as_type) {
+    return flecs::opaque<T, ElemType>(m_world).as_type(as_type);
 }

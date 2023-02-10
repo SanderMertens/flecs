@@ -205,7 +205,7 @@ typedef struct json_serializer_ctx_t {
 
 static
 int json_ser_custom_value(
-    const ecs_meta_serializer_t *ser,
+    const ecs_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
 {
@@ -218,7 +218,7 @@ int json_ser_custom_value(
 
 static
 int json_ser_custom_member(
-    const ecs_meta_serializer_t *ser,
+    const ecs_serializer_t *ser,
     const char *name)
 {
     json_serializer_ctx_t *json_ser = ser->ctx;
@@ -264,7 +264,7 @@ int json_ser_custom_type(
         .is_collection = is_collection
     };
 
-    ecs_meta_serializer_t ser = {
+    ecs_serializer_t ser = {
         .world = world,
         .value = json_ser_custom_value,
         .member = json_ser_custom_member,

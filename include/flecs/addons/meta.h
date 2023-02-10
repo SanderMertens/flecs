@@ -260,37 +260,37 @@ typedef struct EcsVector {
 #if !defined(__cplusplus) || !defined(FLECS_CPP)
 
 /** Serializer interface */
-typedef struct ecs_meta_serializer_t {
+typedef struct ecs_serializer_t {
     /* Serialize value */
     int (*value)(
-        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const struct ecs_serializer_t *ser, /**< Serializer */
         ecs_entity_t type,            /**< Type of the value to serialize */
         const void *value);           /**< Pointer to the value to serialize */
 
     /* Serialize member */
     int (*member)(
-        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const struct ecs_serializer_t *ser, /**< Serializer */
         const char *member);           /**< Member name */
 
     const ecs_world_t *world;
     void *ctx;
-} ecs_meta_serializer_t;
+} ecs_serializer_t;
 
 #elif defined(__cplusplus)
 
 } /* extern "C" { */
 
 /** Serializer interface (same layout as C, but with convenience methods) */
-typedef struct ecs_meta_serializer_t {
+typedef struct ecs_serializer_t {
     /* Serialize value */
     int (*value_)(
-        const struct ecs_meta_serializer_t *ser,
+        const struct ecs_serializer_t *ser,
         ecs_entity_t type,
         const void *value);
 
     /* Serialize member */
     int (*member_)(
-        const struct ecs_meta_serializer_t *ser,
+        const struct ecs_serializer_t *ser,
         const char *name);
 
     /* Serialize value */
@@ -305,14 +305,14 @@ typedef struct ecs_meta_serializer_t {
 
     const ecs_world_t *world;
     void *ctx;
-} ecs_meta_serializer_t;
+} ecs_serializer_t;
 
 extern "C" {
 #endif
 
 /** Callback invoked serializing an opaque type. */
 typedef int (*ecs_meta_serialize_t)(
-    const ecs_meta_serializer_t *ser,
+    const ecs_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
 typedef struct EcsOpaque {

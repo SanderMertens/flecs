@@ -384,7 +384,7 @@ void SerializeTypeInfoToJson_struct_vector_type() {
 }
 
 static
-int DummySerialize(const ecs_meta_serializer_t *s, const void *ptr) {
+int DummySerialize(const ecs_serializer_t *s, const void *ptr) {
     return 0;
 }
 

@@ -2,47 +2,57 @@
 #include <iostream>
 #include <string>
 
-// This example shows how to serialize a type with private members and public
-// getter methods.
-
-struct OpaqueType {
-    OpaqueType(double x, double y) : x_(x), y_(y) { }
-
-    double x() const { return x_; }
-    double y() const { return y_; }
-
-private:
-    double x_;
-    double y_;
+// Use opaque reflection support to add a computed 'result' member to type
+struct Sum {
+    int32_t a;
+    int32_t b;
 };
-
-// Serializer function for std::string
-int opaque_ser(const flecs::serializer *s, const OpaqueType *data) {
-    s->member("x"); // Serializer-specific function to insert member
-    s->value(data->x()); // Serializer specific function to insert double value
-    s->member("y");
-    s->value(data->y());
-    return 0;
-}
 
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Create struct type that represents the opaque type
-    flecs::entity as_struct = ecs.component()
-        .member<double>("x")
-        .member<double>("y");
-
     // Register serialization support for opaque type
-    ecs.component<OpaqueType>()
-        .serialize(
-            as_struct,    // Describes what the serialized output looks like
-            opaque_ser);  // Serializer function
+    ecs.component<Sum>()
+        // Serialize as struct
+        .opaque(ecs.component()
+            .member<int32_t>("a")
+            .member<int32_t>("b")
+            .member<int32_t>("result"))
 
-    // Create dummy value & serialize it
-    OpaqueType v = {10, 20};
+        // Forward struct members to serializer
+        .serialize([](const flecs::serializer *s, const Sum *data) {
+            s->member("x");
+            s->value(data->a);
+            s->member("y");
+            s->value(data->b);
+
+            s->member("result");
+            s->value(data->a + data->b); // Serialize fake member
+            return 0;
+        })
+
+        // Return address for requested member
+        .ensure_member([](Sum *dst, const char *member) -> void* {
+            if (!strcmp(member, "a")) {
+                return &dst->a;
+            } else if (!strcmp(member, "b")) {
+                return &dst->b;
+            } else {
+                return nullptr; // We can't serialize into fake result member
+            }
+        });
+
+    // Serialize value of Sum to JSON
+    Sum v = {10, 20};
     std::cout << ecs.to_json(&v) << std::endl;
 
-    // Output:
-    //   {"x":10, "y":20}
+    // Deserialize new value into Sum
+    ecs.from_json(&v, "{\"a\": 20, \"b\": 22}");
+
+    // Serialize value again
+    std::cout << ecs.to_json(&v) << std::endl;
+
+    // Output
+    //  {"a":10, "b":20, "result":30}
+    //  {"a":22, "b":20, "result":42}
 }

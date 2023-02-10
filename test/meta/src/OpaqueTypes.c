@@ -17,7 +17,7 @@ typedef struct StringVec {
 
 // Custom serializer functions
 static
-int Int32_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_i32_t), ptr);
@@ -27,7 +27,7 @@ int Int32_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
 }
 
 static
-int String_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_string_t), ptr);
@@ -36,7 +36,7 @@ int String_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-int IntVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -50,7 +50,7 @@ int IntVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-int StringVec_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -168,7 +168,7 @@ typedef struct Struct_3_member {
     int32_t x, y, z;
 } Struct_3_member;
 
-int Struct_1_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int Struct_1_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -184,7 +184,7 @@ int Struct_1_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr)
     return 0;
 }
 
-int Struct_2_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int Struct_2_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -205,7 +205,7 @@ int Struct_2_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr)
     return 0;
 }
 
-int Struct_3_member_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int Struct_3_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -575,7 +575,7 @@ typedef struct {
     ecs_entity_t entity;
 } Entity;
 
-int Entity_serialize(const ecs_meta_serializer_t *ser, const void *ptr) {
+int Entity_serialize(const ecs_serializer_t *ser, const void *ptr) {
     const Entity *data = ptr;
     return ser->value(ser, ecs_id(ecs_entity_t), &data->entity);
 }
