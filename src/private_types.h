@@ -504,6 +504,11 @@ struct ecs_stage_t {
     /* Thread specific allocators */
     ecs_stage_allocators_t allocators;
     ecs_allocator_t allocator;
+
+    /* Caches for rule creation */
+    ecs_vector_t *variables;
+    ecs_vector_t *operations;
+    ecs_vector_t *stack;
 };
 
 /* Component monitor */

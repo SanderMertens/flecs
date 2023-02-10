@@ -123,7 +123,7 @@ int flecs_term_id_lookup(
     }
 
     if (term_id->flags & EcsIsVariable) {
-        if (!ecs_os_strcmp(name, "This")) {
+        if (!ecs_os_strcmp(name, "This") || !ecs_os_strcmp(name, "this")) {
             term_id->id = EcsThis;
             if (free_name) {
                 ecs_os_free(term_id->name);
@@ -202,7 +202,12 @@ int flecs_term_ids_finalize(
 
     /* Include subsets for component by default, to support inheritance */
     if (!(first->flags & EcsTraverseFlags)) {
-        first->flags |= EcsSelf | EcsDown;
+        first->flags |= EcsSelf;
+        if (first->id && first->flags & EcsIsEntity) {
+            if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
+                first->flags |= EcsDown;
+            }
+        }
     }
 
     /* Traverse Self by default for pair target */
@@ -259,6 +264,11 @@ int flecs_term_ids_finalize(
     if (second->id == 0 && second->flags & EcsIsEntity) {
         second->flags &= ~EcsTraverseFlags;
         second->trav = 0;
+    }
+
+    /* If source is wildcard, term won't return any data */
+    if ((src->flags & EcsIsVariable) && ecs_id_is_wildcard(src->id)) {
+        term->inout |= EcsInOutNone;
     }
 
     return 0;
@@ -1321,7 +1331,7 @@ void flecs_term_str_w_strbuf(
     const ecs_term_id_t *second = &term->second;
 
     uint8_t def_src_mask = EcsSelf|EcsUp;
-    uint8_t def_first_mask = EcsSelf|EcsDown;
+    uint8_t def_first_mask = EcsSelf;
     uint8_t def_second_mask = EcsSelf;
 
     bool pred_set = ecs_term_id_is_set(&term->first);
