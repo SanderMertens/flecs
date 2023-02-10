@@ -293,12 +293,11 @@ int32_t ecs_search_offset(
     ecs_id_t *id_out)
 {
     if (!offset) {
+        ecs_poly_assert(world, ecs_world_t);
         return ecs_search(world, table, id, id_out);
     }
 
     if (!table) return -1;
-
-    ecs_poly_assert(world, ecs_world_t);
 
     ecs_type_t type = table->type;
     ecs_id_t *ids = type.array;

@@ -41,6 +41,21 @@ void flecs_name_index_init(
         allocator);
 }
 
+void flecs_name_index_init_if(
+    ecs_hashmap_t *hm,
+    ecs_allocator_t *allocator) 
+{
+    if (!hm->compare) {
+        flecs_name_index_init(hm, allocator);
+    }
+}
+
+bool flecs_name_index_is_init(
+    const ecs_hashmap_t *hm)
+{
+    return hm->compare != NULL;
+}
+
 ecs_hashmap_t* flecs_name_index_new(
     ecs_world_t *world,
     ecs_allocator_t *allocator) 

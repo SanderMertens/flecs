@@ -3428,11 +3428,10 @@ typedef struct ecs_snapshot_iter_t {
 /** Rule-iterator specific data */
 typedef struct ecs_rule_iter_t {
     const ecs_rule_t *rule;
-    struct ecs_var_t *registers;         /* Variable storage (tables, entities) */
+    struct ecs_var_t *vars;              /* Variable storage */
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
-    
-    int32_t *columns;                    /* Column indices */
-    
+    uint64_t *written;
+
     ecs_entity_t entity;                 /* Result in case of 1 entity */
 
     bool redo;
@@ -27703,7 +27702,7 @@ private:
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_rule_next_instanced;
+        return ecs_rule_next;
     }
 
 public:

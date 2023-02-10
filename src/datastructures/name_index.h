@@ -10,6 +10,13 @@ void flecs_name_index_init(
     ecs_hashmap_t *hm,
     ecs_allocator_t *allocator);
 
+void flecs_name_index_init_if(
+    ecs_hashmap_t *hm,
+    ecs_allocator_t *allocator);
+
+bool flecs_name_index_is_init(
+    const ecs_hashmap_t *hm);
+
 ecs_hashmap_t* flecs_name_index_new(
     ecs_world_t *world,
     ecs_allocator_t *allocator);
