@@ -27,7 +27,7 @@ void* Sum_ensure_member(void *ptr, const char *member) {
     if (!strcmp(member, "a")) {
         return &data->a;
     } else if (!strcmp(member, "b")) {
-        return &data->a;
+        return &data->b;
     } else {
         return NULL; // We can't serialize into fake result member
     }
