@@ -2016,6 +2016,18 @@ ecs_entity_t ecs_new_w_id(
     ecs_world_t *world,
     ecs_id_t id);
 
+/** Create new entity in table.
+ * This operation creates a new entity in the specified table.
+ * 
+ * @param world The world.
+ * @param table The table to which to add the new entity.
+ * @return The new entity.
+ */
+FLECS_API
+ecs_entity_t ecs_new_w_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /** Find or create an entity. 
  * This operation creates a new entity, or modifies an existing one. When a name
  * is set in the ecs_entity_desc_t::name field and ecs_entity_desc_t::entity is
@@ -4726,6 +4738,22 @@ ecs_table_t* ecs_table_add_id(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id);
+
+/** Find table from id array. 
+ * This operation finds or creates a table with the specified array of 
+ * (component) ids. The ids in the array must be sorted, and it may not contain
+ * duplicate elements.
+ * 
+ * @param world The world.
+ * @param ids The id array.
+ * @param id_count The number of elements in the id array.
+ * @return The table with the specified (component) ids.
+ */
+FLECS_API
+ecs_table_t* ecs_table_find(
+    ecs_world_t *world,
+    const ecs_id_t *ids,
+    int32_t id_count);
 
 /** Get table that has all components of current table minus the specified id.
  * If the provided table doesn't have the provided id, the operation will return

@@ -947,19 +947,19 @@ void flecs_bootstrap(
     /* Set scope back to flecs core */
     ecs_set_scope(world, EcsFlecsCore);
 
-    /* Acyclic/Traversable components */
-    ecs_add_id(world, EcsIsA, EcsTraversable);
-    ecs_add_id(world, EcsDependsOn, EcsTraversable);
-    ecs_add_id(world, EcsWith, EcsAcyclic);
-
-    /* DontInherit components */
-    ecs_add_id(world, EcsPrefab, EcsDontInherit);
-
     /* Traversable relationships are always acyclic */
     ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
 
     /* Transitive relationships are always Traversable */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
+
+    /* DontInherit components */
+    ecs_add_id(world, EcsPrefab, EcsDontInherit);
+
+    /* Acyclic/Traversable components */
+    ecs_add_id(world, EcsIsA, EcsTraversable);
+    ecs_add_id(world, EcsDependsOn, EcsTraversable);
+    ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);

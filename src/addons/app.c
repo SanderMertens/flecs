@@ -95,7 +95,7 @@ int ecs_app_run_frame(
 int ecs_app_set_run_action(
     ecs_app_run_action_t callback)
 {
-    if (run_action != flecs_default_run_action) {
+    if (run_action != flecs_default_run_action && run_action != callback) {
         ecs_err("run action already set");
         return -1;
     }
@@ -108,7 +108,7 @@ int ecs_app_set_run_action(
 int ecs_app_set_frame_action(
     ecs_app_frame_action_t callback)
 {
-    if (frame_action != flecs_default_frame_action) {
+    if (frame_action != flecs_default_frame_action && frame_action != callback) {
         ecs_err("frame action already set");
         return -1;
     }

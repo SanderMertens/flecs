@@ -1172,7 +1172,17 @@
                 "entity_from_json_empty",
                 "entity_from_json_w_path",
                 "entity_from_json_w_ids",
-                "entity_from_json_w_values"
+                "entity_from_json_w_values",
+                "ser_deser_std_string",
+                "ser_deser_std_vector_int",
+                "ser_deser_std_vector_std_string",
+                "ser_deser_type_w_std_string_std_vector_std_string",
+                "ser_deser_flecs_entity",
+                "world_ser_deser_flecs_entity",
+                "new_world_ser_deser_flecs_entity",
+                "new_world_ser_deser_empty_flecs_entity",
+                "opaque_vector_w_builder",
+                "deser_entity_w_path"
             ]
         }, {
             "id": "Table",

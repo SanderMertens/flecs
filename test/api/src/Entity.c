@@ -1988,3 +1988,46 @@ void Entity_defer_entity_init_w_set_name_w_add_childof() {
 
     ecs_fini(world);
 }
+
+void Entity_entity_w_digit_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "10000"
+    });
+
+    test_assert(e != 0);
+    test_uint(e, 10000);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_existing_digit_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "7"
+    });
+
+    test_assert(e != 0);
+    test_uint(e, 7);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_conflicting_digit_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .id = 6,
+        .name = "7"
+    });
+
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}

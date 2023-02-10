@@ -200,18 +200,14 @@ ecs_entity_t ecs_opaque_init(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->as_type != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->serialize != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->type.as_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
     }
 
-    ecs_set(world, t, EcsOpaque, {
-        .as_type = desc->as_type,
-        .serialize = desc->serialize
-    });
+    ecs_set_ptr(world, t, EcsOpaque, &desc->type);
 
     return t;
 }

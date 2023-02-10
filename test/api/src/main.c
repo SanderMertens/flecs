@@ -133,6 +133,9 @@ void Entity_ensure_from_stage(void);
 void Entity_ensure_after_deleted_1_entity(void);
 void Entity_ensure_after_deleted_2_entities(void);
 void Entity_defer_entity_init_w_set_name_w_add_childof(void);
+void Entity_entity_w_digit_name(void);
+void Entity_entity_w_existing_digit_name(void);
+void Entity_entity_w_conflicting_digit_name(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -815,6 +818,7 @@ void ComponentLifecycle_on_add_w_emplace_existing(void);
 void ComponentLifecycle_on_add_w_emplace_defer(void);
 void ComponentLifecycle_merge_async_stage_w_emplace(void);
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void);
+void ComponentLifecycle_emplace_grow_w_existing_component(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
@@ -2868,6 +2872,18 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_entity_init_w_set_name_w_add_childof",
         Entity_defer_entity_init_w_set_name_w_add_childof
+    },
+    {
+        "entity_w_digit_name",
+        Entity_entity_w_digit_name
+    },
+    {
+        "entity_w_existing_digit_name",
+        Entity_entity_w_existing_digit_name
+    },
+    {
+        "entity_w_conflicting_digit_name",
+        Entity_entity_w_conflicting_digit_name
     }
 };
 
@@ -5458,6 +5474,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "merge_async_stage_w_emplace_to_deferred_world",
         ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world
+    },
+    {
+        "emplace_grow_w_existing_component",
+        ComponentLifecycle_emplace_grow_w_existing_component
     },
     {
         "dtor_on_fini",
@@ -11560,7 +11580,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        96,
+        99,
         Entity_testcases
     },
     {
@@ -11714,7 +11734,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        77,
+        78,
         ComponentLifecycle_testcases
     },
     {

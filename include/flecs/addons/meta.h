@@ -260,37 +260,37 @@ typedef struct EcsVector {
 #if !defined(__cplusplus) || !defined(FLECS_CPP)
 
 /** Serializer interface */
-typedef struct ecs_meta_serializer_t {
+typedef struct ecs_serializer_t {
     /* Serialize value */
     int (*value)(
-        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const struct ecs_serializer_t *ser, /**< Serializer */
         ecs_entity_t type,            /**< Type of the value to serialize */
         const void *value);           /**< Pointer to the value to serialize */
 
     /* Serialize member */
     int (*member)(
-        const struct ecs_meta_serializer_t *ser, /**< Serializer */
+        const struct ecs_serializer_t *ser, /**< Serializer */
         const char *member);           /**< Member name */
 
     const ecs_world_t *world;
     void *ctx;
-} ecs_meta_serializer_t;
+} ecs_serializer_t;
 
 #elif defined(__cplusplus)
 
 } /* extern "C" { */
 
 /** Serializer interface (same layout as C, but with convenience methods) */
-typedef struct ecs_meta_serializer_t {
+typedef struct ecs_serializer_t {
     /* Serialize value */
     int (*value_)(
-        const struct ecs_meta_serializer_t *ser,
+        const struct ecs_serializer_t *ser,
         ecs_entity_t type,
         const void *value);
 
     /* Serialize member */
     int (*member_)(
-        const struct ecs_meta_serializer_t *ser,
+        const struct ecs_serializer_t *ser,
         const char *name);
 
     /* Serialize value */
@@ -305,19 +305,88 @@ typedef struct ecs_meta_serializer_t {
 
     const ecs_world_t *world;
     void *ctx;
-} ecs_meta_serializer_t;
+} ecs_serializer_t;
 
 extern "C" {
 #endif
 
 /** Callback invoked serializing an opaque type. */
 typedef int (*ecs_meta_serialize_t)(
-    const ecs_meta_serializer_t *ser,
+    const ecs_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
 typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
+
+    /* Deserializer interface 
+     * Only override the callbacks that are valid for the opaque type. If a
+     * deserializer attempts to assign a value type that is not supported by the
+     * interface, a conversion error is thrown.
+     */
+
+    /** Assign bool value */
+    void (*assign_bool)(
+        void *dst, 
+        bool value);
+
+    /** Assign char value */
+    void (*assign_char)(
+        void *dst, 
+        char value);
+
+    /** Assign int value */
+    void (*assign_int)(
+        void *dst, 
+        int64_t value);
+
+    /** Assign unsigned int value */
+    void (*assign_uint)(
+        void *dst, 
+        uint64_t value);
+
+    /** Assign float value */
+    void (*assign_float)(
+        void *dst, 
+        double value);
+
+    /** Assign string value */
+    void (*assign_string)(
+        void *dst, 
+        const char *value);
+
+    /** Assign entity value */
+    void (*assign_entity)(
+        void *dst,
+        ecs_world_t *world,
+        ecs_entity_t entity);
+
+    /** Assign null value */
+    void (*assign_null)(
+        void *dst);
+
+    /** Clear collection elements */
+    void (*clear)(
+        void *dst);
+
+    /** Ensure & get collection element */
+    void* (*ensure_element)(
+        void *dst, 
+        size_t elem);
+
+    /** Ensure & get element */
+    void* (*ensure_member)(
+        void *dst, 
+        const char *member);
+
+    /** Return number of elements */
+    size_t (*count)(
+        const void *dst);
+    
+    /** Resize to number of elements */
+    void (*resize)(
+        void *dst, 
+        size_t count);
 } EcsOpaque;
 
 
@@ -416,9 +485,12 @@ typedef struct ecs_meta_scope_t {
     void *ptr;                /**< Pointer to the value being iterated */
 
     const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
+    const EcsOpaque *opaque;  /**< Opaque type interface */ 
     ecs_vector_t **vector;    /**< Current vector, in case a vector is iterated */
+    ecs_hashmap_t *members;   /**< string -> member index */
     bool is_collection;       /**< Is the scope iterating elements? */
     bool is_inline_array;     /**< Is the scope iterating an inline array? */
+    bool is_empty_scope;      /**< Was scope populated (for collections) */
 } ecs_meta_scope_t;
 
 /** Type that enables iterating/populating a value using reflection data */
@@ -684,8 +756,7 @@ ecs_entity_t ecs_struct_init(
 /** Used with ecs_opaque_init. */
 typedef struct ecs_opaque_desc_t {
     ecs_entity_t entity;
-    ecs_entity_t as_type;            /**< Type that describes the serialized output */
-    ecs_meta_serialize_t serialize;  /**< Serialize action */
+    EcsOpaque type;
 } ecs_opaque_desc_t;
 
 /** Create a new opaque type.

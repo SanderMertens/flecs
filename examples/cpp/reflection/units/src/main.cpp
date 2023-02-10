@@ -7,7 +7,7 @@ struct WeatherStation {
     double precipitation;
 };
 
-void print_value(const flecs::meta::cursor& cur) {
+void print_value(const flecs::cursor& cur) {
     // Get unit entity and component
     flecs::entity u = cur.get_unit();
     const flecs::Unit *u_data = u.get<flecs::Unit>();

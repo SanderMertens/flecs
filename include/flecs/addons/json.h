@@ -33,6 +33,12 @@ extern "C" {
 typedef struct ecs_from_json_desc_t {
     const char *name; /* Name of expression (used for logging) */
     const char *expr; /* Full expression (used for logging) */
+
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*, 
+        const char *value, 
+        void *ctx);
+    void *lookup_ctx;
 } ecs_from_json_desc_t;
 
 /** Parse JSON string into value.
@@ -68,6 +74,18 @@ FLECS_API
 const char* ecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t entity,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
+
+/** Parse JSON object with multiple entities into the world. The format is the
+ * same as the one outputted by ecs_world_to_json. 
+ * 
+ * @param world The world.
+ * @param json The JSON expression to parse (see iterator in JSON format manual).
+ */
+FLECS_API
+const char* ecs_world_from_json(
+    ecs_world_t *world,
     const char *json,
     const ecs_from_json_desc_t *desc);
 
@@ -230,6 +248,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entities;        /**< Serialize entities (for This terms) */
     bool serialize_entity_labels;   /**< Serialize doc name for entities */
     bool serialize_entity_ids;      /**< Serialize numerical ids for entities */
+    bool serialize_entity_names;    /**< Serialize names (not paths) for entities */
     bool serialize_variable_labels; /**< Serialize doc name for variables */
     bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
     bool serialize_colors;          /**< Serialize doc color for entities */
@@ -248,6 +267,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_entities =        true,  \
     .serialize_entity_labels =   false, \
     .serialize_entity_ids =      false, \
+    .serialize_entity_names =    false, \
     .serialize_variable_labels = false, \
     .serialize_variable_ids =    false, \
     .serialize_colors =          false, \
@@ -285,6 +305,12 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_iter_to_json_desc_t *desc);
 
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_world_to_json_desc_t {
+    bool serialize_builtin;    /* Exclude flecs modules & contents */
+    bool serialize_modules;    /* Exclude modules & contents */
+} ecs_world_to_json_desc_t;
+
 /** Serialize world into JSON string.
  * This operation iterates the contents of the world to JSON. The operation is
  * equivalent to the following code:
@@ -302,7 +328,8 @@ int ecs_iter_to_json_buf(
  */
 FLECS_API
 char* ecs_world_to_json(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    const ecs_world_to_json_desc_t *desc);
 
 /** Serialize world into JSON string buffer.
  * Same as ecs_world_to_json, but serializes to an ecs_strbuf_t instance.
@@ -314,7 +341,8 @@ char* ecs_world_to_json(
 FLECS_API
 int ecs_world_to_json_buf(
     ecs_world_t *world,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf_out,
+    const ecs_world_to_json_desc_t *desc);
 
 #ifdef __cplusplus
 }

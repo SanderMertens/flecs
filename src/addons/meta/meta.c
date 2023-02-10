@@ -444,6 +444,14 @@ int flecs_add_member_to_struct(
             elem->size = member_size;
             elem->offset = size;
 
+            /* Synchronize offset with Member component */
+            if (elem->member == member) {
+                m->offset = elem->offset;
+            } else {
+                EcsMember *other = ecs_get_mut(world, elem->member, EcsMember);
+                other->offset = elem->offset;
+            }
+
             size += member_size;
 
             if (member_alignment > alignment) {
@@ -504,7 +512,7 @@ int flecs_add_constant_to_enum(
     ecs_id_t constant_id)
 {
     EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum);
-    
+
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
     while (ecs_map_next(&it)) {
@@ -540,8 +548,8 @@ int flecs_add_constant_to_enum(
         if (value_set) {
             if (c->value == value) {
                 char *path = ecs_get_fullpath(world, e);
-                ecs_err("conflicting constant value for '%s' (other is '%s')",
-                    path, c->name);
+                ecs_err("conflicting constant value %d for '%s' (other is '%s')",
+                    value, path, c->name);
                 ecs_os_free(path);
                 return -1;
             }
@@ -1318,8 +1326,7 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsOpaque),
         .members = {
-            { .name = (char*)"as_type", .type = ecs_id(ecs_entity_t) },
-            { .name = (char*)"serialize", .type = ecs_id(ecs_uptr_t) }
+            { .name = (char*)"as_type", .type = ecs_id(ecs_entity_t) }
         }
     });
 

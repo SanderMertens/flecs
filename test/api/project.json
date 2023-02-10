@@ -139,7 +139,10 @@
                 "ensure_from_stage",
                 "ensure_after_deleted_1_entity",
                 "ensure_after_deleted_2_entities",
-                "defer_entity_init_w_set_name_w_add_childof"
+                "defer_entity_init_w_set_name_w_add_childof",
+                "entity_w_digit_name",
+                "entity_w_existing_digit_name",
+                "entity_w_conflicting_digit_name"
             ]
         }, {
             "id": "Search",
@@ -866,6 +869,7 @@
                 "on_add_w_emplace_defer",
                 "merge_async_stage_w_emplace",
                 "merge_async_stage_w_emplace_to_deferred_world",
+                "emplace_grow_w_existing_component",
                 "dtor_on_fini",
                 "valid_type_in_dtor_on_fini",
                 "valid_other_type_of_entity_in_dtor_on_fini",

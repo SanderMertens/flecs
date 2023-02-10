@@ -205,7 +205,6 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
     flecs_rest_bool_param(req, "entities", &desc->serialize_entities);
     flecs_rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
-    flecs_rest_bool_param(req, "entity_ids", &desc->serialize_entity_ids);
     flecs_rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
     flecs_rest_bool_param(req, "variable_ids", &desc->serialize_variable_ids);
     flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
@@ -249,7 +248,7 @@ bool flecs_rest_reply_world(
     ecs_http_reply_t *reply)
 {
     (void)req;
-    ecs_world_to_json_buf(world, &reply->body);
+    ecs_world_to_json_buf(world, &reply->body, NULL);
     return true;
 }
 
@@ -992,6 +991,8 @@ void FlecsRestImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsRest);
+
+    ECS_IMPORT(world, FlecsPipeline);
 
     ecs_set_name_prefix(world, "Ecs");
 

@@ -12,6 +12,21 @@ namespace flecs {
 namespace meta {
 namespace _ {
 
+/* Type support for entity wrappers */
+template <typename EntityType>
+inline flecs::opaque<EntityType> flecs_entity_support(flecs::world&) {
+    return flecs::opaque<EntityType>()
+        .as_type(flecs::Entity)
+        .serialize([](const flecs::serializer *ser, const EntityType *data) {
+            flecs::entity_t id = data->id();
+            return ser->value(flecs::Entity, &id);
+        })
+        .assign_entity(
+            [](EntityType *dst, flecs::world_t *world, flecs::entity_t e) {
+                *dst = EntityType(world, e);
+            });
+}
+
 inline void init(flecs::world& world) {
     world.component<bool_t>("flecs::meta::bool");
     world.component<char_t>("flecs::meta::char");
@@ -65,9 +80,19 @@ inline void init(flecs::world& world) {
         // the typename
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
+
+    // Register opaque type support for C++ entity wrappers
+    world.component<flecs::entity_view>()
+        .opaque(flecs_entity_support<flecs::entity_view>);
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support<flecs::entity>);
 }
 
 } // namespace _
+
+} // namespace meta
+
 
 inline flecs::entity cursor::get_type() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
@@ -80,8 +105,6 @@ inline flecs::entity cursor::get_unit() const {
 inline flecs::entity cursor::get_entity() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
 }
-
-} // namespace meta
 
 /** Create primitive type */
 inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
@@ -123,16 +146,16 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
-inline int ecs_meta_serializer_t::value(ecs_entity_t type, const void *v) const {
+inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
 
 template <typename T>
-inline int ecs_meta_serializer_t::value(const T& v) const {
+inline int ecs_serializer_t::value(const T& v) const {
     return this->value(flecs::_::cpp_type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
 }
 
-inline int ecs_meta_serializer_t::member(const char *name) const {
+inline int ecs_serializer_t::member(const char *name) const {
     return this->member_(this, name);
 }

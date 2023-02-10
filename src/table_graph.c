@@ -1194,3 +1194,15 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_diff_t diff;
     return flecs_table_traverse_remove(world, table, &id, &diff);
 }
+
+ecs_table_t* ecs_table_find(
+    ecs_world_t *world,
+    const ecs_id_t *ids,
+    int32_t id_count)
+{
+    ecs_type_t type = {
+        .array = (ecs_id_t*)ids,
+        .count = id_count
+    };
+    return flecs_table_ensure(world, &type, false, NULL);
+}

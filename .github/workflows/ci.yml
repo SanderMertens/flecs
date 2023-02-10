@@ -1,6 +1,6 @@
 name: CI
 
-on: [ push, pull_request ]
+on: [ push ]
 
 jobs:
   build-linux:
@@ -96,6 +96,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: hack sources.list
+        run: sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
+
       - name: install compiler
         run: |
           sudo apt-get update
@@ -234,6 +237,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: hack sources.list
+        run: sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
 
       - name: install compiler
         run: |
@@ -344,7 +349,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-          
+      - name: hack sources.list
+        run: |
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
+          sudo apt-get update
+
       - name: install clang-build
         run: |
           sudo apt-get install -y clang-tools   

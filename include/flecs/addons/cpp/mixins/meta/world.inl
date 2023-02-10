@@ -24,13 +24,13 @@ flecs::string to_expr(const T* value) {
 }
 
 /** Return meta cursor to value */
-flecs::meta::cursor cursor(flecs::entity_t tid, void *ptr) {
-    return flecs::meta::cursor(m_world, tid, ptr);
+flecs::cursor cursor(flecs::entity_t tid, void *ptr) {
+    return flecs::cursor(m_world, tid, ptr);
 }
 
 /** Return meta cursor to value */
 template <typename T>
-flecs::meta::cursor cursor(void *ptr) {
+flecs::cursor cursor(void *ptr) {
     flecs::entity_t tid = _::cpp_type<T>::id(m_world);
     return cursor(tid, ptr);
 }

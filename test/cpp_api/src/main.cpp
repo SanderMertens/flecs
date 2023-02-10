@@ -1117,6 +1117,16 @@ void Meta_entity_from_json_empty(void);
 void Meta_entity_from_json_w_path(void);
 void Meta_entity_from_json_w_ids(void);
 void Meta_entity_from_json_w_values(void);
+void Meta_ser_deser_std_string(void);
+void Meta_ser_deser_std_vector_int(void);
+void Meta_ser_deser_std_vector_std_string(void);
+void Meta_ser_deser_type_w_std_string_std_vector_std_string(void);
+void Meta_ser_deser_flecs_entity(void);
+void Meta_world_ser_deser_flecs_entity(void);
+void Meta_new_world_ser_deser_flecs_entity(void);
+void Meta_new_world_ser_deser_empty_flecs_entity(void);
+void Meta_opaque_vector_w_builder(void);
+void Meta_deser_entity_w_path(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5461,6 +5471,46 @@ bake_test_case Meta_testcases[] = {
     {
         "entity_from_json_w_values",
         Meta_entity_from_json_w_values
+    },
+    {
+        "ser_deser_std_string",
+        Meta_ser_deser_std_string
+    },
+    {
+        "ser_deser_std_vector_int",
+        Meta_ser_deser_std_vector_int
+    },
+    {
+        "ser_deser_std_vector_std_string",
+        Meta_ser_deser_std_vector_std_string
+    },
+    {
+        "ser_deser_type_w_std_string_std_vector_std_string",
+        Meta_ser_deser_type_w_std_string_std_vector_std_string
+    },
+    {
+        "ser_deser_flecs_entity",
+        Meta_ser_deser_flecs_entity
+    },
+    {
+        "world_ser_deser_flecs_entity",
+        Meta_world_ser_deser_flecs_entity
+    },
+    {
+        "new_world_ser_deser_flecs_entity",
+        Meta_new_world_ser_deser_flecs_entity
+    },
+    {
+        "new_world_ser_deser_empty_flecs_entity",
+        Meta_new_world_ser_deser_empty_flecs_entity
+    },
+    {
+        "opaque_vector_w_builder",
+        Meta_opaque_vector_w_builder
+    },
+    {
+        "deser_entity_w_path",
+        Meta_deser_entity_w_path
     }
 };
 
@@ -5794,7 +5844,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        31,
+        41,
         Meta_testcases
     },
     {
