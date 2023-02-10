@@ -1,25 +1,5 @@
 #include <cpp_api.h>
 
-flecs::opaque<flecs::entity> flecs_entity_support(flecs::world&) {
-    flecs::opaque<flecs::entity> ts;
-
-    // Let reflection framework know what kind of type this is
-    ts.as_type(flecs::String);
-
-    // Forward flecs::entity value to (JSON/...) serializer
-    ts.serialize([](const flecs::serializer *s, const flecs::entity *data) {
-        flecs::entity_t id = *data;
-        return s->value(flecs::Entity, &id);
-    });
-
-    // Serialize string into std::string
-    ts.assign_entity([](flecs::entity *data, flecs::world_t *world, flecs::entity_t value) {
-        *data = flecs::entity(world, value);
-    });
-
-    return ts;
-}
-
 flecs::opaque<std::string> std_string_support(flecs::world&) {
     flecs::opaque<std::string> ts;
 
@@ -872,9 +852,6 @@ void Meta_ser_deser_type_w_std_string_std_vector_std_string() {
 void Meta_ser_deser_flecs_entity() {
     flecs::world world;
 
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support);
-
     flecs::entity e1 = world.entity("ent1");
     flecs::entity e2 = world.entity("ent2");
 
@@ -892,9 +869,6 @@ struct CppEntity {
 
 void Meta_world_ser_deser_flecs_entity() {
     flecs::world world;
-
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support);
 
     world.component<CppEntity>()
         .member<flecs::entity>("entity");
@@ -924,9 +898,6 @@ void Meta_world_ser_deser_flecs_entity() {
 void Meta_new_world_ser_deser_flecs_entity() {
     flecs::world world;
 
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support);
-
     world.component<CppEntity>()
         .member<flecs::entity>("entity");
 
@@ -942,8 +913,6 @@ void Meta_new_world_ser_deser_flecs_entity() {
     auto json = world.to_json();
 
     flecs::world world2;
-    world2.component<flecs::entity>()
-        .opaque(flecs_entity_support);
 
     world2.component<CppEntity>()
         .member<flecs::entity>("entity");
@@ -968,9 +937,6 @@ void Meta_new_world_ser_deser_flecs_entity() {
 void Meta_new_world_ser_deser_empty_flecs_entity() {
     flecs::world world;
 
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support);
-
     world.component<CppEntity>()
         .member<flecs::entity>("entity");
 
@@ -985,8 +951,6 @@ void Meta_new_world_ser_deser_empty_flecs_entity() {
     auto json = world.to_json();
 
     flecs::world world2;
-    world2.component<flecs::entity>()
-        .opaque(flecs_entity_support);
 
     world2.component<CppEntity>()
         .member<flecs::entity>("entity");
@@ -1043,16 +1007,6 @@ void Meta_opaque_vector_w_builder() {
 
 void Meta_deser_entity_w_path() {
     flecs::world world;
-
-    world.component<flecs::entity>().opaque()
-        .as_type(flecs::Entity)
-        .serialize([](const flecs::serializer *s, const flecs::entity *data) {
-            flecs::entity_t id = *data;
-            return s->value(flecs::Entity, &id);
-        })
-        .assign_entity([](flecs::entity *dst, flecs::world_t *world, flecs::entity_t value) {
-            *dst = flecs::entity(world, value);
-        });
 
     flecs::entity ent = world.entity("ent");
 

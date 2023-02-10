@@ -12,6 +12,21 @@ namespace flecs {
 namespace meta {
 namespace _ {
 
+/* Type support for entity wrappers */
+template <typename EntityType>
+inline flecs::opaque<EntityType> flecs_entity_support(flecs::world& world) {
+    return flecs::opaque<EntityType>()
+        .as_type(flecs::Entity)
+        .serialize([](const flecs::serializer *ser, const EntityType *data) {
+            flecs::entity_t id = data->id();
+            return ser->value(flecs::Entity, &id);
+        })
+        .assign_entity(
+            [](EntityType *dst, flecs::world_t *world, flecs::entity_t e) {
+                *dst = EntityType(world, e);
+            });
+}
+
 inline void init(flecs::world& world) {
     world.component<bool_t>("flecs::meta::bool");
     world.component<char_t>("flecs::meta::char");
@@ -65,6 +80,13 @@ inline void init(flecs::world& world) {
         // the typename
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
+
+    // Register opaque type support for C++ entity wrappers
+    world.component<flecs::entity_view>()
+        .opaque(flecs_entity_support<flecs::entity_view>);
+
+    world.component<flecs::entity>()
+        .opaque(flecs_entity_support<flecs::entity>);
 }
 
 } // namespace _
