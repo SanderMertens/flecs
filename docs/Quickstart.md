@@ -540,32 +540,55 @@ A singleton is a single instance of a component that can be retrieved without an
 
 ```c
 // Set singleton component
-ecs_singleton_set(world, Position, {10, 20});
+ecs_singleton_set(world, Gravity, { 9.81 });
 
 // Get singleton component
-const Position *p = ecs_singleton_get(world, Position);
+const Gravity *g = ecs_singleton_get(world, Gravity);
 ```
 ```cpp
 // Set singleton component
-world.set<Position>({10, 20});
+world.set<Gravity>({ 9.81 });
 
 // Get singleton component
-const Position *p = world.get<Position>();
+const Gravity *g = world.get<Gravity>();
 ```
 
 Singleton components are created by adding the component to its own entity id. The above code examples are shortcuts for these regular API calls:
 
 ```c
-ecs_set(world, ecs_id(Position), Position, {10, 20});
+ecs_set(world, ecs_id(Gravity), Gravity, {10, 20});
 
-const Position *p = ecs_get(world, ecs_id(Position), Position);
+const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 ```
 ```cpp
-flecs::entity pos_e = world.id<Position>();
+flecs::entity grav_e = world.id<Gravity>();
 
-pos_e.set<Position>({10, 20});
+grav_e.set<Gravity>({10, 20});
 
-const Position *p = pos_e.get<Position>();
+const Gravity *g = grav_e.get<Gravity>();
+```
+
+The following examples show how to query for a singleton component:
+
+```c
+// Create query that matches Gravity as singleton
+ecs_query_t *q = ecs_query(ecs, {
+    .filter.terms = {
+        // Regular component
+        { .id = ecs_id(Velocity) },
+        // A singleton is a component matched on itself
+        { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
+    }
+});
+
+// Create a system using the query DSL with a singleton:
+ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
+```
+
+```cpp
+world.query_builder<Velocity, Gravity>()
+    .term_at(2).singleton()
+    .build();
 ```
 
 ### Filter
