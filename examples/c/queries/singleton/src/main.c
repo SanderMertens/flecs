@@ -44,6 +44,9 @@ int main(int argc, char *argv[]) {
         .filter.instanced = true
     });
 
+    // In a query string expression you can use the $ shortcut for singletons:
+    //   Velocity, Gravity($)
+
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         Velocity *v = ecs_field(&it, Velocity, 1);

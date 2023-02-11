@@ -30,6 +30,9 @@ int main(int, char *[]) {
         .term_at(2).singleton()
         .build();
 
+    // In a query string expression you can use the $ shortcut for singletons:
+    //   Velocity, Gravity($)
+
     q.each([](flecs::entity e, Velocity& v, const Gravity& g) {
         v.y += g.value;
         std::cout << e.path() << " velocity is {" 
