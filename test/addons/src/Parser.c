@@ -1661,7 +1661,7 @@ void Parser_component_not() {
     test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -1686,7 +1686,7 @@ void Parser_pair_implicit_subject_not() {
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsNot);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -1712,7 +1712,7 @@ void Parser_pair_explicit_subject_not() {
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsNot);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -1736,12 +1736,12 @@ void Parser_2_component_not() {
     test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsNot);
-    test_int(terms[1].inout, EcsInOutDefault);
+    test_int(terms[1].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -1765,12 +1765,12 @@ void Parser_2_component_not_no_space() {
     test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsNot);
-    test_int(terms[1].inout, EcsInOutDefault);
+    test_int(terms[1].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 

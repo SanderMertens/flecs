@@ -992,6 +992,10 @@ void Filter_filter_filter(void);
 void Filter_filter_double_init(void);
 void Filter_filter_double_init_w_expr(void);
 void Filter_filter_double_init_w_expr_optional(void);
+void Filter_filter_w_tag_term_is_no_data(void);
+void Filter_filter_w_inout_none_term_is_no_data(void);
+void Filter_filter_w_tag_and_inout_none_term_is_no_data(void);
+void Filter_filter_w_not_term_is_no_data(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -1206,6 +1210,8 @@ void FilterStr_one_term_w_first_var(void);
 void FilterStr_one_term_w_second_var(void);
 void FilterStr_one_term_w_first_var_entity_src(void);
 void FilterStr_one_term_w_pair_w_0_entity(void);
+void FilterStr_not_term(void);
+void FilterStr_wildcard_term(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -1767,6 +1773,7 @@ void Observer_on_set_2_pairs_w_uni_observer(void);
 void Observer_on_set_2_pairs_w_multi_observer(void);
 void Observer_on_remove_target_from_base_at_offset(void);
 void Observer_on_remove_target_component_from_base_at_offset(void);
+void Observer_filter_observer_after_observer(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -6157,6 +6164,22 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_double_init_w_expr_optional
     },
     {
+        "filter_w_tag_term_is_no_data",
+        Filter_filter_w_tag_term_is_no_data
+    },
+    {
+        "filter_w_inout_none_term_is_no_data",
+        Filter_filter_w_inout_none_term_is_no_data
+    },
+    {
+        "filter_w_tag_and_inout_none_term_is_no_data",
+        Filter_filter_w_tag_and_inout_none_term_is_no_data
+    },
+    {
+        "filter_w_not_term_is_no_data",
+        Filter_filter_w_not_term_is_no_data
+    },
+    {
         "term_w_id",
         Filter_term_w_id
     },
@@ -7006,6 +7029,14 @@ bake_test_case FilterStr_testcases[] = {
     {
         "one_term_w_pair_w_0_entity",
         FilterStr_one_term_w_pair_w_0_entity
+    },
+    {
+        "not_term",
+        FilterStr_not_term
+    },
+    {
+        "wildcard_term",
+        FilterStr_wildcard_term
     }
 };
 
@@ -9225,6 +9256,10 @@ bake_test_case Observer_testcases[] = {
     {
         "on_remove_target_component_from_base_at_offset",
         Observer_on_remove_target_component_from_base_at_offset
+    },
+    {
+        "filter_observer_after_observer",
+        Observer_filter_observer_after_observer
     },
     {
         "cache_test_1",
@@ -11755,14 +11790,14 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        257,
+        261,
         Filter_testcases
     },
     {
         "FilterStr",
         NULL,
         NULL,
-        20,
+        22,
         FilterStr_testcases
     },
     {
@@ -11797,7 +11832,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        105,
+        106,
         Observer_testcases
     },
     {

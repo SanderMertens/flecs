@@ -1049,6 +1049,10 @@
                 "filter_double_init",
                 "filter_double_init_w_expr",
                 "filter_double_init_w_expr_optional",
+                "filter_w_tag_term_is_no_data",
+                "filter_w_inout_none_term_is_no_data",
+                "filter_w_tag_and_inout_none_term_is_no_data",
+                "filter_w_not_term_is_no_data",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",
@@ -1264,7 +1268,9 @@
                 "one_term_w_first_var",
                 "one_term_w_second_var",
                 "one_term_w_first_var_entity_src",
-                "one_term_w_pair_w_0_entity"
+                "one_term_w_pair_w_0_entity",
+                "not_term",
+                "wildcard_term"
             ]
         }, {
             "id": "Query",
@@ -1836,6 +1842,7 @@
                 "on_set_2_pairs_w_multi_observer",
                 "on_remove_target_from_base_at_offset",
                 "on_remove_target_component_from_base_at_offset",
+                "filter_observer_after_observer",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

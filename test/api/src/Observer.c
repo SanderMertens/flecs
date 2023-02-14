@@ -4576,3 +4576,47 @@ void Observer_cache_test_15() {
 
     ecs_fini(world);
 }
+
+static int Observer_a_invoked = 0;
+static int Observer_b_invoked = 0;
+
+static void Observer_a(ecs_iter_t *it) {
+    Observer_a_invoked += it->count;
+}
+
+static void Observer_b(ecs_iter_t *it) {
+    Observer_b_invoked += it->count;
+}
+
+void Observer_filter_observer_after_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+            { .id = Tag }
+        },
+        .callback = Observer_a,
+        .events = { EcsOnAdd }
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = Tag, .inout = EcsInOutNone}
+        },
+        .callback = Observer_b,
+        .events = { EcsOnAdd }
+    });
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_add(world, e, Position);
+
+    test_int(Observer_a_invoked, 1);
+    test_int(Observer_b_invoked, 1);
+
+    ecs_fini(world);
+}

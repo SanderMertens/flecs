@@ -952,9 +952,23 @@ int ecs_filter_finalize(
         if (ECS_BIT_IS_SET(f->flags, EcsFilterNoData)) {
             term->inout = EcsInOutNone;
         }
+        
+        if (term->oper == EcsNot && term->inout == EcsInOutDefault) {
+            term->inout = EcsInOutNone;
+        }
 
         if (term->inout == EcsInOutNone) {
             filter_terms ++;
+        } else if (term->idr) {
+            if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
+                filter_terms ++;
+            }
+        } else if (ecs_id_is_tag(world, term->id)) {
+            if (!ecs_id_is_union(world, term->id)) {
+                /* Union ids aren't filters because they return their target
+                 * as component value with type ecs_entity_t */
+                filter_terms ++;
+            }
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
@@ -1245,7 +1259,7 @@ void flecs_filter_str_add_id(
 {
     bool is_added = false;
     if (!is_subject || id->id != EcsThis) {
-        if (id->flags & EcsIsVariable) {
+        if (id->flags & EcsIsVariable && !ecs_id_is_wildcard(id->id)) {
             ecs_strbuf_appendlit(buf, "$");
         }
         if (id->id) {
@@ -1435,7 +1449,7 @@ char* flecs_filter_str(
                 ecs_strbuf_appendlit(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendlit(&buf, "[out] ");
-            } else if (term->inout == EcsInOutNone) {
+            } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
                 ecs_strbuf_appendlit(&buf, "[none] ");
             }
         }
@@ -2156,12 +2170,7 @@ bool ecs_term_next(
     it->columns = &iter->column;
     it->terms = &iter->term;
     it->sizes = &iter->size;
-
-    if (term->inout != EcsInOutNone) {
-        it->ptrs = &iter->ptr;
-    } else {
-        it->ptrs = NULL;
-    }
+    it->ptrs = &iter->ptr;
 
     ecs_iter_t *chain_it = it->chain_it;
     if (chain_it) {
@@ -2324,7 +2333,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
         }
     }
 
-    ECS_BIT_COND(it.flags, EcsIterIsFilter, 
+    ECS_BIT_COND(it.flags, EcsIterNoData, 
         ECS_BIT_IS_SET(filter->flags, EcsFilterNoData));
 
     if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {

@@ -9082,6 +9082,24 @@ bool ecs_id_is_tag(
     return false;
 }
 
+bool ecs_id_is_union(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (!ECS_IS_PAIR(id)) {
+        return false;
+    } else if (ECS_PAIR_FIRST(id) == EcsUnion) {
+        return true;
+    } else {
+        ecs_entity_t first = ecs_pair_first(world, id);
+        if (ecs_has_id(world, first, EcsUnion)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 int32_t ecs_count_id(
     const ecs_world_t *world,
     ecs_entity_t id)
@@ -9098,7 +9116,7 @@ int32_t ecs_count_id(
         .src.flags = EcsSelf
     });
 
-    it.flags |= EcsIterIsFilter;
+    it.flags |= EcsIterNoData;
     it.flags |= EcsIterEvalTables;
 
     while (ecs_term_next(&it)) {
@@ -23882,7 +23900,7 @@ ecs_iter_t ecs_rule_iter(
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
-    ECS_BIT_COND(result.flags, EcsIterIsFilter, 
+    ECS_BIT_COND(result.flags, EcsIterNoData, 
         ECS_BIT_IS_SET(rule->filter.flags, EcsFilterNoData));
 
     flecs_iter_init(world, &result, 
@@ -35936,7 +35954,7 @@ int ecs_iter_to_json_buf(
     /* If serializing entire table, don't bother letting the iterator populate
      * data fields as we'll be iterating all columns. */
     if (desc && desc->serialize_table) {
-        ECS_BIT_SET(it->flags, EcsIterIsFilter);
+        ECS_BIT_SET(it->flags, EcsIterNoData);
     }
 
     ecs_iter_next_action_t next = it->next;
@@ -46154,9 +46172,23 @@ int ecs_filter_finalize(
         if (ECS_BIT_IS_SET(f->flags, EcsFilterNoData)) {
             term->inout = EcsInOutNone;
         }
+        
+        if (term->oper == EcsNot && term->inout == EcsInOutDefault) {
+            term->inout = EcsInOutNone;
+        }
 
         if (term->inout == EcsInOutNone) {
             filter_terms ++;
+        } else if (term->idr) {
+            if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
+                filter_terms ++;
+            }
+        } else if (ecs_id_is_tag(world, term->id)) {
+            if (!ecs_id_is_union(world, term->id)) {
+                /* Union ids aren't filters because they return their target
+                 * as component value with type ecs_entity_t */
+                filter_terms ++;
+            }
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
@@ -46447,7 +46479,7 @@ void flecs_filter_str_add_id(
 {
     bool is_added = false;
     if (!is_subject || id->id != EcsThis) {
-        if (id->flags & EcsIsVariable) {
+        if (id->flags & EcsIsVariable && !ecs_id_is_wildcard(id->id)) {
             ecs_strbuf_appendlit(buf, "$");
         }
         if (id->id) {
@@ -46637,7 +46669,7 @@ char* flecs_filter_str(
                 ecs_strbuf_appendlit(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendlit(&buf, "[out] ");
-            } else if (term->inout == EcsInOutNone) {
+            } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
                 ecs_strbuf_appendlit(&buf, "[none] ");
             }
         }
@@ -47358,12 +47390,7 @@ bool ecs_term_next(
     it->columns = &iter->column;
     it->terms = &iter->term;
     it->sizes = &iter->size;
-
-    if (term->inout != EcsInOutNone) {
-        it->ptrs = &iter->ptr;
-    } else {
-        it->ptrs = NULL;
-    }
+    it->ptrs = &iter->ptr;
 
     ecs_iter_t *chain_it = it->chain_it;
     if (chain_it) {
@@ -47526,7 +47553,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
         }
     }
 
-    ECS_BIT_COND(it.flags, EcsIterIsFilter, 
+    ECS_BIT_COND(it.flags, EcsIterNoData, 
         ECS_BIT_IS_SET(filter->flags, EcsFilterNoData));
 
     if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
@@ -48519,7 +48546,7 @@ void flecs_uni_observer_invoke(
     }
 
     bool is_filter = term->inout == EcsInOutNone;
-    ECS_BIT_COND(it->flags, EcsIterIsFilter, is_filter);
+    ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
     it->system = observer->filter.entity;
     it->ctx = observer->ctx;
     it->binding_ctx = observer->binding_ctx;
@@ -48581,13 +48608,14 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.field_count = o->filter.field_count;
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
-    ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
+    ECS_BIT_COND(user_it.flags, EcsIterNoData,    
         ECS_BIT_IS_SET(o->filter.flags, EcsFilterNoData));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
+
     flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
@@ -48643,10 +48671,8 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
 
-        if (it->ptrs) {
-            user_it.ptrs[pivot_term] = it->ptrs[0];
-            user_it.sizes[pivot_term] = it->sizes[0];
-        }
+        user_it.ptrs[pivot_term] = it->ptrs[0];
+        user_it.sizes[pivot_term] = it->sizes[0];
         user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->filter.entity;
         user_it.term_index = pivot_term;
@@ -50814,7 +50840,7 @@ void flecs_query_match_tables(
 
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     while (ecs_filter_next(&it)) {
@@ -50848,7 +50874,7 @@ bool flecs_query_match_table(
     }
 
     ecs_iter_t it = flecs_filter_iter_w_flags(world, filter, EcsIterMatchVar|
-        EcsIterIsInstanced|EcsIterIsFilter|EcsIterEntityOptional);
+        EcsIterIsInstanced|EcsIterNoData|EcsIterEntityOptional);
     ecs_iter_set_var_as_table(&it, var_id, table);
 
     while (ecs_filter_next(&it)) {
@@ -51458,7 +51484,7 @@ void flecs_query_rematch_tables(
     }
 
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     world->info.rematch_count_total ++;
@@ -52024,7 +52050,7 @@ ecs_iter_t ecs_query_iter(
     }
 
     ecs_flags32_t flags = 0;
-    ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
+    ECS_BIT_COND(flags, EcsIterNoData, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterNoData));
     ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterIsInstanced));
@@ -53748,12 +53774,7 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, columns, int32_t, it->field_count);
     INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
     INIT_CACHE(it, stack, fields, sizes, ecs_size_t, it->field_count);
-
-    if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
-    } else {
-        it->ptrs = NULL;
-    }
+    INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
 void flecs_iter_validate(
@@ -53993,7 +54014,7 @@ void flecs_iter_populate_data(
     }
 
     int t, field_count = it->field_count;
-    if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
+    if (ECS_BIT_IS_SET(it->flags, EcsIterNoData)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
 
         if (!sizes) {
@@ -54096,18 +54117,14 @@ void* ecs_field_w_size(
     int32_t term)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->ptrs != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!size || ecs_field_size(it, term) == size || 
-        (!ecs_field_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
-        ECS_INVALID_PARAMETER, NULL);
-
+        (!ecs_field_size(it, term) && (!it->ptrs[term - 1])), 
+            ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
     if (!term) {
         return it->entities;
-    }
-
-    if (!it->ptrs) {
-        return NULL;
     }
 
     return it->ptrs[term - 1];
@@ -54329,7 +54346,7 @@ int32_t ecs_iter_count(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     int32_t count = 0;
@@ -54346,7 +54363,7 @@ ecs_entity_t ecs_iter_first(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     ecs_entity_t result = 0;
@@ -54365,7 +54382,7 @@ bool ecs_iter_is_true(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     bool result = ecs_iter_next(it);

@@ -3736,6 +3736,24 @@ bool ecs_id_is_tag(
     return false;
 }
 
+bool ecs_id_is_union(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (!ECS_IS_PAIR(id)) {
+        return false;
+    } else if (ECS_PAIR_FIRST(id) == EcsUnion) {
+        return true;
+    } else {
+        ecs_entity_t first = ecs_pair_first(world, id);
+        if (ecs_has_id(world, first, EcsUnion)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 int32_t ecs_count_id(
     const ecs_world_t *world,
     ecs_entity_t id)
@@ -3752,7 +3770,7 @@ int32_t ecs_count_id(
         .src.flags = EcsSelf
     });
 
-    it.flags |= EcsIterIsFilter;
+    it.flags |= EcsIterNoData;
     it.flags |= EcsIterEvalTables;
 
     while (ecs_term_next(&it)) {

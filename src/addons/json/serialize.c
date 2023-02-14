@@ -1686,7 +1686,7 @@ int ecs_iter_to_json_buf(
     /* If serializing entire table, don't bother letting the iterator populate
      * data fields as we'll be iterating all columns. */
     if (desc && desc->serialize_table) {
-        ECS_BIT_SET(it->flags, EcsIterIsFilter);
+        ECS_BIT_SET(it->flags, EcsIterNoData);
     }
 
     ecs_iter_next_action_t next = it->next;

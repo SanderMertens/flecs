@@ -2221,6 +2221,101 @@ void Filter_filter_double_init_w_expr_optional() {
     ecs_fini(world);
 }
 
+void Filter_filter_w_tag_term_is_no_data() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ Foo }}
+    }));
+
+    test_assert(f.flags & EcsFilterNoData);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_assert(it.flags & EcsIterNoData);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);   
+}
+
+void Filter_filter_w_inout_none_term_is_no_data() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
+    }));
+
+    test_assert(f.flags & EcsFilterNoData);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_assert(it.flags & EcsIterNoData);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);  
+}
+
+void Filter_filter_w_tag_and_inout_none_term_is_no_data() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            { ecs_id(Position), .inout = EcsInOutNone },
+            { Foo }
+        }
+    }));
+
+    test_assert(f.flags & EcsFilterNoData);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_assert(it.flags & EcsIterNoData);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_not_term_is_no_data() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            { ecs_id(Position), .oper = EcsNot }
+        }
+    }));
+
+    test_assert(f.flags & EcsFilterNoData);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_assert(it.flags & EcsIterNoData);
+    ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 
@@ -7747,8 +7842,9 @@ void Filter_term_iter_w_filter_term() {
     test_assert(it.sizes != NULL);
     test_int(it.sizes[0], ECS_SIZEOF(Position));
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
+    test_assert(it.ptrs[0] == NULL);
 
     test_bool(ecs_term_next(&it), false);
 
@@ -7782,8 +7878,9 @@ void Filter_filter_iter_w_filter_term() {
     test_assert(it.sizes != NULL);
     test_int(it.sizes[0], ECS_SIZEOF(Position));
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
+    test_assert(it.ptrs[0] == NULL);
 
     test_bool(ecs_filter_next(&it), false);
 
@@ -7925,8 +8022,9 @@ void Filter_filter_iter_2_terms_filter_all() {
     test_int(it.sizes[0], ECS_SIZEOF(Position));
     test_int(it.sizes[1], ECS_SIZEOF(Velocity));
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
+    test_assert(it.ptrs[0] == NULL);
 
     test_bool(ecs_filter_next(&it), false);
 
@@ -7969,8 +8067,9 @@ void Filter_filter_iter_2_terms_filter_all_w_out() {
     test_int(it.sizes[0], ECS_SIZEOF(Position));
     test_int(it.sizes[1], ECS_SIZEOF(Velocity));
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
+    test_assert(it.ptrs[0] == NULL);
 
     test_bool(ecs_filter_next(&it), false);
 

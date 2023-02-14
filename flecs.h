@@ -292,7 +292,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
-#define EcsIterIsFilter                (1u << 1u)  /* Is iterator filter (metadata only) */
+#define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
 #define EcsIterIsInstanced             (1u << 2u)  /* Is iterator instanced */
 #define EcsIterHasShared               (1u << 3u)  /* Does result have shared terms */
 #define EcsIterTableOnly               (1u << 4u)  /* Result only populates table */
@@ -6410,6 +6410,23 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  */
 FLECS_API
 bool ecs_id_is_tag(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+/** Return whether represents a union.
+ * This operation returns whether the specified type represents a union. Only
+ * pair ids can be unions.
+ * 
+ * An id represents a union when:
+ * - The first element of the pair is EcsUnion/flecs::Union
+ * - The first element of the pair has EcsUnion/flecs::Union
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return Whether the provided id represents a union.
+ */
+FLECS_API
+bool ecs_id_is_union(
     const ecs_world_t *world,
     ecs_id_t id);
 

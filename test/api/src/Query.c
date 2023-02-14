@@ -1836,7 +1836,6 @@ void Query_query_for_switch_filter_term() {
     test_uint(it.entities[0], e1);
     test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, EcsWildcard));
     test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
-    test_assert(it.ptrs == NULL);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -5485,7 +5484,7 @@ void Query_filter_term() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_query_next(&it), false);

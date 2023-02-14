@@ -90,7 +90,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
-#define EcsIterIsFilter                (1u << 1u)  /* Is iterator filter (metadata only) */
+#define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
 #define EcsIterIsInstanced             (1u << 2u)  /* Is iterator instanced */
 #define EcsIterHasShared               (1u << 3u)  /* Does result have shared terms */
 #define EcsIterTableOnly               (1u << 4u)  /* Result only populates table */

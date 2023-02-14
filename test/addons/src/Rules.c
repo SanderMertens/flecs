@@ -5071,7 +5071,7 @@ void Rules_filter_term() {
     test_assert(it.sizes != NULL);
     test_int(it.sizes[0], ECS_SIZEOF(Position));
 
-    test_assert(it.ptrs == NULL);
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_rule_next(&it), false);

@@ -355,7 +355,7 @@ void flecs_uni_observer_invoke(
     }
 
     bool is_filter = term->inout == EcsInOutNone;
-    ECS_BIT_COND(it->flags, EcsIterIsFilter, is_filter);
+    ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
     it->system = observer->filter.entity;
     it->ctx = observer->ctx;
     it->binding_ctx = observer->binding_ctx;
@@ -417,13 +417,14 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.field_count = o->filter.field_count;
     user_it.terms = o->filter.terms;
     user_it.flags = 0;
-    ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
+    ECS_BIT_COND(user_it.flags, EcsIterNoData,    
         ECS_BIT_IS_SET(o->filter.flags, EcsFilterNoData));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.sources = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
+
     flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
@@ -479,10 +480,8 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
 
-        if (it->ptrs) {
-            user_it.ptrs[pivot_term] = it->ptrs[0];
-            user_it.sizes[pivot_term] = it->sizes[0];
-        }
+        user_it.ptrs[pivot_term] = it->ptrs[0];
+        user_it.sizes[pivot_term] = it->sizes[0];
         user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->filter.entity;
         user_it.term_index = pivot_term;

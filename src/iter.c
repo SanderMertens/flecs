@@ -50,12 +50,7 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, columns, int32_t, it->field_count);
     INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
     INIT_CACHE(it, stack, fields, sizes, ecs_size_t, it->field_count);
-
-    if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
-    } else {
-        it->ptrs = NULL;
-    }
+    INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
 void flecs_iter_validate(
@@ -295,7 +290,7 @@ void flecs_iter_populate_data(
     }
 
     int t, field_count = it->field_count;
-    if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
+    if (ECS_BIT_IS_SET(it->flags, EcsIterNoData)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
 
         if (!sizes) {
@@ -398,18 +393,14 @@ void* ecs_field_w_size(
     int32_t term)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->ptrs != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!size || ecs_field_size(it, term) == size || 
-        (!ecs_field_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
-        ECS_INVALID_PARAMETER, NULL);
-
+        (!ecs_field_size(it, term) && (!it->ptrs[term - 1])), 
+            ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
     if (!term) {
         return it->entities;
-    }
-
-    if (!it->ptrs) {
-        return NULL;
     }
 
     return it->ptrs[term - 1];
@@ -631,7 +622,7 @@ int32_t ecs_iter_count(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     int32_t count = 0;
@@ -648,7 +639,7 @@ ecs_entity_t ecs_iter_first(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     ecs_entity_t result = 0;
@@ -667,7 +658,7 @@ bool ecs_iter_is_true(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     bool result = ecs_iter_next(it);

@@ -865,7 +865,7 @@ void flecs_query_match_tables(
 
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     while (ecs_filter_next(&it)) {
@@ -899,7 +899,7 @@ bool flecs_query_match_table(
     }
 
     ecs_iter_t it = flecs_filter_iter_w_flags(world, filter, EcsIterMatchVar|
-        EcsIterIsInstanced|EcsIterIsFilter|EcsIterEntityOptional);
+        EcsIterIsInstanced|EcsIterNoData|EcsIterEntityOptional);
     ecs_iter_set_var_as_table(&it, var_id, table);
 
     while (ecs_filter_next(&it)) {
@@ -1509,7 +1509,7 @@ void flecs_query_rematch_tables(
     }
 
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     world->info.rematch_count_total ++;
@@ -2075,7 +2075,7 @@ ecs_iter_t ecs_query_iter(
     }
 
     ecs_flags32_t flags = 0;
-    ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
+    ECS_BIT_COND(flags, EcsIterNoData, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterNoData));
     ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
         EcsFilterIsInstanced));
