@@ -198,7 +198,9 @@ struct cpp_type_impl {
             s_id = entity;
 
             // If component is enum type, register constants
+            #if FLECS_CPP_ENUM_REFLECTION_SUPPORT            
             _::init_enum<T>(world, entity);
+            #endif
         }
 
         // By now the identifier must be valid and known with the world.

@@ -15266,6 +15266,18 @@ struct string_view : string {
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
+#ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
+#if !defined(__clang__) && defined(__GNUC__)
+#if __GNUC__ > 7 || (__GNUC__ == 7 && __GNUC_MINOR__ >= 5)
+#define FLECS_CPP_ENUM_REFLECTION_SUPPORT 1
+#else
+#define FLECS_CPP_ENUM_REFLECTION_SUPPORT 0
+#endif
+#else
+#define FLECS_CPP_ENUM_REFLECTION_SUPPORT 1
+#endif
+#endif
+
 namespace flecs {
 
 /** Int to enum */
@@ -15406,9 +15418,8 @@ struct enum_type {
     }
 
     void init(flecs::world_t *world, flecs::entity_t id) {
-#if !defined(__clang__) && defined(__GNUC__)
-        ecs_assert(__GNUC__ > 7 || (__GNUC__ == 7 && __GNUC_MINOR__ >= 5), 
-            ECS_UNSUPPORTED, "enum component types require gcc 7.5 or higher");
+#if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
+        ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
 #endif
 
         ecs_log_push();
@@ -23488,7 +23499,9 @@ struct cpp_type_impl {
             s_id = entity;
 
             // If component is enum type, register constants
+            #if FLECS_CPP_ENUM_REFLECTION_SUPPORT            
             _::init_enum<T>(world, entity);
+            #endif
         }
 
         // By now the identifier must be valid and known with the world.
