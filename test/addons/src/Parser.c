@@ -108,7 +108,7 @@ void Parser_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -133,7 +133,7 @@ void Parser_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -156,7 +156,7 @@ void Parser_component_explicit_subject_this() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -180,7 +180,7 @@ void Parser_component_explicit_subject_this_by_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -204,7 +204,7 @@ void Parser_component_explicit_subject_this_by_var_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -227,10 +227,10 @@ void Parser_component_explicit_subject_wildcard() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsWildcard, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -250,10 +250,10 @@ void Parser_component_explicit_subject_any() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsAny, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -274,7 +274,7 @@ void Parser_component_explicit_subject_0() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -297,7 +297,7 @@ void Parser_this_as_predicate() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -320,7 +320,7 @@ void Parser_this_var_as_predicate() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -344,7 +344,7 @@ void Parser_this_as_object() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], EcsThis, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -369,7 +369,7 @@ void Parser_this_var_as_object() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -394,7 +394,7 @@ void Parser_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -419,7 +419,7 @@ void Parser_pair_implicit_subject_wildcard_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsWildcard, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsWildcard, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -444,7 +444,7 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], EcsWildcard, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -469,7 +469,7 @@ void Parser_pair_implicit_subject_any_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsAny, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsAny, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -494,7 +494,7 @@ void Parser_pair_implicit_subject_any_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], EcsAny, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -519,7 +519,7 @@ void Parser_pair_implicit_subject_this_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -544,7 +544,7 @@ void Parser_pair_implicit_subject_this_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -594,7 +594,7 @@ void Parser_pair_implicit_subject_obj_w_self() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -644,7 +644,7 @@ void Parser_pair_implicit_subject_obj_w_up() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -694,7 +694,7 @@ void Parser_pair_implicit_subject_obj_w_self_up() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -747,13 +747,13 @@ void Parser_pair_implicit_subject_obj_w_up_trav() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_assert(terms[0].first.trav == EcsIsA);
+    test_assert(terms[0].first.trav == 0);
     test_assert(terms[0].second.trav == EcsChildOf);
 
     ecs_filter_fini(&f);
@@ -808,7 +808,7 @@ void Parser_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -833,7 +833,7 @@ void Parser_pair_explicit_subject_this() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -858,7 +858,7 @@ void Parser_pair_explicit_subject_this_by_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -883,7 +883,7 @@ void Parser_pair_explicit_subject_this_by_var_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -908,7 +908,7 @@ void Parser_pair_explicit_subject_wildcard_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsWildcard, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsWildcard, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -933,11 +933,11 @@ void Parser_pair_explicit_subject_wildcard_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsWildcard, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -958,7 +958,7 @@ void Parser_pair_explicit_subject_wildcard_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], EcsWildcard, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -1029,7 +1029,7 @@ void Parser_pair_explicit_subject_0() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1053,7 +1053,7 @@ void Parser_in_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
@@ -1077,7 +1077,7 @@ void Parser_in_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
@@ -1101,7 +1101,7 @@ void Parser_in_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1127,7 +1127,7 @@ void Parser_in_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1151,7 +1151,7 @@ void Parser_inout_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -1175,7 +1175,7 @@ void Parser_inout_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -1199,7 +1199,7 @@ void Parser_inout_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1225,7 +1225,7 @@ void Parser_inout_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1249,7 +1249,7 @@ void Parser_out_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
@@ -1273,7 +1273,7 @@ void Parser_out_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
@@ -1297,7 +1297,7 @@ void Parser_out_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1323,7 +1323,7 @@ void Parser_out_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1347,7 +1347,7 @@ void Parser_inout_filter_component() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutNone);
@@ -1370,7 +1370,7 @@ void Parser_component_singleton() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Pred, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1395,7 +1395,7 @@ void Parser_this_singleton() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1418,7 +1418,7 @@ void Parser_component_implicit_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1441,7 +1441,7 @@ void Parser_component_explicit_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1465,7 +1465,7 @@ void Parser_pair_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1490,7 +1490,7 @@ void Parser_variable_single_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsUp, "X");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1514,7 +1514,7 @@ void Parser_variable_multi_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsUp, "XYZ");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1538,7 +1538,7 @@ void Parser_variable_multi_char_w_underscore() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsUp, "XY_Z");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1562,7 +1562,7 @@ void Parser_variable_multi_char_w_number() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsUp, "XY_1");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1586,7 +1586,7 @@ void Parser_variable_multi_char_not_allcaps() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsUp, "xyZ");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1610,7 +1610,7 @@ void Parser_pred_var() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first_var(terms[0], 0, EcsSelf|EcsDown, "Pred");
+    test_first_var(terms[0], 0, EcsSelf, "Pred");
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -1634,7 +1634,7 @@ void Parser_obj_var() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second_var(terms[0], 0, EcsSelf, "Obj");
     test_int(terms[0].oper, EcsAnd);
@@ -1658,7 +1658,7 @@ void Parser_component_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutNone);
@@ -1682,7 +1682,7 @@ void Parser_pair_implicit_subject_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsNot);
@@ -1708,7 +1708,7 @@ void Parser_pair_explicit_subject_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsNot);
@@ -1733,12 +1733,12 @@ void Parser_2_component_not() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutNone);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsNot);
     test_int(terms[1].inout, EcsInOutNone);
@@ -1762,12 +1762,12 @@ void Parser_2_component_not_no_space() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutNone);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsNot);
     test_int(terms[1].inout, EcsInOutNone);
@@ -1790,7 +1790,7 @@ void Parser_component_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1814,12 +1814,12 @@ void Parser_2_component_optional() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsOptional);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -1843,12 +1843,12 @@ void Parser_2_component_optional_no_space() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsOptional);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -1871,7 +1871,7 @@ void Parser_from_and() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAndFrom);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1894,7 +1894,7 @@ void Parser_from_or() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOrFrom);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1917,7 +1917,7 @@ void Parser_from_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsNotFrom);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1941,7 +1941,7 @@ void Parser_pair_implicit_subject_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsOptional);
@@ -1967,7 +1967,7 @@ void Parser_pair_explicit_subject_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsOptional);
@@ -1991,7 +1991,7 @@ void Parser_pred_implicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2015,7 +2015,7 @@ void Parser_pred_explicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2039,7 +2039,7 @@ void Parser_pred_no_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2064,7 +2064,7 @@ void Parser_pair_implicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2090,7 +2090,7 @@ void Parser_pair_explicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2115,7 +2115,7 @@ void Parser_inout_role_pred_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -2139,7 +2139,7 @@ void Parser_inout_role_pred_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -2163,7 +2163,7 @@ void Parser_inout_role_pred_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -2188,7 +2188,7 @@ void Parser_inout_role_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2214,7 +2214,7 @@ void Parser_inout_role_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2240,12 +2240,12 @@ void Parser_2_pred_implicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
@@ -2270,12 +2270,12 @@ void Parser_2_pred_no_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], 0, EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
@@ -2300,12 +2300,12 @@ void Parser_2_pred_explicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
@@ -2332,13 +2332,13 @@ void Parser_2_pair_implicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
@@ -2366,13 +2366,13 @@ void Parser_2_pair_explicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
@@ -2398,13 +2398,13 @@ void Parser_2_pred_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].id_flags, ECS_TOGGLE);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
@@ -2432,14 +2432,14 @@ void Parser_2_pair_implicit_subj_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].id_flags, ECS_PAIR);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
@@ -2468,14 +2468,14 @@ void Parser_2_pair_explicit_subj_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].id_flags, ECS_PAIR);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
@@ -2502,14 +2502,14 @@ void Parser_2_or_pred_implicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
-    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
 
     ecs_filter_fini(&f);
@@ -2531,14 +2531,14 @@ void Parser_2_or_pred_explicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
-    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
 
     ecs_filter_fini(&f);
@@ -2562,16 +2562,16 @@ void Parser_2_or_pair_implicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);    
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);    
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);    
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);    
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
-    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
 
     ecs_filter_fini(&f);
@@ -2595,16 +2595,16 @@ void Parser_2_or_pair_explicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);    
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);    
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);    
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);    
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
-    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
 
     ecs_filter_fini(&f);
@@ -2626,14 +2626,14 @@ void Parser_2_or_pred_inout() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred_1, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOut);
 
-    test_first(terms[1], Pred_2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
-    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
 
     ecs_filter_fini(&f);
@@ -2654,7 +2654,7 @@ void Parser_1_digit_pred_implicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], 100, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], 100, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2678,7 +2678,7 @@ void Parser_1_digit_pred_no_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], 100, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], 100, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2703,7 +2703,7 @@ void Parser_1_digit_pred_explicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], 100, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], 100, EcsSelf|EcsIsEntity);
     test_src(terms[0], 200, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2731,7 +2731,7 @@ void Parser_1_digit_pair_implicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], 100, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], 100, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], 300, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2761,7 +2761,7 @@ void Parser_1_digit_pair_explicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], 100, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], 100, EcsSelf|EcsIsEntity);
     test_src(terms[0], 200, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], 300, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -2786,7 +2786,7 @@ void Parser_pred_implicit_subject_self() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2810,7 +2810,7 @@ void Parser_pred_implicit_subject_superset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2834,7 +2834,7 @@ void Parser_pred_implicit_subject_subset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsDown|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2858,7 +2858,7 @@ void Parser_pred_implicit_subject_superset_inclusive() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2882,7 +2882,7 @@ void Parser_pred_implicit_subject_subset_inclusive() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2906,7 +2906,7 @@ void Parser_pred_implicit_subject_superset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2930,7 +2930,7 @@ void Parser_pred_implicit_subject_subset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsDown|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2954,7 +2954,7 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2978,7 +2978,7 @@ void Parser_pred_implicit_subject_subset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsDown|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3002,7 +3002,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3026,7 +3026,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsSelf|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3051,7 +3051,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3076,7 +3076,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsSelf|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3100,7 +3100,7 @@ void Parser_pred_implicit_subject_superset_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3124,7 +3124,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3148,7 +3148,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3172,7 +3172,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsIsVariable);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3203,7 +3203,7 @@ void Parser_expr_w_symbol() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], comp, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], comp, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -3245,7 +3245,7 @@ void Parser_subj_entity_w_explicit_self() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3270,7 +3270,7 @@ void Parser_subj_entity_w_explicit_self_superset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3295,7 +3295,7 @@ void Parser_subj_entity_w_explicit_superset_relation() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsUp|EcsIsEntity);
     test_int(terms[0].src.trav, EcsChildOf);
     test_int(terms[0].oper, EcsAnd);
@@ -3321,7 +3321,7 @@ void Parser_subj_entity_w_explicit_self_superset_relation() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].src.trav, EcsChildOf);
     test_int(terms[0].oper, EcsAnd);
@@ -3347,7 +3347,7 @@ void Parser_obj_entity_w_explicit_self() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -3373,7 +3373,7 @@ void Parser_obj_entity_w_explicit_self_superset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -3399,7 +3399,7 @@ void Parser_obj_entity_w_explicit_superset_relation() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -3425,7 +3425,7 @@ void Parser_obj_entity_w_explicit_self_superset_relation() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -3656,7 +3656,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self() {
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -3686,7 +3686,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset() {
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -3717,7 +3717,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation() {
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -3748,7 +3748,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation() {
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], Pred2, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], Pred2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -3852,7 +3852,7 @@ void Parser_trailing_newline() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3876,7 +3876,7 @@ void Parser_2_trailing_newlines() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3900,7 +3900,7 @@ void Parser_trailing_space() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3924,7 +3924,7 @@ void Parser_2_trailing_spaces() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3952,7 +3952,7 @@ void Parser_template_type() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -3975,7 +3975,7 @@ void Parser_predicate_w_parens() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -4052,12 +4052,12 @@ void Parser_this_subj_var_kind() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], TagB, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], TagB, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);
@@ -4082,12 +4082,12 @@ void Parser_this_obj_var_kind() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], TagB, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], TagB, EcsSelf|EcsIsEntity);
     test_src(terms[1], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[1], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
@@ -4112,12 +4112,12 @@ void Parser_this_subj_obj_var_kind() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_first(terms[1], TagB, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[1], TagB, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[1], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[1].oper, EcsAnd);
@@ -4141,7 +4141,7 @@ void Parser_var_w_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], 0, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);    
@@ -4165,7 +4165,7 @@ void Parser_entity_pred_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -4191,7 +4191,7 @@ void Parser_entity_subj_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -4218,7 +4218,7 @@ void Parser_entity_obj_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -4242,7 +4242,7 @@ void Parser_this_pred_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], EcsThis, EcsSelf|EcsDown|EcsIsVariable);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -4268,7 +4268,7 @@ void Parser_this_subj_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -4294,7 +4294,7 @@ void Parser_this_obj_no_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], TagA, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
@@ -4320,7 +4320,7 @@ void Parser_auto_object_variable() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second_var(terms[0], 0, EcsSelf, "Pred");
     test_int(terms[0].oper, EcsAnd);
@@ -4345,7 +4345,7 @@ void Parser_auto_object_variable_w_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Pred, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_second_var(terms[0], 0, EcsSelf, "Pred");
     test_int(terms[0].oper, EcsAnd);
@@ -4389,7 +4389,7 @@ void Parser_oneof_self_pred_w_relative_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Rel, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
@@ -4417,7 +4417,7 @@ void Parser_oneof_other_pred_w_relative_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_first(terms[0], Rel, EcsSelf|EcsDown|EcsIsEntity);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);

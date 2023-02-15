@@ -875,7 +875,7 @@ void Query_oper_or_to_str() {
 
     auto q = ecs.query_builder<>()
         .term<Position>().oper(flecs::Or)
-        .term<Velocity>().oper(flecs::Or)
+        .term<Velocity>()
         .build();
     test_str(q.str(), "Position || Velocity");
 }

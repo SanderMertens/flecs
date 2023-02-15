@@ -986,7 +986,7 @@ void Observer_3_terms_2_or_on_add() {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}},
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -1036,7 +1036,7 @@ void Observer_3_terms_2_or_on_remove() {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}},
+        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -1076,7 +1076,7 @@ void Observer_2_terms_w_from_entity_on_add() {
     
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr, .src.id = x}},
+        .filter.terms = {{TagA}, {TagB, .src.id = x}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx

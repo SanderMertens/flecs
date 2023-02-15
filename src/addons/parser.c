@@ -840,14 +840,12 @@ char* ecs_parse_term(
 
     ecs_term_id_t *src = &term->src;
 
-    bool prev_or = false;
     if (ptr != expr) {
         if (ptr[0]) {
             if (ptr[0] == ',') {
                 ptr ++;
             } else if (ptr[0] == '|') {
                 ptr += 2;
-                prev_or = true;
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid preceding token");
@@ -894,7 +892,7 @@ char* ecs_parse_term(
     /* Post-parse consistency checks */
 
     /* If next token is OR, term is part of an OR expression */
-    if (!ecs_os_strncmp(ptr, TOK_OR, 2) || prev_or) {
+    if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
         /* An OR operator must always follow an AND or another OR */
         if (term->oper != EcsAnd) {
             ecs_parser_error(name, expr, (ptr - expr), 
@@ -940,11 +938,6 @@ char* ecs_parse_term(
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
         goto error;
-    }
-
-    /* Verify consistency of OR expression */
-    if (prev_or && term->oper == EcsOr) {
-        term->oper = EcsOr;
     }
 
     /* Automatically assign This if entity is not assigned and the set is

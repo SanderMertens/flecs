@@ -283,7 +283,7 @@ void FilterBuilder_add_or() {
 
     auto q = ecs.filter_builder<>()
         .term<Position>().oper(flecs::Or)
-        .term<Velocity>().oper(flecs::Or)
+        .term<Velocity>()
         .build();
 
     auto e1 = ecs.entity().add<Position>();
@@ -1618,7 +1618,7 @@ void FilterBuilder_operator_shortcuts() {
     auto filter = ecs.filter_builder()
         .term(a).and_()
         .term(b).or_()
-        .term(c).or_()
+        .term(c)
         .term(d).not_()
         .term(e).optional()
         .term(f).and_from()
@@ -1636,7 +1636,7 @@ void FilterBuilder_operator_shortcuts() {
 
     t = filter.term(2);
     test_int(t.id(), c);
-    test_int(t.oper(), flecs::Or);
+    test_int(t.oper(), flecs::And);
 
     t = filter.term(3);
     test_int(t.id(), d);

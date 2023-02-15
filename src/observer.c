@@ -760,6 +760,11 @@ int flecs_multi_observer_init(
             continue;
         }
 
+        /* Single component observers never use OR */
+        if (oper == EcsOr) {
+            term->oper = EcsAnd;
+        }
+
         /* If observer only contains optional terms, match everything */
         if (optional_only) {
             term->id = EcsAny;

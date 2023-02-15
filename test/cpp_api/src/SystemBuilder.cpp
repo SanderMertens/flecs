@@ -216,7 +216,7 @@ void SystemBuilder_add_or() {
 
     auto s = ecs.system<>()
         .term<Position>().oper(flecs::Or)
-        .term<Velocity>().oper(flecs::Or)
+        .term<Velocity>()
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1 || e == e2);
