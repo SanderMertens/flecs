@@ -18472,7 +18472,7 @@ void FlecsTimerImport(
         .entity = ecs_entity(world, {.name = "AddTickSource", .add = { ecs_dependson(EcsPreFrame) }}),
         .query.filter.terms = {
             { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
-            { .id = ecs_id(EcsRateFilter), .oper = EcsOr, .inout = EcsIn },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd, .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
         },
         .callback = AddTickSource
@@ -38936,14 +38936,12 @@ char* ecs_parse_term(
 
     ecs_term_id_t *src = &term->src;
 
-    bool prev_or = false;
     if (ptr != expr) {
         if (ptr[0]) {
             if (ptr[0] == ',') {
                 ptr ++;
             } else if (ptr[0] == '|') {
                 ptr += 2;
-                prev_or = true;
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid preceding token");
@@ -38990,7 +38988,7 @@ char* ecs_parse_term(
     /* Post-parse consistency checks */
 
     /* If next token is OR, term is part of an OR expression */
-    if (!ecs_os_strncmp(ptr, TOK_OR, 2) || prev_or) {
+    if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
         /* An OR operator must always follow an AND or another OR */
         if (term->oper != EcsAnd) {
             ecs_parser_error(name, expr, (ptr - expr), 
@@ -39036,11 +39034,6 @@ char* ecs_parse_term(
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
         goto error;
-    }
-
-    /* Verify consistency of OR expression */
-    if (prev_or && term->oper == EcsOr) {
-        term->oper = EcsOr;
     }
 
     /* Automatically assign This if entity is not assigned and the set is
@@ -44211,8 +44204,6 @@ int ecs_filter_finalize(
 {
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
-    bool is_or = false, prev_or = false;
-    ecs_entity_t prev_src_id = 0;
     int32_t filter_terms = 0;
 
     ecs_filter_finalize_ctx_t ctx = {0};
@@ -44227,19 +44218,21 @@ int ecs_filter_finalize(
             return -1;
         }
 
-        is_or = term->oper == EcsOr;
-        field_count += !(is_or && prev_or);
-        term->field_index = field_count - 1;
-
-        if (prev_or && is_or) {
-            if (prev_src_id != term->src.id) {
+        if (i && term[-1].oper == EcsOr) {
+            if (term[-1].src.id != term->src.id) {
                 flecs_filter_error(&ctx, "mismatching src.id for OR terms");
                 return -1;
             }
+            if (term->oper != EcsOr && term->oper != EcsAnd) {
+                flecs_filter_error(&ctx, 
+                    "term after OR operator must use AND operator");
+                return -1;
+            }
+        } else {
+            field_count ++;
         }
 
-        prev_src_id = term->src.id;
-        prev_or = is_or;
+        term->field_index = field_count - 1;
 
         if (ecs_term_match_this(term)) {
             ECS_BIT_SET(f->flags, EcsFilterMatchThis);
@@ -44287,6 +44280,11 @@ int ecs_filter_finalize(
                 term->idr->keep_alive ++;
             }
         }
+    }
+
+    if (term_count && (terms[term_count - 1].oper == EcsOr)) {
+        flecs_filter_error(&ctx, "last term of filter can't have OR operator");
+        return -1;
     }
 
     f->field_count = field_count;
@@ -44721,7 +44719,6 @@ char* flecs_filter_str(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
-    int32_t or_count = 0;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -44735,19 +44732,7 @@ char* flecs_filter_str(
             }
         }
 
-        if (i) {
-            if (terms[i - 1].oper == EcsOr && term->oper == EcsOr) {
-                ecs_strbuf_appendlit(&buf, " || ");
-            } else {
-                ecs_strbuf_appendlit(&buf, ", ");
-            }
-        }
-
-        if (term->oper != EcsOr) {
-            or_count = 0;
-        }
-
-        if (or_count < 1) {
+        if (!i || !(term[-1].oper == EcsOr)) {
             if (term->inout == EcsIn) {
                 ecs_strbuf_appendlit(&buf, "[in] ");
             } else if (term->inout == EcsInOut) {
@@ -44759,11 +44744,15 @@ char* flecs_filter_str(
             }
         }
 
-        if (term->oper == EcsOr) {
-            or_count ++;
-        }
-
         flecs_term_str_w_strbuf(world, term, &buf);
+
+        if (i != (count - 1)) {
+            if (term->oper == EcsOr) {
+                ecs_strbuf_appendlit(&buf, " || ");
+            } else {
+                ecs_strbuf_appendlit(&buf, ", ");
+            }
+        }
     }
 
     return ecs_strbuf_get(&buf);
@@ -45023,10 +45012,9 @@ bool flecs_filter_match_table(
 {
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
-
-    bool is_or = false;
-    bool or_result = false;
     int32_t match_count = 1;
+    bool result = true;
+
     if (matches_left) {
         match_count = *matches_left;
     }
@@ -45035,10 +45023,6 @@ bool flecs_filter_match_table(
         ecs_term_t *term = &terms[i];
         ecs_oper_kind_t oper = term->oper;
         if (i == skip_term) {
-            if (oper == EcsOr) {
-                is_or = true;
-                or_result = true;
-            }
             if (oper != EcsAndFrom && oper != EcsOrFrom && oper != EcsNotFrom) {
                 continue;
             }
@@ -45047,17 +45031,6 @@ bool flecs_filter_match_table(
         ecs_term_id_t *src = &term->src;
         const ecs_table_t *match_table = table;
         int32_t t_i = term->field_index;
-
-        if (!is_or && oper == EcsOr) {
-            is_or = true;
-            or_result = false;
-        } else if (is_or && oper != EcsOr) {
-            if (!or_result) {
-                return false;
-            }
-
-            is_or = false;
-        }
 
         ecs_entity_t src_id = src->id;
         if (!src_id) {
@@ -45071,7 +45044,6 @@ bool flecs_filter_match_table(
             match_table = ecs_get_table(world, src_id);
         } else {
             if (ECS_BIT_IS_SET(iter_flags, EcsIterIgnoreThis)) {
-                or_result = true;
                 continue;
             }
             
@@ -45080,8 +45052,15 @@ bool flecs_filter_match_table(
         }
 
         int32_t match_index = 0;
+        if (!i || term[-1].oper != EcsOr) {
+            result = false;
+        } else {
+            if (result) {
+                continue; /* Already found matching OR term */
+            }
+        }
 
-        bool result = flecs_term_match_table(world, term, match_table,
+        bool term_result = flecs_term_match_table(world, term, match_table,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             sources ? &sources[t_i] : NULL, 
@@ -45089,14 +45068,13 @@ bool flecs_filter_match_table(
             first,
             iter_flags);
 
-        if (is_or) {
-            or_result |= result;
-            if (result) {
-                /* If Or term matched, skip following Or terms */
-                for (; i < count && terms[i].oper == EcsOr; i ++) { }
-                i -- ;
-            }
-        } else if (!result) {
+        if (i && term[-1].oper == EcsOr) {
+            result |= term_result;
+        } else {
+            result = term_result;
+        }
+
+        if (oper != EcsOr && !result) {
             return false;
         }
 
@@ -45112,7 +45090,7 @@ bool flecs_filter_match_table(
         *matches_left = match_count;
     }
 
-    return !is_or || or_result;
+    return true;
 }
 
 static
@@ -45543,7 +45521,7 @@ int32_t ecs_filter_pivot_term(
         ecs_term_t *term = &terms[i];
         ecs_id_t id = term->id;
 
-        if (term->oper != EcsAnd) {
+        if ((term->oper != EcsAnd) || (i && (term[-1].oper == EcsOr))) {
             continue;
         }
 
@@ -47033,6 +47011,11 @@ int flecs_multi_observer_init(
                 }
             }
             continue;
+        }
+
+        /* Single component observers never use OR */
+        if (oper == EcsOr) {
+            term->oper = EcsAnd;
         }
 
         /* If observer only contains optional terms, match everything */

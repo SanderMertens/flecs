@@ -156,7 +156,7 @@ void Filter_filter_3_terms_w_or() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}}
+        .terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }}
     });
 
     test_int(f.term_count, 3);
@@ -182,7 +182,7 @@ void Filter_filter_3_terms_w_or() {
     test_int(f.terms[1].src.trav, EcsIsA);
 
     test_int(f.terms[2].id, TagC);
-    test_int(f.terms[2].oper, EcsOr);
+    test_int(f.terms[2].oper, EcsAnd);
     test_int(f.terms[2].field_index, 1);
     test_int(f.terms[2].first.id, TagC);
     test_int(f.terms[2].first.flags, EcsSelf|EcsIsEntity);
@@ -206,7 +206,7 @@ void Filter_filter_4_terms_w_or_at_1() {
     ecs_filter_t f = ECS_FILTER_INIT;
     ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC, .oper = EcsOr}, {TagD}}
+        .terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC}, {TagD}}
     });
 
     test_int(f.term_count, 4);
@@ -232,7 +232,7 @@ void Filter_filter_4_terms_w_or_at_1() {
     test_int(f.terms[1].src.trav, EcsIsA);
 
     test_int(f.terms[2].id, TagC);
-    test_int(f.terms[2].oper, EcsOr);
+    test_int(f.terms[2].oper, EcsAnd);
     test_int(f.terms[2].field_index, 1);
     test_int(f.terms[2].first.id, TagC);
     test_int(f.terms[2].first.flags, EcsSelf|EcsIsEntity);
@@ -1009,7 +1009,7 @@ void Filter_filter_2_terms_or_w_dontinherit() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter(world, {
         .storage = &f,
-        .terms = {{ TagA, .oper = EcsOr }, { TagB, .oper = EcsOr }}
+        .terms = {{ TagA, .oper = EcsOr }, { TagB }}
     }));
 
     test_int(f.term_count, 2);
@@ -1026,7 +1026,7 @@ void Filter_filter_2_terms_or_w_dontinherit() {
     test_int(f.terms[0].src.trav, EcsIsA);
 
     test_int(f.terms[1].id, TagB);
-    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].oper, EcsAnd);
     test_int(f.terms[1].field_index, 0);
     test_int(f.terms[1].first.id, TagB);
     test_int(f.terms[1].first.flags, EcsSelf|EcsIsEntity);
@@ -1051,7 +1051,7 @@ void Filter_filter_2_terms_or_w_both_dontinherit() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter(world, {
         .storage = &f,
-        .terms = {{ TagA, .oper = EcsOr }, { TagB, .oper = EcsOr }}
+        .terms = {{ TagA, .oper = EcsOr }, { TagB }}
     }));
 
     test_int(f.term_count, 2);
@@ -1068,7 +1068,7 @@ void Filter_filter_2_terms_or_w_both_dontinherit() {
     test_int(f.terms[0].src.trav, 0);
 
     test_int(f.terms[1].id, TagB);
-    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].oper, EcsAnd);
     test_int(f.terms[1].field_index, 0);
     test_int(f.terms[1].first.id, TagB);
     test_int(f.terms[1].first.flags, EcsSelf|EcsIsEntity);
@@ -1758,7 +1758,7 @@ void Filter_filter_2_terms_w_or() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .terms = {{TagA, .oper = EcsOr}, {TagB, .oper = EcsOr}}
+        .terms = {{TagA, .oper = EcsOr}, {TagB }}
     }));
 
     test_int(f.terms[0].oper, EcsOr);
@@ -1769,7 +1769,7 @@ void Filter_filter_2_terms_w_or() {
     test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
     test_int(f.terms[0].src.trav, EcsIsA);
 
-    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].oper, EcsAnd);
     test_int(f.terms[1].id, TagB);
     test_int(f.terms[1].first.id, TagB);
     test_int(f.terms[1].first.flags, EcsSelf|EcsIsEntity);
@@ -1793,7 +1793,7 @@ void Filter_filter_2_terms_w_or_mixed_src_flags() {
         .storage = &f,
         .terms = {
             {TagA, .oper = EcsOr}, 
-            {TagB, .oper = EcsOr, .src.flags = EcsUp}
+            {TagB, .oper = EcsAnd, .src.flags = EcsUp}
         }
     }));
 
@@ -1880,7 +1880,7 @@ void Filter_filter_2_terms_w_or_same_src_w_id_and_name() {
         .storage = &f,
         .terms = {
             {TagA, .oper = EcsOr, .src.name = "SrcA"}, 
-            {TagB, .oper = EcsOr, .src.id = SrcA}
+            {TagB, .src.id = SrcA}
         }
     }));
 
@@ -1892,7 +1892,7 @@ void Filter_filter_2_terms_w_or_same_src_w_id_and_name() {
     test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsEntity);
     test_int(f.terms[0].src.trav, EcsIsA);
 
-    test_int(f.terms[1].oper, EcsOr);
+    test_int(f.terms[1].oper, EcsAnd);
     test_int(f.terms[1].id, TagB);
     test_int(f.terms[1].first.id, TagB);
     test_int(f.terms[1].first.flags, EcsSelf|EcsIsEntity);
@@ -7488,7 +7488,7 @@ void Filter_chain_iter_w_or() {
     ecs_filter_t f_2 = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f_2,
-        .terms = {{ TagB, .oper = EcsOr }, { TagC, .oper = EcsOr }}
+        .terms = {{ TagB, .oper = EcsOr }, { TagC }}
     }));
 
     ecs_iter_t child_it = ecs_filter_iter(world, &f_1);

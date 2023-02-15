@@ -256,7 +256,7 @@ void QueryBuilder_add_or() {
 
     auto q = ecs.query_builder<>()
         .term<Position>().oper(flecs::Or)
-        .term<Velocity>().oper(flecs::Or)
+        .term<Velocity>()
         .build();
 
     auto e1 = ecs.entity().add<Position>();

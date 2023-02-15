@@ -104,7 +104,7 @@ void FilterStr_three_terms_w_or() {
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr },
-            { TagC, .oper = EcsOr }
+            { TagC }
         }
     }));
 
@@ -130,7 +130,7 @@ void FilterStr_three_terms_w_or_inout() {
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr, .inout = EcsIn },
-            { TagC, .oper = EcsOr, .inout = EcsIn }
+            { TagC, .inout = EcsIn }
         }
     }));
 
@@ -157,7 +157,7 @@ void FilterStr_four_terms_three_w_or_inout() {
         .terms = {
             { TagA },
             { TagB, .oper = EcsOr, .inout = EcsIn },
-            { TagC, .oper = EcsOr, .inout = EcsIn },
+            { TagC, .inout = EcsIn },
             { TagD, .inout = EcsIn }
         }
     }));
