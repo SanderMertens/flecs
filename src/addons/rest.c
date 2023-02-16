@@ -445,6 +445,7 @@ bool flecs_rest_reply_query(
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = q
     });
+    if (r) printf("%s\n", ecs_rule_str(r));
     if (!r) {
         char *err = flecs_rest_get_captured_log();
         char *escaped_err = ecs_astresc('"', err);

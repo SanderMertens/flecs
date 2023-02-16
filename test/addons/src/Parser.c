@@ -4466,3 +4466,71 @@ void Parser_oneof_other_pred_w_invalid_obj() {
  
     ecs_fini(world);
 }
+
+void Parser_pair_implicit_src_missing_rel() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(, Obj)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_src_missing_obj() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, )"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_pair_explicit_src_missing_src() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "Rel(, Obj)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_pair_explicit_src_missing_obj() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "Rel($this, )"
+    }));
+
+    ecs_fini(world);
+}

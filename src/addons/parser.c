@@ -724,7 +724,13 @@ parse_pair:
     }
 
     if (ptr[0] == TOK_AND) {
-        ptr ++;
+        ptr = ecs_parse_ws(ptr + 1);
+        if (ptr[0] == TOK_PAREN_CLOSE) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected identifier for second element of pair"); 
+            goto error;
+        }
+        
         term.src.id = EcsThis;
         term.src.flags |= EcsIsVariable;
         goto parse_pair_predicate;

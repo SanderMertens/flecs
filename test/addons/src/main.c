@@ -189,6 +189,10 @@ void Parser_oneof_self_pred_w_relative_obj(void);
 void Parser_oneof_other_pred_w_relative_obj(void);
 void Parser_oneof_self_pred_w_invalid_obj(void);
 void Parser_oneof_other_pred_w_invalid_obj(void);
+void Parser_pair_implicit_src_missing_rel(void);
+void Parser_pair_implicit_src_missing_obj(void);
+void Parser_pair_explicit_src_missing_src(void);
+void Parser_pair_explicit_src_missing_obj(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -655,6 +659,69 @@ void RulesOperators_3_and_optional_dependent_optional_pair_src(void);
 void RulesOperators_3_and_optional_dependent_not_pair_rel(void);
 void RulesOperators_3_and_optional_dependent_not_pair_tgt(void);
 void RulesOperators_3_and_optional_dependent_not_pair_src(void);
+void RulesOperators_2_or(void);
+void RulesOperators_3_or(void);
+void RulesOperators_2_or_written(void);
+void RulesOperators_3_or_written(void);
+void RulesOperators_2_or_written_w_rel_var(void);
+void RulesOperators_3_or_written_w_rel_var(void);
+void RulesOperators_2_or_written_w_tgt_var(void);
+void RulesOperators_2_or_written_w_rel_tgt_var(void);
+void RulesOperators_2_or_written_w_rel_tgt_same_var(void);
+void RulesOperators_3_or_written_w_tgt_var(void);
+void RulesOperators_2_or_chains(void);
+void RulesOperators_2_or_chains_written(void);
+
+// Testsuite 'RulesTransitive'
+void RulesTransitive_1_fact_0_lvl_true(void);
+void RulesTransitive_1_fact_1_lvl_true(void);
+void RulesTransitive_1_fact_2_lvl_true(void);
+void RulesTransitive_1_fact_0_lvl_false(void);
+void RulesTransitive_1_fact_1_lvl_false(void);
+void RulesTransitive_1_fact_2_lvl_false(void);
+void RulesTransitive_1_fact_reflexive(void);
+void RulesTransitive_1_this_src_written_0_lvl(void);
+void RulesTransitive_1_this_src_written_1_lvl(void);
+void RulesTransitive_1_this_src_written_2_lvl(void);
+void RulesTransitive_1_this_src_written_reflexive(void);
+void RulesTransitive_1_this_src_0_lvl(void);
+void RulesTransitive_1_this_src_1_lvl(void);
+void RulesTransitive_1_this_src_2_lvl(void);
+void RulesTransitive_1_this_src_reflexive(void);
+void RulesTransitive_1_ent_src_tgt_var_0_lvl(void);
+void RulesTransitive_1_ent_src_tgt_var_1_lvl(void);
+void RulesTransitive_1_ent_src_tgt_var_2_lvl(void);
+void RulesTransitive_1_ent_src_tgt_var_reflexive(void);
+void RulesTransitive_1_this_src_tgt_var(void);
+void RulesTransitive_1_this_src_tgt_var_reflexive(void);
+void RulesTransitive_1_var_src_written_0_lvl(void);
+void RulesTransitive_1_var_src_written_1_lvl(void);
+void RulesTransitive_1_var_src_written_2_lvl(void);
+void RulesTransitive_1_var_src_written_reflexive(void);
+void RulesTransitive_1_var_src_0_lvl(void);
+void RulesTransitive_1_var_src_1_lvl(void);
+void RulesTransitive_1_var_src_2_lvl(void);
+void RulesTransitive_1_var_src_reflexive(void);
+void RulesTransitive_1_var_src_tgt_var(void);
+void RulesTransitive_1_var_src_tgt_var_reflexive(void);
+void RulesTransitive_1_ent_src_tgt_this_0_lvl(void);
+void RulesTransitive_1_ent_src_tgt_this_1_lvl(void);
+void RulesTransitive_1_ent_src_tgt_this_2_lvl(void);
+void RulesTransitive_1_ent_src_tgt_this_reflexive(void);
+void RulesTransitive_1_var_src_tgt_this(void);
+void RulesTransitive_1_var_src_tgt_this_reflexive(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_before_0_lvl(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_before_1_lvl(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_before_2_lvl(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_after_0_lvl(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_after_1_lvl(void);
+void RulesTransitive_2_ent_src_constrain_tgt_var_after_2_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_before_0_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_before_1_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_before_2_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_after_0_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_after_1_lvl(void);
+void RulesTransitive_2_this_src_constrain_tgt_var_after_2_lvl(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -1874,6 +1941,22 @@ bake_test_case Parser_testcases[] = {
     {
         "oneof_other_pred_w_invalid_obj",
         Parser_oneof_other_pred_w_invalid_obj
+    },
+    {
+        "pair_implicit_src_missing_rel",
+        Parser_pair_implicit_src_missing_rel
+    },
+    {
+        "pair_implicit_src_missing_obj",
+        Parser_pair_implicit_src_missing_obj
+    },
+    {
+        "pair_explicit_src_missing_src",
+        Parser_pair_explicit_src_missing_src
+    },
+    {
+        "pair_explicit_src_missing_obj",
+        Parser_pair_explicit_src_missing_obj
     }
 };
 
@@ -3703,6 +3786,253 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "3_and_optional_dependent_not_pair_src",
         RulesOperators_3_and_optional_dependent_not_pair_src
+    },
+    {
+        "2_or",
+        RulesOperators_2_or
+    },
+    {
+        "3_or",
+        RulesOperators_3_or
+    },
+    {
+        "2_or_written",
+        RulesOperators_2_or_written
+    },
+    {
+        "3_or_written",
+        RulesOperators_3_or_written
+    },
+    {
+        "2_or_written_w_rel_var",
+        RulesOperators_2_or_written_w_rel_var
+    },
+    {
+        "3_or_written_w_rel_var",
+        RulesOperators_3_or_written_w_rel_var
+    },
+    {
+        "2_or_written_w_tgt_var",
+        RulesOperators_2_or_written_w_tgt_var
+    },
+    {
+        "2_or_written_w_rel_tgt_var",
+        RulesOperators_2_or_written_w_rel_tgt_var
+    },
+    {
+        "2_or_written_w_rel_tgt_same_var",
+        RulesOperators_2_or_written_w_rel_tgt_same_var
+    },
+    {
+        "3_or_written_w_tgt_var",
+        RulesOperators_3_or_written_w_tgt_var
+    },
+    {
+        "2_or_chains",
+        RulesOperators_2_or_chains
+    },
+    {
+        "2_or_chains_written",
+        RulesOperators_2_or_chains_written
+    }
+};
+
+bake_test_case RulesTransitive_testcases[] = {
+    {
+        "1_fact_0_lvl_true",
+        RulesTransitive_1_fact_0_lvl_true
+    },
+    {
+        "1_fact_1_lvl_true",
+        RulesTransitive_1_fact_1_lvl_true
+    },
+    {
+        "1_fact_2_lvl_true",
+        RulesTransitive_1_fact_2_lvl_true
+    },
+    {
+        "1_fact_0_lvl_false",
+        RulesTransitive_1_fact_0_lvl_false
+    },
+    {
+        "1_fact_1_lvl_false",
+        RulesTransitive_1_fact_1_lvl_false
+    },
+    {
+        "1_fact_2_lvl_false",
+        RulesTransitive_1_fact_2_lvl_false
+    },
+    {
+        "1_fact_reflexive",
+        RulesTransitive_1_fact_reflexive
+    },
+    {
+        "1_this_src_written_0_lvl",
+        RulesTransitive_1_this_src_written_0_lvl
+    },
+    {
+        "1_this_src_written_1_lvl",
+        RulesTransitive_1_this_src_written_1_lvl
+    },
+    {
+        "1_this_src_written_2_lvl",
+        RulesTransitive_1_this_src_written_2_lvl
+    },
+    {
+        "1_this_src_written_reflexive",
+        RulesTransitive_1_this_src_written_reflexive
+    },
+    {
+        "1_this_src_0_lvl",
+        RulesTransitive_1_this_src_0_lvl
+    },
+    {
+        "1_this_src_1_lvl",
+        RulesTransitive_1_this_src_1_lvl
+    },
+    {
+        "1_this_src_2_lvl",
+        RulesTransitive_1_this_src_2_lvl
+    },
+    {
+        "1_this_src_reflexive",
+        RulesTransitive_1_this_src_reflexive
+    },
+    {
+        "1_ent_src_tgt_var_0_lvl",
+        RulesTransitive_1_ent_src_tgt_var_0_lvl
+    },
+    {
+        "1_ent_src_tgt_var_1_lvl",
+        RulesTransitive_1_ent_src_tgt_var_1_lvl
+    },
+    {
+        "1_ent_src_tgt_var_2_lvl",
+        RulesTransitive_1_ent_src_tgt_var_2_lvl
+    },
+    {
+        "1_ent_src_tgt_var_reflexive",
+        RulesTransitive_1_ent_src_tgt_var_reflexive
+    },
+    {
+        "1_this_src_tgt_var",
+        RulesTransitive_1_this_src_tgt_var
+    },
+    {
+        "1_this_src_tgt_var_reflexive",
+        RulesTransitive_1_this_src_tgt_var_reflexive
+    },
+    {
+        "1_var_src_written_0_lvl",
+        RulesTransitive_1_var_src_written_0_lvl
+    },
+    {
+        "1_var_src_written_1_lvl",
+        RulesTransitive_1_var_src_written_1_lvl
+    },
+    {
+        "1_var_src_written_2_lvl",
+        RulesTransitive_1_var_src_written_2_lvl
+    },
+    {
+        "1_var_src_written_reflexive",
+        RulesTransitive_1_var_src_written_reflexive
+    },
+    {
+        "1_var_src_0_lvl",
+        RulesTransitive_1_var_src_0_lvl
+    },
+    {
+        "1_var_src_1_lvl",
+        RulesTransitive_1_var_src_1_lvl
+    },
+    {
+        "1_var_src_2_lvl",
+        RulesTransitive_1_var_src_2_lvl
+    },
+    {
+        "1_var_src_reflexive",
+        RulesTransitive_1_var_src_reflexive
+    },
+    {
+        "1_var_src_tgt_var",
+        RulesTransitive_1_var_src_tgt_var
+    },
+    {
+        "1_var_src_tgt_var_reflexive",
+        RulesTransitive_1_var_src_tgt_var_reflexive
+    },
+    {
+        "1_ent_src_tgt_this_0_lvl",
+        RulesTransitive_1_ent_src_tgt_this_0_lvl
+    },
+    {
+        "1_ent_src_tgt_this_1_lvl",
+        RulesTransitive_1_ent_src_tgt_this_1_lvl
+    },
+    {
+        "1_ent_src_tgt_this_2_lvl",
+        RulesTransitive_1_ent_src_tgt_this_2_lvl
+    },
+    {
+        "1_ent_src_tgt_this_reflexive",
+        RulesTransitive_1_ent_src_tgt_this_reflexive
+    },
+    {
+        "1_var_src_tgt_this",
+        RulesTransitive_1_var_src_tgt_this
+    },
+    {
+        "1_var_src_tgt_this_reflexive",
+        RulesTransitive_1_var_src_tgt_this_reflexive
+    },
+    {
+        "2_ent_src_constrain_tgt_var_before_0_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_before_0_lvl
+    },
+    {
+        "2_ent_src_constrain_tgt_var_before_1_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_before_1_lvl
+    },
+    {
+        "2_ent_src_constrain_tgt_var_before_2_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_before_2_lvl
+    },
+    {
+        "2_ent_src_constrain_tgt_var_after_0_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_after_0_lvl
+    },
+    {
+        "2_ent_src_constrain_tgt_var_after_1_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_after_1_lvl
+    },
+    {
+        "2_ent_src_constrain_tgt_var_after_2_lvl",
+        RulesTransitive_2_ent_src_constrain_tgt_var_after_2_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_before_0_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_before_0_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_before_1_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_before_1_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_before_2_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_before_2_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_after_0_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_after_0_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_after_1_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_after_1_lvl
+    },
+    {
+        "2_this_src_constrain_tgt_var_after_2_lvl",
+        RulesTransitive_2_this_src_constrain_tgt_var_after_2_lvl
     }
 };
 
@@ -5579,7 +5909,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        180,
+        184,
         Parser_testcases
     },
     {
@@ -5628,8 +5958,15 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        46,
+        58,
         RulesOperators_testcases
+    },
+    {
+        "RulesTransitive",
+        NULL,
+        NULL,
+        49,
+        RulesTransitive_testcases
     },
     {
         "Rules",
@@ -5774,5 +6111,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 28);
+    return bake_test_run("addons", argc, argv, suites, 29);
 }
