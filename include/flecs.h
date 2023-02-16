@@ -491,6 +491,7 @@ typedef enum ecs_oper_kind_t {
     EcsNotFrom,       /**< Term must match none of the components from term id */
 } ecs_oper_kind_t;
 
+/* Term id flags  */
 #define EcsSelf                       (1u << 1) /**< Match on self */
 #define EcsUp                         (1u << 2) /**< Match by traversing upwards */
 #define EcsDown                       (1u << 3) /**< Match by traversing downwards (derived, cannot be set) */
@@ -500,8 +501,14 @@ typedef enum ecs_oper_kind_t {
 #define EcsIsVariable                 (1u << 7) /**< Term id is a variable */
 #define EcsIsEntity                   (1u << 8) /**< Term id is an entity */
 #define EcsFilter                     (1u << 9) /**< Prevent observer from triggering on term */
-
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
+
+/* Term flags discovered & set during filter creation. */
+#define EcsTermMatchAny    (1 << 0)
+#define EcsTermMatchAnySrc (1 << 1)
+#define EcsTermPairSame    (1 << 2)
+#define EcsTermTransitive  (1 << 3)
+#define EcsTermReflexive   (1 << 4)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
@@ -544,6 +551,8 @@ struct ecs_term_t {
 
     int32_t field_index;        /**< Index of field for term in iterator */
     ecs_id_record_t *idr;       /**< Cached pointer to internal index */
+
+    ecs_flags16_t flags;        /**< Flags that help eval, set by ecs_filter_init */
 
     bool move;                  /**< Used by internals */
 };

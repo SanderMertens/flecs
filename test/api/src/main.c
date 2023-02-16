@@ -1001,6 +1001,10 @@ void Filter_filter_w_tag_term_is_no_data(void);
 void Filter_filter_w_inout_none_term_is_no_data(void);
 void Filter_filter_w_tag_and_inout_none_term_is_no_data(void);
 void Filter_filter_w_not_term_is_no_data(void);
+void Filter_filter_w_no_transitive_pair(void);
+void Filter_filter_w_transitive_pair(void);
+void Filter_filter_w_transitive_tag_no_pair(void);
+void Filter_filter_w_transitive_tag_self_tgt(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6207,6 +6211,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_not_term_is_no_data",
         Filter_filter_w_not_term_is_no_data
+    },
+    {
+        "filter_w_no_transitive_pair",
+        Filter_filter_w_no_transitive_pair
+    },
+    {
+        "filter_w_transitive_pair",
+        Filter_filter_w_transitive_pair
+    },
+    {
+        "filter_w_transitive_tag_no_pair",
+        Filter_filter_w_transitive_tag_no_pair
+    },
+    {
+        "filter_w_transitive_tag_self_tgt",
+        Filter_filter_w_transitive_tag_self_tgt
     },
     {
         "term_w_id",
@@ -11835,7 +11855,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        261,
+        265,
         Filter_testcases
     },
     {

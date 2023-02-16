@@ -23,8 +23,10 @@ const char* flecs_rule_op_str(
 {
     switch(kind) {
     case EcsRuleAnd:          return "and     ";
+    case EcsRuleTrav:         return "trav    ";
+    case EcsRuleTravId:       return "travid  ";
+    case EcsRuleFindIds:      return "findids ";
     case EcsRuleEach:         return "each    ";
-    case EcsRuleDown:         return "down    ";
     case EcsRuleStore:        return "store   ";
     case EcsRuleUnion:        return "union   ";
     case EcsRuleEnd:          return "end     ";
@@ -147,8 +149,9 @@ int32_t flecs_rule_op_ref_str(
 char* ecs_rule_str(
     ecs_rule_t *rule)
 {
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_poly_assert(rule, ecs_rule_t);
 
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_rule_op_t *ops = rule->ops;
     int32_t i, count = rule->op_count, indent = 0;
     for (i = 0; i < count; i ++) {

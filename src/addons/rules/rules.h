@@ -32,8 +32,10 @@ typedef struct {
 /* -- Op types -- */
 typedef enum {
     EcsRuleAnd,
+    EcsRuleTrav,
+    EcsRuleTravId,
+    EcsRuleFindIds,
     EcsRuleEach,
-    EcsRuleDown,
     EcsRuleStore,
     EcsRuleUnion,
     EcsRuleEnd,
@@ -58,11 +60,6 @@ typedef enum {
 #define EcsRuleSrc     0
 #define EcsRuleFirst   2
 #define EcsRuleSecond  4
-
-/* Match flags used for special match instructions */
-#define EcsRuleMatchAny    (1 << 0)
-#define EcsRuleMatchAnySrc (1 << 1)
-#define EcsRulePairSame    (1 << 2)
 
 /* References to variable or entity (resolved during evaluation) */
 typedef union {
@@ -92,8 +89,6 @@ typedef struct {
     int32_t remaining;
 
     ecs_table_t *table;
-    ecs_vector_t *tables;
-    int32_t index;
 } ecs_rule_and_ctx_t;
 
  /* Each context */
@@ -101,22 +96,34 @@ typedef struct {
     int32_t row;
 } ecs_rule_each_ctx_t;
 
- /* Each context */
+/* Cache for storing results of downward traversal */
 typedef struct {
-    bool redo_latch;
-} ecs_rule_option_ctx_t;
+    ecs_entity_t entity;
+    ecs_id_record_t *idr;
+    int32_t column;
+} ecs_trav_elem_t;
 
- /* Down context */
 typedef struct {
     ecs_id_t id;
-    ecs_vector_t *tables;
-    int32_t index;
-} ecs_rule_down_ctx_t;
+    ecs_id_record_t *idr;
+    ecs_vec_t entities;
+    bool up;
+} ecs_trav_cache_t;
 
- /* TravDown context */
+/* Trav context */
 typedef struct {
-    ecs_table_range_t root;
-} ecs_rule_trav_down_ctx_t;
+    ecs_rule_and_ctx_t and;
+    ecs_trav_cache_t cache;
+    int32_t index;
+    int32_t offset;
+    int32_t count;
+    bool yield_reflexive;
+} ecs_rule_trav_ctx_t;
+
+/* Trav context */
+typedef struct {
+    ecs_id_record_t *cur;
+} ecs_rule_findids_ctx_t;
 
 /* End context */
 typedef struct {
@@ -132,10 +139,9 @@ typedef struct ecs_rule_op_ctx_t {
     int32_t sp;
     union {
         ecs_rule_and_ctx_t and;
+        ecs_rule_trav_ctx_t trav;
+        ecs_rule_findids_ctx_t findids;
         ecs_rule_each_ctx_t each;
-        ecs_rule_option_ctx_t option;
-        ecs_rule_down_ctx_t down;
-        ecs_rule_trav_down_ctx_t trav_down;
         ecs_rule_ctrlflow_ctx_t ctrlflow;
         ecs_rule_cond_ctx_t cond;
     } is;
@@ -150,6 +156,8 @@ typedef struct {
     int32_t lbl_not;
     int32_t lbl_option;
     int32_t lbl_cond_eval;
+    int32_t lbl_or;
+    int32_t lbl_prev; /* If set, use this as default value for prev */
 } ecs_rule_compile_ctx_t;
 
 /* Rule compiler state */
@@ -217,5 +225,24 @@ void flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule);
+
+ecs_allocator_t* flecs_rule_get_allocator(
+    const ecs_iter_t *it);
+
+void flecs_rule_trav_cache_fini(
+    ecs_allocator_t *a,
+    ecs_trav_cache_t *cache);
+
+void flecs_rule_get_down_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_cache_t *cache,
+    ecs_entity_t trav,
+    ecs_entity_t entity);
+
+void flecs_rule_get_up_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_cache_t *cache,
+    ecs_entity_t trav,
+    ecs_table_t *table);
 
 #endif
