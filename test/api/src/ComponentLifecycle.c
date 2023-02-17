@@ -1485,7 +1485,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace() {
     ecs_set_hooks(world, Position, {
         .ctor = ecs_ctor(Position),
         .copy = ecs_copy(Position),
-        .move_ctor = position_move_ctor
+        .move_ctor = position_move_ctor,
+        .dtor = ecs_dtor(Position)
     });
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1496,7 +1497,9 @@ void ComponentLifecycle_merge_async_stage_w_emplace() {
     test_assert(!ecs_has(world, e, Position));
     test_int(ctor_position, 0);
     test_int(copy_position, 0);
+    test_int(move_position, 0);
     test_int(move_ctor_position, 0);
+    test_int(dtor_position, 0);
     p->x = 10;
     p->y = 20;
 
@@ -1504,7 +1507,9 @@ void ComponentLifecycle_merge_async_stage_w_emplace() {
     test_assert(ecs_has(world, e, Position));
     test_int(ctor_position, 0);
     test_int(copy_position, 0);
+    test_int(move_position, 0);
     test_int(move_ctor_position, 1);
+    test_int(dtor_position, 1);
 
     const Position *ptr = ecs_get(world, e, Position);
     test_int(ptr->x, 10);
