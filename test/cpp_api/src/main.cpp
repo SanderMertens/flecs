@@ -888,6 +888,7 @@ void ComponentLifecycle_set_pair_second_no_copy(void);
 void ComponentLifecycle_set_override_no_copy(void);
 void ComponentLifecycle_set_override_pair_no_copy(void);
 void ComponentLifecycle_set_override_pair_w_entity_no_copy(void);
+void ComponentLifecycle_dtor_after_defer_set(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4604,6 +4605,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "set_override_pair_w_entity_no_copy",
         ComponentLifecycle_set_override_pair_w_entity_no_copy
+    },
+    {
+        "dtor_after_defer_set",
+        ComponentLifecycle_dtor_after_defer_set
     }
 };
 
@@ -5781,7 +5786,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        71,
+        72,
         ComponentLifecycle_testcases
     },
     {
