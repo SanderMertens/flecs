@@ -584,6 +584,13 @@
                 "1_src_pair_first_same_var_after_write",
                 "1_src_pair_second_same_var_after_write",
                 "1_src_pair_first_and_second_same_var_after_write",
+                "1_src_pair_first_same_var_this",
+                "1_src_pair_second_same_var_this",
+                "1_src_pair_first_and_second_same_var_this",
+                "1_src_id_same_var_this_after_write",
+                "1_src_pair_first_same_var_this_after_write",
+                "1_src_pair_second_same_var_this_after_write",
+                "1_src_pair_first_and_second_same_var_this_after_write",
                 "1_ent_src_w_this_var",
                 "1_ent_src_w_pair_this_rel",
                 "1_ent_src_w_pair_this_tgt",
@@ -742,7 +749,9 @@
                 "2_this_src_constrain_tgt_var_before_2_lvl",
                 "2_this_src_constrain_tgt_var_after_0_lvl",
                 "2_this_src_constrain_tgt_var_after_1_lvl",
-                "2_this_src_constrain_tgt_var_after_2_lvl"
+                "2_this_src_constrain_tgt_var_after_2_lvl",
+                "1_src_tgt_same_var",
+                "1_src_tgt_same_var_reflexive"
             ]
         }, {
             "id": "Rules",
