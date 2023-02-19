@@ -2396,6 +2396,178 @@ void Filter_filter_w_transitive_tag_self_tgt() {
     ecs_fini(world); 
 }
 
+void Filter_filter_w_pair_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.name = "a",
+                .src.flags = EcsIsVariable,
+                .second.name = "a",
+                .second.flags = EcsIsVariable,
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsVariable);
+    test_assert(f.terms[0].second.flags & EcsIsVariable);
+    test_str(f.terms[0].src.name, "a");
+    test_str(f.terms[0].second.name, "a");
+    test_assert(f.terms[0].flags & EcsTermPairSame);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_pair_not_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.name = "a",
+                .src.flags = EcsIsVariable,
+                .second.name = "b",
+                .second.flags = EcsIsVariable,
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsVariable);
+    test_assert(f.terms[0].second.flags & EcsIsVariable);
+    test_str(f.terms[0].src.name, "a");
+    test_str(f.terms[0].second.name, "b");
+    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_pair_no_vars_not_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, A);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.id = A,
+                .second.id = A
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsEntity);
+    test_assert(f.terms[0].second.flags & EcsIsEntity);
+    test_uint(f.terms[0].src.id, A);
+    test_uint(f.terms[0].second.id, A);
+    test_assert(f.terms[0].flags & EcsTermPairSame);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_pair_wildcard_not_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.id = EcsWildcard,
+                .second.id = EcsWildcard
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsVariable);
+    test_assert(f.terms[0].second.flags & EcsIsVariable);
+    test_uint(f.terms[0].src.id, EcsWildcard);
+    test_uint(f.terms[0].second.id, EcsWildcard);
+    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_pair_any_not_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.id = EcsAny,
+                .second.id = EcsAny
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsVariable);
+    test_assert(f.terms[0].second.flags & EcsIsVariable);
+    test_uint(f.terms[0].src.id, EcsAny);
+    test_uint(f.terms[0].second.id, EcsAny);
+    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_no_pair_not_same_vars() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = Rel, 
+                .src.name = "a",
+                .src.flags = EcsIsVariable
+            }
+        }
+    }));
+
+    test_assert(f.terms[0].src.flags & EcsIsVariable);
+    test_assert(!(f.terms[0].second.flags & EcsIsVariable));
+    test_str(f.terms[0].src.name, "a");
+    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 

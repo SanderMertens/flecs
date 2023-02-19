@@ -37936,8 +37936,10 @@ bool flecs_rule_trav(
         }
     } else {
         if (!flecs_ref_is_written(rule, op, &op->second, EcsRuleSecond, written)) {
+            printf("src_fixed_tgt_unknown\n");
             return flecs_rule_trav_fixed_src_up_unknown_second(op, redo, ctx);
         } else {
+            printf("fixed_src_up_fixed\n");
             return flecs_rule_trav_fixed_src_up_fixed_second(op, redo, ctx);
         }
     }
@@ -44470,6 +44472,19 @@ int flecs_term_finalize(
         second->id = first->id;
         second->flags &= ~(EcsIsVariable | EcsIsEntity);
         second->flags |= first->flags & (EcsIsVariable | EcsIsEntity);
+    }
+
+    ecs_flags32_t mask = EcsIsEntity | EcsIsVariable;
+    if ((src->flags & mask) == (second->flags & mask)) {
+        bool is_same = false;
+        if (src->flags & EcsIsEntity) {
+            is_same = src->id == second->id;
+        } else if (src->name && second->name) {
+            is_same = !ecs_os_strcmp(src->name, second->name);
+        }
+        if (is_same) {
+            term->flags |= EcsTermPairSame;
+        }
     }
 
     if (!term->id) {
@@ -52950,7 +52965,7 @@ char* ecs_iter_str(
         int32_t actual_count = 0;
         for (i = 0; i < it->variable_count; i ++) {
             const char *var_name = it->variable_names[i];
-            if (!var_name || var_name[0] == '_' || var_name[0] == '.') {
+            if (!var_name || var_name[0] == '_' || !strcmp(var_name, "This")) {
                 /* Skip anonymous variables */
                 continue;
             }

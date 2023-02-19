@@ -3875,3 +3875,51 @@ void RulesTransitive_2_this_src_constrain_tgt_var_after_2_lvl() {
 
     ecs_fini(world);
 }
+
+void RulesTransitive_1_src_tgt_same_var() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "LocatedIn($x, $x)"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void RulesTransitive_1_src_tgt_same_var_reflexive() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_add_id(world, LocatedIn, EcsReflexive);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "LocatedIn($x, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        while (ecs_rule_next(&it)) {
+            printf("%s\n", ecs_iter_str(&it));
+        }
+    }
+
+    test_assert(false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
