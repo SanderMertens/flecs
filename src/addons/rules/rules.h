@@ -50,7 +50,7 @@ typedef enum {
     EcsRuleJmpCondFalse,
     EcsRuleJmpNotSet,
     EcsRuleYield,
-    EcsRuleNothing
+    EcsRuleNothing /* Must be last */
 } ecs_rule_op_kind_t;
 
 /* Op flags to indicate if reference is entity or variable */

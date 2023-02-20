@@ -35531,7 +35531,7 @@ typedef enum {
     EcsRuleJmpCondFalse,
     EcsRuleJmpNotSet,
     EcsRuleYield,
-    EcsRuleNothing
+    EcsRuleNothing /* Must be last */
 } ecs_rule_op_kind_t;
 
 /* Op flags to indicate if reference is entity or variable */
@@ -35745,9 +35745,10 @@ void flecs_rule_get_up_cache(
 
 static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
+    [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
     [EcsRulePairEq] = true,
-    [EcsRuleYield] = false
+    [EcsRuleNothing] = false
 };
 
 bool flecs_rule_is_written(
@@ -36303,7 +36304,7 @@ void flecs_rule_begin_cond_eval(
     ecs_rule_compile_ctx_t *ctx,
     ecs_flags8_t cond_write_state)
 {
-    ecs_var_id_t first_var = 0, second_var = 0, src_var = 0;
+    ecs_var_id_t first_var = -1, second_var = -1, src_var = -1;
     ecs_flags8_t cond_mask = 0;
 
     if (flecs_rule_ref_flags(op->flags, EcsRuleFirst) == EcsRuleIsVar) {
@@ -36664,6 +36665,27 @@ void flecs_rule_compile_term(
         &op.src, EcsRuleSrc, EcsVarAny, ctx);
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
+
+    /* If the query starts with a Not or Optional term, insert an operation that
+     * matches all entities. */
+    if (first_term && src_is_var && !src_written) {
+        if (term->oper == EcsNot || term->oper == EcsOptional) {
+            ecs_rule_op_t match_any = {0};
+            match_any.kind = EcsAnd;
+            match_any.flags = EcsRuleIsSelf | (EcsRuleIsEntity << EcsRuleFirst);
+            match_any.flags |= (EcsRuleIsVar << EcsRuleSrc);
+            match_any.src = op.src;
+            match_any.first.entity = EcsAny;
+            match_any.written = (1 << src_var);
+            flecs_rule_op_insert(&match_any, ctx);
+            flecs_rule_write_ctx(op.src.var, ctx, false);
+
+            /* Update write administration */
+            src_written = true;
+            write_state |= (1 << src_var);
+        }
+    }
+
     flecs_rule_compile_ensure_vars(rule, &op, &op.src, EcsRuleSrc, ctx, cond_write);
 
     /* If source is Any (_) and first and/or second are unconstrained, insert an
@@ -36784,6 +36806,8 @@ void flecs_rule_compile(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
 {
+    ecs_filter_t *filter = &rule->filter;
+    ecs_term_t *terms = filter->terms;
     ecs_rule_compile_ctx_t ctx = {0};
     ctx.ops = stage->operations;
     ctx.lbl_union = -1;
@@ -36794,8 +36818,6 @@ void flecs_rule_compile(
     flecs_rule_discover_vars(stage, rule);
 
     /* Compile query terms to instructions */
-    ecs_filter_t *filter = &rule->filter;
-    ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -38221,7 +38243,7 @@ bool flecs_rule_not(
     }
 
     int32_t field = op->field_index;
-    if (field) {
+    if (field != -1) {
         ecs_iter_t *it = ctx->it;
         const ecs_rule_t *rule = ctx->rule;
         ecs_rule_iter_t *rit = ctx->rit;
@@ -38248,6 +38270,7 @@ bool flecs_rule_not(
             vars[op->second.var].entity =  EcsWildcard;
         }
     }
+
     return true; /* Flip result */
 }
 

@@ -687,6 +687,8 @@ void RulesOperators_2_or_written_w_rel_tgt_same_var(void);
 void RulesOperators_3_or_written_w_tgt_var(void);
 void RulesOperators_2_or_chains(void);
 void RulesOperators_2_or_chains_written(void);
+void RulesOperators_2_not_first(void);
+void RulesOperators_2_optional_first(void);
 
 // Testsuite 'RulesTransitive'
 void RulesTransitive_1_fact_0_lvl_true(void);
@@ -742,6 +744,10 @@ void RulesTransitive_1_src_tgt_same_var(void);
 void RulesTransitive_1_src_tgt_same_var_reflexive(void);
 void RulesTransitive_1_src_tgt_same_this_var_reflexive(void);
 void RulesTransitive_1_any_src_tgt_var(void);
+void RulesTransitive_not_transitive_ent_tgt(void);
+void RulesTransitive_not_transitive_var_tgt(void);
+void RulesTransitive_not_transitive_ent_tgt_written(void);
+void RulesTransitive_not_transitive_var_tgt_written(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -3918,6 +3924,14 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "2_or_chains_written",
         RulesOperators_2_or_chains_written
+    },
+    {
+        "2_not_first",
+        RulesOperators_2_not_first
+    },
+    {
+        "2_optional_first",
+        RulesOperators_2_optional_first
     }
 };
 
@@ -4133,6 +4147,22 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "1_any_src_tgt_var",
         RulesTransitive_1_any_src_tgt_var
+    },
+    {
+        "not_transitive_ent_tgt",
+        RulesTransitive_not_transitive_ent_tgt
+    },
+    {
+        "not_transitive_var_tgt",
+        RulesTransitive_not_transitive_var_tgt
+    },
+    {
+        "not_transitive_ent_tgt_written",
+        RulesTransitive_not_transitive_ent_tgt_written
+    },
+    {
+        "not_transitive_var_tgt_written",
+        RulesTransitive_not_transitive_var_tgt_written
     }
 };
 
@@ -6058,14 +6088,14 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        58,
+        60,
         RulesOperators_testcases
     },
     {
         "RulesTransitive",
         NULL,
         NULL,
-        53,
+        57,
         RulesTransitive_testcases
     },
     {

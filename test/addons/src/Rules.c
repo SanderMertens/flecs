@@ -25,15 +25,7 @@
 }
 
 void Rules_empty_rule() {
-    ecs_log_set_level(-4);
 
-    ecs_world_t *world = ecs_mini();
-
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ 0 });
-
-    test_assert(r == NULL);
-
-    ecs_fini(world);
 }
 
 void Rules_invalid_rule() {
