@@ -970,7 +970,7 @@ bool flecs_rule_not(
     }
 
     int32_t field = op->field_index;
-    if (field) {
+    if (field != -1) {
         ecs_iter_t *it = ctx->it;
         const ecs_rule_t *rule = ctx->rule;
         ecs_rule_iter_t *rit = ctx->rit;
@@ -997,6 +997,7 @@ bool flecs_rule_not(
             vars[op->second.var].entity =  EcsWildcard;
         }
     }
+
     return true; /* Flip result */
 }
 

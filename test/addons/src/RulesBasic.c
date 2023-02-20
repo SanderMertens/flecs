@@ -2995,3 +2995,4 @@ void RulesBasic_invalid_rule() {
 
     ecs_fini(world);
 }
+
