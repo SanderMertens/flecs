@@ -1012,6 +1012,7 @@ void Filter_filter_w_pair_no_vars_not_same_vars(void);
 void Filter_filter_w_pair_wildcard_not_same_vars(void);
 void Filter_filter_w_pair_any_not_same_vars(void);
 void Filter_filter_w_no_pair_not_same_vars(void);
+void Filter_filter_not_childof_any(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6262,6 +6263,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_no_pair_not_same_vars",
         Filter_filter_w_no_pair_not_same_vars
+    },
+    {
+        "filter_not_childof_any",
+        Filter_filter_not_childof_any
     },
     {
         "term_w_id",
@@ -11890,7 +11895,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        272,
+        273,
         Filter_testcases
     },
     {

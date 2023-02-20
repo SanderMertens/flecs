@@ -2592,6 +2592,42 @@ void Filter_filter_w_no_pair_not_same_vars() {
     ecs_fini(world); 
 }
 
+void Filter_filter_not_childof_any() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = EcsChildOf, 
+                .second.id = EcsAny,
+                .oper = EcsNot
+            }
+        }
+    }));
+
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(EcsChildOf, 0));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].inout, EcsInOutDefault);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, EcsChildOf);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsIsVariable);
+    test_int(f.terms[0].second.id, 0);
+    test_int(f.terms[0].second.flags, EcsSelf|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 
@@ -5696,6 +5732,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,A),(Y,A),(Z,A)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5706,6 +5743,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,A),(Y,A),(Z,B)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5716,6 +5754,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,A),(Y,B),(Z,A)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5726,6 +5765,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,A),(Y,B),(Z,B)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5736,6 +5776,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,B),(Y,A),(Z,A)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5746,6 +5787,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,B),(Y,A),(Z,B)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5756,6 +5798,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,B),(Y,B),(Z,A)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -5766,6 +5809,7 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (X,B),(Y,B),(Z,B)"
     LINE "subj: 0,0,0"
+    LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
     LINE;
@@ -11020,3 +11064,4 @@ void Filter_filter_w_short_notation() {
 
     ecs_fini(world);
 }
+

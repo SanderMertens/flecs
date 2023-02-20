@@ -3429,25 +3429,6 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_1_lvl() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(1, it.count);
-        test_uint(State, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 2));
-        test_uint(California, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(California, ecs_iter_get_var(&it, x_var));
-        test_uint(e3, it.entities[0]);
-
-        test_bool(true, ecs_rule_next(&it));
-        test_uint(2, it.count);
-        test_uint(State, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 2));
-        test_uint(California, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(California, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
-        test_uint(e2, it.entities[1]);
-
-        test_bool(true, ecs_rule_next(&it));
         test_uint(2, it.count);
         test_uint(State, ecs_field_id(&it, 1));
         test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 2));
@@ -3456,6 +3437,25 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_1_lvl() {
         test_uint(California, ecs_iter_get_var(&it, x_var));
         test_uint(SanFrancisco, it.entities[0]);
         test_uint(LosAngeles, it.entities[1]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(2, it.count);
+        test_uint(State, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, SanFrancisco), ecs_field_id(&it, 2));
+        test_uint(California, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(California, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(State, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, LosAngeles), ecs_field_id(&it, 2));
+        test_uint(California, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(California, ecs_iter_get_var(&it, x_var));
+        test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
@@ -3473,16 +3473,16 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_1_lvl() {
         test_uint(NoordHolland, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
         test_uint(NoordHolland, ecs_iter_get_var(&it, x_var));
-        test_uint(e4, it.entities[0]);
+        test_uint(Amsterdam, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
         test_uint(State, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, NoordHolland), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(LocatedIn, Amsterdam), ecs_field_id(&it, 2));
         test_uint(NoordHolland, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
         test_uint(NoordHolland, ecs_iter_get_var(&it, x_var));
-        test_uint(Amsterdam, it.entities[0]);
+        test_uint(e4, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3523,44 +3523,6 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_2_lvl() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(1, it.count);
-        test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 2));
-        test_uint(UnitedStates, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
-        test_uint(e3, it.entities[0]);
-
-        test_bool(true, ecs_rule_next(&it));
-        test_uint(2, it.count);
-        test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 2));
-        test_uint(UnitedStates, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
-        test_uint(e2, it.entities[1]);
-
-        test_bool(true, ecs_rule_next(&it));
-        test_uint(1, it.count);
-        test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 2));
-        test_uint(UnitedStates, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
-        test_uint(Seattle, it.entities[0]);
-
-        test_bool(true, ecs_rule_next(&it));
-        test_uint(2, it.count);
-        test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 2));
-        test_uint(UnitedStates, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
-        test_uint(SanFrancisco, it.entities[0]);
-        test_uint(LosAngeles, it.entities[1]);
-
-        test_bool(true, ecs_rule_next(&it));
         test_uint(2, it.count);
         test_uint(Country, ecs_field_id(&it, 1));
         test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 2));
@@ -3571,22 +3533,42 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_2_lvl() {
         test_uint(Washington, it.entities[1]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(1, it.count);
+        test_uint(2, it.count);
         test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, Netherlands), ecs_field_id(&it, 2));
-        test_uint(Netherlands, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 2));
+        test_uint(UnitedStates, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
-        test_uint(e4, it.entities[0]);
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+        test_uint(SanFrancisco, it.entities[0]);
+        test_uint(LosAngeles, it.entities[1]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(2, it.count);
+        test_uint(Country, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, SanFrancisco), ecs_field_id(&it, 2));
+        test_uint(UnitedStates, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
         test_uint(Country, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(LocatedIn, Netherlands), ecs_field_id(&it, 2));
-        test_uint(Netherlands, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(LocatedIn, LosAngeles), ecs_field_id(&it, 2));
+        test_uint(UnitedStates, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
-        test_uint(Amsterdam, it.entities[0]);
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+        test_uint(e3, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Country, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, Washington), ecs_field_id(&it, 2));
+        test_uint(UnitedStates, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+        test_uint(Seattle, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
@@ -3596,6 +3578,24 @@ void RulesTransitive_2_this_src_constrain_tgt_var_before_2_lvl() {
         test_uint(0, ecs_field_src(&it, 2));
         test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
         test_uint(NoordHolland, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Country, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, NoordHolland), ecs_field_id(&it, 2));
+        test_uint(Netherlands, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
+        test_uint(Amsterdam, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Country, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(LocatedIn, Amsterdam), ecs_field_id(&it, 2));
+        test_uint(Netherlands, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
+        test_uint(e4, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }

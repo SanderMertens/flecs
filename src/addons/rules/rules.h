@@ -102,6 +102,7 @@ typedef struct {
 typedef struct {
     int32_t offset;
     int32_t count;
+    ecs_table_t *table;
 } ecs_rule_setthis_ctx_t;
 
 /* Cache for storing results of downward traversal */

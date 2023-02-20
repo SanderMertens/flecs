@@ -689,6 +689,12 @@ void RulesOperators_2_or_chains(void);
 void RulesOperators_2_or_chains_written(void);
 void RulesOperators_2_not_first(void);
 void RulesOperators_2_optional_first(void);
+void RulesOperators_root_entities(void);
+void RulesOperators_root_entities_w_children(void);
+void RulesOperators_root_entities_w_optional_children(void);
+void RulesOperators_core_entities_w_optional_children(void);
+void RulesOperators_root_entities_w_not_children(void);
+void RulesOperators_core_entities_w_not_children(void);
 
 // Testsuite 'RulesTransitive'
 void RulesTransitive_1_fact_0_lvl_true(void);
@@ -3937,6 +3943,30 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "2_optional_first",
         RulesOperators_2_optional_first
+    },
+    {
+        "root_entities",
+        RulesOperators_root_entities
+    },
+    {
+        "root_entities_w_children",
+        RulesOperators_root_entities_w_children
+    },
+    {
+        "root_entities_w_optional_children",
+        RulesOperators_root_entities_w_optional_children
+    },
+    {
+        "core_entities_w_optional_children",
+        RulesOperators_core_entities_w_optional_children
+    },
+    {
+        "root_entities_w_not_children",
+        RulesOperators_root_entities_w_not_children
+    },
+    {
+        "core_entities_w_not_children",
+        RulesOperators_core_entities_w_not_children
     }
 };
 
@@ -6113,7 +6143,7 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        60,
+        66,
         RulesOperators_testcases
     },
     {

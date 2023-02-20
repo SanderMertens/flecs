@@ -497,6 +497,8 @@ int32_t flecs_rule_not_insert(
     not_op.first = op->first;
     not_op.second = op->second;
     not_op.flags = op->flags;
+    not_op.flags &= ~(EcsRuleIsVar << EcsRuleSrc);
+
     return flecs_rule_op_insert(&not_op, ctx);
 }
 
@@ -570,7 +572,7 @@ void flecs_rule_begin_cond_eval(
     ecs_rule_compile_ctx_t *ctx,
     ecs_flags8_t cond_write_state)
 {
-    ecs_var_id_t first_var = -1, second_var = -1, src_var = -1;
+    ecs_var_id_t first_var = EcsVarNone, second_var = EcsVarNone, src_var = EcsVarNone;
     ecs_flags8_t cond_mask = 0;
 
     if (flecs_rule_ref_flags(op->flags, EcsRuleFirst) == EcsRuleIsVar) {
@@ -594,15 +596,15 @@ void flecs_rule_begin_cond_eval(
         ecs_rule_op_t jmp_op = {0};
         jmp_op.kind = EcsRuleJmpNotSet;
 
-        if (cond_write_state & (1 << first_var)) {
+        if ((first_var != EcsVarNone) && cond_write_state & (1 << first_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleFirst);
             jmp_op.first.var = first_var;
         }
-        if (cond_write_state & (1 << second_var)) {
+        if ((second_var != EcsVarNone) && cond_write_state & (1 << second_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleSecond);
             jmp_op.second.var = second_var;
         }
-        if (cond_write_state & (1 << src_var)) {
+        if ((src_var != EcsVarNone) && cond_write_state & (1 << src_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleSrc);
             jmp_op.src.var = src_var;
         }
@@ -822,7 +824,7 @@ void flecs_rule_compile_term_id(
 }
 
 static
-void flecs_rule_compile_ensure_vars(
+bool flecs_rule_compile_ensure_vars(
     ecs_rule_t *rule,
     ecs_rule_op_t *op,
     ecs_rule_ref_t *ref,
@@ -831,6 +833,8 @@ void flecs_rule_compile_ensure_vars(
     bool cond_write)
 {
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, ref_kind);
+    bool written = false;
+
     if (flags & EcsRuleIsVar) {
         ecs_var_id_t var_id = ref->var;
         ecs_rule_var_t *var = &rule->vars[var_id];
@@ -841,13 +845,23 @@ void flecs_rule_compile_ensure_vars(
             ecs_var_id_t tvar = var->table_id;
             if ((tvar != EcsVarNone) && flecs_rule_is_written(tvar, ctx->written)) {
                 flecs_rule_insert_each(tvar, var_id, ctx, cond_write);
+
+                /* Variable was written, just not as entity */
+                written = true;
             }
         }
+
+        written |= flecs_rule_is_written(var_id, ctx->written);
 
         /* After evaluating a term, a used variable is always written */
         flecs_rule_write(var_id, &op->written);
         flecs_rule_write_ctx(var_id, ctx, cond_write);
+    } else {
+        /* If it's not a variable, it's always written */
+        written = true;
     }
+
+    return written;
 }
 
 static
@@ -919,12 +933,12 @@ void flecs_rule_compile_term(
 
     if (first_is_var) first_var = op.first.var;
     if (second_is_var) second_var = op.second.var;
-    bool first_written = flecs_rule_is_written(first_var, ctx->written);
-    bool second_written = flecs_rule_is_written(second_var, ctx->written);
 
     /* Insert each instructions for table -> entity variable if needed */
-    flecs_rule_compile_ensure_vars(rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
-    flecs_rule_compile_ensure_vars(rule, &op, &op.second, EcsRuleSecond, ctx, cond_write);
+    bool first_written = flecs_rule_compile_ensure_vars(
+        rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
+    bool second_written = flecs_rule_compile_ensure_vars(
+        rule, &op, &op.second, EcsRuleSecond, ctx, cond_write);
 
     /* Do src last, in case it uses the same variable as first/second */
     flecs_rule_compile_term_id(world, rule, &op, &term->src, 
@@ -957,7 +971,8 @@ void flecs_rule_compile_term(
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
     if (term->flags & EcsTermMatchAnySrc) {
-        if ((first_is_var && !first_written) || (second_is_var && !second_written)) {
+        /* Use up-to-date written values after potentially inserting each */
+        if (!first_written || !second_written) {
             if (!first_written) {
                 /* If first is unknown, traverse left: <- (*, t) */
                 op.kind = EcsRuleIdsLeft;

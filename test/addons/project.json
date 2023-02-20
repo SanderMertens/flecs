@@ -707,7 +707,13 @@
                 "2_or_chains",
                 "2_or_chains_written",
                 "2_not_first",
-                "2_optional_first"
+                "2_optional_first",
+                "root_entities",
+                "root_entities_w_children",
+                "root_entities_w_optional_children",
+                "core_entities_w_optional_children",
+                "root_entities_w_not_children",
+                "core_entities_w_not_children"
             ]
         }, {
             "id": "RulesTransitive",
