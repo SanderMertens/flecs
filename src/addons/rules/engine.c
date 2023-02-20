@@ -331,7 +331,7 @@ bool flecs_rule_select_w_id(
     int32_t column = -1;
 
     if (!idr || idr->id != id) {
-        idr = flecs_id_record_get(world, id);
+        idr = op_ctx->idr = flecs_id_record_get(world, id);
     }
 
     if (!idr) {
@@ -350,7 +350,6 @@ bool flecs_rule_select_w_id(
     }
 
     if (!redo || !op_ctx->remaining) {
-
 repeat:
         do {
             tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
@@ -392,6 +391,7 @@ repeat:
     }
 
     flecs_rule_set_match(op, table, column, ctx);
+
     return true;
 }
 
@@ -1355,10 +1355,12 @@ void flecs_rule_iter_fini(
     ecs_iter_t *it)
 {
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
+    int32_t op_count = rit->rule->op_count;
+    int32_t var_count = rit->rule->var_count;
     flecs_rule_iter_fini_ctx(it, rit);
-    ecs_os_free(rit->vars);
-    ecs_os_free(rit->written);
-    ecs_os_free(rit->op_ctx);
+    flecs_iter_free_n(rit->vars, ecs_var_t, var_count);
+    flecs_iter_free_n(rit->written, ecs_write_flags_t, op_count);
+    flecs_iter_free_n(rit->op_ctx, ecs_rule_op_ctx_t, op_count);
     rit->vars = NULL;
     rit->written = NULL;
     rit->op_ctx = NULL;
@@ -1380,18 +1382,6 @@ ecs_iter_t ecs_rule_iter(
     it.terms = rule->filter.terms;
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
-    rit->rule = rule;
-    if (var_count) {
-        rit->vars = ecs_os_calloc_n(ecs_var_t, var_count);
-    }
-    if (op_count) {
-        rit->written = ecs_os_calloc_n(ecs_write_flags_t, op_count);
-        rit->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, op_count);
-    }
-    for (i = 0; i < var_count; i ++) {
-        rit->vars[i].entity = EcsWildcard;
-    }
-
     it.field_count = rule->filter.field_count;
 
     flecs_iter_init(world, &it, 
@@ -1400,6 +1390,18 @@ ecs_iter_t ecs_rule_iter(
         flecs_iter_cache_sources |
         flecs_iter_cache_sizes |
         flecs_iter_cache_ptrs);
+
+    rit->rule = rule;
+    if (var_count) {
+        rit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
+    }
+    if (op_count) {
+        rit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
+        rit->op_ctx = flecs_iter_calloc_n(&it, ecs_rule_op_ctx_t, op_count);
+    }
+    for (i = 0; i < var_count; i ++) {
+        rit->vars[i].entity = EcsWildcard;
+    }
 
     it.variables = rit->vars;
     it.variable_count = rule->var_pub_count;

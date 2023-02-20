@@ -27,6 +27,24 @@
         flecs_stack_free_n((void*)it->f, T, count);\
     }
 
+void* flecs_iter_calloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align)
+{
+    ecs_world_t *world = it->world;
+    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+    return flecs_stack_calloc(stack, size, align); 
+}
+
+void flecs_iter_free(
+    void *ptr,
+    ecs_size_t size)
+{
+    flecs_stack_free(ptr, size);
+}
+
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,

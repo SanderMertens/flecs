@@ -4723,7 +4723,7 @@ void RulesTransitive_optional_transitive_var_tgt_written() {
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it,21));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
@@ -4902,7 +4902,7 @@ void RulesTransitive_2_var_src_w_same_tgt_ent() {
         test_uint(e2, ecs_field_src(&it, 3));
         test_uint(e2, ecs_field_src(&it, 4));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it,21));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, x_var));
         test_uint(e2, ecs_iter_get_var(&it, y_var));
 
@@ -4917,7 +4917,7 @@ void RulesTransitive_2_var_src_w_same_tgt_ent() {
         test_uint(e2, ecs_field_src(&it, 3));
         test_uint(e1, ecs_field_src(&it, 4));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it,21));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, x_var));
         test_uint(e1, ecs_iter_get_var(&it, y_var));
 
@@ -4932,7 +4932,7 @@ void RulesTransitive_2_var_src_w_same_tgt_ent() {
         test_uint(e1, ecs_field_src(&it, 3));
         test_uint(e2, ecs_field_src(&it, 4));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it,21));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
         test_uint(e2, ecs_iter_get_var(&it, y_var));
 
@@ -4947,7 +4947,7 @@ void RulesTransitive_2_var_src_w_same_tgt_ent() {
         test_uint(e1, ecs_field_src(&it, 3));
         test_uint(e1, ecs_field_src(&it, 4));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it,21));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
         test_uint(e1, ecs_iter_get_var(&it, y_var));
 
