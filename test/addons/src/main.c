@@ -748,6 +748,11 @@ void RulesTransitive_not_transitive_ent_tgt(void);
 void RulesTransitive_not_transitive_var_tgt(void);
 void RulesTransitive_not_transitive_ent_tgt_written(void);
 void RulesTransitive_not_transitive_var_tgt_written(void);
+void RulesTransitive_optional_transitive_ent_tgt(void);
+void RulesTransitive_optional_transitive_var_tgt(void);
+void RulesTransitive_optional_transitive_ent_tgt_written(void);
+void RulesTransitive_optional_transitive_var_tgt_written(void);
+void RulesTransitive_2_var_src_w_same_tgt_ent(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -4163,6 +4168,26 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "not_transitive_var_tgt_written",
         RulesTransitive_not_transitive_var_tgt_written
+    },
+    {
+        "optional_transitive_ent_tgt",
+        RulesTransitive_optional_transitive_ent_tgt
+    },
+    {
+        "optional_transitive_var_tgt",
+        RulesTransitive_optional_transitive_var_tgt
+    },
+    {
+        "optional_transitive_ent_tgt_written",
+        RulesTransitive_optional_transitive_ent_tgt_written
+    },
+    {
+        "optional_transitive_var_tgt_written",
+        RulesTransitive_optional_transitive_var_tgt_written
+    },
+    {
+        "2_var_src_w_same_tgt_ent",
+        RulesTransitive_2_var_src_w_same_tgt_ent
     }
 };
 
@@ -6095,7 +6120,7 @@ static bake_test_suite suites[] = {
         "RulesTransitive",
         NULL,
         NULL,
-        57,
+        62,
         RulesTransitive_testcases
     },
     {

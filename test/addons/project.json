@@ -768,7 +768,12 @@
                 "not_transitive_ent_tgt",
                 "not_transitive_var_tgt",
                 "not_transitive_ent_tgt_written",
-                "not_transitive_var_tgt_written"
+                "not_transitive_var_tgt_written",
+                "optional_transitive_ent_tgt",
+                "optional_transitive_var_tgt",
+                "optional_transitive_ent_tgt_written",
+                "optional_transitive_var_tgt_written",
+                "2_var_src_w_same_tgt_ent"
             ]
         }, {
             "id": "Rules",
