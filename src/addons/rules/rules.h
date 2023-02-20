@@ -25,16 +25,17 @@ typedef struct {
     ecs_var_kind_t kind;
     ecs_var_id_t id;
     const char *name;
-    const char *label; /* for debugging */
+    const char *label;     /* for debugging */
     ecs_var_id_t table_id; /* id to table variable, if any */
 } ecs_rule_var_t;
 
-/* -- Op types -- */
+/* -- Instruction kinds -- */
 typedef enum {
     EcsRuleAnd,
     EcsRuleTrav,
     EcsRuleTravId,
-    EcsRuleFindIds,
+    EcsRuleIdsRight,
+    EcsRuleIdsLeft,
     EcsRuleEach,
     EcsRuleStore,
     EcsRuleUnion,
@@ -48,7 +49,8 @@ typedef enum {
     EcsRuleSetCond,
     EcsRuleJmpCondFalse,
     EcsRuleJmpNotSet,
-    EcsRuleYield
+    EcsRuleYield,
+    EcsRuleNothing
 } ecs_rule_op_kind_t;
 
 /* Op flags to indicate if reference is entity or variable */
@@ -129,7 +131,7 @@ typedef struct {
 /* Trav context */
 typedef struct {
     ecs_id_record_t *cur;
-} ecs_rule_findids_ctx_t;
+} ecs_rule_ids_ctx_t;
 
 /* End context */
 typedef struct {
@@ -146,7 +148,7 @@ typedef struct ecs_rule_op_ctx_t {
     union {
         ecs_rule_and_ctx_t and;
         ecs_rule_trav_ctx_t trav;
-        ecs_rule_findids_ctx_t findids;
+        ecs_rule_ids_ctx_t ids;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
         ecs_rule_ctrlflow_ctx_t ctrlflow;

@@ -4061,3 +4061,63 @@ void RulesTransitive_1_src_tgt_same_this_var_reflexive() {
 
     ecs_fini(world);
 }
+
+void RulesTransitive_1_any_src_tgt_var() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "LocatedIn(_, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, NoordHolland), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(NoordHolland, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Netherlands), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Washington), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Washington, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(California, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Earth), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Earth, ecs_iter_get_var(&it, x_var));
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

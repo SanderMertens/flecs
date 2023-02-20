@@ -15981,6 +15981,9 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(msg != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(buf != NULL, ECS_INTERNAL_ERROR, NULL);
+
     char *ptr, ch, prev = '\0';
     bool isNum = false;
     char isStr = '\0';
@@ -35503,16 +35506,17 @@ typedef struct {
     ecs_var_kind_t kind;
     ecs_var_id_t id;
     const char *name;
-    const char *label; /* for debugging */
+    const char *label;     /* for debugging */
     ecs_var_id_t table_id; /* id to table variable, if any */
 } ecs_rule_var_t;
 
-/* -- Op types -- */
+/* -- Instruction kinds -- */
 typedef enum {
     EcsRuleAnd,
     EcsRuleTrav,
     EcsRuleTravId,
-    EcsRuleFindIds,
+    EcsRuleIdsRight,
+    EcsRuleIdsLeft,
     EcsRuleEach,
     EcsRuleStore,
     EcsRuleUnion,
@@ -35526,7 +35530,8 @@ typedef enum {
     EcsRuleSetCond,
     EcsRuleJmpCondFalse,
     EcsRuleJmpNotSet,
-    EcsRuleYield
+    EcsRuleYield,
+    EcsRuleNothing
 } ecs_rule_op_kind_t;
 
 /* Op flags to indicate if reference is entity or variable */
@@ -35607,7 +35612,7 @@ typedef struct {
 /* Trav context */
 typedef struct {
     ecs_id_record_t *cur;
-} ecs_rule_findids_ctx_t;
+} ecs_rule_ids_ctx_t;
 
 /* End context */
 typedef struct {
@@ -35624,7 +35629,7 @@ typedef struct ecs_rule_op_ctx_t {
     union {
         ecs_rule_and_ctx_t and;
         ecs_rule_trav_ctx_t trav;
-        ecs_rule_findids_ctx_t findids;
+        ecs_rule_ids_ctx_t ids;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
         ecs_rule_ctrlflow_ctx_t ctrlflow;
@@ -36483,8 +36488,8 @@ void flecs_rule_insert_unconstrained_transitive(
 
     /* First, find ids to start traversal from. This fixes op.second. */
     ecs_rule_op_t find_ids = {0};
-    find_ids.kind = EcsRuleFindIds;
-    find_ids.field_index = op->field_index;
+    find_ids.kind = EcsRuleIdsRight;
+    find_ids.field_index = -1;
     find_ids.first = op->first;
     find_ids.second = op->second;
     find_ids.flags = op->flags;
@@ -36616,9 +36621,10 @@ void flecs_rule_compile_term(
     ecs_rule_compile_ctx_t *ctx)
 {
     ecs_rule_op_t op = {0};
-    op.kind = EcsRuleAnd;
+    op.kind = EcsRuleAnd; /* Default instruction is the And operator */
     op.field_index = term->field_index;
 
+    /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
@@ -36649,7 +36655,7 @@ void flecs_rule_compile_term(
     bool first_written = flecs_rule_is_written(first_var, ctx->written);
     bool second_written = flecs_rule_is_written(second_var, ctx->written);
 
-    /* Insert each instructions for table -> entity variable translation */
+    /* Insert each instructions for table -> entity variable if needed */
     flecs_rule_compile_ensure_vars(rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
     flecs_rule_compile_ensure_vars(rule, &op, &op.second, EcsRuleSecond, ctx, cond_write);
 
@@ -36659,6 +36665,23 @@ void flecs_rule_compile_term(
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
     flecs_rule_compile_ensure_vars(rule, &op, &op.src, EcsRuleSrc, ctx, cond_write);
+
+    /* If source is Any (_) and first and/or second are unconstrained, insert an
+     * ids instruction instead of an And */
+    if (term->flags & EcsTermMatchAnySrc) {
+        if ((first_is_var && !first_written) || (second_is_var && !second_written)) {
+            if (!first_written) {
+                /* If first is unknown, traverse left: <- (*, t) */
+                op.kind = EcsRuleIdsLeft;
+            } else {
+                /* If second is wildcard, traverse right: (r, *) -> */
+                op.kind = EcsRuleIdsRight;
+            }
+            op.src.entity = 0;
+            op.flags &= ~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
+            op.flags &= ~(EcsRuleIsEntity << EcsRuleSrc);
+        }
+    }
 
     /* If this is a transitive term and both the target and source are unknown,
      * find the targets for the relationship first. This clusters together 
@@ -36767,6 +36790,9 @@ void flecs_rule_compile(
     ctx.lbl_prev = -1;
     ecs_vector_clear(ctx.ops);
 
+    /* Find all variables defined in query */
+    flecs_rule_discover_vars(stage, rule);
+
     /* Compile query terms to instructions */
     ecs_filter_t *filter = &rule->filter;
     ecs_term_t *terms = filter->terms;
@@ -36825,10 +36851,17 @@ void flecs_rule_compile(
         }
     }
 
-    /* Insert yield. If program reaches this operation, a result was found */
-    ecs_rule_op_t yield = {0};
-    yield.kind = EcsRuleYield;
-    flecs_rule_op_insert(&yield, &ctx);
+    /* If filter is empty, insert Nothing instruction */
+    if (!rule->filter.term_count) {
+        ecs_rule_op_t nothing = {0};
+        nothing.kind = EcsRuleNothing;
+        flecs_rule_op_insert(&nothing, &ctx);
+    } else {
+        /* Insert yield. If program reaches this operation, a result was found */
+        ecs_rule_op_t yield = {0};
+        yield.kind = EcsRuleYield;
+        flecs_rule_op_insert(&yield, &ctx);
+    }
 
     int32_t op_count = ecs_vector_count(ctx.ops);
     if (op_count) {
@@ -36869,7 +36902,8 @@ const char* flecs_rule_op_str(
     case EcsRuleAnd:          return "and     ";
     case EcsRuleTrav:         return "trav    ";
     case EcsRuleTravId:       return "travid  ";
-    case EcsRuleFindIds:      return "findids ";
+    case EcsRuleIdsRight:     return "idsr    ";
+    case EcsRuleIdsLeft:      return "idsl    ";
     case EcsRuleEach:         return "each    ";
     case EcsRuleStore:        return "store   ";
     case EcsRuleUnion:        return "union   ";
@@ -36884,6 +36918,7 @@ const char* flecs_rule_op_str(
     case EcsRuleJmpCondFalse: return "jfalse  ";
     case EcsRuleJmpNotSet:    return "jnotset ";
     case EcsRuleYield:        return "yield   ";
+    case EcsRuleNothing:      return "nothing ";
     default: return "!invalid";
     }
 }
@@ -36920,9 +36955,6 @@ ecs_rule_t* ecs_rule_init(
     if (ecs_filter_init(world, &desc) == NULL) {
         goto error;
     }
-
-    /* Find all variables defined in query */
-    flecs_rule_discover_vars(stage, result);
 
     /* Compile filter to operations */
     flecs_rule_compile(world, stage, result);
@@ -37054,16 +37086,6 @@ char* ecs_rule_str(
         }
 
         ecs_strbuf_appendch(&buf, ')');
-
-        // if (op->flags & EcsRuleIsSelf) {
-        //     ecs_strbuf_appendstr(&buf, ", self");
-        // }
-
-        // if (op->trav) {
-        //     ecs_strbuf_appendstr(&buf, ", trav: #[blue]");
-        //     ecs_strbuf_appendstr(&buf, ecs_get_name(rule->world, op->trav));
-        //     ecs_strbuf_appendstr(&buf, "#[reset]");
-        // }
 
         ecs_strbuf_appendch(&buf, '\n');
     }
@@ -37419,16 +37441,16 @@ ecs_entity_t flecs_get_ref_entity(
 }
 
 static
-ecs_id_t flecs_rule_op_get_id(
+ecs_id_t flecs_rule_op_get_id_w_written(
     const ecs_rule_t *rule,
     const ecs_var_t *vars,
     const ecs_rule_op_t *op,
-    const ecs_rule_run_ctx_t *ctx)
+    const ecs_rule_run_ctx_t *ctx,
+    uint64_t written)
 {
     ecs_flags16_t flags_1st = flecs_rule_ref_flags(op->flags, EcsRuleFirst);
     ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
     ecs_entity_t first = 0, second = 0;
-    uint64_t written = ctx->rit->written[ctx->op_index];
 
     if (flags_1st) {
         if (flecs_ref_is_written(rule, op, &op->first, EcsRuleFirst, written)) {
@@ -37450,6 +37472,17 @@ ecs_id_t flecs_rule_op_get_id(
     } else {
         return ecs_get_alive(rule->world, first);
     }
+}
+
+static
+ecs_id_t flecs_rule_op_get_id(
+    const ecs_rule_t *rule,
+    const ecs_var_t *vars,
+    const ecs_rule_op_t *op,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->rit->written[ctx->op_index];
+    return flecs_rule_op_get_id_w_written(rule, vars, op, ctx, written);
 }
 
 static
@@ -37981,7 +38014,7 @@ bool flecs_rule_trav(
 }
 
 static
-bool flecs_rule_findids(
+bool flecs_rule_idsright(
     ecs_rule_op_t *op,
     bool redo,
     const ecs_rule_run_ctx_t *ctx)
@@ -37989,7 +38022,7 @@ bool flecs_rule_findids(
     const ecs_rule_t *rule = ctx->rule;
     ecs_world_t *world = rule->world;
     ecs_var_t *vars = ctx->rit->vars;
-    ecs_rule_findids_ctx_t *op_ctx = &ctx->ctx->is.findids;
+    ecs_rule_ids_ctx_t *op_ctx = &ctx->ctx->is.ids;
     ecs_id_record_t *cur;
 
     if (!redo) {
@@ -38021,6 +38054,65 @@ bool flecs_rule_findids(
     }
 
     flecs_rule_set_vars(rule, op, vars, cur->id);
+
+    if (op->field_index != -1) {
+        ecs_iter_t *it = ctx->it;
+        ecs_id_t id = flecs_rule_op_get_id_w_written(
+            ctx->rule, vars, op, ctx, op->written);
+        it->ids[op->field_index] = id;
+    }
+
+    return true;
+}
+
+static
+bool flecs_rule_idsleft(
+    ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    const ecs_rule_t *rule = ctx->rule;
+    ecs_world_t *world = rule->world;
+    ecs_var_t *vars = ctx->rit->vars;
+    ecs_rule_ids_ctx_t *op_ctx = &ctx->ctx->is.ids;
+    ecs_id_record_t *cur;
+
+    if (!redo) {
+        ecs_id_t id = flecs_rule_op_get_id(ctx->rule, ctx->rit->vars, op, ctx);
+        if (!ecs_id_is_wildcard(id)) {
+            /* If id is not a wildcard, we can directly return it. This can 
+             * happen if a variable was constrained by an iterator. */
+            op_ctx->cur = NULL;
+            flecs_rule_set_vars(rule, op, vars, id);
+            return true;
+        }
+
+        cur = op_ctx->cur = flecs_id_record_get(world, id);
+        if (!cur) {
+            return false;
+        }
+
+        cur = op_ctx->cur = cur->second.next;
+    } else {
+        if (!op_ctx->cur) {
+            return false;
+        }
+
+        cur = op_ctx->cur = op_ctx->cur->second.next;
+    }
+
+    if (!cur) {
+        return false;
+    }
+
+    flecs_rule_set_vars(rule, op, vars, cur->id);
+
+    if (op->field_index != -1) {
+        ecs_iter_t *it = ctx->it;
+        ecs_id_t id = flecs_rule_op_get_id_w_written(
+            ctx->rule, vars, op, ctx, op->written);
+        it->ids[op->field_index] = id;
+    }
 
     return true;
 }
@@ -38335,7 +38427,8 @@ bool flecs_rule_run(
     switch(op->kind) {
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleTrav: return flecs_rule_trav(op, redo, ctx);
-    case EcsRuleFindIds: return flecs_rule_findids(op, redo, ctx);
+    case EcsRuleIdsRight: return flecs_rule_idsright(op, redo, ctx);
+    case EcsRuleIdsLeft: return flecs_rule_idsleft(op, redo, ctx);
     case EcsRuleEach: return flecs_rule_each(op, redo, ctx);
     case EcsRuleStore: return flecs_rule_store(op, redo, ctx);
     case EcsRuleUnion: return flecs_rule_union(op, redo, ctx);
@@ -38349,6 +38442,7 @@ bool flecs_rule_run(
     case EcsRuleSetCond: return flecs_rule_jmp_set_cond(op, redo, ctx);
     case EcsRuleJmpNotSet: return flecs_rule_jmp_not_set(op, redo, ctx);
     case EcsRuleYield: return false;
+    case EcsRuleNothing: return false;
     }
     return false;
 }
@@ -44579,10 +44673,12 @@ int flecs_term_finalize(
 
         /* Add traversal flags for transitive relationships */
         if (!(second_flags & EcsTraverseFlags) && ecs_term_id_is_set(second)) {
-            if (ecs_has_id(world, first_id, EcsTransitive)) {
-                second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
-                second->trav = first_id;
-                term->flags |= EcsTermTransitive;
+            if (!((src->flags & EcsIsVariable) && (src->id == EcsAny))) {
+                if (ecs_has_id(world, first_id, EcsTransitive)) {
+                    second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
+                    second->trav = first_id;
+                    term->flags |= EcsTermTransitive;
+                }
             }
         }
 

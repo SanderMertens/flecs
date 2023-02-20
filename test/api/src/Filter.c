@@ -2336,6 +2336,30 @@ void Filter_filter_w_no_transitive_pair() {
     ecs_fini(world); 
 }
 
+void Filter_filter_w_transitive_pair_any_src() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, LocatedIn, Transitive);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            {
+                .first.id = LocatedIn, 
+                .second.id = EcsWildcard,
+                .src.id = EcsAny
+            }
+        }
+    }));
+
+    test_assert(!(f.terms[0].flags & EcsTermTransitive));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
 void Filter_filter_w_transitive_pair() {
     ecs_world_t *world = ecs_mini();
 
