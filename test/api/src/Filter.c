@@ -2419,7 +2419,7 @@ void Filter_filter_w_pair_same_vars() {
     test_assert(f.terms[0].second.flags & EcsIsVariable);
     test_str(f.terms[0].src.name, "a");
     test_str(f.terms[0].second.name, "a");
-    test_assert(f.terms[0].flags & EcsTermPairSame);
+    test_assert(f.terms[0].flags & EcsTermSrcSecondEq);
 
     ecs_filter_fini(&f);
 
@@ -2449,7 +2449,7 @@ void Filter_filter_w_pair_not_same_vars() {
     test_assert(f.terms[0].second.flags & EcsIsVariable);
     test_str(f.terms[0].src.name, "a");
     test_str(f.terms[0].second.name, "b");
-    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+    test_assert(!(f.terms[0].flags & EcsTermSrcSecondEq));
 
     ecs_filter_fini(&f);
 
@@ -2478,7 +2478,7 @@ void Filter_filter_w_pair_no_vars_not_same_vars() {
     test_assert(f.terms[0].second.flags & EcsIsEntity);
     test_uint(f.terms[0].src.id, A);
     test_uint(f.terms[0].second.id, A);
-    test_assert(f.terms[0].flags & EcsTermPairSame);
+    test_assert(f.terms[0].flags & EcsTermSrcSecondEq);
 
     ecs_filter_fini(&f);
 
@@ -2506,7 +2506,7 @@ void Filter_filter_w_pair_wildcard_not_same_vars() {
     test_assert(f.terms[0].second.flags & EcsIsVariable);
     test_uint(f.terms[0].src.id, EcsWildcard);
     test_uint(f.terms[0].second.id, EcsWildcard);
-    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+    test_assert(!(f.terms[0].flags & EcsTermSrcSecondEq));
 
     ecs_filter_fini(&f);
 
@@ -2534,7 +2534,7 @@ void Filter_filter_w_pair_any_not_same_vars() {
     test_assert(f.terms[0].second.flags & EcsIsVariable);
     test_uint(f.terms[0].src.id, EcsAny);
     test_uint(f.terms[0].second.id, EcsAny);
-    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+    test_assert(!(f.terms[0].flags & EcsTermSrcSecondEq));
 
     ecs_filter_fini(&f);
 
@@ -2561,7 +2561,7 @@ void Filter_filter_w_no_pair_not_same_vars() {
     test_assert(f.terms[0].src.flags & EcsIsVariable);
     test_assert(!(f.terms[0].second.flags & EcsIsVariable));
     test_str(f.terms[0].src.name, "a");
-    test_assert(!(f.terms[0].flags & EcsTermPairSame));
+    test_assert(!(f.terms[0].flags & EcsTermSrcSecondEq));
 
     ecs_filter_fini(&f);
 

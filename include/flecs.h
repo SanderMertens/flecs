@@ -506,9 +506,10 @@ typedef enum ecs_oper_kind_t {
 /* Term flags discovered & set during filter creation. */
 #define EcsTermMatchAny    (1 << 0)
 #define EcsTermMatchAnySrc (1 << 1)
-#define EcsTermPairSame    (1 << 2)
-#define EcsTermTransitive  (1 << 3)
-#define EcsTermReflexive   (1 << 4)
+#define EcsTermSrcFirstEq  (1 << 2)
+#define EcsTermSrcSecondEq (1 << 3)
+#define EcsTermTransitive  (1 << 4)
+#define EcsTermReflexive   (1 << 5)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {

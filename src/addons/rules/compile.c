@@ -20,6 +20,10 @@ bool flecs_rule_is_written(
     uint32_t var_id,
     uint64_t written)
 {
+    if (var_id == EcsVarNone) {
+        return true;
+    }
+
     ecs_assert(var_id < EcsRuleMaxVarCount, ECS_INTERNAL_ERROR, NULL);
     return (written & (1 << var_id)) != 0;
 }
@@ -81,7 +85,11 @@ ecs_var_id_t flecs_rule_find_var_id(
     
     if (kind == EcsVarTable) {
         if (!ecs_os_strcmp(name, EcsThisName)) {
-            return 0;
+            if (rule->has_table_this) {
+                return 0;
+            } else {
+                return EcsVarNone;
+            }
         }
 
         if (!flecs_name_index_is_init(&rule->tvar_index)) {
@@ -251,6 +259,11 @@ void flecs_rule_discover_vars(
     ecs_term_t *terms = rule->filter.terms;
     int32_t i, anonymous_count = 0, count = rule->filter.term_count;
     int32_t anonymous_table_count = 0;
+    bool table_this = false, entity_before_table_this = false;
+
+    /* For This table lookups during discovery. This will be overwritten after
+     * discovery with whether the rule actually has a This table variable. */
+    rule->has_table_this = true;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -327,6 +340,17 @@ void flecs_rule_discover_vars(
                 anonymous_count ++;
             }
         }
+
+        /* Track if a This entity variable is used before a potential This table 
+         * variable. If this happens, the rule has no This table variable */
+        if (src->id == EcsThis) {
+            table_this = true;
+        }
+        if (first->id == EcsThis || second->id == EcsThis) {
+            if (!table_this) {
+                entity_before_table_this = true;
+            }
+        }
     }
 
     int32_t var_count = ecs_vector_count(vars);
@@ -363,6 +387,7 @@ void flecs_rule_discover_vars(
     rule->var_count = var_count;
     rule->var_pub_count = var_count;
     rule->var_size = var_count + anonymous_count;
+    rule->has_table_this = !entity_before_table_this;
 
     char **var_names = ECS_ELEM(rule_vars, ECS_SIZEOF(ecs_rule_var_t), 
         var_count + anonymous_count);
@@ -882,7 +907,7 @@ void flecs_rule_compile_term(
     ecs_flags8_t cond_write_state = ctx->cond_written;
 
     /* Resolve component inheritance if necessary */
-    ecs_var_id_t first_var = 0, second_var = 0, src_var = 0;
+    ecs_var_id_t first_var = EcsVarNone, second_var = EcsVarNone, src_var = EcsVarNone;
 
     /* Resolve variables and entities for operation arguments */
     flecs_rule_compile_term_id(world, rule, &op, &term->first, 
@@ -892,9 +917,8 @@ void flecs_rule_compile_term(
 
     if (first_is_var) first_var = op.first.var;
     if (second_is_var) second_var = op.second.var;
-    if (src_is_var) src_var = op.src.var;
     bool first_written = flecs_rule_is_written(first_var, ctx->written);
-    bool second_written = flecs_rule_is_written(src_var, ctx->written);
+    bool second_written = flecs_rule_is_written(second_var, ctx->written);
 
     /* Insert each instructions for table -> entity variable translation */
     flecs_rule_compile_ensure_vars(rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
@@ -903,6 +927,7 @@ void flecs_rule_compile_term(
     /* Do src last, in case it uses the same variable as first/second */
     flecs_rule_compile_term_id(world, rule, &op, &term->src, 
         &op.src, EcsRuleSrc, EcsVarAny, ctx);
+    if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
     flecs_rule_compile_ensure_vars(rule, &op, &op.src, EcsRuleSrc, ctx, cond_write);
 
@@ -917,6 +942,7 @@ void flecs_rule_compile_term(
         }
     }
 
+    /* Handle Not, Optional, Or operators */
     if (term->oper == EcsNot) {
         flecs_rule_begin_not(ctx);
     } else if (term->oper == EcsOptional) {
@@ -937,7 +963,7 @@ void flecs_rule_compile_term(
 
     op.match_flags = term->flags;
 
-    if (first_var) {
+    if (first_is_var) {
         op.first.var = first_var;
         op.flags &= ~(EcsRuleIsEntity << EcsRuleFirst);
         op.flags |= (EcsRuleIsVar << EcsRuleFirst);
@@ -954,24 +980,26 @@ void flecs_rule_compile_term(
     flecs_rule_op_insert(&op, ctx);
 
     /* Handle self-references between src and first/second variables */
-    if (src_var) {
-        if (first_var) {
+    if (src_is_var) {
+        if (first_is_var) {
             flecs_rule_insert_contains(rule, src_var, first_var, ctx);
         }
-        if (second_var && first_var != second_var) {
+        if (second_is_var && first_var != second_var) {
             flecs_rule_insert_contains(rule, src_var, second_var, ctx);
         }
     }
 
     /* Handle self references between first and second variables */
-    if (first_var && !first_written && (first_var == second_var)) {
+    if (first_is_var && !first_written && (first_var == second_var)) {
         flecs_rule_insert_pair_eq(rule, term->field_index, ctx);
     }
 
+    /* Handle closing of conditional evaluation */
     if (ctx->cond_written && (first_is_var || second_is_var || src_is_var)) {
         flecs_rule_end_cond_eval(&op, ctx, write_state);
     }
 
+    /* Handle closing of Not, Optional and Or operators */
     if (term->oper == EcsNot) {
         flecs_rule_end_not(&op, ctx);
     } else if (term->oper == EcsOptional) {

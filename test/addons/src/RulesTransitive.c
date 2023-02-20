@@ -3905,19 +3905,157 @@ void RulesTransitive_1_src_tgt_same_var_reflexive() {
 
     test_assert(r != NULL);
 
-    printf("%s\n", ecs_rule_str(r));
-
     int x_var = ecs_rule_find_var(r, "x");
     test_assert(x_var != -1);
 
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
-        while (ecs_rule_next(&it)) {
-            printf("%s\n", ecs_iter_str(&it));
-        }
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Amsterdam), ecs_field_id(&it, 1));
+        test_uint(Amsterdam, ecs_field_src(&it, 1));
+        test_uint(Amsterdam, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, NoordHolland), ecs_field_id(&it, 1));
+        test_uint(NoordHolland, ecs_field_src(&it, 1));
+        test_uint(NoordHolland, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Seattle), ecs_field_id(&it, 1));
+        test_uint(Seattle, ecs_field_src(&it, 1));
+        test_uint(Seattle, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, SanFrancisco), ecs_field_id(&it, 1));
+        test_uint(SanFrancisco, ecs_field_src(&it, 1));
+        test_uint(SanFrancisco, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, LosAngeles), ecs_field_id(&it, 1));
+        test_uint(LosAngeles, ecs_field_src(&it, 1));
+        test_uint(LosAngeles, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 1));
+        test_uint(California, ecs_field_src(&it, 1));
+        test_uint(California, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Washington), ecs_field_id(&it, 1));
+        test_uint(Washington, ecs_field_src(&it, 1));
+        test_uint(Washington, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 1));
+        test_uint(UnitedStates, ecs_field_src(&it, 1));
+        test_uint(UnitedStates, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(LocatedIn, Netherlands), ecs_field_id(&it, 1));
+        test_uint(Netherlands, ecs_field_src(&it, 1));
+        test_uint(Netherlands, ecs_iter_get_var(&it, x_var));
+
+        test_bool(false, ecs_rule_next(&it));
     }
 
-    test_assert(false);
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTransitive_1_src_tgt_same_this_var_reflexive() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_add_id(world, LocatedIn, EcsReflexive);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "LocatedIn($this, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "This");
+    test_assert(this_var != -1);
+    test_assert(this_var != 0);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, Amsterdam), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Amsterdam, ecs_iter_get_var(&it, this_var));
+        test_uint(Amsterdam, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, NoordHolland), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(NoordHolland, ecs_iter_get_var(&it, this_var));
+        test_uint(NoordHolland, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, Seattle), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Seattle, ecs_iter_get_var(&it, this_var));
+        test_uint(Seattle, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, SanFrancisco), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(SanFrancisco, ecs_iter_get_var(&it, this_var));
+        test_uint(SanFrancisco, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, LosAngeles), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(LosAngeles, ecs_iter_get_var(&it, this_var));
+        test_uint(LosAngeles, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, California), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(California, ecs_iter_get_var(&it, this_var));
+        test_uint(California, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, Washington), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Washington, ecs_iter_get_var(&it, this_var));
+        test_uint(Washington, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, UnitedStates), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(UnitedStates, ecs_iter_get_var(&it, this_var));
+        test_uint(UnitedStates, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(LocatedIn, Netherlands), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Netherlands, ecs_iter_get_var(&it, this_var));
+        test_uint(Netherlands, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
 
     ecs_rule_fini(r);
 
