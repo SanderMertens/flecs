@@ -1069,6 +1069,7 @@
                 "filter_w_pair_wildcard_not_same_vars",
                 "filter_w_pair_any_not_same_vars",
                 "filter_w_no_pair_not_same_vars",
+                "filter_not_childof_any",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",

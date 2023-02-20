@@ -152,10 +152,16 @@ void flecs_rule_set_vars(
     }
 
     if (flags_1st & EcsRuleIsVar) {
-        vars[op->first.var].entity = first;
+        ecs_var_id_t var = op->first.var;
+        if (op->written & (1 << var)) {
+            vars[var].entity = first;
+        }
     }
     if (flags_2nd & EcsRuleIsVar) {
-        vars[op->second.var].entity = second;
+        ecs_var_id_t var = op->second.var;
+        if (op->written & (1 << var)) {
+            vars[var].entity = second;
+        }
     }
 }
 
@@ -204,19 +210,19 @@ ecs_id_t flecs_rule_op_get_id_w_written(
     if (flags_1st) {
         if (flecs_ref_is_written(rule, op, &op->first, EcsRuleFirst, written)) {
             first = flecs_get_ref_entity(rule, vars, &op->first, flags_1st);
-        } else {
+        } else if (flags_1st & EcsRuleIsVar) {
             first = EcsWildcard;
         }
     }
     if (flags_2nd) {
         if (flecs_ref_is_written(rule, op, &op->second, EcsRuleSecond, written)) {
             second = flecs_get_ref_entity(rule, vars, &op->second, flags_2nd);
-        } else {
+        } else if (flags_2nd & EcsRuleIsVar) {
             second = EcsWildcard;
         }
     }
 
-    if (second) {
+    if (flags_2nd & (EcsRuleIsVar | EcsRuleIsEntity)) {
         return ecs_pair(first, second);
     } else {
         return ecs_get_alive(rule->world, first);
@@ -903,8 +909,19 @@ bool flecs_rule_each(
         }
     }
 
+    ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
+
     ecs_entity_t *entities = table->data.entities.array;
-    flecs_rule_var_set_entity(rule, op, rit->vars, op->src.var, entities[row]);
+    ecs_entity_t e;
+    do {
+        e = entities[row ++];
+    
+        /* Exclude entities that are used as markers by rule engine */
+    } while ((e == EcsWildcard) || (e == EcsAny) || 
+        (e == EcsThis) || (e == EcsVariable));
+
+    flecs_rule_var_set_entity(rule, op, rit->vars, op->src.var, e);
+
     return true;
 }
 
@@ -994,10 +1011,10 @@ bool flecs_rule_not(
 
         /* Reset variables */
         if (!flecs_ref_is_written(rule, op, &op->first, EcsRuleFirst, written_cur)){
-            vars[op->first.var].entity =  EcsWildcard;
+            vars[op->first.var].entity = EcsWildcard;
         }
         if (!flecs_ref_is_written(rule, op, &op->second, EcsRuleSecond, written_cur)){
-            vars[op->second.var].entity =  EcsWildcard;
+            vars[op->second.var].entity = EcsWildcard;
         }
     }
 
@@ -1053,6 +1070,7 @@ bool flecs_rule_setthis(
         /* Save values so we can restore them later */
         op_ctx->offset = vars[0].range.offset;
         op_ctx->count = vars[0].range.count;
+        op_ctx->table = vars[0].range.table;
 
         /* Constrain This table variable to a single entity from the table */
         ecs_record_t *r = flecs_entities_get(rule->world, this_var->entity);
@@ -1065,6 +1083,7 @@ bool flecs_rule_setthis(
          * the table variable use all the entities in the table. */
         vars[0].range.offset = op_ctx->offset;
         vars[0].range.count = op_ctx->count;
+        vars[0].range.table = op_ctx->table;
         return false;
     }
 }
