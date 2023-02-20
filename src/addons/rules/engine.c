@@ -190,16 +190,16 @@ ecs_entity_t flecs_get_ref_entity(
 }
 
 static
-ecs_id_t flecs_rule_op_get_id(
+ecs_id_t flecs_rule_op_get_id_w_written(
     const ecs_rule_t *rule,
     const ecs_var_t *vars,
     const ecs_rule_op_t *op,
-    const ecs_rule_run_ctx_t *ctx)
+    const ecs_rule_run_ctx_t *ctx,
+    uint64_t written)
 {
     ecs_flags16_t flags_1st = flecs_rule_ref_flags(op->flags, EcsRuleFirst);
     ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
     ecs_entity_t first = 0, second = 0;
-    uint64_t written = ctx->rit->written[ctx->op_index];
 
     if (flags_1st) {
         if (flecs_ref_is_written(rule, op, &op->first, EcsRuleFirst, written)) {
@@ -221,6 +221,17 @@ ecs_id_t flecs_rule_op_get_id(
     } else {
         return ecs_get_alive(rule->world, first);
     }
+}
+
+static
+ecs_id_t flecs_rule_op_get_id(
+    const ecs_rule_t *rule,
+    const ecs_var_t *vars,
+    const ecs_rule_op_t *op,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->rit->written[ctx->op_index];
+    return flecs_rule_op_get_id_w_written(rule, vars, op, ctx, written);
 }
 
 static
@@ -752,7 +763,7 @@ bool flecs_rule_trav(
 }
 
 static
-bool flecs_rule_findids(
+bool flecs_rule_idsright(
     ecs_rule_op_t *op,
     bool redo,
     const ecs_rule_run_ctx_t *ctx)
@@ -760,7 +771,7 @@ bool flecs_rule_findids(
     const ecs_rule_t *rule = ctx->rule;
     ecs_world_t *world = rule->world;
     ecs_var_t *vars = ctx->rit->vars;
-    ecs_rule_findids_ctx_t *op_ctx = &ctx->ctx->is.findids;
+    ecs_rule_ids_ctx_t *op_ctx = &ctx->ctx->is.ids;
     ecs_id_record_t *cur;
 
     if (!redo) {
@@ -792,6 +803,65 @@ bool flecs_rule_findids(
     }
 
     flecs_rule_set_vars(rule, op, vars, cur->id);
+
+    if (op->field_index != -1) {
+        ecs_iter_t *it = ctx->it;
+        ecs_id_t id = flecs_rule_op_get_id_w_written(
+            ctx->rule, vars, op, ctx, op->written);
+        it->ids[op->field_index] = id;
+    }
+
+    return true;
+}
+
+static
+bool flecs_rule_idsleft(
+    ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    const ecs_rule_t *rule = ctx->rule;
+    ecs_world_t *world = rule->world;
+    ecs_var_t *vars = ctx->rit->vars;
+    ecs_rule_ids_ctx_t *op_ctx = &ctx->ctx->is.ids;
+    ecs_id_record_t *cur;
+
+    if (!redo) {
+        ecs_id_t id = flecs_rule_op_get_id(ctx->rule, ctx->rit->vars, op, ctx);
+        if (!ecs_id_is_wildcard(id)) {
+            /* If id is not a wildcard, we can directly return it. This can 
+             * happen if a variable was constrained by an iterator. */
+            op_ctx->cur = NULL;
+            flecs_rule_set_vars(rule, op, vars, id);
+            return true;
+        }
+
+        cur = op_ctx->cur = flecs_id_record_get(world, id);
+        if (!cur) {
+            return false;
+        }
+
+        cur = op_ctx->cur = cur->second.next;
+    } else {
+        if (!op_ctx->cur) {
+            return false;
+        }
+
+        cur = op_ctx->cur = op_ctx->cur->second.next;
+    }
+
+    if (!cur) {
+        return false;
+    }
+
+    flecs_rule_set_vars(rule, op, vars, cur->id);
+
+    if (op->field_index != -1) {
+        ecs_iter_t *it = ctx->it;
+        ecs_id_t id = flecs_rule_op_get_id_w_written(
+            ctx->rule, vars, op, ctx, op->written);
+        it->ids[op->field_index] = id;
+    }
 
     return true;
 }
@@ -1106,7 +1176,8 @@ bool flecs_rule_run(
     switch(op->kind) {
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleTrav: return flecs_rule_trav(op, redo, ctx);
-    case EcsRuleFindIds: return flecs_rule_findids(op, redo, ctx);
+    case EcsRuleIdsRight: return flecs_rule_idsright(op, redo, ctx);
+    case EcsRuleIdsLeft: return flecs_rule_idsleft(op, redo, ctx);
     case EcsRuleEach: return flecs_rule_each(op, redo, ctx);
     case EcsRuleStore: return flecs_rule_store(op, redo, ctx);
     case EcsRuleUnion: return flecs_rule_union(op, redo, ctx);
@@ -1120,6 +1191,7 @@ bool flecs_rule_run(
     case EcsRuleSetCond: return flecs_rule_jmp_set_cond(op, redo, ctx);
     case EcsRuleJmpNotSet: return flecs_rule_jmp_not_set(op, redo, ctx);
     case EcsRuleYield: return false;
+    case EcsRuleNothing: return false;
     }
     return false;
 }

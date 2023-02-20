@@ -559,7 +559,13 @@
                 "1_any_src_w_pair",
                 "2_any_src",
                 "2_any_src_w_pair",
-                "rule_w_iter_next"
+                "1_any_src_w_pair_tgt_var",
+                "1_any_src_w_pair_rel_var",
+                "1_any_src_w_pair_tgt_this",
+                "1_any_src_w_pair_rel_this",
+                "rule_w_iter_next",
+                "empty_rule",
+                "invalid_rule"
             ]
         }, {
             "id": "RulesVariables",
@@ -755,7 +761,8 @@
                 "2_this_src_constrain_tgt_var_after_2_lvl",
                 "1_src_tgt_same_var",
                 "1_src_tgt_same_var_reflexive",
-                "1_src_tgt_same_this_var_reflexive"
+                "1_src_tgt_same_this_var_reflexive",
+                "1_any_src_tgt_var"
             ]
         }, {
             "id": "Rules",

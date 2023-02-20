@@ -14,6 +14,9 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(msg != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(buf != NULL, ECS_INTERNAL_ERROR, NULL);
+
     char *ptr, ch, prev = '\0';
     bool isNum = false;
     char isStr = '\0';

@@ -25,7 +25,8 @@ const char* flecs_rule_op_str(
     case EcsRuleAnd:          return "and     ";
     case EcsRuleTrav:         return "trav    ";
     case EcsRuleTravId:       return "travid  ";
-    case EcsRuleFindIds:      return "findids ";
+    case EcsRuleIdsRight:     return "idsr    ";
+    case EcsRuleIdsLeft:      return "idsl    ";
     case EcsRuleEach:         return "each    ";
     case EcsRuleStore:        return "store   ";
     case EcsRuleUnion:        return "union   ";
@@ -40,6 +41,7 @@ const char* flecs_rule_op_str(
     case EcsRuleJmpCondFalse: return "jfalse  ";
     case EcsRuleJmpNotSet:    return "jnotset ";
     case EcsRuleYield:        return "yield   ";
+    case EcsRuleNothing:      return "nothing ";
     default: return "!invalid";
     }
 }
@@ -76,9 +78,6 @@ ecs_rule_t* ecs_rule_init(
     if (ecs_filter_init(world, &desc) == NULL) {
         goto error;
     }
-
-    /* Find all variables defined in query */
-    flecs_rule_discover_vars(stage, result);
 
     /* Compile filter to operations */
     flecs_rule_compile(world, stage, result);
@@ -210,16 +209,6 @@ char* ecs_rule_str(
         }
 
         ecs_strbuf_appendch(&buf, ')');
-
-        // if (op->flags & EcsRuleIsSelf) {
-        //     ecs_strbuf_appendstr(&buf, ", self");
-        // }
-
-        // if (op->trav) {
-        //     ecs_strbuf_appendstr(&buf, ", trav: #[blue]");
-        //     ecs_strbuf_appendstr(&buf, ecs_get_name(rule->world, op->trav));
-        //     ecs_strbuf_appendstr(&buf, "#[reset]");
-        // }
 
         ecs_strbuf_appendch(&buf, '\n');
     }

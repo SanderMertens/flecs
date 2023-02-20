@@ -544,7 +544,13 @@ void RulesBasic_1_any_src(void);
 void RulesBasic_1_any_src_w_pair(void);
 void RulesBasic_2_any_src(void);
 void RulesBasic_2_any_src_w_pair(void);
+void RulesBasic_1_any_src_w_pair_tgt_var(void);
+void RulesBasic_1_any_src_w_pair_rel_var(void);
+void RulesBasic_1_any_src_w_pair_tgt_this(void);
+void RulesBasic_1_any_src_w_pair_rel_this(void);
 void RulesBasic_rule_w_iter_next(void);
+void RulesBasic_empty_rule(void);
+void RulesBasic_invalid_rule(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -735,6 +741,7 @@ void RulesTransitive_2_this_src_constrain_tgt_var_after_2_lvl(void);
 void RulesTransitive_1_src_tgt_same_var(void);
 void RulesTransitive_1_src_tgt_same_var_reflexive(void);
 void RulesTransitive_1_src_tgt_same_this_var_reflexive(void);
+void RulesTransitive_1_any_src_tgt_var(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -3351,8 +3358,32 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_2_any_src_w_pair
     },
     {
+        "1_any_src_w_pair_tgt_var",
+        RulesBasic_1_any_src_w_pair_tgt_var
+    },
+    {
+        "1_any_src_w_pair_rel_var",
+        RulesBasic_1_any_src_w_pair_rel_var
+    },
+    {
+        "1_any_src_w_pair_tgt_this",
+        RulesBasic_1_any_src_w_pair_tgt_this
+    },
+    {
+        "1_any_src_w_pair_rel_this",
+        RulesBasic_1_any_src_w_pair_rel_this
+    },
+    {
         "rule_w_iter_next",
         RulesBasic_rule_w_iter_next
+    },
+    {
+        "empty_rule",
+        RulesBasic_empty_rule
+    },
+    {
+        "invalid_rule",
+        RulesBasic_invalid_rule
     }
 };
 
@@ -4098,6 +4129,10 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "1_src_tgt_same_this_var_reflexive",
         RulesTransitive_1_src_tgt_same_this_var_reflexive
+    },
+    {
+        "1_any_src_tgt_var",
+        RulesTransitive_1_any_src_tgt_var
     }
 };
 
@@ -6009,7 +6044,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        59,
+        65,
         RulesBasic_testcases
     },
     {
@@ -6030,7 +6065,7 @@ static bake_test_suite suites[] = {
         "RulesTransitive",
         NULL,
         NULL,
-        52,
+        53,
         RulesTransitive_testcases
     },
     {

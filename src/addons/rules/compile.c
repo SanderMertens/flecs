@@ -754,8 +754,8 @@ void flecs_rule_insert_unconstrained_transitive(
 
     /* First, find ids to start traversal from. This fixes op.second. */
     ecs_rule_op_t find_ids = {0};
-    find_ids.kind = EcsRuleFindIds;
-    find_ids.field_index = op->field_index;
+    find_ids.kind = EcsRuleIdsRight;
+    find_ids.field_index = -1;
     find_ids.first = op->first;
     find_ids.second = op->second;
     find_ids.flags = op->flags;
@@ -887,9 +887,10 @@ void flecs_rule_compile_term(
     ecs_rule_compile_ctx_t *ctx)
 {
     ecs_rule_op_t op = {0};
-    op.kind = EcsRuleAnd;
+    op.kind = EcsRuleAnd; /* Default instruction is the And operator */
     op.field_index = term->field_index;
 
+    /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
@@ -920,7 +921,7 @@ void flecs_rule_compile_term(
     bool first_written = flecs_rule_is_written(first_var, ctx->written);
     bool second_written = flecs_rule_is_written(second_var, ctx->written);
 
-    /* Insert each instructions for table -> entity variable translation */
+    /* Insert each instructions for table -> entity variable if needed */
     flecs_rule_compile_ensure_vars(rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
     flecs_rule_compile_ensure_vars(rule, &op, &op.second, EcsRuleSecond, ctx, cond_write);
 
@@ -930,6 +931,23 @@ void flecs_rule_compile_term(
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
     flecs_rule_compile_ensure_vars(rule, &op, &op.src, EcsRuleSrc, ctx, cond_write);
+
+    /* If source is Any (_) and first and/or second are unconstrained, insert an
+     * ids instruction instead of an And */
+    if (term->flags & EcsTermMatchAnySrc) {
+        if ((first_is_var && !first_written) || (second_is_var && !second_written)) {
+            if (!first_written) {
+                /* If first is unknown, traverse left: <- (*, t) */
+                op.kind = EcsRuleIdsLeft;
+            } else {
+                /* If second is wildcard, traverse right: (r, *) -> */
+                op.kind = EcsRuleIdsRight;
+            }
+            op.src.entity = 0;
+            op.flags &= ~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
+            op.flags &= ~(EcsRuleIsEntity << EcsRuleSrc);
+        }
+    }
 
     /* If this is a transitive term and both the target and source are unknown,
      * find the targets for the relationship first. This clusters together 
@@ -1038,6 +1056,9 @@ void flecs_rule_compile(
     ctx.lbl_prev = -1;
     ecs_vector_clear(ctx.ops);
 
+    /* Find all variables defined in query */
+    flecs_rule_discover_vars(stage, rule);
+
     /* Compile query terms to instructions */
     ecs_filter_t *filter = &rule->filter;
     ecs_term_t *terms = filter->terms;
@@ -1096,10 +1117,17 @@ void flecs_rule_compile(
         }
     }
 
-    /* Insert yield. If program reaches this operation, a result was found */
-    ecs_rule_op_t yield = {0};
-    yield.kind = EcsRuleYield;
-    flecs_rule_op_insert(&yield, &ctx);
+    /* If filter is empty, insert Nothing instruction */
+    if (!rule->filter.term_count) {
+        ecs_rule_op_t nothing = {0};
+        nothing.kind = EcsRuleNothing;
+        flecs_rule_op_insert(&nothing, &ctx);
+    } else {
+        /* Insert yield. If program reaches this operation, a result was found */
+        ecs_rule_op_t yield = {0};
+        yield.kind = EcsRuleYield;
+        flecs_rule_op_insert(&yield, &ctx);
+    }
 
     int32_t op_count = ecs_vector_count(ctx.ops);
     if (op_count) {
