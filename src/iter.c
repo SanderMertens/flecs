@@ -550,6 +550,16 @@ char* ecs_iter_str(
             ecs_os_free(str);
         }
         ecs_strbuf_list_pop(&buf, "\n");
+
+        ecs_strbuf_list_push(&buf, "set: ", ",");
+        for (i = 0; i < it->field_count; i ++) {
+            if (ecs_field_is_set(it, i + 1)) {
+                ecs_strbuf_list_appendlit(&buf, "true");
+            } else {
+                ecs_strbuf_list_appendlit(&buf, "false");
+            }
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
     }
 
     if (it->variable_count) {

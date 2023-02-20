@@ -37564,7 +37564,9 @@ void flecs_rule_set_match(
         it->sources[field_index] = op->src.entity;
     }
 
-    flecs_rule_it_set_column(it, field_index, column);
+    if (column >= 0) {
+        flecs_rule_it_set_column(it, field_index, column);
+    }
     
     if (!(op->match_flags & EcsTermMatchAny)) {
         if (column >= 0) {
@@ -37845,6 +37847,7 @@ bool flecs_rule_trav_fixed_src_up_fixed_second(
     ecs_iter_t *it = ctx->it;
     it->ids[op->field_index] = ecs_pair(trav, second);
     flecs_rule_set_match(op, table, -1, ctx);
+    flecs_rule_it_set_column(it, op->field_index, column);
 
     return true;
 }
@@ -53133,6 +53136,16 @@ char* ecs_iter_str(
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
+
+        ecs_strbuf_list_push(&buf, "set: ", ",");
+        for (i = 0; i < it->field_count; i ++) {
+            if (ecs_field_is_set(it, i + 1)) {
+                ecs_strbuf_list_appendlit(&buf, "true");
+            } else {
+                ecs_strbuf_list_appendlit(&buf, "false");
+            }
         }
         ecs_strbuf_list_pop(&buf, "\n");
     }

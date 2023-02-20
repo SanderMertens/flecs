@@ -291,7 +291,9 @@ void flecs_rule_set_match(
         it->sources[field_index] = op->src.entity;
     }
 
-    flecs_rule_it_set_column(it, field_index, column);
+    if (column >= 0) {
+        flecs_rule_it_set_column(it, field_index, column);
+    }
     
     if (!(op->match_flags & EcsTermMatchAny)) {
         if (column >= 0) {
@@ -572,6 +574,7 @@ bool flecs_rule_trav_fixed_src_up_fixed_second(
     ecs_iter_t *it = ctx->it;
     it->ids[op->field_index] = ecs_pair(trav, second);
     flecs_rule_set_match(op, table, -1, ctx);
+    flecs_rule_it_set_column(it, op->field_index, column);
 
     return true;
 }
