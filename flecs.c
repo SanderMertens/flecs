@@ -1297,6 +1297,27 @@ bool flecs_iter_next_instanced(
     ecs_iter_t *it,
     bool result);
 
+void* flecs_iter_calloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align);
+
+#define flecs_iter_calloc_t(it, T)\
+    flecs_iter_calloc(it, ECS_SIZEOF(T), ECS_ALIGNOF(T))
+
+#define flecs_iter_calloc_n(it, T, count)\
+    flecs_iter_calloc(it, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+
+void flecs_iter_free(
+    void *ptr,
+    ecs_size_t size);
+
+#define flecs_iter_free_t(ptr, T)\
+    flecs_iter_free(ptr, ECS_SIZEOF(T))
+
+#define flecs_iter_free_n(ptr, T, count)\
+    flecs_iter_free(ptr, ECS_SIZEOF(T) * count)
+
 #endif
 
 /**
@@ -37619,7 +37640,7 @@ bool flecs_rule_select_w_id(
     int32_t column = -1;
 
     if (!idr || idr->id != id) {
-        idr = flecs_id_record_get(world, id);
+        idr = op_ctx->idr = flecs_id_record_get(world, id);
     }
 
     if (!idr) {
@@ -37638,7 +37659,6 @@ bool flecs_rule_select_w_id(
     }
 
     if (!redo || !op_ctx->remaining) {
-
 repeat:
         do {
             tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
@@ -37680,6 +37700,7 @@ repeat:
     }
 
     flecs_rule_set_match(op, table, column, ctx);
+
     return true;
 }
 
@@ -38643,10 +38664,12 @@ void flecs_rule_iter_fini(
     ecs_iter_t *it)
 {
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
+    int32_t op_count = rit->rule->op_count;
+    int32_t var_count = rit->rule->var_count;
     flecs_rule_iter_fini_ctx(it, rit);
-    ecs_os_free(rit->vars);
-    ecs_os_free(rit->written);
-    ecs_os_free(rit->op_ctx);
+    flecs_iter_free_n(rit->vars, ecs_var_t, var_count);
+    flecs_iter_free_n(rit->written, ecs_write_flags_t, op_count);
+    flecs_iter_free_n(rit->op_ctx, ecs_rule_op_ctx_t, op_count);
     rit->vars = NULL;
     rit->written = NULL;
     rit->op_ctx = NULL;
@@ -38668,18 +38691,6 @@ ecs_iter_t ecs_rule_iter(
     it.terms = rule->filter.terms;
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
-    rit->rule = rule;
-    if (var_count) {
-        rit->vars = ecs_os_calloc_n(ecs_var_t, var_count);
-    }
-    if (op_count) {
-        rit->written = ecs_os_calloc_n(ecs_write_flags_t, op_count);
-        rit->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, op_count);
-    }
-    for (i = 0; i < var_count; i ++) {
-        rit->vars[i].entity = EcsWildcard;
-    }
-
     it.field_count = rule->filter.field_count;
 
     flecs_iter_init(world, &it, 
@@ -38688,6 +38699,18 @@ ecs_iter_t ecs_rule_iter(
         flecs_iter_cache_sources |
         flecs_iter_cache_sizes |
         flecs_iter_cache_ptrs);
+
+    rit->rule = rule;
+    if (var_count) {
+        rit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
+    }
+    if (op_count) {
+        rit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
+        rit->op_ctx = flecs_iter_calloc_n(&it, ecs_rule_op_ctx_t, op_count);
+    }
+    for (i = 0; i < var_count; i ++) {
+        rit->vars[i].entity = EcsWildcard;
+    }
 
     it.variables = rit->vars;
     it.variable_count = rule->var_pub_count;
@@ -52658,6 +52681,24 @@ ecs_table_t* ecs_table_find(
     if (it->priv.cache.used & flecs_iter_cache_##f) {\
         flecs_stack_free_n((void*)it->f, T, count);\
     }
+
+void* flecs_iter_calloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align)
+{
+    ecs_world_t *world = it->world;
+    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+    return flecs_stack_calloc(stack, size, align); 
+}
+
+void flecs_iter_free(
+    void *ptr,
+    ecs_size_t size)
+{
+    flecs_stack_free(ptr, size);
+}
 
 void flecs_iter_init(
     const ecs_world_t *world,
