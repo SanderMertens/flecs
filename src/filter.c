@@ -624,7 +624,18 @@ int flecs_term_finalize(
             is_same = !ecs_os_strcmp(src->name, second->name);
         }
         if (is_same) {
-            term->flags |= EcsTermPairSame;
+            term->flags |= EcsTermSrcSecondEq;
+        }
+    }
+    if ((src->flags & mask) == (first->flags & mask)) {
+        bool is_same = false;
+        if (src->flags & EcsIsEntity) {
+            is_same = src->id == first->id;
+        } else if (src->name && first->name) {
+            is_same = !ecs_os_strcmp(src->name, first->name);
+        }
+        if (is_same) {
+            term->flags |= EcsTermSrcFirstEq;
         }
     }
 

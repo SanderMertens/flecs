@@ -1723,12 +1723,13 @@ void RulesVariables_1_src_pair_first_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(e1, ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -1737,20 +1738,22 @@ void RulesVariables_1_src_pair_first_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(e1, ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(e2, ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -1798,12 +1801,13 @@ void RulesVariables_1_src_pair_second_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(e1, TgtA), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -1812,20 +1816,22 @@ void RulesVariables_1_src_pair_second_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(e1, TgtA), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(e2, TgtA), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -1874,12 +1880,13 @@ void RulesVariables_1_src_pair_first_and_second_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(RelA, e1), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -1888,20 +1895,22 @@ void RulesVariables_1_src_pair_first_and_second_same_var_this() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(RelA, e1), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(ecs_pair(RelA, e2), ecs_field_id(&it, 1));
         test_uint(TagA, ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -1941,12 +1950,13 @@ void RulesVariables_1_src_id_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(e1, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -1955,20 +1965,22 @@ void RulesVariables_1_src_id_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(e1, ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(e2, ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -2024,12 +2036,13 @@ void RulesVariables_1_src_pair_first_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e1, TgtA), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -2038,20 +2051,22 @@ void RulesVariables_1_src_pair_first_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e1, TgtA), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e2, TgtA), ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -2106,12 +2121,13 @@ void RulesVariables_1_src_pair_second_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, e1), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -2120,20 +2136,22 @@ void RulesVariables_1_src_pair_second_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, e1), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, e2), ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -2199,12 +2217,13 @@ void RulesVariables_1_src_pair_first_and_second_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -2213,20 +2232,22 @@ void RulesVariables_1_src_pair_first_and_second_same_var_this_after_write() {
     {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 2));
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
-        test_uint(0, it.count);
+        test_uint(1, it.count);
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(e2, e2), ecs_field_id(&it, 2));
-        test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -5077,6 +5098,282 @@ void RulesVariables_2_cycle_pair_w_var_var_this() {
         test_uint(e3, ecs_iter_get_var(&it, y_var));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
         test_uint(e2, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_cycle_pair_ent_var_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Likes($x, $y), Likes($y, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Likes, e2);
+    ecs_add_pair(world, e1, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e3);
+    ecs_add_pair(world, e3, Likes, e1);
+    ecs_add_pair(world, e3, Likes, e2);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, ecs_iter_get_var(&it, y_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+        test_uint(e2, ecs_iter_get_var(&it, y_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 2));
+        test_uint(e3, ecs_field_src(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(e3, ecs_iter_get_var(&it, x_var));
+        test_uint(e2, ecs_iter_get_var(&it, y_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, ecs_iter_get_var(&it, y_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(e3, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, x_var));
+        test_uint(e3, ecs_iter_get_var(&it, y_var));
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_cycle_pair_ent_this_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Likes($this, $y), Likes($y, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "This");
+    test_assert(this_var != -1);
+    test_assert(this_var != 0);
+
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Likes, e2);
+    ecs_add_pair(world, e1, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e3);
+    ecs_add_pair(world, e3, Likes, e1);
+    ecs_add_pair(world, e3, Likes, e2);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, ecs_iter_get_var(&it, y_var));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, ecs_iter_get_var(&it, y_var));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 2));
+        test_uint(e3, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, ecs_iter_get_var(&it, y_var));
+        test_uint(e3, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, ecs_iter_get_var(&it, y_var));
+        test_uint(e2, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(e3, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e3, ecs_iter_get_var(&it, y_var));
+        test_uint(e2, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_cycle_pair_ent_var_this() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Likes($x, $this), Likes($this, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    int this_var = ecs_rule_find_var(r, "This");
+    test_assert(this_var != -1);
+    test_assert(this_var != 0);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Likes, e2);
+    ecs_add_pair(world, e1, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e1);
+    ecs_add_pair(world, e2, Likes, e3);
+    ecs_add_pair(world, e3, Likes, e1);
+    ecs_add_pair(world, e3, Likes, e2);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+        test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 2));
+        test_uint(e3, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(e3, ecs_iter_get_var(&it, x_var));
+        test_uint(e2, ecs_iter_get_var(&it, this_var));
+        test_uint(e2, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e1), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, x_var));
+        test_uint(e1, ecs_iter_get_var(&it, this_var));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Likes, e3), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, e2), ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(e2, ecs_iter_get_var(&it, x_var));
+        test_uint(e3, ecs_iter_get_var(&it, this_var));
+        test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }

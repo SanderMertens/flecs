@@ -634,7 +634,10 @@
                 "2_cycle_pair_w_var",
                 "2_cycle_pair_w_this_var_var",
                 "2_cycle_pair_w_var_this_var",
-                "2_cycle_pair_w_var_var_this"
+                "2_cycle_pair_w_var_var_this",
+                "2_cycle_pair_ent_var_var",
+                "2_cycle_pair_ent_this_var",
+                "2_cycle_pair_ent_var_this"
             ]
         }, {
             "id": "RulesOperators",
@@ -751,7 +754,8 @@
                 "2_this_src_constrain_tgt_var_after_1_lvl",
                 "2_this_src_constrain_tgt_var_after_2_lvl",
                 "1_src_tgt_same_var",
-                "1_src_tgt_same_var_reflexive"
+                "1_src_tgt_same_var_reflexive",
+                "1_src_tgt_same_this_var_reflexive"
             ]
         }, {
             "id": "Rules",

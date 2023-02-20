@@ -618,6 +618,9 @@ void RulesVariables_2_cycle_pair_w_var(void);
 void RulesVariables_2_cycle_pair_w_this_var_var(void);
 void RulesVariables_2_cycle_pair_w_var_this_var(void);
 void RulesVariables_2_cycle_pair_w_var_var_this(void);
+void RulesVariables_2_cycle_pair_ent_var_var(void);
+void RulesVariables_2_cycle_pair_ent_this_var(void);
+void RulesVariables_2_cycle_pair_ent_var_this(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -731,6 +734,7 @@ void RulesTransitive_2_this_src_constrain_tgt_var_after_1_lvl(void);
 void RulesTransitive_2_this_src_constrain_tgt_var_after_2_lvl(void);
 void RulesTransitive_1_src_tgt_same_var(void);
 void RulesTransitive_1_src_tgt_same_var_reflexive(void);
+void RulesTransitive_1_src_tgt_same_this_var_reflexive(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -3636,6 +3640,18 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "2_cycle_pair_w_var_var_this",
         RulesVariables_2_cycle_pair_w_var_var_this
+    },
+    {
+        "2_cycle_pair_ent_var_var",
+        RulesVariables_2_cycle_pair_ent_var_var
+    },
+    {
+        "2_cycle_pair_ent_this_var",
+        RulesVariables_2_cycle_pair_ent_this_var
+    },
+    {
+        "2_cycle_pair_ent_var_this",
+        RulesVariables_2_cycle_pair_ent_var_this
     }
 };
 
@@ -4078,6 +4094,10 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "1_src_tgt_same_var_reflexive",
         RulesTransitive_1_src_tgt_same_var_reflexive
+    },
+    {
+        "1_src_tgt_same_this_var_reflexive",
+        RulesTransitive_1_src_tgt_same_this_var_reflexive
     }
 };
 
@@ -5996,7 +6016,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        71,
+        74,
         RulesVariables_testcases
     },
     {
@@ -6010,7 +6030,7 @@ static bake_test_suite suites[] = {
         "RulesTransitive",
         NULL,
         NULL,
-        51,
+        52,
         RulesTransitive_testcases
     },
     {

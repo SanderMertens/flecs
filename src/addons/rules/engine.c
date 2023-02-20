@@ -736,7 +736,8 @@ bool flecs_rule_trav(
     if (!flecs_ref_is_written(rule, op, &op->src, EcsRuleSrc, written)) {
         if (!flecs_ref_is_written(rule, op, &op->second, EcsRuleSecond, written)) {
             /* This can't happen, src or second should have been resolved */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_abort(ECS_INTERNAL_ERROR, 
+                "invalid instruction sequence: unconstrained traversal");
             return false;
         } else {
             return flecs_rule_trav_unknown_src_up_fixed_second(op, redo, ctx);
@@ -812,6 +813,7 @@ bool flecs_rule_each(
     if (!table) {
         return false;
     }
+
 
     if (!redo) {
         row = op_ctx->row = range.offset;
@@ -967,20 +969,30 @@ bool flecs_rule_setthis(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    if (redo) {
-        return false;
-    }
+    ecs_rule_setthis_ctx_t *op_ctx = &ctx->ctx->is.setthis;
 
     const ecs_rule_t *rule = ctx->rule;
     ecs_var_t *vars = ctx->rit->vars;
     ecs_var_t *this_var = &vars[op->first.var];
 
-    ecs_record_t *r = flecs_entities_get(rule->world, this_var->entity);
-    vars[0].range.table = r->table;
-    vars[0].range.offset = ECS_RECORD_TO_ROW(r->row);
-    vars[0].range.count = 1;
+    if (!redo) {
+        /* Save values so we can restore them later */
+        op_ctx->offset = vars[0].range.offset;
+        op_ctx->count = vars[0].range.count;
 
-    return true;
+        /* Constrain This table variable to a single entity from the table */
+        ecs_record_t *r = flecs_entities_get(rule->world, this_var->entity);
+        vars[0].range.table = r->table;
+        vars[0].range.offset = ECS_RECORD_TO_ROW(r->row);
+        vars[0].range.count = 1;
+        return true;
+    } else {
+        /* Restore previous values, so that instructions that are operating on
+         * the table variable use all the entities in the table. */
+        vars[0].range.offset = op_ctx->offset;
+        vars[0].range.count = op_ctx->count;
+        return false;
+    }
 }
 
 /* Check if entity is stored in table */

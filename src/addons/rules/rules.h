@@ -96,6 +96,12 @@ typedef struct {
     int32_t row;
 } ecs_rule_each_ctx_t;
 
+ /* Setthis context */
+typedef struct {
+    int32_t offset;
+    int32_t count;
+} ecs_rule_setthis_ctx_t;
+
 /* Cache for storing results of downward traversal */
 typedef struct {
     ecs_entity_t entity;
@@ -142,6 +148,7 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_trav_ctx_t trav;
         ecs_rule_findids_ctx_t findids;
         ecs_rule_each_ctx_t each;
+        ecs_rule_setthis_ctx_t setthis;
         ecs_rule_ctrlflow_ctx_t ctrlflow;
         ecs_rule_cond_ctx_t cond;
     } is;
@@ -186,6 +193,7 @@ struct ecs_rule_t {
     int32_t var_count;
     int32_t var_pub_count; /* Number of public variables */
     int32_t var_size;
+    bool has_table_this;
     ecs_hashmap_t tvar_index;
     ecs_hashmap_t evar_index;
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
