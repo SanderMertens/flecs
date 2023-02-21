@@ -779,7 +779,9 @@
                 "optional_transitive_var_tgt",
                 "optional_transitive_ent_tgt_written",
                 "optional_transitive_var_tgt_written",
-                "2_var_src_w_same_tgt_ent"
+                "2_var_src_w_same_tgt_ent",
+                "self_target",
+                "any_target"
             ]
         }, {
             "id": "Rules",

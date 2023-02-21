@@ -2403,13 +2403,33 @@ void Filter_filter_w_transitive_tag_no_pair() {
 void Filter_filter_w_transitive_tag_self_tgt() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, LocatedIn);
+    ECS_ENTITY(world, LocatedIn, Transitive);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
         .terms = {
             { .first.id = LocatedIn, .second.id = EcsWildcard, .second.flags = EcsSelf }
+        }
+    }));
+
+    test_assert(!(f.terms[0].flags & EcsTermTransitive));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_transitive_tag_any_tgt() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, LocatedIn, Transitive);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {
+            { .first.id = LocatedIn, .second.id = EcsAny }
         }
     }));
 
@@ -11064,4 +11084,3 @@ void Filter_filter_w_short_notation() {
 
     ecs_fini(world);
 }
-

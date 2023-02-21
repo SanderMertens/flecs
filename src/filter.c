@@ -685,10 +685,12 @@ int flecs_term_finalize(
         /* Add traversal flags for transitive relationships */
         if (!(second_flags & EcsTraverseFlags) && ecs_term_id_is_set(second)) {
             if (!((src->flags & EcsIsVariable) && (src->id == EcsAny))) {
-                if (ecs_has_id(world, first_id, EcsTransitive)) {
-                    second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
-                    second->trav = first_id;
-                    term->flags |= EcsTermTransitive;
+                if (!((second->flags & EcsIsVariable) && (second->id == EcsAny))) {
+                    if (ecs_has_id(world, first_id, EcsTransitive)) {
+                        second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
+                        second->trav = first_id;
+                        term->flags |= EcsTermTransitive;
+                    }
                 }
             }
         }

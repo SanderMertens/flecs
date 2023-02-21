@@ -759,6 +759,10 @@ void RulesTransitive_optional_transitive_var_tgt(void);
 void RulesTransitive_optional_transitive_ent_tgt_written(void);
 void RulesTransitive_optional_transitive_var_tgt_written(void);
 void RulesTransitive_2_var_src_w_same_tgt_ent(void);
+void RulesTransitive_self_target(void);
+void RulesTransitive_any_target(void);
+void RulesTransitive_self_target_written(void);
+void RulesTransitive_any_target_written(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -4218,6 +4222,22 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "2_var_src_w_same_tgt_ent",
         RulesTransitive_2_var_src_w_same_tgt_ent
+    },
+    {
+        "self_target",
+        RulesTransitive_self_target
+    },
+    {
+        "any_target",
+        RulesTransitive_any_target
+    },
+    {
+        "self_target_written",
+        RulesTransitive_self_target_written
+    },
+    {
+        "any_target_written",
+        RulesTransitive_any_target_written
     }
 };
 
@@ -6150,7 +6170,7 @@ static bake_test_suite suites[] = {
         "RulesTransitive",
         NULL,
         NULL,
-        62,
+        66,
         RulesTransitive_testcases
     },
     {
