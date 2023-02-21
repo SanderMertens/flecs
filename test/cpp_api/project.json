@@ -926,7 +926,8 @@
                 "set_override_no_copy",
                 "set_override_pair_no_copy",
                 "set_override_pair_w_entity_no_copy",
-                "dtor_after_defer_set"
+                "dtor_after_defer_set",
+                "dtor_with_relation"
             ]
         }, {
             "id": "Refs",
