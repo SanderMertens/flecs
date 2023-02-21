@@ -784,6 +784,30 @@
                 "any_target"
             ]
         }, {
+            "id": "RulesComponentInheritance",
+            "testcases": [
+                "1_ent_0_lvl",
+                "1_ent_1_lvl",
+                "1_ent_2_lvl",
+                "1_ent_3_lvl",
+                "1_this_0_lvl",
+                "1_this_1_lvl",
+                "1_this_2_lvl",
+                "1_this_3_lvl",
+                "1_this_0_lvl_written",
+                "1_this_1_lvl_written",
+                "1_this_2_lvl_written",
+                "1_this_3_lvl_written",
+                "1_var_0_lvl",
+                "1_var_1_lvl",
+                "1_var_2_lvl",
+                "1_var_3_lvl",
+                "1_var_0_lvl_written",
+                "1_var_1_lvl_written",
+                "1_var_2_lvl_written",
+                "1_var_3_lvl_written"
+            ]
+        }, {
             "id": "Rules",
             "testcases": [
                 "empty_rule",

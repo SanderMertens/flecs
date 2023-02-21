@@ -287,11 +287,14 @@ void flecs_rule_set_match(
     int32_t column,
     const ecs_rule_run_ctx_t *ctx)
 {
+    int32_t field_index = op->field_index;
+    if (field_index == -1) {
+        return;
+    }
+
     ecs_iter_t *it = ctx->it;
     const ecs_rule_t *rule = ctx->rule;
-    int32_t field_index = op->field_index;
     ecs_var_t *vars = ctx->rit->vars;
-
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, EcsRuleSrc);
     if (flags & EcsRuleIsEntity) {
         it->sources[field_index] = op->src.entity;

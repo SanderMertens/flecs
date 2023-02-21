@@ -3083,6 +3083,7 @@ typedef enum ecs_oper_kind_t {
 #define EcsTermSrcSecondEq (1 << 3)
 #define EcsTermTransitive  (1 << 4)
 #define EcsTermReflexive   (1 << 5)
+#define EcsTermIdInherited (1 << 6)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {

@@ -1014,6 +1014,10 @@ void Filter_filter_w_pair_wildcard_not_same_vars(void);
 void Filter_filter_w_pair_any_not_same_vars(void);
 void Filter_filter_w_no_pair_not_same_vars(void);
 void Filter_filter_not_childof_any(void);
+void Filter_flecs_w_inherited_id(void);
+void Filter_flecs_w_inherited_pair(void);
+void Filter_flecs_w_non_inherited_id(void);
+void Filter_flecs_w_non_inherited_pair(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6272,6 +6276,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_not_childof_any",
         Filter_filter_not_childof_any
+    },
+    {
+        "flecs_w_inherited_id",
+        Filter_flecs_w_inherited_id
+    },
+    {
+        "flecs_w_inherited_pair",
+        Filter_flecs_w_inherited_pair
+    },
+    {
+        "flecs_w_non_inherited_id",
+        Filter_flecs_w_non_inherited_id
+    },
+    {
+        "flecs_w_non_inherited_pair",
+        Filter_flecs_w_non_inherited_pair
     },
     {
         "term_w_id",
@@ -11900,7 +11920,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        274,
+        278,
         Filter_testcases
     },
     {

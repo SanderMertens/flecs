@@ -79,11 +79,11 @@ ecs_rule_t* ecs_rule_init(
         goto error;
     }
 
-    /* Compile filter to operations */
-    flecs_rule_compile(world, stage, result);
-
     result->world = world;
     result->iterable.init = flecs_rule_iter_mixin_init;
+
+    /* Compile filter to operations */
+    flecs_rule_compile(world, stage, result);
 
     return result;
 error:
