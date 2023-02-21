@@ -22470,7 +22470,7 @@ struct each_invoker : public invoker {
 
     using Terms = typename term_ptrs<Components ...>::array;
 
-    template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
+    template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
     explicit each_invoker(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
@@ -22630,7 +22630,7 @@ private:
     using Terms = typename term_ptrs<Components ...>::array;
 
 public:
-    template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
+    template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
     explicit iter_invoker(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
