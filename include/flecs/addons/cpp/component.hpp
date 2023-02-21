@@ -126,7 +126,6 @@ template <typename T>
 struct cpp_type_impl {
     // Initialize component identifier
     static void init(
-        world_t* world, 
         entity_t entity, 
         bool allow_tag = true) 
     {
@@ -136,7 +135,6 @@ struct cpp_type_impl {
 
         // If an identifier was already set, check for consistency
         if (s_id) {
-            ecs_assert(s_name.c_str() != nullptr, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 type_name<T>());
             ecs_assert(allow_tag == s_allow_tag, ECS_INVALID_PARAMETER, NULL);
@@ -148,9 +146,7 @@ struct cpp_type_impl {
 
         // Component wasn't registered yet, set the values. Register component
         // name as the fully qualified flecs path.
-        char *path = ecs_get_fullpath(world, entity);
         s_id = entity;
-        s_name = flecs::string(path);
         s_allow_tag = allow_tag;
         s_size = sizeof(T);
         s_alignment = alignof(T);
@@ -179,7 +175,7 @@ struct cpp_type_impl {
         // across more than one binary), or if the id does not exists in the 
         // world (indicating a multi-world application), register it. */
         if (!s_id || (world && !ecs_exists(world, s_id))) {
-            init(world, s_id ? s_id : id, allow_tag);
+            init(s_id ? s_id : id, allow_tag);
 
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
 
@@ -255,20 +251,6 @@ struct cpp_type_impl {
         return s_id;
     }
 
-    // Obtain a component name
-    static const char* name(world_t *world = nullptr) {
-        // If no id has been registered yet, do it now.
-        if (!s_id) {
-            id(world);
-        }
-
-        // By now we should have a valid identifier
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-
-        // If the id is set, the name should also have been set
-        return s_name.c_str();
-    }
-
     // Return the size of a component.
     static size_t size() {
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -302,11 +284,9 @@ struct cpp_type_impl {
         s_size = 0;
         s_alignment = 0;
         s_allow_tag = true;
-        s_name.clear();
     }
 
     static entity_t s_id;
-    static flecs::string s_name;
     static size_t s_size;
     static size_t s_alignment;
     static bool s_allow_tag;
@@ -315,7 +295,6 @@ struct cpp_type_impl {
 
 // Global templated variables that hold component identifier and other info
 template <typename T> entity_t      cpp_type_impl<T>::s_id;
-template <typename T> flecs::string cpp_type_impl<T>::s_name;
 template <typename T> size_t        cpp_type_impl<T>::s_size;
 template <typename T> size_t        cpp_type_impl<T>::s_alignment;
 template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );

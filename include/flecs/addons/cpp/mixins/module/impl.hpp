@@ -45,7 +45,7 @@ flecs::entity import(world& world) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::cpp_type<T>::init(world, m, false);
+            _::cpp_type<T>::init(m, false);
         
         /* Module is not yet registered, register it now */
         } else {
