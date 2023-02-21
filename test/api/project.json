@@ -1063,6 +1063,7 @@
                 "filter_w_transitive_pair",
                 "filter_w_transitive_tag_no_pair",
                 "filter_w_transitive_tag_self_tgt",
+                "filter_w_transitive_tag_any_tgt",
                 "filter_w_pair_same_vars",
                 "filter_w_pair_not_same_vars",
                 "filter_w_pair_no_vars_not_same_vars",

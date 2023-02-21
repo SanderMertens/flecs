@@ -1006,6 +1006,7 @@ void Filter_filter_w_transitive_pair_any_src(void);
 void Filter_filter_w_transitive_pair(void);
 void Filter_filter_w_transitive_tag_no_pair(void);
 void Filter_filter_w_transitive_tag_self_tgt(void);
+void Filter_filter_w_transitive_tag_any_tgt(void);
 void Filter_filter_w_pair_same_vars(void);
 void Filter_filter_w_pair_not_same_vars(void);
 void Filter_filter_w_pair_no_vars_not_same_vars(void);
@@ -6239,6 +6240,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_transitive_tag_self_tgt",
         Filter_filter_w_transitive_tag_self_tgt
+    },
+    {
+        "filter_w_transitive_tag_any_tgt",
+        Filter_filter_w_transitive_tag_any_tgt
     },
     {
         "filter_w_pair_same_vars",
@@ -11895,7 +11900,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        273,
+        274,
         Filter_testcases
     },
     {
