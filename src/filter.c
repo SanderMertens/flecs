@@ -667,8 +667,14 @@ int flecs_term_finalize(
                 flecs_filter_error(ctx, "final id cannot be traversed down");
                 return -1;
             }
-            first->flags &= ~EcsDown;
-            first->trav = 0;
+        }
+
+        /* If component is inherited from, flag term */
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, term->first.id))) {
+            term->flags |= EcsTermIdInherited;
+            if (!term->first.trav) {
+                term->first.trav = EcsIsA;
+            }
         }
 
         /* Don't traverse ids that cannot be inherited */
@@ -1399,9 +1405,6 @@ void flecs_term_str_w_strbuf(
     bool obj_set = ecs_term_id_is_set(second);
 
     if (term->first.flags & EcsIsEntity && term->first.id != 0) {
-        if (ecs_has_id(world, term->first.id, EcsFinal)) {
-            def_first_mask = EcsSelf;
-        }
         if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
             def_src_mask = EcsSelf;
         }

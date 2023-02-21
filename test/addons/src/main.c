@@ -761,8 +761,28 @@ void RulesTransitive_optional_transitive_var_tgt_written(void);
 void RulesTransitive_2_var_src_w_same_tgt_ent(void);
 void RulesTransitive_self_target(void);
 void RulesTransitive_any_target(void);
-void RulesTransitive_self_target_written(void);
-void RulesTransitive_any_target_written(void);
+
+// Testsuite 'RulesComponentInheritance'
+void RulesComponentInheritance_1_ent_0_lvl(void);
+void RulesComponentInheritance_1_ent_1_lvl(void);
+void RulesComponentInheritance_1_ent_2_lvl(void);
+void RulesComponentInheritance_1_ent_3_lvl(void);
+void RulesComponentInheritance_1_this_0_lvl(void);
+void RulesComponentInheritance_1_this_1_lvl(void);
+void RulesComponentInheritance_1_this_2_lvl(void);
+void RulesComponentInheritance_1_this_3_lvl(void);
+void RulesComponentInheritance_1_this_0_lvl_written(void);
+void RulesComponentInheritance_1_this_1_lvl_written(void);
+void RulesComponentInheritance_1_this_2_lvl_written(void);
+void RulesComponentInheritance_1_this_3_lvl_written(void);
+void RulesComponentInheritance_1_var_0_lvl(void);
+void RulesComponentInheritance_1_var_1_lvl(void);
+void RulesComponentInheritance_1_var_2_lvl(void);
+void RulesComponentInheritance_1_var_3_lvl(void);
+void RulesComponentInheritance_1_var_0_lvl_written(void);
+void RulesComponentInheritance_1_var_1_lvl_written(void);
+void RulesComponentInheritance_1_var_2_lvl_written(void);
+void RulesComponentInheritance_1_var_3_lvl_written(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -4230,14 +4250,89 @@ bake_test_case RulesTransitive_testcases[] = {
     {
         "any_target",
         RulesTransitive_any_target
+    }
+};
+
+bake_test_case RulesComponentInheritance_testcases[] = {
+    {
+        "1_ent_0_lvl",
+        RulesComponentInheritance_1_ent_0_lvl
     },
     {
-        "self_target_written",
-        RulesTransitive_self_target_written
+        "1_ent_1_lvl",
+        RulesComponentInheritance_1_ent_1_lvl
     },
     {
-        "any_target_written",
-        RulesTransitive_any_target_written
+        "1_ent_2_lvl",
+        RulesComponentInheritance_1_ent_2_lvl
+    },
+    {
+        "1_ent_3_lvl",
+        RulesComponentInheritance_1_ent_3_lvl
+    },
+    {
+        "1_this_0_lvl",
+        RulesComponentInheritance_1_this_0_lvl
+    },
+    {
+        "1_this_1_lvl",
+        RulesComponentInheritance_1_this_1_lvl
+    },
+    {
+        "1_this_2_lvl",
+        RulesComponentInheritance_1_this_2_lvl
+    },
+    {
+        "1_this_3_lvl",
+        RulesComponentInheritance_1_this_3_lvl
+    },
+    {
+        "1_this_0_lvl_written",
+        RulesComponentInheritance_1_this_0_lvl_written
+    },
+    {
+        "1_this_1_lvl_written",
+        RulesComponentInheritance_1_this_1_lvl_written
+    },
+    {
+        "1_this_2_lvl_written",
+        RulesComponentInheritance_1_this_2_lvl_written
+    },
+    {
+        "1_this_3_lvl_written",
+        RulesComponentInheritance_1_this_3_lvl_written
+    },
+    {
+        "1_var_0_lvl",
+        RulesComponentInheritance_1_var_0_lvl
+    },
+    {
+        "1_var_1_lvl",
+        RulesComponentInheritance_1_var_1_lvl
+    },
+    {
+        "1_var_2_lvl",
+        RulesComponentInheritance_1_var_2_lvl
+    },
+    {
+        "1_var_3_lvl",
+        RulesComponentInheritance_1_var_3_lvl
+    },
+    {
+        "1_var_0_lvl_written",
+        RulesComponentInheritance_1_var_0_lvl_written
+    },
+    {
+        "1_var_1_lvl_written",
+        RulesComponentInheritance_1_var_1_lvl_written
+    },
+    {
+        "1_var_2_lvl_written",
+        RulesComponentInheritance_1_var_2_lvl_written
+    },
+    {
+        "1_var_3_lvl_written",
+        RulesComponentInheritance_1_var_3_lvl_written
     }
 };
 
@@ -6170,8 +6265,15 @@ static bake_test_suite suites[] = {
         "RulesTransitive",
         NULL,
         NULL,
-        66,
+        64,
         RulesTransitive_testcases
+    },
+    {
+        "RulesComponentInheritance",
+        NULL,
+        NULL,
+        20,
+        RulesComponentInheritance_testcases
     },
     {
         "Rules",
@@ -6316,5 +6418,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 29);
+    return bake_test_run("addons", argc, argv, suites, 30);
 }

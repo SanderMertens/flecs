@@ -36032,10 +36032,8 @@ void flecs_rule_discover_vars(
         if (first_var_id == -1) {
             /* If first is not a variable, check if we need to insert anonymous
              * variable for resolving component inheritance */
-            if (first->flags & EcsIsEntity) {
-                if (first->flags & EcsDown) {
-                    anonymous_count += 2; /* table & entity variable */
-                }
+            if (term->flags & EcsTermIdInherited) {
+                anonymous_count += 2; /* table & entity variable */
             }
 
             /* If first is a wildcard, insert anonymous variable */
@@ -36517,8 +36515,7 @@ void flecs_rule_insert_unconstrained_transitive(
     find_ids.first = op->first;
     find_ids.second = op->second;
     find_ids.flags = op->flags;
-    find_ids.flags &= ~(EcsRuleIsVar << EcsRuleSrc);
-    find_ids.flags &= ~(EcsRuleIsEntity << EcsRuleSrc);
+    find_ids.flags &= ~((EcsRuleIsVar|EcsRuleIsEntity) << EcsRuleSrc);
     find_ids.second.var = tgt;
     flecs_rule_write_ctx(tgt, ctx, cond_write);
     flecs_rule_write(tgt, &find_ids.written);
@@ -36536,6 +36533,48 @@ void flecs_rule_insert_unconstrained_transitive(
     flecs_rule_write_ctx(and_op.src.var, ctx, cond_write);
     flecs_rule_write(and_op.src.var, &and_op.written);
     flecs_rule_op_insert(&and_op, ctx);
+}
+
+static
+void flecs_rule_insert_inheritance(
+    ecs_rule_t *rule,
+    ecs_term_t *term,
+    ecs_rule_op_t *op,
+    ecs_rule_compile_ctx_t *ctx,
+    bool cond_write)
+{
+    /* Anonymous variable to store the resolved component ids */
+    ecs_var_id_t tvar = flecs_rule_add_var(rule, NULL, NULL, EcsVarTable);
+    ecs_var_id_t evar = flecs_rule_add_var(rule, NULL, NULL, EcsVarEntity);
+
+    ecs_entity_t id = term->first.id;
+    ecs_entity_t trav = term->first.trav;
+
+    const char *lbl = ecs_get_name(rule->world, id);
+    rule->vars[tvar].label = lbl;
+    rule->vars[evar].label = lbl;
+
+    ecs_rule_op_t trav_op = {0};
+    trav_op.kind = EcsRuleTrav;
+    trav_op.field_index = -1;
+    trav_op.first.entity = term->first.trav;
+    trav_op.second.entity = term->first.id;
+    trav_op.src.var = tvar;
+    trav_op.flags = EcsRuleIsSelf;
+    trav_op.flags |= (EcsRuleIsEntity << EcsRuleFirst);
+    trav_op.flags |= (EcsRuleIsEntity << EcsRuleSecond);
+    trav_op.flags |= (EcsRuleIsVar << EcsRuleSrc);
+    trav_op.written |= (1 << tvar);
+    if (ecs_has_id(rule->world, trav, EcsReflexive)) {
+        trav_op.match_flags |= EcsTermReflexive;
+    }
+    flecs_rule_op_insert(&trav_op, ctx);
+    flecs_rule_insert_each(tvar, evar, ctx, cond_write);
+
+    ecs_rule_ref_t r = { .var = evar };
+    op->first = r;
+    op->flags &= ~(EcsRuleIsEntity << EcsRuleFirst);
+    op->flags |= (EcsRuleIsVar << EcsRuleFirst);
 }
 
 static
@@ -36739,6 +36778,12 @@ void flecs_rule_compile_term(
             op.flags &= ~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
             op.flags &= ~(EcsRuleIsEntity << EcsRuleSrc);
         }
+    }
+
+    /* If term has component inheritance enabled, insert instruction to walk
+     * down the relationship tree of the id. */
+    if (term->flags & EcsTermIdInherited) {
+        flecs_rule_insert_inheritance(rule, term, &op, ctx, cond_write);
     }
 
     /* If this is a transitive term and both the target and source are unknown,
@@ -37014,11 +37059,11 @@ ecs_rule_t* ecs_rule_init(
         goto error;
     }
 
-    /* Compile filter to operations */
-    flecs_rule_compile(world, stage, result);
-
     result->world = world;
     result->iterable.init = flecs_rule_iter_mixin_init;
+
+    /* Compile filter to operations */
+    flecs_rule_compile(world, stage, result);
 
     return result;
 error:
@@ -37596,11 +37641,14 @@ void flecs_rule_set_match(
     int32_t column,
     const ecs_rule_run_ctx_t *ctx)
 {
+    int32_t field_index = op->field_index;
+    if (field_index == -1) {
+        return;
+    }
+
     ecs_iter_t *it = ctx->it;
     const ecs_rule_t *rule = ctx->rule;
-    int32_t field_index = op->field_index;
     ecs_var_t *vars = ctx->rit->vars;
-
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, EcsRuleSrc);
     if (flags & EcsRuleIsEntity) {
         it->sources[field_index] = op->src.entity;
@@ -44749,8 +44797,14 @@ int flecs_term_finalize(
                 flecs_filter_error(ctx, "final id cannot be traversed down");
                 return -1;
             }
-            first->flags &= ~EcsDown;
-            first->trav = 0;
+        }
+
+        /* If component is inherited from, flag term */
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, term->first.id))) {
+            term->flags |= EcsTermIdInherited;
+            if (!term->first.trav) {
+                term->first.trav = EcsIsA;
+            }
         }
 
         /* Don't traverse ids that cannot be inherited */
@@ -45481,9 +45535,6 @@ void flecs_term_str_w_strbuf(
     bool obj_set = ecs_term_id_is_set(second);
 
     if (term->first.flags & EcsIsEntity && term->first.id != 0) {
-        if (ecs_has_id(world, term->first.id, EcsFinal)) {
-            def_first_mask = EcsSelf;
-        }
         if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
             def_src_mask = EcsSelf;
         }

@@ -2648,6 +2648,93 @@ void Filter_filter_not_childof_any() {
     ecs_fini(world); 
 }
 
+void Filter_flecs_w_inherited_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, EcsIsA);
+    test_int(f.terms[0].first.id, Unit);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_flecs_w_inherited_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .second.id = EcsWildcard }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, EcsIsA);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].second.id, EcsWildcard);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_flecs_w_non_inherited_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit }
+        }
+    }));
+
+    test_assert(!(f.terms[0].flags & EcsTermIdInherited));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_flecs_w_non_inherited_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .second.id = EcsWildcard }
+        }
+    }));
+
+    test_assert(!(f.terms[0].flags & EcsTermIdInherited));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 
