@@ -1758,3 +1758,33 @@ void ComponentLifecycle_dtor_after_defer_set() {
     test_int(Pod::move_invoked, 2);
     test_int(Pod::move_ctor_invoked, 0);
 }
+
+void ComponentLifecycle_dtor_with_relation() {
+    {
+        flecs::world ecs;
+
+        auto e = ecs.entity();
+        auto e2 = ecs.entity().set<Pod>({5});
+
+        e.set<Pod>({10}).add<Tag>(e2);
+
+        test_int(Pod::ctor_invoked, 4);
+        test_int(Pod::dtor_invoked, 3);
+        test_int(Pod::move_invoked, 2);
+        test_int(Pod::move_ctor_invoked, 1);
+
+        const Pod *ptr = e.get<Pod>();
+        test_assert(ptr != NULL);
+        test_int(ptr->value, 10);
+
+        test_int(Pod::ctor_invoked, 4);
+        test_int(Pod::dtor_invoked, 3);
+        test_int(Pod::move_invoked, 2);
+        test_int(Pod::move_ctor_invoked, 1);
+    }
+
+    test_int(Pod::ctor_invoked, 5);
+    test_int(Pod::dtor_invoked, 6);
+    test_int(Pod::move_invoked, 4);
+    test_int(Pod::move_ctor_invoked, 1);
+}

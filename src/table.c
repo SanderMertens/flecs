@@ -2184,7 +2184,7 @@ void flecs_merge_column(
         /* Move values into column */
         ecs_move_t move = NULL;
         if (ti) {
-            move = ti->hooks.move;
+            move = ti->hooks.move_dtor;
         }
         if (move) {
             move(dst_ptr, src_ptr, src_count, ti);
