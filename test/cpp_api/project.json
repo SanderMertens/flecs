@@ -249,7 +249,9 @@
                 "children_w_custom_relation",
                 "children_w_custom_relation_type",
                 "get_depth",
-                "get_depth_w_type"
+                "get_depth_w_type",
+                "to_view",
+                "to_view_from_stage"
             ]
         }, {
             "id": "Pairs",

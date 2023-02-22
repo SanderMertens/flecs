@@ -4199,3 +4199,23 @@ void Entity_get_depth_w_type() {
     test_int(2, e3.depth<Rel>());
     test_int(3, e4.depth<Rel>());
 }
+
+void Entity_to_view() {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity_view ev = e.view();
+    test_assert(e == ev);
+}
+
+void Entity_to_view_from_stage() {
+    flecs::world world;
+
+    auto stage = world.get_stage(0);
+
+    flecs::entity e = stage.entity();
+    flecs::entity_view ev = e.view();
+    test_assert(e == ev);
+    test_assert(e.world() == stage);
+    test_assert(ev.world() == world);
+}

@@ -270,6 +270,19 @@ struct entity : entity_builder<entity>
         ecs_delete(m_world, m_id);
     }
 
+    /** Return entity as entity_view.
+     * This returns an entity_view instance for the entity which is a readonly
+     * version of the entity class.
+     * 
+     * This is similar to a regular upcast, except that this method ensures that
+     * the entity_view instance is instantiated with a world vs. a stage, which
+     * a regular upcast does not guarantee.
+     */
+    flecs::entity_view view() const {
+        return flecs::entity_view(
+            const_cast<flecs::world_t*>(ecs_get_world(m_world)), m_id);
+    }
+
     /** Entity id 0.
      * This function is useful when the API must provide an entity that
      * belongs to a world, but the entity id is 0.

@@ -242,6 +242,8 @@ void Entity_children_w_custom_relation(void);
 void Entity_children_w_custom_relation_type(void);
 void Entity_get_depth(void);
 void Entity_get_depth_w_type(void);
+void Entity_to_view(void);
+void Entity_to_view_from_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2097,6 +2099,14 @@ bake_test_case Entity_testcases[] = {
     {
         "get_depth_w_type",
         Entity_get_depth_w_type
+    },
+    {
+        "to_view",
+        Entity_to_view
+    },
+    {
+        "to_view_from_stage",
+        Entity_to_view_from_stage
     }
 };
 
@@ -5686,7 +5696,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        229,
+        231,
         Entity_testcases
     },
     {
