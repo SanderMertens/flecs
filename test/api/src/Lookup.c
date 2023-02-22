@@ -174,6 +174,20 @@ void Lookup_lookup_name_w_digit() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_name_of_child() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_set_name(world, 0, "parent");
+    ecs_entity_t c = ecs_set_name(world, 0, "child");
+	ecs_add_pair(world, c, EcsChildOf, p);
+    ecs_entity_t p2 = ecs_lookup(world, "parent");
+    ecs_entity_t c2 = ecs_lookup(world, "child");
+    test_assert(p == p2);
+    test_assert(c == c2);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_symbol_by_id() {
     ecs_world_t *world = ecs_mini();
 

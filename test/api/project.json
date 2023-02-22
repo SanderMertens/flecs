@@ -765,6 +765,7 @@
                 "lookup_recycled_by_id",
                 "lookup_symbol_by_id",
                 "lookup_name_w_digit",
+				"lookup_name_of_child",
                 "lookup_symbol_w_digit",
                 "lookup_path_w_digit",
                 "set_name_of_existing",
