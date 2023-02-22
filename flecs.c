@@ -9511,7 +9511,6 @@ void flecs_cmd_batch_for_entity(
         case EcsOpAddModified:
             /* Add is batched, but keep Modified */
             cmd->kind = EcsOpModified;
-            kind = EcsOpAdd;
 
             /* fallthrough */
         case EcsOpAdd:

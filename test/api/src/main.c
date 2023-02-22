@@ -2230,6 +2230,8 @@ void DeferredActions_get_mut_override(void);
 void DeferredActions_set_override(void);
 void DeferredActions_absent_get_mut_for_entity_w_tag(void);
 void DeferredActions_on_set_hook_before_on_add_for_existing_component(void);
+void DeferredActions_defer_2_sets_w_observer_same_component(void);
+void DeferredActions_defer_2_sets_w_observer_other_component(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -11019,6 +11021,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "on_set_hook_before_on_add_for_existing_component",
         DeferredActions_on_set_hook_before_on_add_for_existing_component
+    },
+    {
+        "defer_2_sets_w_observer_same_component",
+        DeferredActions_defer_2_sets_w_observer_same_component
+    },
+    {
+        "defer_2_sets_w_observer_other_component",
+        DeferredActions_defer_2_sets_w_observer_other_component
     }
 };
 
@@ -11907,7 +11917,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        112,
+        114,
         DeferredActions_testcases
     },
     {

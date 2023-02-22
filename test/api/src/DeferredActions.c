@@ -3255,10 +3255,15 @@ void DeferredActions_absent_get_mut_for_entity_w_tag() {
 }
 
 static int set_position_invoked = 0;
+static int set_velocity_invoked = 0;
 static int add_tag_invoked = 0;
 
 static void set_position_hook(ecs_iter_t *it) {
     set_position_invoked ++;
+}
+
+static void set_velocity_hook(ecs_iter_t *it) {
+    set_velocity_invoked ++;
 }
 
 static void add_tag(ecs_iter_t *it) {
@@ -3296,6 +3301,75 @@ void DeferredActions_on_set_hook_before_on_add_for_existing_component() {
 
     test_assert(set_position_invoked != 0);
     test_int(add_tag_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_2_sets_w_observer_same_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .filter.terms[0].id = ecs_id(Position),
+        .events = { EcsOnSet },
+        .callback = set_position_hook
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Position, {20, 30});
+    ecs_defer_end(world);
+
+    test_assert(set_position_invoked != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_2_sets_w_observer_other_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .filter.terms[0].id = ecs_id(Position),
+        .events = { EcsOnSet },
+        .callback = set_position_hook
+    });
+
+    ecs_observer(world, {
+        .filter.terms[0].id = ecs_id(Velocity),
+        .events = { EcsOnSet },
+        .callback = set_velocity_hook
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+    ecs_defer_end(world);
+
+    test_assert(set_position_invoked != 0);
+    test_assert(set_velocity_invoked != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
 
     ecs_fini(world);
 }
