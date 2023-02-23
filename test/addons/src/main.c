@@ -804,6 +804,10 @@ void RulesComponentInheritance_1_var_1_lvl_written(void);
 void RulesComponentInheritance_1_var_2_lvl_written(void);
 void RulesComponentInheritance_1_var_3_lvl_written(void);
 void RulesComponentInheritance_1_ent_src_not(void);
+void RulesComponentInheritance_1_this_src_not(void);
+void RulesComponentInheritance_1_var_src_not(void);
+void RulesComponentInheritance_1_this_src_not_written(void);
+void RulesComponentInheritance_1_var_src_not_written(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -4438,6 +4442,22 @@ bake_test_case RulesComponentInheritance_testcases[] = {
     {
         "1_ent_src_not",
         RulesComponentInheritance_1_ent_src_not
+    },
+    {
+        "1_this_src_not",
+        RulesComponentInheritance_1_this_src_not
+    },
+    {
+        "1_var_src_not",
+        RulesComponentInheritance_1_var_src_not
+    },
+    {
+        "1_this_src_not_written",
+        RulesComponentInheritance_1_this_src_not_written
+    },
+    {
+        "1_var_src_not_written",
+        RulesComponentInheritance_1_var_src_not_written
     }
 };
 
@@ -6377,7 +6397,7 @@ static bake_test_suite suites[] = {
         "RulesComponentInheritance",
         NULL,
         NULL,
-        21,
+        25,
         RulesComponentInheritance_testcases
     },
     {

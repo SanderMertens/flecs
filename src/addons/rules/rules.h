@@ -33,7 +33,6 @@ typedef struct {
 typedef enum {
     EcsRuleAnd,
     EcsRuleTrav,
-    EcsRuleTravId,
     EcsRuleIdsRight,
     EcsRuleIdsLeft,
     EcsRuleEach,
@@ -167,7 +166,7 @@ typedef struct {
     int32_t lbl_option;
     int32_t lbl_cond_eval;
     int32_t lbl_or;
-    int32_t lbl_once;
+    int32_t lbl_none;
     int32_t lbl_prev; /* If set, use this as default value for prev */
 } ecs_rule_compile_ctx_t;
 

@@ -504,6 +504,17 @@ int32_t flecs_rule_not_insert(
 }
 
 static
+void flecs_rule_begin_none(
+    ecs_rule_compile_ctx_t *ctx)
+{
+    ctx->lbl_none = ecs_vector_count(ctx->ops);
+
+    ecs_rule_op_t jmp = {0};
+    jmp.kind = EcsRuleJmpCondFalse;
+    flecs_rule_op_insert(&jmp, ctx);
+}
+
+static
 void flecs_rule_begin_not(
     ecs_rule_compile_ctx_t *ctx)
 {
@@ -515,6 +526,13 @@ void flecs_rule_end_not(
     ecs_rule_op_t *op,
     ecs_rule_compile_ctx_t *ctx)
 {
+    if (ctx->lbl_none != -1) {
+        ecs_rule_op_t setcond = {0};
+        setcond.kind = EcsRuleSetCond;
+        setcond.other = ctx->lbl_none;
+        flecs_rule_op_insert(&setcond, ctx);
+    }
+
     flecs_rule_not_insert(op, ctx);
 
     ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
@@ -533,7 +551,19 @@ void flecs_rule_end_not(
     ecs_rule_op_t *not_ptr = ecs_vector_last(ctx->ops, ecs_rule_op_t);
     not_ptr->prev = ctx->lbl_not - 1;
 
+    if (ctx->lbl_none != -1) {
+        /* setcond */
+        ops[count - 2].next = ctx->lbl_none - 1;
+        /* last actual instruction */
+        ops[count - 3].prev = count - 4;
+        /* jfalse */
+        ops[ctx->lbl_none].other = count - 1; /* jump to not */
+        /* not */
+        ops[count - 1].prev = ctx->lbl_none - 1;
+    }
+
     ctx->lbl_not = -1;
+    ctx->lbl_none = -1;
 }
 
 static
@@ -709,24 +739,6 @@ void flecs_rule_end_union(
 
     ops[next].prev = i;
     ops[i].next = next;
-}
-
-static
-void flecs_rule_begin_once(
-    ecs_rule_compile_ctx_t *ctx)
-{
-    ctx->lbl_once = ecs_vector_count(ctx->ops);
-}
-
-static
-void flecs_rule_end_once(
-    ecs_rule_compile_ctx_t *ctx)
-{
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t count = ecs_vector_count(ctx->ops);
-
-    // ops[count - 1].prev = ctx->lbl_once - 1;
-    ctx->lbl_once = -1;
 }
 
 static
@@ -978,7 +990,6 @@ void flecs_rule_compile_term(
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
     bool cond_write = term->oper == EcsOptional;
-    bool once = false;
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
@@ -1008,6 +1019,12 @@ void flecs_rule_compile_term(
         &op.src, EcsRuleSrc, EcsVarAny, ctx);
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
+
+    /* Cache the current value of op.first. This value may get overwritten with
+     * a variable when term has component inheritance, but Not operations may 
+     * need the original value to initialize the result id with. */
+    ecs_rule_ref_t prev_first = op.first;
+    ecs_flags16_t prev_op_flags = op.flags;
 
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
@@ -1064,8 +1081,9 @@ void flecs_rule_compile_term(
      * down the relationship tree of the id. */
     if (term->flags & EcsTermIdInherited) {
         if (term->oper == EcsNot) {
-            flecs_rule_begin_once(ctx);
-            once = true;
+            /* Ensure that term only matches if none of the inherited ids match
+             * with the source. */
+            flecs_rule_begin_none(ctx);
         }
         flecs_rule_insert_inheritance(rule, term, &op, ctx, cond_write);
     }
@@ -1129,6 +1147,9 @@ void flecs_rule_compile_term(
 
     /* Handle closing of Not, Optional and Or operators */
     if (term->oper == EcsNot) {
+        /* Restore original first id in case it got replaced with a variable */
+        op.first = prev_first;
+        op.flags = prev_op_flags;
         flecs_rule_end_not(&op, ctx);
     } else if (term->oper == EcsOptional) {
         flecs_rule_end_option(&op, ctx);
@@ -1153,10 +1174,6 @@ void flecs_rule_compile_term(
             }
         }
     }
-
-    if (once) {
-        flecs_rule_end_once(ctx);
-    }
 }
 
 void flecs_rule_compile(
@@ -1171,6 +1188,7 @@ void flecs_rule_compile(
     ctx.lbl_union = -1;
     ctx.lbl_prev = -1;
     ctx.lbl_not = -1;
+    ctx.lbl_none = -1;
     ecs_vector_clear(ctx.ops);
 
     /* Find all variables defined in query */

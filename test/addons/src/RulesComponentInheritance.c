@@ -1247,8 +1247,6 @@ void RulesComponentInheritance_1_ent_src_not() {
         ecs_rule_t *r = ecs_rule(world, { .expr = "!Unit(e1)" });
         test_assert(r != NULL);
 
-        printf("%s\n", ecs_rule_str(r));
-
         {
             ecs_iter_t it = ecs_rule_iter(world, r);
             test_bool(false, ecs_rule_next(&it));
@@ -1306,7 +1304,7 @@ void RulesComponentInheritance_1_ent_src_not() {
             ecs_iter_t it = ecs_rule_iter(world, r);
             test_bool(true, ecs_rule_next(&it));
             test_uint(0, it.count);
-            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
             test_uint(e1, ecs_field_src(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 1));
             test_bool(false, ecs_rule_next(&it));
@@ -1323,7 +1321,7 @@ void RulesComponentInheritance_1_ent_src_not() {
             ecs_iter_t it = ecs_rule_iter(world, r);
             test_bool(true, ecs_rule_next(&it));
             test_uint(0, it.count);
-            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 1));
             test_uint(e1, ecs_field_src(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 1));
             test_bool(false, ecs_rule_next(&it));
@@ -1340,9 +1338,1651 @@ void RulesComponentInheritance_1_ent_src_not() {
             ecs_iter_t it = ecs_rule_iter(world, r);
             test_bool(true, ecs_rule_next(&it));
             test_uint(0, it.count);
-            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 1));
             test_uint(e1, ecs_field_src(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_this_src_not() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Unit);
+    ecs_add(world, e2, MeleeUnit);
+    ecs_add(world, e3, RangedUnit);
+    ecs_add(world, e4, Warrior);
+    ecs_add(world, e5, Archer);
+    ecs_add(world, e6, Wizard);
+    ecs_add(world, e7, Warlock);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Unit($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!MeleeUnit($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warrior($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warlock($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!RangedUnit($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Archer($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e7, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Wizard($this), Tag($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_var_src_not() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Unit);
+    ecs_add(world, e2, MeleeUnit);
+    ecs_add(world, e3, RangedUnit);
+    ecs_add(world, e4, Warrior);
+    ecs_add(world, e5, Archer);
+    ecs_add(world, e6, Wizard);
+    ecs_add(world, e7, Warlock);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Unit($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!MeleeUnit($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(MeleeUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warrior($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warlock($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!RangedUnit($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(RangedUnit, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Archer($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Archer, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e7, ecs_field_src(&it, 1));
+            test_uint(e7, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e7, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Wizard($x), Tag($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Wizard, ecs_field_id(&it, 1));
+            test_uint(Tag, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_this_src_not_written() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Unit);
+    ecs_add(world, e2, MeleeUnit);
+    ecs_add(world, e3, RangedUnit);
+    ecs_add(world, e4, Warrior);
+    ecs_add(world, e5, Archer);
+    ecs_add(world, e6, Wizard);
+    ecs_add(world, e7, Warlock);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !Unit($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !MeleeUnit($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !Warrior($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !Warlock($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !RangedUnit($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !Archer($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e7, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($this), !Wizard($this)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, it.entities[0]);
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, it.entities[0]);
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_var_src_not_written() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Unit);
+    ecs_add(world, e2, MeleeUnit);
+    ecs_add(world, e3, RangedUnit);
+    ecs_add(world, e4, Warrior);
+    ecs_add(world, e5, Archer);
+    ecs_add(world, e6, Wizard);
+    ecs_add(world, e7, Warlock);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !Unit($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !MeleeUnit($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !Warrior($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warrior, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !Warlock($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Warlock, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !RangedUnit($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(RangedUnit, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !Archer($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e6, ecs_field_src(&it, 1));
+            test_uint(e6, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e6, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Archer, ecs_field_id(&it, 2));
+            test_uint(e7, ecs_field_src(&it, 1));
+            test_uint(e7, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e7, ecs_iter_get_var(&it, x_var));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "Tag($x), !Wizard($x)" });
+        test_assert(r != NULL);
+
+        int x_var = ecs_rule_find_var(r, "x");
+        test_assert(x_var != -1);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(e2, ecs_field_src(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e2, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(e3, ecs_field_src(&it, 1));
+            test_uint(e3, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(e4, ecs_field_src(&it, 1));
+            test_uint(e4, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e4, ecs_iter_get_var(&it, x_var));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(Wizard, ecs_field_id(&it, 2));
+            test_uint(e5, ecs_field_src(&it, 1));
+            test_uint(e5, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(e5, ecs_iter_get_var(&it, x_var));
+
             test_bool(false, ecs_rule_next(&it));
         }
 
