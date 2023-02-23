@@ -36148,7 +36148,7 @@ void flecs_rule_discover_vars(
     rule->var_names = (char**)var_names;
 
     rule_vars[0].kind = EcsVarTable;
-    rule_vars[0].name = (char*)EcsThisName;
+    rule_vars[0].name = NULL;
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
     var_names[0] = (char*)rule_vars[0].name;
@@ -37094,6 +37094,33 @@ void flecs_rule_iter_mixin_init(
     }
 }
 
+static
+void flecs_rule_fini(
+    ecs_rule_t *rule)
+{
+    if (rule->vars != &rule->vars_cache.var) {
+        ecs_os_free(rule->vars);
+    }
+
+    ecs_os_free(rule->ops);
+    flecs_name_index_fini(&rule->tvar_index);
+    flecs_name_index_fini(&rule->evar_index);
+    ecs_filter_fini(&rule->filter);
+
+    ecs_poly_free(rule, ecs_rule_t);
+}
+
+void ecs_rule_fini(
+    ecs_rule_t *rule)
+{
+    if (rule->filter.entity) {
+        /* If filter is associated with entity, use poly dtor path */
+        ecs_delete(rule->filter.world, rule->filter.entity);
+    } else {
+        flecs_rule_fini(rule);
+    }
+}
+
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world, 
     const ecs_filter_desc_t *const_desc)
@@ -37115,24 +37142,18 @@ ecs_rule_t* ecs_rule_init(
     /* Compile filter to operations */
     flecs_rule_compile(world, stage, result);
 
+    ecs_entity_t entity = const_desc->entity;
+    result->dtor = (ecs_poly_dtor_t)flecs_rule_fini;
+
+    if (entity) {
+        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_rule_t);
+        poly->poly = result;
+        ecs_poly_modified(world, entity, ecs_rule_t);
+    }
+
     return result;
 error:
     return NULL;
-}
-
-void ecs_rule_fini(
-    ecs_rule_t *rule)
-{
-    if (rule->vars != &rule->vars_cache.var) {
-        ecs_os_free(rule->vars);
-    }
-
-    ecs_os_free(rule->ops);
-    flecs_name_index_fini(&rule->tvar_index);
-    flecs_name_index_fini(&rule->evar_index);
-    ecs_filter_fini(&rule->filter);
-
-    ecs_poly_free(rule, ecs_rule_t);
 }
 
 static
@@ -53365,7 +53386,7 @@ char* ecs_iter_str(
     int i;
 
     if (it->field_count) {
-        ecs_strbuf_list_push(&buf, "term: ", ",");
+        ecs_strbuf_list_push(&buf, "id:  ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
@@ -53374,7 +53395,7 @@ char* ecs_iter_str(
         }
         ecs_strbuf_list_pop(&buf, "\n");
 
-        ecs_strbuf_list_push(&buf, "subj: ", ",");
+        ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
@@ -53410,7 +53431,7 @@ char* ecs_iter_str(
             }
 
             if (!actual_count) {
-                ecs_strbuf_list_push(&buf, "vars: ", ",");
+                ecs_strbuf_list_push(&buf, "var: ", ",");
             }
 
             char *str = ecs_get_fullpath(world, var.entity);

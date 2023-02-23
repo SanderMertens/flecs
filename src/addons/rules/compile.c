@@ -393,7 +393,7 @@ void flecs_rule_discover_vars(
     rule->var_names = (char**)var_names;
 
     rule_vars[0].kind = EcsVarTable;
-    rule_vars[0].name = (char*)EcsThisName;
+    rule_vars[0].name = NULL;
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
     var_names[0] = (char*)rule_vars[0].name;
