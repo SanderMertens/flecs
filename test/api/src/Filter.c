@@ -5837,8 +5837,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,A),(Y,A),(Z,A)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,A),(Y,A),(Z,A)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5848,8 +5848,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,A),(Y,A),(Z,B)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,A),(Y,A),(Z,B)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5859,8 +5859,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,A),(Y,B),(Z,A)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,A),(Y,B),(Z,A)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5870,8 +5870,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,A),(Y,B),(Z,B)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,A),(Y,B),(Z,B)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5881,8 +5881,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,B),(Y,A),(Z,A)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,B),(Y,A),(Z,A)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5892,8 +5892,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,B),(Y,A),(Z,B)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,B),(Y,A),(Z,B)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5903,8 +5903,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,B),(Y,B),(Z,A)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,B),(Y,B),(Z,A)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"
@@ -5914,8 +5914,8 @@ void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
 
     test_bool(ecs_filter_next(&it), true);
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (X,B),(Y,B),(Z,B)"
-    LINE "subj: 0,0,0"
+    HEAD "id:  (X,B),(Y,B),(Z,B)"
+    LINE "src: 0,0,0"
     LINE "set: true,true,true"
     LINE "this:"
     LINE "    - E"

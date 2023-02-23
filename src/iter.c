@@ -551,7 +551,7 @@ char* ecs_iter_str(
     int i;
 
     if (it->field_count) {
-        ecs_strbuf_list_push(&buf, "term: ", ",");
+        ecs_strbuf_list_push(&buf, "id:  ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_id_t id = ecs_field_id(it, i + 1);
             char *str = ecs_id_str(world, id);
@@ -560,7 +560,7 @@ char* ecs_iter_str(
         }
         ecs_strbuf_list_pop(&buf, "\n");
 
-        ecs_strbuf_list_push(&buf, "subj: ", ",");
+        ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
@@ -596,7 +596,7 @@ char* ecs_iter_str(
             }
 
             if (!actual_count) {
-                ecs_strbuf_list_push(&buf, "vars: ", ",");
+                ecs_strbuf_list_push(&buf, "var: ", ",");
             }
 
             char *str = ecs_get_fullpath(world, var.entity);
