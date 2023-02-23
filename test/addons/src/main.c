@@ -695,6 +695,26 @@ void RulesOperators_root_entities_w_optional_children(void);
 void RulesOperators_core_entities_w_optional_children(void);
 void RulesOperators_root_entities_w_not_children(void);
 void RulesOperators_core_entities_w_not_children(void);
+void RulesOperators_1_ent_src_not(void);
+void RulesOperators_1_ent_src_not_pair(void);
+void RulesOperators_1_ent_src_not_pair_rel_wildcard(void);
+void RulesOperators_1_ent_src_not_pair_tgt_wildcard(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_wildcard(void);
+void RulesOperators_1_ent_src_not_pair_rel_any(void);
+void RulesOperators_1_ent_src_not_pair_tgt_any(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_any(void);
+void RulesOperators_1_ent_src_not_pair_rel_var(void);
+void RulesOperators_1_ent_src_not_pair_tgt_var(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_var(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_same_var(void);
+void RulesOperators_1_this_src_not_pair_rel_var(void);
+void RulesOperators_1_this_src_not_pair_tgt_var(void);
+void RulesOperators_1_this_src_not_pair_rel_tgt_var(void);
+void RulesOperators_1_this_src_not_pair_rel_tgt_same_var(void);
+void RulesOperators_1_ent_src_not_pair_rel_var_written(void);
+void RulesOperators_1_ent_src_not_pair_tgt_var_written(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_var_written(void);
+void RulesOperators_1_ent_src_not_pair_rel_tgt_same_var_written(void);
 
 // Testsuite 'RulesTransitive'
 void RulesTransitive_1_fact_0_lvl_true(void);
@@ -783,6 +803,7 @@ void RulesComponentInheritance_1_var_0_lvl_written(void);
 void RulesComponentInheritance_1_var_1_lvl_written(void);
 void RulesComponentInheritance_1_var_2_lvl_written(void);
 void RulesComponentInheritance_1_var_3_lvl_written(void);
+void RulesComponentInheritance_1_ent_src_not(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -3991,6 +4012,86 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "core_entities_w_not_children",
         RulesOperators_core_entities_w_not_children
+    },
+    {
+        "1_ent_src_not",
+        RulesOperators_1_ent_src_not
+    },
+    {
+        "1_ent_src_not_pair",
+        RulesOperators_1_ent_src_not_pair
+    },
+    {
+        "1_ent_src_not_pair_rel_wildcard",
+        RulesOperators_1_ent_src_not_pair_rel_wildcard
+    },
+    {
+        "1_ent_src_not_pair_tgt_wildcard",
+        RulesOperators_1_ent_src_not_pair_tgt_wildcard
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_wildcard",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_wildcard
+    },
+    {
+        "1_ent_src_not_pair_rel_any",
+        RulesOperators_1_ent_src_not_pair_rel_any
+    },
+    {
+        "1_ent_src_not_pair_tgt_any",
+        RulesOperators_1_ent_src_not_pair_tgt_any
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_any",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_any
+    },
+    {
+        "1_ent_src_not_pair_rel_var",
+        RulesOperators_1_ent_src_not_pair_rel_var
+    },
+    {
+        "1_ent_src_not_pair_tgt_var",
+        RulesOperators_1_ent_src_not_pair_tgt_var
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_var",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_var
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_same_var",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_same_var
+    },
+    {
+        "1_this_src_not_pair_rel_var",
+        RulesOperators_1_this_src_not_pair_rel_var
+    },
+    {
+        "1_this_src_not_pair_tgt_var",
+        RulesOperators_1_this_src_not_pair_tgt_var
+    },
+    {
+        "1_this_src_not_pair_rel_tgt_var",
+        RulesOperators_1_this_src_not_pair_rel_tgt_var
+    },
+    {
+        "1_this_src_not_pair_rel_tgt_same_var",
+        RulesOperators_1_this_src_not_pair_rel_tgt_same_var
+    },
+    {
+        "1_ent_src_not_pair_rel_var_written",
+        RulesOperators_1_ent_src_not_pair_rel_var_written
+    },
+    {
+        "1_ent_src_not_pair_tgt_var_written",
+        RulesOperators_1_ent_src_not_pair_tgt_var_written
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_var_written",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_var_written
+    },
+    {
+        "1_ent_src_not_pair_rel_tgt_same_var_written",
+        RulesOperators_1_ent_src_not_pair_rel_tgt_same_var_written
     }
 };
 
@@ -4333,6 +4434,10 @@ bake_test_case RulesComponentInheritance_testcases[] = {
     {
         "1_var_3_lvl_written",
         RulesComponentInheritance_1_var_3_lvl_written
+    },
+    {
+        "1_ent_src_not",
+        RulesComponentInheritance_1_ent_src_not
     }
 };
 
@@ -6258,7 +6363,7 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        66,
+        86,
         RulesOperators_testcases
     },
     {
@@ -6272,7 +6377,7 @@ static bake_test_suite suites[] = {
         "RulesComponentInheritance",
         NULL,
         NULL,
-        20,
+        21,
         RulesComponentInheritance_testcases
     },
     {

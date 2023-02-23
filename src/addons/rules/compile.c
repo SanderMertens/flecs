@@ -496,6 +496,9 @@ int32_t flecs_rule_not_insert(
     not_op.second = op->second;
     not_op.flags = op->flags;
     not_op.flags &= ~(EcsRuleIsVar << EcsRuleSrc);
+    if (op->flags & (EcsRuleIsEntity << EcsRuleSrc)) {
+        not_op.src.entity = op->src.entity;
+    }
 
     return flecs_rule_op_insert(&not_op, ctx);
 }
@@ -520,7 +523,9 @@ void flecs_rule_end_not(
         ecs_rule_op_t *op = &ops[i];
         if (flecs_rule_op_is_test[op->kind]) {
             op->prev = count - 1;
-            op->next = ctx->lbl_not - 1;
+            if (i == (count - 2)) {
+                op->next = ctx->lbl_not - 1;
+            }
         }
     }
 
@@ -704,6 +709,24 @@ void flecs_rule_end_union(
 
     ops[next].prev = i;
     ops[i].next = next;
+}
+
+static
+void flecs_rule_begin_once(
+    ecs_rule_compile_ctx_t *ctx)
+{
+    ctx->lbl_once = ecs_vector_count(ctx->ops);
+}
+
+static
+void flecs_rule_end_once(
+    ecs_rule_compile_ctx_t *ctx)
+{
+    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
+    int32_t count = ecs_vector_count(ctx->ops);
+
+    // ops[count - 1].prev = ctx->lbl_once - 1;
+    ctx->lbl_once = -1;
 }
 
 static
@@ -955,6 +978,7 @@ void flecs_rule_compile_term(
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
     bool cond_write = term->oper == EcsOptional;
+    bool once = false;
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
@@ -1025,12 +1049,6 @@ void flecs_rule_compile_term(
         }
     }
 
-    /* If term has component inheritance enabled, insert instruction to walk
-     * down the relationship tree of the id. */
-    if (term->flags & EcsTermIdInherited) {
-        flecs_rule_insert_inheritance(rule, term, &op, ctx, cond_write);
-    }
-
     /* If this is a transitive term and both the target and source are unknown,
      * find the targets for the relationship first. This clusters together 
      * tables for the same target, which allows for more efficient usage of the
@@ -1040,6 +1058,16 @@ void flecs_rule_compile_term(
             flecs_rule_insert_unconstrained_transitive(
                 rule, &op, ctx, cond_write);
         }
+    }
+
+    /* If term has component inheritance enabled, insert instruction to walk
+     * down the relationship tree of the id. */
+    if (term->flags & EcsTermIdInherited) {
+        if (term->oper == EcsNot) {
+            flecs_rule_begin_once(ctx);
+            once = true;
+        }
+        flecs_rule_insert_inheritance(rule, term, &op, ctx, cond_write);
     }
 
     /* Handle Not, Optional, Or operators */
@@ -1125,6 +1153,10 @@ void flecs_rule_compile_term(
             }
         }
     }
+
+    if (once) {
+        flecs_rule_end_once(ctx);
+    }
 }
 
 void flecs_rule_compile(
@@ -1138,6 +1170,7 @@ void flecs_rule_compile(
     ctx.ops = stage->operations;
     ctx.lbl_union = -1;
     ctx.lbl_prev = -1;
+    ctx.lbl_not = -1;
     ecs_vector_clear(ctx.ops);
 
     /* Find all variables defined in query */
