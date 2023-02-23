@@ -1234,3 +1234,120 @@ void RulesComponentInheritance_1_var_3_lvl_written() {
 
     ecs_fini(world);
 }
+
+void RulesComponentInheritance_1_ent_src_not() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Unit(e1)" });
+        test_assert(r != NULL);
+
+        printf("%s\n", ecs_rule_str(r));
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!MeleeUnit(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warrior(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Warlock(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!RangedUnit(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Archer(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, { .expr = "!Wizard(e1)" });
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}

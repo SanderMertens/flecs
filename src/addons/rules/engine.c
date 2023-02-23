@@ -1019,6 +1019,11 @@ bool flecs_rule_not(
         if (!flecs_ref_is_written(rule, op, &op->second, EcsRuleSecond, written_cur)){
             vars[op->second.var].entity = EcsWildcard;
         }
+
+        /* If term has entity src, set it because no other instruction might */
+        if (op->flags & (EcsRuleIsEntity << EcsRuleSrc)) {
+            it->sources[field] = op->src.entity;
+        }
     }
 
     return true; /* Flip result */
