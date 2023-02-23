@@ -176,7 +176,11 @@ typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
-} ecs_snapshot_iter_t;  
+} ecs_snapshot_iter_t;
+
+typedef struct ecs_rule_op_profile_t {
+    int32_t count[2]; /* 0 = enter, 1 = redo */
+} ecs_rule_op_profile_t;
 
 /** Rule-iterator specific data */
 typedef struct ecs_rule_iter_t {
@@ -185,7 +189,9 @@ typedef struct ecs_rule_iter_t {
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     uint64_t *written;
 
-    ecs_entity_t entity;                 /* Result in case of 1 entity */
+#ifdef FLECS_DEBUG
+    ecs_rule_op_profile_t *profile;
+#endif
 
     bool redo;
     int32_t op;

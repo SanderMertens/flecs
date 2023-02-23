@@ -119,6 +119,7 @@ extern "C" {
 #define EcsFilterNoData                (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
+#define EcsFilterProfile               (1u << 10u) /* Profile filter performance */
 
 
 ////////////////////////////////////////////////////////////////////////////////

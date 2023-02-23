@@ -190,8 +190,12 @@ bool ecs_rule_next_instanced(
  */
 FLECS_API
 char* ecs_rule_str(
-    ecs_rule_t *rule);
+    const ecs_rule_t *rule);
 
+
+char* ecs_rule_str_w_profile(
+    const ecs_rule_t *rule,
+    const ecs_iter_t *it);
 
 #ifdef __cplusplus
 }

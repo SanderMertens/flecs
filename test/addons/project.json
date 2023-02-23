@@ -565,7 +565,13 @@
                 "1_any_src_w_pair_rel_this",
                 "rule_w_iter_next",
                 "empty_rule",
-                "invalid_rule"
+                "invalid_rule",
+                "not_instanced_table_src",
+                "not_instanced_entity_src",
+                "not_instanced_mixed_src",
+                "instanced_table_src",
+                "instanced_entity_src",
+                "instanced_mixed_src"
             ]
         }, {
             "id": "RulesVariables",

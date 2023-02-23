@@ -238,10 +238,10 @@ int flecs_entity_filter_bitset_next(
             /* Block was not empty, so bs_start must be smaller than 64 */
             ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, NULL);
         }
-        
+
         /* Step 3: Find number of contiguous enabled elements after start */
         int32_t bs_end = bs_start, bs_block_end = bs_block;
-        
+
         remain = bitmask_remain[bs_end];
         while ((v & remain) == remain) {
             bs_end = 0;

@@ -15763,10 +15763,10 @@ int flecs_entity_filter_bitset_next(
             /* Block was not empty, so bs_start must be smaller than 64 */
             ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, NULL);
         }
-        
+
         /* Step 3: Find number of contiguous enabled elements after start */
         int32_t bs_end = bs_start, bs_block_end = bs_block;
-        
+
         remain = bitmask_remain[bs_end];
         while ((v & remain) == remain) {
             bs_end = 0;
@@ -37175,8 +37175,9 @@ int32_t flecs_rule_op_ref_str(
     return color_chars;
 }
 
-char* ecs_rule_str(
-    ecs_rule_t *rule)
+char* ecs_rule_str_w_profile(
+    const ecs_rule_t *rule,
+    const ecs_iter_t *it)
 {
     ecs_poly_assert(rule, ecs_rule_t);
 
@@ -37189,6 +37190,14 @@ char* ecs_rule_str(
         ecs_flags16_t src_flags = flecs_rule_ref_flags(flags, EcsRuleSrc);
         ecs_flags16_t first_flags = flecs_rule_ref_flags(flags, EcsRuleFirst);
         ecs_flags16_t second_flags = flecs_rule_ref_flags(flags, EcsRuleSecond);
+
+        if (it) {
+            const ecs_rule_iter_t *rit = &it->priv.iter.rule;
+            ecs_strbuf_append(&buf, 
+                "#[green]%4d -> #[red]%4d <- #[grey]  |   ",
+                rit->profile[i].count[0],
+                rit->profile[i].count[1]);
+        }
 
         ecs_strbuf_append(&buf, 
             "#[normal]%2d. [#[grey]%2d#[reset], #[green]%2d#[reset]]  ", 
@@ -37247,6 +37256,12 @@ char* ecs_rule_str(
     flecs_colorize_buf(str, true, &buf);
     ecs_os_free(str);
     return ecs_strbuf_get(&buf);
+}
+
+char* ecs_rule_str(
+    const ecs_rule_t *rule)
+{
+    return ecs_rule_str_w_profile(rule, NULL);
 }
 
 #endif
@@ -38669,6 +38684,21 @@ void flecs_rule_iter_init(
 bool ecs_rule_next(
     ecs_iter_t *it)
 {
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
+
+    if (flecs_iter_next_row(it)) {
+        return true;
+    }
+
+    return flecs_iter_next_instanced(it, ecs_rule_next_instanced(it));
+error:
+    return false;
+}
+
+bool ecs_rule_next_instanced(
+    ecs_iter_t *it)
+{
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
 
@@ -38682,7 +38712,7 @@ bool ecs_rule_next(
 
     if (!(it->flags & EcsIterIsValid)) {
         if (!rule) {
-            return false; /* Iterator is done */
+            goto done;
         }
         flecs_rule_iter_init(rule, it, rit);
     }
@@ -38707,6 +38737,10 @@ bool ecs_rule_next(
         } else {
             ecs_vector_set_count(&stage->stack, ecs_entity_t, ctx.ctx->sp);
         }
+
+#ifdef FLECS_DEBUG
+        rit->profile[op_index].count[redo] ++;
+#endif
 
         bool result = flecs_rule_run(op, redo, &ctx);
 
@@ -38735,6 +38769,7 @@ bool ecs_rule_next(
         }
     } while (rit->op >= 0);
 
+done:
     ecs_iter_fini(it);
     return false;
 }
@@ -38769,10 +38804,19 @@ void flecs_rule_iter_fini(
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
     int32_t op_count = rit->rule->op_count;
     int32_t var_count = rit->rule->var_count;
+    const ecs_rule_t *rule = rit->rule;
+
+    if (rule->filter.flags & EcsFilterProfile) {
+        char *str = ecs_rule_str_w_profile(rit->rule, it);
+        printf("%s\n", str);
+        ecs_os_free(str);
+    }
+
     flecs_rule_iter_fini_ctx(it, rit);
     flecs_iter_free_n(rit->vars, ecs_var_t, var_count);
     flecs_iter_free_n(rit->written, ecs_write_flags_t, op_count);
     flecs_iter_free_n(rit->op_ctx, ecs_rule_op_ctx_t, op_count);
+    flecs_iter_free_n(rit->profile, ecs_rule_op_profile_t, op_count);
     rit->vars = NULL;
     rit->written = NULL;
     rit->op_ctx = NULL;
@@ -38795,6 +38839,8 @@ ecs_iter_t ecs_rule_iter(
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
+    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
+        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsInstanced));
 
     flecs_iter_init(world, &it, 
         flecs_iter_cache_ids |
@@ -38811,6 +38857,11 @@ ecs_iter_t ecs_rule_iter(
         rit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
         rit->op_ctx = flecs_iter_calloc_n(&it, ecs_rule_op_ctx_t, op_count);
     }
+
+#ifdef FLECS_DEBUG
+    rit->profile = flecs_iter_calloc_n(&it, ecs_rule_op_profile_t, op_count);
+#endif
+
     for (i = 0; i < var_count; i ++) {
         rit->vars[i].entity = EcsWildcard;
     }
