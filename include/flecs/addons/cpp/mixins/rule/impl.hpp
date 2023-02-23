@@ -82,7 +82,7 @@ private:
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_rule_next;
+        return ecs_rule_next_instanced;
     }
 
 public:

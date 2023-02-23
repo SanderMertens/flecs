@@ -144,8 +144,9 @@ int32_t flecs_rule_op_ref_str(
     return color_chars;
 }
 
-char* ecs_rule_str(
-    ecs_rule_t *rule)
+char* ecs_rule_str_w_profile(
+    const ecs_rule_t *rule,
+    const ecs_iter_t *it)
 {
     ecs_poly_assert(rule, ecs_rule_t);
 
@@ -158,6 +159,14 @@ char* ecs_rule_str(
         ecs_flags16_t src_flags = flecs_rule_ref_flags(flags, EcsRuleSrc);
         ecs_flags16_t first_flags = flecs_rule_ref_flags(flags, EcsRuleFirst);
         ecs_flags16_t second_flags = flecs_rule_ref_flags(flags, EcsRuleSecond);
+
+        if (it) {
+            const ecs_rule_iter_t *rit = &it->priv.iter.rule;
+            ecs_strbuf_append(&buf, 
+                "#[green]%4d -> #[red]%4d <- #[grey]  |   ",
+                rit->profile[i].count[0],
+                rit->profile[i].count[1]);
+        }
 
         ecs_strbuf_append(&buf, 
             "#[normal]%2d. [#[grey]%2d#[reset], #[green]%2d#[reset]]  ", 
@@ -216,6 +225,12 @@ char* ecs_rule_str(
     flecs_colorize_buf(str, true, &buf);
     ecs_os_free(str);
     return ecs_strbuf_get(&buf);
+}
+
+char* ecs_rule_str(
+    const ecs_rule_t *rule)
+{
+    return ecs_rule_str_w_profile(rule, NULL);
 }
 
 #endif

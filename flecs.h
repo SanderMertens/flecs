@@ -321,6 +321,7 @@ extern "C" {
 #define EcsFilterNoData                (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
+#define EcsFilterProfile               (1u << 10u) /* Profile filter performance */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3434,7 +3435,11 @@ typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
-} ecs_snapshot_iter_t;  
+} ecs_snapshot_iter_t;
+
+typedef struct ecs_rule_op_profile_t {
+    int32_t count[2]; /* 0 = enter, 1 = redo */
+} ecs_rule_op_profile_t;
 
 /** Rule-iterator specific data */
 typedef struct ecs_rule_iter_t {
@@ -3443,7 +3448,9 @@ typedef struct ecs_rule_iter_t {
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     uint64_t *written;
 
-    ecs_entity_t entity;                 /* Result in case of 1 entity */
+#ifdef FLECS_DEBUG
+    ecs_rule_op_profile_t *profile;
+#endif
 
     bool redo;
     int32_t op;
@@ -13912,8 +13919,12 @@ bool ecs_rule_next_instanced(
  */
 FLECS_API
 char* ecs_rule_str(
-    ecs_rule_t *rule);
+    const ecs_rule_t *rule);
 
+
+char* ecs_rule_str_w_profile(
+    const ecs_rule_t *rule,
+    const ecs_iter_t *it);
 
 #ifdef __cplusplus
 }
@@ -27713,7 +27724,7 @@ private:
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_rule_next;
+        return ecs_rule_next_instanced;
     }
 
 public:

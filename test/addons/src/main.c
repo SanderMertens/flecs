@@ -551,6 +551,12 @@ void RulesBasic_1_any_src_w_pair_rel_this(void);
 void RulesBasic_rule_w_iter_next(void);
 void RulesBasic_empty_rule(void);
 void RulesBasic_invalid_rule(void);
+void RulesBasic_not_instanced_table_src(void);
+void RulesBasic_not_instanced_entity_src(void);
+void RulesBasic_not_instanced_mixed_src(void);
+void RulesBasic_instanced_table_src(void);
+void RulesBasic_instanced_entity_src(void);
+void RulesBasic_instanced_mixed_src(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -3450,6 +3456,30 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "invalid_rule",
         RulesBasic_invalid_rule
+    },
+    {
+        "not_instanced_table_src",
+        RulesBasic_not_instanced_table_src
+    },
+    {
+        "not_instanced_entity_src",
+        RulesBasic_not_instanced_entity_src
+    },
+    {
+        "not_instanced_mixed_src",
+        RulesBasic_not_instanced_mixed_src
+    },
+    {
+        "instanced_table_src",
+        RulesBasic_instanced_table_src
+    },
+    {
+        "instanced_entity_src",
+        RulesBasic_instanced_entity_src
+    },
+    {
+        "instanced_mixed_src",
+        RulesBasic_instanced_mixed_src
     }
 };
 
@@ -6369,7 +6399,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        65,
+        71,
         RulesBasic_testcases
     },
     {
