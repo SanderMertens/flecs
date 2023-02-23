@@ -24,7 +24,6 @@ const char* flecs_rule_op_str(
     switch(kind) {
     case EcsRuleAnd:          return "and     ";
     case EcsRuleTrav:         return "trav    ";
-    case EcsRuleTravId:       return "travid  ";
     case EcsRuleIdsRight:     return "idsr    ";
     case EcsRuleIdsLeft:      return "idsl    ";
     case EcsRuleEach:         return "each    ";
