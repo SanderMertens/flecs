@@ -7,12 +7,13 @@
 
 #ifdef FLECS_RULES
 
-#define EcsRuleMaxVarCount      (64)
-#define EcsVarNone              ((uint32_t)-1)
-#define EcsThisName             "This"
-
-typedef uint32_t ecs_var_id_t;
+typedef uint8_t ecs_var_id_t;
+typedef int16_t ecs_rule_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
+
+#define EcsRuleMaxVarCount      (64)
+#define EcsVarNone              ((ecs_var_id_t)-1)
+#define EcsThisName             "This"
 
 /* -- Variable types -- */
 typedef enum {
@@ -70,11 +71,11 @@ typedef union {
 
 typedef struct {
     uint16_t kind;             /* Instruction kind */
-    int16_t prev;              /* Backtracking label (no data) */
-    int16_t next;              /* Forwarding label */
-    int16_t other;
+    ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
+    ecs_rule_lbl_t next;       /* Forwarding label */
+    ecs_rule_lbl_t other;
+    ecs_flags16_t match_flags; /* Flags that modify matching behavior */
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
-    ecs_flags8_t match_flags;  /* Flags that modify matching behavior */
     int8_t field_index;        /* Query field corresponding with operation */
     ecs_rule_ref_t src;
     ecs_rule_ref_t first;
@@ -135,7 +136,7 @@ typedef struct {
 
 /* End context */
 typedef struct {
-    int32_t lbl;
+    ecs_rule_lbl_t lbl;
 } ecs_rule_ctrlflow_ctx_t;
 
 /* Condition context */
@@ -161,13 +162,13 @@ typedef struct {
     ecs_vector_t *ops;
     ecs_write_flags_t written; /* Bitmask to check which variables have been written */
     ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
-    int32_t lbl_union;
-    int32_t lbl_not;
-    int32_t lbl_option;
-    int32_t lbl_cond_eval;
-    int32_t lbl_or;
-    int32_t lbl_none;
-    int32_t lbl_prev; /* If set, use this as default value for prev */
+    ecs_rule_lbl_t lbl_union;
+    ecs_rule_lbl_t lbl_not;
+    ecs_rule_lbl_t lbl_option;
+    ecs_rule_lbl_t lbl_cond_eval;
+    ecs_rule_lbl_t lbl_or;
+    ecs_rule_lbl_t lbl_none;
+    ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
 } ecs_rule_compile_ctx_t;
 
 /* Rule compiler state */
@@ -176,9 +177,9 @@ typedef struct {
     ecs_iter_t *it;
     ecs_rule_iter_t *rit;
     ecs_rule_op_ctx_t *ctx;
-    int32_t op_index;
-    int32_t prev_index;
-    int32_t jump;
+    ecs_rule_lbl_t op_index;
+    ecs_rule_lbl_t prev_index;
+    ecs_rule_lbl_t jump;
     ecs_stage_t *stage;
 } ecs_rule_run_ctx_t;
 
@@ -201,7 +202,7 @@ struct ecs_rule_t {
     ecs_hashmap_t evar_index;
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
     char **var_names; /* Array with variable names for iterator */
-    int32_t *src_vars; /* Array with ids to source variables for fields */
+    ecs_var_id_t *src_vars; /* Array with ids to source variables for fields */
 
     /* Operations */
     ecs_rule_op_t *ops;
@@ -218,14 +219,13 @@ ecs_flags16_t flecs_rule_ref_flags(
     ecs_flags16_t kind);
 
 bool flecs_ref_is_written(
-    const ecs_rule_t *rule,
     const ecs_rule_op_t *op,
     const ecs_rule_ref_t *ref,
     ecs_flags16_t kind,
     uint64_t written);
 
 bool flecs_rule_is_written(
-    uint32_t var_id,
+    ecs_var_id_t var_id,
     uint64_t written);
 
 void flecs_rule_discover_vars(
