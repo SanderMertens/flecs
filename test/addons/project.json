@@ -839,6 +839,14 @@
                 "1_var_src_not_written"
             ]
         }, {
+            "id": "RulesRecycled",
+            "testcases": [
+                "recycled_vars",
+                "recycled_pair_vars",
+                "recycled_this_ent_var",
+                "has_recycled_id_from_pair"
+            ]
+        }, {
             "id": "Rules",
             "testcases": [
                 "empty_rule",

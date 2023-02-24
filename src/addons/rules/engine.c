@@ -90,6 +90,9 @@ ecs_entity_t flecs_rule_var_get_entity(
         ecs_entity_t *entities = table->data.entities.array;
         return entities[range->offset];
     }
+
+    ecs_assert(ecs_is_alive(rule->world, vars[var_id].entity), 
+        ECS_INTERNAL_ERROR, NULL);
     return vars[var_id].entity;
 }
 

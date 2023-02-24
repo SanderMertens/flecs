@@ -815,6 +815,12 @@ void RulesComponentInheritance_1_var_src_not(void);
 void RulesComponentInheritance_1_this_src_not_written(void);
 void RulesComponentInheritance_1_var_src_not_written(void);
 
+// Testsuite 'RulesRecycled'
+void RulesRecycled_recycled_vars(void);
+void RulesRecycled_recycled_pair_vars(void);
+void RulesRecycled_recycled_this_ent_var(void);
+void RulesRecycled_has_recycled_id_from_pair(void);
+
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
 void Rules_invalid_rule(void);
@@ -4491,6 +4497,25 @@ bake_test_case RulesComponentInheritance_testcases[] = {
     }
 };
 
+bake_test_case RulesRecycled_testcases[] = {
+    {
+        "recycled_vars",
+        RulesRecycled_recycled_vars
+    },
+    {
+        "recycled_pair_vars",
+        RulesRecycled_recycled_pair_vars
+    },
+    {
+        "recycled_this_ent_var",
+        RulesRecycled_recycled_this_ent_var
+    },
+    {
+        "has_recycled_id_from_pair",
+        RulesRecycled_has_recycled_id_from_pair
+    }
+};
+
 bake_test_case Rules_testcases[] = {
     {
         "empty_rule",
@@ -6431,6 +6456,13 @@ static bake_test_suite suites[] = {
         RulesComponentInheritance_testcases
     },
     {
+        "RulesRecycled",
+        NULL,
+        NULL,
+        4,
+        RulesRecycled_testcases
+    },
+    {
         "Rules",
         NULL,
         NULL,
@@ -6573,5 +6605,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 30);
+    return bake_test_run("addons", argc, argv, suites, 31);
 }
