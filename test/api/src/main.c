@@ -885,6 +885,7 @@ void Sorting_sort_4_entities_4_types(void);
 void Sorting_sort_1000_entities_2_types_again(void);
 void Sorting_sort_1000_entities_add_type_after_sort(void);
 void Sorting_sort_shared_component(void);
+void Sorting_sort_shared_component_childof(void);
 void Sorting_sort_w_tags_only(void);
 void Sorting_sort_childof_marked(void);
 void Sorting_sort_isa_marked(void);
@@ -892,6 +893,8 @@ void Sorting_sort_relation_marked(void);
 void Sorting_dont_resort_after_set_unsorted_component(void);
 void Sorting_dont_resort_after_set_unsorted_component_w_tag(void);
 void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
+void Sorting_sort_component_not_queried_for(void);
+void Sorting_sort_by_wildcard(void);
 
 // Testsuite 'SortingEntireTable'
 void SortingEntireTable_sort_by_component(void);
@@ -5750,6 +5753,10 @@ bake_test_case Sorting_testcases[] = {
         Sorting_sort_shared_component
     },
     {
+        "sort_shared_component_childof",
+        Sorting_sort_shared_component_childof
+    },
+    {
         "sort_w_tags_only",
         Sorting_sort_w_tags_only
     },
@@ -5776,6 +5783,14 @@ bake_test_case Sorting_testcases[] = {
     {
         "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
         Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term
+    },
+    {
+        "sort_component_not_queried_for",
+        Sorting_sort_component_not_queried_for
+    },
+    {
+        "sort_by_wildcard",
+        Sorting_sort_by_wildcard
     }
 };
 
@@ -11796,7 +11811,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        33,
+        36,
         Sorting_testcases
     },
     {

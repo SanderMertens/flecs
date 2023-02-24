@@ -341,6 +341,7 @@ struct ecs_query_t {
     ecs_order_by_action_t order_by;
     ecs_sort_table_action_t sort_table;
     ecs_vector_t *table_slices;
+    int32_t order_by_term;
 
     /* Table grouping */
     ecs_entity_t group_by_id;

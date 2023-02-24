@@ -1288,6 +1288,68 @@ void Sorting_sort_shared_component() {
     ecs_fini(world);
 }
 
+void Sorting_sort_shared_component_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {3, 0});
+    ecs_entity_t base_3 = ecs_set(world, 0, Position, {7, 0});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {6, 0});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, base_3);
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, base_2);
+    ecs_entity_t e8 = ecs_new_w_pair(world, EcsChildOf, base_1);
+    ecs_entity_t e9 = ecs_new_w_pair(world, EcsChildOf, base_1);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "Position(self|up(ChildOf))",
+        .filter.instanced = true,
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position,
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == base_1);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_assert(it.entities[0] == e8);
+    test_assert(it.entities[1] == e9);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_assert(it.entities[0] == e2);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == base_2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e7);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 4);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.entities[1] == e3);
+    test_assert(it.entities[2] == e1);
+    test_assert(it.entities[3] == base_3);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == e6);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Sorting_sort_2_entities_2_types() {
     ecs_world_t *world = ecs_mini();
 
@@ -1755,4 +1817,35 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term() {
     ecs_iter_fini(&it);
 
     ecs_fini(world);
+}
+
+void Sorting_sort_component_not_queried_for() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    test_expect_abort();
+    ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "Position",
+        .order_by_component = ecs_id(Velocity),
+        .order_by = compare_position
+    });
+}
+
+void Sorting_sort_by_wildcard() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+    ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "(Position, *)",
+        .order_by_component = ecs_pair(ecs_id(Position), EcsWildcard),
+        .order_by = compare_position
+    });
 }

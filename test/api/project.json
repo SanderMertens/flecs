@@ -938,13 +938,16 @@
                 "sort_1000_entities_2_types_again",
                 "sort_1000_entities_add_type_after_sort",
                 "sort_shared_component",
+                "sort_shared_component_childof",
                 "sort_w_tags_only",
                 "sort_childof_marked",
                 "sort_isa_marked",
                 "sort_relation_marked",
                 "dont_resort_after_set_unsorted_component",
                 "dont_resort_after_set_unsorted_component_w_tag",
-                "dont_resort_after_set_unsorted_component_w_tag_w_out_term"
+                "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
+                "sort_component_not_queried_for",
+                "sort_by_wildcard"
             ]
         }, {
             "id": "SortingEntireTable",

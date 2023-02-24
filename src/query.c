@@ -997,6 +997,9 @@ void flecs_query_build_sorted_table_range(
     ecs_query_table_list_t *list)
 {
     ecs_world_t *world = query->filter.world;
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
+        "cannot sort query in multithreaded mode");
+
     ecs_entity_t id = query->order_by_component;
     ecs_order_by_action_t compare = query->order_by;
     int32_t table_count = list->info.table_count;
@@ -1004,9 +1007,11 @@ void flecs_query_build_sorted_table_range(
         return;
     }
 
-    int to_sort = 0;
+    int32_t to_sort = 0;
+    int32_t order_by_term = query->order_by_term;
 
-    sort_helper_t *helper = ecs_os_malloc_n(sort_helper_t, table_count);
+    sort_helper_t *helper = flecs_alloc_n(
+        &world->allocator, sort_helper_t, table_count);
     ecs_query_table_node_t *cur, *end = list->last->next;
     for (cur = list->first; cur != end; cur = cur->next) {
         ecs_query_table_match_t *match = cur->match;
@@ -1015,34 +1020,41 @@ void flecs_query_build_sorted_table_range(
 
         ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
 
-        int32_t index = -1;
         if (id) {
-            index = ecs_search(world, table->storage_table, id, 0);
-        }
+            const ecs_term_t *term = &query->filter.terms[order_by_term];
+            int32_t field = term->field_index;
+            int32_t column = match->columns[field];
+            ecs_size_t size = match->sizes[field];
+            ecs_assert(column != 0, ECS_INTERNAL_ERROR, NULL);
+            if (column >= 0) {
+                column = table->storage_map[column - 1];
+                ecs_vec_t *vec = &data->columns[column];
+                helper[to_sort].ptr = ecs_vec_first(vec);
+                helper[to_sort].elem_size = size;
+                helper[to_sort].shared = false;
+            } else {
+                ecs_entity_t src = match->sources[field];
+                ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
+                ecs_record_t *r = flecs_entities_get(world, src);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (index != -1) {
-            ecs_type_info_t *ti = table->type_info[index];
-            ecs_vec_t *column = &data->columns[index];
-            int32_t size = ti->size;
-            helper[to_sort].ptr = ecs_vec_first(column);
-            helper[to_sort].elem_size = size;
-            helper[to_sort].shared = false;
-        } else if (id) {
-            /* Find component in prefab */
-            ecs_entity_t base = 0;
-            ecs_search_relation(world, table, 0, id, 
-                EcsIsA, EcsUp, &base, 0, 0);
+                if (term->src.flags & EcsUp) {
+                    ecs_entity_t base = 0;
+                    ecs_search_relation(world, r->table, 0, id, 
+                        EcsIsA, term->src.flags & EcsTraverseFlags, &base, 0, 0);
+                    if (base && base != src) { /* Component could be inherited */
+                        r = flecs_entities_get(world, base);
+                    }
+                }
 
-            /* If a base was not found, the query should not have allowed using
-             * the component for sorting */
-            ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
-
-            const EcsComponent *cptr = ecs_get(world, id, EcsComponent);
-            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            helper[to_sort].ptr = ecs_get_id(world, base, id);
-            helper[to_sort].elem_size = cptr->size;
-            helper[to_sort].shared = true;
+                helper[to_sort].ptr = ecs_table_get_id(
+                    world, r->table, id, ECS_RECORD_TO_ROW(r->row));
+                helper[to_sort].elem_size = size;
+                helper[to_sort].shared = true;
+            }
+            ecs_assert(helper[to_sort].ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(helper[to_sort].elem_size != 0, ECS_INTERNAL_ERROR, NULL);
         } else {
             helper[to_sort].ptr = NULL;
             helper[to_sort].elem_size = 0;
@@ -1118,7 +1130,7 @@ void flecs_query_build_sorted_table_range(
     nodes[0].prev = NULL;
     nodes[i - 1].next = NULL;
 
-    ecs_os_free(helper);
+    flecs_free_n(&world->allocator, sort_helper_t, table_count, helper);
 }
 
 static
@@ -1165,26 +1177,7 @@ void flecs_query_sort_tables(
     ecs_sort_table_action_t sort = query->sort_table;
     
     ecs_entity_t order_by_component = query->order_by_component;
-    int32_t i, order_by_term = -1;
-
-    /* Find term that iterates over component (must be at least one) */
-    if (order_by_component) {
-        const ecs_filter_t *f = &query->filter;
-        int32_t term_count = f->term_count;
-        for (i = 0; i < term_count; i ++) {
-            ecs_term_t *term = &f->terms[i];
-            if (!ecs_term_match_this(term)) {
-                continue;
-            }
-
-            if (term->id == order_by_component) {
-                order_by_term = i;
-                break;
-            }
-        }
-
-        ecs_assert(order_by_term != -1, ECS_INTERNAL_ERROR, NULL);
-    }
+    int32_t order_by_term = query->order_by_term;
 
     /* Iterate over non-empty tables. Don't bother with empty tables as they
      * have nothing to sort */
@@ -1229,7 +1222,8 @@ void flecs_query_sort_tables(
             continue;
         }
 
-        /* Something has changed, sort the table. Prefers using flecs_query_sort_table when available */
+        /* Something has changed, sort the table. Prefers using 
+         * flecs_query_sort_table when available */
         flecs_query_sort_table(world, table, column, compare, sort);
         tables_sorted = true;
     }
@@ -1647,10 +1641,33 @@ void flecs_query_order_by(
     ecs_sort_table_action_t action)
 {
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!ecs_id_is_wildcard(order_by_component), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    /* Find order_by_component term & make sure it is queried for */
+    const ecs_filter_t *filter = &query->filter;
+    int32_t i, count = filter->term_count;
+    int32_t order_by_term = -1;
+
+    if (order_by_component) {
+        for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &filter->terms[i];
+            
+            /* Only And terms are supported */
+            if (term->id == order_by_component && term->oper == EcsAnd) {
+                order_by_term = i;
+                break;
+            }
+        }
+
+        ecs_check(order_by_term != -1, ECS_INVALID_PARAMETER, 
+            "sorted component not is queried for");
+    }
 
     query->order_by_component = order_by_component;
     query->order_by = order_by;
+    query->order_by_term = order_by_term;
     query->sort_table = action;
 
     ecs_vector_free(query->table_slices);
