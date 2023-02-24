@@ -174,7 +174,7 @@ void Parser_component_explicit_subject_this_by_name() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "Pred(This)"
+        .expr = "Pred(this)"
     }));
 
     test_int(filter_count(&f), 1);
@@ -292,7 +292,7 @@ void Parser_this_as_predicate() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "This(Subj)"
+        .expr = "this(Subj)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -330,6 +330,29 @@ void Parser_this_var_as_predicate() {
     ecs_fini(world);
 }
 
+void Parser_this_lowercase_var_as_predicate() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this(Subj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Parser_this_as_object() {
     ecs_world_t *world = ecs_mini();
 
@@ -339,7 +362,7 @@ void Parser_this_as_object() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "Pred(Subj, This)"
+        .expr = "Pred(Subj, this)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -853,7 +876,7 @@ void Parser_pair_explicit_subject_this_by_name() {
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f,
-        .expr = "Pred(This, Obj)"
+        .expr = "Pred(this, Obj)"
     }));
     test_int(filter_count(&f), 1);
 

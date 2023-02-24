@@ -29,6 +29,7 @@
                 "component_explicit_subject_0",
                 "this_as_predicate",
                 "this_var_as_predicate",
+                "this_lowercase_var_as_predicate",
                 "this_as_object",
                 "this_var_as_object",
                 "pair_implicit_subject",
@@ -579,7 +580,11 @@
                 "not_instanced_mixed_src",
                 "instanced_table_src",
                 "instanced_entity_src",
-                "instanced_mixed_src"
+                "instanced_mixed_src",
+                "in_term",
+                "out_term",
+                "inout_term",
+                "nodata_term"
             ]
         }, {
             "id": "RulesVariables",
@@ -722,6 +727,7 @@
                 "2_or_chains_written",
                 "2_not_first",
                 "2_optional_first",
+                "root_entities_empty",
                 "root_entities",
                 "root_entities_w_children",
                 "root_entities_w_optional_children",

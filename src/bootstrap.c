@@ -774,7 +774,7 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
-    flecs_bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
+    flecs_bootstrap_entity(world, EcsThis, "this", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsVariable, "$", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
