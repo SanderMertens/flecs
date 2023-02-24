@@ -1389,3 +1389,50 @@ void EnabledComponents_sort() {
 
     ecs_fini(world);
 }
+
+void EnabledComponents_table_move_2_from_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, { .filter.expr = "Position" });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_enable_component(world, e1, Position, true);
+    ecs_enable_component(world, e2, Position, false);
+    ecs_enable_component(world, e3, Position, true);
+
+    test_bool(ecs_is_enabled_component(world, e1, Position), true);
+    test_bool(ecs_is_enabled_component(world, e2, Position), false);
+    test_bool(ecs_is_enabled_component(world, e3, Position), true);
+
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e2, Tag);
+    
+    test_bool(ecs_is_enabled_component(world, e1, Position), true);
+    test_bool(ecs_is_enabled_component(world, e2, Position), false);
+    test_bool(ecs_is_enabled_component(world, e3, Position), true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        Position *p = ecs_field(&it, Position, 1);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e3, it.entities[0]);
+        Position *p = ecs_field(&it, Position, 1);
+        test_int(p->x, 30); test_int(p->y, 40);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

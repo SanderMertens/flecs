@@ -351,6 +351,7 @@ void EnabledComponents_query_randomized_3_bitsets(void);
 void EnabledComponents_query_randomized_4_bitsets(void);
 void EnabledComponents_defer_enable(void);
 void EnabledComponents_sort(void);
+void EnabledComponents_table_move_2_from_3(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -3715,6 +3716,10 @@ bake_test_case EnabledComponents_testcases[] = {
     {
         "sort",
         EnabledComponents_sort
+    },
+    {
+        "table_move_2_from_3",
+        EnabledComponents_table_move_2_from_3
     }
 };
 
@@ -11679,7 +11684,7 @@ static bake_test_suite suites[] = {
         "EnabledComponents",
         NULL,
         NULL,
-        51,
+        52,
         EnabledComponents_testcases
     },
     {

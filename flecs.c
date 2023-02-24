@@ -13261,6 +13261,7 @@ void flecs_bitset_remove(
     int32_t last = bs->count - 1;
     bool last_value = flecs_bitset_get(bs, last);
     flecs_bitset_set(bs, elem, last_value);
+    flecs_bitset_set(bs, last, 0);
     bs->count --;
 error:
     return;

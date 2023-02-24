@@ -371,7 +371,8 @@
                 "query_randomized_3_bitsets",
                 "query_randomized_4_bitsets",
                 "defer_enable",
-                "sort"
+                "sort",
+                "table_move_2_from_3"
             ]
         }, {
             "id": "Remove",
