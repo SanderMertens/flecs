@@ -44450,7 +44450,7 @@ int flecs_term_id_lookup(
     term_id->id = e;
 
     if (!ecs_os_strcmp(name, "*") || !ecs_os_strcmp(name, "_") || 
-        !ecs_os_strcmp(name, "$") || !ecs_os_strcmp(name, ".")) 
+        !ecs_os_strcmp(name, "$")) 
     {
         term_id->flags &= ~EcsIsEntity;
         term_id->flags |= EcsIsVariable;
@@ -45546,7 +45546,7 @@ ecs_filter_t* ecs_filter_init(
         f->terms[i].move = false;
     }
 
-    f->variable_names[0] = (char*)".";
+    f->variable_names[0] = NULL;
     f->iterable.init = flecs_filter_iter_init;
 
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
@@ -55211,7 +55211,7 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
-    flecs_bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
+    flecs_bootstrap_entity(world, EcsThis, "this", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsVariable, "$", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 

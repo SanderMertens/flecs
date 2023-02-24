@@ -1986,7 +1986,7 @@ void Filter_filter_w_resources_copy() {
     ecs_filter_t f_1 = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
         .storage = &f_1,
-        .terms = {{TagA, .src.name = "This"}, {TagB, .src.name = "This"}}
+        .terms = {{TagA, .src.name = "this"}, {TagB, .src.name = "this"}}
     }));
 
     test_int(f_1.term_count, 2);

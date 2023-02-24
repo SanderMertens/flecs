@@ -24,6 +24,7 @@ void Parser_component_explicit_subject_any(void);
 void Parser_component_explicit_subject_0(void);
 void Parser_this_as_predicate(void);
 void Parser_this_var_as_predicate(void);
+void Parser_this_lowercase_var_as_predicate(void);
 void Parser_this_as_object(void);
 void Parser_this_var_as_object(void);
 void Parser_pair_implicit_subject(void);
@@ -703,6 +704,7 @@ void RulesOperators_2_or_chains(void);
 void RulesOperators_2_or_chains_written(void);
 void RulesOperators_2_not_first(void);
 void RulesOperators_2_optional_first(void);
+void RulesOperators_root_entities_empty(void);
 void RulesOperators_root_entities(void);
 void RulesOperators_root_entities_w_children(void);
 void RulesOperators_root_entities_w_optional_children(void);
@@ -1189,6 +1191,10 @@ bake_test_case Parser_testcases[] = {
     {
         "this_var_as_predicate",
         Parser_this_var_as_predicate
+    },
+    {
+        "this_lowercase_var_as_predicate",
+        Parser_this_lowercase_var_as_predicate
     },
     {
         "this_as_object",
@@ -3872,6 +3878,10 @@ bake_test_case RulesOperators_testcases[] = {
         RulesOperators_2_optional_first
     },
     {
+        "root_entities_empty",
+        RulesOperators_root_entities_empty
+    },
+    {
         "root_entities",
         RulesOperators_root_entities
     },
@@ -5449,7 +5459,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        184,
+        185,
         Parser_testcases
     },
     {
@@ -5498,7 +5508,7 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        86,
+        87,
         RulesOperators_testcases
     },
     {

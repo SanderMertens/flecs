@@ -4728,7 +4728,7 @@ void RulesOperators_2_optional_first() {
     ecs_fini(world);
 }
 
-void RulesOperators_root_entities() {
+void RulesOperators_root_entities_empty() {
     ecs_world_t *world = ecs_mini();
 
     ecs_rule_t *r = ecs_rule(world, {
@@ -4743,6 +4743,40 @@ void RulesOperators_root_entities() {
         test_uint(1, it.count);
         test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
         test_uint(EcsFlecs, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_root_entities() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_new_entity(world, "e1.e2");
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
+        test_uint(EcsFlecs, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
+        test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
