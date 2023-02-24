@@ -134,31 +134,36 @@ int32_t flecs_rule_op_ref_str(
 {
     int32_t color_chars = 0;
     if (flags & EcsRuleIsVar) {
+        ecs_assert(ref->var < rule->var_count, ECS_INTERNAL_ERROR, NULL);
         ecs_rule_var_t *var = &rule->vars[ref->var];
-        ecs_strbuf_appendstr(buf, "#[green]$#[reset]");
+        ecs_strbuf_appendlit(buf, "#[green]$#[reset]");
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, '[');
         }
-        ecs_strbuf_appendstr(buf, "#[green]");
+        ecs_strbuf_appendlit(buf, "#[green]");
         if (var->name) {
             ecs_strbuf_appendstr(buf, var->name);
         } else {
-            if (var->label) {
-                ecs_strbuf_appendstr(buf, var->label);
-                ecs_strbuf_appendch(buf, '\'');
+            if (var->id) {
+                if (var->label) {
+                    ecs_strbuf_appendstr(buf, var->label);
+                    ecs_strbuf_appendch(buf, '\'');
+                }
+                ecs_strbuf_append(buf, "%d", var->id);
+            } else {
+                ecs_strbuf_appendlit(buf, "this");
             }
-            ecs_strbuf_append(buf, "%d", var->id);
         }
-        ecs_strbuf_appendstr(buf, "#[reset]");
+        ecs_strbuf_appendlit(buf, "#[reset]");
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, ']');
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsRuleIsEntity) {
         char *path = ecs_get_fullpath(rule->world, ref->entity);
-        ecs_strbuf_appendstr(buf, "#[blue]");
+        ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
-        ecs_strbuf_appendstr(buf, "#[reset]");
+        ecs_strbuf_appendlit(buf, "#[reset]");
         ecs_os_free(path);
         color_chars = ecs_os_strlen("#[blue]#[reset]");
     }
@@ -214,7 +219,7 @@ char* ecs_rule_str_w_profile(
             ecs_strbuf_appendint(&buf, op->other);
             ecs_strbuf_appendch(&buf, ' ');
         }
-
+    
         hidden_chars = flecs_rule_op_ref_str(rule, &op->src, src_flags, &buf);
 
         if (op->kind == EcsRuleUnion) {

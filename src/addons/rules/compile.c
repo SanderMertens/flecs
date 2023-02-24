@@ -246,6 +246,7 @@ ecs_var_id_t flecs_rule_add_var(
         flecs_name_index_init_if(var_index, NULL);
         flecs_name_index_ensure(var_index, var->id, name, 0, 0);
     }
+
     return var->id;
 }
 
@@ -408,6 +409,7 @@ void flecs_rule_discover_vars(
 
     rule_vars[0].kind = EcsVarTable;
     rule_vars[0].name = NULL;
+    rule_vars[0].label = NULL;
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
     var_names[0] = (char*)rule_vars[0].name;
