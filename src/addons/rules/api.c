@@ -182,11 +182,13 @@ char* ecs_rule_str_w_profile(
         ecs_flags16_t second_flags = flecs_rule_ref_flags(flags, EcsRuleSecond);
 
         if (it) {
+#ifdef FLECS_DEBUG
             const ecs_rule_iter_t *rit = &it->priv.iter.rule;
             ecs_strbuf_append(&buf, 
                 "#[green]%4d -> #[red]%4d <- #[grey]  |   ",
                 rit->profile[i].count[0],
                 rit->profile[i].count[1]);
+#endif
         }
 
         ecs_strbuf_append(&buf, 
@@ -202,7 +204,7 @@ char* ecs_rule_str_w_profile(
         ecs_strbuf_appendstr(&buf, " ");
 
         int32_t written = ecs_strbuf_written(&buf);
-        for (int32_t i = 0; i < (10 - (written - start)); i ++) {
+        for (int32_t j = 0; j < (10 - (written - start)); j ++) {
             ecs_strbuf_appendch(&buf, ' ');
         }
 
@@ -225,7 +227,7 @@ char* ecs_rule_str_w_profile(
         }
 
         written = ecs_strbuf_written(&buf) - hidden_chars;
-        for (int32_t i = 0; i < (30 - (written - start)); i ++) {
+        for (int32_t j = 0; j < (30 - (written - start)); j ++) {
             ecs_strbuf_appendch(&buf, ' ');
         }
 

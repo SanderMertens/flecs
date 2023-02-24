@@ -3453,8 +3453,8 @@ typedef struct ecs_rule_iter_t {
 #endif
 
     bool redo;
-    int32_t op;
-    int32_t sp;
+    int16_t op;
+    int16_t sp;
 } ecs_rule_iter_t;
 
 /* Bits for tracking whether a cache was used/whether the array was allocated.
