@@ -669,11 +669,42 @@ int flecs_term_finalize(
             }
         }
 
-        /* If component is inherited from, flag term */
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, term->first.id))) {
-            term->flags |= EcsTermIdInherited;
-            if (!term->first.trav) {
-                term->first.trav = EcsIsA;
+        ecs_entity_t first_trav = first->trav;
+        if (first_trav) {
+            if (!ecs_has_id(world, first_trav, EcsTraversable)) {
+                flecs_filter_error(ctx, "first.trav is not traversable");
+                return -1;
+            }
+        }
+
+        /* If component is inherited from, set correct traversal flags */
+        ecs_flags32_t first_trav_flags = first_flags & EcsTraverseFlags;
+        if (!first_trav && first_trav_flags != EcsSelf) {
+            /* Inheritance uses IsA by default, but can use any relationship */
+            first_trav = EcsIsA;
+        }
+
+        /* Only enable inheritance for ids which are inherited from at the time
+         * of filter creation. To force component inheritance to be evaluated,
+         * an application can explicitly set traversal flags. */
+        if ((first_trav_flags & EcsDown) || 
+            flecs_id_record_get(world, ecs_pair(first_trav, first->id))) 
+        {
+            if (first_trav_flags == EcsSelf) {
+                flecs_filter_error(ctx, "first.trav specified with self");
+                return -1;
+            }
+
+            if (!first_trav_flags || (first_trav_flags & EcsDown)) {
+                term->flags |= EcsTermIdInherited;
+                first->trav = first_trav;
+                if (!first_trav_flags) {
+                    first->flags &= ~EcsTraverseFlags;
+                    first->flags |= EcsDown;
+                    if (ecs_has_id(world, first_trav, EcsReflexive)) {
+                        first->flags |= EcsSelf;
+                    }
+                }
             }
         }
 

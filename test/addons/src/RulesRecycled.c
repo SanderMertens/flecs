@@ -51,6 +51,8 @@ void RulesRecycled_recycled_vars() {
 
     test_bool(false, ecs_rule_next(&it));
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -100,6 +102,8 @@ void RulesRecycled_recycled_pair_vars() {
     test_uint(tgt, ecs_iter_get_var(&it, z_var));
 
     test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -153,6 +157,8 @@ void RulesRecycled_recycled_this_ent_var() {
 
     test_bool(false, ecs_rule_next(&it));
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -195,6 +201,8 @@ void RulesRecycled_has_recycled_id_from_pair() {
     test_uint(tgt, ecs_iter_get_var(&it, z_var));
 
     test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }

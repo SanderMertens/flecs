@@ -850,7 +850,13 @@
                 "1_this_src_not",
                 "1_var_src_not",
                 "1_this_src_not_written",
-                "1_var_src_not_written"
+                "1_var_src_not_written",
+                "first_self",
+                "first_down",
+                "first_self_down",
+                "first_rel_self",
+                "first_rel_down",
+                "first_rel_self_down"
             ]
         }, {
             "id": "RulesRecycled",

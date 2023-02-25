@@ -17,7 +17,6 @@ static bool flecs_rule_op_is_test[] = {
     [EcsRuleNothing] = false
 };
 
-static
 ecs_rule_lbl_t flecs_itolbl(int64_t val) {
     return flecs_ito(int16_t, val);
 }
@@ -29,7 +28,7 @@ ecs_var_id_t flecs_itovar(int64_t val) {
 
 static
 ecs_var_id_t flecs_utovar(uint64_t val) {
-    return flecs_ito(uint8_t, val);
+    return flecs_uto(uint8_t, val);
 }
 
 bool flecs_rule_is_written(
@@ -41,7 +40,7 @@ bool flecs_rule_is_written(
     }
 
     ecs_assert(var_id < EcsRuleMaxVarCount, ECS_INTERNAL_ERROR, NULL);
-    return (written & (1 << var_id)) != 0;
+    return (written & (1ull << var_id)) != 0;
 }
 
 static
@@ -50,7 +49,7 @@ void flecs_rule_write(
     uint64_t *written)
 {
     ecs_assert(var_id < EcsRuleMaxVarCount, ECS_INTERNAL_ERROR, NULL);
-    *written |= (1 << var_id);
+    *written |= (1ull << var_id);
 }
 
 static
@@ -229,11 +228,11 @@ ecs_var_id_t flecs_rule_add_var(
     ecs_rule_var_t *var;
     if (vars) {
         var = ecs_vector_add(vars, ecs_rule_var_t);
-        var->id = (ecs_var_id_t)ecs_vector_count(*vars);
+        var->id = flecs_itovar(ecs_vector_count(*vars));
     } else {
         ecs_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
         var = &rule->vars[rule->var_count];
-        var->id = (ecs_var_id_t)rule->var_count;
+        var->id = flecs_itovar(rule->var_count);
         rule->var_count ++;
     }
 
@@ -511,7 +510,7 @@ int32_t flecs_rule_not_insert(
     not_op.first = op->first;
     not_op.second = op->second;
     not_op.flags = op->flags;
-    not_op.flags &= ~(EcsRuleIsVar << EcsRuleSrc);
+    not_op.flags &= (ecs_flags8_t)~(EcsRuleIsVar << EcsRuleSrc);
     if (op->flags & (EcsRuleIsEntity << EcsRuleSrc)) {
         not_op.src.entity = op->src.entity;
     }
@@ -558,25 +557,25 @@ void flecs_rule_end_not(
         if (flecs_rule_op_is_test[cur->kind]) {
             cur->prev = flecs_itolbl(count - 1);
             if (i == (count - 2)) {
-                cur->next = ctx->lbl_not - 1;
+                cur->next = flecs_itolbl(ctx->lbl_not - 1);
             }
         }
     }
 
     /* After a match was found, return to op before Not operation */
     ecs_rule_op_t *not_ptr = ecs_vector_last(ctx->ops, ecs_rule_op_t);
-    not_ptr->prev = ctx->lbl_not - 1;
+    not_ptr->prev = flecs_itolbl(ctx->lbl_not - 1);
 
     if (ctx->lbl_none != -1) {
         /* setcond */
-        ops[count - 2].next = ctx->lbl_none - 1;
+        ops[count - 2].next = flecs_itolbl(ctx->lbl_none - 1);
         /* last actual instruction */
         ops[count - 3].prev = flecs_itolbl(count - 4);
         /* jfalse */
         ops[ctx->lbl_none].other =
             flecs_itolbl(count - 1); /* jump to not */
         /* not */
-        ops[count - 1].prev = ctx->lbl_none - 1;
+        ops[count - 1].prev = flecs_itolbl(ctx->lbl_none - 1);
     }
 
     ctx->lbl_not = -1;
@@ -627,15 +626,15 @@ void flecs_rule_begin_cond_eval(
 
     if (flecs_rule_ref_flags(op->flags, EcsRuleFirst) == EcsRuleIsVar) {
         first_var = op->first.var;
-        cond_mask |= (1 << first_var);
+        cond_mask |= (1ull << first_var);
     }
     if (flecs_rule_ref_flags(op->flags, EcsRuleSecond) == EcsRuleIsVar) {
         second_var = op->second.var;
-        cond_mask |= (1 << second_var);
+        cond_mask |= (1ull << second_var);
     }
     if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) == EcsRuleIsVar) {
         src_var = op->src.var;
-        cond_mask |= (1 << src_var);
+        cond_mask |= (1ull << src_var);
     }
 
     /* If this term uses conditionally set variables, insert instruction that
@@ -646,15 +645,15 @@ void flecs_rule_begin_cond_eval(
         ecs_rule_op_t jmp_op = {0};
         jmp_op.kind = EcsRuleJmpNotSet;
 
-        if ((first_var != EcsVarNone) && cond_write_state & (1 << first_var)) {
+        if ((first_var != EcsVarNone) && cond_write_state & (1ull << first_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleFirst);
             jmp_op.first.var = first_var;
         }
-        if ((second_var != EcsVarNone) && cond_write_state & (1 << second_var)) {
+        if ((second_var != EcsVarNone) && cond_write_state & (1ull << second_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleSecond);
             jmp_op.second.var = second_var;
         }
-        if ((src_var != EcsVarNone) && cond_write_state & (1 << src_var)) {
+        if ((src_var != EcsVarNone) && cond_write_state & (1ull << src_var)) {
             jmp_op.flags |= (EcsRuleIsVar << EcsRuleSrc);
             jmp_op.src.var = src_var;
         }
@@ -706,9 +705,9 @@ void flecs_rule_end_or(
     flecs_rule_next_or(ctx);
 
     ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t i = ctx->lbl_or, count = ecs_vector_count(ctx->ops);
+    int32_t i, count = ecs_vector_count(ctx->ops);
     int32_t prev_or = -2;
-    for (i = 0; i < count; i ++) {
+    for (i = ctx->lbl_or; i < count; i ++) {
         if (ops[i].next == FlecsRuleOrMarker) {
             if (prev_or != -2) {
                 ops[prev_or].prev = flecs_itolbl(i);
@@ -718,10 +717,10 @@ void flecs_rule_end_or(
         }
     }
 
-    ops[count - 1].prev = ctx->lbl_or - 1;
+    ops[count - 1].prev = flecs_itolbl(ctx->lbl_or - 1);
 
     /* Set prev of next instruction to before the start of the OR chain */
-    ctx->lbl_prev = ctx->lbl_or - 1;
+    ctx->lbl_prev = flecs_itolbl(ctx->lbl_or - 1);
     ctx->lbl_or = -1;
 }
 
@@ -755,22 +754,6 @@ void flecs_rule_end_union(
 
     ops[next].prev = flecs_itolbl(i);
     ops[i].next = next;
-}
-
-static
-void flecs_rule_insert_store(
-    ecs_entity_t entity,
-    ecs_var_id_t var,
-    ecs_rule_compile_ctx_t *ctx)
-{
-    ecs_rule_op_t op = {0};
-    op.kind = EcsRuleStore;
-    op.src.var = var;
-    op.first.entity = entity;
-    op.flags = (EcsRuleIsVar << EcsRuleSrc) |
-               (EcsRuleIsEntity << EcsRuleFirst);
-    flecs_rule_write(var, &op.written);
-    flecs_rule_op_insert(&op, ctx);
 }
 
 static
@@ -811,7 +794,7 @@ void flecs_rule_insert_unconstrained_transitive(
     find_ids.first = op->first;
     find_ids.second = op->second;
     find_ids.flags = op->flags;
-    find_ids.flags &= ~((EcsRuleIsVar|EcsRuleIsEntity) << EcsRuleSrc);
+    find_ids.flags &= (ecs_flags8_t)~((EcsRuleIsVar|EcsRuleIsEntity) << EcsRuleSrc);
     find_ids.second.var = tgt;
     flecs_rule_write_ctx(tgt, ctx, cond_write);
     flecs_rule_write(tgt, &find_ids.written);
@@ -844,8 +827,6 @@ void flecs_rule_insert_inheritance(
     ecs_var_id_t evar = flecs_rule_add_var(rule, NULL, NULL, EcsVarEntity);
 
     ecs_entity_t id = term->first.id;
-    ecs_entity_t trav = term->first.trav;
-
     const char *lbl = ecs_get_name(rule->world, id);
     rule->vars[tvar].label = lbl;
     rule->vars[evar].label = lbl;
@@ -860,8 +841,8 @@ void flecs_rule_insert_inheritance(
     trav_op.flags |= (EcsRuleIsEntity << EcsRuleFirst);
     trav_op.flags |= (EcsRuleIsEntity << EcsRuleSecond);
     trav_op.flags |= (EcsRuleIsVar << EcsRuleSrc);
-    trav_op.written |= (1 << tvar);
-    if (ecs_has_id(rule->world, trav, EcsReflexive)) {
+    trav_op.written |= (1ull << tvar);
+    if (term->first.flags & EcsSelf) {
         trav_op.match_flags |= EcsTermReflexive;
     }
     flecs_rule_op_insert(&trav_op, ctx);
@@ -869,7 +850,7 @@ void flecs_rule_insert_inheritance(
 
     ecs_rule_ref_t r = { .var = evar };
     op->first = r;
-    op->flags &= ~(EcsRuleIsEntity << EcsRuleFirst);
+    op->flags &= (ecs_flags8_t)~(EcsRuleIsEntity << EcsRuleFirst);
     op->flags |= (EcsRuleIsVar << EcsRuleFirst);
 }
 
@@ -880,7 +861,7 @@ void flecs_rule_compile_term_id(
     ecs_rule_op_t *op,
     ecs_term_id_t *term_id,
     ecs_rule_ref_t *ref,
-    ecs_flags32_t ref_kind,
+    ecs_flags8_t ref_kind,
     ecs_var_kind_t kind,
     ecs_rule_compile_ctx_t *ctx)
 {
@@ -889,7 +870,7 @@ void flecs_rule_compile_term_id(
     }
 
     if (term_id->flags & EcsIsVariable) {
-        op->flags |= (EcsRuleIsVar << ref_kind);
+        op->flags |= (ecs_flags8_t)(EcsRuleIsVar << ref_kind);
         const char *name = flecs_term_id_var_name(term_id);
         if (name) {
             ref->var = flecs_rule_most_specific_var(rule, name, kind, ctx);
@@ -908,7 +889,7 @@ void flecs_rule_compile_term_id(
     }
 
     if (term_id->flags & EcsIsEntity) {
-        op->flags |= (EcsRuleIsEntity << ref_kind);
+        op->flags |= (ecs_flags8_t)(EcsRuleIsEntity << ref_kind);
         ref->entity = term_id->id;
     }
 }
@@ -1050,7 +1031,7 @@ void flecs_rule_compile_term(
             match_any.flags |= (EcsRuleIsVar << EcsRuleSrc);
             match_any.src = op.src;
             match_any.first.entity = EcsAny;
-            match_any.written = (1 << src_var);
+            match_any.written = (1ull << src_var);
             flecs_rule_op_insert(&match_any, ctx);
             flecs_rule_write_ctx(op.src.var, ctx, false);
 
@@ -1074,8 +1055,8 @@ void flecs_rule_compile_term(
                 op.kind = EcsRuleIdsRight;
             }
             op.src.entity = 0;
-            op.flags &= ~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
-            op.flags &= ~(EcsRuleIsEntity << EcsRuleSrc);
+            op.flags &= (ecs_flags8_t)~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
+            op.flags &= (ecs_flags8_t)~(EcsRuleIsEntity << EcsRuleSrc);
         }
     }
 
@@ -1124,7 +1105,7 @@ void flecs_rule_compile_term(
 
     if (first_is_var) {
         op.first.var = first_var;
-        op.flags &= ~(EcsRuleIsEntity << EcsRuleFirst);
+        op.flags &= (ecs_flags8_t)~(EcsRuleIsEntity << EcsRuleFirst);
         op.flags |= (EcsRuleIsVar << EcsRuleFirst);
     }
 
@@ -1241,6 +1222,7 @@ void flecs_rule_compile(
 
     /* If rule contains non-This variables as term source, build lookup array */
     if (rule->src_vars) {
+        ecs_assert(rule->vars != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_rule_op_t set_vars = {0};
         set_vars.kind = EcsRuleSetVars;
         flecs_rule_op_insert(&set_vars, &ctx);

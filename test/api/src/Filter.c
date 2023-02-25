@@ -2648,7 +2648,7 @@ void Filter_filter_not_childof_any() {
     ecs_fini(world); 
 }
 
-void Filter_flecs_w_inherited_id() {
+void Filter_filter_w_inherited_id() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -2671,7 +2671,7 @@ void Filter_flecs_w_inherited_id() {
     ecs_fini(world); 
 }
 
-void Filter_flecs_w_inherited_pair() {
+void Filter_filter_w_inherited_pair() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -2695,7 +2695,7 @@ void Filter_flecs_w_inherited_pair() {
     ecs_fini(world);
 }
 
-void Filter_flecs_w_non_inherited_id() {
+void Filter_filter_w_non_inherited_id() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -2715,7 +2715,7 @@ void Filter_flecs_w_non_inherited_id() {
     ecs_fini(world); 
 }
 
-void Filter_flecs_w_non_inherited_pair() {
+void Filter_filter_w_non_inherited_pair() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -2733,6 +2733,212 @@ void Filter_flecs_w_non_inherited_pair() {
     ecs_filter_fini(&f);
 
     ecs_fini(world);
+}
+
+void Filter_filter_w_first_rel() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsSelf, .first.trav = Rel }
+        }
+    }));
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_down() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsDown, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_first_rel_self_down() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsSelf|EcsDown, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_first_rel_reflexive() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_reflexive_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsSelf, .first.trav = Rel }
+        }
+    }));
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_reflexive_down() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsDown, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_reflexive_self_down() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (Rel, Unit));
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.flags = EcsSelf|EcsDown, .first.trav = Rel }
+        }
+    }));
+
+    test_assert(f.terms[0].flags & EcsTermIdInherited);
+    test_int(f.terms[0].first.trav, Rel);
+    test_int(f.terms[0].first.id, Unit);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsDown|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world); 
+}
+
+void Filter_filter_w_first_rel_non_traversable() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Unit);
+
+    ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = Unit, .first.trav = Rel }
+        }
+    }));
+
+    ecs_fini(world); 
 }
 
 void Filter_filter_w_not_flag() {

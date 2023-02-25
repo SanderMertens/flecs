@@ -5625,6 +5625,8 @@ void RulesOperators_1_this_src_not_pair_rel_var() {
 
     test_assert(e2_found);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -5671,6 +5673,8 @@ void RulesOperators_1_this_src_not_pair_tgt_var() {
     }
 
     test_assert(e2_found);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -5721,6 +5725,8 @@ void RulesOperators_1_this_src_not_pair_rel_tgt_var() {
     }
 
     test_assert(e2_found);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
