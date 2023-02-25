@@ -566,6 +566,10 @@ void RulesBasic_not_instanced_mixed_src(void);
 void RulesBasic_instanced_table_src(void);
 void RulesBasic_instanced_entity_src(void);
 void RulesBasic_instanced_mixed_src(void);
+void RulesBasic_in_term(void);
+void RulesBasic_out_term(void);
+void RulesBasic_inout_term(void);
+void RulesBasic_nodata_term(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -3334,6 +3338,22 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "instanced_mixed_src",
         RulesBasic_instanced_mixed_src
+    },
+    {
+        "in_term",
+        RulesBasic_in_term
+    },
+    {
+        "out_term",
+        RulesBasic_out_term
+    },
+    {
+        "inout_term",
+        RulesBasic_inout_term
+    },
+    {
+        "nodata_term",
+        RulesBasic_nodata_term
     }
 };
 
@@ -5494,7 +5514,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        79,
+        83,
         RulesBasic_testcases
     },
     {

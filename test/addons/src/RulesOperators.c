@@ -4761,8 +4761,6 @@ void RulesOperators_root_entities() {
 
     test_assert(r != NULL);
 
-    printf("%s\n", ecs_rule_str(r));
-
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_new_entity(world, "e1.e2");
 

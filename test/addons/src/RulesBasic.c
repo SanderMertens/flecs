@@ -3697,3 +3697,19 @@ void RulesBasic_instanced_mixed_src() {
 
     ecs_fini(world);
 }
+
+void RulesBasic_in_term() {
+    // Implement testcase
+}
+
+void RulesBasic_out_term() {
+    // Implement testcase
+}
+
+void RulesBasic_inout_term() {
+    // Implement testcase
+}
+
+void RulesBasic_nodata_term() {
+    // Implement testcase
+}
