@@ -1527,6 +1527,8 @@ void Pairs_get_n_targets(void);
 void Pairs_get_target_from_base(void);
 void Pairs_get_target_from_2nd_base(void);
 void Pairs_get_target_from_base_w_pair_on_instance(void);
+void Pairs_get_childof_target_from_base(void);
+void Pairs_get_dontinherit_target_from_base(void);
 void Pairs_get_target_for_id_from_self(void);
 void Pairs_get_target_for_id_from_base(void);
 void Pairs_get_target_for_id_from_nested_base(void);
@@ -8291,6 +8293,14 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_target_from_base_w_pair_on_instance
     },
     {
+        "get_childof_target_from_base",
+        Pairs_get_childof_target_from_base
+    },
+    {
+        "get_dontinherit_target_from_base",
+        Pairs_get_dontinherit_target_from_base
+    },
+    {
         "get_target_for_id_from_self",
         Pairs_get_target_for_id_from_self
     },
@@ -11853,7 +11863,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        103,
+        105,
         Pairs_testcases
     },
     {

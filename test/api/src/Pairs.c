@@ -2050,6 +2050,38 @@ void Pairs_get_target_from_base_w_pair_on_instance() {
     ecs_fini(world);
 }
 
+void Pairs_get_childof_target_from_base() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert(ecs_has_pair(world, base, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(ecs_get_target(world, e, EcsChildOf, 0) == 0);
+    test_assert(ecs_get_target(world, e, EcsChildOf, 1) == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_dontinherit_target_from_base() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, DontInherit);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_pair(world, Rel, parent);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert(ecs_has_pair(world, base, Rel, parent));
+    test_assert(!ecs_has_pair(world, e, Rel, parent));
+    test_assert(ecs_get_target(world, e, Rel, 0) == 0);
+    test_assert(ecs_get_target(world, e, Rel, 1) == 0);
+
+    ecs_fini(world);
+}
+
 void Pairs_get_target_for_id_from_self() {
     ecs_world_t *world = ecs_mini();
 

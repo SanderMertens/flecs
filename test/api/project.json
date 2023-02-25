@@ -1592,6 +1592,8 @@
                 "get_target_from_base",
                 "get_target_from_2nd_base",
                 "get_target_from_base_w_pair_on_instance",
+                "get_childof_target_from_base",
+                "get_dontinherit_target_from_base",
                 "get_target_for_id_from_self",
                 "get_target_for_id_from_base",
                 "get_target_for_id_from_nested_base",

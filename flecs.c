@@ -8577,7 +8577,11 @@ ecs_entity_t ecs_get_target(
     }
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
-    ecs_table_record_t *tr = flecs_table_record_get(world, table, wc);
+    ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+    const ecs_table_record_t *tr = NULL;
+    if (idr) {
+        tr = flecs_id_record_get_table(idr, table);
+    }
     if (!tr) {
         if (table->flags & EcsTableHasUnion) {
             wc = ecs_pair(EcsUnion, rel);
@@ -8590,7 +8594,12 @@ ecs_entity_t ecs_get_target(
                 
             }
         }
-        goto look_in_base;
+
+        if (!idr || !(idr->flags & EcsIdDontInherit)) {
+            goto look_in_base;
+        } else {
+            return 0;
+        }
     }
 
     if (index >= tr->count) {
