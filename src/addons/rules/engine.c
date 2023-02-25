@@ -1265,6 +1265,7 @@ void flecs_rule_iter_init(
             }
         }
     }
+    flecs_iter_validate(it);
 }
 
 bool ecs_rule_next(
@@ -1302,8 +1303,6 @@ bool ecs_rule_next_instanced(
         }
         flecs_rule_iter_init(rule, it, rit);
     }
-
-    flecs_iter_validate(it);
 
     do {
         op_index = rit->op;
@@ -1393,8 +1392,7 @@ void flecs_rule_iter_fini(
     int32_t var_count = rit->rule->var_count;
 
 #ifdef FLECS_DEBUG
-    const ecs_rule_t *rule = rit->rule;
-    if (rule->filter.flags & EcsFilterProfile) {
+    if (it->flags & EcsFilterProfile) {
         char *str = ecs_rule_str_w_profile(rit->rule, it);
         printf("%s\n", str);
         ecs_os_free(str);

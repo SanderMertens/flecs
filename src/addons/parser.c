@@ -237,7 +237,6 @@ const char* ecs_parse_token(
     return ptr;
 }
 
-static
 const char* ecs_parse_identifier(
     const char *name,
     const char *expr,

@@ -5382,3 +5382,406 @@ void RulesVariables_2_cycle_pair_ent_var_this() {
 
     ecs_fini(world);
 }
+
+void RulesVariables_parse_0_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, ""));
+    test_uint(it.variables[x_var].entity, EcsWildcard);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_1_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "x:e1"));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_2_vars() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "x:e1,y:e2"));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, e2);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_0_var_paren() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "()"));
+    test_uint(it.variables[x_var].entity, EcsWildcard);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_1_var_paren() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "(x:e1)"));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_2_vars_paren() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "(x:e1,y:e2)"));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, e2);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_1_vars_w_path() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "parent.e1");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "x:parent.e1"));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_missing_close_paren() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_log_set_level(-4);
+    test_str(NULL, ecs_rule_parse_vars(r, &it, "(x:e1"));
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_missing_open_paren() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_log_set_level(-4);
+    test_str(NULL, ecs_rule_parse_vars(r, &it, "x:e1)"));
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_missing_value() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_log_set_level(-4);
+    test_str(NULL, ecs_rule_parse_vars(r, &it, "x:"));
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_0_var_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "  "));
+    test_uint(it.variables[x_var].entity, EcsWildcard);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_1_var_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "  x  :  e1  "));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_2_vars_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("", ecs_rule_parse_vars(r, &it, "  x  :  e1  ,  y  :  e2  "));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, e2);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_0_var_paren_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("  ", ecs_rule_parse_vars(r, &it, "  (  )  "));
+    test_uint(it.variables[x_var].entity, EcsWildcard);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_1_var_paren_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("  ", ecs_rule_parse_vars(r, &it, "  (  x  :  e1  )  "));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, EcsWildcard);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_parse_2_vars_paren_w_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y)"
+    });
+
+    test_assert(r != NULL);
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_str("  ", ecs_rule_parse_vars(r, &it, "  (  x  :  e1  ,  y  :  e2  )  "));
+    test_uint(it.variables[x_var].entity, e1);
+    test_uint(it.variables[y_var].entity, e2);
+    ecs_iter_fini(&it);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

@@ -662,7 +662,23 @@
                 "2_cycle_pair_w_var_var_this",
                 "2_cycle_pair_ent_var_var",
                 "2_cycle_pair_ent_this_var",
-                "2_cycle_pair_ent_var_this"
+                "2_cycle_pair_ent_var_this",
+                "parse_0_var",
+                "parse_1_var",
+                "parse_2_vars",
+                "parse_0_var_paren",
+                "parse_1_var_paren",
+                "parse_2_vars_paren",
+                "parse_1_vars_w_path",
+                "parse_missing_close_paren",
+                "parse_missing_open_paren",
+                "parse_missing_value",
+                "parse_0_var_w_spaces",
+                "parse_1_var_w_spaces",
+                "parse_2_vars_w_spaces",
+                "parse_0_var_paren_w_spaces",
+                "parse_1_var_paren_w_spaces",
+                "parse_2_vars_paren_w_spaces"
             ]
         }, {
             "id": "RulesOperators",
