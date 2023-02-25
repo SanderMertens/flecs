@@ -828,6 +828,12 @@ void RulesComponentInheritance_1_this_src_not(void);
 void RulesComponentInheritance_1_var_src_not(void);
 void RulesComponentInheritance_1_this_src_not_written(void);
 void RulesComponentInheritance_1_var_src_not_written(void);
+void RulesComponentInheritance_first_self(void);
+void RulesComponentInheritance_first_down(void);
+void RulesComponentInheritance_first_self_down(void);
+void RulesComponentInheritance_first_rel_self(void);
+void RulesComponentInheritance_first_rel_down(void);
+void RulesComponentInheritance_first_rel_self_down(void);
 
 // Testsuite 'RulesRecycled'
 void RulesRecycled_recycled_vars(void);
@@ -4366,6 +4372,30 @@ bake_test_case RulesComponentInheritance_testcases[] = {
     {
         "1_var_src_not_written",
         RulesComponentInheritance_1_var_src_not_written
+    },
+    {
+        "first_self",
+        RulesComponentInheritance_first_self
+    },
+    {
+        "first_down",
+        RulesComponentInheritance_first_down
+    },
+    {
+        "first_self_down",
+        RulesComponentInheritance_first_self_down
+    },
+    {
+        "first_rel_self",
+        RulesComponentInheritance_first_rel_self
+    },
+    {
+        "first_rel_down",
+        RulesComponentInheritance_first_rel_down
+    },
+    {
+        "first_rel_self_down",
+        RulesComponentInheritance_first_rel_self_down
     }
 };
 
@@ -5542,7 +5572,7 @@ static bake_test_suite suites[] = {
         "RulesComponentInheritance",
         NULL,
         NULL,
-        25,
+        31,
         RulesComponentInheritance_testcases
     },
     {

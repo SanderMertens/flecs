@@ -214,6 +214,9 @@ struct ecs_rule_t {
     ecs_poly_dtor_t dtor;
 };
 
+ecs_rule_lbl_t flecs_itolbl(
+    int64_t val);
+
 ecs_flags16_t flecs_rule_ref_flags(
     ecs_flags16_t flags,
     ecs_flags16_t kind);

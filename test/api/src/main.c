@@ -1014,10 +1014,19 @@ void Filter_filter_w_pair_wildcard_not_same_vars(void);
 void Filter_filter_w_pair_any_not_same_vars(void);
 void Filter_filter_w_no_pair_not_same_vars(void);
 void Filter_filter_not_childof_any(void);
-void Filter_flecs_w_inherited_id(void);
-void Filter_flecs_w_inherited_pair(void);
-void Filter_flecs_w_non_inherited_id(void);
-void Filter_flecs_w_non_inherited_pair(void);
+void Filter_filter_w_inherited_id(void);
+void Filter_filter_w_inherited_pair(void);
+void Filter_filter_w_non_inherited_id(void);
+void Filter_filter_w_non_inherited_pair(void);
+void Filter_filter_w_first_rel(void);
+void Filter_filter_w_first_rel_self(void);
+void Filter_filter_w_first_rel_down(void);
+void Filter_filter_w_first_rel_self_down(void);
+void Filter_filter_w_first_rel_reflexive(void);
+void Filter_filter_w_first_rel_reflexive_self(void);
+void Filter_filter_w_first_rel_reflexive_down(void);
+void Filter_filter_w_first_rel_reflexive_self_down(void);
+void Filter_filter_w_first_rel_non_traversable(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6278,20 +6287,56 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_not_childof_any
     },
     {
-        "flecs_w_inherited_id",
-        Filter_flecs_w_inherited_id
+        "filter_w_inherited_id",
+        Filter_filter_w_inherited_id
     },
     {
-        "flecs_w_inherited_pair",
-        Filter_flecs_w_inherited_pair
+        "filter_w_inherited_pair",
+        Filter_filter_w_inherited_pair
     },
     {
-        "flecs_w_non_inherited_id",
-        Filter_flecs_w_non_inherited_id
+        "filter_w_non_inherited_id",
+        Filter_filter_w_non_inherited_id
     },
     {
-        "flecs_w_non_inherited_pair",
-        Filter_flecs_w_non_inherited_pair
+        "filter_w_non_inherited_pair",
+        Filter_filter_w_non_inherited_pair
+    },
+    {
+        "filter_w_first_rel",
+        Filter_filter_w_first_rel
+    },
+    {
+        "filter_w_first_rel_self",
+        Filter_filter_w_first_rel_self
+    },
+    {
+        "filter_w_first_rel_down",
+        Filter_filter_w_first_rel_down
+    },
+    {
+        "filter_w_first_rel_self_down",
+        Filter_filter_w_first_rel_self_down
+    },
+    {
+        "filter_w_first_rel_reflexive",
+        Filter_filter_w_first_rel_reflexive
+    },
+    {
+        "filter_w_first_rel_reflexive_self",
+        Filter_filter_w_first_rel_reflexive_self
+    },
+    {
+        "filter_w_first_rel_reflexive_down",
+        Filter_filter_w_first_rel_reflexive_down
+    },
+    {
+        "filter_w_first_rel_reflexive_self_down",
+        Filter_filter_w_first_rel_reflexive_self_down
+    },
+    {
+        "filter_w_first_rel_non_traversable",
+        Filter_filter_w_first_rel_non_traversable
     },
     {
         "term_w_id",
@@ -11920,7 +11965,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        278,
+        287,
         Filter_testcases
     },
     {

@@ -160,13 +160,13 @@ void flecs_rule_set_vars(
 
     if (flags_1st & EcsRuleIsVar) {
         ecs_var_id_t var = op->first.var;
-        if (op->written & (1 << var)) {
+        if (op->written & (1ull << var)) {
             vars[var].entity = first;
         }
     }
     if (flags_2nd & EcsRuleIsVar) {
         ecs_var_id_t var = op->second.var;
-        if (op->written & (1 << var)) {
+        if (op->written & (1ull << var)) {
             vars[var].entity = second;
         }
     }
@@ -376,7 +376,6 @@ repeat:
             }
 
             if (!(op->flags & EcsRuleIsSelf)) {
-                redo = true;
                 goto repeat;
             }
 
@@ -610,7 +609,8 @@ bool flecs_rule_trav_unknown_src_up_fixed_second(
     if (!redo) {
         ecs_record_t *r_second = flecs_entities_get(world, second);
         bool traversable = r_second && r_second->row & EcsEntityIsTraversable;
-        if (!traversable) {
+        bool reflexive = op->match_flags & EcsTermReflexive;
+        if (!traversable && !reflexive) {
             trav_ctx->cache.id = 0;
 
             /* If there's no record for the entity, it can't have a subtree so
@@ -954,10 +954,10 @@ bool flecs_rule_union(
     ecs_rule_run_ctx_t *ctx)
 {
     if (!redo) {
-        ctx->jump = ctx->op_index + 1;
+        ctx->jump = flecs_itolbl(ctx->op_index + 1);
         return true;
     } else {
-        ecs_rule_lbl_t next = ctx->prev_index + 1;
+        ecs_rule_lbl_t next = flecs_itolbl(ctx->prev_index + 1);
         if (next == op->next) {
             return false;
         }
@@ -1251,7 +1251,7 @@ void flecs_rule_iter_init(
                 ecs_var_id_t var_id = rule->src_vars[i];
                 ecs_rule_var_t *var = &rule->vars[var_id];
 
-                if (!(it_written & (1 << var_id)) || 
+                if (!(it_written & (1ull << var_id)) || 
                     (var->kind == EcsVarTable) || (var->table_id == EcsVarNone)) 
                 {
                     continue;
@@ -1261,7 +1261,7 @@ void flecs_rule_iter_init(
                 ecs_var_t *tvar = &vars[var->table_id];
                 tvar->range = flecs_range_from_entity(
                     world, vars[var_id].entity);
-                rit->written[0] |= (1 << var->table_id); /* Mark as written */
+                rit->written[0] |= (1ull << var->table_id); /* Mark as written */
             }
         }
     }

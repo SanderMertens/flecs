@@ -2991,3 +2991,379 @@ void RulesComponentInheritance_1_var_src_not_written() {
 
     ecs_fini(world);
 }
+
+void RulesComponentInheritance_first_self() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warlock:self:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self:(e2)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_first_down() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:down:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warlock:down:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:down:(e2)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_first_self_down() {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self|down:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warlock:self|down:(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self|down:(e2)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_first_rel_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Warrior);
+    ECS_ENTITY(world, Warlock, (Rel, Warrior));
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+
+    ecs_log_set_level(-4);
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Warrior:self(Rel):(e1)"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_first_rel_down() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Warrior);
+    ECS_ENTITY(world, Warlock, (Rel, Warrior));
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:down(Rel):(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warlock:down(Rel):(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:down(Rel):(e2)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_first_rel_self_down() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_TAG(world, Warrior);
+    ECS_ENTITY(world, Warlock, (Rel, Warrior));
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Warrior);
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self|down(Rel):(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warlock:self|down(Rel):(e1)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warlock, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e1, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    {
+        ecs_rule_t *r = ecs_rule(world, {
+            .expr = "Warrior:self|down(Rel):(e2)"
+        });
+
+        test_assert(r != NULL);
+
+        {
+            ecs_iter_t it = ecs_rule_iter(world, r);
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(0, it.count);
+            test_uint(Warrior, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_uint(e2, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_rule_next(&it));
+        }
+
+        ecs_rule_fini(r);
+    }
+
+    ecs_fini(world);
+}

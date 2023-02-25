@@ -3699,17 +3699,155 @@ void RulesBasic_instanced_mixed_src() {
 }
 
 void RulesBasic_in_term() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[in] Position(ent)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ent, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_readonly(&it, 1));
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
 }
 
 void RulesBasic_out_term() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[out] Position(ent)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ent, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_readonly(&it, 1));
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
 }
 
 void RulesBasic_inout_term() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[inout] Position(ent)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ent, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_readonly(&it, 1));
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
 }
 
 void RulesBasic_nodata_term() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[none] Position(ent)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ent, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_readonly(&it, 1));
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p == NULL);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
 }

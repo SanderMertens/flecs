@@ -72,6 +72,7 @@ void flecs_rule_fini(
     }
 
     ecs_os_free(rule->ops);
+    ecs_os_free(rule->src_vars);
     flecs_name_index_fini(&rule->tvar_index);
     flecs_name_index_fini(&rule->evar_index);
     ecs_filter_fini(&rule->filter);
@@ -122,6 +123,7 @@ ecs_rule_t* ecs_rule_init(
 
     return result;
 error:
+    ecs_rule_fini(result);
     return NULL;
 }
 
@@ -248,10 +250,12 @@ char* ecs_rule_str_w_profile(
 
         ecs_strbuf_appendch(&buf, '\n');
     }
-    
+
+#ifdef FLECS_LOG    
     char *str = ecs_strbuf_get(&buf);
     flecs_colorize_buf(str, true, &buf);
     ecs_os_free(str);
+#endif
     return ecs_strbuf_get(&buf);
 }
 
