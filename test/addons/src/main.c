@@ -646,6 +646,22 @@ void RulesVariables_2_cycle_pair_w_var_var_this(void);
 void RulesVariables_2_cycle_pair_ent_var_var(void);
 void RulesVariables_2_cycle_pair_ent_this_var(void);
 void RulesVariables_2_cycle_pair_ent_var_this(void);
+void RulesVariables_parse_0_var(void);
+void RulesVariables_parse_1_var(void);
+void RulesVariables_parse_2_vars(void);
+void RulesVariables_parse_0_var_paren(void);
+void RulesVariables_parse_1_var_paren(void);
+void RulesVariables_parse_2_vars_paren(void);
+void RulesVariables_parse_1_vars_w_path(void);
+void RulesVariables_parse_missing_close_paren(void);
+void RulesVariables_parse_missing_open_paren(void);
+void RulesVariables_parse_missing_value(void);
+void RulesVariables_parse_0_var_w_spaces(void);
+void RulesVariables_parse_1_var_w_spaces(void);
+void RulesVariables_parse_2_vars_w_spaces(void);
+void RulesVariables_parse_0_var_paren_w_spaces(void);
+void RulesVariables_parse_1_var_paren_w_spaces(void);
+void RulesVariables_parse_2_vars_paren_w_spaces(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -3659,6 +3675,70 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "2_cycle_pair_ent_var_this",
         RulesVariables_2_cycle_pair_ent_var_this
+    },
+    {
+        "parse_0_var",
+        RulesVariables_parse_0_var
+    },
+    {
+        "parse_1_var",
+        RulesVariables_parse_1_var
+    },
+    {
+        "parse_2_vars",
+        RulesVariables_parse_2_vars
+    },
+    {
+        "parse_0_var_paren",
+        RulesVariables_parse_0_var_paren
+    },
+    {
+        "parse_1_var_paren",
+        RulesVariables_parse_1_var_paren
+    },
+    {
+        "parse_2_vars_paren",
+        RulesVariables_parse_2_vars_paren
+    },
+    {
+        "parse_1_vars_w_path",
+        RulesVariables_parse_1_vars_w_path
+    },
+    {
+        "parse_missing_close_paren",
+        RulesVariables_parse_missing_close_paren
+    },
+    {
+        "parse_missing_open_paren",
+        RulesVariables_parse_missing_open_paren
+    },
+    {
+        "parse_missing_value",
+        RulesVariables_parse_missing_value
+    },
+    {
+        "parse_0_var_w_spaces",
+        RulesVariables_parse_0_var_w_spaces
+    },
+    {
+        "parse_1_var_w_spaces",
+        RulesVariables_parse_1_var_w_spaces
+    },
+    {
+        "parse_2_vars_w_spaces",
+        RulesVariables_parse_2_vars_w_spaces
+    },
+    {
+        "parse_0_var_paren_w_spaces",
+        RulesVariables_parse_0_var_paren_w_spaces
+    },
+    {
+        "parse_1_var_paren_w_spaces",
+        RulesVariables_parse_1_var_paren_w_spaces
+    },
+    {
+        "parse_2_vars_paren_w_spaces",
+        RulesVariables_parse_2_vars_paren_w_spaces
     }
 };
 
@@ -5551,7 +5631,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        74,
+        90,
         RulesVariables_testcases
     },
     {

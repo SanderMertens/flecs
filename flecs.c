@@ -37036,6 +37036,7 @@ void flecs_rule_compile(
  * @brief User facing API for rules.
  */
 
+#include <ctype.h>
 
 #ifdef FLECS_RULES
 
@@ -37295,6 +37296,98 @@ char* ecs_rule_str(
     const ecs_rule_t *rule)
 {
     return ecs_rule_str_w_profile(rule, NULL);
+}
+
+const char* ecs_rule_parse_vars(
+    ecs_rule_t *rule,
+    ecs_iter_t *it,
+    const char *expr)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+    const char *ptr = expr;
+    bool paren = false;
+
+    const char *name = NULL;
+    if (rule->filter.entity) {
+        name = ecs_get_name(rule->world, rule->filter.entity);
+    }
+
+    ptr = ecs_parse_ws_eol(ptr);
+    if (!ptr[0]) {
+        return ptr;
+    }
+
+    if (ptr[0] == '(') {
+        paren = true;
+        ptr = ecs_parse_ws_eol(ptr + 1);
+        if (ptr[0] == ')') {
+            return ptr + 1;
+        }
+    }
+
+    do {
+        ptr = ecs_parse_ws_eol(ptr);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        int var = ecs_rule_find_var(rule, token);
+        if (var == -1) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unknown variable '%s'", token);
+            return NULL;
+        }
+
+        ptr = ecs_parse_ws_eol(ptr);
+        if (ptr[0] != ':') {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "missing ':'");
+            return NULL;
+        }
+
+        ptr = ecs_parse_ws_eol(ptr + 1);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+
+        ecs_entity_t val = ecs_lookup_fullpath(rule->world, token);
+        if (!val) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unresolved entity '%s'", token);
+            return NULL;
+        }
+
+        ecs_iter_set_var(it, var, val);
+
+        ptr = ecs_parse_ws_eol(ptr);
+        if (ptr[0] == ')') {
+            if (!paren) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "unexpected closing parenthesis");
+                return NULL;
+            }
+
+            ptr ++;
+            break;
+        } else if (ptr[0] == ',') {
+            ptr ++;
+        } else if (!ptr[0]) {
+            if (paren) {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "missing closing parenthesis");
+                return NULL;
+            }
+            break;
+        } else {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "expected , or end of string");
+            return NULL;
+        }
+    } while (true);
+
+    return ptr;
 }
 
 #endif
@@ -38717,6 +38810,7 @@ void flecs_rule_iter_init(
             }
         }
     }
+    flecs_iter_validate(it);
 }
 
 bool ecs_rule_next(
@@ -38754,8 +38848,6 @@ bool ecs_rule_next_instanced(
         }
         flecs_rule_iter_init(rule, it, rit);
     }
-
-    flecs_iter_validate(it);
 
     do {
         op_index = rit->op;
@@ -38845,8 +38937,7 @@ void flecs_rule_iter_fini(
     int32_t var_count = rit->rule->var_count;
 
 #ifdef FLECS_DEBUG
-    const ecs_rule_t *rule = rit->rule;
-    if (rule->filter.flags & EcsFilterProfile) {
+    if (it->flags & EcsFilterProfile) {
         char *str = ecs_rule_str_w_profile(rit->rule, it);
         printf("%s\n", str);
         ecs_os_free(str);
@@ -39317,7 +39408,6 @@ const char* ecs_parse_token(
     return ptr;
 }
 
-static
 const char* ecs_parse_identifier(
     const char *name,
     const char *expr,

@@ -43,6 +43,13 @@ FLECS_API
 const char* ecs_parse_ws_eol(
     const char *ptr);
 
+/** Utility function to parse an identifier */
+const char* ecs_parse_identifier(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token_out);
+
 /** Parse digit.
  * This function will parse until the first non-digit character is found. The
  * provided expression must contain at least one digit character.
