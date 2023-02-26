@@ -107,7 +107,6 @@ ecs_rule_t* ecs_rule_init(
         goto error;
     }
 
-    result->world = world;
     result->iterable.init = flecs_rule_iter_mixin_init;
 
     /* Compile filter to operations */
@@ -148,10 +147,12 @@ int32_t flecs_rule_op_ref_str(
             ecs_strbuf_appendstr(buf, var->name);
         } else {
             if (var->id) {
+#ifdef FLECS_DEBUG
                 if (var->label) {
                     ecs_strbuf_appendstr(buf, var->label);
                     ecs_strbuf_appendch(buf, '\'');
                 }
+#endif
                 ecs_strbuf_append(buf, "%d", var->id);
             } else {
                 ecs_strbuf_appendlit(buf, "this");
@@ -163,7 +164,7 @@ int32_t flecs_rule_op_ref_str(
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsRuleIsEntity) {
-        char *path = ecs_get_fullpath(rule->world, ref->entity);
+        char *path = ecs_get_fullpath(rule->filter.world, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
         ecs_strbuf_appendlit(buf, "#[reset]");
@@ -271,13 +272,16 @@ const char* ecs_rule_parse_vars(
     ecs_iter_t *it,
     const char *expr)
 {
+    ecs_poly_assert(rule, ecs_rule_t);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL)
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = expr;
     bool paren = false;
 
     const char *name = NULL;
     if (rule->filter.entity) {
-        name = ecs_get_name(rule->world, rule->filter.entity);
+        name = ecs_get_name(rule->filter.world, rule->filter.entity);
     }
 
     ptr = ecs_parse_ws_eol(ptr);
@@ -320,7 +324,7 @@ const char* ecs_rule_parse_vars(
             return NULL;
         }
 
-        ecs_entity_t val = ecs_lookup_fullpath(rule->world, token);
+        ecs_entity_t val = ecs_lookup_fullpath(rule->filter.world, token);
         if (!val) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unresolved entity '%s'", token);
@@ -356,6 +360,8 @@ const char* ecs_rule_parse_vars(
     } while (true);
 
     return ptr;
+error:
+    return NULL;
 }
 
 #endif

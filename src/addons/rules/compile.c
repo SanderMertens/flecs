@@ -31,6 +31,12 @@ ecs_var_id_t flecs_utovar(uint64_t val) {
     return flecs_uto(uint8_t, val);
 }
 
+#ifdef FLECS_DEBUG
+#define flecs_set_var_label(var, lbl) (var)->label = lbl
+#else
+#define flecs_set_var_label(var, lbl)
+#endif
+
 bool flecs_rule_is_written(
     ecs_var_id_t var_id,
     uint64_t written)
@@ -153,6 +159,9 @@ int32_t ecs_rule_find_var(
                 var_id = 0;
             }
         }
+        if (var_id == EcsVarNone) {
+            return -1;
+        }
     }
     return (int32_t)var_id;
 }
@@ -236,10 +245,10 @@ ecs_var_id_t flecs_rule_add_var(
         rule->var_count ++;
     }
 
-    var->kind = kind;
+    var->kind = flecs_ito(int8_t, kind);
     var->name = name;
-    var->label = NULL;
     var->table_id = var_id;
+    flecs_set_var_label(var, NULL);
 
     if (name) {
         flecs_name_index_init_if(var_index, NULL);
@@ -408,7 +417,7 @@ void flecs_rule_discover_vars(
 
     rule_vars[0].kind = EcsVarTable;
     rule_vars[0].name = NULL;
-    rule_vars[0].label = NULL;
+    flecs_set_var_label(&rule_vars[0], NULL);
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
     var_names[0] = (char*)rule_vars[0].name;
@@ -785,7 +794,7 @@ void flecs_rule_insert_unconstrained_transitive(
      * list of targets without constraining the variable of the term, which
      * needs to stay variable to find all transitive relationships for a src. */
     ecs_var_id_t tgt = flecs_rule_add_var(rule, NULL, NULL, EcsVarEntity);
-    rule->vars[tgt].label = rule->vars[op->second.var].name;
+    flecs_set_var_label(&rule->vars[tgt], rule->vars[op->second.var].name);
 
     /* First, find ids to start traversal from. This fixes op.second. */
     ecs_rule_op_t find_ids = {0};
@@ -825,11 +834,8 @@ void flecs_rule_insert_inheritance(
     /* Anonymous variable to store the resolved component ids */
     ecs_var_id_t tvar = flecs_rule_add_var(rule, NULL, NULL, EcsVarTable);
     ecs_var_id_t evar = flecs_rule_add_var(rule, NULL, NULL, EcsVarEntity);
-
-    ecs_entity_t id = term->first.id;
-    const char *lbl = ecs_get_name(rule->world, id);
-    rule->vars[tvar].label = lbl;
-    rule->vars[evar].label = lbl;
+    flecs_set_var_label(&rule->vars[tvar], ecs_get_name(rule->filter.world, term->first.id));
+    flecs_set_var_label(&rule->vars[evar], ecs_get_name(rule->filter.world, term->first.id));
 
     ecs_rule_op_t trav_op = {0};
     trav_op.kind = EcsRuleTrav;
@@ -865,6 +871,8 @@ void flecs_rule_compile_term_id(
     ecs_var_kind_t kind,
     ecs_rule_compile_ctx_t *ctx)
 {
+    (void)world;
+
     if (!ecs_term_id_is_set(term_id)) {
         return;
     }
@@ -882,7 +890,8 @@ void flecs_rule_compile_term_id(
                 ref->var = flecs_rule_add_var(rule, NULL, NULL, EcsVarEntity);
             }
             if (is_wildcard) {
-                rule->vars[ref->var].label = ecs_get_name(world, term_id->id);
+                flecs_set_var_label(&rule->vars[ref->var], 
+                    ecs_get_name(world, term_id->id));
             }
         }
         ecs_assert(ref->var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
@@ -1111,10 +1120,6 @@ void flecs_rule_compile_term(
 
     if (term->src.flags & EcsSelf) {
         op.flags |= EcsRuleIsSelf;
-    }
-
-    if (term->src.flags & EcsUp) {
-        op.trav = term->src.trav;
     }
 
     flecs_rule_op_insert(&op, ctx);
