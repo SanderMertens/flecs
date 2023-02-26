@@ -35890,6 +35890,15 @@ bool flecs_ref_is_written(
 }
 
 static
+bool flecs_rule_var_is_anonymous(
+    const ecs_rule_t *rule,
+    ecs_var_id_t var_id)
+{
+    ecs_rule_var_t *var = &rule->vars[var_id];
+    return var->name && var->name[0] == '_';
+}
+
+static
 ecs_var_id_t flecs_rule_find_var_id(
     const ecs_rule_t *rule,
     const char *name,
@@ -37013,7 +37022,10 @@ void flecs_rule_compile(
                 ecs_var_id_t var_id = flecs_rule_find_var_id(rule, var->name,
                     EcsVarEntity);
                 if (!flecs_rule_is_written(var_id, ctx.written)) {
-                    flecs_rule_insert_each(var->id, var_id, &ctx, false);
+                    /* Skip anonymous variables */
+                    if (!flecs_rule_var_is_anonymous(rule, var_id)) {
+                        flecs_rule_insert_each(var->id, var_id, &ctx, false);
+                    }
                 }
             }
         }
@@ -37022,9 +37034,26 @@ void flecs_rule_compile(
     /* If rule contains non-This variables as term source, build lookup array */
     if (rule->src_vars) {
         ecs_assert(rule->vars != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_rule_op_t set_vars = {0};
-        set_vars.kind = EcsRuleSetVars;
-        flecs_rule_op_insert(&set_vars, &ctx);
+        bool only_anonymous = true;
+
+        for (i = 0; i < filter->field_count; i ++) {
+            ecs_var_id_t var_id = rule->src_vars[i];
+            if (!var_id) {
+                continue;
+            }
+
+            if (!flecs_rule_var_is_anonymous(rule, var_id)) {
+                only_anonymous = false;
+                break;
+            }
+        }
+
+        /* Don't insert setvar instruction if all vars are anonymous */
+        if (!only_anonymous) {
+            ecs_rule_op_t set_vars = {0};
+            set_vars.kind = EcsRuleSetVars;
+            flecs_rule_op_insert(&set_vars, &ctx);
+        }
 
         for (i = 0; i < filter->field_count; i ++) {
             ecs_var_id_t var_id = rule->src_vars[i];
