@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         .iter(Sys);
 
     ecs.system("GameSystem")
-        .kind(flecs::OnUpdate)
+        .kind(Update)
         .iter(Sys);
 
     // Run pipeline
