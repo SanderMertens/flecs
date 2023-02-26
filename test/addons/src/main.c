@@ -570,6 +570,10 @@ void RulesBasic_in_term(void);
 void RulesBasic_out_term(void);
 void RulesBasic_inout_term(void);
 void RulesBasic_nodata_term(void);
+void RulesBasic_find_this_lowercase(void);
+void RulesBasic_find_this_uppercase(void);
+void RulesBasic_find_this_tgt_lowercase(void);
+void RulesBasic_find_this_tgt_uppercase(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -3376,6 +3380,22 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "nodata_term",
         RulesBasic_nodata_term
+    },
+    {
+        "find_this_lowercase",
+        RulesBasic_find_this_lowercase
+    },
+    {
+        "find_this_uppercase",
+        RulesBasic_find_this_uppercase
+    },
+    {
+        "find_this_tgt_lowercase",
+        RulesBasic_find_this_tgt_lowercase
+    },
+    {
+        "find_this_tgt_uppercase",
+        RulesBasic_find_this_tgt_uppercase
     }
 };
 
@@ -5624,7 +5644,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        83,
+        87,
         RulesBasic_testcases
     },
     {
