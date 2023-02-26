@@ -35549,7 +35549,7 @@ typedef ecs_flags64_t ecs_write_flags_t;
 
 #define EcsRuleMaxVarCount      (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
-#define EcsThisName             "This"
+#define EcsThisName             "this"
 
 /* -- Variable types -- */
 typedef enum {
@@ -35905,7 +35905,12 @@ ecs_var_id_t flecs_rule_find_var_id(
     ecs_var_kind_t kind)
 {
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+
+    /* Backwards compatibility */
+    if (!ecs_os_strcmp(name, "This")) {
+        name = "this";
+    }
+
     if (kind == EcsVarTable) {
         if (!ecs_os_strcmp(name, EcsThisName)) {
             if (rule->has_table_this) {
@@ -35959,6 +35964,9 @@ int32_t ecs_rule_find_var(
     if (var_id == EcsVarNone) {
         if (rule->filter.flags & EcsFilterMatchThis) {
             if (!ecs_os_strcmp(name, "This")) {
+                name = "this";
+            }
+            if (!ecs_os_strcmp(name, EcsThisName)) {
                 var_id = 0;
             }
         }
@@ -37783,10 +37791,8 @@ void flecs_rule_var_set_entity(
     ecs_assert(flecs_rule_is_written(var_id, op->written), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_var_t *var = &ctx->vars[var_id];
-    if (var->entity != entity) {
-        var->range.table = NULL;
-        var->entity = entity;
-    }
+    var->range.table = NULL;
+    var->entity = entity;
 }
 
 static

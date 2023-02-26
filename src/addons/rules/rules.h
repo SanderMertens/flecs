@@ -13,7 +13,7 @@ typedef ecs_flags64_t ecs_write_flags_t;
 
 #define EcsRuleMaxVarCount      (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
-#define EcsThisName             "This"
+#define EcsThisName             "this"
 
 /* -- Variable types -- */
 typedef enum {

@@ -165,10 +165,8 @@ void flecs_rule_var_set_entity(
     ecs_assert(flecs_rule_is_written(var_id, op->written), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_var_t *var = &ctx->vars[var_id];
-    if (var->entity != entity) {
-        var->range.table = NULL;
-        var->entity = entity;
-    }
+    var->range.table = NULL;
+    var->entity = entity;
 }
 
 static

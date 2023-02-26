@@ -3851,3 +3851,83 @@ void RulesBasic_nodata_term() {
 
     ecs_fini(world);
 }
+
+void RulesBasic_find_this_lowercase() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Rel($this)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "this");
+    test_assert(this_var != -1);
+    test_assert(this_var == 0);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_find_this_uppercase() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Rel($this)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "This");
+    test_assert(this_var != -1);
+    test_assert(this_var == 0);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_find_this_tgt_lowercase() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Rel(*, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "this");
+    test_assert(this_var != -1);
+    test_assert(this_var != 0);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_find_this_tgt_uppercase() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Rel(*, $This)"
+    });
+
+    test_assert(r != NULL);
+
+    int this_var = ecs_rule_find_var(r, "this");
+    test_assert(this_var != -1);
+    test_assert(this_var != 0);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

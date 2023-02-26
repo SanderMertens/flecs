@@ -584,7 +584,11 @@
                 "in_term",
                 "out_term",
                 "inout_term",
-                "nodata_term"
+                "nodata_term",
+                "find_this_lowercase",
+                "find_this_uppercase",
+                "find_this_tgt_lowercase",
+                "find_this_tgt_uppercase"
             ]
         }, {
             "id": "RulesVariables",
