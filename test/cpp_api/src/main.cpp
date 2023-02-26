@@ -947,6 +947,7 @@ void ImplicitComponents_implicit_const(void);
 void ImplicitComponents_implicit_ref(void);
 void ImplicitComponents_implicit_ptr(void);
 void ImplicitComponents_implicit_const_ref(void);
+void ImplicitComponents_vector_elem_type(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -4829,6 +4830,10 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "implicit_const_ref",
         ImplicitComponents_implicit_const_ref
+    },
+    {
+        "vector_elem_type",
+        ImplicitComponents_vector_elem_type
     }
 };
 
@@ -5822,7 +5827,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        27,
+        28,
         ImplicitComponents_testcases
     },
     {

@@ -27934,7 +27934,7 @@ inline flecs::entity world::vector(flecs::entity_t elem_id) {
 
 template <typename T>
 inline flecs::entity world::vector() {
-    return this->vector(_::cpp_type<T>::id());
+    return this->vector(_::cpp_type<T>::id(m_world));
 }
 
 } // namespace flecs
