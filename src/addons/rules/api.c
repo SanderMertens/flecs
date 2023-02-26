@@ -24,6 +24,8 @@ const char* flecs_rule_op_str(
 {
     switch(kind) {
     case EcsRuleAnd:          return "and     ";
+    case EcsRuleAndAny:       return "andany  ";
+    case EcsRuleWith:         return "with    ";
     case EcsRuleTrav:         return "trav    ";
     case EcsRuleIdsRight:     return "idsr    ";
     case EcsRuleIdsLeft:      return "idsl    ";
@@ -34,6 +36,7 @@ const char* flecs_rule_op_str(
     case EcsRuleNot:          return "not     ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
+    case EcsRuleSetFixed:     return "setfix  ";
     case EcsRuleContain:      return "contain ";
     case EcsRulePairEq:       return "pair_eq ";
     case EcsRuleSetCond:      return "setcond ";

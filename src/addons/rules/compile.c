@@ -11,6 +11,8 @@
 
 static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
+    [EcsRuleAndAny] = true,
+    [EcsRuleWith] = true,
     [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
     [EcsRulePairEq] = true,
@@ -1001,21 +1003,28 @@ void flecs_rule_compile_term(
     ecs_term_t *term,
     ecs_rule_compile_ctx_t *ctx)
 {
+    bool first_term = term == rule->filter.terms;
+    bool first_is_var = term->first.flags & EcsIsVariable;
+    bool second_is_var = term->second.flags & EcsIsVariable;
+    bool src_is_var = term->src.flags & EcsIsVariable;
+    bool cond_write = term->oper == EcsOptional;
     ecs_rule_op_t op = {0};
-    op.kind = EcsRuleAnd; /* Default instruction is the And operator */
+
+    /* Default instruction for And operators. If the source is fixed (like for
+     * singletons or terms with an entity source), use With, which like And but
+     * just matches against a source (vs. finding a source). */
+    op.kind = src_is_var ? EcsRuleAnd : EcsRuleWith;
     op.field_index = flecs_ito(int8_t, term->field_index);
 
     /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
+    } else {
+        if (term->flags & EcsTermMatchAny || term->flags & EcsTermMatchAnySrc) {
+            op.kind = EcsRuleAndAny;
+        }
     }
-
-    bool first_term = term == rule->filter.terms;
-    bool first_is_var = term->first.flags & EcsIsVariable;
-    bool second_is_var = term->second.flags & EcsIsVariable;
-    bool src_is_var = term->src.flags & EcsIsVariable;
-    bool cond_write = term->oper == EcsOptional;
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
@@ -1214,8 +1223,19 @@ void flecs_rule_compile(
     /* Find all variables defined in query */
     flecs_rule_discover_vars(stage, rule);
 
-    /* Compile query terms to instructions */
+    /* If rule contains fixed source terms, insert operation to set sources */
     int32_t i, count = filter->term_count;
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (term->src.flags & EcsIsEntity) {
+            ecs_rule_op_t set_fixed = {0};
+            set_fixed.kind = EcsRuleSetFixed;
+            flecs_rule_op_insert(&set_fixed, &ctx);
+            break;
+        }
+    }
+
+    /* Compile query terms to instructions */
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
         flecs_rule_compile_term(world, rule, term, &ctx);

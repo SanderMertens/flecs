@@ -34,8 +34,10 @@ typedef struct ecs_rule_var_t {
 
 /* -- Instruction kinds -- */
 typedef enum {
-    EcsRuleAnd,            /* And operator: find or match id against table */
-    EcsRuleTrav,           /* EcsRuleAnd with support for transitive/reflexive queries */
+    EcsRuleAnd,            /* And operator: find or match id against variable source */
+    EcsRuleWith,           /* Match id against fixed or variable source */
+    EcsRuleAndAny,         /* And operation with support for matching Any src/id */
+    EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
     EcsRuleEach,           /* Iterate entities in table, populate entity variable */
@@ -45,6 +47,7 @@ typedef enum {
     EcsRuleNot,            /* Sets iterator state after term was not matched */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
+    EcsRuleSetFixed,       /* Set fixed source entity ids */
     EcsRuleContain,        /* Test if table contains entity */
     EcsRulePairEq,         /* Test if both elements of pair are the same */
     EcsRuleSetCond,        /* Set conditional value for EcsRuleJmpCondFalse */
@@ -89,7 +92,8 @@ typedef struct ecs_rule_op_t {
 typedef struct {
     ecs_id_record_t *idr;
     ecs_table_cache_iter_t it;
-    int32_t remaining;
+    int16_t column;
+    int16_t remaining;
 } ecs_rule_and_ctx_t;
 
  /* Each context */
@@ -119,10 +123,10 @@ typedef struct {
 /* Trav context */
 typedef struct {
     ecs_rule_and_ctx_t and;
-    ecs_trav_cache_t cache;
     int32_t index;
     int32_t offset;
     int32_t count;
+    ecs_trav_cache_t cache;
     bool yield_reflexive;
 } ecs_rule_trav_ctx_t;
 
