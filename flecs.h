@@ -299,7 +299,8 @@ extern "C" {
 #define EcsIterEntityOptional          (1u << 5u)  /* Treat terms with entity subject as optional */
 #define EcsIterNoResults               (1u << 6u)  /* Iterator has no results */
 #define EcsIterIgnoreThis              (1u << 7u)  /* Only evaluate non-this terms */
-#define EcsIterMatchVar                (1u << 8u)
+#define EcsIterMatchVar                (1u << 8u)  
+#define EcsIterProfile                 (1u << 10u) /* Profile iterator performance */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Filter flags (used by ecs_filter_t::flags)
@@ -321,7 +322,7 @@ extern "C" {
 #define EcsFilterNoData                (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
-#define EcsFilterProfile               (1u << 10u) /* Profile filter performance */
+#define EcsIterProfile               (1u << 10u) /* Profile filter performance */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13923,7 +13924,10 @@ FLECS_API
 char* ecs_rule_str(
     const ecs_rule_t *rule);
 
-/** Convert rule to string with profile. 
+/** Convert rule to string with profile.
+ * To use this you must set the EcsIterProfile flag on an iterator before 
+ * starting uteration:
+ *   it.flags |= EcsIterProfile 
  *
  * @param rule The rule.
  * @return The string
@@ -13939,12 +13943,16 @@ char* ecs_rule_str_w_profile(
  *   var_a: value, var_b: value
  * 
  * The key-value list may optionally be enclosed in parenthesis.
+ * 
+ * @param rule The rule.
+ * @param it The iterator for which to set the variables.
+ * @param expr The key-value expression.
  */
 FLECS_API
 const char* ecs_rule_parse_vars(
     ecs_rule_t *rule,
     ecs_iter_t *it,
-    const char *param_list);
+    const char *expr);
 
 #ifdef __cplusplus
 }

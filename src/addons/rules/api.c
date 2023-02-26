@@ -32,7 +32,6 @@ const char* flecs_rule_op_str(
     case EcsRuleUnion:        return "union   ";
     case EcsRuleEnd:          return "end     ";
     case EcsRuleNot:          return "not     ";
-    case EcsRuleOption:       return "option  ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleContain:      return "contain ";

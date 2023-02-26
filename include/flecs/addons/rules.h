@@ -192,7 +192,10 @@ FLECS_API
 char* ecs_rule_str(
     const ecs_rule_t *rule);
 
-/** Convert rule to string with profile. 
+/** Convert rule to string with profile.
+ * To use this you must set the EcsIterProfile flag on an iterator before 
+ * starting uteration:
+ *   it.flags |= EcsIterProfile 
  *
  * @param rule The rule.
  * @return The string
@@ -208,12 +211,16 @@ char* ecs_rule_str_w_profile(
  *   var_a: value, var_b: value
  * 
  * The key-value list may optionally be enclosed in parenthesis.
+ * 
+ * @param rule The rule.
+ * @param it The iterator for which to set the variables.
+ * @param expr The key-value expression.
  */
 FLECS_API
 const char* ecs_rule_parse_vars(
     ecs_rule_t *rule,
     ecs_iter_t *it,
-    const char *param_list);
+    const char *expr);
 
 #ifdef __cplusplus
 }

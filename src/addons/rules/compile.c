@@ -256,7 +256,7 @@ ecs_var_id_t flecs_rule_add_var(
         var = ecs_vector_add(vars, ecs_rule_var_t);
         var->id = flecs_itovar(ecs_vector_count(*vars));
     } else {
-        ecs_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
         var = &rule->vars[rule->var_count];
         var->id = flecs_itovar(rule->var_count);
         rule->var_count ++;
@@ -290,6 +290,7 @@ ecs_var_id_t flecs_rule_add_var_for_term_id(
     return flecs_rule_add_var(rule, name, vars, kind);
 }
 
+static
 void flecs_rule_discover_vars(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
@@ -425,8 +426,11 @@ void flecs_rule_discover_vars(
     rule->vars = rule_vars;
     rule->var_count = var_count;
     rule->var_pub_count = var_count;
-    rule->var_size = var_count + anonymous_count;
     rule->has_table_this = !entity_before_table_this;
+
+#ifdef FLECS_DEBUG
+    rule->var_size = var_count + anonymous_count;
+#endif
 
     char **var_names = ECS_ELEM(rule_vars, ECS_SIZEOF(ecs_rule_var_t), 
         var_count + anonymous_count);
