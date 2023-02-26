@@ -373,22 +373,25 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
-    ecs_map_init_if(&impl->reply_cache, NULL);
-    ecs_rest_cached_t *cached = ecs_map_get_deref(&impl->reply_cache, 
-        ecs_rest_cached_t, q);
-    if (cached) {
-        if ((impl->time - cached->time) > FLECS_REST_CACHE_TIMEOUT) {
-            ecs_os_free(cached->content);
+    const char *vars = ecs_http_get_param(req, "vars");
+    ecs_rest_cached_t *cached = NULL;
+    if (!vars) {
+        ecs_map_init_if(&impl->reply_cache, NULL);
+        cached = ecs_map_get_deref(&impl->reply_cache, ecs_rest_cached_t, q);
+        if (cached) {
+            if ((impl->time - cached->time) > FLECS_REST_CACHE_TIMEOUT) {
+                ecs_os_free(cached->content);
+            } else {
+                /* Cache hit */
+                ecs_strbuf_appendstr_zerocpyn_const(
+                    &reply->body, cached->content, cached->content_length);
+                ecs_os_linc(&ecs_rest_query_name_from_cache_count);
+                return true;
+            }
         } else {
-            /* Cache hit */
-            ecs_strbuf_appendstr_zerocpyn_const(
-                &reply->body, cached->content, cached->content_length);
-            ecs_os_linc(&ecs_rest_query_name_from_cache_count);
-            return true;
+            cached = ecs_map_insert_alloc_t(
+                &impl->reply_cache, ecs_rest_cached_t, q);
         }
-    } else {
-        cached = ecs_map_insert_alloc_t(
-            &impl->reply_cache, ecs_rest_cached_t, q);
     }
 
     /* Cache miss */
@@ -403,14 +406,45 @@ bool flecs_rest_reply_existing_query(
 
     ecs_iter_t it;
     ecs_iter_poly(world, poly->poly, &it, NULL);
+
+    ecs_dbg_2("rest: request query '%s'", q);
+    bool prev_color = ecs_log_enable_colors(false);
+    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    if (vars) {
+        if (!ecs_poly_is(poly->poly, ecs_rule_t)) {
+            flecs_reply_error(reply, 
+                "variables are only supported for rule queries");
+            reply->code = 400;
+            ecs_os_linc(&ecs_rest_query_name_error_count);
+            return true;
+        }
+        if (ecs_rule_parse_vars(poly->poly, &it, vars) == NULL) {
+            char *err = flecs_rest_get_captured_log();
+            char *escaped_err = ecs_astresc('"', err);
+            flecs_reply_error(reply, escaped_err);
+            reply->code = 400;
+            ecs_os_linc(&ecs_rest_query_name_error_count);
+            ecs_os_free(escaped_err);
+            ecs_os_free(err);
+            return true;
+        }
+    }
+
     flecs_rest_iter_to_reply(world, req, reply, &it);
 
-    cached->content_length = ecs_strbuf_written(&reply->body);
-    cached->content = ecs_strbuf_get(&reply->body);
-    ecs_strbuf_reset(&reply->body);
-    ecs_strbuf_appendstr_zerocpyn_const(
-        &reply->body, cached->content, cached->content_length);
-    cached->time = impl->time;
+    if (cached) {
+        cached->content_length = ecs_strbuf_written(&reply->body);
+        cached->content = ecs_strbuf_get(&reply->body);
+        ecs_strbuf_reset(&reply->body);
+        ecs_strbuf_appendstr_zerocpyn_const(
+            &reply->body, cached->content, cached->content_length);
+        cached->time = impl->time;
+    }
+
+    ecs_os_api.log_ = prev_log_;
+    ecs_log_enable_colors(prev_color);    
 
     return true;
 }

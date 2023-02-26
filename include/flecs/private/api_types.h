@@ -186,6 +186,8 @@ typedef struct ecs_rule_op_profile_t {
 typedef struct ecs_rule_iter_t {
     const ecs_rule_t *rule;
     struct ecs_var_t *vars;              /* Variable storage */
+    const struct ecs_rule_var_t *rule_vars;
+    const struct ecs_rule_op_t *ops;
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     uint64_t *written;
 

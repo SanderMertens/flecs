@@ -22,12 +22,14 @@ typedef enum {
     EcsVarAny
 } ecs_var_kind_t;
 
-typedef struct {
-    ecs_var_kind_t kind;
+typedef struct ecs_rule_var_t {
+    int8_t kind;
     ecs_var_id_t id;
-    const char *name;
-    const char *label;     /* for debugging */
     ecs_var_id_t table_id; /* id to table variable, if any */
+    const char *name;
+#ifdef FLECS_DEBUG
+    const char *label;     /* for debugging */
+#endif
 } ecs_rule_var_t;
 
 /* -- Instruction kinds -- */
@@ -69,19 +71,18 @@ typedef union {
     ecs_entity_t entity;
 } ecs_rule_ref_t;
 
-typedef struct {
-    uint16_t kind;             /* Instruction kind */
-    ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
-    ecs_rule_lbl_t next;       /* Forwarding label */
-    ecs_rule_lbl_t other;
-    ecs_flags16_t match_flags; /* Flags that modify matching behavior */
+typedef struct ecs_rule_op_t {
+    uint8_t kind;              /* Instruction kind */
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
     int8_t field_index;        /* Query field corresponding with operation */
+    ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
+    ecs_rule_lbl_t next;       /* Forwarding label. Must come after prev */
+    ecs_rule_lbl_t other;
+    ecs_flags16_t match_flags; /* Flags that modify matching behavior */
     ecs_rule_ref_t src;
     ecs_rule_ref_t first;
     ecs_rule_ref_t second;
     ecs_flags64_t written;     /* Bitset with variables written by op */
-    ecs_entity_t trav;
 } ecs_rule_op_t;
 
  /* And context */
@@ -145,7 +146,6 @@ typedef struct {
 } ecs_rule_cond_ctx_t;
 
 typedef struct ecs_rule_op_ctx_t {
-    int32_t sp;
     union {
         ecs_rule_and_ctx_t and;
         ecs_rule_trav_ctx_t trav;
@@ -169,18 +169,20 @@ typedef struct {
     ecs_rule_lbl_t lbl_or;
     ecs_rule_lbl_t lbl_none;
     ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
-} ecs_rule_compile_ctx_t;
+} ecs_rule_compile_ctx_t;    
 
 /* Rule compiler state */
 typedef struct {
-    const ecs_rule_t *rule;
-    ecs_iter_t *it;
-    ecs_rule_iter_t *rit;
-    ecs_rule_op_ctx_t *ctx;
+    uint64_t *written;
     ecs_rule_lbl_t op_index;
     ecs_rule_lbl_t prev_index;
     ecs_rule_lbl_t jump;
-    ecs_stage_t *stage;
+    ecs_world_t *world;
+    ecs_var_t *vars;              /* Variable storage */
+    const ecs_rule_t *rule;
+    const ecs_rule_var_t *rule_vars;
+    ecs_iter_t *it;
+    ecs_rule_op_ctx_t *op_ctx;
 } ecs_rule_run_ctx_t;
 
 typedef struct {
@@ -209,7 +211,6 @@ struct ecs_rule_t {
     int32_t op_count;
 
     /* Mixins */
-    ecs_world_t *world;
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
 };

@@ -508,7 +508,6 @@ struct ecs_stage_t {
     /* Caches for rule creation */
     ecs_vector_t *variables;
     ecs_vector_t *operations;
-    ecs_vector_t *stack;
 };
 
 /* Component monitor */
