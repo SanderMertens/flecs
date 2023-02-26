@@ -35553,16 +35553,16 @@ typedef ecs_flags64_t ecs_write_flags_t;
 
 /* -- Variable types -- */
 typedef enum {
-    EcsVarEntity,
-    EcsVarTable,
-    EcsVarAny
+    EcsVarEntity,          /* Variable that stores an entity id */
+    EcsVarTable,           /* Variable that stores a table */
+    EcsVarAny              /* Used when requesting either entity or table var */
 } ecs_var_kind_t;
 
 typedef struct ecs_rule_var_t {
-    int8_t kind;
-    ecs_var_id_t id;
+    int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable)*/
+    ecs_var_id_t id;       /* variable id */
     ecs_var_id_t table_id; /* id to table variable, if any */
-    const char *name;
+    const char *name;      /* variable name */
 #ifdef FLECS_DEBUG
     const char *label;     /* for debugging */
 #endif
@@ -35570,28 +35570,27 @@ typedef struct ecs_rule_var_t {
 
 /* -- Instruction kinds -- */
 typedef enum {
-    EcsRuleAnd,
-    EcsRuleTrav,
-    EcsRuleIdsRight,
-    EcsRuleIdsLeft,
-    EcsRuleEach,
-    EcsRuleStore,
-    EcsRuleUnion,
-    EcsRuleEnd,
-    EcsRuleNot,
-    EcsRuleOption,
-    EcsRuleSetVars,
-    EcsRuleSetThis,
-    EcsRuleContain,
-    EcsRulePairEq,
-    EcsRuleSetCond,
-    EcsRuleJmpCondFalse,
-    EcsRuleJmpNotSet,
-    EcsRuleYield,
-    EcsRuleNothing /* Must be last */
+    EcsRuleAnd,            /* And operator: find or match id against table */
+    EcsRuleTrav,           /* EcsRuleAnd with support for transitive/reflexive queries */
+    EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
+    EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
+    EcsRuleEach,           /* Iterate entities in table, populate entity variable */
+    EcsRuleStore,          /* Store table or entity in variable */
+    EcsRuleUnion,          /* Combine output of multiple operations */
+    EcsRuleEnd,            /* Used to denote end of EcsRuleUnion block */
+    EcsRuleNot,            /* Sets iterator state after term was not matched */
+    EcsRuleSetVars,        /* Populate it.sources from variables */
+    EcsRuleSetThis,        /* Populate This entity variable */
+    EcsRuleContain,        /* Test if table contains entity */
+    EcsRulePairEq,         /* Test if both elements of pair are the same */
+    EcsRuleSetCond,        /* Set conditional value for EcsRuleJmpCondFalse */
+    EcsRuleJmpCondFalse,   /* Jump if condition is false */
+    EcsRuleJmpNotSet,      /* Jump if variable(s) is not set */
+    EcsRuleYield,          /* Yield result back to application */
+    EcsRuleNothing         /* Must be last */
 } ecs_rule_op_kind_t;
 
-/* Op flags to indicate if reference is entity or variable */
+/* Op flags to indicate if ecs_rule_ref_t is entity or variable */
 #define EcsRuleIsEntity  (1 << 0)
 #define EcsRuleIsVar     (1 << 1)
 #define EcsRuleIsSelf    (1 << 6)
@@ -35601,19 +35600,20 @@ typedef enum {
 #define EcsRuleFirst   2
 #define EcsRuleSecond  4
 
-/* References to variable or entity (resolved during evaluation) */
+/* References to variable or entity */
 typedef union {
     ecs_var_id_t var;
     ecs_entity_t entity;
 } ecs_rule_ref_t;
 
+/* Query instruction */
 typedef struct ecs_rule_op_t {
     uint8_t kind;              /* Instruction kind */
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
     int8_t field_index;        /* Query field corresponding with operation */
     ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
     ecs_rule_lbl_t next;       /* Forwarding label. Must come after prev */
-    ecs_rule_lbl_t other;
+    ecs_rule_lbl_t other;      /* Misc register used for control flow */
     ecs_flags16_t match_flags; /* Flags that modify matching behavior */
     ecs_rule_ref_t src;
     ecs_rule_ref_t first;
@@ -35626,8 +35626,6 @@ typedef struct {
     ecs_id_record_t *idr;
     ecs_table_cache_iter_t it;
     int32_t remaining;
-
-    ecs_table_t *table;
 } ecs_rule_and_ctx_t;
 
  /* Each context */
@@ -35637,9 +35635,7 @@ typedef struct {
 
  /* Setthis context */
 typedef struct {
-    int32_t offset;
-    int32_t count;
-    ecs_table_t *table;
+    ecs_table_range_t range;
 } ecs_rule_setthis_ctx_t;
 
 /* Cache for storing results of downward traversal */
@@ -35671,7 +35667,7 @@ typedef struct {
     ecs_id_record_t *cur;
 } ecs_rule_ids_ctx_t;
 
-/* End context */
+/* End context (used with Union) */
 typedef struct {
     ecs_rule_lbl_t lbl;
 } ecs_rule_ctrlflow_ctx_t;
@@ -35698,6 +35694,8 @@ typedef struct {
     ecs_vector_t *ops;
     ecs_write_flags_t written; /* Bitmask to check which variables have been written */
     ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
+
+    /* Labels used for control flow */
     ecs_rule_lbl_t lbl_union;
     ecs_rule_lbl_t lbl_not;
     ecs_rule_lbl_t lbl_option;
@@ -35707,18 +35705,18 @@ typedef struct {
     ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
 } ecs_rule_compile_ctx_t;    
 
-/* Rule compiler state */
+/* Rule run state */
 typedef struct {
-    uint64_t *written;
-    ecs_rule_lbl_t op_index;
-    ecs_rule_lbl_t prev_index;
-    ecs_rule_lbl_t jump;
-    ecs_world_t *world;
+    uint64_t *written;            /* Bitset to check which variables have been written */
+    ecs_rule_lbl_t op_index;      /* Currently evaluated operation */
+    ecs_rule_lbl_t prev_index;    /* Previously evaluated operation */
+    ecs_rule_lbl_t jump;          /* Set by control flow operations to jump to operation */
     ecs_var_t *vars;              /* Variable storage */
-    const ecs_rule_t *rule;
-    const ecs_rule_var_t *rule_vars;
-    ecs_iter_t *it;
-    ecs_rule_op_ctx_t *op_ctx;
+    ecs_iter_t *it;               /* Iterator */
+    ecs_rule_op_ctx_t *op_ctx;    /* Operation context (stack) */
+    ecs_world_t *world;           /* Reference to world */
+    const ecs_rule_t *rule;       /* Reference to rule */
+    const ecs_rule_var_t *rule_vars; /* Reference to rule variable array */
 } ecs_rule_run_ctx_t;
 
 typedef struct {
@@ -35727,74 +35725,81 @@ typedef struct {
 } ecs_rule_var_cache_t;
 
 struct ecs_rule_t {
-    ecs_header_t hdr;
-    ecs_filter_t filter;
+    ecs_header_t hdr;             /* Poly header */
+    ecs_filter_t filter;          /* Filter */
 
     /* Variables */
-    ecs_rule_var_t *vars;
-    int32_t var_count;
-    int32_t var_pub_count; /* Number of public variables */
-    int32_t var_size;
-    bool has_table_this;
-    ecs_hashmap_t tvar_index;
-    ecs_hashmap_t evar_index;
+    ecs_rule_var_t *vars;         /* Variables */
+    int32_t var_count;            /* Number of variables */
+    int32_t var_pub_count;        /* Number of public variables */
+    bool has_table_this;          /* Does rule have [$this] */
+    ecs_hashmap_t tvar_index;     /* Name index for table variables */
+    ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
-    char **var_names; /* Array with variable names for iterator */
-    ecs_var_id_t *src_vars; /* Array with ids to source variables for fields */
+    char **var_names;             /* Array with variable names for iterator */
+    ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
 
-    /* Operations */
-    ecs_rule_op_t *ops;
-    int32_t op_count;
+    ecs_rule_op_t *ops;           /* Operations */
+    int32_t op_count;             /* Number of operations */
 
     /* Mixins */
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
+
+#ifdef FLECS_DEBUG
+    int32_t var_size;             /* Used for out of bounds check during compilation */
+#endif
 };
 
+/* Convert integer to label */
 ecs_rule_lbl_t flecs_itolbl(
     int64_t val);
 
+/* Get ref flags (IsEntity) or IsVar) for ref (Src, First, Second) */
 ecs_flags16_t flecs_rule_ref_flags(
     ecs_flags16_t flags,
     ecs_flags16_t kind);
 
+/* Check if variable is written */
+bool flecs_rule_is_written(
+    ecs_var_id_t var_id,
+    uint64_t written);
+
+/* Check if ref is written (calls flecs_rule_is_written)*/
 bool flecs_ref_is_written(
     const ecs_rule_op_t *op,
     const ecs_rule_ref_t *ref,
     ecs_flags16_t kind,
     uint64_t written);
 
-bool flecs_rule_is_written(
-    ecs_var_id_t var_id,
-    uint64_t written);
-
-void flecs_rule_discover_vars(
-    ecs_stage_t *stage,
-    ecs_rule_t *rule);
-
+/* Compile filter to list of operations */
 void flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule);
 
+/* Get allocator from iterator */
 ecs_allocator_t* flecs_rule_get_allocator(
     const ecs_iter_t *it);
 
-void flecs_rule_trav_cache_fini(
-    ecs_allocator_t *a,
-    ecs_trav_cache_t *cache);
-
+/* Find all entities when traversing downwards */
 void flecs_rule_get_down_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
     ecs_entity_t entity);
 
+/* Find all entities when traversing upwards */
 void flecs_rule_get_up_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
     ecs_table_t *table);
+
+/* Free traversal cache */
+void flecs_rule_trav_cache_fini(
+    ecs_allocator_t *a,
+    ecs_trav_cache_t *cache);
 
 #endif
 
@@ -36050,7 +36055,7 @@ ecs_var_id_t flecs_rule_add_var(
         var = ecs_vector_add(vars, ecs_rule_var_t);
         var->id = flecs_itovar(ecs_vector_count(*vars));
     } else {
-        ecs_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
         var = &rule->vars[rule->var_count];
         var->id = flecs_itovar(rule->var_count);
         rule->var_count ++;
@@ -36084,6 +36089,7 @@ ecs_var_id_t flecs_rule_add_var_for_term_id(
     return flecs_rule_add_var(rule, name, vars, kind);
 }
 
+static
 void flecs_rule_discover_vars(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
@@ -36219,8 +36225,11 @@ void flecs_rule_discover_vars(
     rule->vars = rule_vars;
     rule->var_count = var_count;
     rule->var_pub_count = var_count;
-    rule->var_size = var_count + anonymous_count;
     rule->has_table_this = !entity_before_table_this;
+
+#ifdef FLECS_DEBUG
+    rule->var_size = var_count + anonymous_count;
+#endif
 
     char **var_names = ECS_ELEM(rule_vars, ECS_SIZEOF(ecs_rule_var_t), 
         var_count + anonymous_count);
@@ -37139,7 +37148,6 @@ const char* flecs_rule_op_str(
     case EcsRuleUnion:        return "union   ";
     case EcsRuleEnd:          return "end     ";
     case EcsRuleNot:          return "not     ";
-    case EcsRuleOption:       return "option  ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleContain:      return "contain ";
@@ -37993,7 +38001,6 @@ bool flecs_rule_select_w_id(
         if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
             return false;
         }
-        op_ctx->table = NULL;
     } else {
         if (match_flags & EcsTermMatchAnySrc) {
             return false;
@@ -38011,7 +38018,6 @@ repeat:
             column = tr->column;
             table = tr->hdr.table;
             op_ctx->remaining = tr->count - 1;
-            op_ctx->table = table;
 
             if (op->match_flags & EcsTermMatchAny) {
                 op_ctx->remaining = 0;
@@ -38695,9 +38701,7 @@ bool flecs_rule_setthis(
 
     if (!redo) {
         /* Save values so we can restore them later */
-        op_ctx->offset = vars[0].range.offset;
-        op_ctx->count = vars[0].range.count;
-        op_ctx->table = vars[0].range.table;
+        op_ctx->range = vars[0].range;
 
         /* Constrain This table variable to a single entity from the table */
         vars[0].range = flecs_range_from_entity(this_var->entity, ctx);
@@ -38706,9 +38710,7 @@ bool flecs_rule_setthis(
     } else {
         /* Restore previous values, so that instructions that are operating on
          * the table variable use all the entities in the table. */
-        vars[0].range.offset = op_ctx->offset;
-        vars[0].range.count = op_ctx->count;
-        vars[0].range.table = op_ctx->table;
+        vars[0].range = op_ctx->range;
         vars[0].entity = 0;
         return false;
     }
@@ -38991,7 +38993,7 @@ void flecs_rule_iter_fini(
     int32_t var_count = rit->rule->var_count;
 
 #ifdef FLECS_DEBUG
-    if (it->flags & EcsFilterProfile) {
+    if (it->flags & EcsIterProfile) {
         char *str = ecs_rule_str_w_profile(rit->rule, it);
         printf("%s\n", str);
         ecs_os_free(str);

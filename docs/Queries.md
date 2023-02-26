@@ -1121,8 +1121,6 @@ Position, Velocity || Speed, Mass
 
 This query has 4 terms, while an iterator for the query returns results with 3 fields. This is important to consider when retrieving the field for a term, as its index has to be adjusted. In this example, `Position` has index 1, `Velocity || Speed` has index 2, and `Mass` has index 3.
 
-A limitation of the current query descriptors is that each term participating in an `Or` expression must be created with the `Or` operator. This currently makes it impossible to have a query with two `Or` expressions that come right after each other. This limitation will be addressed in future versions.
-
 The following sections show how to use the `Or` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 
 #### Query Descriptor (C)
@@ -1134,7 +1132,7 @@ ecs_filter_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity), .oper = EcsOr },
-    { ecs_id(Speed), .oper = EcsOr },
+    { ecs_id(Speed) },
     { ecs_id(Mass) }
   }
 });
@@ -1163,7 +1161,7 @@ To create a query with `Or` terms, use the `oper` method with `flecs::Or`:
 flecs::filter<> f = world.filter_builder()
     .term<Position>()
     .term<Velocity>().oper(flecs::Or)
-    .term<Speed>().oper(flecs::Or)
+    .term<Speed>()
     .term<Mass>()
     .build();
 
@@ -1188,7 +1186,7 @@ The builder API has a `or_` convenience method:
 flecs::filter<> f = world.filter_builder()
     .term<Position>() 
     .term<Velocity>().or_(); // note escaping, 'or' is a C++ keyword
-    .term<Speed>().or_();
+    .term<Speed>()
     .term<Mass>()
     .build();
 ```

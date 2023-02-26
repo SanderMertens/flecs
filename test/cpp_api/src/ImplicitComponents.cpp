@@ -471,3 +471,19 @@ void ImplicitComponents_implicit_const_ref() {
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
+
+void ImplicitComponents_vector_elem_type() {
+    flecs::world world;
+
+    {
+        flecs::entity v = world.vector<int>();
+        test_assert(v != 0);
+    }
+
+    flecs::reset();
+
+    {
+        flecs::entity v = world.vector<int>();
+        test_assert(v != 0);
+    }
+}

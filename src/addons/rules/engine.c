@@ -367,7 +367,6 @@ bool flecs_rule_select_w_id(
         if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
             return false;
         }
-        op_ctx->table = NULL;
     } else {
         if (match_flags & EcsTermMatchAnySrc) {
             return false;
@@ -385,7 +384,6 @@ repeat:
             column = tr->column;
             table = tr->hdr.table;
             op_ctx->remaining = tr->count - 1;
-            op_ctx->table = table;
 
             if (op->match_flags & EcsTermMatchAny) {
                 op_ctx->remaining = 0;
@@ -1069,9 +1067,7 @@ bool flecs_rule_setthis(
 
     if (!redo) {
         /* Save values so we can restore them later */
-        op_ctx->offset = vars[0].range.offset;
-        op_ctx->count = vars[0].range.count;
-        op_ctx->table = vars[0].range.table;
+        op_ctx->range = vars[0].range;
 
         /* Constrain This table variable to a single entity from the table */
         vars[0].range = flecs_range_from_entity(this_var->entity, ctx);
@@ -1080,9 +1076,7 @@ bool flecs_rule_setthis(
     } else {
         /* Restore previous values, so that instructions that are operating on
          * the table variable use all the entities in the table. */
-        vars[0].range.offset = op_ctx->offset;
-        vars[0].range.count = op_ctx->count;
-        vars[0].range.table = op_ctx->table;
+        vars[0].range = op_ctx->range;
         vars[0].entity = 0;
         return false;
     }
@@ -1365,7 +1359,7 @@ void flecs_rule_iter_fini(
     int32_t var_count = rit->rule->var_count;
 
 #ifdef FLECS_DEBUG
-    if (it->flags & EcsFilterProfile) {
+    if (it->flags & EcsIterProfile) {
         char *str = ecs_rule_str_w_profile(rit->rule, it);
         printf("%s\n", str);
         ecs_os_free(str);
