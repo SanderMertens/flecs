@@ -35,8 +35,9 @@ typedef struct ecs_rule_var_t {
 /* -- Instruction kinds -- */
 typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
+    EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleWith,           /* Match id against fixed or variable source */
-    EcsRuleAndAny,         /* And operation with support for matching Any src/id */
+    EcsRuleAndAny,         /* And operator with support for matching Any src/id */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
@@ -48,6 +49,7 @@ typedef enum {
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
+    EcsRuleSetIds,         /* Set fixed (component) ids */
     EcsRuleContain,        /* Test if table contains entity */
     EcsRulePairEq,         /* Test if both elements of pair are the same */
     EcsRuleSetCond,        /* Set conditional value for EcsRuleJmpCondFalse */

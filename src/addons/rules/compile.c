@@ -12,6 +12,7 @@
 static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
     [EcsRuleAndAny] = true,
+    [EcsRuleAndId] = true,
     [EcsRuleWith] = true,
     [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
@@ -997,6 +998,44 @@ void flecs_rule_insert_pair_eq(
 }
 
 static
+bool flecs_rule_term_fixed_id(
+    ecs_filter_t *filter,
+    ecs_term_t *term)
+{
+    /* Transitive/inherited terms have variable ids */
+    if (term->flags & (EcsTermTransitive|EcsTermIdInherited)) {
+        return false;
+    }
+
+    /* Or terms can match different ids */
+    if (term->oper == EcsOr) {
+        return false;
+    }
+    if ((term != filter->terms) && term[-1].oper == EcsOr) {
+        return false;
+    }
+
+    /* Wildcards can assume different ids */
+    if (ecs_id_is_wildcard(term->id)) {
+        return false;
+    }
+
+    /* Any terms can have fixed ids, but they require special handling */
+    if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
+        return false;
+    }
+
+    /* First terms that are Not or Optional require special handling */
+    if (term->oper == EcsNot || term->oper == EcsOptional) {
+        if (term == filter->terms) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
 void flecs_rule_compile_term(
     ecs_world_t *world,
     ecs_rule_t *rule,
@@ -1021,8 +1060,16 @@ void flecs_rule_compile_term(
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
     } else {
-        if (term->flags & EcsTermMatchAny || term->flags & EcsTermMatchAnySrc) {
+        if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op.kind = EcsRuleAndAny;
+        }
+    }
+
+    /* If term has fixed id, insert simpler instruction that skips dealing with
+     * wildcard terms and variables */
+    if (flecs_rule_term_fixed_id(&rule->filter, term)) {
+        if (op.kind == EcsRuleAnd) {
+            op.kind = EcsRuleAndId;
         }
     }
 
@@ -1231,6 +1278,19 @@ void flecs_rule_compile(
             ecs_rule_op_t set_fixed = {0};
             set_fixed.kind = EcsRuleSetFixed;
             flecs_rule_op_insert(&set_fixed, &ctx);
+            break;
+        }
+    }
+
+    /* If the rule contains terms with fixed ids (no wildcards, variables), 
+     * insert instruction that initializes ecs_iter_t::ids. This allows for the
+     * insertion of simpler instructions later on. */
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (flecs_rule_term_fixed_id(filter, term)) {
+            ecs_rule_op_t set_ids = {0};
+            set_ids.kind = EcsRuleSetIds;
+            flecs_rule_op_insert(&set_ids, &ctx);
             break;
         }
     }
