@@ -160,10 +160,10 @@ void flecs_assert_relation_unused(
         return;
     }
 
-    ecs_vector_t *marked_ids = world->store.marked_ids;
-    int32_t i, count = ecs_vector_count(marked_ids);
+    ecs_vec_t *marked_ids = &world->store.marked_ids;
+    int32_t i, count = ecs_vec_count(marked_ids);
     for (i = 0; i < count; i ++) {
-        ecs_marked_id_t *mid = ecs_vector_get(marked_ids, ecs_marked_id_t, i);
+        ecs_marked_id_t *mid = ecs_vec_get_t(marked_ids, ecs_marked_id_t, i);
         if (mid->id == ecs_pair(rel, EcsWildcard)) {
             /* If id is being cleaned up, no need to throw error as tables will
              * be cleaned up */

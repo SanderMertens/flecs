@@ -35,8 +35,8 @@ void _meta_test_member(
     const EcsStruct *sptr = ecs_get(world, t, EcsStruct);
     test_assert(sptr != NULL);
 
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
-    int i, count = ecs_vector_count(sptr->members);
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
+    int i, count = ecs_vec_count(&sptr->members);
 
     for (i = 0; i < count; i ++) {
         if (members[i].member == m) {
@@ -386,8 +386,7 @@ void StructTypes_incomplete_member() {
 
     const EcsStruct *ptr = ecs_get(world, t, EcsStruct);
     test_assert(ptr != NULL);
-    test_assert(ptr->members != NULL);
-    test_int(ecs_vector_count(ptr->members), 2);
+    test_int(ecs_vec_count(&ptr->members), 2);
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);

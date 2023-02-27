@@ -340,7 +340,7 @@ struct ecs_query_t {
     ecs_entity_t order_by_component;
     ecs_order_by_action_t order_by;
     ecs_sort_table_action_t sort_table;
-    ecs_vector_t *table_slices;
+    ecs_vec_t table_slices;
     int32_t order_by_term;
 
     /* Table grouping */
@@ -353,7 +353,7 @@ struct ecs_query_t {
 
     /* Subqueries */
     ecs_query_t *parent;
-    ecs_vector_t *subqueries;
+    ecs_vec_t subqueries;
 
     /* Flags for query properties */
     ecs_flags32_t flags;
@@ -489,7 +489,7 @@ struct ecs_stage_t {
     ecs_os_thread_t thread;      /* Thread handle (0 if no threading is used) */
 
     /* One-shot actions to be executed after the merge */
-    ecs_vector_t *post_frame_actions;
+    ecs_vec_t post_frame_actions;
 
     /* Namespacing */
     ecs_entity_t scope;          /* Entity of current scope */
@@ -512,7 +512,7 @@ struct ecs_stage_t {
 
 /* Component monitor */
 typedef struct ecs_monitor_t {
-    ecs_vector_t *queries;       /* vector<ecs_query_t*> */
+    ecs_vec_t queries;           /* vector<ecs_query_t*> */
     bool is_dirty;               /* Should queries be rematched? */
 } ecs_monitor_t;
 
@@ -544,10 +544,10 @@ typedef struct ecs_store_t {
     ecs_table_t root;
 
     /* Records cache */
-    ecs_vector_t *records;
+    ecs_vec_t records;
 
     /* Stack of ids being deleted. */
-    ecs_vector_t *marked_ids;    /* vector<ecs_marked_ids_t> */
+    ecs_vec_t marked_ids;    /* vector<ecs_marked_ids_t> */
 } ecs_store_t;
 
 /* fini actions */
@@ -631,7 +631,7 @@ struct ecs_world_t {
     ecs_allocator_t allocator;         /* Dynamic allocation sizes */
 
     void *context;               /* Application context */
-    ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
+    ecs_vec_t fini_actions;  /* Callbacks to execute when world exits */
 };
 
 #endif

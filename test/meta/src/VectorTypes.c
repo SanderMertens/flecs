@@ -7,8 +7,8 @@ void meta_test_vector(
 {
     const EcsComponent *ct = ecs_get(world, t, EcsComponent);
     test_assert(ct != NULL);
-    test_int(ct->size, ECS_SIZEOF(ecs_vector_t*));
-    test_int(ct->alignment, ECS_ALIGNOF(ecs_vector_t*));
+    test_int(ct->size, ECS_SIZEOF(ecs_vec_t));
+    test_int(ct->alignment, ECS_ALIGNOF(ecs_vec_t));
 
     const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
     test_assert(mt != NULL);

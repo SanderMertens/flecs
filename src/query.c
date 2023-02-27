@@ -1007,6 +1007,7 @@ void flecs_query_build_sorted_table_range(
         return;
     }
 
+    ecs_vec_init_if_t(&query->table_slices, ecs_query_table_node_t);
     int32_t to_sort = 0;
     int32_t order_by_term = query->order_by_term;
 
@@ -1105,8 +1106,8 @@ void flecs_query_build_sorted_table_range(
 
         sort_helper_t *cur_helper = &helper[min];
         if (!cur || cur->match != cur_helper->match) {
-            cur = ecs_vector_add(&query->table_slices, ecs_query_table_node_t);
-            ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
+            cur = ecs_vec_append_t(NULL, &query->table_slices, 
+                ecs_query_table_node_t);
             cur->match = cur_helper->match;
             cur->offset = cur_helper->row;
             cur->count = 1;
@@ -1119,9 +1120,8 @@ void flecs_query_build_sorted_table_range(
 
     /* Iterate through the vector of slices to set the prev/next ptrs. This
      * can't be done while building the vector, as reallocs may occur */
-    int32_t i, count = ecs_vector_count(query->table_slices);    
-    ecs_query_table_node_t *nodes = ecs_vector_first(
-        query->table_slices, ecs_query_table_node_t);
+    int32_t i, count = ecs_vec_count(&query->table_slices);    
+    ecs_query_table_node_t *nodes = ecs_vec_first(&query->table_slices);
     for (i = 0; i < count; i ++) {
         nodes[i].prev = &nodes[i - 1];
         nodes[i].next = &nodes[i + 1];
@@ -1137,7 +1137,7 @@ static
 void flecs_query_build_sorted_tables(
     ecs_query_t *query)
 {
-    ecs_vector_clear(query->table_slices);
+    ecs_vec_clear(&query->table_slices);
 
     if (query->group_by) {
         /* Populate sorted node list in grouping order */
@@ -1388,7 +1388,9 @@ void flecs_query_add_subquery(
     ecs_query_t *parent, 
     ecs_query_t *subquery) 
 {
-    ecs_query_t **elem = ecs_vector_add(&parent->subqueries, ecs_query_t*);
+    ecs_vec_init_if_t(&parent->subqueries, ecs_query_t*);
+    ecs_query_t **elem = ecs_vec_append_t(
+        NULL, &parent->subqueries, ecs_query_t*);
     *elem = subquery;
 
     ecs_table_cache_t *cache = &parent->cache;
@@ -1406,9 +1408,9 @@ void flecs_query_notify_subqueries(
     ecs_query_t *query,
     ecs_query_event_t *event)
 {
-    if (query->subqueries) {
-        ecs_query_t **queries = ecs_vector_first(query->subqueries, ecs_query_t*);
-        int32_t i, count = ecs_vector_count(query->subqueries);
+    if (query->subqueries.array) {
+        ecs_query_t **queries = ecs_vec_first(&query->subqueries);
+        int32_t i, count = ecs_vec_count(&query->subqueries);
 
         ecs_query_event_t sub_event = *event;
         sub_event.parent_query = query;
@@ -1579,10 +1581,10 @@ void flecs_query_remove_subquery(
 {
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(sub != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(parent->subqueries != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent->subqueries.array, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t i, count = ecs_vector_count(parent->subqueries);
-    ecs_query_t **sq = ecs_vector_first(parent->subqueries, ecs_query_t*);
+    int32_t i, count = ecs_vec_count(&parent->subqueries);
+    ecs_query_t **sq = ecs_vec_first(&parent->subqueries);
 
     for (i = 0; i < count; i ++) {
         if (sq[i] == sub) {
@@ -1590,7 +1592,7 @@ void flecs_query_remove_subquery(
         }
     }
 
-    ecs_vector_remove(parent->subqueries, ecs_query_t*, i);
+    ecs_vec_remove_t(&parent->subqueries, ecs_query_t*, i);
 }
 
 /* -- Private API -- */
@@ -1606,7 +1608,7 @@ void flecs_query_notify(
     case EcsQueryTableMatch:
         /* Creation of new table */
         if (flecs_query_match_table(world, query, event->table)) {
-            if (query->subqueries) {
+            if (query->subqueries.array) {
                 flecs_query_notify_subqueries(world, query, event);
             }
         }
@@ -1670,12 +1672,10 @@ void flecs_query_order_by(
     query->order_by_term = order_by_term;
     query->sort_table = action;
 
-    ecs_vector_free(query->table_slices);
-    query->table_slices = NULL;
-
+    ecs_vec_fini_t(NULL, &query->table_slices, ecs_query_table_node_t);
     flecs_query_sort_tables(world, query);  
 
-    if (!query->table_slices) {
+    if (!query->table_slices.array) {
         flecs_query_build_sorted_tables(query);
     }
 error:
@@ -1746,7 +1746,7 @@ void flecs_query_on_event(
     if (event == EcsOnTableCreate) {
         /* Creation of new table */
         if (flecs_query_match_table(world, query, table)) {
-            if (query->subqueries) {
+            if (query->subqueries.array) {
                 ecs_query_event_t evt = {
                     .kind = EcsQueryTableMatch,
                     .table = table,
@@ -1774,7 +1774,7 @@ void flecs_query_on_event(
     } else if (event == EcsOnTableDelete) {
         /* Deletion of table */
         flecs_query_unmatch_table(query, table, NULL);
-        if (query->subqueries) {
+        if (query->subqueries.array) {
                 ecs_query_event_t evt = {
                     .kind = EcsQueryTableUnmatch,
                     .table = table,
@@ -1874,8 +1874,8 @@ void flecs_query_fini(
 
     ecs_map_fini(&query->groups);
 
-    ecs_vector_free(query->subqueries);
-    ecs_vector_free(query->table_slices);
+    ecs_vec_fini_t(NULL, &query->subqueries, ecs_query_t*);
+    ecs_vec_fini_t(NULL, &query->table_slices, ecs_query_table_node_t);
     ecs_filter_fini(&query->filter);
 
     flecs_query_allocators_fini(query);
@@ -2075,8 +2075,8 @@ ecs_iter_t ecs_query_iter(
     /* Prepare iterator */
 
     int32_t table_count;
-    if (query->table_slices) {
-        table_count = ecs_vector_count(query->table_slices);
+    if (ecs_vec_count(&query->table_slices)) {
+        table_count = ecs_vec_count(&query->table_slices);
     } else {
         table_count = ecs_query_table_count(query);
     }
@@ -2088,7 +2088,7 @@ ecs_iter_t ecs_query_iter(
     };
 
     if (query->order_by && query->list.info.table_count) {
-        it.node = ecs_vector_first(query->table_slices, ecs_query_table_node_t);
+        it.node = ecs_vec_first(&query->table_slices);
     }
 
     ecs_flags32_t flags = 0;

@@ -1084,12 +1084,12 @@ void Pipeline_stage_write_before_read() {
     test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
-    test_int(ecs_vector_count(stats.systems), 5);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], s2);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 5);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], s2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
@@ -1164,17 +1164,17 @@ void Pipeline_mixed_multithreaded() {
     test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
-    test_int(ecs_vector_count(stats.systems), 10);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], s2);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[5], s4);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[6], s5);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], s6);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 10);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], s2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[5], s4);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[6], s5);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[8], s6);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
@@ -1278,18 +1278,18 @@ void Pipeline_mixed_staging() {
     test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
-    test_int(ecs_vector_count(stats.systems), 11);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], s2);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[5], s4);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[6], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], s5);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], 0); /* merge */
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], s6);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[10], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 11);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], s2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[5], s4);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[6], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[7], s5);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[8], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[9], s6);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[10], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
@@ -1551,9 +1551,9 @@ void Pipeline_no_staging_system_create_query() {
     test_bool(ecs_pipeline_stats_get(world, 
         ecs_get_pipeline(world), &stats), true);
 
-    test_int(ecs_vector_count(stats.systems), 2);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s);
-    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], s);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
