@@ -34,7 +34,7 @@ void ecs_vec_fini(
     ecs_size_t size)
 {
     if (v->array) {
-        ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        ecs_dbg_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
         if (allocator) {
             flecs_free(allocator, size * v->size, v->array);
         } else {

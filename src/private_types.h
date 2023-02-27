@@ -506,8 +506,8 @@ struct ecs_stage_t {
     ecs_allocator_t allocator;
 
     /* Caches for rule creation */
-    ecs_vector_t *variables;
-    ecs_vector_t *operations;
+    ecs_vec_t variables;
+    ecs_vec_t operations;
 };
 
 /* Component monitor */

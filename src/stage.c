@@ -566,8 +566,8 @@ void flecs_stage_fini(
     flecs_sparse_fini(&stage->cmd_entries);
 
     ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-    ecs_vector_free(stage->variables);
-    ecs_vector_free(stage->operations);
+    ecs_vec_fini(NULL, &stage->variables, 0);
+    ecs_vec_fini(NULL, &stage->operations, 0);
     flecs_stack_fini(&stage->defer_stack);
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);
