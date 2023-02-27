@@ -81,6 +81,50 @@ ecs_world_t *world = ecs_init_w_args(argc, argv);
 flecs::world world(argc, argc);
 ```
 
+### Queries
+The search bar in the explorer makes it possible to directly query the ECS storage. A query can be entered in the "Search" box, and needs to be specified in the query DSL (see query manual). An example:
+
+![Remote Explorer](img/explorer-query.png)
+
+The default query engine used by the search bar is the rules engine, which means it is possible to use features like query variables:
+
+![Remote Explorer](img/explorer-rules.png)
+
+It is also possible to inspect the results of existing queries. This can be done by entering a `?-`, followed by the name of the query. Queries can be given a name by setting the `.entity` field to a named entity in C:
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .entity = ecs_entity(world, { .name = "Move" }),
+  .filter.terms = {
+    { ecs_id(Position) },
+    { ecs_id(Velocity) },
+  }
+});
+```
+
+In C++ a name can be provided to the query factory method:
+
+```cpp
+auto q = world.query<Position, Velocity>("Move");
+```
+
+This also works for filters and rules. Because systems are queries, the name of a system can be entered to inspect the entities matched by the system:
+
+![Remote Explorer](img/explorer-system.png)
+
+When a named rule query has variables, variables can be optionally provided as arguments to the query. The following example provides the value `Apples` to the query variable `food` for query `eats_query`, which constrains the results to only show results with `Apples`:
+
+![Remote Explorer](img/explorer-arguments.png)
+
+The underlying query that was used for this screenshot was created like this:
+
+```c
+ecs_rule(world, {
+    .entity = ecs_entity(world, { .name = "eats_query" }),
+    .expr = "(Eats, $food)"
+});
+```
+
 ## Endpoints
 This section describes the endpoints of the REST API.
 
