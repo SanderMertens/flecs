@@ -194,6 +194,29 @@ void Parser_pair_implicit_src_missing_rel(void);
 void Parser_pair_implicit_src_missing_obj(void);
 void Parser_pair_explicit_src_missing_src(void);
 void Parser_pair_explicit_src_missing_obj(void);
+void Parser_eq_id(void);
+void Parser_eq_id_var(void);
+void Parser_eq_var_id(void);
+void Parser_eq_var(void);
+void Parser_neq_id(void);
+void Parser_neq_id_var(void);
+void Parser_neq_var_id(void);
+void Parser_neq_var(void);
+void Parser_eq_name(void);
+void Parser_eq_name_var(void);
+void Parser_eq_var_name(void);
+void Parser_eq_var(void);
+void Parser_neq_name(void);
+void Parser_neq_name_var(void);
+void Parser_neq_var_name(void);
+void Parser_neq_var(void);
+void Parser_match_name(void);
+void Parser_match_name_var(void);
+void Parser_match_var_name(void);
+void Parser_match_var(void);
+void Parser_nmatch_name(void);
+void Parser_nmatch_name_var(void);
+void Parser_nmatch_var_name(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -1901,6 +1924,98 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_src_missing_obj",
         Parser_pair_explicit_src_missing_obj
+    },
+    {
+        "eq_id",
+        Parser_eq_id
+    },
+    {
+        "eq_id_var",
+        Parser_eq_id_var
+    },
+    {
+        "eq_var_id",
+        Parser_eq_var_id
+    },
+    {
+        "eq_var",
+        Parser_eq_var
+    },
+    {
+        "neq_id",
+        Parser_neq_id
+    },
+    {
+        "neq_id_var",
+        Parser_neq_id_var
+    },
+    {
+        "neq_var_id",
+        Parser_neq_var_id
+    },
+    {
+        "neq_var",
+        Parser_neq_var
+    },
+    {
+        "eq_name",
+        Parser_eq_name
+    },
+    {
+        "eq_name_var",
+        Parser_eq_name_var
+    },
+    {
+        "eq_var_name",
+        Parser_eq_var_name
+    },
+    {
+        "eq_var",
+        Parser_eq_var
+    },
+    {
+        "neq_name",
+        Parser_neq_name
+    },
+    {
+        "neq_name_var",
+        Parser_neq_name_var
+    },
+    {
+        "neq_var_name",
+        Parser_neq_var_name
+    },
+    {
+        "neq_var",
+        Parser_neq_var
+    },
+    {
+        "match_name",
+        Parser_match_name
+    },
+    {
+        "match_name_var",
+        Parser_match_name_var
+    },
+    {
+        "match_var_name",
+        Parser_match_var_name
+    },
+    {
+        "match_var",
+        Parser_match_var
+    },
+    {
+        "nmatch_name",
+        Parser_nmatch_name
+    },
+    {
+        "nmatch_name_var",
+        Parser_nmatch_name_var
+    },
+    {
+        "nmatch_var_name",
+        Parser_nmatch_var_name
     }
 };
 
@@ -5609,7 +5724,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        185,
+        208,
         Parser_testcases
     },
     {

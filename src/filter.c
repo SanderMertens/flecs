@@ -74,7 +74,7 @@ int flecs_term_id_finalize_flags(
         return -1;
     }
 
-    if (!(term_id->flags & EcsIsEntity) && !(term_id->flags & EcsIsVariable)) {
+    if (!(term_id->flags & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (term_id->id || term_id->name) {
             if (term_id->id == EcsThis || 
                 term_id->id == EcsWildcard || 
@@ -130,6 +130,8 @@ int flecs_term_id_lookup(
             }
             term_id->name = NULL;
         }
+        return 0;
+    } else if (term_id->flags & EcsIsName) {
         return 0;
     }
 
@@ -403,6 +405,41 @@ int flecs_term_populate_from_id(
 }
 
 static
+int flecs_term_verify_eq_pred(
+    const ecs_world_t *world,
+    const ecs_term_t *term,
+    ecs_filter_finalize_ctx_t *ctx)
+{
+    ecs_entity_t first_id = term->first.id;
+    const ecs_term_id_t *second = &term->second;
+    const ecs_term_id_t *src = &term->src;
+
+    if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "both sides of operator cannot be a name");
+        goto error;
+    }
+
+    if ((src->flags & EcsIsEntity) && (second->flags & EcsIsEntity)) {
+        flecs_filter_error(ctx, "both sides of operator cannot be an entity");
+        goto error;
+    }
+
+    if (first_id == EcsPredMatch && !(src->flags & EcsIsVariable)) {
+        flecs_filter_error(ctx, "left-hand of match operator must be a variable");
+        goto error;
+    }
+
+    if (first_id == EcsPredMatch && !(second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "right-hand of match operator must be a string");
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_term_verify(
     const ecs_world_t *world,
     const ecs_term_t *term,
@@ -415,11 +452,20 @@ int flecs_term_verify(
     ecs_id_t role = term->id_flags;
     ecs_id_t id = term->id;
 
+    if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "mismatch between term.id_flags & term.id");
+        return -1;
+    }
+
     if (first->flags & EcsIsEntity) {
         first_id = first->id;
     }
     if (second->flags & EcsIsEntity) {
         second_id = second->id;
+    }
+
+    if (first_id == EcsPredEq || first_id == EcsPredMatch || first_id == EcsPredLookup) {
+        return flecs_term_verify_eq_pred(world, term, ctx);
     }
 
     if (role != (id & ECS_ID_FLAGS_MASK)) {

@@ -25,6 +25,10 @@
 #define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
+#define TOK_EQ "=="
+#define TOK_NEQ "!="
+#define TOK_MATCH "~="
+#define TOK_EXPR_STRING '"'
 
 #define TOK_SELF "self"
 #define TOK_UP "up"
@@ -33,7 +37,6 @@
 #define TOK_PARENT "parent"
 
 #define TOK_OVERRIDE "OVERRIDE"
-
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_NOT "NOT"
@@ -243,7 +246,7 @@ const char* ecs_parse_identifier(
     const char *ptr,
     char *token_out)
 {
-    if (!flecs_valid_identifier_start_char(ptr[0])) {
+    if (!flecs_valid_identifier_start_char(ptr[0]) && (ptr[0] != '"')) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected start of identifier");
         return NULL;
@@ -264,8 +267,26 @@ int flecs_parse_identifier(
         out->flags |= EcsIsVariable;
         tptr ++;
     }
+    if (tptr[0] == TOK_EXPR_STRING && tptr[1]) {
+        out->flags |= EcsIsName;
+        tptr ++;
+        if (tptr[0] == TOK_NOT) {
+            /* Already parsed */
+            tptr ++;
+        }
+    }
 
     out->name = ecs_os_strdup(tptr);
+
+    ecs_size_t len = ecs_os_strlen(out->name);
+    if (out->flags & EcsIsName) {
+        if (out->name[len - 1] != TOK_EXPR_STRING) {
+            ecs_parser_error(NULL, token, 0, "missing '\"' at end of string");
+            return -1;
+        } else {
+            out->name[len - 1] = '\0';
+        }
+    }
 
     return 0;
 }
@@ -686,6 +707,15 @@ parse_predicate:
         }
 
         ptr = ecs_parse_ws(ptr + 1);
+    } else if (!ecs_os_strncmp(ptr, TOK_EQ, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_eq;
+    } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_neq;
+    } else if (!ecs_os_strncmp(ptr, TOK_MATCH, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_match;
     } else {
         ptr = ecs_parse_ws(ptr);
     }
@@ -707,6 +737,53 @@ parse_predicate:
 
     goto parse_done;
 
+parse_eq:
+    term.src = term.first;
+    term.first = (ecs_term_id_t){0};
+    term.first.id = EcsPredEq;
+    goto parse_right_operand;
+
+parse_neq:
+    term.src = term.first;
+    term.first = (ecs_term_id_t){0};
+    term.first.id = EcsPredEq;
+    term.oper = EcsNot;
+    goto parse_right_operand;
+    
+parse_match:
+    term.src = term.first;
+    term.first = (ecs_term_id_t){0};
+    term.first.id = EcsPredMatch;
+    goto parse_right_operand;
+
+parse_right_operand:
+    if (flecs_valid_token_start_char(ptr[0])) {
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
+        if (!ptr) {
+            goto error;
+        }
+
+        if (term.first.id == EcsPredMatch) {
+            if (token[0] == '"' && token[1] == '!') {
+                term.oper = EcsNot;
+            }
+        }
+
+        if (flecs_parse_identifier(token, &term.second)) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid identifier '%s'", token); 
+            goto error;
+        }
+
+        term.src.flags &= ~EcsTraverseFlags;
+        term.src.flags |= EcsSelf;
+        term.inout = EcsInOutNone;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier");
+        goto error;
+    }
+    goto parse_done;
 parse_pair:
     ptr = ecs_parse_identifier(name, expr, ptr + 1, token);
     if (!ptr) {
@@ -875,7 +952,7 @@ char* ecs_parse_term(
     }
 
     /* Check for $() notation */
-    if (!ecs_os_strcmp(term->first.name, "$")) {
+    if (term->first.name && !ecs_os_strcmp(term->first.name, "$")) {
         if (term->src.name) {
             ecs_os_free(term->first.name);
             
@@ -919,7 +996,7 @@ char* ecs_parse_term(
 
     /* If the term just contained a 0, the expression has nothing. Ensure
      * that after the 0 nothing else follows */
-    if (!ecs_os_strcmp(term->first.name, "0")) {
+    if (term->first.name && !ecs_os_strcmp(term->first.name, "0")) {
         if (ptr[0]) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected term after 0"); 

@@ -38950,6 +38950,10 @@ void FlecsDocImport(
 #define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
+#define TOK_EQ "=="
+#define TOK_NEQ "!="
+#define TOK_MATCH "~="
+#define TOK_EXPR_STRING '"'
 
 #define TOK_SELF "self"
 #define TOK_UP "up"
@@ -38958,7 +38962,6 @@ void FlecsDocImport(
 #define TOK_PARENT "parent"
 
 #define TOK_OVERRIDE "OVERRIDE"
-
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_NOT "NOT"
@@ -39168,7 +39171,7 @@ const char* ecs_parse_identifier(
     const char *ptr,
     char *token_out)
 {
-    if (!flecs_valid_identifier_start_char(ptr[0])) {
+    if (!flecs_valid_identifier_start_char(ptr[0]) && (ptr[0] != '"')) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected start of identifier");
         return NULL;
@@ -39189,8 +39192,22 @@ int flecs_parse_identifier(
         out->flags |= EcsIsVariable;
         tptr ++;
     }
+    if (tptr[0] == TOK_EXPR_STRING && tptr[1]) {
+        out->flags |= EcsIsName;
+        tptr ++;
+    }
 
     out->name = ecs_os_strdup(tptr);
+
+    ecs_size_t len = ecs_os_strlen(out->name);
+    if (out->flags & EcsIsName) {
+        if (out->name[len - 1] != TOK_EXPR_STRING) {
+            ecs_parser_error(NULL, token, 0, "missing '\"' at end of string");
+            return -1;
+        } else {
+            out->name[len - 1] = '\0';
+        }
+    }
 
     return 0;
 }
@@ -39611,6 +39628,15 @@ parse_predicate:
         }
 
         ptr = ecs_parse_ws(ptr + 1);
+    } else if (!ecs_os_strncmp(ptr, TOK_EQ, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_eq;
+    } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_neq;
+    } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
+        ptr = ecs_parse_ws(ptr + 2);
+        goto parse_match;
     } else {
         ptr = ecs_parse_ws(ptr);
     }
@@ -39632,6 +39658,46 @@ parse_predicate:
 
     goto parse_done;
 
+parse_eq:
+    term.src = term.first;
+    term.first = (ecs_term_id_t){0};
+    term.first.id = EcsPredEq;
+    goto parse_right_operand;
+
+parse_neq:
+    term.src = term.first;
+    term.first = (ecs_term_id_t){0};
+    term.first.id = EcsPredEq;
+    term.oper = EcsNot;
+    goto parse_right_operand;
+    
+parse_match:
+    term.src = term.first;
+    term.first.id = EcsPredMatch;
+    goto parse_right_operand;
+
+parse_right_operand:
+    if (flecs_valid_token_start_char(ptr[0])) {
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
+        if (!ptr) {
+            goto error;
+        }
+
+        if (flecs_parse_identifier(token, &term.second)) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid identifier '%s'", token); 
+            goto error;
+        }
+
+        term.src.flags &= ~EcsTraverseFlags;
+        term.src.flags |= EcsSelf;
+        term.inout = EcsInOutNone;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected identifier");
+        goto error;
+    }
+    goto parse_done;
 parse_pair:
     ptr = ecs_parse_identifier(name, expr, ptr + 1, token);
     if (!ptr) {
@@ -39800,7 +39866,7 @@ char* ecs_parse_term(
     }
 
     /* Check for $() notation */
-    if (!ecs_os_strcmp(term->first.name, "$")) {
+    if (term->first.name && !ecs_os_strcmp(term->first.name, "$")) {
         if (term->src.name) {
             ecs_os_free(term->first.name);
             
@@ -39844,7 +39910,7 @@ char* ecs_parse_term(
 
     /* If the term just contained a 0, the expression has nothing. Ensure
      * that after the 0 nothing else follows */
-    if (!ecs_os_strcmp(term->first.name, "0")) {
+    if (term->first.name && !ecs_os_strcmp(term->first.name, "0")) {
         if (ptr[0]) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected term after 0"); 
@@ -40942,7 +41008,12 @@ const ecs_entity_t EcsDelete =                        ECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 53;
+
+/* Builtin predicate ids (used by rule engine) */
+const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;
@@ -44265,6 +44336,8 @@ int flecs_term_id_lookup(
             term_id->name = NULL;
         }
         return 0;
+    } else if (term_id->flags & EcsIsName) {
+        return 0;
     }
 
     ecs_assert(term_id->flags & EcsIsEntity, ECS_INTERNAL_ERROR, NULL);
@@ -44548,6 +44621,10 @@ int flecs_term_verify(
     ecs_entity_t first_id = 0, second_id = 0;
     ecs_id_t role = term->id_flags;
     ecs_id_t id = term->id;
+
+    if ((first->flags & EcsIsName) || (second->flags & EcsIsName)) {
+        return 0;
+    }
 
     if (first->flags & EcsIsEntity) {
         first_id = first->id;
@@ -55115,6 +55192,11 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPanic);
 
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
+
+    /* Builtin predicates */
+    flecs_bootstrap_tag(world, EcsPredEq);
+    flecs_bootstrap_tag(world, EcsPredMatch);
+    flecs_bootstrap_tag(world, EcsPredLookup);
 
     /* Builtin relationships */
     flecs_bootstrap_tag(world, EcsIsA);
