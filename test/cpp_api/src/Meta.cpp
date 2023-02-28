@@ -658,7 +658,7 @@ void Meta_vector_type() {
 
     const flecs::Component *c = t.get<flecs::Component>();
     test_assert(c != nullptr);
-    test_int(c->size, 8);
+    test_int(c->size, ECS_SIZEOF(ecs_vec_t));
     test_int(c->alignment, 8);
 
     const flecs::MetaType *mt = t.get<flecs::MetaType>();

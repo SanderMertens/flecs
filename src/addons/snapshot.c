@@ -13,7 +13,7 @@
 struct ecs_snapshot_t {
     ecs_world_t *world;
     ecs_sparse_t entity_index;
-    ecs_vector_t *tables;
+    ecs_vec_t tables;
     ecs_entity_t last_id;
 };
 
@@ -81,8 +81,8 @@ void snapshot_table(
         return;
     }
     
-    ecs_table_leaf_t *l = ecs_vector_get(
-        snapshot->tables, ecs_table_leaf_t, (int32_t)table->id);
+    ecs_table_leaf_t *l = ecs_vec_get_t(
+        &snapshot->tables, ecs_table_leaf_t, (int32_t)table->id);
     ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
     
     l->table = table;
@@ -117,9 +117,9 @@ ecs_snapshot_t* snapshot_create(
      * which of the world tables still exist, no longer exist, or need to be
      * deleted. */
     uint64_t t, table_count = flecs_sparse_last_id(&world->store.tables) + 1;
-    result->tables = ecs_vector_new(ecs_table_leaf_t, (int32_t)table_count);
-    ecs_vector_set_count(&result->tables, ecs_table_leaf_t, (int32_t)table_count);
-    ecs_table_leaf_t *arr = ecs_vector_first(result->tables, ecs_table_leaf_t);
+    ecs_vec_init_t(NULL, &result->tables, ecs_table_leaf_t, (int32_t)table_count);
+    ecs_vec_set_count_t(NULL, &result->tables, ecs_table_leaf_t, (int32_t)table_count);
+    ecs_table_leaf_t *arr = ecs_vec_first_t(&result->tables, ecs_table_leaf_t);
 
     /* Array may have holes, so initialize with 0 */
     ecs_os_memset_n(arr, 0, ecs_table_leaf_t, table_count);
@@ -182,10 +182,9 @@ void restore_unfiltered(
     
     world->info.last_id = snapshot->last_id;
 
-    ecs_table_leaf_t *leafs = ecs_vector_first(
-        snapshot->tables, ecs_table_leaf_t);
+    ecs_table_leaf_t *leafs = ecs_vec_first_t(&snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = (int32_t)flecs_sparse_last_id(&world->store.tables);
-    int32_t snapshot_count = ecs_vector_count(snapshot->tables);
+    int32_t snapshot_count = ecs_vec_count(&snapshot->tables);
 
     for (i = 0; i <= count; i ++) {
         ecs_table_t *world_table = flecs_sparse_get_t(
@@ -273,9 +272,8 @@ void restore_filtered(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    ecs_table_leaf_t *leafs = ecs_vector_first(
-        snapshot->tables, ecs_table_leaf_t);
-    int32_t l = 0, snapshot_count = ecs_vector_count(snapshot->tables);
+    ecs_table_leaf_t *leafs = ecs_vec_first_t(&snapshot->tables, ecs_table_leaf_t);
+    int32_t l = 0, snapshot_count = ecs_vec_count(&snapshot->tables);
 
     for (l = 0; l < snapshot_count; l ++) {
         ecs_table_leaf_t *snapshot_table = &leafs[l];
@@ -342,7 +340,7 @@ void ecs_snapshot_restore(
         restore_filtered(world, snapshot);
     }
 
-    ecs_vector_free(snapshot->tables);   
+    ecs_vec_fini_t(NULL, &snapshot->tables, ecs_table_leaf_t);
 
     ecs_os_free(snapshot);
 }
@@ -357,7 +355,7 @@ ecs_iter_t ecs_snapshot_iter(
 
     return (ecs_iter_t){
         .world = snapshot->world,
-        .table_count = ecs_vector_count(snapshot->tables),
+        .table_count = ecs_vec_count(&snapshot->tables),
         .priv.iter.snapshot = iter,
         .next = ecs_snapshot_next
     };
@@ -367,8 +365,8 @@ bool ecs_snapshot_next(
     ecs_iter_t *it)
 {
     ecs_snapshot_iter_t *iter = &it->priv.iter.snapshot;
-    ecs_table_leaf_t *tables = ecs_vector_first(iter->tables, ecs_table_leaf_t);
-    int32_t count = ecs_vector_count(iter->tables);
+    ecs_table_leaf_t *tables = ecs_vec_first_t(&iter->tables, ecs_table_leaf_t);
+    int32_t count = ecs_vec_count(&iter->tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
@@ -407,8 +405,8 @@ void ecs_snapshot_free(
 {
     flecs_sparse_fini(&snapshot->entity_index);
 
-    ecs_table_leaf_t *tables = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
-    int32_t i, count = ecs_vector_count(snapshot->tables);
+    ecs_table_leaf_t *tables = ecs_vec_first_t(&snapshot->tables, ecs_table_leaf_t);
+    int32_t i, count = ecs_vec_count(&snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_leaf_t *snapshot_table = &tables[i];
         ecs_table_t *table = snapshot_table->table;
@@ -422,7 +420,7 @@ void ecs_snapshot_free(
         }
     }    
 
-    ecs_vector_free(snapshot->tables);
+    ecs_vec_fini_t(NULL, &snapshot->tables, ecs_table_leaf_t);
     ecs_os_free(snapshot);
 }
 

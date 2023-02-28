@@ -295,11 +295,14 @@ void flecs_eval_component_monitor(
 
         m->is_dirty = false;
 
-        ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
-            flecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+        int32_t i, count = ecs_vec_count(&m->queries);
+        ecs_query_t **elems = ecs_vec_first(&m->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t *q = elems[i];
+            flecs_query_notify(world, q, &(ecs_query_event_t) {
                 .kind = EcsQueryTableRematch
             });
-        });
+        }
     }
 }
 
@@ -335,7 +338,9 @@ void flecs_monitor_register(
     ecs_map_t *monitors = &world->monitors.monitors;
     ecs_map_init_if(monitors, &world->allocator);
     ecs_monitor_t *m = ecs_map_ensure_alloc_t(monitors, ecs_monitor_t, id);
-    ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
+    ecs_vec_init_if_t(&m->queries, ecs_query_t*);
+    ecs_query_t **q = ecs_vec_append_t(
+        &world->allocator, &m->queries, ecs_query_t*);
     *q = query;
 }
 
@@ -358,18 +363,18 @@ void flecs_monitor_unregister(
         return;
     }
 
-    int32_t i, count = ecs_vector_count(m->queries);
-    ecs_query_t **queries = ecs_vector_first(m->queries, ecs_query_t*);
+    int32_t i, count = ecs_vec_count(&m->queries);
+    ecs_query_t **queries = ecs_vec_first(&m->queries);
     for (i = 0; i < count; i ++) {
         if (queries[i] == query) {
-            ecs_vector_remove(m->queries, ecs_query_t*, i);
+            ecs_vec_remove_t(&m->queries, ecs_query_t*, i);
             count --;
             break;
         }
     }
 
     if (!count) {
-        ecs_vector_free(m->queries);
+        ecs_vec_fini_t(&world->allocator, &m->queries, ecs_query_t*);
         ecs_map_remove_free(monitors, id);
     }
 
@@ -384,17 +389,19 @@ void flecs_init_store(
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
     
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_init_t(a, &world->store.records, ecs_table_record_t, 0);
+    ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
+
     /* Initialize entity index */
     flecs_sparse_init_t(&world->store.entity_index, 
-        &world->allocator, &world->allocators.sparse_chunk,
-        ecs_record_t);
+        a, &world->allocators.sparse_chunk, ecs_record_t);
     flecs_sparse_set_id_source(&world->store.entity_index, 
         &world->info.last_id);
 
     /* Initialize root table */
     flecs_sparse_init_t(&world->store.tables, 
-        &world->allocator, &world->allocators.sparse_chunk,
-        ecs_table_t);
+        a, &world->allocators.sparse_chunk, ecs_table_t);
 
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
@@ -488,8 +495,10 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_release(world, &world->store.root);
     flecs_sparse_clear(&world->store.entity_index);
     flecs_hashmap_fini(&world->store.table_map);
-    ecs_vector_free(world->store.records);
-    ecs_vector_free(world->store.marked_ids);
+
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
+    ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
 }
 
 /* Implementation for iterable mixin */
@@ -708,9 +717,10 @@ ecs_world_t *ecs_mini(void) {
     ecs_poly_init(world, ecs_world_t);
 
     flecs_world_allocators_init(world);
+    ecs_allocator_t *a = &world->allocator;
 
     world->self = world;
-    flecs_sparse_init_t(&world->type_info, &world->allocator, 
+    flecs_sparse_init_t(&world->type_info, a,
         &world->allocators.sparse_chunk, ecs_type_info_t);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, ECS_HI_ID_RECORD_ID);
@@ -718,17 +728,17 @@ ecs_world_t *ecs_mini(void) {
     world->iterable.init = flecs_world_iter_init;
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
-    flecs_sparse_init_t(world->pending_tables, &world->allocator, 
+    flecs_sparse_init_t(world->pending_tables, a, 
         &world->allocators.sparse_chunk, ecs_table_t*);
     world->pending_buffer = ecs_os_calloc_t(ecs_sparse_t);
-    flecs_sparse_init_t(world->pending_buffer, &world->allocator, 
+    flecs_sparse_init_t(world->pending_buffer, a,
         &world->allocators.sparse_chunk, ecs_table_t*);
 
-    flecs_name_index_init(&world->aliases, &world->allocator);
-    flecs_name_index_init(&world->symbols, &world->allocator);
+    flecs_name_index_init(&world->aliases, a);
+    flecs_name_index_init(&world->symbols, a);
+    ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
 
     world->info.time_scale = 1.0;
-
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
@@ -1091,7 +1101,7 @@ void ecs_atfini(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
+    ecs_action_elem_t *elem = ecs_vec_append_t(NULL, &world->fini_actions,
         ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1110,8 +1120,8 @@ void ecs_run_post_frame(
     ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
-        ecs_action_elem_t);
+    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator, 
+        &stage->post_frame_actions, ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     elem->action = action;
@@ -1139,11 +1149,13 @@ static
 void flecs_fini_actions(
     ecs_world_t *world)
 {
-    ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
-        elem->action(world, elem->ctx);
-    });
+    int32_t i, count = ecs_vec_count(&world->fini_actions);
+    ecs_action_elem_t *elems = ecs_vec_first(&world->fini_actions);
+    for (i = 0; i < count; i ++) {
+        elems[i].action(world, elems[i].ctx);
+    }
 
-    ecs_vector_free(world->fini_actions);
+    ecs_vec_fini_t(NULL, &world->fini_actions, ecs_action_elem_t);
 }
 
 /* Cleanup remaining type info elements */

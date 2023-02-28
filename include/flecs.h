@@ -187,7 +187,6 @@
 /** @} */
 
 #include "flecs/private/api_defines.h"
-#include "flecs/private/vector.h"           /* Vector datatype */
 #include "flecs/private/vec.h"              /* Vector datatype */
 #include "flecs/private/sparse.h"           /* Sparse set */
 #include "flecs/private/block_allocator.h"  /* Block allocator */

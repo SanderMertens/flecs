@@ -518,12 +518,13 @@ void flecs_stage_merge_post_frame(
     ecs_stage_t *stage)
 {
     /* Execute post frame actions */
-    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
-        action->action(world, action->ctx);
-    });
+    int32_t i, count = ecs_vec_count(&stage->post_frame_actions);
+    ecs_action_elem_t *elems = ecs_vec_first(&stage->post_frame_actions);
+    for (i = 0; i < count; i ++) {
+        elems[i].action(world, elems[i].ctx);
+    }
 
-    ecs_vector_free(stage->post_frame_actions);
-    stage->post_frame_actions = NULL;
+    ecs_vec_clear(&stage->post_frame_actions);
 }
 
 void flecs_stage_init(
@@ -545,7 +546,9 @@ void flecs_stage_init(
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_CHUNK_SIZE);
 
-    ecs_vec_init_t(&stage->allocator, &stage->commands, ecs_cmd_t, 0);
+    ecs_allocator_t *a = &stage->allocator;
+    ecs_vec_init_t(a, &stage->commands, ecs_cmd_t, 0);
+    ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
     flecs_sparse_init_t(&stage->cmd_entries, &stage->allocator,
         &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
 }
@@ -565,9 +568,11 @@ void flecs_stage_fini(
 
     flecs_sparse_fini(&stage->cmd_entries);
 
-    ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-    ecs_vector_free(stage->variables);
-    ecs_vector_free(stage->operations);
+    ecs_allocator_t *a = &stage->allocator;
+    ecs_vec_fini_t(a, &stage->commands, ecs_cmd_t);
+    ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
+    ecs_vec_fini(NULL, &stage->variables, 0);
+    ecs_vec_fini(NULL, &stage->operations, 0);
     flecs_stack_fini(&stage->defer_stack);
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);

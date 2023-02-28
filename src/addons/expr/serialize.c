@@ -10,7 +10,7 @@
 static
 int flecs_expr_ser_type(
     const ecs_world_t *world,
-    ecs_vector_t *ser, 
+    const ecs_vec_t *ser, 
     const void *base, 
     ecs_strbuf_t *str);
 
@@ -265,9 +265,8 @@ int expr_ser_type_elements(
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_meta_type_op_t *ops = ecs_vector_first(ser->ops, ecs_meta_type_op_t);
-    int32_t op_count = ecs_vector_count(ser->ops);
-
+    ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
+    int32_t op_count = ecs_vec_count(&ser->ops);
     return expr_ser_elements(
         world, ops, op_count, base, elem_count, comp->size, str);
 }
@@ -295,7 +294,7 @@ int expr_ser_vector(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_vector_t *value = *(ecs_vector_t**)base;
+    ecs_vec_t *value = *(ecs_vec_t**)base;
     if (!value) {
         ecs_strbuf_appendlit(str, "null");
         return 0;
@@ -304,11 +303,8 @@ int expr_ser_vector(
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsComponent *comp = ecs_get(world, v->type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = ecs_vector_count(value);
-    void *array = ecs_vector_first_t(value, comp->size, comp->alignment);
+    int32_t count = ecs_vec_count(value);
+    void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
     return expr_ser_type_elements(world, v->type, array, count, str);
@@ -423,12 +419,12 @@ error:
 static
 int flecs_expr_ser_type(
     const ecs_world_t *world,
-    ecs_vector_t *v_ops,
+    const ecs_vec_t *v_ops,
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_meta_type_op_t *ops = ecs_vector_first(v_ops, ecs_meta_type_op_t);
-    int32_t count = ecs_vector_count(v_ops);
+    ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
+    int32_t count = ecs_vec_count(v_ops);
     return flecs_expr_ser_type_ops(world, ops, count, base, str, 0);
 }
 
@@ -447,7 +443,7 @@ int ecs_ptr_to_expr_buf(
         goto error;
     }
 
-    if (flecs_expr_ser_type(world, ser->ops, ptr, buf_out)) {
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out)) {
         goto error;
     }
 

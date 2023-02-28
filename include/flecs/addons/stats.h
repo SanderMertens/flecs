@@ -203,9 +203,12 @@ typedef struct ecs_system_stats_t {
 
 /** Statistics for all systems in a pipeline. */
 typedef struct ecs_pipeline_stats_t {
+    /* Allow for initializing struct with {0} */
+    int8_t canary_;
+
     /** Vector with system ids of all systems in the pipeline. The systems are
      * stored in the order they are executed. Merges are represented by a 0. */
-    ecs_vector_t *systems;
+    ecs_vec_t systems;
 
     /** Map with system statistics. For each system in the systems vector, an
      * entry in the map exists of type ecs_system_stats_t. */

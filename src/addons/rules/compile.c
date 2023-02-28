@@ -217,7 +217,7 @@ static
 ecs_var_id_t flecs_rule_add_var(
     ecs_rule_t *rule,
     const char *name,
-    ecs_vector_t **vars,
+    ecs_vec_t *vars,
     ecs_var_kind_t kind)
 {
     ecs_hashmap_t *var_index = NULL;
@@ -256,8 +256,8 @@ ecs_var_id_t flecs_rule_add_var(
 
     ecs_rule_var_t *var;
     if (vars) {
-        var = ecs_vector_add(vars, ecs_rule_var_t);
-        var->id = flecs_itovar(ecs_vector_count(*vars));
+        var = ecs_vec_append_t(NULL, vars, ecs_rule_var_t);
+        var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
         ecs_dbg_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
         var = &rule->vars[rule->var_count];
@@ -282,7 +282,7 @@ static
 ecs_var_id_t flecs_rule_add_var_for_term_id(
     ecs_rule_t *rule,
     ecs_term_id_t *term_id,
-    ecs_vector_t **vars,
+    ecs_vec_t *vars,
     ecs_var_kind_t kind)
 {
     const char *name = flecs_term_id_var_name(term_id);
@@ -298,8 +298,8 @@ void flecs_rule_discover_vars(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
 {
-    ecs_vector_t *vars = stage->variables; /* Buffer to reduce allocs */
-    ecs_vector_clear(vars);
+    ecs_vec_t *vars = &stage->variables; /* Buffer to reduce allocs */
+    ecs_vec_reset_t(NULL, vars, ecs_rule_var_t);
 
     ecs_term_t *terms = rule->filter.terms;
     int32_t i, anonymous_count = 0, count = rule->filter.term_count;
@@ -317,7 +317,7 @@ void flecs_rule_discover_vars(
         ecs_term_id_t *src = &term->src;
 
         ecs_var_id_t first_var_id = flecs_rule_add_var_for_term_id(
-            rule, first, &vars, EcsVarEntity);
+            rule, first, vars, EcsVarEntity);
         if (first_var_id == EcsVarNone) {
             /* If first is not a variable, check if we need to insert anonymous
              * variable for resolving component inheritance */
@@ -338,12 +338,12 @@ void flecs_rule_discover_vars(
                     rule, var_name, EcsVarEntity);
                 if (var_id == EcsVarNone || var_id == first_var_id) {
                     var_id = flecs_rule_add_var(
-                        rule, var_name, &vars, EcsVarEntity);
+                        rule, var_name, vars, EcsVarEntity);
 
                     /* Mark variable as one for which we need to create a table
                      * variable. Don't create table variable now, so that we can
                      * store it in the non-public part of the variable array. */
-                    ecs_rule_var_t *var = ecs_vector_get(
+                    ecs_rule_var_t *var = ecs_vec_get_t(
                         vars, ecs_rule_var_t, (int32_t)var_id - 1);
                     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
                     var->kind = EcsVarAny;
@@ -368,7 +368,7 @@ void flecs_rule_discover_vars(
         }
 
         if (flecs_rule_add_var_for_term_id(
-            rule, second, &vars, EcsVarEntity) == EcsVarNone)
+            rule, second, vars, EcsVarEntity) == EcsVarNone)
         {
             /* If second is a wildcard, insert anonymous variable */
             if (flecs_term_id_is_wildcard(second)) {
@@ -396,24 +396,24 @@ void flecs_rule_discover_vars(
         }
     }
 
-    int32_t var_count = ecs_vector_count(vars);
+    int32_t var_count = ecs_vec_count(vars);
 
     /* Add non-This table variables */
     if (anonymous_table_count) {
         anonymous_table_count = 0;
         for (i = 0; i < var_count; i ++) {
-            ecs_rule_var_t *var = ecs_vector_get(vars, ecs_rule_var_t, i);
+            ecs_rule_var_t *var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
             if (var->kind == EcsVarAny) {
                 var->kind = EcsVarEntity;
 
                 ecs_var_id_t var_id = flecs_rule_add_var(
-                    rule, var->name, &vars, EcsVarTable);
-                ecs_vector_get(vars, ecs_rule_var_t, i)->table_id = var_id;
+                    rule, var->name, vars, EcsVarTable);
+                ecs_vec_get_t(vars, ecs_rule_var_t, i)->table_id = var_id;
                 anonymous_table_count ++;
             }
         }
 
-        var_count = ecs_vector_count(vars);
+        var_count = ecs_vec_count(vars);
     }
 
     /* Always include spot for This variable, even if rule doesn't use it */
@@ -450,7 +450,7 @@ void flecs_rule_discover_vars(
     var_count --;
 
     if (var_count) {
-        ecs_rule_var_t *user_vars = ecs_vector_first(vars, ecs_rule_var_t);
+        ecs_rule_var_t *user_vars = ecs_vec_first_t(vars, ecs_rule_var_t);
         ecs_os_memcpy_n(rule_vars, user_vars, ecs_rule_var_t, var_count);
         for (i = 0; i < var_count; i ++) {
             var_names[i] = (char*)rule_vars[i].name;
@@ -459,8 +459,6 @@ void flecs_rule_discover_vars(
 
     /* Hide anonymous table variables from application */
     rule->var_pub_count -= anonymous_table_count;
-
-    stage->variables = vars;
 }
 
 static
@@ -499,8 +497,8 @@ ecs_rule_lbl_t flecs_rule_op_insert(
     ecs_rule_op_t *op,
     ecs_rule_compile_ctx_t *ctx)
 {
-    ecs_rule_op_t *elem = ecs_vector_add(&ctx->ops, ecs_rule_op_t);
-    int32_t count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *elem = ecs_vec_append_t(NULL, ctx->ops, ecs_rule_op_t);
+    int32_t count = ecs_vec_count(ctx->ops);
     *elem = *op;
     if (count > 1) {
         if (ctx->lbl_union == -1) {
@@ -528,13 +526,13 @@ int32_t flecs_rule_not_insert(
     ecs_rule_op_t *op,
     ecs_rule_compile_ctx_t *ctx)
 {
-    ecs_rule_op_t *op_last = ecs_vector_last(ctx->ops, ecs_rule_op_t);
+    ecs_rule_op_t *op_last = ecs_vec_last_t(ctx->ops, ecs_rule_op_t);
     if (op_last && op_last->kind == EcsRuleNot) {
         /* There can be multiple reasons for inserting a Not operation, ensure
          * that only one is created. */
         ecs_assert(op_last->field_index == op->field_index, 
             ECS_INTERNAL_ERROR, NULL);
-        return ecs_vector_count(ctx->ops) - 1;
+        return ecs_vec_count(ctx->ops) - 1;
     }
 
     ecs_rule_op_t not_op = {0};
@@ -555,7 +553,7 @@ static
 void flecs_rule_begin_none(
     ecs_rule_compile_ctx_t *ctx)
 {
-    ctx->lbl_none = flecs_itolbl(ecs_vector_count(ctx->ops));
+    ctx->lbl_none = flecs_itolbl(ecs_vec_count(ctx->ops));
 
     ecs_rule_op_t jmp = {0};
     jmp.kind = EcsRuleJmpCondFalse;
@@ -566,7 +564,7 @@ static
 void flecs_rule_begin_not(
     ecs_rule_compile_ctx_t *ctx)
 {
-    ctx->lbl_not = flecs_itolbl(ecs_vector_count(ctx->ops));
+    ctx->lbl_not = flecs_itolbl(ecs_vec_count(ctx->ops));
 }
 
 static
@@ -583,8 +581,8 @@ void flecs_rule_end_not(
 
     flecs_rule_not_insert(op, ctx);
 
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t i, count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t i, count = ecs_vec_count(ctx->ops);
     for (i = ctx->lbl_not; i < count; i ++) {
         ecs_rule_op_t *cur = &ops[i];
         if (flecs_rule_op_is_test[cur->kind]) {
@@ -596,7 +594,7 @@ void flecs_rule_end_not(
     }
 
     /* After a match was found, return to op before Not operation */
-    ecs_rule_op_t *not_ptr = ecs_vector_last(ctx->ops, ecs_rule_op_t);
+    ecs_rule_op_t *not_ptr = ecs_vec_last_t(ctx->ops, ecs_rule_op_t);
     not_ptr->prev = flecs_itolbl(ctx->lbl_not - 1);
 
     if (ctx->lbl_none != -1) {
@@ -619,7 +617,7 @@ static
 void flecs_rule_begin_option(
     ecs_rule_compile_ctx_t *ctx)
 {
-    ctx->lbl_option = flecs_itolbl(ecs_vector_count(ctx->ops));
+    ctx->lbl_option = flecs_itolbl(ecs_vec_count(ctx->ops));
 
     {
         ecs_rule_op_t new_op = {0};
@@ -634,8 +632,8 @@ void flecs_rule_end_option(
     ecs_rule_compile_ctx_t *ctx)
 {
     flecs_rule_not_insert(op, ctx);
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t count = ecs_vec_count(ctx->ops);
 
     ops[ctx->lbl_option].other = flecs_itolbl(count - 1);
     ops[count - 2].next = flecs_itolbl(count);
@@ -673,7 +671,7 @@ void flecs_rule_begin_cond_eval(
     /* If this term uses conditionally set variables, insert instruction that
      * jumps over the term if the variables weren't set yet. */
     if (cond_mask & cond_write_state) {
-        ctx->lbl_cond_eval = flecs_itolbl(ecs_vector_count(ctx->ops));
+        ctx->lbl_cond_eval = flecs_itolbl(ecs_vec_count(ctx->ops));
 
         ecs_rule_op_t jmp_op = {0};
         jmp_op.kind = EcsRuleJmpNotSet;
@@ -708,8 +706,8 @@ void flecs_rule_end_cond_eval(
 
     flecs_rule_not_insert(op, ctx);
 
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t count = ecs_vec_count(ctx->ops);
     ops[ctx->lbl_cond_eval].other = flecs_itolbl(count - 1);
     ops[count - 2].next = flecs_itolbl(count);
 }
@@ -718,8 +716,8 @@ static
 void flecs_rule_next_or(
     ecs_rule_compile_ctx_t *ctx)
 {
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t count = ecs_vec_count(ctx->ops);
     ops[count - 1].next = FlecsRuleOrMarker;
 }
 
@@ -727,7 +725,7 @@ static
 void flecs_rule_begin_or(
     ecs_rule_compile_ctx_t *ctx)
 {
-    ctx->lbl_or = flecs_itolbl(ecs_vector_count(ctx->ops) - 1);
+    ctx->lbl_or = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
     flecs_rule_next_or(ctx);
 }
 
@@ -737,8 +735,8 @@ void flecs_rule_end_or(
 {
     flecs_rule_next_or(ctx);
 
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t i, count = ecs_vector_count(ctx->ops);
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t i, count = ecs_vec_count(ctx->ops);
     int32_t prev_or = -2;
     for (i = ctx->lbl_or; i < count; i ++) {
         if (ops[i].next == FlecsRuleOrMarker) {
@@ -777,8 +775,8 @@ void flecs_rule_end_union(
     ctx->lbl_union = -1;
     ecs_rule_lbl_t next = flecs_rule_op_insert(&op, ctx);
     
-    ecs_rule_op_t *ops = ecs_vector_first(ctx->ops, ecs_rule_op_t);
-    int32_t i = ecs_vector_count(ctx->ops) - 2;
+    ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
+    int32_t i = ecs_vec_count(ctx->ops) - 2;
     for (; i >= 0 && (ops[i].kind != EcsRuleUnion); i --) {
         if (ops[i].next == FlecsRuleOrMarker) {
             ops[i].next = next;
@@ -1260,12 +1258,13 @@ void flecs_rule_compile(
     ecs_filter_t *filter = &rule->filter;
     ecs_term_t *terms = filter->terms;
     ecs_rule_compile_ctx_t ctx = {0};
-    ctx.ops = stage->operations;
+    ecs_vec_reset_t(NULL, &stage->operations, ecs_rule_op_t);
+    ctx.ops = &stage->operations;
     ctx.lbl_union = -1;
     ctx.lbl_prev = -1;
     ctx.lbl_not = -1;
     ctx.lbl_none = -1;
-    ecs_vector_clear(ctx.ops);
+    ecs_vec_clear(ctx.ops);
 
     /* Find all variables defined in query */
     flecs_rule_discover_vars(stage, rule);
@@ -1383,15 +1382,13 @@ void flecs_rule_compile(
         flecs_rule_op_insert(&yield, &ctx);
     }
 
-    int32_t op_count = ecs_vector_count(ctx.ops);
+    int32_t op_count = ecs_vec_count(ctx.ops);
     if (op_count) {
         rule->op_count = op_count;
         rule->ops = ecs_os_malloc_n(ecs_rule_op_t, op_count);
-        ecs_rule_op_t *rule_ops = ecs_vector_first(ctx.ops, ecs_rule_op_t);
+        ecs_rule_op_t *rule_ops = ecs_vec_first_t(ctx.ops, ecs_rule_op_t);
         ecs_os_memcpy_n(rule->ops, rule_ops, ecs_rule_op_t, op_count);
     }
-
-    stage->operations = ctx.ops;
 }
 
 #endif

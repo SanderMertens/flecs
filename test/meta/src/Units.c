@@ -24,8 +24,8 @@ void Units_member_w_unit() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
@@ -73,8 +73,8 @@ void Units_member_w_unit_type() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, u);
     test_uint(members[0].unit, u);
@@ -657,8 +657,8 @@ void Units_set_unit() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
@@ -714,8 +714,8 @@ void Units_set_unit_w_derived() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
@@ -779,8 +779,8 @@ void Units_set_unit_w_over() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
@@ -848,8 +848,8 @@ void Units_set_unit_w_prefix() {
 
     const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
     test_assert(sptr != NULL);
-    test_int(1, ecs_vector_count(sptr->members));
-    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_int(1, ecs_vec_count(&sptr->members));
+    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);

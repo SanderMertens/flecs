@@ -28,13 +28,30 @@ ecs_vec_t* ecs_vec_init(
     return v;
 }
 
+void ecs_vec_init_if(
+    ecs_vec_t *vec,
+    ecs_size_t size)
+{
+    ecs_dbg_assert(!vec->elem_size || vec->elem_size == size, ECS_INVALID_PARAMETER, NULL);
+    (void)vec;
+    (void)size;
+#ifdef FLECS_DEBUG
+    if (!vec->elem_size) {
+        ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
+        vec->elem_size = size;
+    }
+#endif
+}
+
 void ecs_vec_fini(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size)
 {
     if (v->array) {
-        ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        ecs_dbg_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
         if (allocator) {
             flecs_free(allocator, size * v->size, v->array);
         } else {
@@ -135,6 +152,29 @@ void ecs_vec_set_size(
             }
             v->size = elem_count;
         }
+    }
+}
+
+void ecs_vec_set_min_size(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count)
+{
+    if (elem_count > vec->size) {
+        ecs_vec_set_size(allocator, vec, size, elem_count);
+    }
+}
+
+void ecs_vec_set_min_count(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count)
+{
+    ecs_vec_set_min_size(allocator, vec, size, elem_count);
+    if (vec->count < elem_count) {
+        vec->count = elem_count;
     }
 }
 

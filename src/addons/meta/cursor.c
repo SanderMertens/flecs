@@ -101,15 +101,6 @@ ecs_size_t get_size(
     return get_ecs_component(world, scope)->size;
 }
 
-/* Get alignment for type in current scope */
-static
-ecs_size_t get_alignment(
-    const ecs_world_t *world,
-    ecs_meta_scope_t *scope)
-{
-    return get_ecs_component(world, scope)->alignment;
-}
-
 static
 int32_t get_elem_count(
     ecs_meta_scope_t *scope)
@@ -117,7 +108,7 @@ int32_t get_elem_count(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        return ecs_vector_count(*(scope->vector));
+        return ecs_vec_count(scope->vector);
     } else if (opaque && opaque->count) {
         return flecs_uto(int32_t, opaque->count(scope[-1].ptr));
     }
@@ -137,10 +128,8 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        ecs_size_t align = get_alignment(world, scope);
-        ecs_vector_set_min_count_t(
-            scope->vector, size, align, scope->elem_cur + 1);
-        scope->ptr = ecs_vector_first_t(*(scope->vector), size, align);
+        ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        scope->ptr = ecs_vec_first(scope->vector);
     } else if (opaque) {
         if (scope->is_collection) {
             if (!opaque->ensure_element) {
@@ -192,8 +181,8 @@ int flecs_meta_cursor_push_type(
 
     scope[0] = (ecs_meta_scope_t) {
         .type = type,
-        .ops = ecs_vector_first(ser->ops, ecs_meta_type_op_t),
-        .op_count = ecs_vector_count(ser->ops),
+        .ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t),
+        .op_count = ecs_vec_count(&ser->ops),
         .ptr = ptr
     };
 

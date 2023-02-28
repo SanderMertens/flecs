@@ -407,7 +407,7 @@ static
 void flecs_table_append_to_records(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_vector_t **records,
+    ecs_vec_t *records,
     ecs_id_t id,
     int32_t column)
 {
@@ -417,7 +417,7 @@ void flecs_table_append_to_records(
     ecs_table_record_t *tr = (ecs_table_record_t*)flecs_id_record_get_table(
             idr, table);
     if (!tr) {
-        tr = ecs_vector_add(records, ecs_table_record_t);
+        tr = ecs_vec_append_t(&world->allocator, records, ecs_table_record_t);
         tr->column = column;
         tr->count = 1;
 
@@ -450,8 +450,9 @@ void flecs_table_init(
     /* We don't know in advance how large the records array will be, so use
      * cached vector. This eliminates unnecessary allocations, and/or expensive
      * iterations to determine how many records we need. */
-    ecs_vector_t *records = world->store.records;
-    ecs_vector_clear(records);
+    ecs_allocator_t *a = &world->allocator;
+    ecs_vec_t *records = &world->store.records;
+    ecs_vec_reset_t(a, records, ecs_table_record_t);
     ecs_id_record_t *idr;
 
     int32_t last_id = -1; /* Track last regular (non-pair) id */
@@ -484,7 +485,7 @@ void flecs_table_init(
             idr = flecs_id_record_ensure(world, dst_id);
         }
         if (idr) {
-            tr = ecs_vector_add(&records, ecs_table_record_t);
+            tr = ecs_vec_append_t(a, records, ecs_table_record_t);
             tr->hdr.cache = (ecs_table_cache_t*)idr;
             tr->column = dst_i;
             tr->count = 1;
@@ -497,7 +498,7 @@ void flecs_table_init(
     /* Add remaining ids that the "from" table didn't have */
     for (; (dst_i < dst_count); dst_i ++) {
         ecs_id_t dst_id = dst_ids[dst_i];
-        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         idr = flecs_id_record_ensure(world, dst_id);
         tr->hdr.cache = (ecs_table_cache_t*)idr;
         ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -523,7 +524,7 @@ void flecs_table_init(
          */
         int32_t flag_id_count = dst_count - start;
         int32_t record_count = start + 3 * flag_id_count + 3 + 1;
-        ecs_vector_set_min_size(&records, ecs_table_record_t, record_count);
+        ecs_vec_set_min_size_t(a, records, ecs_table_record_t, record_count);
     }
 
     /* Add records for ids with roles (used by cleanup logic) */
@@ -540,11 +541,11 @@ void flecs_table_init(
                     first = id & ECS_COMPONENT_MASK;
                 }
                 if (first) {
-                    flecs_table_append_to_records(world, table, &records, 
+                    flecs_table_append_to_records(world, table, records, 
                         ecs_pair(EcsFlag, first), dst_i);
                 }
                 if (second) {
-                    flecs_table_append_to_records(world, table, &records, 
+                    flecs_table_append_to_records(world, table, records, 
                         ecs_pair(EcsFlag, second), dst_i);
                 }
             }
@@ -562,11 +563,11 @@ void flecs_table_init(
                 break; /* no more pairs */
             }
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
-                tr = ecs_vector_get(records, ecs_table_record_t, dst_i);
+                tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
                 idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                tr = ecs_vector_add(&records, ecs_table_record_t);
+                tr = ecs_vec_append_t(a, records, ecs_table_record_t);
                 tr->hdr.cache = (ecs_table_cache_t*)idr;
                 tr->column = dst_i;
                 tr->count = 0;
@@ -587,40 +588,40 @@ void flecs_table_init(
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
             flecs_table_append_to_records(
-                world, table, &records, tgt_id, dst_i);
+                world, table, records, tgt_id, dst_i);
         }
     }
 
     /* Lastly, add records for all-wildcard ids */
     if (last_id >= 0) {
-        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard;
         tr->column = 0;
         tr->count = last_id + 1;
     }
     if (last_pair - first_pair) {
-        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard_wildcard;
         tr->column = first_pair;
         tr->count = last_pair - first_pair;
     }
     if (dst_count) {
-        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_any;
         tr->column = 0;
         tr->count = 1;
     }
     if (dst_count && !has_childof) {
-        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_childof_0;
         tr->column = 0;
         tr->count = 1;
     }
 
     /* Now that all records have been added, copy them to array */
-    int32_t i, dst_record_count = ecs_vector_count(records);
+    int32_t i, dst_record_count = ecs_vec_count(records);
     ecs_table_record_t *dst_tr = flecs_wdup_n(world, ecs_table_record_t, 
-        dst_record_count, ecs_vector_first(records, ecs_table_record_t));
+        dst_record_count, ecs_vec_first_t(records, ecs_table_record_t));
     table->record_count = flecs_ito(uint16_t, dst_record_count);
     table->records = dst_tr;
 
@@ -647,8 +648,6 @@ void flecs_table_init(
         /* Initialize event flags */
         table->flags |= idr->flags & EcsIdEventMask;
     }
-
-    world->store.records = records;
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table); 

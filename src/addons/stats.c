@@ -585,8 +585,9 @@ bool ecs_pipeline_stats_get(
     /* Make sure vector is large enough to store all systems & sync points */
     ecs_entity_t *systems = NULL;
     if (pip_count) {
-        ecs_vector_set_count(&s->systems, ecs_entity_t, pip_count);
-        systems = ecs_vector_first(s->systems, ecs_entity_t);
+        ecs_vec_init_if_t(&s->systems, ecs_entity_t);
+        ecs_vec_set_count_t(NULL, &s->systems, ecs_entity_t, pip_count);
+        systems = ecs_vec_first_t(&s->systems, ecs_entity_t);
 
         /* Populate systems vector, keep track of sync points */
         it = ecs_query_iter(stage, pq->query);
@@ -611,8 +612,7 @@ bool ecs_pipeline_stats_get(
         systems[i_system ++] = 0; /* Last merge */
         ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
     } else {
-        ecs_vector_free(s->systems);
-        s->systems = NULL;
+        ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
     }
 
     /* Separately populate system stats map from build query, which includes
@@ -644,17 +644,17 @@ void ecs_pipeline_stats_fini(
         ecs_os_free(elem);
     }
     ecs_map_fini(&stats->system_stats);
-    ecs_vector_free(stats->systems);
+    ecs_vec_fini_t(NULL, &stats->systems, ecs_entity_t);
 }
 
 void ecs_pipeline_stats_reduce(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
-    int32_t system_count = ecs_vector_count(src->systems);
-    ecs_vector_set_count(&dst->systems, ecs_entity_t, system_count);
-    ecs_entity_t *dst_systems = ecs_vector_first(dst->systems, ecs_entity_t);
-    ecs_entity_t *src_systems = ecs_vector_first(src->systems, ecs_entity_t);
+    int32_t system_count = ecs_vec_count(&src->systems);
+    ecs_vec_set_count_t(NULL, &dst->systems, ecs_entity_t, system_count);
+    ecs_entity_t *dst_systems = ecs_vec_first_t(&dst->systems, ecs_entity_t);
+    ecs_entity_t *src_systems = ecs_vec_first_t(&src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
     ecs_map_init_if(&dst->system_stats, NULL);

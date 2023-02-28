@@ -706,8 +706,8 @@ void flecs_pipeline_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "[", ",");
 
-    int32_t i, count = ecs_vector_count(stats->stats.systems);
-    ecs_entity_t *ids = ecs_vector_first(stats->stats.systems, ecs_entity_t);
+    int32_t i, count = ecs_vec_count(&stats->stats.systems);
+    ecs_entity_t *ids = ecs_vec_first_t(&stats->stats.systems, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
         

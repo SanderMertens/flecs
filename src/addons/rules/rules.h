@@ -161,7 +161,7 @@ typedef struct ecs_rule_op_ctx_t {
 
 /* Rule compiler state */
 typedef struct {
-    ecs_vector_t *ops;
+    ecs_vec_t *ops;
     ecs_write_flags_t written; /* Bitmask to check which variables have been written */
     ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
 
