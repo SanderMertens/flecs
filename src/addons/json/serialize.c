@@ -187,9 +187,6 @@ int json_ser_vector(
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsComponent *comp = ecs_get(world, v->type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-
     int32_t count = ecs_vec_count(value);
     void *array = ecs_vec_first(value);
 

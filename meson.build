@@ -60,7 +60,6 @@ flecs_src = files(
     'src/datastructures/strbuf.c',
     'src/datastructures/switch_list.c',
     'src/datastructures/vec.c',
-    'src/datastructures/vector.c',
     'src/bootstrap.c',
     'src/entity.c',
     'src/entity_filter.c',

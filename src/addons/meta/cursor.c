@@ -101,15 +101,6 @@ ecs_size_t get_size(
     return get_ecs_component(world, scope)->size;
 }
 
-/* Get alignment for type in current scope */
-static
-ecs_size_t get_alignment(
-    const ecs_world_t *world,
-    ecs_meta_scope_t *scope)
-{
-    return get_ecs_component(world, scope)->alignment;
-}
-
 static
 int32_t get_elem_count(
     ecs_meta_scope_t *scope)

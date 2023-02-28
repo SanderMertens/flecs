@@ -12,40 +12,6 @@
     },
     "test": {
         "testsuites": [{
-            "id": "Vector",
-            "setup": true,
-            "testcases": [
-                "free_empty",
-                "count",
-                "count_empty",
-                "get",
-                "get_first",
-                "get_last",
-                "get_last_from_empty",
-                "get_last_from_null",
-                "get_empty",
-                "get_out_of_bound",
-                "add_empty",
-                "add_resize",
-                "sort_rnd",
-                "sort_sorted",
-                "sort_empty",
-                "sort_null",
-                "size_of_null",
-                "set_size_smaller_than_count",
-                "pop_elements",
-                "pop_null",
-                "reclaim",
-                "grow",
-                "copy",
-                "copy_null",
-                "addn_to_null",
-                "addn_to_0_size",
-                "set_min_count",
-                "set_min_size",
-                "set_min_size_to_smaller"
-            ]
-        }, {
             "id": "Map",
             "setup": true,
             "testcases": [

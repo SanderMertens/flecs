@@ -33,12 +33,16 @@ void ecs_vec_init_if(
     ecs_size_t size)
 {
     ecs_dbg_assert(!vec->elem_size || vec->elem_size == size, ECS_INVALID_PARAMETER, NULL);
+    (void)vec;
+    (void)size;
+#ifdef FLECS_DEBUG
     if (!vec->elem_size) {
         ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
         vec->elem_size = size;
     }
+#endif
 }
 
 void ecs_vec_fini(
