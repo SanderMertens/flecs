@@ -652,6 +652,7 @@ void ecs_pipeline_stats_reduce(
     const ecs_pipeline_stats_t *src)
 {
     int32_t system_count = ecs_vec_count(&src->systems);
+    ecs_vec_init_if_t(&dst->systems, ecs_entity_t);
     ecs_vec_set_count_t(NULL, &dst->systems, ecs_entity_t, system_count);
     ecs_entity_t *dst_systems = ecs_vec_first_t(&dst->systems, ecs_entity_t);
     ecs_entity_t *src_systems = ecs_vec_first_t(&src->systems, ecs_entity_t);
