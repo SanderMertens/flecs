@@ -89,6 +89,7 @@ bool flecs_ref_is_written(
 {
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, kind);
     if (flags & EcsRuleIsEntity) {
+        ecs_assert(!(flags & EcsRuleIsVar), ECS_INTERNAL_ERROR, NULL);
         if (ref->entity) {
             return true;
         }
@@ -1034,7 +1035,63 @@ bool flecs_rule_term_fixed_id(
 }
 
 static
-void flecs_rule_compile_term(
+bool flecs_rule_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.flags & EcsIsEntity) {
+        ecs_entity_t id = term->first.id;
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static
+int flecs_rule_compile_builtin_pred(
+    ecs_term_t *term,
+    ecs_rule_op_t *op,
+    ecs_write_flags_t write_state)
+{
+    ecs_entity_t id = term->first.id;
+
+    if (id == EcsPredEq) {
+        ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+
+        if (term->second.flags & EcsIsName) {
+            if (term->oper == EcsNot) {
+                op->kind = EcsRulePredNeqName;
+            } else {
+                op->kind = EcsRulePredEqName;
+            }
+        } else {
+            if (term->oper == EcsNot) {
+                op->kind = EcsRulePredNeq;
+            } else {
+                op->kind = EcsRulePredEq;
+            }
+        }
+
+        op->first = op->src;
+        op->src = (ecs_rule_ref_t){0};
+        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
+        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
+        op->flags |= EcsRuleIsVar << EcsRuleFirst;
+
+        if (flags_2nd & EcsRuleIsVar) {
+            if (!(write_state & (1ull << op->second.var))) {
+                ecs_err("uninitialized variable '%s' on right-hand side of "
+                    "equality operator", term->second.name);
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static
+int flecs_rule_compile_term(
     ecs_world_t *world,
     ecs_rule_t *rule,
     ecs_term_t *term,
@@ -1045,6 +1102,8 @@ void flecs_rule_compile_term(
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
     bool cond_write = term->oper == EcsOptional;
+    bool builtin_pred = flecs_rule_is_builtin_pred(term);
+    bool is_not = (term->oper == EcsNot) && !builtin_pred;
     ecs_rule_op_t op = {0};
 
     /* Default instruction for And operators. If the source is fixed (like for
@@ -1074,6 +1133,7 @@ void flecs_rule_compile_term(
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
     ecs_write_flags_t cond_write_state = ctx->cond_written;
+    ecs_write_flags_t write_state = ctx->written;
 
     /* Resolve component inheritance if necessary */
     ecs_var_id_t first_var = EcsVarNone, second_var = EcsVarNone, src_var = EcsVarNone;
@@ -1158,7 +1218,7 @@ void flecs_rule_compile_term(
     /* If term has component inheritance enabled, insert instruction to walk
      * down the relationship tree of the id. */
     if (term->flags & EcsTermIdInherited) {
-        if (term->oper == EcsNot) {
+        if (is_not) {
             /* Ensure that term only matches if none of the inherited ids match
              * with the source. */
             flecs_rule_begin_none(ctx);
@@ -1167,7 +1227,7 @@ void flecs_rule_compile_term(
     }
 
     /* Handle Not, Optional, Or operators */
-    if (term->oper == EcsNot) {
+    if (is_not) {
         flecs_rule_begin_not(ctx);
     } else if (term->oper == EcsOptional) {
         flecs_rule_begin_option(ctx);
@@ -1197,6 +1257,12 @@ void flecs_rule_compile_term(
         op.flags |= EcsRuleIsSelf;
     }
 
+    if (builtin_pred) {
+        if (flecs_rule_compile_builtin_pred(term, &op, write_state)) {
+            return -1;
+        }
+    }
+
     flecs_rule_op_insert(&op, ctx);
 
     /* Handle self-references between src and first/second variables */
@@ -1220,7 +1286,7 @@ void flecs_rule_compile_term(
     }
 
     /* Handle closing of Not, Optional and Or operators */
-    if (term->oper == EcsNot) {
+    if (is_not) {
         /* Restore original first id in case it got replaced with a variable */
         op.first = prev_first;
         op.flags = prev_op_flags;
@@ -1248,9 +1314,11 @@ void flecs_rule_compile_term(
             }
         }
     }
+
+    return 0;
 }
 
-void flecs_rule_compile(
+int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule)
@@ -1297,7 +1365,9 @@ void flecs_rule_compile(
     /* Compile query terms to instructions */
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        flecs_rule_compile_term(world, rule, term, &ctx);
+        if (flecs_rule_compile_term(world, rule, term, &ctx)) {
+            return -1;
+        }
     }
 
     /* If This variable has been written as entity, insert an operation to 
@@ -1389,6 +1459,8 @@ void flecs_rule_compile(
         ecs_rule_op_t *rule_ops = ecs_vec_first_t(ctx.ops, ecs_rule_op_t);
         ecs_os_memcpy_n(rule->ops, rule_ops, ecs_rule_op_t, op_count);
     }
+
+    return 0;
 }
 
 #endif

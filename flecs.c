@@ -35045,6 +35045,10 @@ typedef enum {
     EcsRuleUnion,          /* Combine output of multiple operations */
     EcsRuleEnd,            /* Used to denote end of EcsRuleUnion block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
+    EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
+    EcsRulePredNeq,        /* Test if variable is not equal to */
+    EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
+    EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
@@ -35097,16 +35101,6 @@ typedef struct {
     int16_t remaining;
 } ecs_rule_and_ctx_t;
 
- /* Each context */
-typedef struct {
-    int32_t row;
-} ecs_rule_each_ctx_t;
-
- /* Setthis context */
-typedef struct {
-    ecs_table_range_t range;
-} ecs_rule_setthis_ctx_t;
-
 /* Cache for storing results of downward traversal */
 typedef struct {
     ecs_entity_t entity;
@@ -35131,12 +35125,28 @@ typedef struct {
     bool yield_reflexive;
 } ecs_rule_trav_ctx_t;
 
-/* Trav context */
+ /* Eq context */
+typedef struct {
+    ecs_table_range_t range;
+    bool redo;
+} ecs_rule_eq_ctx_t;
+
+ /* Each context */
+typedef struct {
+    int32_t row;
+} ecs_rule_each_ctx_t;
+
+ /* Setthis context */
+typedef struct {
+    ecs_table_range_t range;
+} ecs_rule_setthis_ctx_t;
+
+/* Ids context */
 typedef struct {
     ecs_id_record_t *cur;
 } ecs_rule_ids_ctx_t;
 
-/* End context (used with Union) */
+/* Ctrlflow context (used with Union) */
 typedef struct {
     ecs_rule_lbl_t lbl;
 } ecs_rule_ctrlflow_ctx_t;
@@ -35151,6 +35161,7 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_and_ctx_t and;
         ecs_rule_trav_ctx_t trav;
         ecs_rule_ids_ctx_t ids;
+        ecs_rule_eq_ctx_t eq;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
         ecs_rule_ctrlflow_ctx_t ctrlflow;
@@ -35242,7 +35253,7 @@ bool flecs_ref_is_written(
     uint64_t written);
 
 /* Compile filter to list of operations */
-void flecs_rule_compile(
+int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule);
@@ -35357,6 +35368,7 @@ bool flecs_ref_is_written(
 {
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, kind);
     if (flags & EcsRuleIsEntity) {
+        ecs_assert(!(flags & EcsRuleIsVar), ECS_INTERNAL_ERROR, NULL);
         if (ref->entity) {
             return true;
         }
@@ -36302,7 +36314,63 @@ bool flecs_rule_term_fixed_id(
 }
 
 static
-void flecs_rule_compile_term(
+bool flecs_rule_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.flags & EcsIsEntity) {
+        ecs_entity_t id = term->first.id;
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static
+int flecs_rule_compile_builtin_pred(
+    ecs_term_t *term,
+    ecs_rule_op_t *op,
+    ecs_write_flags_t write_state)
+{
+    ecs_entity_t id = term->first.id;
+
+    if (id == EcsPredEq) {
+        ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+
+        if (term->second.flags & EcsIsName) {
+            if (term->oper == EcsNot) {
+                op->kind = EcsRulePredNeqName;
+            } else {
+                op->kind = EcsRulePredEqName;
+            }
+        } else {
+            if (term->oper == EcsNot) {
+                op->kind = EcsRulePredNeq;
+            } else {
+                op->kind = EcsRulePredEq;
+            }
+        }
+
+        op->first = op->src;
+        op->src = (ecs_rule_ref_t){0};
+        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
+        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
+        op->flags |= EcsRuleIsVar << EcsRuleFirst;
+
+        if (flags_2nd & EcsRuleIsVar) {
+            if (!(write_state & (1ull << op->second.var))) {
+                ecs_err("uninitialized variable '%s' on right-hand side of "
+                    "equality operator", term->second.name);
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static
+int flecs_rule_compile_term(
     ecs_world_t *world,
     ecs_rule_t *rule,
     ecs_term_t *term,
@@ -36313,6 +36381,8 @@ void flecs_rule_compile_term(
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
     bool cond_write = term->oper == EcsOptional;
+    bool builtin_pred = flecs_rule_is_builtin_pred(term);
+    bool is_not = (term->oper == EcsNot) && !builtin_pred;
     ecs_rule_op_t op = {0};
 
     /* Default instruction for And operators. If the source is fixed (like for
@@ -36342,6 +36412,7 @@ void flecs_rule_compile_term(
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
     ecs_write_flags_t cond_write_state = ctx->cond_written;
+    ecs_write_flags_t write_state = ctx->written;
 
     /* Resolve component inheritance if necessary */
     ecs_var_id_t first_var = EcsVarNone, second_var = EcsVarNone, src_var = EcsVarNone;
@@ -36426,7 +36497,7 @@ void flecs_rule_compile_term(
     /* If term has component inheritance enabled, insert instruction to walk
      * down the relationship tree of the id. */
     if (term->flags & EcsTermIdInherited) {
-        if (term->oper == EcsNot) {
+        if (is_not) {
             /* Ensure that term only matches if none of the inherited ids match
              * with the source. */
             flecs_rule_begin_none(ctx);
@@ -36435,7 +36506,7 @@ void flecs_rule_compile_term(
     }
 
     /* Handle Not, Optional, Or operators */
-    if (term->oper == EcsNot) {
+    if (is_not) {
         flecs_rule_begin_not(ctx);
     } else if (term->oper == EcsOptional) {
         flecs_rule_begin_option(ctx);
@@ -36465,6 +36536,12 @@ void flecs_rule_compile_term(
         op.flags |= EcsRuleIsSelf;
     }
 
+    if (builtin_pred) {
+        if (flecs_rule_compile_builtin_pred(term, &op, write_state)) {
+            return -1;
+        }
+    }
+
     flecs_rule_op_insert(&op, ctx);
 
     /* Handle self-references between src and first/second variables */
@@ -36488,7 +36565,7 @@ void flecs_rule_compile_term(
     }
 
     /* Handle closing of Not, Optional and Or operators */
-    if (term->oper == EcsNot) {
+    if (is_not) {
         /* Restore original first id in case it got replaced with a variable */
         op.first = prev_first;
         op.flags = prev_op_flags;
@@ -36516,9 +36593,11 @@ void flecs_rule_compile_term(
             }
         }
     }
+
+    return 0;
 }
 
-void flecs_rule_compile(
+int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule)
@@ -36565,7 +36644,9 @@ void flecs_rule_compile(
     /* Compile query terms to instructions */
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        flecs_rule_compile_term(world, rule, term, &ctx);
+        if (flecs_rule_compile_term(world, rule, term, &ctx)) {
+            return -1;
+        }
     }
 
     /* If This variable has been written as entity, insert an operation to 
@@ -36657,6 +36738,8 @@ void flecs_rule_compile(
         ecs_rule_op_t *rule_ops = ecs_vec_first_t(ctx.ops, ecs_rule_op_t);
         ecs_os_memcpy_n(rule->ops, rule_ops, ecs_rule_op_t, op_count);
     }
+
+    return 0;
 }
 
 #endif
@@ -36697,6 +36780,10 @@ const char* flecs_rule_op_str(
     case EcsRuleUnion:        return "union   ";
     case EcsRuleEnd:          return "end     ";
     case EcsRuleNot:          return "not     ";
+    case EcsRulePredEq:       return "eq      ";
+    case EcsRulePredNeq:      return "neq     ";
+    case EcsRulePredEqName:   return "eq_nm   ";
+    case EcsRulePredNeqName:  return "neq_nm  ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleSetFixed:     return "setfix  ";
@@ -36776,7 +36863,9 @@ ecs_rule_t* ecs_rule_init(
     result->iterable.init = flecs_rule_iter_mixin_init;
 
     /* Compile filter to operations */
-    flecs_rule_compile(world, stage, result);
+    if (flecs_rule_compile(world, stage, result)) {
+        goto error;
+    }
 
     ecs_entity_t entity = const_desc->entity;
     result->dtor = (ecs_poly_dtor_t)flecs_rule_fini;
@@ -36912,6 +37001,11 @@ char* ecs_rule_str_w_profile(
         if (second_flags) {
             ecs_strbuf_appendstr(&buf, ", ");
             flecs_rule_op_ref_str(rule, &op->second, second_flags, &buf);
+        } else if (op->kind == EcsRulePredEqName) {
+            int8_t field = op->field_index;
+            ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+            ecs_strbuf_appendstr(&buf, rule->filter.terms[field].second.name);
+            ecs_strbuf_appendstr(&buf, "\"#[reset]");
         }
 
         ecs_strbuf_appendch(&buf, ')');
@@ -37283,6 +37377,28 @@ ecs_table_t* flecs_rule_get_table(
     } else {
         return flecs_rule_var_get_table(ref->var, ctx);
     }
+}
+
+static
+ecs_table_range_t flecs_rule_get_range(
+    const ecs_rule_op_t *op,
+    const ecs_rule_ref_t *ref,
+    ecs_flags16_t ref_kind,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, ref_kind);
+    if (flags & EcsRuleIsEntity) {
+        ecs_assert(!(flags & EcsRuleIsVar), ECS_INTERNAL_ERROR, NULL);
+        return flecs_range_from_entity(ref->entity, ctx);
+    } else {
+        ecs_var_t *var = &ctx->vars[ref->var];
+        if (var->range.table) {
+            return ctx->vars[ref->var].range;
+        } else if (var->entity) {
+            return flecs_range_from_entity(var->entity, ctx);
+        }
+    }
+    return (ecs_table_range_t){0};
 }
 
 static
@@ -38251,43 +38367,227 @@ bool flecs_rule_not(
     }
 
     int32_t field = op->field_index;
-    if (field != -1) {
-        ecs_iter_t *it = ctx->it;
+    if (field == -1) {
+        return true;
+    }
 
-        /* Not terms return no data */
-        it->columns[field] = 0;
+    ecs_iter_t *it = ctx->it;
 
-        /* Ignore variables written by Not operation */
-        uint64_t *written = ctx->written;
-        uint64_t written_cur = written[ctx->op_index] = written[op->prev + 1];
-        ecs_flags16_t flags_1st = flecs_rule_ref_flags(op->flags, EcsRuleFirst);
-        ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+    /* Not terms return no data */
+    it->columns[field] = 0;
 
-        /* Overwrite id with cleared out variables */
-        ecs_id_t id = flecs_rule_op_get_id(op, ctx);
-        if (id) {
-            it->ids[field] = id;
+    /* Ignore variables written by Not operation */
+    uint64_t *written = ctx->written;
+    uint64_t written_cur = written[ctx->op_index] = written[op->prev + 1];
+    ecs_flags16_t flags_1st = flecs_rule_ref_flags(op->flags, EcsRuleFirst);
+    ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+
+    /* Overwrite id with cleared out variables */
+    ecs_id_t id = flecs_rule_op_get_id(op, ctx);
+    if (id) {
+        it->ids[field] = id;
+    }
+
+    /* Reset variables */
+    if (flags_1st & EcsRuleIsVar) {
+        if (!flecs_ref_is_written(op, &op->first, EcsRuleFirst, written_cur)){
+            flecs_rule_var_reset(op->first.var, ctx);
         }
-
-        /* Reset variables */
-        if (flags_1st & EcsRuleIsVar) {
-            if (!flecs_ref_is_written(op, &op->first, EcsRuleFirst, written_cur)){
-                flecs_rule_var_reset(op->first.var, ctx);
-            }
-        }
-        if (flags_2nd & EcsRuleIsVar) {
-            if (!flecs_ref_is_written(op, &op->second, EcsRuleSecond, written_cur)){
-                flecs_rule_var_reset(op->second.var, ctx);
-            }
-        }
-
-        /* If term has entity src, set it because no other instruction might */
-        if (op->flags & (EcsRuleIsEntity << EcsRuleSrc)) {
-            it->sources[field] = op->src.entity;
+    }
+    if (flags_2nd & EcsRuleIsVar) {
+        if (!flecs_ref_is_written(op, &op->second, EcsRuleSecond, written_cur)){
+            flecs_rule_var_reset(op->second.var, ctx);
         }
     }
 
+    /* If term has entity src, set it because no other instruction might */
+    if (op->flags & (EcsRuleIsEntity << EcsRuleSrc)) {
+        it->sources[field] = op->src.entity;
+    }
+
     return true; /* Flip result */
+}
+
+static
+bool flecs_rule_compare_range(
+    const ecs_table_range_t *l,
+    const ecs_table_range_t *r)
+{
+    if (l->table != r->table) {
+        return false;
+    }
+
+    if (l->count) {
+        if ((r->offset < l->offset) || (r->count > l->count)) {
+            return false;
+        }
+    } else {
+        /* Entire table is matched */
+    }
+
+    return true;
+}
+
+static
+bool flecs_rule_pred_eq_w_range(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx,
+    ecs_table_range_t r)
+{
+    if (redo) {
+        return false;
+    }
+
+    uint64_t written = ctx->written[ctx->op_index];
+    ecs_var_id_t first_var = op->first.var;
+    if (!(written & (1ull << first_var))) {
+        /* left = unknown, right = known. Assign right-hand value to left */
+        ecs_var_id_t l = first_var;
+        ctx->vars[l].range = r;
+        return true;
+    } else {
+        ecs_table_range_t l = flecs_rule_get_range(
+            op, &op->first, EcsRuleFirst, ctx);
+
+        if (!flecs_rule_compare_range(&l, &r)) {
+            return false;
+        }
+
+        ctx->vars[first_var].range.offset = r.offset;
+        ctx->vars[first_var].range.count = r.count;
+        return true;
+    }
+}
+
+static
+bool flecs_rule_pred_eq(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index]; (void)written;
+    ecs_assert(flecs_ref_is_written(op, &op->second, EcsRuleSecond, written),
+        ECS_INTERNAL_ERROR, 
+            "invalid instruction sequence: uninitialized eq operand");
+
+    ecs_table_range_t r = flecs_rule_get_range(
+        op, &op->second, EcsRuleSecond, ctx);
+    return flecs_rule_pred_eq_w_range(op, redo, ctx, r);
+}
+
+static
+bool flecs_rule_pred_eq_name(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    int8_t field = op->field_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    const char *name = term->second.name;
+    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    if (!e) {
+        /* Entity doesn't exist */
+        return false;
+    }
+
+    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    return flecs_rule_pred_eq_w_range(op, redo, ctx, r);
+}
+
+static
+bool flecs_rule_pred_neq_w_range(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx,
+    ecs_table_range_t r)
+{
+    ecs_rule_eq_ctx_t *op_ctx = flecs_op_ctx(ctx, eq);
+    ecs_var_id_t first_var = op->first.var;
+    ecs_table_range_t l = flecs_rule_get_range(
+        op, &op->first, EcsRuleFirst, ctx);
+
+    /* If tables don't match, neq always returns once */
+    if (l.table != r.table) {
+        return true && !redo;
+    }
+
+    /* If the table matches, a Neq returns twice: once for the slice before the
+     * excluded slice, once for the slice after the excluded slice. */
+    ecs_var_t *var = &ctx->vars[first_var];
+    if (!redo && r.offset != 0) {
+        /* Cache old value */
+        op_ctx->range = l;
+
+        /* Return first slice*/
+        var->range.table = l.table;
+        var->range.offset = 0;
+        var->range.count = r.offset;
+        op_ctx->redo = false;
+        return true;
+    } else if (!op_ctx->redo) {
+        int32_t l_count = op_ctx->range.count;
+        if (!l_count) {
+            l_count = ecs_table_count(l.table);
+        }
+        int32_t l_end = op_ctx->range.offset + l_count;
+        int32_t r_end = r.offset + r.count;
+
+        if (l_end <= r_end) {
+            /* If end of existing range falls inside the excluded range, there's
+             * nothing more to return */
+            var->range = l;
+            return false;
+        }
+
+        /* Return second slice */
+        var->range.table = l.table;
+        var->range.offset = r_end;
+        var->range.count = l_end - r_end;
+
+        /* Flag so we know we're done the next redo */
+        op_ctx->redo = true;
+        return true;
+    } else {
+        /* Restore previous value */
+        var->range = l;
+        return false;
+    }
+}
+
+static
+bool flecs_rule_pred_neq(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index]; (void)written;
+    ecs_assert(flecs_ref_is_written(op, &op->second, EcsRuleSecond, written),
+        ECS_INTERNAL_ERROR, 
+            "invalid instruction sequence: uninitialized neq operand");
+
+    ecs_table_range_t r = flecs_rule_get_range(
+        op, &op->second, EcsRuleSecond, ctx);
+    return flecs_rule_pred_neq_w_range(op, redo, ctx, r);
+}
+
+static
+bool flecs_rule_pred_neq_name(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    int8_t field = op->field_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    const char *name = term->second.name;
+    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    if (!e) {
+        /* Entity doesn't exist */
+        return true && !redo;
+    }
+
+    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    return flecs_rule_pred_neq_w_range(op, redo, ctx, r);
 }
 
 static
@@ -38521,6 +38821,10 @@ bool flecs_rule_run(
     case EcsRuleUnion: return flecs_rule_union(op, redo, ctx);
     case EcsRuleEnd: return flecs_rule_end(op, redo, ctx);
     case EcsRuleNot: return flecs_rule_not(op, redo, ctx);
+    case EcsRulePredEq: return flecs_rule_pred_eq(op, redo, ctx);
+    case EcsRulePredNeq: return flecs_rule_pred_neq(op, redo, ctx);
+    case EcsRulePredEqName: return flecs_rule_pred_eq_name(op, redo, ctx);
+    case EcsRulePredNeqName: return flecs_rule_pred_neq_name(op, redo, ctx);
     case EcsRuleSetVars: return flecs_rule_setvars(op, redo, ctx);
     case EcsRuleSetThis: return flecs_rule_setthis(op, redo, ctx);
     case EcsRuleSetFixed: return flecs_rule_setfixed(op, redo, ctx);
@@ -39195,6 +39499,10 @@ int flecs_parse_identifier(
     if (tptr[0] == TOK_EXPR_STRING && tptr[1]) {
         out->flags |= EcsIsName;
         tptr ++;
+        if (tptr[0] == TOK_NOT) {
+            /* Already parsed */
+            tptr ++;
+        }
     }
 
     out->name = ecs_os_strdup(tptr);
@@ -39634,7 +39942,7 @@ parse_predicate:
     } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
         ptr = ecs_parse_ws(ptr + 2);
         goto parse_neq;
-    } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
+    } else if (!ecs_os_strncmp(ptr, TOK_MATCH, 2)) {
         ptr = ecs_parse_ws(ptr + 2);
         goto parse_match;
     } else {
@@ -39673,6 +39981,7 @@ parse_neq:
     
 parse_match:
     term.src = term.first;
+    term.first = (ecs_term_id_t){0};
     term.first.id = EcsPredMatch;
     goto parse_right_operand;
 
@@ -39681,6 +39990,12 @@ parse_right_operand:
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
+        }
+
+        if (term.first.id == EcsPredMatch) {
+            if (token[0] == '"' && token[1] == '!') {
+                term.oper = EcsNot;
+            }
         }
 
         if (flecs_parse_identifier(token, &term.second)) {
@@ -41011,9 +41326,9 @@ const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 53;
 
 /* Builtin predicate ids (used by rule engine) */
-const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 53;
-const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 54;
-const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 56;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;
@@ -44279,7 +44594,7 @@ int flecs_term_id_finalize_flags(
         return -1;
     }
 
-    if (!(term_id->flags & EcsIsEntity) && !(term_id->flags & EcsIsVariable)) {
+    if (!(term_id->flags & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (term_id->id || term_id->name) {
             if (term_id->id == EcsThis || 
                 term_id->id == EcsWildcard || 
@@ -44610,6 +44925,51 @@ int flecs_term_populate_from_id(
 }
 
 static
+int flecs_term_verify_eq_pred(
+    const ecs_term_t *term,
+    ecs_filter_finalize_ctx_t *ctx)
+{
+    ecs_entity_t first_id = term->first.id;
+    const ecs_term_id_t *second = &term->second;
+    const ecs_term_id_t *src = &term->src;
+
+    if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "both sides of operator cannot be a name");
+        goto error;
+    }
+
+    if ((src->flags & EcsIsEntity) && (second->flags & EcsIsEntity)) {
+        flecs_filter_error(ctx, "both sides of operator cannot be an entity");
+        goto error;
+    }
+
+    if (!(src->flags & EcsIsVariable)) {
+        flecs_filter_error(ctx, "left-hand of operator must be a variable");
+        goto error;
+    }
+
+    if (first_id == EcsPredMatch && !(second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "right-hand of match operator must be a string");
+        goto error;
+    }
+
+    if ((src->flags & EcsIsVariable) && (second->flags & EcsIsVariable)) {
+        if (src->id && src->id == second->id) {
+            flecs_filter_error(ctx, "both sides of operator are equal");
+            goto error;
+        }
+        if (src->name && second->name && !ecs_os_strcmp(src->name, second->name)) {
+            flecs_filter_error(ctx, "both sides of operator are equal");
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_term_verify(
     const ecs_world_t *world,
     const ecs_term_t *term,
@@ -44622,8 +44982,9 @@ int flecs_term_verify(
     ecs_id_t role = term->id_flags;
     ecs_id_t id = term->id;
 
-    if ((first->flags & EcsIsName) || (second->flags & EcsIsName)) {
-        return 0;
+    if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
+        flecs_filter_error(ctx, "mismatch between term.id_flags & term.id");
+        return -1;
     }
 
     if (first->flags & EcsIsEntity) {
@@ -44631,6 +44992,10 @@ int flecs_term_verify(
     }
     if (second->flags & EcsIsEntity) {
         second_id = second->id;
+    }
+
+    if (first_id == EcsPredEq || first_id == EcsPredMatch || first_id == EcsPredLookup) {
+        return flecs_term_verify_eq_pred(term, ctx);
     }
 
     if (role != (id & ECS_ID_FLAGS_MASK)) {

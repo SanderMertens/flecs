@@ -406,7 +406,6 @@ int flecs_term_populate_from_id(
 
 static
 int flecs_term_verify_eq_pred(
-    const ecs_world_t *world,
     const ecs_term_t *term,
     ecs_filter_finalize_ctx_t *ctx)
 {
@@ -424,14 +423,25 @@ int flecs_term_verify_eq_pred(
         goto error;
     }
 
-    if (first_id == EcsPredMatch && !(src->flags & EcsIsVariable)) {
-        flecs_filter_error(ctx, "left-hand of match operator must be a variable");
+    if (!(src->flags & EcsIsVariable)) {
+        flecs_filter_error(ctx, "left-hand of operator must be a variable");
         goto error;
     }
 
     if (first_id == EcsPredMatch && !(second->flags & EcsIsName)) {
         flecs_filter_error(ctx, "right-hand of match operator must be a string");
         goto error;
+    }
+
+    if ((src->flags & EcsIsVariable) && (second->flags & EcsIsVariable)) {
+        if (src->id && src->id == second->id) {
+            flecs_filter_error(ctx, "both sides of operator are equal");
+            goto error;
+        }
+        if (src->name && second->name && !ecs_os_strcmp(src->name, second->name)) {
+            flecs_filter_error(ctx, "both sides of operator are equal");
+            goto error;
+        }
     }
 
     return 0;
@@ -465,7 +475,7 @@ int flecs_term_verify(
     }
 
     if (first_id == EcsPredEq || first_id == EcsPredMatch || first_id == EcsPredLookup) {
-        return flecs_term_verify_eq_pred(world, term, ctx);
+        return flecs_term_verify_eq_pred(term, ctx);
     }
 
     if (role != (id & ECS_ID_FLAGS_MASK)) {

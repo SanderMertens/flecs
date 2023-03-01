@@ -217,6 +217,10 @@ void Parser_match_var(void);
 void Parser_nmatch_name(void);
 void Parser_nmatch_name_var(void);
 void Parser_nmatch_var_name(void);
+void Parser_eq_same_var(void);
+void Parser_neq_same_var(void);
+void Parser_eq_same_var_this(void);
+void Parser_neq_same_var_this(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -883,6 +887,40 @@ void RulesRecycled_recycled_vars(void);
 void RulesRecycled_recycled_pair_vars(void);
 void RulesRecycled_recycled_this_ent_var(void);
 void RulesRecycled_has_recycled_id_from_pair(void);
+
+// Testsuite 'RulesBuiltinPredicates'
+void RulesBuiltinPredicates_this_eq_id(void);
+void RulesBuiltinPredicates_this_eq_name(void);
+void RulesBuiltinPredicates_this_eq_var(void);
+void RulesBuiltinPredicates_this_eq_id_written(void);
+void RulesBuiltinPredicates_this_eq_id_written_no_match(void);
+void RulesBuiltinPredicates_this_eq_name_written(void);
+void RulesBuiltinPredicates_this_eq_name_written_no_match(void);
+void RulesBuiltinPredicates_this_eq_var_written(void);
+void RulesBuiltinPredicates_var_eq_id(void);
+void RulesBuiltinPredicates_var_eq_name(void);
+void RulesBuiltinPredicates_var_eq_var(void);
+void RulesBuiltinPredicates_var_eq_id_written(void);
+void RulesBuiltinPredicates_var_eq_id_written_no_match(void);
+void RulesBuiltinPredicates_var_eq_name_written(void);
+void RulesBuiltinPredicates_var_eq_name_written_no_match(void);
+void RulesBuiltinPredicates_var_eq_var_written(void);
+void RulesBuiltinPredicates_this_neq_id(void);
+void RulesBuiltinPredicates_this_neq_name(void);
+void RulesBuiltinPredicates_this_neq_var(void);
+void RulesBuiltinPredicates_this_neq_id_written(void);
+void RulesBuiltinPredicates_this_neq_id_written_no_match(void);
+void RulesBuiltinPredicates_this_neq_name_written(void);
+void RulesBuiltinPredicates_this_neq_name_written_no_match(void);
+void RulesBuiltinPredicates_this_neq_var_written(void);
+void RulesBuiltinPredicates_var_neq_id(void);
+void RulesBuiltinPredicates_var_neq_name(void);
+void RulesBuiltinPredicates_var_neq_var(void);
+void RulesBuiltinPredicates_var_neq_id_written(void);
+void RulesBuiltinPredicates_var_neq_id_written_no_match(void);
+void RulesBuiltinPredicates_var_neq_name_written(void);
+void RulesBuiltinPredicates_var_neq_name_written_no_match(void);
+void RulesBuiltinPredicates_var_neq_var_written(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -2016,6 +2054,22 @@ bake_test_case Parser_testcases[] = {
     {
         "nmatch_var_name",
         Parser_nmatch_var_name
+    },
+    {
+        "eq_same_var",
+        Parser_eq_same_var
+    },
+    {
+        "neq_same_var",
+        Parser_neq_same_var
+    },
+    {
+        "eq_same_var_this",
+        Parser_eq_same_var_this
+    },
+    {
+        "neq_same_var_this",
+        Parser_neq_same_var_this
     }
 };
 
@@ -4633,6 +4687,137 @@ bake_test_case RulesRecycled_testcases[] = {
     }
 };
 
+bake_test_case RulesBuiltinPredicates_testcases[] = {
+    {
+        "this_eq_id",
+        RulesBuiltinPredicates_this_eq_id
+    },
+    {
+        "this_eq_name",
+        RulesBuiltinPredicates_this_eq_name
+    },
+    {
+        "this_eq_var",
+        RulesBuiltinPredicates_this_eq_var
+    },
+    {
+        "this_eq_id_written",
+        RulesBuiltinPredicates_this_eq_id_written
+    },
+    {
+        "this_eq_id_written_no_match",
+        RulesBuiltinPredicates_this_eq_id_written_no_match
+    },
+    {
+        "this_eq_name_written",
+        RulesBuiltinPredicates_this_eq_name_written
+    },
+    {
+        "this_eq_name_written_no_match",
+        RulesBuiltinPredicates_this_eq_name_written_no_match
+    },
+    {
+        "this_eq_var_written",
+        RulesBuiltinPredicates_this_eq_var_written
+    },
+    {
+        "var_eq_id",
+        RulesBuiltinPredicates_var_eq_id
+    },
+    {
+        "var_eq_name",
+        RulesBuiltinPredicates_var_eq_name
+    },
+    {
+        "var_eq_var",
+        RulesBuiltinPredicates_var_eq_var
+    },
+    {
+        "var_eq_id_written",
+        RulesBuiltinPredicates_var_eq_id_written
+    },
+    {
+        "var_eq_id_written_no_match",
+        RulesBuiltinPredicates_var_eq_id_written_no_match
+    },
+    {
+        "var_eq_name_written",
+        RulesBuiltinPredicates_var_eq_name_written
+    },
+    {
+        "var_eq_name_written_no_match",
+        RulesBuiltinPredicates_var_eq_name_written_no_match
+    },
+    {
+        "var_eq_var_written",
+        RulesBuiltinPredicates_var_eq_var_written
+    },
+    {
+        "this_neq_id",
+        RulesBuiltinPredicates_this_neq_id
+    },
+    {
+        "this_neq_name",
+        RulesBuiltinPredicates_this_neq_name
+    },
+    {
+        "this_neq_var",
+        RulesBuiltinPredicates_this_neq_var
+    },
+    {
+        "this_neq_id_written",
+        RulesBuiltinPredicates_this_neq_id_written
+    },
+    {
+        "this_neq_id_written_no_match",
+        RulesBuiltinPredicates_this_neq_id_written_no_match
+    },
+    {
+        "this_neq_name_written",
+        RulesBuiltinPredicates_this_neq_name_written
+    },
+    {
+        "this_neq_name_written_no_match",
+        RulesBuiltinPredicates_this_neq_name_written_no_match
+    },
+    {
+        "this_neq_var_written",
+        RulesBuiltinPredicates_this_neq_var_written
+    },
+    {
+        "var_neq_id",
+        RulesBuiltinPredicates_var_neq_id
+    },
+    {
+        "var_neq_name",
+        RulesBuiltinPredicates_var_neq_name
+    },
+    {
+        "var_neq_var",
+        RulesBuiltinPredicates_var_neq_var
+    },
+    {
+        "var_neq_id_written",
+        RulesBuiltinPredicates_var_neq_id_written
+    },
+    {
+        "var_neq_id_written_no_match",
+        RulesBuiltinPredicates_var_neq_id_written_no_match
+    },
+    {
+        "var_neq_name_written",
+        RulesBuiltinPredicates_var_neq_name_written
+    },
+    {
+        "var_neq_name_written_no_match",
+        RulesBuiltinPredicates_var_neq_name_written_no_match
+    },
+    {
+        "var_neq_var_written",
+        RulesBuiltinPredicates_var_neq_var_written
+    }
+};
+
 bake_test_case SystemPeriodic_testcases[] = {
     {
         "1_type_1_component",
@@ -5724,7 +5909,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        208,
+        212,
         Parser_testcases
     },
     {
@@ -5796,6 +5981,13 @@ static bake_test_suite suites[] = {
         NULL,
         4,
         RulesRecycled_testcases
+    },
+    {
+        "RulesBuiltinPredicates",
+        NULL,
+        NULL,
+        32,
+        RulesBuiltinPredicates_testcases
     },
     {
         "SystemPeriodic",
@@ -5926,5 +6118,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 29);
+    return bake_test_run("addons", argc, argv, suites, 30);
 }

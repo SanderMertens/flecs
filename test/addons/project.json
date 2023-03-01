@@ -221,7 +221,11 @@
                 "match_var",
                 "nmatch_name",
                 "nmatch_name_var",
-                "nmatch_var_name"
+                "nmatch_var_name",
+                "eq_same_var",
+                "neq_same_var",
+                "eq_same_var_this",
+                "neq_same_var_this"
             ]
         }, {
             "id": "Plecs",
@@ -908,6 +912,42 @@
                 "recycled_pair_vars",
                 "recycled_this_ent_var",
                 "has_recycled_id_from_pair"
+            ]
+        }, {
+            "id": "RulesBuiltinPredicates",
+            "testcases": [
+                "this_eq_id",
+                "this_eq_name",
+                "this_eq_var",
+                "this_eq_id_written",
+                "this_eq_id_written_no_match",
+                "this_eq_name_written",
+                "this_eq_name_written_no_match",
+                "this_eq_var_written",
+                "var_eq_id",
+                "var_eq_name",
+                "var_eq_var",
+                "var_eq_id_written",
+                "var_eq_id_written_no_match",
+                "var_eq_name_written",
+                "var_eq_name_written_no_match",
+                "var_eq_var_written",
+                "this_neq_id",
+                "this_neq_name",
+                "this_neq_var",
+                "this_neq_id_written",
+                "this_neq_id_written_no_match",
+                "this_neq_name_written",
+                "this_neq_name_written_no_match",
+                "this_neq_var_written",
+                "var_neq_id",
+                "var_neq_name",
+                "var_neq_var",
+                "var_neq_id_written",
+                "var_neq_id_written_no_match",
+                "var_neq_name_written",
+                "var_neq_name_written_no_match",
+                "var_neq_var_written"
             ]
         }, {
             "id": "SystemPeriodic",

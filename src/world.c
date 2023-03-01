@@ -94,9 +94,9 @@ const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 53;
 
 /* Builtin predicate ids (used by rule engine) */
-const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 53;
-const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 54;
-const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 56;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;

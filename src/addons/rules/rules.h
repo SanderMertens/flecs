@@ -46,6 +46,10 @@ typedef enum {
     EcsRuleUnion,          /* Combine output of multiple operations */
     EcsRuleEnd,            /* Used to denote end of EcsRuleUnion block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
+    EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
+    EcsRulePredNeq,        /* Test if variable is not equal to */
+    EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
+    EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
@@ -98,16 +102,6 @@ typedef struct {
     int16_t remaining;
 } ecs_rule_and_ctx_t;
 
- /* Each context */
-typedef struct {
-    int32_t row;
-} ecs_rule_each_ctx_t;
-
- /* Setthis context */
-typedef struct {
-    ecs_table_range_t range;
-} ecs_rule_setthis_ctx_t;
-
 /* Cache for storing results of downward traversal */
 typedef struct {
     ecs_entity_t entity;
@@ -132,12 +126,28 @@ typedef struct {
     bool yield_reflexive;
 } ecs_rule_trav_ctx_t;
 
-/* Trav context */
+ /* Eq context */
+typedef struct {
+    ecs_table_range_t range;
+    bool redo;
+} ecs_rule_eq_ctx_t;
+
+ /* Each context */
+typedef struct {
+    int32_t row;
+} ecs_rule_each_ctx_t;
+
+ /* Setthis context */
+typedef struct {
+    ecs_table_range_t range;
+} ecs_rule_setthis_ctx_t;
+
+/* Ids context */
 typedef struct {
     ecs_id_record_t *cur;
 } ecs_rule_ids_ctx_t;
 
-/* End context (used with Union) */
+/* Ctrlflow context (used with Union) */
 typedef struct {
     ecs_rule_lbl_t lbl;
 } ecs_rule_ctrlflow_ctx_t;
@@ -152,6 +162,7 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_and_ctx_t and;
         ecs_rule_trav_ctx_t trav;
         ecs_rule_ids_ctx_t ids;
+        ecs_rule_eq_ctx_t eq;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
         ecs_rule_ctrlflow_ctx_t ctrlflow;
@@ -243,7 +254,7 @@ bool flecs_ref_is_written(
     uint64_t written);
 
 /* Compile filter to list of operations */
-void flecs_rule_compile(
+int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_rule_t *rule);
