@@ -49024,7 +49024,7 @@ void flecs_query_compute_group_id(
 
 static
 ecs_query_table_list_t* flecs_query_get_group(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     uint64_t group_id)
 {
     return ecs_map_get_deref(&query->groups, ecs_query_table_list_t, group_id);
@@ -51018,7 +51018,7 @@ void ecs_query_fini(
 }
 
 const ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query)
+    const ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
     return &query->filter;
@@ -51158,7 +51158,7 @@ error:
 }
 
 const ecs_query_group_info_t* ecs_query_get_group_info(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     uint64_t group_id)
 {
     ecs_query_table_list_t *node = flecs_query_get_group(query, group_id);
@@ -51170,7 +51170,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
 }
 
 void* ecs_query_get_group_ctx(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     uint64_t group_id)
 {
     const ecs_query_group_info_t *info = 
@@ -51490,7 +51490,7 @@ void ecs_query_skip(
 }
 
 bool ecs_query_orphaned(
-    ecs_query_t *query)
+    const ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
     return query->flags & EcsQueryIsOrphaned;

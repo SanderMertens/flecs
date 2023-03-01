@@ -3841,7 +3841,7 @@ void ecs_query_fini(
  */
 FLECS_API
 const ecs_filter_t* ecs_query_get_filter(
-    ecs_query_t *query);    
+    const ecs_query_t *query);
 
 /** Return a query iterator.
  * A query iterator lets an application iterate over entities that match the
@@ -4015,7 +4015,7 @@ void ecs_query_set_group(
  */
 FLECS_API
 void* ecs_query_get_group_ctx(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     uint64_t group_id);
 
 /** Get information about query group.
@@ -4028,7 +4028,7 @@ void* ecs_query_get_group_ctx(
  */
 FLECS_API
 const ecs_query_group_info_t* ecs_query_get_group_info(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     uint64_t group_id);
 
 /** Returns whether query is orphaned.
@@ -4041,7 +4041,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
  */
 FLECS_API
 bool ecs_query_orphaned(
-    ecs_query_t *query);
+    const ecs_query_t *query);
 
 /** Convert query to string.
  *
