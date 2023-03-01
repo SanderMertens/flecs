@@ -3305,7 +3305,7 @@ bool ecs_id_is_union(
  */
 FLECS_API
 bool ecs_id_in_use(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_id_t id);
 
 /** Get the type for an id.

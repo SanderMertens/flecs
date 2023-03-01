@@ -42680,7 +42680,7 @@ void flecs_table_set_empty(
 }
 
 bool ecs_id_in_use(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
