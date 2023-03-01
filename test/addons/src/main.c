@@ -921,6 +921,14 @@ void RulesBuiltinPredicates_var_neq_id_written_no_match(void);
 void RulesBuiltinPredicates_var_neq_name_written(void);
 void RulesBuiltinPredicates_var_neq_name_written_no_match(void);
 void RulesBuiltinPredicates_var_neq_var_written(void);
+void RulesBuiltinPredicates_this_2_neq_id(void);
+void RulesBuiltinPredicates_this_2_neq_name(void);
+void RulesBuiltinPredicates_var_2_neq_id(void);
+void RulesBuiltinPredicates_var_2_neq_name(void);
+void RulesBuiltinPredicates_this_2_neq_id_written(void);
+void RulesBuiltinPredicates_this_2_neq_name_written(void);
+void RulesBuiltinPredicates_var_2_neq_id_written(void);
+void RulesBuiltinPredicates_var_2_neq_name_written(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -4815,6 +4823,38 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "var_neq_var_written",
         RulesBuiltinPredicates_var_neq_var_written
+    },
+    {
+        "this_2_neq_id",
+        RulesBuiltinPredicates_this_2_neq_id
+    },
+    {
+        "this_2_neq_name",
+        RulesBuiltinPredicates_this_2_neq_name
+    },
+    {
+        "var_2_neq_id",
+        RulesBuiltinPredicates_var_2_neq_id
+    },
+    {
+        "var_2_neq_name",
+        RulesBuiltinPredicates_var_2_neq_name
+    },
+    {
+        "this_2_neq_id_written",
+        RulesBuiltinPredicates_this_2_neq_id_written
+    },
+    {
+        "this_2_neq_name_written",
+        RulesBuiltinPredicates_this_2_neq_name_written
+    },
+    {
+        "var_2_neq_id_written",
+        RulesBuiltinPredicates_var_2_neq_id_written
+    },
+    {
+        "var_2_neq_name_written",
+        RulesBuiltinPredicates_var_2_neq_name_written
     }
 };
 
@@ -5986,7 +6026,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        32,
+        40,
         RulesBuiltinPredicates_testcases
     },
     {

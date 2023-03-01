@@ -38512,24 +38512,42 @@ bool flecs_rule_pred_neq_w_range(
         return true && !redo;
     }
 
-    /* If the table matches, a Neq returns twice: once for the slice before the
-     * excluded slice, once for the slice after the excluded slice. */
-    ecs_var_t *var = &ctx->vars[first_var];
-    if (!redo && r.offset != 0) {
+    int32_t l_offset;
+    int32_t l_count;
+    if (!redo) {
+        /* Make sure we're working with the correct table count */
+        if (!l.count && l.table) {
+            l.count = ecs_table_count(l.table);
+        }
+
+        l_offset = l.offset;
+        l_count = l.count;
+
         /* Cache old value */
         op_ctx->range = l;
+    } else {
+        l_offset = op_ctx->range.offset;
+        l_count = op_ctx->range.count;
+    }
 
-        /* Return first slice*/
+    /* If the table matches, a Neq returns twice: once for the slice before the
+     * excluded slice, once for the slice after the excluded slice. If the right
+     * hand range starts & overlaps with the left hand range, there is only
+     * one slice. */
+    ecs_var_t *var = &ctx->vars[first_var];
+    if (!redo && r.offset > l_offset) {
+        int32_t end = r.offset;
+        if (end > l_count) {
+            end = l_count;
+        }
+
+        /* Return first slice */
         var->range.table = l.table;
-        var->range.offset = 0;
-        var->range.count = r.offset;
+        var->range.offset = l_offset;
+        var->range.count = end - l_offset;
         op_ctx->redo = false;
         return true;
     } else if (!op_ctx->redo) {
-        int32_t l_count = op_ctx->range.count;
-        if (!l_count) {
-            l_count = ecs_table_count(l.table);
-        }
         int32_t l_end = op_ctx->range.offset + l_count;
         int32_t r_end = r.offset + r.count;
 
