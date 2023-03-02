@@ -36446,22 +36446,6 @@ int flecs_rule_compile_term(
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
 
-    /* A bit of special logic for OR expressions and equality predicates. If the
-     * left-hand of an equality operator is a table, and there are multiple
-     * operators in an Or expression, the Or chain should match all entities in
-     * the table that match the right hand sides of the operator expressions. 
-     * For this to work, the src variable needs to be resolved as entity, as an
-     * Or chain would otherwise only yield the first match from a table. */
-    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
-        /* Or terms are required to have the same source, so we don't have to
-         * worry about the last term in the chain. */
-        if (rule->vars[src_var].kind == EcsVarTable) {
-            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
-                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
-            src_var = op.src.var;
-        }
-    }
-
     /* Cache the current value of op.first. This value may get overwritten with
      * a variable when term has component inheritance, but Not operations may 
      * need the original value to initialize the result id with. */
@@ -36494,6 +36478,22 @@ int flecs_rule_compile_term(
 
             /* Update write administration */
             src_written = true;
+        }
+    }
+
+    /* A bit of special logic for OR expressions and equality predicates. If the
+     * left-hand of an equality operator is a table, and there are multiple
+     * operators in an Or expression, the Or chain should match all entities in
+     * the table that match the right hand sides of the operator expressions. 
+     * For this to work, the src variable needs to be resolved as entity, as an
+     * Or chain would otherwise only yield the first match from a table. */
+    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
+        /* Or terms are required to have the same source, so we don't have to
+         * worry about the last term in the chain. */
+        if (rule->vars[src_var].kind == EcsVarTable) {
+            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
+                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
+            src_var = op.src.var;
         }
     }
 
@@ -37037,11 +37037,20 @@ char* ecs_rule_str_w_profile(
         if (second_flags) {
             ecs_strbuf_appendstr(&buf, ", ");
             flecs_rule_op_ref_str(rule, &op->second, second_flags, &buf);
-        } else if (op->kind == EcsRulePredEqName) {
-            int8_t term_index = op->term_index;
-            ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
-            ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
-            ecs_strbuf_appendstr(&buf, "\"#[reset]");
+        } else {
+            switch (op->kind) {
+            case EcsRulePredEqName:
+            case EcsRulePredNeqName:
+            case EcsRulePredEqMatch:
+            case EcsRulePredNeqMatch: {
+                int8_t term_index = op->term_index;
+                ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+                ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
+                ecs_strbuf_appendstr(&buf, "\"#[reset]");
+            }
+            default:
+                break;
+            }
         }
 
         ecs_strbuf_appendch(&buf, ')');
@@ -38634,6 +38643,7 @@ bool flecs_rule_pred_match(
     ecs_assert(flecs_ref_is_written(op, &op->first, EcsRuleFirst, written),
         ECS_INTERNAL_ERROR, 
             "invalid instruction sequence: uninitialized match operand");
+    (void)written;
 
     ecs_var_id_t first_var = op->first.var;
     const char *match = flecs_rule_name_arg(op, ctx);
@@ -40131,6 +40141,11 @@ parse_neq:
     term.src = term.first;
     term.first = (ecs_term_id_t){0};
     term.first.id = EcsPredEq;
+    if (term.oper != EcsAnd) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid operator combination");
+        goto error;
+    }
     term.oper = EcsNot;
     goto parse_right_operand;
     
@@ -45087,6 +45102,11 @@ int flecs_term_verify_eq_pred(
     ecs_entity_t first_id = term->first.id;
     const ecs_term_id_t *second = &term->second;
     const ecs_term_id_t *src = &term->src;
+
+    if (term->oper != EcsAnd && term->oper != EcsNot && term->oper != EcsOr) {
+        flecs_filter_error(ctx, "invalid operator combination");
+        goto error;
+    }
 
     if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
         flecs_filter_error(ctx, "both sides of operator cannot be a name");

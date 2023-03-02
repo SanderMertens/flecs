@@ -413,6 +413,11 @@ int flecs_term_verify_eq_pred(
     const ecs_term_id_t *second = &term->second;
     const ecs_term_id_t *src = &term->src;
 
+    if (term->oper != EcsAnd && term->oper != EcsNot && term->oper != EcsOr) {
+        flecs_filter_error(ctx, "invalid operator combination");
+        goto error;
+    }
+
     if ((src->flags & EcsIsName) && (second->flags & EcsIsName)) {
         flecs_filter_error(ctx, "both sides of operator cannot be a name");
         goto error;

@@ -258,11 +258,20 @@ char* ecs_rule_str_w_profile(
         if (second_flags) {
             ecs_strbuf_appendstr(&buf, ", ");
             flecs_rule_op_ref_str(rule, &op->second, second_flags, &buf);
-        } else if (op->kind == EcsRulePredEqName) {
-            int8_t term_index = op->term_index;
-            ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
-            ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
-            ecs_strbuf_appendstr(&buf, "\"#[reset]");
+        } else {
+            switch (op->kind) {
+            case EcsRulePredEqName:
+            case EcsRulePredNeqName:
+            case EcsRulePredEqMatch:
+            case EcsRulePredNeqMatch: {
+                int8_t term_index = op->term_index;
+                ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+                ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
+                ecs_strbuf_appendstr(&buf, "\"#[reset]");
+            }
+            default:
+                break;
+            }
         }
 
         ecs_strbuf_appendch(&buf, ')');

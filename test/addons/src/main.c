@@ -221,6 +221,9 @@ void Parser_eq_same_var(void);
 void Parser_neq_same_var(void);
 void Parser_eq_same_var_this(void);
 void Parser_neq_same_var_this(void);
+void Parser_eq_w_optional(void);
+void Parser_neq_w_optional(void);
+void Parser_match_w_optional(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -949,6 +952,10 @@ void RulesBuiltinPredicates_this_match_2_neq(void);
 void RulesBuiltinPredicates_var_match_2_neq(void);
 void RulesBuiltinPredicates_this_match_2_neq_written(void);
 void RulesBuiltinPredicates_var_match_2_neq_written(void);
+void RulesBuiltinPredicates_this_match_2_or(void);
+void RulesBuiltinPredicates_this_match_2_or_written(void);
+void RulesBuiltinPredicates_this_match_3_or(void);
+void RulesBuiltinPredicates_this_match_3_or_written(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -2098,6 +2105,18 @@ bake_test_case Parser_testcases[] = {
     {
         "neq_same_var_this",
         Parser_neq_same_var_this
+    },
+    {
+        "eq_w_optional",
+        Parser_eq_w_optional
+    },
+    {
+        "neq_w_optional",
+        Parser_neq_w_optional
+    },
+    {
+        "match_w_optional",
+        Parser_match_w_optional
     }
 };
 
@@ -4955,6 +4974,22 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "var_match_2_neq_written",
         RulesBuiltinPredicates_var_match_2_neq_written
+    },
+    {
+        "this_match_2_or",
+        RulesBuiltinPredicates_this_match_2_or
+    },
+    {
+        "this_match_2_or_written",
+        RulesBuiltinPredicates_this_match_2_or_written
+    },
+    {
+        "this_match_3_or",
+        RulesBuiltinPredicates_this_match_3_or
+    },
+    {
+        "this_match_3_or_written",
+        RulesBuiltinPredicates_this_match_3_or_written
     }
 };
 
@@ -6049,7 +6084,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        212,
+        215,
         Parser_testcases
     },
     {
@@ -6126,7 +6161,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        60,
+        64,
         RulesBuiltinPredicates_testcases
     },
     {

@@ -4942,3 +4942,40 @@ void Parser_neq_same_var_this() {
 
     ecs_fini(world);
 }
+
+void Parser_eq_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this == Foo"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this != Foo"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_match_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this ~= \"Foo\""
+    }));
+
+    ecs_fini(world);
+}

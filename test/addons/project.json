@@ -225,7 +225,10 @@
                 "eq_same_var",
                 "neq_same_var",
                 "eq_same_var_this",
-                "neq_same_var_this"
+                "neq_same_var_this",
+                "eq_w_optional",
+                "neq_w_optional",
+                "match_w_optional"
             ]
         }, {
             "id": "Plecs",
@@ -975,7 +978,11 @@
                 "this_match_2_neq",
                 "var_match_2_neq",
                 "this_match_2_neq_written",
-                "var_match_2_neq_written"
+                "var_match_2_neq_written",
+                "this_match_2_or",
+                "this_match_2_or_written",
+                "this_match_3_or",
+                "this_match_3_or_written"
             ]
         }, {
             "id": "SystemPeriodic",

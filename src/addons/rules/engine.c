@@ -1319,6 +1319,7 @@ bool flecs_rule_pred_match(
     ecs_assert(flecs_ref_is_written(op, &op->first, EcsRuleFirst, written),
         ECS_INTERNAL_ERROR, 
             "invalid instruction sequence: uninitialized match operand");
+    (void)written;
 
     ecs_var_id_t first_var = op->first.var;
     const char *match = flecs_rule_name_arg(op, ctx);

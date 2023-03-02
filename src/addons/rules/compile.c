@@ -1162,22 +1162,6 @@ int flecs_rule_compile_term(
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
 
-    /* A bit of special logic for OR expressions and equality predicates. If the
-     * left-hand of an equality operator is a table, and there are multiple
-     * operators in an Or expression, the Or chain should match all entities in
-     * the table that match the right hand sides of the operator expressions. 
-     * For this to work, the src variable needs to be resolved as entity, as an
-     * Or chain would otherwise only yield the first match from a table. */
-    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
-        /* Or terms are required to have the same source, so we don't have to
-         * worry about the last term in the chain. */
-        if (rule->vars[src_var].kind == EcsVarTable) {
-            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
-                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
-            src_var = op.src.var;
-        }
-    }
-
     /* Cache the current value of op.first. This value may get overwritten with
      * a variable when term has component inheritance, but Not operations may 
      * need the original value to initialize the result id with. */
@@ -1210,6 +1194,22 @@ int flecs_rule_compile_term(
 
             /* Update write administration */
             src_written = true;
+        }
+    }
+
+    /* A bit of special logic for OR expressions and equality predicates. If the
+     * left-hand of an equality operator is a table, and there are multiple
+     * operators in an Or expression, the Or chain should match all entities in
+     * the table that match the right hand sides of the operator expressions. 
+     * For this to work, the src variable needs to be resolved as entity, as an
+     * Or chain would otherwise only yield the first match from a table. */
+    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
+        /* Or terms are required to have the same source, so we don't have to
+         * worry about the last term in the chain. */
+        if (rule->vars[src_var].kind == EcsVarTable) {
+            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
+                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
+            src_var = op.src.var;
         }
     }
 

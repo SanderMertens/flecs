@@ -747,6 +747,11 @@ parse_neq:
     term.src = term.first;
     term.first = (ecs_term_id_t){0};
     term.first.id = EcsPredEq;
+    if (term.oper != EcsAnd) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid operator combination");
+        goto error;
+    }
     term.oper = EcsNot;
     goto parse_right_operand;
     
