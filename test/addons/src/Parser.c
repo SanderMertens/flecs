@@ -4557,3 +4557,425 @@ void Parser_pair_explicit_src_missing_obj() {
 
     ecs_fini(world);
 }
+
+void Parser_eq_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, First);
+    ECS_TAG(world, Second);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "First == Second"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_id_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Second);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this == Second"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], Second, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_var_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, First);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "First == $this"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, First);
+    ECS_TAG(world, Second);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$x == $y"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src_var(terms[0], 0, EcsSelf, "x");
+    test_second_var(terms[0], 0, EcsSelf, "y");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_neq_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, First);
+    ECS_TAG(world, Second);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "First != Second"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_id_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Second);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this != Second"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], Second, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsNot);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_neq_var_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, First);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "First != $this"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$x != $y"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src_var(terms[0], 0, EcsSelf, "x");
+    test_second_var(terms[0], 0, EcsSelf, "y");
+    test_int(terms[0].oper, EcsNot);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" == \"Second\""
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_name_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" == $y"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_var_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$x == \"Second\""
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" != \"Second\""
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_name_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" != $y"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_var_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$x != \"Second\""
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_uint(terms[0].src.flags, (EcsSelf|EcsIsVariable));
+    test_str(terms[0].src.name, "x");
+    test_uint(terms[0].src.id, 0);
+    test_uint(terms[0].second.flags, (EcsSelf|EcsIsName));
+    test_str(terms[0].second.name, "Second");
+    test_uint(terms[0].second.id, 0);
+    test_int(terms[0].oper, EcsNot);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_match_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" ~= \"Second\""
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_match_name_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" ~= $y"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_match_var_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$x ~= \"Second\""
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_uint(terms[0].src.flags, (EcsSelf|EcsIsVariable));
+    test_str(terms[0].src.name, "x");
+    test_uint(terms[0].src.id, 0);
+    test_uint(terms[0].second.flags, (EcsSelf|EcsIsName));
+    test_str(terms[0].second.name, "Second");
+    test_uint(terms[0].second.id, 0);
+    test_int(terms[0].oper, EcsAnd);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_match_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$x ~= $y"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_nmatch_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"First\" ~= \"!Second\""
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_nmatch_name_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "\"!First\" ~= $y"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_nmatch_var_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$x ~= \"!Second\""
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_uint(terms[0].src.flags, (EcsSelf|EcsIsVariable));
+    test_str(terms[0].src.name, "x");
+    test_uint(terms[0].src.id, 0);
+    test_uint(terms[0].second.flags, (EcsSelf|EcsIsName));
+    test_str(terms[0].second.name, "Second");
+    test_uint(terms[0].second.id, 0);
+    test_int(terms[0].oper, EcsNot);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_same_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$x == $x"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_same_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$x != $x"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_same_var_this() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$this == $this"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_same_var_this() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "$this != $this"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_eq_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this == Foo"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_neq_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this != Foo"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_match_w_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .expr = "?$this ~= \"Foo\""
+    }));
+
+    ecs_fini(world);
+}

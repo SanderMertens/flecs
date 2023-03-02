@@ -1041,15 +1041,18 @@ Position, [in] Velocity
 
 The following operators are supported by queries:
 
-| Name     | DSL operator   | C identifier  | C++ identifier    | Description |
-|----------|----------------|---------------|-------------------|-------------|
-| And      | `,`            | `EcsAnd`      | `flecs::And`      | Match at least once with term |
-| Or       | `\|\|`         | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
-| Not      | `!`            | `EcsNot`      | `flecs::Not`      | Must not match with term |
-| Optional | `?`            | `EcsOptional` | `flecs::Optional` | May match with term |
-| AndFrom  | `AND \|`        | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
-| OrFrom   | `OR \|`         | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
-| NotFrom  | `NOT \|`        | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
+| Name       | DSL operator   | C identifier  | C++ identifier    | Description |
+|-----------|----------------|---------------|-------------------|-------------|
+| And       | `,`            | `EcsAnd`      | `flecs::And`      | Match at least once with term |
+| Or        | `\|\|`         | `EcsOr`       | `flecs::Or`       | Match at least once with one of the OR terms |
+| Not       | `!`            | `EcsNot`      | `flecs::Not`      | Must not match with term |
+| Optional  | `?`            | `EcsOptional` | `flecs::Optional` | May match with term |
+| Equal     | `==`           | `EcsPredEq`   | `flecs::PredEq`   | Equals entity/entity name |
+| Not equal | `!=`           | `EcsPredNeq`  | `flecs::PredNeq`  | Not equals entity/entity name |
+| Match     | `~=`           | `EcsPredMatch`| `flecs::PredMatch`| Match entity name with substring |
+| AndFrom   | `AND \|`       | `EcsAndFrom`  | `flecs::AndFrom`  | Match all components from id at least once |
+| OrFrom    | `OR \|`        | `EcsOrFrom`   | `flecs::OrFrom`   | Match at least one component from id at least once |
+| NotFrom   | `NOT \|`       | `EcsNotFrom`  | `flecs::NotFrom`  | Don't match any components from id |
 
 ### And Operator
 > *Supported by: filters, cached queries, rules*
@@ -1252,6 +1255,14 @@ The `Optional` operator optionally matches with a component. While this operator
 
 A note on performance: just like the `Not` operator `Optional` terms are efficient to evaluate when combined with other terms, but queries that only have `Optional` terms can be expensive. Because the `Optional` operator does not restrict query results, a query that only has `Optional` terms will match all entities.
 
+When an optional operator is used in a rule, and a variable written by the optional term is read by a subsequent term, the subsequent term becomes a _dependent term_. This means that if the optional term does not match, the dependent term will be ignored. For example:
+
+```
+SpaceShip, ?(DockedTo, $planet), Planet($planet)
+```
+
+Because the second term is optional, the variable `$planet` may or may not be set depending on whether the term was matched. As a result the third term becomes dependent: if `$planet` was not set, the term will be ignored.
+
 The following sections show how to use the `Optional` operator in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 
 #### Query Descriptor (C)
@@ -1312,6 +1323,75 @@ To create a query with `Optional` terms, use the `?` symbol:
 
 ```
 Position, ?Velocity
+```
+
+### Equality operators
+> *Supported by: rules*
+
+Equality operators (`==`, `!=`, `~=`) allow a query to ensure that a variable equals a specific entity, that the entity it stores has a specific name, or that the entity name partially matches a substring.
+
+The left hand side of an equality operator must be a variable. The right hand side of an operator can be an entity identifier or a string for the `==` and `!=` operators, and must be a string in case of the `~=` operator. For example:
+
+Test if variable `$this` equals `Foo` (`Foo` must exist at query creation time):
+
+```js
+$this == Foo
+```
+
+Test if variable `$this` equals entity with name `Foo` (`Foo` does not need to exist at query creation time):
+
+```js
+$this == "Foo"
+```
+
+Test if variable `$this` stores an entity with a name that has substring `Fo`:
+
+```js
+$this ~= "Fo"
+```
+
+When the equals operator (`==`) is used with a variable that has not  yet been initialized, the right-hand side of the operator will be assigned to the variable.
+
+Other than regular operators, equality operators are set as `first`, with the left hand being `src` and the right hand being `second`. Equality operators can be combined with `And`, `Not` and `Or` terms.
+
+Terms with equality operators return no data.
+
+#### Query Descriptor (C)
+```c
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {
+    // $this == Foo
+    { .first.id = EcsPredEq, .second.id = Foo }, 
+    // $this != Bar
+    { .first.id = EcsPredEq, .second.id = Bar, .oper = EcsNot },
+    // $this == "Foo"
+    { .first.id = EcsPredEq, .second = { .name = "Foo", .flags = EcsIsName }}, 
+    // $this ~= "Fo"
+    { .first.id = EcsPredMatch, .second = { .name = "Fo", .flags = EcsIsName }}, 
+  }
+});
+```
+
+#### Query Builder (C++)
+```cpp
+world.rule_builder()
+  // $this == Foo
+  .with(flecs::PredEq, Foo)
+  // $this != Foo
+  .without(flecs::PredEq, Bar)
+  // $this == "Foo"
+  .with(flecs::PredEq).second("Foo").flags(EcsIsName)
+  // $this ~= "Fo"
+  .with(flecs::PredMatch).second("Fo").flags(EcsIsName)
+  .build();
+```
+
+#### Query DSL
+```js
+$this == Foo
+$this != Foo
+$this == "Foo"
+$this != "Fo"
 ```
 
 ### AndFrom, OrFrom, NotFrom Operators

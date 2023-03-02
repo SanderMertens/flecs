@@ -53,7 +53,7 @@ When building for emscripten, add the following command line options to the `emc
 ```bash 
 -s ALLOW_MEMORY_GROWTH=1 
 -s EXPORTED_RUNTIME_METHODS=cwrap 
--s MODULARIZE=true 
+-s MODULARIZE=1 
 -s EXPORT_NAME="my_app"
 ```
 
