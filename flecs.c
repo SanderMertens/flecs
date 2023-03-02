@@ -35083,6 +35083,7 @@ typedef struct ecs_rule_op_t {
     uint8_t kind;              /* Instruction kind */
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
     int8_t field_index;        /* Query field corresponding with operation */
+    int8_t term_index;         /* Query term corresponding with operation */
     ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
     ecs_rule_lbl_t next;       /* Forwarding label. Must come after prev */
     ecs_rule_lbl_t other;      /* Misc register used for control flow */
@@ -35318,6 +35319,19 @@ ecs_var_id_t flecs_utovar(uint64_t val) {
 #else
 #define flecs_set_var_label(var, lbl)
 #endif
+
+static
+bool flecs_rule_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.flags & EcsIsEntity) {
+        ecs_entity_t id = term->first.id;
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+    return false;
+}
 
 bool flecs_rule_is_written(
     ecs_var_id_t var_id,
@@ -35644,6 +35658,10 @@ void flecs_rule_discover_vars(
                 if (flecs_term_id_is_wildcard(src)) {
                     anonymous_count ++;
                 }
+            }
+        } else if ((src->flags & EcsIsVariable) && (src->id == EcsThis)) {
+            if (flecs_rule_is_builtin_pred(term) && term->oper == EcsOr) {
+                flecs_rule_add_var(rule, EcsThisName, vars, EcsVarEntity);
             }
         }
 
@@ -36314,19 +36332,6 @@ bool flecs_rule_term_fixed_id(
 }
 
 static
-bool flecs_rule_is_builtin_pred(
-    ecs_term_t *term)
-{
-    if (term->first.flags & EcsIsEntity) {
-        ecs_entity_t id = term->first.id;
-        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static
 int flecs_rule_compile_builtin_pred(
     ecs_term_t *term,
     ecs_rule_op_t *op,
@@ -36390,6 +36395,7 @@ int flecs_rule_compile_term(
      * just matches against a source (vs. finding a source). */
     op.kind = src_is_var ? EcsRuleAnd : EcsRuleWith;
     op.field_index = flecs_ito(int8_t, term->field_index);
+    op.term_index = flecs_ito(int8_t, term - rule->filter.terms);
 
     /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
@@ -36437,6 +36443,22 @@ int flecs_rule_compile_term(
         &op.src, EcsRuleSrc, EcsVarAny, ctx);
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
+
+    /* A bit of special logic for OR expressions and equality predicates. If the
+     * left-hand of an equality operator is a table, and there are multiple
+     * operators in an Or expression, the Or chain should match all entities in
+     * the table that match the right hand sides of the operator expressions. 
+     * For this to work, the src variable needs to be resolved as entity, as an
+     * Or chain would otherwise only yield the first match from a table. */
+    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
+        /* Or terms are required to have the same source, so we don't have to
+         * worry about the last term in the chain. */
+        if (rule->vars[src_var].kind == EcsVarTable) {
+            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
+                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
+            src_var = op.src.var;
+        }
+    }
 
     /* Cache the current value of op.first. This value may get overwritten with
      * a variable when term has component inheritance, but Not operations may 
@@ -36652,7 +36674,7 @@ int flecs_rule_compile(
     /* If This variable has been written as entity, insert an operation to 
      * assign it to it.entities for consistency. */
     ecs_var_id_t this_id = flecs_rule_find_var_id(rule, "This", EcsVarEntity);
-    if (this_id != EcsVarNone) {
+    if (this_id != EcsVarNone && (ctx.written & (1ull << this_id))) {
         ecs_rule_op_t set_this = {0};
         set_this.kind = EcsRuleSetThis;
         set_this.flags |= (EcsRuleIsVar << EcsRuleFirst);
@@ -37002,9 +37024,9 @@ char* ecs_rule_str_w_profile(
             ecs_strbuf_appendstr(&buf, ", ");
             flecs_rule_op_ref_str(rule, &op->second, second_flags, &buf);
         } else if (op->kind == EcsRulePredEqName) {
-            int8_t field = op->field_index;
+            int8_t term_index = op->term_index;
             ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
-            ecs_strbuf_appendstr(&buf, rule->filter.terms[field].second.name);
+            ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
             ecs_strbuf_appendstr(&buf, "\"#[reset]");
         }
 
@@ -38418,7 +38440,12 @@ bool flecs_rule_compare_range(
     }
 
     if (l->count) {
-        if ((r->offset < l->offset) || (r->count > l->count)) {
+        int32_t l_end = l->offset + l->count;
+        int32_t r_end = r->offset + r->count;
+        if (r->offset < l->offset) {
+            return false;
+        }
+        if (r_end > l_end) {
             return false;
         }
     } else {
@@ -38482,8 +38509,8 @@ bool flecs_rule_pred_eq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t field = op->field_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    int8_t term_index = op->term_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
     const char *name = term->second.name;
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {
@@ -38595,8 +38622,8 @@ bool flecs_rule_pred_neq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t field = op->field_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    int8_t term_index = op->term_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
     const char *name = term->second.name;
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {

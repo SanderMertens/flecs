@@ -84,6 +84,7 @@ typedef struct ecs_rule_op_t {
     uint8_t kind;              /* Instruction kind */
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
     int8_t field_index;        /* Query field corresponding with operation */
+    int8_t term_index;         /* Query term corresponding with operation */
     ecs_rule_lbl_t prev;       /* Backtracking label (no data) */
     ecs_rule_lbl_t next;       /* Forwarding label. Must come after prev */
     ecs_rule_lbl_t other;      /* Misc register used for control flow */

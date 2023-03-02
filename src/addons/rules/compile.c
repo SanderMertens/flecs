@@ -40,6 +40,19 @@ ecs_var_id_t flecs_utovar(uint64_t val) {
 #define flecs_set_var_label(var, lbl)
 #endif
 
+static
+bool flecs_rule_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.flags & EcsIsEntity) {
+        ecs_entity_t id = term->first.id;
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool flecs_rule_is_written(
     ecs_var_id_t var_id,
     uint64_t written)
@@ -365,6 +378,10 @@ void flecs_rule_discover_vars(
                 if (flecs_term_id_is_wildcard(src)) {
                     anonymous_count ++;
                 }
+            }
+        } else if ((src->flags & EcsIsVariable) && (src->id == EcsThis)) {
+            if (flecs_rule_is_builtin_pred(term) && term->oper == EcsOr) {
+                flecs_rule_add_var(rule, EcsThisName, vars, EcsVarEntity);
             }
         }
 
@@ -1035,19 +1052,6 @@ bool flecs_rule_term_fixed_id(
 }
 
 static
-bool flecs_rule_is_builtin_pred(
-    ecs_term_t *term)
-{
-    if (term->first.flags & EcsIsEntity) {
-        ecs_entity_t id = term->first.id;
-        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static
 int flecs_rule_compile_builtin_pred(
     ecs_term_t *term,
     ecs_rule_op_t *op,
@@ -1111,6 +1115,7 @@ int flecs_rule_compile_term(
      * just matches against a source (vs. finding a source). */
     op.kind = src_is_var ? EcsRuleAnd : EcsRuleWith;
     op.field_index = flecs_ito(int8_t, term->field_index);
+    op.term_index = flecs_ito(int8_t, term - rule->filter.terms);
 
     /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
@@ -1158,6 +1163,22 @@ int flecs_rule_compile_term(
         &op.src, EcsRuleSrc, EcsVarAny, ctx);
     if (src_is_var) src_var = op.src.var;
     bool src_written = flecs_rule_is_written(src_var, ctx->written);
+
+    /* A bit of special logic for OR expressions and equality predicates. If the
+     * left-hand of an equality operator is a table, and there are multiple
+     * operators in an Or expression, the Or chain should match all entities in
+     * the table that match the right hand sides of the operator expressions. 
+     * For this to work, the src variable needs to be resolved as entity, as an
+     * Or chain would otherwise only yield the first match from a table. */
+    if (src_is_var && src_written && builtin_pred && term->oper == EcsOr) {
+        /* Or terms are required to have the same source, so we don't have to
+         * worry about the last term in the chain. */
+        if (rule->vars[src_var].kind == EcsVarTable) {
+            flecs_rule_compile_term_id(world, rule, &op, &term->src, 
+                    &op.src, EcsRuleSrc, EcsVarEntity, ctx);
+            src_var = op.src.var;
+        }
+    }
 
     /* Cache the current value of op.first. This value may get overwritten with
      * a variable when term has component inheritance, but Not operations may 
@@ -1373,7 +1394,7 @@ int flecs_rule_compile(
     /* If This variable has been written as entity, insert an operation to 
      * assign it to it.entities for consistency. */
     ecs_var_id_t this_id = flecs_rule_find_var_id(rule, "This", EcsVarEntity);
-    if (this_id != EcsVarNone) {
+    if (this_id != EcsVarNone && (ctx.written & (1ull << this_id))) {
         ecs_rule_op_t set_this = {0};
         set_this.kind = EcsRuleSetThis;
         set_this.flags |= (EcsRuleIsVar << EcsRuleFirst);

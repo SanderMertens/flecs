@@ -1139,7 +1139,12 @@ bool flecs_rule_compare_range(
     }
 
     if (l->count) {
-        if ((r->offset < l->offset) || (r->count > l->count)) {
+        int32_t l_end = l->offset + l->count;
+        int32_t r_end = r->offset + r->count;
+        if (r->offset < l->offset) {
+            return false;
+        }
+        if (r_end > l_end) {
             return false;
         }
     } else {
@@ -1203,8 +1208,8 @@ bool flecs_rule_pred_eq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t field = op->field_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    int8_t term_index = op->term_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
     const char *name = term->second.name;
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {
@@ -1316,8 +1321,8 @@ bool flecs_rule_pred_neq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t field = op->field_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[field];
+    int8_t term_index = op->term_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
     const char *name = term->second.name;
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {
