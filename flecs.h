@@ -14479,6 +14479,14 @@ static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
 
+/* Misc */
+static const flecs::entity_t EcsDefaultChildComponent = EcsDefaultChildComponent;
+
+/* Builtin predicates for comparing entity ids in queries. Only supported by rules */
+static const flecs::entity_t PredEq = EcsPredEq;
+static const flecs::entity_t PredMatch = EcsPredMatch;
+static const flecs::entity_t PredLookup = EcsPredLookup;
+
 /** @} */
 
 }
@@ -24549,6 +24557,13 @@ struct term_id_builder_i {
         this->assert_term_id();
         m_term_id->flags |= flecs::IsVariable;
         m_term_id->name = const_cast<char*>(var_name);
+        return *this;
+    }
+
+    /* Override term id flags */
+    Base& flags(flecs::flags32_t flags) {
+        this->assert_term_id();
+        m_term_id->flags = flags;
         return *this;
     }
 

@@ -1067,12 +1067,12 @@ int flecs_rule_compile_builtin_pred(
 
     if (id == EcsPredEq) {
         if (term->second.flags & EcsIsName) {
-            op->kind = eq_name[term->oper == EcsNot];
+            op->kind = flecs_ito(uint8_t, eq_name[term->oper == EcsNot]);
         } else {
-            op->kind = eq[term->oper == EcsNot];
+            op->kind = flecs_ito(uint8_t, eq[term->oper == EcsNot]);
         }
     } else if (id == EcsPredMatch) {
-        op->kind = eq_match[term->oper == EcsNot];
+        op->kind = flecs_ito(uint8_t, eq_match[term->oper == EcsNot]);
     }
 
     op->first = op->src;

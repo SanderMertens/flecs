@@ -116,6 +116,13 @@ struct term_id_builder_i {
         return *this;
     }
 
+    /* Override term id flags */
+    Base& flags(flecs::flags32_t flags) {
+        this->assert_term_id();
+        m_term_id->flags = flags;
+        return *this;
+    }
+
     ecs_term_id_t *m_term_id;
     
 protected:

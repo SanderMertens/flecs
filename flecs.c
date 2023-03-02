@@ -36351,12 +36351,12 @@ int flecs_rule_compile_builtin_pred(
 
     if (id == EcsPredEq) {
         if (term->second.flags & EcsIsName) {
-            op->kind = eq_name[term->oper == EcsNot];
+            op->kind = flecs_ito(uint8_t, eq_name[term->oper == EcsNot]);
         } else {
-            op->kind = eq[term->oper == EcsNot];
+            op->kind = flecs_ito(uint8_t, eq[term->oper == EcsNot]);
         }
     } else if (id == EcsPredMatch) {
-        op->kind = eq_match[term->oper == EcsNot];
+        op->kind = flecs_ito(uint8_t, eq_match[term->oper == EcsNot]);
     }
 
     op->first = op->src;
@@ -38650,18 +38650,24 @@ bool flecs_rule_pred_match(
     ecs_table_range_t l;
     if (!redo) {
         l = flecs_rule_get_range(op, &op->first, EcsRuleFirst, ctx);
+        if (!l.table) {
+            return false;
+        }
+
         if (!l.count) {
             l.count = ecs_table_count(l.table);
         }
 
         op_ctx->range = l;
         op_ctx->index = l.offset;
-        op_ctx->name_col = ecs_table_get_index(ctx->world, l.table, 
-            ecs_pair(ecs_id(EcsIdentifier), EcsName));
+        op_ctx->name_col = flecs_ito(int16_t,   
+            ecs_table_get_index(ctx->world, l.table, 
+                ecs_pair(ecs_id(EcsIdentifier), EcsName)));
         if (op_ctx->name_col == -1) {
             return is_neq;
         }
-        op_ctx->name_col = l.table->storage_map[op_ctx->name_col];
+        op_ctx->name_col = flecs_ito(int16_t, 
+            l.table->storage_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
     } else {
         if (op_ctx->name_col == -1) {
