@@ -907,7 +907,7 @@ The above query does not match root entities, as they do not have a parent with 
 ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Position");
 ```
 
-See the [query manual](Query.md) section for more details.
+See the [query manual](Queries.md) section for more details.
 
 ### Path identifiers
 When entities in a hierarchy have names assigned to them, they can be looked up with path expressions. A path expression is a list of entity names, separated by a scope separator character (by default a `.`, and `::` in the C++ API). This example shows how to request the path expression from an entity:
