@@ -50,6 +50,8 @@ typedef enum {
     EcsRulePredNeq,        /* Test if variable is not equal to */
     EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
     EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
+    EcsRulePredEqMatch,    /* Same as EcsRulePredEq but with fuzzy matching by name */
+    EcsRulePredNeqMatch,   /* Same as EcsRulePredNeq but with fuzzy matching by name */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
@@ -130,6 +132,8 @@ typedef struct {
  /* Eq context */
 typedef struct {
     ecs_table_range_t range;
+    int32_t index;
+    int16_t name_col;
     bool redo;
 } ecs_rule_eq_ctx_t;
 

@@ -39,6 +39,8 @@ const char* flecs_rule_op_str(
     case EcsRulePredNeq:      return "neq     ";
     case EcsRulePredEqName:   return "eq_nm   ";
     case EcsRulePredNeqName:  return "neq_nm  ";
+    case EcsRulePredEqMatch:  return "eq_m    ";
+    case EcsRulePredNeqMatch: return "neq_m   ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleSetFixed:     return "setfix  ";

@@ -1059,35 +1059,33 @@ int flecs_rule_compile_builtin_pred(
 {
     ecs_entity_t id = term->first.id;
 
+    ecs_rule_op_kind_t eq[] = {EcsRulePredEq, EcsRulePredNeq};
+    ecs_rule_op_kind_t eq_name[] = {EcsRulePredEqName, EcsRulePredNeqName};
+    ecs_rule_op_kind_t eq_match[] = {EcsRulePredEqMatch, EcsRulePredNeqMatch};
+    
+    ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+
     if (id == EcsPredEq) {
-        ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
-
         if (term->second.flags & EcsIsName) {
-            if (term->oper == EcsNot) {
-                op->kind = EcsRulePredNeqName;
-            } else {
-                op->kind = EcsRulePredEqName;
-            }
+            op->kind = eq_name[term->oper == EcsNot];
         } else {
-            if (term->oper == EcsNot) {
-                op->kind = EcsRulePredNeq;
-            } else {
-                op->kind = EcsRulePredEq;
-            }
+            op->kind = eq[term->oper == EcsNot];
         }
+    } else if (id == EcsPredMatch) {
+        op->kind = eq_match[term->oper == EcsNot];
+    }
 
-        op->first = op->src;
-        op->src = (ecs_rule_ref_t){0};
-        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
-        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
-        op->flags |= EcsRuleIsVar << EcsRuleFirst;
+    op->first = op->src;
+    op->src = (ecs_rule_ref_t){0};
+    op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
+    op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
+    op->flags |= EcsRuleIsVar << EcsRuleFirst;
 
-        if (flags_2nd & EcsRuleIsVar) {
-            if (!(write_state & (1ull << op->second.var))) {
-                ecs_err("uninitialized variable '%s' on right-hand side of "
-                    "equality operator", term->second.name);
-                return -1;
-            }
+    if (flags_2nd & EcsRuleIsVar) {
+        if (!(write_state & (1ull << op->second.var))) {
+            ecs_err("uninitialized variable '%s' on right-hand side of "
+                "equality operator", term->second.name);
+            return -1;
         }
     }
 
@@ -1189,13 +1187,23 @@ int flecs_rule_compile_term(
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
     if (first_term && src_is_var && !src_written) {
-        if (term->oper == EcsNot || term->oper == EcsOptional) {
+        bool pred_match = builtin_pred && term->first.id == EcsPredMatch;
+        if (term->oper == EcsNot || term->oper == EcsOptional || pred_match) {
             ecs_rule_op_t match_any = {0};
             match_any.kind = EcsAnd;
             match_any.flags = EcsRuleIsSelf | (EcsRuleIsEntity << EcsRuleFirst);
             match_any.flags |= (EcsRuleIsVar << EcsRuleSrc);
             match_any.src = op.src;
-            match_any.first.entity = EcsAny;
+            match_any.field_index = -1;
+            if (!pred_match) {
+                match_any.first.entity = EcsAny;
+            } else {
+                /* If matching by name, instead of finding all tables, just find
+                 * the ones with a name. */
+                match_any.first.entity = ecs_id(EcsIdentifier);
+                match_any.second.entity = EcsName;
+                match_any.flags |= (EcsRuleIsEntity << EcsRuleSecond);
+            }
             match_any.written = (1ull << src_var);
             flecs_rule_op_insert(&match_any, ctx);
             flecs_rule_write_ctx(op.src.var, ctx, false);

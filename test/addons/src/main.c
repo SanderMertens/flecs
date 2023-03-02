@@ -937,6 +937,18 @@ void RulesBuiltinPredicates_this_2_or_id_written(void);
 void RulesBuiltinPredicates_this_2_or_name_written(void);
 void RulesBuiltinPredicates_var_2_or_id_written(void);
 void RulesBuiltinPredicates_var_2_or_name_written(void);
+void RulesBuiltinPredicates_this_match_eq(void);
+void RulesBuiltinPredicates_var_match_eq(void);
+void RulesBuiltinPredicates_this_match_eq_written(void);
+void RulesBuiltinPredicates_var_match_eq_written(void);
+void RulesBuiltinPredicates_this_match_neq(void);
+void RulesBuiltinPredicates_var_match_neq(void);
+void RulesBuiltinPredicates_this_match_neq_written(void);
+void RulesBuiltinPredicates_var_match_neq_written(void);
+void RulesBuiltinPredicates_this_match_2_neq(void);
+void RulesBuiltinPredicates_var_match_2_neq(void);
+void RulesBuiltinPredicates_this_match_2_neq_written(void);
+void RulesBuiltinPredicates_var_match_2_neq_written(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -4895,6 +4907,54 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "var_2_or_name_written",
         RulesBuiltinPredicates_var_2_or_name_written
+    },
+    {
+        "this_match_eq",
+        RulesBuiltinPredicates_this_match_eq
+    },
+    {
+        "var_match_eq",
+        RulesBuiltinPredicates_var_match_eq
+    },
+    {
+        "this_match_eq_written",
+        RulesBuiltinPredicates_this_match_eq_written
+    },
+    {
+        "var_match_eq_written",
+        RulesBuiltinPredicates_var_match_eq_written
+    },
+    {
+        "this_match_neq",
+        RulesBuiltinPredicates_this_match_neq
+    },
+    {
+        "var_match_neq",
+        RulesBuiltinPredicates_var_match_neq
+    },
+    {
+        "this_match_neq_written",
+        RulesBuiltinPredicates_this_match_neq_written
+    },
+    {
+        "var_match_neq_written",
+        RulesBuiltinPredicates_var_match_neq_written
+    },
+    {
+        "this_match_2_neq",
+        RulesBuiltinPredicates_this_match_2_neq
+    },
+    {
+        "var_match_2_neq",
+        RulesBuiltinPredicates_var_match_2_neq
+    },
+    {
+        "this_match_2_neq_written",
+        RulesBuiltinPredicates_this_match_2_neq_written
+    },
+    {
+        "var_match_2_neq_written",
+        RulesBuiltinPredicates_var_match_2_neq_written
     }
 };
 
@@ -6066,7 +6126,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        48,
+        60,
         RulesBuiltinPredicates_testcases
     },
     {

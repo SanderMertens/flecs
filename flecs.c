@@ -35049,6 +35049,8 @@ typedef enum {
     EcsRulePredNeq,        /* Test if variable is not equal to */
     EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
     EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
+    EcsRulePredEqMatch,    /* Same as EcsRulePredEq but with fuzzy matching by name */
+    EcsRulePredNeqMatch,   /* Same as EcsRulePredNeq but with fuzzy matching by name */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
@@ -35129,6 +35131,8 @@ typedef struct {
  /* Eq context */
 typedef struct {
     ecs_table_range_t range;
+    int32_t index;
+    int16_t name_col;
     bool redo;
 } ecs_rule_eq_ctx_t;
 
@@ -36339,35 +36343,33 @@ int flecs_rule_compile_builtin_pred(
 {
     ecs_entity_t id = term->first.id;
 
+    ecs_rule_op_kind_t eq[] = {EcsRulePredEq, EcsRulePredNeq};
+    ecs_rule_op_kind_t eq_name[] = {EcsRulePredEqName, EcsRulePredNeqName};
+    ecs_rule_op_kind_t eq_match[] = {EcsRulePredEqMatch, EcsRulePredNeqMatch};
+    
+    ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
+
     if (id == EcsPredEq) {
-        ecs_flags16_t flags_2nd = flecs_rule_ref_flags(op->flags, EcsRuleSecond);
-
         if (term->second.flags & EcsIsName) {
-            if (term->oper == EcsNot) {
-                op->kind = EcsRulePredNeqName;
-            } else {
-                op->kind = EcsRulePredEqName;
-            }
+            op->kind = eq_name[term->oper == EcsNot];
         } else {
-            if (term->oper == EcsNot) {
-                op->kind = EcsRulePredNeq;
-            } else {
-                op->kind = EcsRulePredEq;
-            }
+            op->kind = eq[term->oper == EcsNot];
         }
+    } else if (id == EcsPredMatch) {
+        op->kind = eq_match[term->oper == EcsNot];
+    }
 
-        op->first = op->src;
-        op->src = (ecs_rule_ref_t){0};
-        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
-        op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
-        op->flags |= EcsRuleIsVar << EcsRuleFirst;
+    op->first = op->src;
+    op->src = (ecs_rule_ref_t){0};
+    op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleSrc);
+    op->flags &= (ecs_flags8_t)~((EcsRuleIsEntity|EcsRuleIsVar) << EcsRuleFirst);
+    op->flags |= EcsRuleIsVar << EcsRuleFirst;
 
-        if (flags_2nd & EcsRuleIsVar) {
-            if (!(write_state & (1ull << op->second.var))) {
-                ecs_err("uninitialized variable '%s' on right-hand side of "
-                    "equality operator", term->second.name);
-                return -1;
-            }
+    if (flags_2nd & EcsRuleIsVar) {
+        if (!(write_state & (1ull << op->second.var))) {
+            ecs_err("uninitialized variable '%s' on right-hand side of "
+                "equality operator", term->second.name);
+            return -1;
         }
     }
 
@@ -36469,13 +36471,23 @@ int flecs_rule_compile_term(
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
     if (first_term && src_is_var && !src_written) {
-        if (term->oper == EcsNot || term->oper == EcsOptional) {
+        bool pred_match = builtin_pred && term->first.id == EcsPredMatch;
+        if (term->oper == EcsNot || term->oper == EcsOptional || pred_match) {
             ecs_rule_op_t match_any = {0};
             match_any.kind = EcsAnd;
             match_any.flags = EcsRuleIsSelf | (EcsRuleIsEntity << EcsRuleFirst);
             match_any.flags |= (EcsRuleIsVar << EcsRuleSrc);
             match_any.src = op.src;
-            match_any.first.entity = EcsAny;
+            match_any.field_index = -1;
+            if (!pred_match) {
+                match_any.first.entity = EcsAny;
+            } else {
+                /* If matching by name, instead of finding all tables, just find
+                 * the ones with a name. */
+                match_any.first.entity = ecs_id(EcsIdentifier);
+                match_any.second.entity = EcsName;
+                match_any.flags |= (EcsRuleIsEntity << EcsRuleSecond);
+            }
             match_any.written = (1ull << src_var);
             flecs_rule_op_insert(&match_any, ctx);
             flecs_rule_write_ctx(op.src.var, ctx, false);
@@ -36806,6 +36818,8 @@ const char* flecs_rule_op_str(
     case EcsRulePredNeq:      return "neq     ";
     case EcsRulePredEqName:   return "eq_nm   ";
     case EcsRulePredNeqName:  return "neq_nm  ";
+    case EcsRulePredEqMatch:  return "eq_m    ";
+    case EcsRulePredNeqMatch: return "neq_m   ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleSetFixed:     return "setfix  ";
@@ -38431,6 +38445,16 @@ bool flecs_rule_not(
 }
 
 static
+const char* flecs_rule_name_arg(
+    const ecs_rule_op_t *op,
+    ecs_rule_run_ctx_t *ctx)
+{
+    int8_t term_index = op->term_index;
+    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
+    return term->second.name;
+}
+
+static
 bool flecs_rule_compare_range(
     const ecs_table_range_t *l,
     const ecs_table_range_t *r)
@@ -38509,9 +38533,7 @@ bool flecs_rule_pred_eq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t term_index = op->term_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
-    const char *name = term->second.name;
+    const char *name = flecs_rule_name_arg(op, ctx);
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
@@ -38601,6 +38623,94 @@ bool flecs_rule_pred_neq_w_range(
 }
 
 static
+bool flecs_rule_pred_match(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx,
+    bool is_neq)
+{
+    ecs_rule_eq_ctx_t *op_ctx = flecs_op_ctx(ctx, eq);
+    uint64_t written = ctx->written[ctx->op_index];
+    ecs_assert(flecs_ref_is_written(op, &op->first, EcsRuleFirst, written),
+        ECS_INTERNAL_ERROR, 
+            "invalid instruction sequence: uninitialized match operand");
+
+    ecs_var_id_t first_var = op->first.var;
+    const char *match = flecs_rule_name_arg(op, ctx);
+    ecs_table_range_t l;
+    if (!redo) {
+        l = flecs_rule_get_range(op, &op->first, EcsRuleFirst, ctx);
+        if (!l.count) {
+            l.count = ecs_table_count(l.table);
+        }
+
+        op_ctx->range = l;
+        op_ctx->index = l.offset;
+        op_ctx->name_col = ecs_table_get_index(ctx->world, l.table, 
+            ecs_pair(ecs_id(EcsIdentifier), EcsName));
+        if (op_ctx->name_col == -1) {
+            return is_neq;
+        }
+        op_ctx->name_col = l.table->storage_map[op_ctx->name_col];
+        ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        if (op_ctx->name_col == -1) {
+            /* Table has no name */
+            return false;
+        }
+
+        l = op_ctx->range;
+    }
+
+    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].array;
+    int32_t count = l.offset + l.count, offset = -1;
+    for (; op_ctx->index < count; op_ctx->index ++) {
+        const char *name = names[op_ctx->index].value;
+        bool result = strstr(name, match);
+        if (is_neq) {
+            result = !result;
+        }
+
+        if (!result) {
+            if (offset != -1) {
+                break;
+            }
+        } else {
+            if (offset == -1) {
+                offset = op_ctx->index;
+            }
+        }
+    }
+
+    if (offset == -1) {
+        ctx->vars[first_var].range = op_ctx->range;
+        return false;
+    }
+
+    ctx->vars[first_var].range.offset = offset;
+    ctx->vars[first_var].range.count = (op_ctx->index - offset);
+    return true;
+}
+
+static
+bool flecs_rule_pred_eq_match(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    return flecs_rule_pred_match(op, redo, ctx, false);
+}
+
+static
+bool flecs_rule_pred_neq_match(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    return flecs_rule_pred_match(op, redo, ctx, true);
+}
+
+static
 bool flecs_rule_pred_neq(
     const ecs_rule_op_t *op,
     bool redo,
@@ -38622,9 +38732,7 @@ bool flecs_rule_pred_neq_name(
     bool redo,
     ecs_rule_run_ctx_t *ctx)
 {
-    int8_t term_index = op->term_index;
-    ecs_term_t *term = &ctx->rule->filter.terms[term_index];
-    const char *name = term->second.name;
+    const char *name = flecs_rule_name_arg(op, ctx);
     ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
@@ -38870,6 +38978,8 @@ bool flecs_rule_run(
     case EcsRulePredNeq: return flecs_rule_pred_neq(op, redo, ctx);
     case EcsRulePredEqName: return flecs_rule_pred_eq_name(op, redo, ctx);
     case EcsRulePredNeqName: return flecs_rule_pred_neq_name(op, redo, ctx);
+    case EcsRulePredEqMatch: return flecs_rule_pred_eq_match(op, redo, ctx);
+    case EcsRulePredNeqMatch: return flecs_rule_pred_neq_match(op, redo, ctx);
     case EcsRuleSetVars: return flecs_rule_setvars(op, redo, ctx);
     case EcsRuleSetThis: return flecs_rule_setthis(op, redo, ctx);
     case EcsRuleSetFixed: return flecs_rule_setfixed(op, redo, ctx);

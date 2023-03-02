@@ -963,7 +963,19 @@
                 "this_2_or_id_written",
                 "this_2_or_name_written",
                 "var_2_or_id_written",
-                "var_2_or_name_written"
+                "var_2_or_name_written",
+                "this_match_eq",
+                "var_match_eq",
+                "this_match_eq_written",
+                "var_match_eq_written",
+                "this_match_neq",
+                "var_match_neq",
+                "this_match_neq_written",
+                "var_match_neq_written",
+                "this_match_2_neq",
+                "var_match_2_neq",
+                "this_match_2_neq_written",
+                "var_match_2_neq_written"
             ]
         }, {
             "id": "SystemPeriodic",
