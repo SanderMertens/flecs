@@ -184,8 +184,16 @@ Module      | Description
 
 ## Language bindings
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
-- [C# #1](https://github.com/flecs-hub/flecs-cs) [#2](https://git.mcft.net/copygirl/gaemstone.ECS)
-- [Rust](https://github.com/jazzay/flecs-rs)
-- [Zig #1](https://github.com/foxnne/zig-flecs) [#2](https://github.com/prime31/zig-flecs)
-- [Polyglot webasm binding](https://github.com/flecs-hub/flecs-polyglot)
-- [Lua](https://github.com/flecs-hub/flecs-lua)
+- C#:
+  - [flecs-hub/flecs-cs](https://github.com/flecs-hub/flecs-cs)
+  - [copygirl/gaemstone.ECS](https://git.mcft.net/copygirl/gaemstone.ECS)
+- Rust:
+  - [flecs-rs](https://github.com/jazzay/flecs-rs)
+  - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
+- Zig: 
+  - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)
+  - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)
+  - [prime31/zig-flecs](https://github.com/prime31/zig-flecs)
+- Lua:
+  - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)
+  - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
