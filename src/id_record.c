@@ -404,6 +404,8 @@ ecs_id_record_t* flecs_id_record_get(
     ecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
         return world->idr_isa_wildcard;
+    } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
+        return world->idr_childof_wildcard;
     }
 
     ecs_id_t hash = flecs_id_record_hash(id);

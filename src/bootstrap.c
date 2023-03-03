@@ -587,9 +587,10 @@ ecs_table_t* flecs_bootstrap_component_table(
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
         EcsIdTraversable | EcsIdTag;
-    idr = flecs_id_record_ensure(world, ecs_pair(EcsChildOf, EcsWildcard));
-    idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdTraversable | EcsIdTag | EcsIdExclusive;
+    world->idr_childof_wildcard = flecs_id_record_ensure(world, 
+        ecs_pair(EcsChildOf, EcsWildcard));
+    world->idr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
+        EcsIdDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
 
     idr = flecs_id_record_ensure(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));

@@ -913,6 +913,7 @@ struct ecs_world_t {
     ecs_id_record_t *idr_any;
     ecs_id_record_t *idr_isa_wildcard;
     ecs_id_record_t *idr_childof_0;
+    ecs_id_record_t *idr_childof_wildcard;
 
     /* -- Mixins -- */
     ecs_world_t *self;
@@ -55542,9 +55543,10 @@ ecs_table_t* flecs_bootstrap_component_table(
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
         EcsIdTraversable | EcsIdTag;
-    idr = flecs_id_record_ensure(world, ecs_pair(EcsChildOf, EcsWildcard));
-    idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdTraversable | EcsIdTag | EcsIdExclusive;
+    world->idr_childof_wildcard = flecs_id_record_ensure(world, 
+        ecs_pair(EcsChildOf, EcsWildcard));
+    world->idr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
+        EcsIdDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
 
     idr = flecs_id_record_ensure(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
@@ -57008,6 +57010,8 @@ ecs_id_record_t* flecs_id_record_get(
     ecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
         return world->idr_isa_wildcard;
+    } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
+        return world->idr_childof_wildcard;
     }
 
     ecs_id_t hash = flecs_id_record_hash(id);
