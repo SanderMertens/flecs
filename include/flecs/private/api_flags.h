@@ -98,7 +98,8 @@ extern "C" {
 #define EcsIterNoResults               (1u << 6u)  /* Iterator has no results */
 #define EcsIterIgnoreThis              (1u << 7u)  /* Only evaluate non-this terms */
 #define EcsIterMatchVar                (1u << 8u)  
-#define EcsIterProfile                 (1u << 10u) /* Profile iterator performance */
+#define EcsIterHasCondSet              (1u << 10u) /* Does iterator have conditionally set fields */
+#define EcsIterProfile                 (1u << 11u) /* Profile iterator performance */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Filter flags (used by ecs_filter_t::flags)
@@ -120,8 +121,7 @@ extern "C" {
 #define EcsFilterNoData                (1u << 7u)  /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
-#define EcsIterProfile               (1u << 10u) /* Profile filter performance */
-
+#define EcsFilterHasCondSet            (1u << 10u) /* Does filter have conditionally set fields */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

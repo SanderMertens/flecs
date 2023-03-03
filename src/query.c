@@ -2091,22 +2091,17 @@ ecs_iter_t ecs_query_iter(
         it.node = ecs_vec_first(&query->table_slices);
     }
 
-    ecs_flags32_t flags = 0;
-    ECS_BIT_COND(flags, EcsIterNoData, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterNoData));
-    ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterIsInstanced));
-
     ecs_iter_t result = {
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,
-        .flags = flags,
         .priv.iter.query = it,
         .next = ecs_query_next,
     };
+
+    flecs_filter_apply_iter_flags(&result, &query->filter);
 
     ecs_filter_t *filter = &query->filter;
     if (filter->flags & EcsFilterMatchOnlyThis) {

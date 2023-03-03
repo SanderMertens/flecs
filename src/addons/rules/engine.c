@@ -1875,8 +1875,7 @@ ecs_iter_t ecs_rule_iter(
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
-    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsInstanced));
+    flecs_filter_apply_iter_flags(&it, &rule->filter);
 
     flecs_iter_init(world, &it, 
         flecs_iter_cache_ids |

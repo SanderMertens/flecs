@@ -1070,6 +1070,7 @@ int ecs_filter_finalize(
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     int32_t filter_terms = 0;
+    bool cond_set = false;
 
     ecs_filter_finalize_ctx_t ctx = {0};
     ctx.world = world;
@@ -1155,6 +1156,10 @@ int ecs_filter_finalize(
                 term->idr->keep_alive ++;
             }
         }
+
+        if (term->oper == EcsOptional || term->oper == EcsNot) {
+            cond_set = true;
+        }
     }
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
@@ -1167,6 +1172,8 @@ int ecs_filter_finalize(
     if (filter_terms == term_count) {
         ECS_BIT_SET(f->flags, EcsFilterNoData);
     }
+
+    ECS_BIT_COND(f->flags, EcsFilterHasCondSet, cond_set);
 
     return 0;
 }
@@ -2427,6 +2434,18 @@ error:
     return -2;
 }
 
+void flecs_filter_apply_iter_flags(
+    ecs_iter_t *it,
+    const ecs_filter_t *filter)
+{
+    ECS_BIT_COND(it->flags, EcsIterIsInstanced, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
+    ECS_BIT_COND(it->flags, EcsIterNoData,
+        ECS_BIT_IS_SET(filter->flags, EcsFilterNoData));
+    ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterHasCondSet));
+}
+
 ecs_iter_t flecs_filter_iter_w_flags(
     const ecs_world_t *stage,
     const ecs_filter_t *filter,
@@ -2452,8 +2471,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     iter->pivot_term = -1;
 
     flecs_init_filter_iter(&it, filter);
-    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
+    flecs_filter_apply_iter_flags(&it, filter);
 
     /* Find term that represents smallest superset */
     if (ECS_BIT_IS_SET(flags, EcsIterIgnoreThis)) {
