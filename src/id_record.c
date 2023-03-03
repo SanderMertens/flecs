@@ -406,6 +406,8 @@ ecs_id_record_t* flecs_id_record_get(
         return world->idr_isa_wildcard;
     } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
         return world->idr_childof_wildcard;
+    } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+        return world->idr_identifier_name;
     }
 
     ecs_id_t hash = flecs_id_record_hash(id);

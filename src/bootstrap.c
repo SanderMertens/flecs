@@ -587,23 +587,24 @@ ecs_table_t* flecs_bootstrap_component_table(
     ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
         EcsIdTraversable | EcsIdTag;
+
+    /* Initialize id records cached on world */
     world->idr_childof_wildcard = flecs_id_record_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->idr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
         EcsIdDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
-
-    idr = flecs_id_record_ensure(
-        world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
+    idr = flecs_id_record_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     idr->flags |= EcsIdDontInherit;
-
+    world->idr_identifier_name = 
+        flecs_id_record_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));
     world->idr_childof_0 = flecs_id_record_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
         EcsFinal,
-        ecs_pair(ecs_id(EcsIdentifier), EcsName),
-        ecs_pair(ecs_id(EcsIdentifier), EcsSymbol),
+        ecs_pair_t(EcsIdentifier, EcsName),
+        ecs_pair_t(EcsIdentifier, EcsSymbol),
         ecs_pair(EcsChildOf, EcsFlecsCore),
         ecs_pair(EcsOnDelete, EcsPanic)
     };

@@ -642,6 +642,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
+#define ecs_pair_t(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, ecs_id(pred)))
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
 #define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
 #define ecs_pair_relation ecs_pair_first

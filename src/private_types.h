@@ -573,6 +573,7 @@ struct ecs_world_t {
     ecs_id_record_t *idr_isa_wildcard;
     ecs_id_record_t *idr_childof_0;
     ecs_id_record_t *idr_childof_wildcard;
+    ecs_id_record_t *idr_identifier_name;
 
     /* -- Mixins -- */
     ecs_world_t *self;
