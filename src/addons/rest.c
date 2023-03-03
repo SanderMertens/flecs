@@ -351,6 +351,12 @@ void flecs_rest_iter_to_reply(
     flecs_rest_int_param(req, "offset", &offset);
     flecs_rest_int_param(req, "limit", &limit);
 
+    if (offset < 0 || limit < 0) {
+        flecs_reply_error(reply, "invalid offset/limit parameter");
+        reply->code = 400;
+        return;
+    }
+
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
     ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
 }
