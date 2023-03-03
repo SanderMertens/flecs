@@ -364,7 +364,7 @@ void FilterStr_one_term_w_first_var() {
     }));
 
     char *str = ecs_filter_str(world, &f);
-    test_str(str, "$Var");
+    test_str(str, "[none] $Var");
     ecs_os_free(str);
 
     ecs_filter_fini(&f);
@@ -404,7 +404,7 @@ void FilterStr_one_term_w_first_var_entity_src() {
     }));
 
     char *str = ecs_filter_str(world, &f);
-    test_str(str, "$Var(Src)");
+    test_str(str, "[none] $Var(Src)");
     ecs_os_free(str);
 
     ecs_filter_fini(&f);
@@ -469,7 +469,7 @@ void FilterStr_wildcard_term() {
     }));
 
     char *str = ecs_filter_str(world, &f);
-    test_str(str, "*");
+    test_str(str, "[none] *");
     ecs_os_free(str);
 
     ecs_filter_fini(&f);

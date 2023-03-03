@@ -1027,6 +1027,10 @@ void Filter_filter_w_first_rel_reflexive_self(void);
 void Filter_filter_w_first_rel_reflexive_down(void);
 void Filter_filter_w_first_rel_reflexive_self_down(void);
 void Filter_filter_w_first_rel_non_traversable(void);
+void Filter_filter_w_first_wildcard_inout_none(void);
+void Filter_filter_w_first_var_inout_none(void);
+void Filter_filter_w_pair_wildcard_inout_none(void);
+void Filter_filter_w_pair_var_inout_none(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6337,6 +6341,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_first_rel_non_traversable",
         Filter_filter_w_first_rel_non_traversable
+    },
+    {
+        "filter_w_first_wildcard_inout_none",
+        Filter_filter_w_first_wildcard_inout_none
+    },
+    {
+        "filter_w_first_var_inout_none",
+        Filter_filter_w_first_var_inout_none
+    },
+    {
+        "filter_w_pair_wildcard_inout_none",
+        Filter_filter_w_pair_wildcard_inout_none
+    },
+    {
+        "filter_w_pair_var_inout_none",
+        Filter_filter_w_pair_var_inout_none
     },
     {
         "term_w_id",
@@ -11965,7 +11985,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        287,
+        291,
         Filter_testcases
     },
     {

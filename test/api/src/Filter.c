@@ -2941,6 +2941,76 @@ void Filter_filter_w_first_rel_non_traversable() {
     ecs_fini(world); 
 }
 
+void Filter_filter_w_first_wildcard_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = EcsWildcard }
+        }
+    }));
+
+
+    test_int(f.terms[0].inout, EcsInOutNone);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_first_var_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.name = "var", .first.flags = EcsIsVariable }
+        }
+    }));
+
+
+    test_int(f.terms[0].inout, EcsInOutNone);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_pair_wildcard_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            { .first.id = EcsWildcard, .second.id = EcsWildcard }
+        }
+    }));
+
+
+    test_int(f.terms[0].inout, EcsInOutNone);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_pair_var_inout_none() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = {
+            {
+                .first.name = "x", .first.flags = EcsIsVariable,
+                .second.name = "y", .second.flags = EcsIsVariable,
+            }
+        }
+    }));
+
+    test_int(f.terms[0].inout, EcsInOutNone);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 

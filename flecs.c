@@ -45829,6 +45829,16 @@ int ecs_filter_finalize(
                 filter_terms ++;
             }
         }
+        if ((term->id == EcsWildcard) || (term->id == 
+            ecs_pair(EcsWildcard, EcsWildcard))) 
+        {
+            /* If term type is unknown beforehand, default the inout type to
+             * none. This prevents accidentally requesting lots of components,
+             * which can put stress on serializer code. */
+            if (term->inout == EcsInOutDefault) {
+                term->inout = EcsInOutNone;
+            }
+        }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
             ECS_BIT_CLEAR(f->flags, EcsFilterMatchAnything);

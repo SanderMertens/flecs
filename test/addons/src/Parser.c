@@ -323,7 +323,7 @@ void Parser_this_var_as_predicate() {
     test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -346,7 +346,7 @@ void Parser_this_lowercase_var_as_predicate() {
     test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], Subj, EcsSelf|EcsUp|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -1421,7 +1421,7 @@ void Parser_this_singleton() {
     test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     ecs_filter_fini(&f);
 
@@ -4268,7 +4268,7 @@ void Parser_this_pred_no_name() {
     test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].inout, EcsInOutNone);
 
     test_str(terms[0].first.name, NULL);
 
