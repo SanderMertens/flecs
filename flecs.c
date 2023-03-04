@@ -33865,10 +33865,10 @@ typedef int ecs_http_socket_t;
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
 /* Cache invalidation timeout (s) */
-#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)2.0)
+#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)1.0)
 
-/* Cache purge timeout (s) */
-#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)4.0)
+/* Cache entry purge timeout (s) */
+#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)10.0)
 
 /* Global statistics */
 int64_t ecs_http_request_received_count = 0;
@@ -34345,7 +34345,6 @@ ecs_http_request_entry_t* http_enqueue_request(
             req.pub.conn = (ecs_http_connection_t*)conn;
             req.pub.method = frag->method;
             req.pub.path = res + 1;
-            
             http_decode_url_str(req.pub.path);
 
             if (frag->body_offset) {
@@ -34368,11 +34367,16 @@ ecs_http_request_entry_t* http_enqueue_request(
             req.res = res;
             req.req_len = frag->header_offsets[0];
 
-            ecs_http_request_entry_t *entry = 
-                http_find_request_entry(srv, res, frag->header_offsets[0]);
-            if (entry) {
-                ecs_os_mutex_unlock(srv->lock);
-                return entry;
+            /* Check cache for GET requests */
+            if (frag->method == EcsHttpGet) {
+                ecs_http_request_entry_t *entry = 
+                    http_find_request_entry(srv, res, frag->header_offsets[0]);
+                if (entry) {
+                    /* If an entry is found, don't enqueue a request. Instead
+                     * return the cached response immediately. */
+                    ecs_os_mutex_unlock(srv->lock);
+                    return entry;
+                }
             }
 
             ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
@@ -34380,13 +34384,11 @@ ecs_http_request_entry_t* http_enqueue_request(
             *req_ptr = req;
             req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
             req_ptr->conn_id = conn->pub.id;
-
             ecs_os_linc(&ecs_http_request_received_count);
         }
     }
 
     ecs_os_mutex_unlock(srv->lock);
-
     return NULL;
 }
 
