@@ -33832,8 +33832,8 @@ typedef struct ecs_http_send_request_t {
 
 typedef struct ecs_http_send_queue_t {
     ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
-    int32_t cur;
-    int32_t count;
+    int32_t head;
+    int32_t tail;
     ecs_os_thread_t thread;
     int32_t wait_ms;
 } ecs_http_send_queue_t;
@@ -34061,6 +34061,7 @@ void http_close(
     ecs_http_socket_t *sock)
 {
     ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
 #else
@@ -34314,7 +34315,6 @@ ecs_http_request_entry_t* http_enqueue_request(
                 if (entry) {
                     /* If an entry is found, don't enqueue a request. Instead
                      * return the cached response immediately. */
-                    ecs_os_mutex_unlock(srv->lock);
                     return entry;
                 }
             }
@@ -34498,13 +34498,14 @@ bool http_parse_request(
 
 static
 ecs_http_send_request_t* http_send_queue_post(
-    ecs_http_server_t *srv)
+    ecs_http_server_t *srv,
+    ecs_http_socket_t sock)
 {
     /* This function should only be called while the server is locked. Before 
      * the lock is released, the returned element should be populated. */
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    ecs_assert(sq->count <= ECS_HTTP_SEND_QUEUE_MAX, ECS_INTERNAL_ERROR, NULL);
-    if (sq->count == ECS_HTTP_SEND_QUEUE_MAX) {
+    int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    if (next == sq->tail) {
         return NULL;
     }
 
@@ -34514,21 +34515,24 @@ ecs_http_send_request_t* http_send_queue_post(
     }
 
     /* Return element at end of the queue */
-    return &sq->requests[(sq->cur + sq->count ++) % ECS_HTTP_SEND_QUEUE_MAX];
+    ecs_http_send_request_t *result = &sq->requests[sq->head];
+    sq->head = next;
+    return result;
 }
 
 static
 ecs_http_send_request_t* http_send_queue_get(
     ecs_http_server_t *srv)
 {
-    ecs_http_send_request_t *result = NULL;
     ecs_os_mutex_lock(srv->lock);
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    if (sq->count) {
-        result = &sq->requests[sq->cur];
-        sq->cur = (sq->cur + 1) % ECS_HTTP_SEND_QUEUE_MAX;
-        sq->count --;
+    if (sq->tail == sq->head) {
+        return NULL;
     }
+
+    int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    ecs_http_send_request_t *result = &sq->requests[sq->tail];
+    sq->tail = next;
     return result;
 }
 
@@ -34539,7 +34543,7 @@ void* http_server_send_queue(void* arg) {
 
     /* Run for as long as the server is running or there are messages. When the
      * server is stopping, no new messages will be enqueued */
-    while (srv->should_run || srv->send_queue.count) {
+    while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
         ecs_http_send_request_t* r = http_send_queue_get(srv);
         if (!r) {
             ecs_os_mutex_unlock(srv->lock);
@@ -34579,6 +34583,8 @@ void* http_server_send_queue(void* arg) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
                 http_close(&sock);
+            } else {
+                ecs_err("http: invalid socket\n");
             }
 
             ecs_os_free(content);
@@ -34623,8 +34629,6 @@ void http_append_send_headers(
         ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
     }
 
-    ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
-
     ecs_strbuf_mergebuff(hdrs, extra_headers);
 
     ecs_strbuf_appendlit(hdrs, "\r\n");
@@ -34645,7 +34649,7 @@ void http_send_reply(
     ecs_http_send_request_t *req = NULL;
 
     if (!preflight) {
-        req = http_send_queue_post(conn->pub.server);
+        req = http_send_queue_post(conn->pub.server, conn->sock);
         if (!req) {
             reply->code = 503; /* queue full, server is busy */
             ecs_os_linc(&ecs_http_busy_count);
@@ -34725,6 +34729,9 @@ void http_recv_request(
                     ecs_strbuf_appendstrn(&reply.body, 
                         entry->content, entry->content_length);
                     http_send_reply(conn, &reply, false);
+
+                    /* Lock was transferred from enqueue_request */
+                    ecs_os_mutex_unlock(srv->lock);
                 }
             }
             return;
