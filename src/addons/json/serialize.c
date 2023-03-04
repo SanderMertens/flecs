@@ -1431,7 +1431,8 @@ void flecs_json_serialize_iter_result_entity_labels(
     ecs_strbuf_t *buf,
     const ecs_json_ser_idr_t *ser_idr)
 {
-    int32_t count = it->count;
+    (void)buf;
+    (void)ser_idr;
     if (!it->count) {
         return;
     }
@@ -1454,7 +1455,7 @@ void flecs_json_serialize_iter_result_entity_labels(
     flecs_json_memberl(buf, "entity_labels");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
         flecs_json_string(buf, labels[i].value);
     }
@@ -1469,7 +1470,9 @@ void flecs_json_serialize_iter_result_colors(
     ecs_strbuf_t *buf,
     const ecs_json_ser_idr_t *ser_idr) 
 {
-    int32_t count = it->count;
+    (void)buf;
+    (void)ser_idr;
+
     if (!it->count) {
         return;
     }
@@ -1492,7 +1495,7 @@ void flecs_json_serialize_iter_result_colors(
     flecs_json_memberl(buf, "colors");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
         flecs_json_string(buf, colors[i].value);
     }
