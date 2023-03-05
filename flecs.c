@@ -34336,6 +34336,7 @@ ecs_http_request_entry_t* http_enqueue_request(
                 if (entry) {
                     /* If an entry is found, don't enqueue a request. Instead
                      * return the cached response immediately. */
+                    ecs_os_free(res);
                     return entry;
                 }
             }
@@ -34750,6 +34751,7 @@ bool http_recv_connection(
                     ecs_strbuf_appendstrn(&reply.body, 
                         entry->content, entry->content_length);
                     http_send_reply(conn, &reply, false);
+                    http_connection_free(conn);
 
                     /* Lock was transferred from enqueue_request */
                     ecs_os_mutex_unlock(srv->lock);
@@ -34902,7 +34904,7 @@ void http_accept_connections(
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len;
+    ecs_size_t remote_addr_len = 0;
     http_conn_res_t conn[FD_SETSIZE];
 
     fd_set fds, readfds;

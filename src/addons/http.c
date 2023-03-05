@@ -621,6 +621,7 @@ ecs_http_request_entry_t* http_enqueue_request(
                 if (entry) {
                     /* If an entry is found, don't enqueue a request. Instead
                      * return the cached response immediately. */
+                    ecs_os_free(res);
                     return entry;
                 }
             }
@@ -1035,6 +1036,7 @@ bool http_recv_connection(
                     ecs_strbuf_appendstrn(&reply.body, 
                         entry->content, entry->content_length);
                     http_send_reply(conn, &reply, false);
+                    http_connection_free(conn);
 
                     /* Lock was transferred from enqueue_request */
                     ecs_os_mutex_unlock(srv->lock);
