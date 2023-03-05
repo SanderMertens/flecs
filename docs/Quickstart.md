@@ -191,15 +191,17 @@ const Position *p = ecs_get(world, e, Position);
 ecs_remove(world, e, Position);
 ```
 ```cpp
+// Option 1: Create entity and assign component
 auto e = world.entity();
 
 // Add a component. This creates the component in the ECS storage, but does not
 // assign it with a value.
 e.add<Velocity>();
 
+// Option 2: Create entity and assign components at the same time
 // Set the value for the Position & Velocity components. A component will be
 // added if the entity doesn't have it yet.
-e = ecs.entity()
+auto e = ecs.entity()
     .set<Position>({10, 20})
     .set<Velocity>({1, 2});
 
