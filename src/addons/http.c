@@ -1071,15 +1071,6 @@ http_conn_res_t http_init_connection(
     return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
 
-#include <fcntl.h>
-void set_nonblock(int socket) {
-    int flags;
-    flags = fcntl(socket,F_GETFL,0);
-    assert(flags != -1);
-    flags = fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-    assert(flags != -1);
-}
-
 static
 void http_accept_connections(
     ecs_http_server_t* srv, 
@@ -1136,8 +1127,6 @@ void http_accept_connections(
             ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
         }
 
-        set_nonblock(sock);
-
         result = http_bind(sock, addr, addr_len);
         if (result) {
             ecs_err("http: failed to bind to '%s:%s': %s", 
@@ -1165,7 +1154,7 @@ void http_accept_connections(
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len;
+    ecs_size_t remote_addr_len = 0;
     http_conn_res_t conn[FD_SETSIZE];
 
     fd_set fds, readfds;
