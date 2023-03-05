@@ -33770,6 +33770,7 @@ typedef SOCKET ecs_http_socket_t;
 #include <netdb.h>
 #include <strings.h>
 #include <signal.h>
+#include <fcntl.h>
 typedef int ecs_http_socket_t;
 #endif
 
@@ -34010,6 +34011,26 @@ void http_sock_keep_alive(
         ecs_warn("http: failed to set socket KEEPALIVE: %s",
             ecs_os_strerror(errno));
     }
+}
+
+static
+void http_sock_nonblock(ecs_http_socket_t sock) {
+    (void)sock;
+#ifdef ECS_TARGET_POSIX
+    int flags;
+    flags = fcntl(sock,F_GETFL,0);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+#endif
 }
 
 static
@@ -34697,7 +34718,7 @@ bool http_recv_connection(
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
     ecs_http_fragment_t frag = {0};
 
-    while ((bytes_read = http_recv(
+    if ((bytes_read = http_recv(
         sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
     {
         bool is_alive = conn->pub.id == conn_id;
@@ -34827,7 +34848,7 @@ void http_accept_connections(
     if (srv->should_run) {
         ecs_dbg_2("http: initializing connection socket");
 
-        sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
         if (!http_socket_is_valid(sock)) {
             ecs_err("http: unable to create new connection socket: %s", 
                 ecs_os_strerror(errno));
@@ -34841,6 +34862,18 @@ void http_accept_connections(
         if (result) {
             ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
         }
+
+        if (addr->sa_family == AF_INET6) {
+            int ipv6only = 0;
+            if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+                (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
+            {
+                ecs_warn("http: failed to setsockopt: %s", 
+                    ecs_os_strerror(errno));
+            }
+        }
+
+        http_sock_nonblock(sock);
 
         result = http_bind(sock, addr, addr_len);
         if (result) {
@@ -34869,10 +34902,11 @@ void http_accept_connections(
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len = 0;
+    ecs_size_t remote_addr_len;
     http_conn_res_t conn[FD_SETSIZE];
 
     fd_set fds, readfds;
+    FD_ZERO(&fds);
     FD_SET(srv->sock, &fds);
 
     while (srv->should_run) {
@@ -34887,19 +34921,17 @@ void http_accept_connections(
         for (i = 0; i < FD_SETSIZE; i++) {
             if (FD_ISSET(i, &readfds)) {
                 if (i == srv->sock) {
-                    do {
-                        sock_conn = http_accept(srv->sock, 
-                            (struct sockaddr*) &remote_addr, &remote_addr_len);
-                        if (!http_socket_is_valid(sock_conn)) {
-                            break;
-                        }
+                    sock_conn = http_accept(srv->sock, 
+                        (struct sockaddr*) &remote_addr, &remote_addr_len);
+                    if (!http_socket_is_valid(sock_conn)) {
+                        break;
+                    }
 
-                        FD_SET(sock_conn, &fds);
-                        conn[sock_conn] = http_init_connection(srv, sock_conn, 
-                            &remote_addr, remote_addr_len);
-                    } while (true);
+                    FD_SET(sock_conn, &fds);
+                    conn[sock_conn] = http_init_connection(srv, sock_conn, 
+                        &remote_addr, remote_addr_len);
                 } else {
-                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)) {
+                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)){
                         FD_CLR(i, &fds);
                     }
                 }
@@ -34959,7 +34991,10 @@ void http_handle_request(
             }
         }
 
-        http_insert_request_entry(srv, req, &reply);
+        if (req->pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, req, &reply);
+        }
+
         http_send_reply(conn, &reply, false);
         ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
     } else {
@@ -35034,7 +35069,6 @@ int32_t http_dequeue_requests(
     }
 
     http_purge_request_cache(srv, false);
-
     ecs_os_mutex_unlock(srv->lock);
 
     return request_count - 1;
