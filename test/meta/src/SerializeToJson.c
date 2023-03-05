@@ -2215,7 +2215,6 @@ void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2271,7 +2270,6 @@ void SerializeToJson_serialize_iterator_2_comps_2_ents_same_table() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Mass\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2311,11 +2309,9 @@ void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table() {
         "\"results\":[{"
             "\"ids\":[[\"MyTag\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -2357,7 +2353,6 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"MyTag\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2417,7 +2412,6 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"TagA\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2428,7 +2422,6 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
         "}, {"
             "\"ids\":[[\"Position\"], [\"TagA\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Hello\", \"World\""
             "], "
@@ -2486,7 +2479,6 @@ void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Mass\"]], "
             "\"sources\":[0, \"Base\"], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2527,19 +2519,15 @@ void SerializeToJson_serialize_iterator_w_pair_wildcard() {
         "\"results\":[{"
             "\"ids\":[[\"Rel\",\"ObjA\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}, {"
             "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -2576,20 +2564,16 @@ void SerializeToJson_serialize_iterator_w_var() {
             "\"ids\":[[\"Rel\",\"ObjA\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjA\"], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}, {"
             "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjB\"], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -2635,20 +2619,16 @@ void SerializeToJson_serialize_iterator_w_2_vars() {
             "\"ids\":[[\"RelX\",\"ObjA\"], [\"RelY\",\"ObjC\"]], "
             "\"sources\":[0, 0], "
             "\"vars\":[\"ObjA\", \"ObjC\"], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\""
-            "], "
-            "\"values\":[0, 0]"
+            "]"
         "}, {"
             "\"ids\":[[\"RelX\",\"ObjB\"], [\"RelY\",\"ObjD\"]], "
             "\"sources\":[0, 0], "
             "\"vars\":[\"ObjB\", \"ObjD\"], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Bar\""
-            "], "
-            "\"values\":[0, 0]"
+            "]"
         "}]"
     "}");
 
@@ -2680,15 +2660,12 @@ void SerializeToJson_serialize_iterator_type_info_1_tags() {
     test_str(json, 
     "{"
         "\"ids\":[[\"TagA\"]], "
-        "\"type_info\":{\"TagA\":0}, "
         "\"results\":[{"
             "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -2721,15 +2698,12 @@ void SerializeToJson_serialize_iterator_type_info_2_tags() {
     test_str(json, 
     "{"
         "\"ids\":[[\"TagA\"], [\"TagB\"]], "
-        "\"type_info\":{\"TagA\":0, \"TagB\":0}, "
         "\"results\":[{"
             "\"ids\":[[\"TagA\"], [\"TagB\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
-            "], "
-            "\"values\":[0, 0]"
+            "]"
         "}]"
     "}");
 
@@ -2763,7 +2737,6 @@ void SerializeToJson_serialize_iterator_type_info_1_component() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2805,7 +2778,6 @@ void SerializeToJson_serialize_iterator_type_info_2_components() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2853,7 +2825,6 @@ void SerializeToJson_serialize_iterator_type_info_1_struct() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2911,7 +2882,6 @@ void SerializeToJson_serialize_iterator_type_info_1_component_1_struct() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -2977,7 +2947,6 @@ void SerializeToJson_serialize_iterator_type_info_2_structs() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -3041,7 +3010,6 @@ void SerializeToJson_serialize_iterator_type_info_w_unit() {
         "\"results\":[{"
             "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -3108,7 +3076,6 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_quantity() {
         "\"results\":[{"
             "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -3182,7 +3149,6 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
         "\"results\":[{"
             "\"ids\":[[\"T\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\", \"Bar\""
             "], "
@@ -3223,25 +3189,18 @@ void SerializeToJson_serialize_iterator_w_entity_label() {
         "\"results\":[{"
             "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"foo_bar\""
-            "], "
-            "\"entity_labels\":["
-                "\"foo_bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}, {"
             "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"hello_world\""
             "], "
             "\"entity_labels\":["
                 "\"Hello World\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -3284,21 +3243,17 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
             "\"sources\":[0], "
             "\"vars\":[\"ObjA\"], "
             "\"var_labels\":[\"Object A\"], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Foo\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}, {"
             "\"ids\":[[\"Rel\",\"ObjB\"]], "
             "\"sources\":[0], "
             "\"vars\":[\"ObjB\"], "
             "\"var_labels\":[\"ObjB\"], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"Bar\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -3334,25 +3289,18 @@ void SerializeToJson_serialize_iterator_color() {
         "\"results\":[{"
             "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"foo_bar\""
-            "], "
-            "\"colors\":["
-                "0"
-            "], "
-            "\"values\":[0]"
+            "]"
         "}, {"
             "\"ids\":[[\"Tag\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"hello_world\""
             "], "
             "\"colors\":["
                 "\"#47B576\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -3398,7 +3346,6 @@ void SerializeToJson_serialize_iterator_w_var_component() {
             "\"ids\":[[\"Rel\",\"Obj\"], [\"T\"]], "
             "\"sources\":[0, \"Obj\"], "
             "\"vars\":[\"Obj\"], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"Foo\""
             "], "
@@ -3440,16 +3387,14 @@ void SerializeToJson_serialize_iterator_w_optional_tag() {
             "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"e1\""
-            "], "
-            "\"values\":[0, 0]"
+            "]"
         "}, {"
             "\"ids\":[[\"TagA\"], [\"TagB\"]], "
             "\"sources\":[0, 0], "
             "\"is_set\":[true, false], "
             "\"entities\":["
                 "\"e2\""
-            "], "
-            "\"values\":[0, 0]"
+            "]"
         "}]"
     "}");
 
@@ -3581,11 +3526,9 @@ void SerializeToJson_serialize_iterator_w_inout_filter_tag() {
         "\"results\":[{"
             "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"e1\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -3624,7 +3567,6 @@ void SerializeToJson_serialize_iterator_w_inout_filter_component() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"e1\""
             "], "
@@ -3675,7 +3617,6 @@ void SerializeToJson_serialize_iterator_w_inout_filter_reflected_component() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"e1\""
             "], "
@@ -3708,11 +3649,9 @@ void SerializeToJson_serialize_iterator_w_inout_out_tag() {
         "\"results\":[{"
             "\"ids\":[[\"TagA\"]], "
             "\"sources\":[0], "
-            "\"is_set\":[true], "
             "\"entities\":["
                 "\"e1\""
-            "], "
-            "\"values\":[0]"
+            "]"
         "}]"
     "}");
 
@@ -3751,7 +3690,6 @@ void SerializeToJson_serialize_iterator_w_inout_out_component() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"e1\""
             "], "
@@ -3802,7 +3740,6 @@ void SerializeToJson_serialize_iterator_w_inout_out_reflected_component() {
         "\"results\":[{"
             "\"ids\":[[\"Position\"], [\"Velocity\"]], "
             "\"sources\":[0, 0], "
-            "\"is_set\":[true, true], "
             "\"entities\":["
                 "\"e1\""
             "], "
@@ -3846,7 +3783,6 @@ void SerializeToJson_serialize_iterator_component_from_var() {
             "\"ids\":[[\"Position\"]], "
             "\"sources\":[\"e1\"], "
             "\"vars\":[\"e1\"], "
-            "\"is_set\":[true], "
             "\"values\":[{\"x\":10, \"y\":20}]"
         "}]"
     "}");
@@ -4288,6 +4224,94 @@ void SerializeToJson_serialize_world() {
 
     ecs_os_free(json_1);
     ecs_os_free(json_2);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Tag);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"entities\":[\"e1\"]}, {\"entities\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_labels_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
+    ecs_doc_set_name(world, e1, "e1");
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Tag);
+    ecs_doc_set_name(world, e2, "e2");
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entity_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"entity_labels\":[\"e1\"]}, {\"entity_labels\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_colors_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
+    ecs_doc_set_color(world, e1, "e1");
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Tag);
+    ecs_doc_set_color(world, e2, "e2");
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_colors = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"colors\":[\"e1\"]}, {\"colors\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }

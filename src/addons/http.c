@@ -55,6 +55,7 @@ typedef SOCKET ecs_http_socket_t;
 #include <netdb.h>
 #include <strings.h>
 #include <signal.h>
+#include <fcntl.h>
 typedef int ecs_http_socket_t;
 #endif
 
@@ -89,6 +90,12 @@ typedef int ecs_http_socket_t;
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
+/* Cache invalidation timeout (s) */
+#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)1.0)
+
+/* Cache entry purge timeout (s) */
+#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)10.0)
+
 /* Global statistics */
 int64_t ecs_http_request_received_count = 0;
 int64_t ecs_http_request_invalid_count = 0;
@@ -111,11 +118,22 @@ typedef struct ecs_http_send_request_t {
 
 typedef struct ecs_http_send_queue_t {
     ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
-    int32_t cur;
-    int32_t count;
+    int32_t head;
+    int32_t tail;
     ecs_os_thread_t thread;
     int32_t wait_ms;
 } ecs_http_send_queue_t;
+
+typedef struct ecs_http_request_key_t {
+    const char *array;
+    ecs_size_t count;
+} ecs_http_request_key_t;
+
+typedef struct ecs_http_request_entry_t {
+    char *content;
+    int32_t content_length;
+    ecs_ftime_t time;
+} ecs_http_request_entry_t;
 
 /* HTTP server struct */
 struct ecs_http_server_t {
@@ -145,8 +163,9 @@ struct ecs_http_server_t {
     int32_t requests_processed; /* requests processed in last stats interval */
     int32_t requests_processed_total; /* total requests processed */
     int32_t dequeue_count; /* number of dequeues in last stats interval */ 
-
     ecs_http_send_queue_t send_queue;
+
+    ecs_hashmap_t request_cache;
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -201,7 +220,8 @@ typedef struct {
 typedef struct {
     ecs_http_request_t pub;
     uint64_t conn_id; /* for sanity check */
-    void *res;
+    char *res;
+    int32_t req_len;
 } ecs_http_request_impl_t;
 
 static
@@ -279,6 +299,26 @@ void http_sock_keep_alive(
 }
 
 static
+void http_sock_nonblock(ecs_http_socket_t sock) {
+    (void)sock;
+#ifdef ECS_TARGET_POSIX
+    int flags;
+    flags = fcntl(sock,F_GETFL,0);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+#endif
+}
+
+static
 int http_getnameinfo(
     const struct sockaddr* addr,
     ecs_size_t addr_len,
@@ -327,6 +367,7 @@ void http_close(
     ecs_http_socket_t *sock)
 {
     ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
 #else
@@ -454,7 +495,82 @@ void http_header_buf_append(
 }
 
 static
-void http_enqueue_request(
+uint64_t http_request_key_hash(const void *ptr) {
+    const ecs_http_request_key_t *key = ptr;
+    const char *array = key->array;
+    int32_t count = key->count;
+    return flecs_hash(array, count * ECS_SIZEOF(char));
+}
+
+static
+int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
+    const ecs_http_request_key_t *type_1 = ptr_1;
+    const ecs_http_request_key_t *type_2 = ptr_2;
+
+    int32_t count_1 = type_1->count;
+    int32_t count_2 = type_2->count;
+
+    if (count_1 != count_2) {
+        return (count_1 > count_2) - (count_1 < count_2);
+    }
+
+    return ecs_os_memcmp(type_1->array, type_2->array, count_1);
+}
+
+static
+ecs_http_request_entry_t* http_find_request_entry(
+    ecs_http_server_t *srv,
+    const char *array,
+    int32_t count)
+{
+    ecs_http_request_key_t key;
+    key.array = array;
+    key.count = count;
+
+    ecs_time_t t = {0, 0};
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+
+    if (entry) {
+        ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
+        if ((tf - entry->time) < ECS_HTTP_CACHE_TIMEOUT) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+static
+void http_insert_request_entry(
+    ecs_http_server_t *srv,
+    ecs_http_request_impl_t *req,
+    ecs_http_reply_t *reply)
+{
+    ecs_http_request_key_t key;
+    key.array = req->res;
+    key.count = req->req_len;
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+    if (!entry) {
+        flecs_hashmap_result_t elem = flecs_hashmap_ensure(
+            &srv->request_cache, &key, ecs_http_request_entry_t);
+        ecs_http_request_key_t *elem_key = elem.key;
+        elem_key->array = ecs_os_memdup_n(key.array, char, key.count);
+        entry = elem.value;
+    } else {
+        ecs_os_free(entry->content);
+    }
+
+    ecs_time_t t = {0, 0};
+    entry->time = (ecs_ftime_t)ecs_time_measure(&t);
+    entry->content_length = ecs_strbuf_written(&reply->body);
+    entry->content = ecs_strbuf_get(&reply->body);
+    ecs_strbuf_appendstrn(&reply->body, 
+        entry->content, entry->content_length);
+}
+
+static
+ecs_http_request_entry_t* http_enqueue_request(
     ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
     ecs_http_fragment_t *frag)
@@ -470,41 +586,57 @@ void http_enqueue_request(
     } else {
         char *res = ecs_strbuf_get(&frag->buf);
         if (res) {
-            ecs_http_request_impl_t *req = flecs_sparse_add_t(
-                &srv->requests, ecs_http_request_impl_t);
-            req->pub.id = flecs_sparse_last_id(&srv->requests);
-            req->conn_id = conn->pub.id;
+            ecs_http_request_impl_t req;
+            ecs_os_zeromem(&req);
 
-            req->pub.conn = (ecs_http_connection_t*)conn;
-            req->pub.method = frag->method;
-            req->pub.path = res + 1;
-            
-            http_decode_url_str(req->pub.path);
+            req.pub.conn = (ecs_http_connection_t*)conn;
+            req.pub.method = frag->method;
+            req.pub.path = res + 1;
+            http_decode_url_str(req.pub.path);
 
             if (frag->body_offset) {
-                req->pub.body = &res[frag->body_offset];
+                req.pub.body = &res[frag->body_offset];
             }
             int32_t i, count = frag->header_count;
             for (i = 0; i < count; i ++) {
-                req->pub.headers[i].key = &res[frag->header_offsets[i]];
-                req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+                req.pub.headers[i].key = &res[frag->header_offsets[i]];
+                req.pub.headers[i].value = &res[frag->header_value_offsets[i]];
             }
             count = frag->param_count;
             for (i = 0; i < count; i ++) {
-                req->pub.params[i].key = &res[frag->param_offsets[i]];
-                req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-                http_decode_url_str((char*)req->pub.params[i].value);
+                req.pub.params[i].key = &res[frag->param_offsets[i]];
+                req.pub.params[i].value = &res[frag->param_value_offsets[i]];
+                http_decode_url_str((char*)req.pub.params[i].value);
             }
 
-            req->pub.header_count = frag->header_count;
-            req->pub.param_count = frag->param_count;
-            req->res = res;
+            req.pub.header_count = frag->header_count;
+            req.pub.param_count = frag->param_count;
+            req.res = res;
+            req.req_len = frag->header_offsets[0];
 
+            /* Check cache for GET requests */
+            if (frag->method == EcsHttpGet) {
+                ecs_http_request_entry_t *entry = 
+                    http_find_request_entry(srv, res, frag->header_offsets[0]);
+                if (entry) {
+                    /* If an entry is found, don't enqueue a request. Instead
+                     * return the cached response immediately. */
+                    ecs_os_free(res);
+                    return entry;
+                }
+            }
+
+            ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
+                &srv->requests, ecs_http_request_impl_t);
+            *req_ptr = req;
+            req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
+            req_ptr->conn_id = conn->pub.id;
             ecs_os_linc(&ecs_http_request_received_count);
         }
     }
 
     ecs_os_mutex_unlock(srv->lock);
+    return NULL;
 }
 
 static
@@ -678,8 +810,8 @@ ecs_http_send_request_t* http_send_queue_post(
     /* This function should only be called while the server is locked. Before 
      * the lock is released, the returned element should be populated. */
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    ecs_assert(sq->count <= ECS_HTTP_SEND_QUEUE_MAX, ECS_INTERNAL_ERROR, NULL);
-    if (sq->count == ECS_HTTP_SEND_QUEUE_MAX) {
+    int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    if (next == sq->tail) {
         return NULL;
     }
 
@@ -689,21 +821,24 @@ ecs_http_send_request_t* http_send_queue_post(
     }
 
     /* Return element at end of the queue */
-    return &sq->requests[(sq->cur + sq->count ++) % ECS_HTTP_SEND_QUEUE_MAX];
+    ecs_http_send_request_t *result = &sq->requests[sq->head];
+    sq->head = next;
+    return result;
 }
 
 static
 ecs_http_send_request_t* http_send_queue_get(
     ecs_http_server_t *srv)
 {
-    ecs_http_send_request_t *result = NULL;
     ecs_os_mutex_lock(srv->lock);
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    if (sq->count) {
-        result = &sq->requests[sq->cur];
-        sq->cur = (sq->cur + 1) % ECS_HTTP_SEND_QUEUE_MAX;
-        sq->count --;
+    if (sq->tail == sq->head) {
+        return NULL;
     }
+
+    int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    ecs_http_send_request_t *result = &sq->requests[sq->tail];
+    sq->tail = next;
     return result;
 }
 
@@ -714,13 +849,13 @@ void* http_server_send_queue(void* arg) {
 
     /* Run for as long as the server is running or there are messages. When the
      * server is stopping, no new messages will be enqueued */
-    while (srv->should_run || srv->send_queue.count) {
+    while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
         ecs_http_send_request_t* r = http_send_queue_get(srv);
         if (!r) {
             ecs_os_mutex_unlock(srv->lock);
             /* If the queue is empty, wait so we don't run too fast */
             if (srv->should_run) {
-                ecs_os_sleep(0, wait_ms);
+                ecs_os_sleep(0, wait_ms * 1000 * 1000);
             }
         } else {
             ecs_http_socket_t sock = r->sock;
@@ -753,7 +888,10 @@ void* http_server_send_queue(void* arg) {
                 if (!error) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
+
                 http_close(&sock);
+            } else {
+                ecs_err("http: invalid socket\n");
             }
 
             ecs_os_free(content);
@@ -797,8 +935,6 @@ void http_append_send_headers(
         ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
         ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
     }
-
-    ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
 
@@ -858,7 +994,7 @@ void http_send_reply(
 }
 
 static
-void http_recv_request(
+bool http_recv_connection(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -868,13 +1004,13 @@ void http_recv_request(
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
     ecs_http_fragment_t frag = {0};
 
-    while ((bytes_read = http_recv(
+    if ((bytes_read = http_recv(
         sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
     {
         bool is_alive = conn->pub.id == conn_id;
         if (!is_alive) {
             /* Connection has been purged by main thread */
-            return;
+            return true;
         }
 
         if (http_parse_request(&frag, recv_buf, bytes_read)) {
@@ -888,29 +1024,40 @@ void http_recv_request(
                 http_send_reply(conn, &reply, true);
                 ecs_os_linc(&ecs_http_request_preflight_count);
             } else {
-                http_enqueue_request(conn, conn_id, &frag);
+                ecs_http_request_entry_t *entry =
+                    http_enqueue_request(conn, conn_id, &frag);
+                if (entry) {
+                    ecs_http_reply_t reply;
+                    reply.body = ECS_STRBUF_INIT;
+                    reply.code = 200;
+                    reply.content_type = NULL;
+                    reply.headers = ECS_STRBUF_INIT;
+                    reply.status = "OK";
+                    ecs_strbuf_appendstrn(&reply.body, 
+                        entry->content, entry->content_length);
+                    http_send_reply(conn, &reply, false);
+                    http_connection_free(conn);
+
+                    /* Lock was transferred from enqueue_request */
+                    ecs_os_mutex_unlock(srv->lock);
+                }
             }
-            return;
+            return true;
         } else {
             ecs_os_linc(&ecs_http_request_invalid_count);
         }
     }
 
-    /* Partial request received, cleanup resources */
-    ecs_strbuf_reset(&frag.buf);
-
-    /* No request was enqueued, flag connection so it'll get purged */
-    ecs_os_mutex_lock(srv->lock);
-    if (conn->pub.id == conn_id) {
-        /* Only flag connection if it was still alive */
-        conn->dequeue_timeout = ECS_HTTP_CONNECTION_PURGE_TIMEOUT;
-        conn->dequeue_retries = ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT;
-    }
-    ecs_os_mutex_unlock(srv->lock);
+    return false;
 }
 
+typedef struct {
+    ecs_http_connection_impl_t *conn;
+    uint64_t id;
+} http_conn_res_t;
+
 static
-void http_init_connection(
+http_conn_res_t http_init_connection(
     ecs_http_server_t *srv, 
     ecs_http_socket_t sock_conn,
     struct sockaddr_storage *remote_addr, 
@@ -943,11 +1090,8 @@ void http_init_connection(
 
     ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
         remote_host, remote_port, sock_conn);
-
-    http_recv_request(srv, conn, conn_id, sock_conn);
-
-    ecs_dbg_2("http: request received from '%s:%s'", 
-        remote_host, remote_port);
+    
+    return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
 
 static
@@ -999,8 +1143,8 @@ void http_accept_connections(
             goto done;
         }
 
-        int reuse = 1;
-        int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
+        int reuse = 1, result;
+        result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
             (char*)&reuse, ECS_SIZEOF(reuse)); 
         if (result) {
             ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
@@ -1015,6 +1159,8 @@ void http_accept_connections(
                     ecs_os_strerror(errno));
             }
         }
+
+        http_sock_nonblock(sock);
 
         result = http_bind(sock, addr, addr_len);
         if (result) {
@@ -1043,22 +1189,41 @@ void http_accept_connections(
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len;
+    ecs_size_t remote_addr_len = 0;
+    http_conn_res_t conn[FD_SETSIZE];
+
+    fd_set fds, readfds;
+    FD_ZERO(&fds);
+    FD_SET(srv->sock, &fds);
 
     while (srv->should_run) {
-        remote_addr_len = ECS_SIZEOF(remote_addr);
-        sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
-            &remote_addr_len);
-
-        if (!http_socket_is_valid(sock_conn)) {
-            if (srv->should_run) {
-                ecs_dbg("http: connection attempt failed: %s", 
-                    ecs_os_strerror(errno));
-            }
+        readfds = fds;
+        int r = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
+        if (r == -1) {
+            ecs_err("http: select failed: %s", ecs_os_strerror(errno));
             continue;
         }
 
-        http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        int i;
+        for (i = 0; i < FD_SETSIZE; i++) {
+            if (FD_ISSET(i, &readfds)) {
+                if (i == srv->sock) {
+                    sock_conn = http_accept(srv->sock, 
+                        (struct sockaddr*) &remote_addr, &remote_addr_len);
+                    if (!http_socket_is_valid(sock_conn)) {
+                        break;
+                    }
+
+                    FD_SET(sock_conn, &fds);
+                    conn[sock_conn] = http_init_connection(srv, sock_conn, 
+                        &remote_addr, remote_addr_len);
+                } else {
+                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)){
+                        FD_CLR(i, &fds);
+                    }
+                }
+            }
+        }
     }
 
 done:
@@ -1113,6 +1278,10 @@ void http_handle_request(
             }
         }
 
+        if (req->pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, req, &reply);
+        }
+
         http_send_reply(conn, &reply, false);
         ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
     } else {
@@ -1122,6 +1291,36 @@ void http_handle_request(
     http_reply_free(&reply);
     http_request_free(req);
     http_connection_free(conn);
+}
+
+static
+void http_purge_request_cache(
+    ecs_http_server_t *srv,
+    bool fini)
+{
+    ecs_time_t t = {0, 0};
+    ecs_ftime_t time = (ecs_ftime_t)ecs_time_measure(&t);
+    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
+        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
+        for (i = count - 1; i >= 0; i --) {
+            ecs_http_request_entry_t *entry = &entries[i];
+            if (fini || ((time - entry->time) > ECS_HTTP_CACHE_PURGE_TIMEOUT)) {
+                ecs_http_request_key_t *key = &keys[i];
+                ecs_os_free((char*)key->array);
+                ecs_os_free(entry->content);
+                flecs_hm_bucket_remove(&srv->request_cache, bucket, 
+                    ecs_map_key(&it), i);
+            }
+        }
+    }
+
+    if (fini) {
+        flecs_hashmap_fini(&srv->request_cache);
+    }
 }
 
 static
@@ -1156,6 +1355,7 @@ int32_t http_dequeue_requests(
         }
     }
 
+    http_purge_request_cache(srv, false);
     ecs_os_mutex_unlock(srv->lock);
 
     return request_count - 1;
@@ -1204,7 +1404,7 @@ ecs_http_server_t* ecs_http_server_init(
     srv->ipaddr = desc->ipaddr;
     srv->send_queue.wait_ms = desc->send_queue_wait_ms;
     if (!srv->send_queue.wait_ms) {
-        srv->send_queue.wait_ms = 100 * 1000 * 1000;
+        srv->send_queue.wait_ms = 1;
     }
 
     flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
@@ -1213,6 +1413,11 @@ ecs_http_server_t* ecs_http_server_init(
     /* Start at id 1 */
     flecs_sparse_new_id(&srv->connections);
     flecs_sparse_new_id(&srv->requests);
+
+    /* Initialize request cache */
+    flecs_hashmap_init(&srv->request_cache, 
+        ecs_http_request_key_t, ecs_http_request_entry_t,
+        http_request_key_hash, http_request_key_compare, NULL);
 
 #ifndef ECS_TARGET_WINDOWS
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
@@ -1232,8 +1437,9 @@ void ecs_http_server_fini(
         ecs_http_server_stop(srv);
     }
     ecs_os_mutex_free(srv->lock);
-    flecs_sparse_fini(&srv->connections);
+    http_purge_request_cache(srv, true);
     flecs_sparse_fini(&srv->requests);
+    flecs_sparse_fini(&srv->connections);
     ecs_os_free(srv);
 }
 

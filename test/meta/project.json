@@ -723,6 +723,9 @@
                 "serialize_paged_iterator_w_optional_component",
                 "serialize_paged_iterator_w_optional_tag",
                 "serialize_paged_iterator_w_vars",
+                "serialize_w_offset",
+                "serialize_labels_w_offset",
+                "serialize_colors_w_offset",
                 "serialize_table",
                 "serialize_world"
             ]

@@ -4,6 +4,14 @@ This document provides an overview of the JSON serializer format. For an overvie
 ## Value kinds
 This section describes value kinds that are used by the JSON serializers.
 
+### Name
+A name field returns the name of an entity as returned by `ecs_get_name` or `flecs::entity::name`. 
+
+**Example**:
+```json
+"Earth"
+```
+
 ### Path
 A path field returns the path identifier of an entity as returned by `ecs_get_fullpath` or `flecs::entity::path`. The path contains the entity's name and the names of its parent and grandparents separated by a dot (`.`).
 
@@ -205,52 +213,57 @@ The result kind is an object that contains the metadata and data of a single res
 
 The following sections describe the fields that an object of the entity kind may contain:
 
-#### "entities
-Array with paths of the returned entities.
+#### parent
+Parent of the entity in current result.
 
 Type: Array([Path](#path)), optional
 
-#### "entity_labels
+#### entities
+Array with paths of the returned entities.
+
+Type: Array([Name](#name)), optional
+
+#### entity_labels
 Same as [entities](#entities), but with [Label](#label)'s instead of paths.
 
 Type: Array([Label](#label)), optional
 
-#### "entity_ids
+#### entity_ids
 Same as [entities](#entities), but with numerical ids instead of paths.
 
 Type: Array(Number), optional
 
-#### "sources
+#### sources
 Array with paths of sources for each term. A subject indicates the actual entity on which a component is stored. If this is the matched entity (default) the array will contain a `0` element.
 
 Type: Array([Path](#path)), optional
 
-#### "variables
+#### variables
 Array with variable values for current result (see [query variables](https://www.flecs.dev/flecs/md_docs_Queries.html/#variables)).
 
 Type: Array([Path](#path)), optional
 
-#### "variable_labels
+#### variable_labels
 Same as [variables](#variables), but with [Label](#label)'s instead of paths.
 
 Type: Array([Label](#label)), optional
 
-#### "variable_ids
+#### variable_ids
 Same as [variables](#variables), but with numerical ids instead of paths.
 
 Type: Array(Number), optional
 
-#### "ids
+#### ids
 Array with component ids. This list is more specific than the ids array provided by the top-level iterator object. The arrays can be different in the case of terms with an `Or` operator, or terms with wildcard ids.
 
 Type: Array(string), optional
 
-#### "is_set
+#### is_set
 Array with booleans that can be used to determine whether terms with the `Optional` operator are set.
 
 Type: Array(bool), optional
 
-#### "values
+#### values
 Array with component values. The array contains an element for each term. If a component has no value, or no value could be serialized for the component a `[]` element is added.
 
 Each element in the array can be either an array with component values when the component is from the matched entity, or a single component value when the component is from another entity (like a parent, prefab, singleton).
@@ -291,7 +304,6 @@ Type: Array([Type info](#type-info)), optional
 {
   "ids": ["Position", "Jedi"],
   "results": [{
-    "is_set": [true, true],
     "entities": ["Luke", "Yoda"],
     "values": [
       [{ "x": 10, "y": 20 },

@@ -2297,6 +2297,10 @@ ecs_id_t flecs_from_public_id(
     ecs_world_t *world,
     ecs_id_t id);
 
+void flecs_filter_apply_iter_flags(
+    ecs_iter_t *it,
+    const ecs_filter_t *filter);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting
 ////////////////////////////////////////////////////////////////////////////////
@@ -29371,6 +29375,12 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
 
 #ifdef FLECS_JSON
 
+/* Cached id records during serialization */
+typedef struct ecs_json_ser_idr_t {
+    ecs_id_record_t *idr_doc_name;
+    ecs_id_record_t *idr_doc_color;
+} ecs_json_ser_idr_t;
+
 static
 int json_ser_type(
     const ecs_world_t *world,
@@ -30390,7 +30400,7 @@ static
 bool flecs_json_skip_variable(
     const char *name)
 {
-    if (!name || name[0] == '_' || name[0] == '.') {
+    if (!name || name[0] == '_' || !ecs_os_strcmp(name, "this")) {
         return true;
     } else {
         return false;
@@ -30461,12 +30471,19 @@ void flecs_json_serialize_type_info(
         return;
     }
 
+    if (it->flags & EcsIterNoData) {
+        return;
+    }
+
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
-        ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
+        ecs_entity_t typeid = 0;
+        if (it->terms[i].inout != EcsInOutNone) {
+            typeid = ecs_get_typeid(world, it->terms[i].id);
+        }
         if (typeid) {
             flecs_json_serialize_id_str(world, typeid, buf);
             ecs_strbuf_appendch(buf, ':');
@@ -30571,6 +30588,10 @@ void flecs_json_serialize_iter_result_is_set(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
+    if (!(it->flags & EcsIterHasCondSet)) {
+        return;
+    }
+
     flecs_json_memberl(buf, "is_set");
     flecs_json_array_push(buf);
 
@@ -30676,51 +30697,25 @@ void flecs_json_serialize_iter_result_variable_ids(
 }
 
 static
-void flecs_json_serialize_iter_result_entities(
-    const ecs_world_t *world,
+bool flecs_json_serialize_iter_result_entity_names(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
-    if (!it->count) {
-        return;
+    ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    EcsIdentifier *names = ecs_table_get_id(it->world, it->table, 
+        ecs_pair(ecs_id(EcsIdentifier), EcsName), it->offset);
+    if (!names) {
+        return false;
     }
 
-    flecs_json_memberl(buf, "entities");
-    flecs_json_array_push(buf);
-
-    ecs_entity_t *entities = it->entities;
-
-    for (int i = 0; i < count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
-        flecs_json_path(buf, world, entities[i]);
+        flecs_json_string(buf, names[i].value);
     }
 
-    flecs_json_array_pop(buf);
-}
-
-static
-void flecs_json_serialize_iter_result_entity_labels(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    ecs_strbuf_t *buf) 
-{
-    int32_t count = it->count;
-    if (!it->count) {
-        return;
-    }
-
-    flecs_json_memberl(buf, "entity_labels");
-    flecs_json_array_push(buf);
-
-    ecs_entity_t *entities = it->entities;
-
-    for (int i = 0; i < count; i ++) {
-        flecs_json_next(buf);
-        flecs_json_label(buf, world, entities[i]);
-    }
-
-    flecs_json_array_pop(buf);
+    return true;
 }
 
 static
@@ -30728,7 +30723,6 @@ void flecs_json_serialize_iter_result_entity_ids(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
     if (!it->count) {
         return;
     }
@@ -30738,7 +30732,8 @@ void flecs_json_serialize_iter_result_entity_ids(
 
     ecs_entity_t *entities = it->entities;
 
-    for (int i = 0; i < count; i ++) {
+    int i = it->offset, end = i + it->count;
+    for (; i < end; i ++) {
         flecs_json_next(buf);
         flecs_json_number(buf, (double)entities[i]);
     }
@@ -30747,54 +30742,137 @@ void flecs_json_serialize_iter_result_entity_ids(
 }
 
 static
-void flecs_json_serialize_iter_result_entity_names(
+void flecs_json_serialize_iter_result_parent(
+    const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
+    ecs_table_t *table = it->table;
+    if (!(table->flags & EcsTableHasChildOf)) {
+        return;
+    }
+
+    const ecs_table_record_t *tr = flecs_id_record_get_table(
+        world->idr_childof_wildcard, it->table);
+    if (tr == NULL) {
+        return;
+    }
+
+    ecs_id_t id = table->type.array[tr->column];
+    ecs_entity_t parent = ecs_pair_second(world, id);
+    char *path = ecs_get_fullpath(world, parent);
+    flecs_json_memberl(buf, "parent");
+    flecs_json_string(buf, path);
+    ecs_os_free(path);
+}
+
+static
+void flecs_json_serialize_iter_result_entities(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
     if (!it->count) {
         return;
     }
 
-    EcsIdentifier *names = ecs_table_get_id(it->world, it->table, 
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0);
-    if (!names) {
-        return;
-    }
+    flecs_json_serialize_iter_result_parent(world, it, buf);
 
-    flecs_json_memberl(buf, "entity_names");
+    flecs_json_memberl(buf, "entities");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < count; i ++) {
-        flecs_json_next(buf);
-        flecs_json_string(buf, names[i].value);
+    if (!flecs_json_serialize_iter_result_entity_names(it, buf)) {
+        ecs_entity_t *entities = it->entities;
+
+        int i = it->offset, end = i + it->count;
+        for (; i < end; i ++) {
+            flecs_json_next(buf);
+            flecs_json_number(buf, (double)entities[i]);
+        }
     }
 
     flecs_json_array_pop(buf);
 }
 
 static
-void flecs_json_serialize_iter_result_colors(
-    const ecs_world_t *world,
+void flecs_json_serialize_iter_result_entity_labels(
     const ecs_iter_t *it,
-    ecs_strbuf_t *buf) 
+    ecs_strbuf_t *buf,
+    const ecs_json_ser_idr_t *ser_idr)
 {
-    int32_t count = it->count;
+    (void)buf;
+    (void)ser_idr;
     if (!it->count) {
         return;
     }
 
-    flecs_json_memberl(buf, "colors");
+    if (!ser_idr->idr_doc_name) {
+        return;
+    }
+
+#ifdef FLECS_DOC
+    const ecs_table_record_t *tr = flecs_id_record_get_table(
+        ser_idr->idr_doc_name, it->table);
+    if (tr == NULL) {
+        return;
+    }
+
+    EcsDocDescription *labels = ecs_table_get_column(
+        it->table, tr->column, it->offset);
+    ecs_assert(labels != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_json_memberl(buf, "entity_labels");
     flecs_json_array_push(buf);
 
-    ecs_entity_t *entities = it->entities;
-
-    for (int i = 0; i < count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
-        flecs_json_color(buf, world, entities[i]);
+        flecs_json_string(buf, labels[i].value);
     }
 
     flecs_json_array_pop(buf);
+#endif
+}
+
+static
+void flecs_json_serialize_iter_result_colors(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf,
+    const ecs_json_ser_idr_t *ser_idr) 
+{
+    (void)buf;
+    (void)ser_idr;
+
+    if (!it->count) {
+        return;
+    }
+
+#ifdef FLECS_DOC
+    if (!ser_idr->idr_doc_color) {
+        return;
+    }
+
+    const ecs_table_record_t *tr = flecs_id_record_get_table(
+        ser_idr->idr_doc_color, it->table);
+    if (tr == NULL) {
+        return;
+    }
+
+    EcsDocDescription *colors = ecs_table_get_column(
+        it->table, tr->column, it->offset);
+    ecs_assert(colors != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_json_memberl(buf, "colors");
+    flecs_json_array_push(buf);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_string(buf, colors[i].value);
+    }
+
+    flecs_json_array_pop(buf);
+#endif
 }
 
 static
@@ -30803,6 +30881,10 @@ void flecs_json_serialize_iter_result_values(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
+    if (!it->ptrs || (it->flags & EcsIterNoData)) {
+        return;
+    }
+
     flecs_json_memberl(buf, "values");
     flecs_json_array_push(buf);
 
@@ -30934,7 +31016,8 @@ void flecs_json_serialize_iter_result(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc) 
+    const ecs_iter_to_json_desc_t *desc,
+    const ecs_json_ser_idr_t *ser_idr) 
 {
     flecs_json_next(buf);
     flecs_json_object_push(buf);
@@ -30979,24 +31062,19 @@ void flecs_json_serialize_iter_result(
         flecs_json_serialize_iter_result_entities(world, it, buf);
     }
 
-    /* Write labels for entities */
-    if (desc && desc->serialize_entity_labels) {
-        flecs_json_serialize_iter_result_entity_labels(world, it, buf);
-    }
-
-    /* Write ids for entities */
-    if (desc && desc->serialize_entity_names) {
-        flecs_json_serialize_iter_result_entity_names(it, buf);
-    }
-
     /* Write ids for entities */
     if (desc && desc->serialize_entity_ids) {
         flecs_json_serialize_iter_result_entity_ids(it, buf);
     }
 
+    /* Write labels for entities */
+    if (desc && desc->serialize_entity_labels) {
+        flecs_json_serialize_iter_result_entity_labels(it, buf, ser_idr);
+    }
+
     /* Write colors for entities */
     if (desc && desc->serialize_colors) {
-        flecs_json_serialize_iter_result_colors(world, it, buf);
+        flecs_json_serialize_iter_result_colors(it, buf, ser_idr);
     }
 
     /* Serialize component values */
@@ -31050,9 +31128,18 @@ int ecs_iter_to_json_buf(
         ECS_BIT_SET(it->flags, EcsIterNoData);
     }
 
+    /* Cache id record for flecs.doc ids */
+    ecs_json_ser_idr_t ser_idr = {NULL, NULL};
+#ifdef FLECS_DOC
+    ser_idr.idr_doc_name = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsName));
+    ser_idr.idr_doc_color = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsDocColor));
+#endif
+
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {
-        flecs_json_serialize_iter_result(world, it, buf, desc);
+        flecs_json_serialize_iter_result(world, it, buf, desc, &ser_idr);
     }
 
     flecs_json_array_pop(buf);
@@ -31875,10 +31962,19 @@ ecs_entity_t flecs_json_new_id(
 static
 ecs_entity_t flecs_json_lookup(
     ecs_world_t *world,
+    ecs_entity_t parent,
     const char *name,
     const ecs_from_json_desc_t *desc)
 {
-    return desc->lookup_action(world, name, desc->lookup_ctx);
+    ecs_entity_t scope = 0;
+    if (parent) {
+        scope = ecs_set_scope(world, parent);
+    }
+    ecs_entity_t result = desc->lookup_action(world, name, desc->lookup_ctx);
+    if (parent) {
+        ecs_set_scope(world, scope);
+    }
+    return result;
 }
 
 static
@@ -31984,7 +32080,7 @@ ecs_table_t* flecs_json_parse_table(
             goto error;
         }
 
-        ecs_entity_t first = flecs_json_lookup(world, token, desc);
+        ecs_entity_t first = flecs_json_lookup(world, 0, token, desc);
         if (!first) {
             goto error;
         }
@@ -31996,7 +32092,7 @@ ecs_table_t* flecs_json_parse_table(
                 goto error;
             }
 
-            ecs_entity_t second = flecs_json_lookup(world, token, desc);
+            ecs_entity_t second = flecs_json_lookup(world, 0, token, desc);
             if (!second) {
                 goto error;
             }
@@ -32042,6 +32138,7 @@ int flecs_json_parse_entities(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_table_t *table,
+    ecs_entity_t parent,
     const char *json,
     char *token,
     ecs_vec_t *records,
@@ -32052,12 +32149,17 @@ int flecs_json_parse_entities(
     ecs_vec_clear(records);
 
     do {
-        json = flecs_json_expect(json, JsonString, name_token, desc);
+        json = flecs_json_parse(json, &token_kind, name_token);
         if (!json) {
             goto error;
         }
+        if ((token_kind != JsonNumber) && (token_kind != JsonString)) {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "expected number or string");
+            goto error;
+        }
 
-        ecs_entity_t e = flecs_json_lookup(world, name_token, desc);
+        ecs_entity_t e = flecs_json_lookup(world, parent, name_token, desc);
         ecs_record_t *r = flecs_entities_try(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -32295,8 +32397,33 @@ const char* flecs_json_parse_result(
         goto error;
     }
 
-    json = flecs_json_expect_member_name(json, token, "entities", desc);
+    json = flecs_json_expect_member(json, token, desc);
     if (!json) {
+        goto error;
+    }
+
+    ecs_entity_t parent = 0;
+    if (!ecs_os_strcmp(token, "parent")) {
+        json = flecs_json_expect(json, JsonString, token, desc);
+        if (!json) {
+            goto error;
+        }
+        parent = ecs_lookup_fullpath(world, token);
+
+        json = flecs_json_expect(json, JsonComma, token, desc);
+        if (!json) {
+            goto error;
+        }
+
+        json = flecs_json_expect_member(json, token, desc);
+        if (!json) {
+            goto error;
+        }
+    }
+
+    if (ecs_os_strcmp(token, "entities")) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expected 'entities'");
         goto error;
     }
 
@@ -32338,7 +32465,7 @@ const char* flecs_json_parse_result(
     }
 
     /* Add entities to table */
-    if (flecs_json_parse_entities(world, a, table, 
+    if (flecs_json_parse_entities(world, a, table, parent,
         entities, token, records, desc)) 
     {
         goto error;
@@ -32458,24 +32585,11 @@ error:
 
 #ifdef FLECS_REST
 
-/* Time interval used to determine when to return a result from the cache. Use
- * a short interval so that clients still get realtime data, but multiple 
- * clients requesting for the same data can reuse the same result. */
-#define FLECS_REST_CACHE_TIMEOUT ((ecs_ftime_t)0.5)
-
-typedef struct {
-    char *content;
-    int32_t content_length;
-    ecs_ftime_t time;
-} ecs_rest_cached_t;
-
 typedef struct {
     ecs_world_t *world;
     ecs_entity_t entity;
     ecs_http_server_t *srv;
-    ecs_map_t reply_cache;
     int32_t rc;
-    ecs_ftime_t time;
 } ecs_rest_ctx_t;
 
 /* Global statistics */
@@ -32496,19 +32610,6 @@ int64_t ecs_rest_delete_error_count = 0;
 int64_t ecs_rest_world_stats_count = 0;
 int64_t ecs_rest_pipeline_stats_count = 0;
 int64_t ecs_rest_stats_error_count = 0;
-
-static
-void flecs_rest_free_reply_cache(ecs_map_t *reply_cache) {
-    if (ecs_map_is_init(reply_cache)) {
-        ecs_map_iter_t it = ecs_map_iter(reply_cache);
-        while (ecs_map_next(&it)) {
-            ecs_rest_cached_t *reply = ecs_map_ptr(&it);
-            ecs_os_free(reply->content);
-            ecs_os_free(reply);
-        }
-        ecs_map_fini(reply_cache);
-    }
-}
 
 static ECS_COPY(EcsRest, dst, src, {
     ecs_rest_ctx_t *impl = src->impl;
@@ -32533,7 +32634,6 @@ static ECS_DTOR(EcsRest, ptr, {
         impl->rc --;
         if (!impl->rc) {
             ecs_http_server_fini(impl->srv);
-            flecs_rest_free_reply_cache(&impl->reply_cache);
             ecs_os_free(impl);
         }
     }
@@ -32815,7 +32915,6 @@ void flecs_rest_iter_to_reply(
 static
 bool flecs_rest_reply_existing_query(
     ecs_world_t *world,
-    ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     const char *name)
@@ -32830,28 +32929,6 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
-    const char *vars = ecs_http_get_param(req, "vars");
-    ecs_rest_cached_t *cached = NULL;
-    if (!vars) {
-        ecs_map_init_if(&impl->reply_cache, NULL);
-        cached = ecs_map_get_deref(&impl->reply_cache, ecs_rest_cached_t, q);
-        if (cached) {
-            if ((impl->time - cached->time) > FLECS_REST_CACHE_TIMEOUT) {
-                ecs_os_free(cached->content);
-            } else {
-                /* Cache hit */
-                ecs_strbuf_appendstr_zerocpyn_const(
-                    &reply->body, cached->content, cached->content_length);
-                ecs_os_linc(&ecs_rest_query_name_from_cache_count);
-                return true;
-            }
-        } else {
-            cached = ecs_map_insert_alloc_t(
-                &impl->reply_cache, ecs_rest_cached_t, q);
-        }
-    }
-
-    /* Cache miss */
     const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
     if (!poly) {
         flecs_reply_error(reply, 
@@ -32869,6 +32946,7 @@ bool flecs_rest_reply_existing_query(
     ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
+    const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
         if (!ecs_poly_is(poly->poly, ecs_rule_t)) {
             flecs_reply_error(reply, 
@@ -32891,15 +32969,6 @@ bool flecs_rest_reply_existing_query(
 
     flecs_rest_iter_to_reply(world, req, reply, &it);
 
-    if (cached) {
-        cached->content_length = ecs_strbuf_written(&reply->body);
-        cached->content = ecs_strbuf_get(&reply->body);
-        ecs_strbuf_reset(&reply->body);
-        ecs_strbuf_appendstr_zerocpyn_const(
-            &reply->body, cached->content, cached->content_length);
-        cached->time = impl->time;
-    }
-
     ecs_os_api.log_ = prev_log_;
     ecs_log_enable_colors(prev_color);    
 
@@ -32909,13 +32978,12 @@ bool flecs_rest_reply_existing_query(
 static
 bool flecs_rest_reply_query(
     ecs_world_t *world,
-    ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
     const char *q_name = ecs_http_get_param(req, "name");
     if (q_name) {
-        return flecs_rest_reply_existing_query(world, impl, req, reply, q_name);
+        return flecs_rest_reply_existing_query(world, req, reply, q_name);
     }
 
     ecs_os_linc(&ecs_rest_query_count);
@@ -33352,7 +33420,7 @@ bool flecs_rest_reply(
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
-            return flecs_rest_reply_query(world, impl, req, reply);
+            return flecs_rest_reply_query(world, req, reply);
 
         /* World endpoint */
         } else if (!ecs_os_strcmp(req->path, "world")) {
@@ -33440,7 +33508,6 @@ void DequeueRest(ecs_iter_t *it) {
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
-            ctx->time += it->delta_time;
             ecs_http_server_dequeue(ctx->srv, it->delta_time);
         }
     } 
@@ -33706,6 +33773,7 @@ typedef SOCKET ecs_http_socket_t;
 #include <netdb.h>
 #include <strings.h>
 #include <signal.h>
+#include <fcntl.h>
 typedef int ecs_http_socket_t;
 #endif
 
@@ -33740,6 +33808,12 @@ typedef int ecs_http_socket_t;
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
+/* Cache invalidation timeout (s) */
+#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)1.0)
+
+/* Cache entry purge timeout (s) */
+#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)10.0)
+
 /* Global statistics */
 int64_t ecs_http_request_received_count = 0;
 int64_t ecs_http_request_invalid_count = 0;
@@ -33762,11 +33836,22 @@ typedef struct ecs_http_send_request_t {
 
 typedef struct ecs_http_send_queue_t {
     ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
-    int32_t cur;
-    int32_t count;
+    int32_t head;
+    int32_t tail;
     ecs_os_thread_t thread;
     int32_t wait_ms;
 } ecs_http_send_queue_t;
+
+typedef struct ecs_http_request_key_t {
+    const char *array;
+    ecs_size_t count;
+} ecs_http_request_key_t;
+
+typedef struct ecs_http_request_entry_t {
+    char *content;
+    int32_t content_length;
+    ecs_ftime_t time;
+} ecs_http_request_entry_t;
 
 /* HTTP server struct */
 struct ecs_http_server_t {
@@ -33796,8 +33881,9 @@ struct ecs_http_server_t {
     int32_t requests_processed; /* requests processed in last stats interval */
     int32_t requests_processed_total; /* total requests processed */
     int32_t dequeue_count; /* number of dequeues in last stats interval */ 
-
     ecs_http_send_queue_t send_queue;
+
+    ecs_hashmap_t request_cache;
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -33852,7 +33938,8 @@ typedef struct {
 typedef struct {
     ecs_http_request_t pub;
     uint64_t conn_id; /* for sanity check */
-    void *res;
+    char *res;
+    int32_t req_len;
 } ecs_http_request_impl_t;
 
 static
@@ -33930,6 +34017,26 @@ void http_sock_keep_alive(
 }
 
 static
+void http_sock_nonblock(ecs_http_socket_t sock) {
+    (void)sock;
+#ifdef ECS_TARGET_POSIX
+    int flags;
+    flags = fcntl(sock,F_GETFL,0);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+#endif
+}
+
+static
 int http_getnameinfo(
     const struct sockaddr* addr,
     ecs_size_t addr_len,
@@ -33978,6 +34085,7 @@ void http_close(
     ecs_http_socket_t *sock)
 {
     ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
 #else
@@ -34105,7 +34213,82 @@ void http_header_buf_append(
 }
 
 static
-void http_enqueue_request(
+uint64_t http_request_key_hash(const void *ptr) {
+    const ecs_http_request_key_t *key = ptr;
+    const char *array = key->array;
+    int32_t count = key->count;
+    return flecs_hash(array, count * ECS_SIZEOF(char));
+}
+
+static
+int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
+    const ecs_http_request_key_t *type_1 = ptr_1;
+    const ecs_http_request_key_t *type_2 = ptr_2;
+
+    int32_t count_1 = type_1->count;
+    int32_t count_2 = type_2->count;
+
+    if (count_1 != count_2) {
+        return (count_1 > count_2) - (count_1 < count_2);
+    }
+
+    return ecs_os_memcmp(type_1->array, type_2->array, count_1);
+}
+
+static
+ecs_http_request_entry_t* http_find_request_entry(
+    ecs_http_server_t *srv,
+    const char *array,
+    int32_t count)
+{
+    ecs_http_request_key_t key;
+    key.array = array;
+    key.count = count;
+
+    ecs_time_t t = {0, 0};
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+
+    if (entry) {
+        ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
+        if ((tf - entry->time) < ECS_HTTP_CACHE_TIMEOUT) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+static
+void http_insert_request_entry(
+    ecs_http_server_t *srv,
+    ecs_http_request_impl_t *req,
+    ecs_http_reply_t *reply)
+{
+    ecs_http_request_key_t key;
+    key.array = req->res;
+    key.count = req->req_len;
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+    if (!entry) {
+        flecs_hashmap_result_t elem = flecs_hashmap_ensure(
+            &srv->request_cache, &key, ecs_http_request_entry_t);
+        ecs_http_request_key_t *elem_key = elem.key;
+        elem_key->array = ecs_os_memdup_n(key.array, char, key.count);
+        entry = elem.value;
+    } else {
+        ecs_os_free(entry->content);
+    }
+
+    ecs_time_t t = {0, 0};
+    entry->time = (ecs_ftime_t)ecs_time_measure(&t);
+    entry->content_length = ecs_strbuf_written(&reply->body);
+    entry->content = ecs_strbuf_get(&reply->body);
+    ecs_strbuf_appendstrn(&reply->body, 
+        entry->content, entry->content_length);
+}
+
+static
+ecs_http_request_entry_t* http_enqueue_request(
     ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
     ecs_http_fragment_t *frag)
@@ -34121,41 +34304,57 @@ void http_enqueue_request(
     } else {
         char *res = ecs_strbuf_get(&frag->buf);
         if (res) {
-            ecs_http_request_impl_t *req = flecs_sparse_add_t(
-                &srv->requests, ecs_http_request_impl_t);
-            req->pub.id = flecs_sparse_last_id(&srv->requests);
-            req->conn_id = conn->pub.id;
+            ecs_http_request_impl_t req;
+            ecs_os_zeromem(&req);
 
-            req->pub.conn = (ecs_http_connection_t*)conn;
-            req->pub.method = frag->method;
-            req->pub.path = res + 1;
-            
-            http_decode_url_str(req->pub.path);
+            req.pub.conn = (ecs_http_connection_t*)conn;
+            req.pub.method = frag->method;
+            req.pub.path = res + 1;
+            http_decode_url_str(req.pub.path);
 
             if (frag->body_offset) {
-                req->pub.body = &res[frag->body_offset];
+                req.pub.body = &res[frag->body_offset];
             }
             int32_t i, count = frag->header_count;
             for (i = 0; i < count; i ++) {
-                req->pub.headers[i].key = &res[frag->header_offsets[i]];
-                req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+                req.pub.headers[i].key = &res[frag->header_offsets[i]];
+                req.pub.headers[i].value = &res[frag->header_value_offsets[i]];
             }
             count = frag->param_count;
             for (i = 0; i < count; i ++) {
-                req->pub.params[i].key = &res[frag->param_offsets[i]];
-                req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-                http_decode_url_str((char*)req->pub.params[i].value);
+                req.pub.params[i].key = &res[frag->param_offsets[i]];
+                req.pub.params[i].value = &res[frag->param_value_offsets[i]];
+                http_decode_url_str((char*)req.pub.params[i].value);
             }
 
-            req->pub.header_count = frag->header_count;
-            req->pub.param_count = frag->param_count;
-            req->res = res;
+            req.pub.header_count = frag->header_count;
+            req.pub.param_count = frag->param_count;
+            req.res = res;
+            req.req_len = frag->header_offsets[0];
 
+            /* Check cache for GET requests */
+            if (frag->method == EcsHttpGet) {
+                ecs_http_request_entry_t *entry = 
+                    http_find_request_entry(srv, res, frag->header_offsets[0]);
+                if (entry) {
+                    /* If an entry is found, don't enqueue a request. Instead
+                     * return the cached response immediately. */
+                    ecs_os_free(res);
+                    return entry;
+                }
+            }
+
+            ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
+                &srv->requests, ecs_http_request_impl_t);
+            *req_ptr = req;
+            req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
+            req_ptr->conn_id = conn->pub.id;
             ecs_os_linc(&ecs_http_request_received_count);
         }
     }
 
     ecs_os_mutex_unlock(srv->lock);
+    return NULL;
 }
 
 static
@@ -34329,8 +34528,8 @@ ecs_http_send_request_t* http_send_queue_post(
     /* This function should only be called while the server is locked. Before 
      * the lock is released, the returned element should be populated. */
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    ecs_assert(sq->count <= ECS_HTTP_SEND_QUEUE_MAX, ECS_INTERNAL_ERROR, NULL);
-    if (sq->count == ECS_HTTP_SEND_QUEUE_MAX) {
+    int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    if (next == sq->tail) {
         return NULL;
     }
 
@@ -34340,21 +34539,24 @@ ecs_http_send_request_t* http_send_queue_post(
     }
 
     /* Return element at end of the queue */
-    return &sq->requests[(sq->cur + sq->count ++) % ECS_HTTP_SEND_QUEUE_MAX];
+    ecs_http_send_request_t *result = &sq->requests[sq->head];
+    sq->head = next;
+    return result;
 }
 
 static
 ecs_http_send_request_t* http_send_queue_get(
     ecs_http_server_t *srv)
 {
-    ecs_http_send_request_t *result = NULL;
     ecs_os_mutex_lock(srv->lock);
     ecs_http_send_queue_t *sq = &srv->send_queue;
-    if (sq->count) {
-        result = &sq->requests[sq->cur];
-        sq->cur = (sq->cur + 1) % ECS_HTTP_SEND_QUEUE_MAX;
-        sq->count --;
+    if (sq->tail == sq->head) {
+        return NULL;
     }
+
+    int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    ecs_http_send_request_t *result = &sq->requests[sq->tail];
+    sq->tail = next;
     return result;
 }
 
@@ -34365,13 +34567,13 @@ void* http_server_send_queue(void* arg) {
 
     /* Run for as long as the server is running or there are messages. When the
      * server is stopping, no new messages will be enqueued */
-    while (srv->should_run || srv->send_queue.count) {
+    while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
         ecs_http_send_request_t* r = http_send_queue_get(srv);
         if (!r) {
             ecs_os_mutex_unlock(srv->lock);
             /* If the queue is empty, wait so we don't run too fast */
             if (srv->should_run) {
-                ecs_os_sleep(0, wait_ms);
+                ecs_os_sleep(0, wait_ms * 1000 * 1000);
             }
         } else {
             ecs_http_socket_t sock = r->sock;
@@ -34404,7 +34606,10 @@ void* http_server_send_queue(void* arg) {
                 if (!error) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
+
                 http_close(&sock);
+            } else {
+                ecs_err("http: invalid socket\n");
             }
 
             ecs_os_free(content);
@@ -34448,8 +34653,6 @@ void http_append_send_headers(
         ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
         ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
     }
-
-    ecs_strbuf_appendlit(hdrs, "Server: flecs\r\n");
 
     ecs_strbuf_mergebuff(hdrs, extra_headers);
 
@@ -34509,7 +34712,7 @@ void http_send_reply(
 }
 
 static
-void http_recv_request(
+bool http_recv_connection(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -34519,13 +34722,13 @@ void http_recv_request(
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
     ecs_http_fragment_t frag = {0};
 
-    while ((bytes_read = http_recv(
+    if ((bytes_read = http_recv(
         sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
     {
         bool is_alive = conn->pub.id == conn_id;
         if (!is_alive) {
             /* Connection has been purged by main thread */
-            return;
+            return true;
         }
 
         if (http_parse_request(&frag, recv_buf, bytes_read)) {
@@ -34539,29 +34742,40 @@ void http_recv_request(
                 http_send_reply(conn, &reply, true);
                 ecs_os_linc(&ecs_http_request_preflight_count);
             } else {
-                http_enqueue_request(conn, conn_id, &frag);
+                ecs_http_request_entry_t *entry =
+                    http_enqueue_request(conn, conn_id, &frag);
+                if (entry) {
+                    ecs_http_reply_t reply;
+                    reply.body = ECS_STRBUF_INIT;
+                    reply.code = 200;
+                    reply.content_type = NULL;
+                    reply.headers = ECS_STRBUF_INIT;
+                    reply.status = "OK";
+                    ecs_strbuf_appendstrn(&reply.body, 
+                        entry->content, entry->content_length);
+                    http_send_reply(conn, &reply, false);
+                    http_connection_free(conn);
+
+                    /* Lock was transferred from enqueue_request */
+                    ecs_os_mutex_unlock(srv->lock);
+                }
             }
-            return;
+            return true;
         } else {
             ecs_os_linc(&ecs_http_request_invalid_count);
         }
     }
 
-    /* Partial request received, cleanup resources */
-    ecs_strbuf_reset(&frag.buf);
-
-    /* No request was enqueued, flag connection so it'll get purged */
-    ecs_os_mutex_lock(srv->lock);
-    if (conn->pub.id == conn_id) {
-        /* Only flag connection if it was still alive */
-        conn->dequeue_timeout = ECS_HTTP_CONNECTION_PURGE_TIMEOUT;
-        conn->dequeue_retries = ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT;
-    }
-    ecs_os_mutex_unlock(srv->lock);
+    return false;
 }
 
+typedef struct {
+    ecs_http_connection_impl_t *conn;
+    uint64_t id;
+} http_conn_res_t;
+
 static
-void http_init_connection(
+http_conn_res_t http_init_connection(
     ecs_http_server_t *srv, 
     ecs_http_socket_t sock_conn,
     struct sockaddr_storage *remote_addr, 
@@ -34594,11 +34808,8 @@ void http_init_connection(
 
     ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
         remote_host, remote_port, sock_conn);
-
-    http_recv_request(srv, conn, conn_id, sock_conn);
-
-    ecs_dbg_2("http: request received from '%s:%s'", 
-        remote_host, remote_port);
+    
+    return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
 
 static
@@ -34650,8 +34861,8 @@ void http_accept_connections(
             goto done;
         }
 
-        int reuse = 1;
-        int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
+        int reuse = 1, result;
+        result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
             (char*)&reuse, ECS_SIZEOF(reuse)); 
         if (result) {
             ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
@@ -34666,6 +34877,8 @@ void http_accept_connections(
                     ecs_os_strerror(errno));
             }
         }
+
+        http_sock_nonblock(sock);
 
         result = http_bind(sock, addr, addr_len);
         if (result) {
@@ -34694,22 +34907,41 @@ void http_accept_connections(
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len;
+    ecs_size_t remote_addr_len = 0;
+    http_conn_res_t conn[FD_SETSIZE];
+
+    fd_set fds, readfds;
+    FD_ZERO(&fds);
+    FD_SET(srv->sock, &fds);
 
     while (srv->should_run) {
-        remote_addr_len = ECS_SIZEOF(remote_addr);
-        sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
-            &remote_addr_len);
-
-        if (!http_socket_is_valid(sock_conn)) {
-            if (srv->should_run) {
-                ecs_dbg("http: connection attempt failed: %s", 
-                    ecs_os_strerror(errno));
-            }
+        readfds = fds;
+        int r = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
+        if (r == -1) {
+            ecs_err("http: select failed: %s", ecs_os_strerror(errno));
             continue;
         }
 
-        http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        int i;
+        for (i = 0; i < FD_SETSIZE; i++) {
+            if (FD_ISSET(i, &readfds)) {
+                if (i == srv->sock) {
+                    sock_conn = http_accept(srv->sock, 
+                        (struct sockaddr*) &remote_addr, &remote_addr_len);
+                    if (!http_socket_is_valid(sock_conn)) {
+                        break;
+                    }
+
+                    FD_SET(sock_conn, &fds);
+                    conn[sock_conn] = http_init_connection(srv, sock_conn, 
+                        &remote_addr, remote_addr_len);
+                } else {
+                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)){
+                        FD_CLR(i, &fds);
+                    }
+                }
+            }
+        }
     }
 
 done:
@@ -34764,6 +34996,10 @@ void http_handle_request(
             }
         }
 
+        if (req->pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, req, &reply);
+        }
+
         http_send_reply(conn, &reply, false);
         ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
     } else {
@@ -34773,6 +35009,36 @@ void http_handle_request(
     http_reply_free(&reply);
     http_request_free(req);
     http_connection_free(conn);
+}
+
+static
+void http_purge_request_cache(
+    ecs_http_server_t *srv,
+    bool fini)
+{
+    ecs_time_t t = {0, 0};
+    ecs_ftime_t time = (ecs_ftime_t)ecs_time_measure(&t);
+    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
+        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
+        for (i = count - 1; i >= 0; i --) {
+            ecs_http_request_entry_t *entry = &entries[i];
+            if (fini || ((time - entry->time) > ECS_HTTP_CACHE_PURGE_TIMEOUT)) {
+                ecs_http_request_key_t *key = &keys[i];
+                ecs_os_free((char*)key->array);
+                ecs_os_free(entry->content);
+                flecs_hm_bucket_remove(&srv->request_cache, bucket, 
+                    ecs_map_key(&it), i);
+            }
+        }
+    }
+
+    if (fini) {
+        flecs_hashmap_fini(&srv->request_cache);
+    }
 }
 
 static
@@ -34807,6 +35073,7 @@ int32_t http_dequeue_requests(
         }
     }
 
+    http_purge_request_cache(srv, false);
     ecs_os_mutex_unlock(srv->lock);
 
     return request_count - 1;
@@ -34855,7 +35122,7 @@ ecs_http_server_t* ecs_http_server_init(
     srv->ipaddr = desc->ipaddr;
     srv->send_queue.wait_ms = desc->send_queue_wait_ms;
     if (!srv->send_queue.wait_ms) {
-        srv->send_queue.wait_ms = 100 * 1000 * 1000;
+        srv->send_queue.wait_ms = 1;
     }
 
     flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
@@ -34864,6 +35131,11 @@ ecs_http_server_t* ecs_http_server_init(
     /* Start at id 1 */
     flecs_sparse_new_id(&srv->connections);
     flecs_sparse_new_id(&srv->requests);
+
+    /* Initialize request cache */
+    flecs_hashmap_init(&srv->request_cache, 
+        ecs_http_request_key_t, ecs_http_request_entry_t,
+        http_request_key_hash, http_request_key_compare, NULL);
 
 #ifndef ECS_TARGET_WINDOWS
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
@@ -34883,8 +35155,9 @@ void ecs_http_server_fini(
         ecs_http_server_stop(srv);
     }
     ecs_os_mutex_free(srv->lock);
-    flecs_sparse_fini(&srv->connections);
+    http_purge_request_cache(srv, true);
     flecs_sparse_fini(&srv->requests);
+    flecs_sparse_fini(&srv->connections);
     ecs_os_free(srv);
 }
 
@@ -39207,8 +39480,7 @@ ecs_iter_t ecs_rule_iter(
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
-    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsInstanced));
+    flecs_filter_apply_iter_flags(&it, &rule->filter);
 
     flecs_iter_init(world, &it, 
         flecs_iter_cache_ids |
@@ -45774,6 +46046,7 @@ int ecs_filter_finalize(
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
     int32_t filter_terms = 0;
+    bool cond_set = false;
 
     ecs_filter_finalize_ctx_t ctx = {0};
     ctx.world = world;
@@ -45859,6 +46132,10 @@ int ecs_filter_finalize(
                 term->idr->keep_alive ++;
             }
         }
+
+        if (term->oper == EcsOptional || term->oper == EcsNot) {
+            cond_set = true;
+        }
     }
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
@@ -45871,6 +46148,8 @@ int ecs_filter_finalize(
     if (filter_terms == term_count) {
         ECS_BIT_SET(f->flags, EcsFilterNoData);
     }
+
+    ECS_BIT_COND(f->flags, EcsFilterHasCondSet, cond_set);
 
     return 0;
 }
@@ -47131,6 +47410,18 @@ error:
     return -2;
 }
 
+void flecs_filter_apply_iter_flags(
+    ecs_iter_t *it,
+    const ecs_filter_t *filter)
+{
+    ECS_BIT_COND(it->flags, EcsIterIsInstanced, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
+    ECS_BIT_COND(it->flags, EcsIterNoData,
+        ECS_BIT_IS_SET(filter->flags, EcsFilterNoData));
+    ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterHasCondSet));
+}
+
 ecs_iter_t flecs_filter_iter_w_flags(
     const ecs_world_t *stage,
     const ecs_filter_t *filter,
@@ -47156,8 +47447,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     iter->pivot_term = -1;
 
     flecs_init_filter_iter(&it, filter);
-    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
+    flecs_filter_apply_iter_flags(&it, filter);
 
     /* Find term that represents smallest superset */
     if (ECS_BIT_IS_SET(flags, EcsIterIgnoreThis)) {
@@ -51709,22 +51999,17 @@ ecs_iter_t ecs_query_iter(
         it.node = ecs_vec_first(&query->table_slices);
     }
 
-    ecs_flags32_t flags = 0;
-    ECS_BIT_COND(flags, EcsIterNoData, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterNoData));
-    ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
-        EcsFilterIsInstanced));
-
     ecs_iter_t result = {
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,
-        .flags = flags,
         .priv.iter.query = it,
         .next = ecs_query_next,
     };
+
+    flecs_filter_apply_iter_flags(&result, &query->filter);
 
     ecs_filter_t *filter = &query->filter;
     if (filter->flags & EcsFilterMatchOnlyThis) {
