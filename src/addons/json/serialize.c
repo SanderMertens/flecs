@@ -1336,12 +1336,13 @@ bool flecs_json_serialize_iter_result_entity_names(
     ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     EcsIdentifier *names = ecs_table_get_id(it->world, it->table, 
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0);
+        ecs_pair(ecs_id(EcsIdentifier), EcsName), it->offset);
     if (!names) {
         return false;
     }
 
-    for (int i = 0; i < it->count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
         flecs_json_string(buf, names[i].value);
     }
@@ -1354,7 +1355,6 @@ void flecs_json_serialize_iter_result_entity_ids(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
     if (!it->count) {
         return;
     }
@@ -1364,7 +1364,8 @@ void flecs_json_serialize_iter_result_entity_ids(
 
     ecs_entity_t *entities = it->entities;
 
-    for (int i = 0; i < count; i ++) {
+    int i = it->offset, end = i + it->count;
+    for (; i < end; i ++) {
         flecs_json_next(buf);
         flecs_json_number(buf, (double)entities[i]);
     }
@@ -1403,7 +1404,6 @@ void flecs_json_serialize_iter_result_entities(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
     if (!it->count) {
         return;
     }
@@ -1416,7 +1416,8 @@ void flecs_json_serialize_iter_result_entities(
     if (!flecs_json_serialize_iter_result_entity_names(it, buf)) {
         ecs_entity_t *entities = it->entities;
 
-        for (int i = 0; i < count; i ++) {
+        int i = it->offset, end = i + it->count;
+        for (; i < end; i ++) {
             flecs_json_next(buf);
             flecs_json_number(buf, (double)entities[i]);
         }
@@ -1455,7 +1456,8 @@ void flecs_json_serialize_iter_result_entity_labels(
     flecs_json_memberl(buf, "entity_labels");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
         flecs_json_string(buf, labels[i].value);
     }
@@ -1495,7 +1497,8 @@ void flecs_json_serialize_iter_result_colors(
     flecs_json_memberl(buf, "colors");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
         flecs_json_string(buf, colors[i].value);
     }

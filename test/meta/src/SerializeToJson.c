@@ -4227,3 +4227,91 @@ void SerializeToJson_serialize_world() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Tag);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"entities\":[\"e1\"]}, {\"entities\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_labels_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
+    ecs_doc_set_name(world, e1, "e1");
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Tag);
+    ecs_doc_set_name(world, e2, "e2");
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entity_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"entity_labels\":[\"e1\"]}, {\"entity_labels\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_colors_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
+    ecs_doc_set_color(world, e1, "e1");
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Tag);
+    ecs_doc_set_color(world, e2, "e2");
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_colors = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+        "{\"results\":[{\"colors\":[\"e1\"]}, {\"colors\":[\"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
