@@ -34498,8 +34498,7 @@ bool http_parse_request(
 
 static
 ecs_http_send_request_t* http_send_queue_post(
-    ecs_http_server_t *srv,
-    ecs_http_socket_t sock)
+    ecs_http_server_t *srv)
 {
     /* This function should only be called while the server is locked. Before 
      * the lock is released, the returned element should be populated. */
@@ -34549,7 +34548,7 @@ void* http_server_send_queue(void* arg) {
             ecs_os_mutex_unlock(srv->lock);
             /* If the queue is empty, wait so we don't run too fast */
             if (srv->should_run) {
-                ecs_os_sleep(0, wait_ms);
+                ecs_os_sleep(0, wait_ms * 1000 * 1000);
             }
         } else {
             ecs_http_socket_t sock = r->sock;
@@ -34582,6 +34581,7 @@ void* http_server_send_queue(void* arg) {
                 if (!error) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
+
                 http_close(&sock);
             } else {
                 ecs_err("http: invalid socket\n");
@@ -34649,7 +34649,7 @@ void http_send_reply(
     ecs_http_send_request_t *req = NULL;
 
     if (!preflight) {
-        req = http_send_queue_post(conn->pub.server, conn->sock);
+        req = http_send_queue_post(conn->pub.server);
         if (!req) {
             reply->code = 503; /* queue full, server is busy */
             ecs_os_linc(&ecs_http_busy_count);
@@ -34687,7 +34687,7 @@ void http_send_reply(
 }
 
 static
-void http_recv_request(
+bool http_recv_connection(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -34703,7 +34703,7 @@ void http_recv_request(
         bool is_alive = conn->pub.id == conn_id;
         if (!is_alive) {
             /* Connection has been purged by main thread */
-            return;
+            return true;
         }
 
         if (http_parse_request(&frag, recv_buf, bytes_read)) {
@@ -34734,27 +34734,22 @@ void http_recv_request(
                     ecs_os_mutex_unlock(srv->lock);
                 }
             }
-            return;
+            return true;
         } else {
             ecs_os_linc(&ecs_http_request_invalid_count);
         }
     }
 
-    /* Partial request received, cleanup resources */
-    ecs_strbuf_reset(&frag.buf);
-
-    /* No request was enqueued, flag connection so it'll get purged */
-    ecs_os_mutex_lock(srv->lock);
-    if (conn->pub.id == conn_id) {
-        /* Only flag connection if it was still alive */
-        conn->dequeue_timeout = ECS_HTTP_CONNECTION_PURGE_TIMEOUT;
-        conn->dequeue_retries = ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT;
-    }
-    ecs_os_mutex_unlock(srv->lock);
+    return false;
 }
 
+typedef struct {
+    ecs_http_connection_impl_t *conn;
+    uint64_t id;
+} http_conn_res_t;
+
 static
-void http_init_connection(
+http_conn_res_t http_init_connection(
     ecs_http_server_t *srv, 
     ecs_http_socket_t sock_conn,
     struct sockaddr_storage *remote_addr, 
@@ -34787,11 +34782,17 @@ void http_init_connection(
 
     ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
         remote_host, remote_port, sock_conn);
+    
+    return (http_conn_res_t){ .conn = conn, .id = conn_id };
+}
 
-    http_recv_request(srv, conn, conn_id, sock_conn);
-
-    ecs_dbg_2("http: request received from '%s:%s'", 
-        remote_host, remote_port);
+#include <fcntl.h>
+void set_nonblock(int socket) {
+    int flags;
+    flags = fcntl(socket,F_GETFL,0);
+    assert(flags != -1);
+    flags = fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+    assert(flags != -1);
 }
 
 static
@@ -34835,7 +34836,7 @@ void http_accept_connections(
     if (srv->should_run) {
         ecs_dbg_2("http: initializing connection socket");
 
-        sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+        sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (!http_socket_is_valid(sock)) {
             ecs_err("http: unable to create new connection socket: %s", 
                 ecs_os_strerror(errno));
@@ -34843,22 +34844,14 @@ void http_accept_connections(
             goto done;
         }
 
-        int reuse = 1;
-        int result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
+        int reuse = 1, result;
+        result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
             (char*)&reuse, ECS_SIZEOF(reuse)); 
         if (result) {
             ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
         }
 
-        if (addr->sa_family == AF_INET6) {
-            int ipv6only = 0;
-            if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
-                (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
-            {
-                ecs_warn("http: failed to setsockopt: %s", 
-                    ecs_os_strerror(errno));
-            }
-        }
+        set_nonblock(sock);
 
         result = http_bind(sock, addr, addr_len);
         if (result) {
@@ -34888,21 +34881,41 @@ void http_accept_connections(
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
     ecs_size_t remote_addr_len;
+    http_conn_res_t conn[FD_SETSIZE];
+
+    fd_set fds, readfds;
+    FD_SET(srv->sock, &fds);
 
     while (srv->should_run) {
-        remote_addr_len = ECS_SIZEOF(remote_addr);
-        sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
-            &remote_addr_len);
-
-        if (!http_socket_is_valid(sock_conn)) {
-            if (srv->should_run) {
-                ecs_dbg("http: connection attempt failed: %s", 
-                    ecs_os_strerror(errno));
-            }
+        readfds = fds;
+        int r = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
+        if (r == -1) {
+            ecs_err("http: select failed: %s", ecs_os_strerror(errno));
             continue;
         }
 
-        http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        int i;
+        for (i = 0; i < FD_SETSIZE; i++) {
+            if (FD_ISSET(i, &readfds)) {
+                if (i == srv->sock) {
+                    do {
+                        sock_conn = http_accept(srv->sock, 
+                            (struct sockaddr*) &remote_addr, &remote_addr_len);
+                        if (!http_socket_is_valid(sock_conn)) {
+                            break;
+                        }
+
+                        FD_SET(sock_conn, &fds);
+                        conn[sock_conn] = http_init_connection(srv, sock_conn, 
+                            &remote_addr, remote_addr_len);
+                    } while (true);
+                } else {
+                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)) {
+                        FD_CLR(i, &fds);
+                    }
+                }
+            }
+        }
     }
 
 done:
@@ -34958,7 +34971,6 @@ void http_handle_request(
         }
 
         http_insert_request_entry(srv, req, &reply);
-
         http_send_reply(conn, &reply, false);
         ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
     } else {
@@ -35082,7 +35094,7 @@ ecs_http_server_t* ecs_http_server_init(
     srv->ipaddr = desc->ipaddr;
     srv->send_queue.wait_ms = desc->send_queue_wait_ms;
     if (!srv->send_queue.wait_ms) {
-        srv->send_queue.wait_ms = 100 * 1000 * 1000;
+        srv->send_queue.wait_ms = 1;
     }
 
     flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
