@@ -199,7 +199,7 @@ e.add<Velocity>();
 
 // Set the value for the Position & Velocity components. A component will be
 // added if the entity doesn't have it yet.
-auto e = ecs.entity()
+e = ecs.entity()
     .set<Position>({10, 20})
     .set<Velocity>({1, 2});
 
