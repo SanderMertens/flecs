@@ -8,17 +8,6 @@
 #ifndef FLECS_ADDONS_H
 #define FLECS_ADDONS_H
 
-/* Don't enable web addons if we're running as a webasm app */
-#ifdef ECS_TARGET_EM
-#ifndef FLECS_NO_HTTP
-#define FLECS_NO_HTTP
-#endif // FLECS_NO_HTTP
-
-#ifndef FLECS_NO_REST
-#define FLECS_NO_REST
-#endif // FLECS_NO_REST
-#endif // ECS_TARGET_EM
-
 /* Blacklist macros */
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
@@ -114,6 +103,12 @@
 #error "FLECS_NO_APP failed: APP is required by other addons"
 #endif
 #include "../addons/app.h"
+#endif
+#ifdef FLECS_HTTP
+#ifdef FLECS_NO_HTTP
+#error "FLECS_NO_HTTP failed: HTTP is required by other addons"
+#endif
+#include "../addons/http.h"
 #endif
 #ifdef FLECS_REST
 #ifdef FLECS_NO_REST
@@ -221,12 +216,6 @@
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"
 #endif
 #include "../addons/parser.h"
-#endif
-#ifdef FLECS_HTTP
-#ifdef FLECS_NO_HTTP
-#error "FLECS_NO_HTTP failed: HTTP is required by other addons"
-#endif
-#include "../addons/http.h"
 #endif
 #ifdef FLECS_OS_API_IMPL
 #ifdef FLECS_NO_OS_API_IMPL

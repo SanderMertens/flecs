@@ -9,7 +9,6 @@
 
 typedef struct {
     ecs_world_t *world;
-    ecs_entity_t entity;
     ecs_http_server_t *srv;
     int32_t rc;
 } ecs_rest_ctx_t;
@@ -879,6 +878,39 @@ bool flecs_rest_reply(
     return false;
 }
 
+ecs_http_server_t* ecs_rest_server_init(
+    ecs_world_t *world,
+    const ecs_http_server_desc_t *desc)
+{
+    ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
+    ecs_http_server_desc_t private_desc = {0};
+    if (desc) {
+        private_desc = *desc;
+    }
+    private_desc.callback = flecs_rest_reply;
+    private_desc.ctx = srv_ctx;
+
+    ecs_http_server_t *srv = ecs_http_server_init(&private_desc);
+    if (!srv) {
+        ecs_os_free(srv_ctx);
+        return NULL;
+    }
+
+    srv_ctx->world = world;
+    srv_ctx->srv = srv;
+    srv_ctx->rc = 1;
+    srv_ctx->srv = srv;
+    return srv;
+}
+
+void ecs_rest_server_fini(
+    ecs_http_server_t *srv)
+{
+    ecs_rest_ctx_t *srv_ctx = ecs_http_server_ctx(srv);
+    ecs_os_free(srv_ctx);
+    ecs_http_server_fini(srv);
+}
+
 static
 void flecs_on_set_rest(ecs_iter_t *it) {
     EcsRest *rest = it->ptrs[0];
@@ -889,30 +921,22 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
-        ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
-            .ipaddr = rest[i].ipaddr,
-            .port = rest[i].port,
-            .callback = flecs_rest_reply,
-            .ctx = srv_ctx
-        });
+        ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
+            &(ecs_http_server_desc_t){ 
+                .ipaddr = rest[i].ipaddr, 
+                .port = rest[i].port 
+            });
 
         if (!srv) {
             const char *ipaddr = rest[i].ipaddr ? rest[i].ipaddr : "0.0.0.0";
             ecs_err("failed to create REST server on %s:%u", 
                 ipaddr, rest[i].port);
-            ecs_os_free(srv_ctx);
             continue;
         }
 
-        srv_ctx->world = it->world;
-        srv_ctx->entity = it->entities[i];
-        srv_ctx->srv = srv;
-        srv_ctx->rc = 1;
+        rest[i].impl = ecs_http_server_ctx(srv);
 
-        rest[i].impl = srv_ctx;
-
-        ecs_http_server_start(srv_ctx->srv);
+        ecs_http_server_start(srv);
     }
 }
 

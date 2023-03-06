@@ -73,6 +73,26 @@ extern int64_t ecs_rest_world_stats_count;
 extern int64_t ecs_rest_pipeline_stats_count;
 extern int64_t ecs_rest_stats_error_count;
 
+/** Create HTTP server for REST API. 
+ * This allows for the creation of a REST server that can be managed by the
+ * application without using Flecs systems.
+ * 
+ * @param world The world.
+ * @param desc The HTTP server descriptor.
+ * @return The HTTP server, or NULL if failed.
+ */
+FLECS_API
+ecs_http_server_t* ecs_rest_server_init(
+    ecs_world_t *world,
+    const ecs_http_server_desc_t *desc);
+
+/** Cleanup REST HTTP server. 
+ * The server must have been created with ecs_rest_server_init.
+ */
+FLECS_API
+void ecs_rest_server_fini(
+    ecs_http_server_t *srv);
+
 /* Module import */
 FLECS_API
 void FlecsRestImport(

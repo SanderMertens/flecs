@@ -1318,7 +1318,8 @@
         }, {
             "id": "Rest",
             "testcases": [
-                "teardown"
+                "teardown",
+                "get"
             ]
         }]
     }

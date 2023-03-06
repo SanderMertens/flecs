@@ -1256,6 +1256,7 @@ void Http_stop_start(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
+void Rest_get(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -6076,6 +6077,10 @@ bake_test_case Rest_testcases[] = {
     {
         "teardown",
         Rest_teardown
+    },
+    {
+        "get",
+        Rest_get
     }
 };
 
@@ -6287,7 +6292,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        1,
+        2,
         Rest_testcases
     }
 };

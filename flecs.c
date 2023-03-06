@@ -32587,7 +32587,6 @@ error:
 
 typedef struct {
     ecs_world_t *world;
-    ecs_entity_t entity;
     ecs_http_server_t *srv;
     int32_t rc;
 } ecs_rest_ctx_t;
@@ -33457,6 +33456,39 @@ bool flecs_rest_reply(
     return false;
 }
 
+ecs_http_server_t* ecs_rest_server_init(
+    ecs_world_t *world,
+    const ecs_http_server_desc_t *desc)
+{
+    ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
+    ecs_http_server_desc_t private_desc = {0};
+    if (desc) {
+        private_desc = *desc;
+    }
+    private_desc.callback = flecs_rest_reply;
+    private_desc.ctx = srv_ctx;
+
+    ecs_http_server_t *srv = ecs_http_server_init(&private_desc);
+    if (!srv) {
+        ecs_os_free(srv_ctx);
+        return NULL;
+    }
+
+    srv_ctx->world = world;
+    srv_ctx->srv = srv;
+    srv_ctx->rc = 1;
+    srv_ctx->srv = srv;
+    return srv;
+}
+
+void ecs_rest_server_fini(
+    ecs_http_server_t *srv)
+{
+    ecs_rest_ctx_t *srv_ctx = ecs_http_server_ctx(srv);
+    ecs_os_free(srv_ctx);
+    ecs_http_server_fini(srv);
+}
+
 static
 void flecs_on_set_rest(ecs_iter_t *it) {
     EcsRest *rest = it->ptrs[0];
@@ -33467,30 +33499,22 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
-        ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
-            .ipaddr = rest[i].ipaddr,
-            .port = rest[i].port,
-            .callback = flecs_rest_reply,
-            .ctx = srv_ctx
-        });
+        ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
+            &(ecs_http_server_desc_t){ 
+                .ipaddr = rest[i].ipaddr, 
+                .port = rest[i].port 
+            });
 
         if (!srv) {
             const char *ipaddr = rest[i].ipaddr ? rest[i].ipaddr : "0.0.0.0";
             ecs_err("failed to create REST server on %s:%u", 
                 ipaddr, rest[i].port);
-            ecs_os_free(srv_ctx);
             continue;
         }
 
-        srv_ctx->world = it->world;
-        srv_ctx->entity = it->entities[i];
-        srv_ctx->srv = srv;
-        srv_ctx->rc = 1;
+        rest[i].impl = ecs_http_server_ctx(srv);
 
-        rest[i].impl = srv_ctx;
-
-        ecs_http_server_start(srv_ctx->srv);
+        ecs_http_server_start(srv);
     }
 }
 
@@ -34108,14 +34132,14 @@ ecs_http_socket_t http_accept(
     return result;
 }
 
-static 
-void http_reply_free(ecs_http_reply_t* response) {
-    ecs_assert(response != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_free(response->body.content);
+static
+void http_reply_fini(ecs_http_reply_t* reply) {
+    ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_os_free(reply->body.content);
 }
 
 static
-void http_request_free(ecs_http_request_impl_t *req) {
+void http_request_fini(ecs_http_request_impl_t *req) {
     ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -34288,6 +34312,45 @@ void http_insert_request_entry(
 }
 
 static
+char* http_decode_request(
+    ecs_http_request_impl_t *req,
+    ecs_http_fragment_t *frag)
+{
+    ecs_os_zeromem(req);
+
+    char *res = ecs_strbuf_get(&frag->buf);
+    if (!res) {
+        return NULL;
+    }
+
+    req->pub.method = frag->method;
+    req->pub.path = res + 1;
+    http_decode_url_str(req->pub.path);
+
+    if (frag->body_offset) {
+        req->pub.body = &res[frag->body_offset];
+    }
+    int32_t i, count = frag->header_count;
+    for (i = 0; i < count; i ++) {
+        req->pub.headers[i].key = &res[frag->header_offsets[i]];
+        req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+    }
+    count = frag->param_count;
+    for (i = 0; i < count; i ++) {
+        req->pub.params[i].key = &res[frag->param_offsets[i]];
+        req->pub.params[i].value = &res[frag->param_value_offsets[i]];
+        http_decode_url_str((char*)req->pub.params[i].value);
+    }
+
+    req->pub.header_count = frag->header_count;
+    req->pub.param_count = frag->param_count;
+    req->res = res;
+    req->req_len = frag->header_offsets[0];
+
+    return res;
+}
+
+static
 ecs_http_request_entry_t* http_enqueue_request(
     ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
@@ -34302,35 +34365,10 @@ ecs_http_request_entry_t* http_enqueue_request(
         /* Don't enqueue invalid requests or requests for purged connections */
         ecs_strbuf_reset(&frag->buf);
     } else {
-        char *res = ecs_strbuf_get(&frag->buf);
+        ecs_http_request_impl_t req;
+        char *res = http_decode_request(&req, frag);
         if (res) {
-            ecs_http_request_impl_t req;
-            ecs_os_zeromem(&req);
-
             req.pub.conn = (ecs_http_connection_t*)conn;
-            req.pub.method = frag->method;
-            req.pub.path = res + 1;
-            http_decode_url_str(req.pub.path);
-
-            if (frag->body_offset) {
-                req.pub.body = &res[frag->body_offset];
-            }
-            int32_t i, count = frag->header_count;
-            for (i = 0; i < count; i ++) {
-                req.pub.headers[i].key = &res[frag->header_offsets[i]];
-                req.pub.headers[i].value = &res[frag->header_value_offsets[i]];
-            }
-            count = frag->param_count;
-            for (i = 0; i < count; i ++) {
-                req.pub.params[i].key = &res[frag->param_offsets[i]];
-                req.pub.params[i].value = &res[frag->param_value_offsets[i]];
-                http_decode_url_str((char*)req.pub.params[i].value);
-            }
-
-            req.pub.header_count = frag->header_count;
-            req.pub.param_count = frag->param_count;
-            req.res = res;
-            req.req_len = frag->header_offsets[0];
 
             /* Check cache for GET requests */
             if (frag->method == EcsHttpGet) {
@@ -34975,6 +35013,25 @@ void* http_server_thread(void* arg) {
 }
 
 static
+void http_do_request(
+    ecs_http_server_t *srv,
+    ecs_http_reply_t *reply,
+    const ecs_http_request_impl_t *req)
+{
+    if (srv->callback((ecs_http_request_t*)req, reply, srv->ctx) == false) {
+        reply->code = 404;
+        reply->status = "Resource not found";
+        ecs_os_linc(&ecs_http_request_not_handled_count);
+    } else {
+        if (reply->code >= 400) {
+            ecs_os_linc(&ecs_http_request_handled_error_count);
+        } else {
+            ecs_os_linc(&ecs_http_request_handled_ok_count);
+        }
+    }
+}
+
+static
 void http_handle_request(
     ecs_http_server_t *srv,
     ecs_http_request_impl_t *req)
@@ -35006,8 +35063,8 @@ void http_handle_request(
         /* Already taken care of */
     }
 
-    http_reply_free(&reply);
-    http_request_free(req);
+    http_reply_fini(&reply);
+    http_request_fini(req);
     http_connection_free(conn);
 }
 
@@ -35212,7 +35269,7 @@ void ecs_http_server_stop(
     /* Cleanup all outstanding requests */
     int i, count = flecs_sparse_count(&srv->requests);
     for (i = count - 1; i >= 1; i --) {
-        http_request_free(flecs_sparse_get_dense_t(
+        http_request_fini(flecs_sparse_get_dense_t(
             &srv->requests, ecs_http_request_impl_t, i));
     }
 
@@ -35270,6 +35327,71 @@ void ecs_http_server_dequeue(
 
 error:
     return;
+}
+
+ecs_http_reply_t ecs_http_server_request(
+    ecs_http_server_t* srv,
+    const char *req,
+    ecs_size_t len)
+{
+    if (!len) {
+        len = ecs_os_strlen(req);
+    }
+
+    ecs_http_fragment_t frag = {0};
+    if (!http_parse_request(&frag, req, len)) {
+        ecs_strbuf_reset(&frag.buf);
+        return (ecs_http_reply_t){ .code = 400 };
+    }
+
+    ecs_http_request_impl_t request;
+    char *res = http_decode_request(&request, &frag);
+    if (!res) {
+        return (ecs_http_reply_t){ .code = 400 };
+    }
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    http_do_request(srv, &reply, &request);
+    ecs_os_free(res);
+
+    return reply;
+}
+
+static
+ecs_http_reply_t http_server_request_wrap(
+    ecs_http_server_t* srv,
+    const char *method,
+    const char *req)
+{
+    ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
+    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
+    ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
+    int32_t len = ecs_strbuf_written(&reqbuf);
+    char *reqstr = ecs_strbuf_get(&reqbuf);
+    ecs_http_reply_t reply = ecs_http_server_request(srv, reqstr, len);
+    ecs_os_free(reqstr);
+    return reply;
+}
+
+ecs_http_reply_t ecs_http_server_get(
+    ecs_http_server_t* srv,
+    const char *req)
+{
+    return http_server_request_wrap(srv, "GET ", req);
+}
+
+ecs_http_reply_t ecs_http_server_put(
+    ecs_http_server_t* srv,
+    const char *req)
+{
+    return http_server_request_wrap(srv, "PUT ", req);
+}
+
+void* ecs_http_server_ctx(
+    ecs_http_server_t* srv)
+{
+    return srv->ctx;
 }
 
 #endif
