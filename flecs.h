@@ -9402,6 +9402,10 @@ int ecs_log_last_error(void);
 #endif
 #endif
 
+#ifdef FLECS_REST
+#define FLECS_HTTP
+#endif
+
 #ifdef FLECS_APP
 #ifdef FLECS_NO_APP
 #error "FLECS_NO_APP failed: APP is required by other addons"
