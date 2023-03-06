@@ -4089,3 +4089,110 @@ void Plecs_scope_w_component_after_const_var() {
 
     ecs_fini(world);
 }
+
+void Plecs_parse_with() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo"
+    LINE "Bar {"
+    LINE "  Hello"
+    LINE "}";
+
+    ECS_TAG(world, Tag);
+
+    ecs_set_with(world, Tag);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_set_with(world, 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    
+    test_assert(ecs_has(world, foo, Tag));
+    test_assert(ecs_has(world, bar, Tag));
+    test_assert(ecs_has(world, hello, Tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_parse_with_w_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    const char *expr =
+    HEAD "Foo"
+    LINE "with TagB {"
+    LINE "  Bar {"
+    LINE "    Hello"
+    LINE "  }"
+    LINE "}";
+
+    ecs_set_with(world, TagA);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_set_with(world, 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    
+    test_assert(ecs_has(world, foo, TagA));
+    test_assert(ecs_has(world, bar, TagA));
+    test_assert(ecs_has(world, hello, TagA));
+
+    test_assert(!ecs_has(world, TagB, TagA));
+    test_assert(!ecs_has(world, foo, TagB));
+    test_assert(ecs_has(world, bar, TagB));
+    test_assert(ecs_has(world, hello, TagB));
+
+    ecs_fini(world);
+}
+
+void Plecs_parse_with_w_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    const char *expr =
+    HEAD "Foo"
+    LINE "with TagB {"
+    LINE "  Bar {"
+    LINE "    - Hello"
+    LINE "  }"
+    LINE "}";
+
+    ecs_set_with(world, TagA);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_set_with(world, 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    
+    test_assert(ecs_has(world, foo, TagA));
+    test_assert(ecs_has(world, bar, TagA));
+    test_assert(ecs_has(world, hello, TagA));
+    test_assert(ecs_has_id(world, bar, hello));
+
+    test_assert(!ecs_has(world, TagB, TagA));
+    test_assert(!ecs_has(world, foo, TagB));
+    test_assert(ecs_has(world, bar, TagB));
+    test_assert(!ecs_has(world, hello, TagB));
+
+    ecs_fini(world);
+}

@@ -19159,6 +19159,7 @@ typedef struct {
     int32_t sp;
     int32_t with_frame;
     int32_t using_frame;
+    ecs_entity_t global_with;
 
     char *annot[STACK_MAX_SIZE];
     int32_t annot_count;
@@ -19311,6 +19312,10 @@ ecs_entity_t plecs_ensure_entity(
 
         e = ecs_add_path(world, e, 0, path);
         ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
+        if (state->global_with) {
+            ecs_add_id(world, e, state->global_with);
+        }
     } else {
         /* If entity exists, make sure it gets the right scope and with */
         if (is_subject) {
@@ -20258,6 +20263,7 @@ int ecs_plecs_from_str(
     state.scope[0] = 0;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
+    state.global_with = prev_with;
 
 #ifdef FLECS_EXPR
     ecs_vars_init(world, &state.vars);
@@ -32585,6 +32591,8 @@ error:
 
 #ifdef FLECS_REST
 
+ECS_TAG_DECLARE(EcsRestPlecs);
+
 typedef struct {
     ecs_world_t *world;
     ecs_http_server_t *srv;
@@ -32883,6 +32891,52 @@ bool flecs_rest_enable(
     ecs_enable(world, e, enable);
     
     return true;
+}
+
+static
+bool flecs_rest_plecs(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)world;
+    (void)req;
+    (void)reply;
+#ifdef FLECS_PLECS
+    const char *data = ecs_http_get_param(req, "data");
+    if (!data) {
+        flecs_reply_error(reply, "missing data parameter");
+        return true;
+    }
+
+    ecs_delete_with(world, EcsRestPlecs);
+
+    bool prev_color = ecs_log_enable_colors(false);
+    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    ecs_entity_t prev_with = ecs_set_with(world, EcsRestPlecs);
+
+    int res = ecs_plecs_from_str(world, NULL, data);
+    if (res) {
+        char *err = flecs_rest_get_captured_log();
+        char *escaped_err = ecs_astresc('"', err);
+        flecs_reply_error(reply, escaped_err);
+        ecs_os_linc(&ecs_rest_query_error_count);
+        reply->code = 400; /* bad request */
+        ecs_os_free(escaped_err);
+        ecs_os_free(err);
+    }
+
+    ecs_set_with(world, prev_with);
+
+    ecs_os_api.log_ = prev_log_;
+    ecs_log_enable_colors(prev_color);
+
+    return true;
+#else
+    return false;
+#endif
 }
 
 static
@@ -33450,6 +33504,10 @@ bool flecs_rest_reply(
         /* Disable endpoint */
         } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
             return flecs_rest_enable(world, reply, &req->path[8], false);
+
+        /* Plecs endpoint */
+        } else if (!ecs_os_strncmp(req->path, "plecs", 5)) {
+            return flecs_rest_plecs(world, req, reply);
         }
     }
 
@@ -33597,6 +33655,9 @@ void FlecsRestImport(
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = DisableRest
     });
+
+    ecs_set_name_prefix(world, "EcsRest");
+    ECS_TAG_DEFINE(world, EcsRestPlecs);
 }
 
 #endif
@@ -35329,7 +35390,7 @@ error:
     return;
 }
 
-ecs_http_reply_t ecs_http_server_request(
+ecs_http_reply_t ecs_http_server_http_request(
     ecs_http_server_t* srv,
     const char *req,
     ecs_size_t len)
@@ -35357,35 +35418,21 @@ ecs_http_reply_t ecs_http_server_request(
     return reply;
 }
 
-static
-ecs_http_reply_t http_server_request_wrap(
+ecs_http_reply_t ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
     const char *req)
 {
     ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
+    ecs_strbuf_appendlit(&reqbuf, " ");
     ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
     ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
     int32_t len = ecs_strbuf_written(&reqbuf);
     char *reqstr = ecs_strbuf_get(&reqbuf);
-    ecs_http_reply_t reply = ecs_http_server_request(srv, reqstr, len);
+    ecs_http_reply_t reply = ecs_http_server_http_request(srv, reqstr, len);
     ecs_os_free(reqstr);
     return reply;
-}
-
-ecs_http_reply_t ecs_http_server_get(
-    ecs_http_server_t* srv,
-    const char *req)
-{
-    return http_server_request_wrap(srv, "GET ", req);
-}
-
-ecs_http_reply_t ecs_http_server_put(
-    ecs_http_server_t* srv,
-    const char *req)
-{
-    return http_server_request_wrap(srv, "PUT ", req);
 }
 
 void* ecs_http_server_ctx(

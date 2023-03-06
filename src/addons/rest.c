@@ -7,6 +7,8 @@
 
 #ifdef FLECS_REST
 
+ECS_TAG_DECLARE(EcsRestPlecs);
+
 typedef struct {
     ecs_world_t *world;
     ecs_http_server_t *srv;
@@ -305,6 +307,52 @@ bool flecs_rest_enable(
     ecs_enable(world, e, enable);
     
     return true;
+}
+
+static
+bool flecs_rest_plecs(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)world;
+    (void)req;
+    (void)reply;
+#ifdef FLECS_PLECS
+    const char *data = ecs_http_get_param(req, "data");
+    if (!data) {
+        flecs_reply_error(reply, "missing data parameter");
+        return true;
+    }
+
+    ecs_delete_with(world, EcsRestPlecs);
+
+    bool prev_color = ecs_log_enable_colors(false);
+    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    ecs_entity_t prev_with = ecs_set_with(world, EcsRestPlecs);
+
+    int res = ecs_plecs_from_str(world, NULL, data);
+    if (res) {
+        char *err = flecs_rest_get_captured_log();
+        char *escaped_err = ecs_astresc('"', err);
+        flecs_reply_error(reply, escaped_err);
+        ecs_os_linc(&ecs_rest_query_error_count);
+        reply->code = 400; /* bad request */
+        ecs_os_free(escaped_err);
+        ecs_os_free(err);
+    }
+
+    ecs_set_with(world, prev_with);
+
+    ecs_os_api.log_ = prev_log_;
+    ecs_log_enable_colors(prev_color);
+
+    return true;
+#else
+    return false;
+#endif
 }
 
 static
@@ -872,6 +920,10 @@ bool flecs_rest_reply(
         /* Disable endpoint */
         } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
             return flecs_rest_enable(world, reply, &req->path[8], false);
+
+        /* Plecs endpoint */
+        } else if (!ecs_os_strncmp(req->path, "plecs", 5)) {
+            return flecs_rest_plecs(world, req, reply);
         }
     }
 
@@ -1019,6 +1071,9 @@ void FlecsRestImport(
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = DisableRest
     });
+
+    ecs_set_name_prefix(world, "EcsRest");
+    ECS_TAG_DEFINE(world, EcsRestPlecs);
 }
 
 #endif

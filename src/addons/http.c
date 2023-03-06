@@ -1587,7 +1587,7 @@ error:
     return;
 }
 
-ecs_http_reply_t ecs_http_server_request(
+ecs_http_reply_t ecs_http_server_http_request(
     ecs_http_server_t* srv,
     const char *req,
     ecs_size_t len)
@@ -1615,35 +1615,21 @@ ecs_http_reply_t ecs_http_server_request(
     return reply;
 }
 
-static
-ecs_http_reply_t http_server_request_wrap(
+ecs_http_reply_t ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
     const char *req)
 {
     ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
+    ecs_strbuf_appendlit(&reqbuf, " ");
     ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
     ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
     int32_t len = ecs_strbuf_written(&reqbuf);
     char *reqstr = ecs_strbuf_get(&reqbuf);
-    ecs_http_reply_t reply = ecs_http_server_request(srv, reqstr, len);
+    ecs_http_reply_t reply = ecs_http_server_http_request(srv, reqstr, len);
     ecs_os_free(reqstr);
     return reply;
-}
-
-ecs_http_reply_t ecs_http_server_get(
-    ecs_http_server_t* srv,
-    const char *req)
-{
-    return http_server_request_wrap(srv, "GET ", req);
-}
-
-ecs_http_reply_t ecs_http_server_put(
-    ecs_http_server_t* srv,
-    const char *req)
-{
-    return http_server_request_wrap(srv, "PUT ", req);
 }
 
 void* ecs_http_server_ctx(

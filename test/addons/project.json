@@ -379,7 +379,10 @@
                 "const_var_struct",
                 "const_var_redeclare",
                 "const_var_scoped",
-                "scope_w_component_after_const_var"
+                "scope_w_component_after_const_var",
+                "parse_with",
+                "parse_with_w_with",
+                "parse_with_w_tag"
             ]
         }, {
             "id": "Doc",

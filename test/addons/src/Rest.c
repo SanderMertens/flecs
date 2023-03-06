@@ -16,7 +16,7 @@ void Rest_get() {
     ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
     test_assert(srv != NULL);
 
-    ecs_http_reply_t reply = ecs_http_server_get(srv, 
+    ecs_http_reply_t reply = ecs_http_server_request(srv, "GET",
         "/entity/flecs/core/World?label=true");
     test_int(reply.code, 200);
     

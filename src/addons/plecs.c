@@ -37,6 +37,7 @@ typedef struct {
     int32_t sp;
     int32_t with_frame;
     int32_t using_frame;
+    ecs_entity_t global_with;
 
     char *annot[STACK_MAX_SIZE];
     int32_t annot_count;
@@ -189,6 +190,10 @@ ecs_entity_t plecs_ensure_entity(
 
         e = ecs_add_path(world, e, 0, path);
         ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
+        if (state->global_with) {
+            ecs_add_id(world, e, state->global_with);
+        }
     } else {
         /* If entity exists, make sure it gets the right scope and with */
         if (is_subject) {
@@ -1136,6 +1141,7 @@ int ecs_plecs_from_str(
     state.scope[0] = 0;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
+    state.global_with = prev_with;
 
 #ifdef FLECS_EXPR
     ecs_vars_init(world, &state.vars);
