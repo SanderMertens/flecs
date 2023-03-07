@@ -1364,10 +1364,10 @@ void flecs_json_serialize_iter_result_entity_ids(
 
     ecs_entity_t *entities = it->entities;
 
-    int i = it->offset, end = i + it->count;
-    for (; i < end; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         flecs_json_next(buf);
-        flecs_json_number(buf, (double)entities[i]);
+        flecs_json_number(buf, (double)(uint32_t)entities[i]);
     }
 
     flecs_json_array_pop(buf);
@@ -1416,10 +1416,10 @@ void flecs_json_serialize_iter_result_entities(
     if (!flecs_json_serialize_iter_result_entity_names(it, buf)) {
         ecs_entity_t *entities = it->entities;
 
-        int i = it->offset, end = i + it->count;
-        for (; i < end; i ++) {
+        int i, count = it->count;
+        for (i = 0; i < count; i ++) {
             flecs_json_next(buf);
-            flecs_json_number(buf, (double)entities[i]);
+            flecs_json_number(buf, (double)(uint32_t)entities[i]);
         }
     }
 

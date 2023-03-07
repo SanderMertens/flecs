@@ -727,6 +727,7 @@
                 "serialize_w_offset",
                 "serialize_labels_w_offset",
                 "serialize_colors_w_offset",
+                "serialize_anonymous_entities_w_offset",
                 "serialize_table",
                 "serialize_world"
             ]

@@ -13530,12 +13530,15 @@ int ecs_plecs_from_file(
 typedef struct ecs_script_desc_t {
     ecs_entity_t entity;      /* Set to customize entity handle associated with script */
     const char *filename;     /* Set to load script from file */
-    const char *script;       /* Set to parse script from string */
+    const char *str;          /* Set to parse script from string */
 } ecs_script_desc_t;
 
 /** Load managed script.
  * A managed script tracks which entities it creates, and keeps those entities
- * synchronized when the contents of the script are updated.
+ * synchronized when the contents of the script are updated. When the script is
+ * updated, entities that are no longer in the new version will be deleted.
+ * 
+ * This feature is experimental.
  * 
  * @param world The world.
  * @param desc Script descriptor.
@@ -13548,12 +13551,17 @@ ecs_entity_t ecs_script_init(
 #define ecs_script(world, ...)\
     ecs_script_init(world, &(ecs_script_desc_t) __VA_ARGS__)
 
-/** Update script with new code. */
+/** Update script with new code. 
+ * 
+ * @param world The world.
+ * @param script The script entity.
+ * @param str The script code.
+ */
 FLECS_API
 int ecs_script_update(
     ecs_world_t *world,
-    ecs_entity_t e,
-    const char *code);
+    ecs_entity_t script,
+    const char *str);
 
 /* Module import */
 FLECS_API

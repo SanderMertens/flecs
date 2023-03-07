@@ -4315,3 +4315,34 @@ void SerializeToJson_serialize_colors_w_offset() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_anonymous_entities_w_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Tag);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag($this), ?$this(_)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    char *expect = ecs_asprintf(
+        "{\"results\":[{\"entities\":[%u]}, {\"entities\":[%u]}]}",
+            (uint32_t)e1, (uint32_t)e2);
+
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
