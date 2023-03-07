@@ -19130,6 +19130,8 @@ void ecs_set_os_api_impl(void) {
 
 #ifdef FLECS_PLECS
 
+ECS_COMPONENT_DECLARE(EcsScript);
+
 #include <ctype.h>
 
 #define TOK_NEWLINE '\n'
@@ -20312,9 +20314,9 @@ error:
     return -1;
 }
 
-int ecs_plecs_from_file(
-    ecs_world_t *world,
-    const char *filename) 
+static
+char* flecs_load_from_file(
+    const char *filename)
 {
     FILE* file;
     char* content = NULL;
@@ -20350,12 +20352,102 @@ int ecs_plecs_from_file(
 
     fclose(file);
 
-    int result = ecs_plecs_from_str(world, filename, content);
-    ecs_os_free(content);
-    return result;
+    return content;
 error:
     ecs_os_free(content);
-    return -1;
+    return NULL;
+}
+
+int ecs_plecs_from_file(
+    ecs_world_t *world,
+    const char *filename) 
+{
+    char *script = flecs_load_from_file(filename);
+    if (!script) {
+        return -1;
+    }
+
+    int result = ecs_plecs_from_str(world, filename, script);
+    ecs_os_free(script);
+    return result;
+}
+
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *script)
+{
+    int result = 0;
+
+    ecs_delete_with(world, ecs_pair_t(EcsScript, e));
+    ecs_entity_t old_with = ecs_set_with(world, ecs_pair_t(EcsScript, e));
+    if (ecs_plecs_from_str(world, ecs_get_name(world, e), script)) {
+        result = -1;
+    }
+    ecs_set_with(world, old_with);
+
+    EcsScript *s = ecs_get_mut(world, e, EcsScript);
+    s->script = ecs_os_strdup(script);
+    ecs_modified(world, e, EcsScript);
+
+    return result;
+}
+
+ecs_entity_t ecs_script_init(
+    ecs_world_t *world,
+    const ecs_script_desc_t *desc)
+{
+    const char *script = NULL;
+    ecs_entity_t e = desc->entity;
+
+    if (!e) {
+        if (desc->filename) {
+            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
+        } else {
+            e = ecs_new_id(world);
+        }
+    }
+
+    script = desc->script;
+    if (!desc->script && desc->filename) {
+        script = flecs_load_from_file(desc->filename);
+        if (!script) {
+            goto error;
+        }
+    }
+
+    const char *name = ecs_get_name(world, e);
+    if (!name) {
+        name = desc->filename;
+    }
+
+    if (ecs_script_update(world, e, script)) {
+        goto error;
+    }
+
+    if (script != desc->script) {
+        /* Safe cast, only happens when script is loaded from file */
+        ecs_os_free((char*)script);
+    }
+
+    return e;
+error:
+    if (script != desc->script) {
+        /* Safe cast, only happens when script is loaded from file */
+        ecs_os_free((char*)script);
+    }
+    ecs_delete(world, e);
+    return 0;
+}
+
+void FlecsScriptImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, FlecsScript);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    ECS_COMPONENT_DEFINE(world, EcsScript);
 }
 
 #endif
@@ -32951,7 +33043,7 @@ bool flecs_rest_enable(
 }
 
 static
-bool flecs_rest_plecs(
+bool flecs_rest_script(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -32966,16 +33058,16 @@ bool flecs_rest_plecs(
         return true;
     }
 
-    ecs_delete_with(world, EcsRestPlecs);
-
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_entity_t prev_with = ecs_set_with(world, EcsRestPlecs);
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "scripts.main" }),
+        .script = data
+    });
 
-    int res = ecs_plecs_from_str(world, NULL, data);
-    if (res) {
+    if (!script) {
         char *err = flecs_rest_get_captured_log();
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
@@ -32984,8 +33076,6 @@ bool flecs_rest_plecs(
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
-
-    ecs_set_with(world, prev_with);
 
     ecs_os_api.log_ = prev_log_;
     ecs_log_enable_colors(prev_color);
@@ -33562,9 +33652,9 @@ bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
             return flecs_rest_enable(world, reply, &req->path[8], false);
 
-        /* Plecs endpoint */
-        } else if (!ecs_os_strncmp(req->path, "plecs", 5)) {
-            return flecs_rest_plecs(world, req, reply);
+        /* Script endpoint */
+        } else if (!ecs_os_strncmp(req->path, "script", 6)) {
+            return flecs_rest_script(world, req, reply);
         }
     }
 
@@ -42577,6 +42667,9 @@ void flecs_log_addons(void) {
     #ifdef FLECS_OS_API_IMPL
         ecs_trace("FLECS_OS_API_IMPL");
     #endif
+    #ifdef FLECS_SCRIPT
+        ecs_trace("FLECS_SCRIPT");
+    #endif
     #ifdef FLECS_HTTP
         ecs_trace("FLECS_HTTP");
     #endif
@@ -42699,6 +42792,9 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_COREDOC
     ECS_IMPORT(world, FlecsCoreDoc);
+#endif
+#ifdef FLECS_SCRIPT
+    ECS_IMPORT(world, FlecsScript);
 #endif
 #ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);

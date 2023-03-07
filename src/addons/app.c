@@ -47,6 +47,28 @@ static ecs_app_run_action_t run_action = flecs_default_run_action;
 static ecs_app_frame_action_t frame_action = flecs_default_frame_action;
 static ecs_app_desc_t ecs_app_desc;
 
+/* Serve REST API from wasm image when running in emscripten */
+#ifdef ECS_TARGET_EM
+ecs_http_server_t *flecs_wasm_rest_server;
+
+EMSCRIPTEN_KEEPALIVE
+char* flecs_explorer_request(const char *method, char *request) {
+    ecs_http_reply_t reply = ecs_http_server_request(
+        flecs_wasm_rest_server, method, request);
+    if (reply.code == 200) {
+        return ecs_strbuf_get(&reply.body);
+    } else {
+        char *body = ecs_strbuf_get(&reply.body);
+        if (body) {
+            return body;
+        } else {
+            return ecs_asprintf(
+                "{\"error\": \"bad request (code %d)\"}", reply.code);
+        }
+    }
+}
+#endif
+
 int ecs_app_run(
     ecs_world_t *world,
     ecs_app_desc_t *desc)
@@ -67,7 +89,11 @@ int ecs_app_run(
     /* REST server enables connecting to app with explorer */
     if (desc->enable_rest) {
 #ifdef FLECS_REST
+#ifdef ECS_TARGET_EM
+        flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
+#else
         ecs_set(world, EcsWorld, EcsRest, {.port = 0});
+#endif
 #else
         ecs_warn("cannot enable remote API, REST addon not available");
 #endif

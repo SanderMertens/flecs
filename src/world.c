@@ -663,6 +663,9 @@ void flecs_log_addons(void) {
     #ifdef FLECS_OS_API_IMPL
         ecs_trace("FLECS_OS_API_IMPL");
     #endif
+    #ifdef FLECS_SCRIPT
+        ecs_trace("FLECS_SCRIPT");
+    #endif
     #ifdef FLECS_HTTP
         ecs_trace("FLECS_HTTP");
     #endif
@@ -785,6 +788,9 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_COREDOC
     ECS_IMPORT(world, FlecsCoreDoc);
+#endif
+#ifdef FLECS_SCRIPT
+    ECS_IMPORT(world, FlecsScript);
 #endif
 #ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);

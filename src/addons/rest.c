@@ -310,7 +310,7 @@ bool flecs_rest_enable(
 }
 
 static
-bool flecs_rest_plecs(
+bool flecs_rest_script(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -325,16 +325,16 @@ bool flecs_rest_plecs(
         return true;
     }
 
-    ecs_delete_with(world, EcsRestPlecs);
-
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_entity_t prev_with = ecs_set_with(world, EcsRestPlecs);
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "scripts.main" }),
+        .str = data
+    });
 
-    int res = ecs_plecs_from_str(world, NULL, data);
-    if (res) {
+    if (!script) {
         char *err = flecs_rest_get_captured_log();
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
@@ -343,8 +343,6 @@ bool flecs_rest_plecs(
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
-
-    ecs_set_with(world, prev_with);
 
     ecs_os_api.log_ = prev_log_;
     ecs_log_enable_colors(prev_color);
@@ -921,9 +919,9 @@ bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
             return flecs_rest_enable(world, reply, &req->path[8], false);
 
-        /* Plecs endpoint */
-        } else if (!ecs_os_strncmp(req->path, "plecs", 5)) {
-            return flecs_rest_plecs(world, req, reply);
+        /* Script endpoint */
+        } else if (!ecs_os_strncmp(req->path, "script", 6)) {
+            return flecs_rest_script(world, req, reply);
         }
     }
 
@@ -1049,6 +1047,9 @@ void FlecsRestImport(
     ECS_MODULE(world, FlecsRest);
 
     ECS_IMPORT(world, FlecsPipeline);
+#ifdef FLECS_PLECS
+    ECS_IMPORT(world, FlecsScript);
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

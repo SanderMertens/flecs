@@ -13464,42 +13464,15 @@ int ecs_meta_from_desc(
 #endif
 /**
  * @file addons/plecs.h
- * @brief Plecs addon.
- *
- * Plecs is a small data definition language for instantiating entities that
- * reuses the existing flecs query parser. The following examples illustrate
- * how a plecs snippet translates to regular flecs operations:
- *
- * Plecs:
- *   Entity
- * C code:
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *
- * Plecs:
- *   Position(Entity)
- * C code:
- *   ecs_entity_t Position = ecs_set_name(world, 0, "Position"); 
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *   ecs_add_id(world, Entity, Position);
- *
- * Plecs:
- *   Likes(Entity, Apples)
- * C code:
- *   ecs_entity_t Likes = ecs_set_name(world, 0, "Likes"); 
- *   ecs_entity_t Apples = ecs_set_name(world, 0, "Apples"); 
- *   ecs_entity_t Entity = ecs_set_name(world, 0, "Entity");
- *   ecs_add_pair(world, Entity, Likes, Apples);
- *
- * A plecs string may contain multiple statements, separated by a newline:
- *   Likes(Entity, Apples)
- *   Likes(Entity, Pears)
- *   Likes(Entity, Bananas)
+ * @brief Flecs script module.
+ * 
+ * For script, see examples/plecs.
  */
 
 #ifdef FLECS_PLECS
 
 /**
- * @defgroup c_addons_plecs Plecs
+ * @defgroup c_addons_plecs Flecs script
  * @brief Data definition format for loading entity data.
  * 
  * \ingroup c_addons
@@ -13516,6 +13489,14 @@ int ecs_meta_from_desc(
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScript);
+
+/* Script component */
+typedef struct EcsScript {
+    char *script;
+} EcsScript;
 
 /** Parse plecs string.
  * This parses a plecs string and instantiates the entities in the world.
@@ -13544,6 +13525,40 @@ FLECS_API
 int ecs_plecs_from_file(
     ecs_world_t *world,
     const char *filename);
+
+/** Used with ecs_script_init */
+typedef struct ecs_script_desc_t {
+    ecs_entity_t entity;      /* Set to customize entity handle associated with script */
+    const char *filename;     /* Set to load script from file */
+    const char *script;       /* Set to parse script from string */
+} ecs_script_desc_t;
+
+/** Load managed script.
+ * A managed script tracks which entities it creates, and keeps those entities
+ * synchronized when the contents of the script are updated.
+ * 
+ * @param world The world.
+ * @param desc Script descriptor.
+ */
+FLECS_API
+ecs_entity_t ecs_script_init(
+    ecs_world_t *world,
+    const ecs_script_desc_t *desc);
+
+#define ecs_script(world, ...)\
+    ecs_script_init(world, &(ecs_script_desc_t) __VA_ARGS__)
+
+/** Update script with new code. */
+FLECS_API
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *code);
+
+/* Module import */
+FLECS_API
+void FlecsScriptImport(
+    ecs_world_t *world);
 
 #ifdef __cplusplus
 }

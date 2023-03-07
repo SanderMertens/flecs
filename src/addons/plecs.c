@@ -7,6 +7,8 @@
 
 #ifdef FLECS_PLECS
 
+ECS_COMPONENT_DECLARE(EcsScript);
+
 #include "../private_api.h"
 #include <ctype.h>
 
@@ -1190,9 +1192,9 @@ error:
     return -1;
 }
 
-int ecs_plecs_from_file(
-    ecs_world_t *world,
-    const char *filename) 
+static
+char* flecs_load_from_file(
+    const char *filename)
 {
     FILE* file;
     char* content = NULL;
@@ -1228,12 +1230,120 @@ int ecs_plecs_from_file(
 
     fclose(file);
 
-    int result = ecs_plecs_from_str(world, filename, content);
-    ecs_os_free(content);
-    return result;
+    return content;
 error:
     ecs_os_free(content);
-    return -1;
+    return NULL;
+}
+
+int ecs_plecs_from_file(
+    ecs_world_t *world,
+    const char *filename) 
+{
+    char *script = flecs_load_from_file(filename);
+    if (!script) {
+        return -1;
+    }
+
+    int result = ecs_plecs_from_str(world, filename, script);
+    ecs_os_free(script);
+    return result;
+}
+
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *script)
+{
+    int result = 0;
+
+    ecs_delete_with(world, ecs_pair_t(EcsScript, e));
+    ecs_entity_t old_with = ecs_set_with(world, ecs_pair_t(EcsScript, e));
+    if (ecs_plecs_from_str(world, ecs_get_name(world, e), script)) {
+        ecs_delete_with(world, ecs_pair_t(EcsScript, e));
+        result = -1;
+    }
+    ecs_set_with(world, old_with);
+
+    EcsScript *s = ecs_get_mut(world, e, EcsScript);
+    s->script = ecs_os_strdup(script);
+    ecs_modified(world, e, EcsScript);
+
+    return result;
+}
+
+ecs_entity_t ecs_script_init(
+    ecs_world_t *world,
+    const ecs_script_desc_t *desc)
+{
+    const char *script = NULL;
+    ecs_entity_t e = desc->entity;
+    
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!e) {
+        if (desc->filename) {
+            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
+        } else {
+            e = ecs_new_id(world);
+        }
+    }
+
+    script = desc->str;
+    if (!script && desc->filename) {
+        script = flecs_load_from_file(desc->filename);
+        if (!script) {
+            goto error;
+        }
+    }
+
+    const char *name = ecs_get_name(world, e);
+    if (!name) {
+        name = desc->filename;
+    }
+
+    if (ecs_script_update(world, e, script)) {
+        goto error;
+    }
+
+    if (script != desc->str) {
+        /* Safe cast, only happens when script is loaded from file */
+        ecs_os_free((char*)script);
+    }
+
+    return e;
+error:
+    if (script != desc->str) {
+        /* Safe cast, only happens when script is loaded from file */
+        ecs_os_free((char*)script);
+    }
+    if (!desc->entity) {
+        ecs_delete(world, e);
+    }
+    return 0;
+}
+
+void FlecsScriptImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, FlecsScript);
+
+#ifdef FLECS_META
+    ECS_IMPORT(world, FlecsMeta);
+#endif
+
+    ecs_set_name_prefix(world, "Ecs");
+    ECS_COMPONENT_DEFINE(world, EcsScript);
+
+#ifdef FLECS_META
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScript),
+        .members = {
+            { .name = "script", .type = ecs_id(ecs_string_t) }
+        }
+    });
+#endif
 }
 
 #endif

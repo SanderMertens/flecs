@@ -546,6 +546,11 @@ void http_insert_request_entry(
     ecs_http_request_impl_t *req,
     ecs_http_reply_t *reply)
 {
+    int32_t content_length = ecs_strbuf_written(&reply->body);
+    if (!content_length) {
+        return;
+    }
+
     ecs_http_request_key_t key;
     key.array = req->res;
     key.count = req->req_len;
@@ -566,7 +571,7 @@ void http_insert_request_entry(
     entry->content_length = ecs_strbuf_written(&reply->body);
     entry->content = ecs_strbuf_get(&reply->body);
     ecs_strbuf_appendstrn(&reply->body, 
-        entry->content, entry->content_length);
+            entry->content, entry->content_length);
 }
 
 static
