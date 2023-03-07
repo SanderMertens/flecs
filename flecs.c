@@ -20420,11 +20420,6 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    const char *name = ecs_get_name(world, e);
-    if (!name) {
-        name = desc->filename;
-    }
-
     if (ecs_script_update(world, e, script)) {
         goto error;
     }

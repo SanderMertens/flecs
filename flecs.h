@@ -13479,6 +13479,10 @@ int ecs_meta_from_desc(
  * @{
  */
 
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
 #endif
