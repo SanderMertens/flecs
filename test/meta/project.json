@@ -599,7 +599,8 @@
                 "ser_deser_on_set_3_entities_1_restored",
                 "ser_deser_3_entities_after_remove_all",
                 "ser_deser_3_entities_after_delete_with",
-                "ser_deser_w_hooks"
+                "ser_deser_w_hooks",
+                "ser_deser_large_data"
             ]
         }, {
             "id": "SerializeToJson",

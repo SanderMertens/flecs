@@ -28865,6 +28865,7 @@ typedef enum ecs_json_token_t {
     JsonTrue,
     JsonFalse,
     JsonNull,
+    JsonLargeString,
     JsonInvalid
 } ecs_json_token_t;
 
@@ -28872,6 +28873,10 @@ const char* flecs_json_parse(
     const char *json,
     ecs_json_token_t *token_kind,
     char *token);
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf);
 
 const char* flecs_json_expect(
     const char *json,
@@ -29030,6 +29035,7 @@ const char* flecs_json_parse(
         token_kind[0] = JsonComma;
         return json + 1;
     } else if (ch == '"') {
+        const char *start = json;
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
@@ -29037,6 +29043,13 @@ const char* flecs_json_parse(
                 json ++;
                 token_ptr[0] = '\0';
                 break;
+            }
+
+            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
             }
 
             json = ecs_chrparse(json, token_ptr ++);
@@ -29075,6 +29088,33 @@ const char* flecs_json_parse(
     } else {
         token_kind[0] = JsonInvalid;
         return NULL;
+    }
+}
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf)
+{
+    if (json[0] != '"') {
+        return NULL; /* can only parse strings */
+    }
+
+    char ch, ch_out;
+    json ++;
+    for (; (ch = json[0]); ) {
+        if (ch == '"') {
+            json ++;
+            break;
+        }
+
+        json = ecs_chrparse(json, &ch_out);
+        ecs_strbuf_appendch(buf, ch_out);
+    }
+
+    if (!ch) {
+        return NULL;
+    } else {
+        return json;
     }
 }
 
@@ -31620,7 +31660,8 @@ const char* ecs_ptr_from_json(
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
-    char token[ECS_MAX_TOKEN_SIZE], t_lah[ECS_MAX_TOKEN_SIZE];
+    char token_buffer[ECS_MAX_TOKEN_SIZE], t_lah[ECS_MAX_TOKEN_SIZE];
+    char *token = token_buffer;
     int depth = 0;
 
     const char *name = NULL;
@@ -31639,6 +31680,17 @@ const char* ecs_ptr_from_json(
     }
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (token_kind == JsonLargeString) {
+            ecs_strbuf_t large_token = ECS_STRBUF_INIT;
+            json = flecs_json_parse_large_string(json, &large_token);
+            if (!json) {
+                break;
+            }
+
+            token = ecs_strbuf_get(&large_token);
+            token_kind = JsonString;
+        }
+
         if (token_kind == JsonObjectOpen) {
             depth ++;
             if (ecs_meta_push(&cur) != 0) {
@@ -31722,6 +31774,11 @@ const char* ecs_ptr_from_json(
             }
         } else {
             goto error;
+        }
+
+        if (token != token_buffer) {
+            ecs_os_free(token);
+            token = token_buffer;
         }
 
         if (!depth) {

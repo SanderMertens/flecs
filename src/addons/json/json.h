@@ -20,6 +20,7 @@ typedef enum ecs_json_token_t {
     JsonTrue,
     JsonFalse,
     JsonNull,
+    JsonLargeString,
     JsonInvalid
 } ecs_json_token_t;
 
@@ -27,6 +28,10 @@ const char* flecs_json_parse(
     const char *json,
     ecs_json_token_t *token_kind,
     char *token);
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf);
 
 const char* flecs_json_expect(
     const char *json,

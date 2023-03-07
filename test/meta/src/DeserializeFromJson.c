@@ -4105,3 +4105,43 @@ void DeserializeFromJson_ser_deser_w_hooks() {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_ser_deser_large_data() {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    char *long_str = ecs_os_malloc_n(char, 1024);
+    ecs_os_memset(long_str, 'a', 1023);
+    long_str[1023] = '\0';
+    T value = {
+        .v = long_str
+    };
+
+    char *long_str_ser = ecs_asprintf("{\"v\":\"%s\"}", long_str);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+    test_str(json, long_str_ser);
+    ecs_os_free(long_str_ser);
+    value.v = NULL;
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, long_str);
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}

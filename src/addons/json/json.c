@@ -59,6 +59,7 @@ const char* flecs_json_parse(
         token_kind[0] = JsonComma;
         return json + 1;
     } else if (ch == '"') {
+        const char *start = json;
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
@@ -66,6 +67,13 @@ const char* flecs_json_parse(
                 json ++;
                 token_ptr[0] = '\0';
                 break;
+            }
+
+            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
             }
 
             json = ecs_chrparse(json, token_ptr ++);
@@ -104,6 +112,33 @@ const char* flecs_json_parse(
     } else {
         token_kind[0] = JsonInvalid;
         return NULL;
+    }
+}
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf)
+{
+    if (json[0] != '"') {
+        return NULL; /* can only parse strings */
+    }
+
+    char ch, ch_out;
+    json ++;
+    for (; (ch = json[0]); ) {
+        if (ch == '"') {
+            json ++;
+            break;
+        }
+
+        json = ecs_chrparse(json, &ch_out);
+        ecs_strbuf_appendch(buf, ch_out);
+    }
+
+    if (!ch) {
+        return NULL;
+    } else {
+        return json;
     }
 }
 
