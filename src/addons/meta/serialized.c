@@ -56,7 +56,12 @@ int flecs_meta_serialize_primitive(
     ecs_vec_t *ops)
 {
     const EcsPrimitive *ptr = ecs_get(world, type, EcsPrimitive);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!ptr) {
+        char *name = ecs_get_fullpath(world, type);
+        ecs_err("entity '%s' is not a primitive type", name);
+        ecs_os_free(name);
+        return -1;
+    }
 
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, flecs_meta_primitive_to_op_kind(ptr->kind));
     op->offset = offset,

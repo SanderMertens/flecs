@@ -3000,3 +3000,72 @@ void ComponentLifecycle_on_set_hook_check_offset() {
 
     ecs_fini(world);
 }
+
+static int on_set_position_invoked = 0;
+
+static
+void on_set_position(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 1);
+    test_int(it->count, 1);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    on_set_position_invoked ++;
+}
+
+void ComponentLifecycle_on_set_hook_on_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = on_set_position
+    });
+
+    ecs_entity_t p = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_id(world, p, EcsPrefab);
+    test_int(on_set_position_invoked, 1);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_int(on_set_position_invoked, 1);
+
+    ecs_add(world, i, Position);
+    test_int(on_set_position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_set_hook_on_auto_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = on_set_position
+    });
+
+    ecs_entity_t p = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_id(world, p, ECS_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, p, EcsPrefab);
+    test_int(on_set_position_invoked, 1);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_int(on_set_position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}

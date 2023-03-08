@@ -429,6 +429,7 @@ typedef enum ecs_cmd_kind_t {
     EcsOpMut,
     EcsOpModified,
     EcsOpAddModified,
+    EcsOpPath,
     EcsOpDelete,
     EcsOpClear,
     EcsOpOnDeleteAction,

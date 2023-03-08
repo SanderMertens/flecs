@@ -664,6 +664,9 @@ void OnDelete_delete_with_inherited_tag_w_query(void);
 void OnDelete_delete_with_inherited_tag_w_observer(void);
 void OnDelete_delete_symmetric_relation(void);
 void OnDelete_delete_observed_symmetric_relation(void);
+void OnDelete_nested_delete_with(void);
+void OnDelete_deferred_delete_with_after_create_named(void);
+void OnDelete_deferred_delete_with_childof_after_create_named(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -857,9 +860,14 @@ void ComponentLifecycle_with_before_hooks(void);
 void ComponentLifecycle_move_ctor_on_move(void);
 void ComponentLifecycle_ptr_to_self(void);
 void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void);
+<<<<<<< HEAD
 void ComponentLifecycle_on_add_hook_check_offset(void);
 void ComponentLifecycle_on_remove_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_check_offset(void);
+=======
+void ComponentLifecycle_on_set_hook_on_override(void);
+void ComponentLifecycle_on_set_hook_on_auto_override(void);
+>>>>>>> 37a1760cb (Implement support for assemblies)
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4948,6 +4956,18 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_observed_symmetric_relation",
         OnDelete_delete_observed_symmetric_relation
+    },
+    {
+        "nested_delete_with",
+        OnDelete_nested_delete_with
+    },
+    {
+        "deferred_delete_with_after_create_named",
+        OnDelete_deferred_delete_with_after_create_named
+    },
+    {
+        "deferred_delete_with_childof_after_create_named",
+        OnDelete_deferred_delete_with_childof_after_create_named
     }
 };
 
@@ -5684,6 +5704,7 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_ctor_move_dtor_from_move_ctor
     },
     {
+<<<<<<< HEAD
         "on_add_hook_check_offset",
         ComponentLifecycle_on_add_hook_check_offset
     },
@@ -5694,6 +5715,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_hook_check_offset",
         ComponentLifecycle_on_set_hook_check_offset
+=======
+        "on_set_hook_on_override",
+        ComponentLifecycle_on_set_hook_on_override
+    },
+    {
+        "on_set_hook_on_auto_override",
+        ComponentLifecycle_on_set_hook_on_auto_override
+>>>>>>> 37a1760cb (Implement support for assemblies)
     }
 };
 
@@ -11952,7 +11981,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        103,
+        106,
         OnDelete_testcases
     },
     {
@@ -11994,7 +12023,11 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
+<<<<<<< HEAD
         82,
+=======
+        81,
+>>>>>>> 37a1760cb (Implement support for assemblies)
         ComponentLifecycle_testcases
     },
     {

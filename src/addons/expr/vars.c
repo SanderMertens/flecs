@@ -27,7 +27,9 @@ void flecs_expr_var_scope_fini(
     int32_t i, count = vars->count;
     for (i = 0; i < count; i++) {
         ecs_expr_var_t *var = ecs_vec_get_t(vars, ecs_expr_var_t, i);
-        ecs_value_free(world, var->value.type, var->value.ptr);
+        if (var->owned) {
+            ecs_value_free(world, var->value.type, var->value.ptr);
+        }
         flecs_strfree(&world->allocator, var->name);
     }
 
@@ -53,6 +55,8 @@ void ecs_vars_fini(
         flecs_expr_var_scope_fini(vars->world, cur);
         if (cur != &vars->root) {
             flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, cur);
+        } else {
+            break;
         }
     } while ((cur = next));
 }
@@ -104,6 +108,7 @@ ecs_expr_var_t* ecs_vars_declare(
     }
     var->value.type = type;
     var->name = flecs_strdup(&vars->world->allocator, name);
+    var->owned = true;
 
     flecs_name_index_ensure(var_index, 
         flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
@@ -133,6 +138,7 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
         &scope->vars, ecs_expr_var_t);
     var->value = *value;
     var->name = flecs_strdup(&vars->world->allocator, name);
+    var->owned = true;
     value->ptr = NULL; /* Take ownership, prevent double free */
 
     flecs_name_index_ensure(var_index, 

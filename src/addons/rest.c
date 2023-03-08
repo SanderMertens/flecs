@@ -1065,6 +1065,11 @@ void FlecsRestImport(
 
     ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
 
+    ecs_system(world, {
+        .entity = ecs_id(DequeueRest),
+        .no_readonly = true
+    });
+
     ecs_observer(world, {
         .filter = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}

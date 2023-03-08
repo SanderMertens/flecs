@@ -1862,7 +1862,10 @@ void flecs_table_move(
     ecs_vec_t *src_columns = src_table->data.columns;
     ecs_vec_t *dst_columns = dst_table->data.columns;
 
-    for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
+    printf("\n\nMove [%s] <- [%s]\n", 
+        ecs_table_str(world, dst_table), ecs_table_str(world, src_table));
+
+    for (; (i_new < dst_column_count) && (i_old < src_column_count); ) {
         ecs_id_t dst_id = dst_ids[i_new];
         ecs_id_t src_id = src_ids[i_old];
 
@@ -1871,6 +1874,14 @@ void flecs_table_move(
             ecs_vec_t *src_column = &src_columns[i_old];
             ecs_type_info_t *ti = dst_type_info[i_new];
             int32_t size = ti->size;
+
+
+            printf("     [%s] <- [%s]\n", 
+                ecs_table_str(world, dst_table), ecs_table_str(world, src_table));
+            printf("\n[%d <- %d] %s\n", i_new, i_old,
+                ecs_get_fullpath(world, ti->component));
+            printf("dst.get(%d, %d)\n", ecs_vec_count(dst_column), dst_index);
+            printf("src.get(%d, %d)\n", ecs_vec_count(src_column), src_index);
 
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
             void *dst = ecs_vec_get(dst_column, size, dst_index);
@@ -1886,32 +1897,40 @@ void flecs_table_move(
                 }
 
                 if (move) {
+                    printf("  MOVE\n");
                     move(dst, src, 1, ti);
                 } else {
+                    printf("  MEMCPY\n");
                     ecs_os_memcpy(dst, src, size);
                 }
             } else {
                 ecs_copy_t copy = ti->hooks.copy_ctor;
                 if (copy) {
+                    printf("  COPY\n");
                     copy(dst, src, 1, ti);
                 } else {
+                    printf("  MEMCPY 2\n");
                     ecs_os_memcpy(dst, src, size);
                 }
             }
         } else {
             if (dst_id < src_id) {
+                printf("  RUN_ADD\n");
                 flecs_run_add_hooks(world, dst_table, dst_type_info[i_new],
                     &dst_columns[i_new], &dst_entity, dst_id, 
                         dst_index, 1, construct);
             } else {
+                printf("  RUN_REMOVE\n");
                 flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
                         src_index, 1, use_move_dtor);
             }
         }
 
+        printf(" - inc (%d, %d)\n", i_new, i_old);
         i_new += dst_id <= src_id;
         i_old += dst_id >= src_id;
+        printf("   inc (%d, %d)\n", i_new, i_old);
     }
 
     for (; (i_new < dst_column_count); i_new ++) {

@@ -975,7 +975,6 @@ error:
     return dst;
 }
 
-/* -- Private functions -- */
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1589,22 +1588,7 @@ void flecs_deferred_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        /* To prevent creating two entities with the same name, temporarily go
-         * out of readonly mode if it's safe to do so. */
-        ecs_suspend_readonly_state_t state;
-        if (thread_count <= 1) {
-            /* When not running on multiple threads we can temporarily leave
-             * readonly mode which ensures that we don't accidentally create
-             * two entities with the same name. */
-            ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
-            ecs_add_path_w_sep(real_world, entity, scope, name, sep, root_sep);
-            flecs_resume_readonly(real_world, &state);
-        } else {
-            /* In multithreaded mode we can't leave readonly mode, which means
-             * there is a risk of creating two entities with the same name. 
-             * Future improvements will be able to detect this. */
-            ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
-        }
+        ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
     }
 
     /* Set symbol */
@@ -2340,18 +2324,22 @@ bool flecs_on_delete_clear_ids(
         /* Release the claim taken by flecs_marked_id_push. This may delete the
          * id record as all other claims may have been released. */
         int32_t rc = flecs_id_record_release(world, idr);
-        ecs_assert(rc > 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
         (void)rc;
 
-        if (delete_id) {
-            /* If id should be deleted, release initial claim. This happens when
-             * a component, tag, or part of a pair is deleted. */
-            flecs_id_record_release(world, idr);
-        } else {
-            /* If id should not be deleted, unmark id record for deletion. This
-             * happens when all instances *of* an id are deleted, for example
-             * when calling ecs_remove_all or ecs_delete_with. */
-            idr->flags &= ~EcsIdMarkedForDelete;
+        /* If rc is 0, the id was likely deleted by a nested delete_with call
+         * made by an on_remove handler/OnRemove observer */
+        if (rc) {
+            if (delete_id) {
+                /* If id should be deleted, release initial claim. This happens when
+                * a component, tag, or part of a pair is deleted. */
+                flecs_id_record_release(world, idr);
+            } else {
+                /* If id should not be deleted, unmark id record for deletion. This
+                * happens when all instances *of* an id are deleted, for example
+                * when calling ecs_remove_all or ecs_delete_with. */
+                idr->flags &= ~EcsIdMarkedForDelete;
+            }
         }
     }
 
@@ -3419,7 +3407,13 @@ ecs_entity_t ecs_set_name(
             .name = name
         });
     }
-    return flecs_set_identifier(world, entity, EcsName, name);
+
+    flecs_set_identifier(world, entity, EcsName, name);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_defer_path(stage, 0, entity, name);
+
+    return entity;
 }
 
 ecs_entity_t ecs_set_symbol(
@@ -3852,7 +3846,6 @@ void ecs_defer_resume(
     ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_check(stage->defer < 0, ECS_INVALID_OPERATION, NULL);
     stage->defer = -stage->defer;
@@ -4331,7 +4324,7 @@ bool flecs_defer_end(
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
                 ecs_cmd_kind_t kind = cmd->kind;
-                if ((kind == EcsOpSkip) || (e && !is_alive)) {
+                if ((kind != EcsOpPath) && ((kind == EcsOpSkip) || (e && !is_alive))) {
                     world->info.cmd.discard_count ++;
                     flecs_discard_cmd(world, cmd);
                     continue;
@@ -4417,6 +4410,15 @@ bool flecs_defer_end(
                     flecs_flush_bulk_new(world, cmd);
                     world->info.cmd.other_count ++;
                     continue;
+                case EcsOpPath:
+                    ecs_ensure(world, e);
+                    if (cmd->id) {
+                        ecs_add_pair(world, e, EcsChildOf, cmd->id);
+                    }
+                    ecs_set_name(world, e, cmd->is._1.value);
+                    ecs_os_free(cmd->is._1.value);
+                    cmd->is._1.value = NULL;
+                    break;
                 case EcsOpSkip:
                     break;
                 }

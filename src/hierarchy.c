@@ -533,6 +533,31 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
+void flecs_add_path(
+    ecs_world_t *world,
+    bool defer_suspend,
+    ecs_entity_t parent,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_suspend_readonly_state_t srs;
+    ecs_world_t *real_world;
+    if (defer_suspend) {
+        real_world = flecs_suspend_readonly(world, &srs);
+    }
+
+    if (parent) {
+        ecs_add_pair(world, entity, EcsChildOf, parent);
+    }
+
+    ecs_set_name(world, entity, name);
+
+    if (defer_suspend) {
+        flecs_resume_readonly(real_world, &srs);
+        flecs_defer_path((ecs_stage_t*)world, parent, entity, name);
+    }
+}
+
 ecs_entity_t ecs_add_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -567,9 +592,13 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *ptr_start = path;
     char *elem = buff;
     int32_t len, size = ECS_NAME_BUFFER_LENGTH;
-
+    
+    /* If we're in deferred/readonly mode suspend it, so that the name index is
+     * immediately updated. Without this, we could create multiple entities for
+     * the same name in a single command queue. */
+    bool suspend_defer = ecs_poly_is(world, ecs_stage_t) && 
+        (ecs_get_stage_count(world) <= 1);
     ecs_entity_t cur = parent;
-
     char *name = NULL;
 
     if (sep[0]) {
@@ -614,13 +643,11 @@ ecs_entity_t ecs_add_path_w_sep(
                     }
                 }
 
-                if (cur) {
-                    ecs_add_pair(world, e, EcsChildOf, cur);
-                } else if (last_elem && root_path) {
+                if (!cur && last_elem && root_path) {
                     ecs_remove_pair(world, e, EcsChildOf, EcsWildcard);
                 }
 
-                ecs_set_name(world, e, name);
+                flecs_add_path(world, suspend_defer, cur, e, name);
             }
 
             cur = e;
@@ -638,10 +665,7 @@ ecs_entity_t ecs_add_path_w_sep(
             ecs_os_free(elem);
         }
     } else {
-        if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, parent);
-        }
-        ecs_set_name(world, entity, path);
+        flecs_add_path(world, suspend_defer, parent, entity, path);
     }
 
     return cur;

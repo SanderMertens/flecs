@@ -115,6 +115,7 @@ char* ecs_astresc(
 typedef struct ecs_expr_var_t {
     char *name;
     ecs_value_t value;
+    bool owned; /* Set to false if ecs_vars_t should not take ownership of var */
 } ecs_expr_var_t;
 
 typedef struct ecs_expr_var_scope_t {

@@ -46,6 +46,12 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out);
 
+bool flecs_defer_path(
+    ecs_stage_t *stage,
+    ecs_entity_t parent,
+    ecs_entity_t entity,
+    const char *name);
+
 bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity);

@@ -4225,3 +4225,1211 @@ void Plecs_assign_const_w_expr() {
 
     ecs_fini(world);
 }
+
+void Plecs_const_w_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "const var : flecs.meta.i32 = 5 / 2"
+    LINE "e :- Position{x: $var, y: $var * 3}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_after_const_paren_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "e {"
+    LINE "  const val = (10 + 20)"
+    LINE "  - Position{$val, $val * 2}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_no_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_no_props() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  - Foo"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_prop_no_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop height"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_prop_no_default() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop height: flecs.meta.f32"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_prop() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_prop_space_colon() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_2_props() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.i32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_i32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_instance_w_default_values() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 10"
+    LINE "  prop height : flecs.meta.f32 = 20"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 10, height: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_instance_w_assign_default_values() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 10"
+    LINE "  prop height : flecs.meta.f32 = 20"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 10, height: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_instance_w_overridden_values() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 10"
+    LINE "  prop height : flecs.meta.f32 = 20"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 30, height: 40}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 30, height: 40}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_child() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 42);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_child_parse_script() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 42);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_child_parse_script_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 42);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_child_update_after_parse() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    {
+        ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+        test_assert(e != 0);
+
+        ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+        test_assert(child != 0);
+    }
+
+    test_assert(!ecs_is_deferred(world));
+
+    const char *expr_update =
+    LINE "e :- Tree{width: 3, height: 4}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr_update) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 3, height: 4}");
+    ecs_os_free(str);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 31);
+    test_int(p->y, 82);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_nested_child() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child {"
+    LINE "    - Position{$width, $height}"
+    LINE "    grand_child :- Position{$height, $width}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    ecs_entity_t grand_child = ecs_lookup_fullpath(world, "e.child.grand_child");
+    test_assert(grand_child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, grand_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 1);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  Prefab base {"
+    LINE "    - Velocity{$width * 2, $height * 3}"
+    LINE "  }"
+    LINE "  child : base {"
+    LINE "    - Position{$width, $height}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    ecs_entity_t base = ecs_lookup_fullpath(world, "e.base");
+    test_assert(base != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    test_assert(ecs_has_pair(world, child, EcsIsA, base));
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, child, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 6);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, base, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 6);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_prefab_tree() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  Prefab base {"
+    LINE "    - Velocity{$width * 2, $height * 3}"
+    LINE "    Prefab child {"
+    LINE "      - Velocity{$height * 3, $width * 2}"
+    LINE "    }"
+    LINE "  }"
+    LINE "  child : base {"
+    LINE "    - Position{$width, $height}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    ecs_entity_t base = ecs_lookup_fullpath(world, "e.base");
+    test_assert(base != 0);
+
+    ecs_entity_t base_child = ecs_lookup_fullpath(world, "e.base.child");
+    test_assert(base_child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    test_assert(ecs_has_pair(world, child, EcsIsA, base));
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, child, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 6);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, base, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 6);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, base_child, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 6);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_nested_assembly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child {"
+    LINE "    - Position{$width, $height}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "assembly Forest {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  tree_1 :- Tree{-$width, -$height}"
+    LINE "  tree_2 :- Tree{$width + 1, $height + 1}"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    test_assert(forest != 0);
+    test_assert(ecs_lookup_fullpath(world, "Forest.tree_1") != 0);
+    test_assert(ecs_lookup_fullpath(world, "Forest.tree_2") != 0);
+    test_assert(ecs_lookup_fullpath(world, "Forest.tree_1.child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Forest.tree_2.child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "tree_1") == 0);
+    test_assert(ecs_lookup_fullpath(world, "tree_2") == 0);
+
+    {
+        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 2);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+    }
+
+    {
+        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 2);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+    }
+
+    test_assert(!ecs_is_deferred(world));
+
+    const char *expr_instance =
+    LINE "f :- Forest{10, 20}"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
+
+    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    test_assert(f != 0);
+    ecs_entity_t f_tree_1 = ecs_lookup_fullpath(world, "f.tree_1");
+    test_assert(f_tree_1 != 0);
+    ecs_entity_t f_tree_2 = ecs_lookup_fullpath(world, "f.tree_2");
+    test_assert(f_tree_2 != 0);
+    ecs_entity_t f_tree_1_child = ecs_lookup_fullpath(world, "f.tree_1.child");
+    test_assert(f_tree_1_child != 0);
+    ecs_entity_t f_tree_2_child = ecs_lookup_fullpath(world, "f.tree_2.child");
+    test_assert(f_tree_2_child != 0);
+
+    {
+        const void *ptr = ecs_get_id(world, f, forest);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, forest, ptr);
+        test_str(str, "{width: 10, height: 20}");
+        ecs_os_free(str);
+    }
+    {
+        const void *ptr = ecs_get_id(world, f_tree_1, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{width: -10, height: -20}");
+        ecs_os_free(str);
+    }
+    {
+        const void *ptr = ecs_get_id(world, f_tree_2, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{width: 11, height: 21}");
+        ecs_os_free(str);
+    }
+
+    {
+        const Position *p = ecs_get(world, f_tree_1_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, -10);
+        test_int(p->y, -20);
+    }
+    {
+        const Position *p = ecs_get(world, f_tree_2_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 11);
+        test_int(p->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_instantiate_prefab_w_assembly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width, $height}"
+    LINE "}"
+    LINE ""
+    LINE "Prefab p :- Tree{width: 10, height: 20}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_lookup_fullpath(world, "p.child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "child") == 0);
+    
+    const char *expr_instance =
+    LINE "e : p"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    test_assert(child != 0);
+
+    test_assert(ecs_lookup_fullpath(world, "e.child") != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    {
+        const void *ptr = ecs_get_id(world, p, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{width: 10, height: 20}");
+        ecs_os_free(str);
+    }
+
+    test_assert(ecs_has_pair(world, e, EcsIsA, p));
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_prefab_w_assembly() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop count: flecs.meta.f32 = 0"
+    LINE "}"
+    LINE ""
+    LINE "assembly Forest {"
+    LINE "  prop count: flecs.meta.f32 = 0"
+    LINE ""
+    LINE "  Prefab TreePrefab {"
+    LINE "    - Tree{count: $count}"
+    LINE "  }"
+    LINE ""
+    LINE "  child : TreePrefab"
+    LINE "}"
+    LINE "f :- Forest{}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    test_assert(forest != 0);
+    ecs_entity_t tree_prefab = ecs_lookup_fullpath(world, "Forest.TreePrefab");
+    test_assert(tree_prefab != 0);
+
+    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    test_assert(f != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "f.child");
+    test_assert(child != 0);
+
+    {
+        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 2);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    }
+    
+    {
+        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 2);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    }
+    
+    ecs_fini(world);
+}

@@ -377,6 +377,29 @@ void Plecs_parse_with(void);
 void Plecs_parse_with_w_with(void);
 void Plecs_parse_with_w_tag(void);
 void Plecs_assign_const_w_expr(void);
+void Plecs_const_w_type(void);
+void Plecs_component_after_const_paren_expr(void);
+void Plecs_assembly_no_scope(void);
+void Plecs_assembly_empty(void);
+void Plecs_assembly_no_props(void);
+void Plecs_assembly_prop_no_type(void);
+void Plecs_assembly_prop_no_default(void);
+void Plecs_assembly_prop(void);
+void Plecs_assembly_prop_space_colon(void);
+void Plecs_assembly_2_props(void);
+void Plecs_assembly_instance_w_default_values(void);
+void Plecs_assembly_instance_w_assign_default_values(void);
+void Plecs_assembly_instance_w_overridden_values(void);
+void Plecs_assembly_w_child(void);
+void Plecs_assembly_w_child_parse_script(void);
+void Plecs_assembly_w_child_parse_script_twice(void);
+void Plecs_assembly_w_child_update_after_parse(void);
+void Plecs_assembly_w_nested_child(void);
+void Plecs_assembly_w_prefab(void);
+void Plecs_assembly_w_prefab_tree(void);
+void Plecs_assembly_w_nested_assembly(void);
+void Plecs_instantiate_prefab_w_assembly(void);
+void Plecs_assembly_w_prefab_w_assembly(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2729,6 +2752,98 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_const_w_expr",
         Plecs_assign_const_w_expr
+    },
+    {
+        "const_w_type",
+        Plecs_const_w_type
+    },
+    {
+        "component_after_const_paren_expr",
+        Plecs_component_after_const_paren_expr
+    },
+    {
+        "assembly_no_scope",
+        Plecs_assembly_no_scope
+    },
+    {
+        "assembly_empty",
+        Plecs_assembly_empty
+    },
+    {
+        "assembly_no_props",
+        Plecs_assembly_no_props
+    },
+    {
+        "assembly_prop_no_type",
+        Plecs_assembly_prop_no_type
+    },
+    {
+        "assembly_prop_no_default",
+        Plecs_assembly_prop_no_default
+    },
+    {
+        "assembly_prop",
+        Plecs_assembly_prop
+    },
+    {
+        "assembly_prop_space_colon",
+        Plecs_assembly_prop_space_colon
+    },
+    {
+        "assembly_2_props",
+        Plecs_assembly_2_props
+    },
+    {
+        "assembly_instance_w_default_values",
+        Plecs_assembly_instance_w_default_values
+    },
+    {
+        "assembly_instance_w_assign_default_values",
+        Plecs_assembly_instance_w_assign_default_values
+    },
+    {
+        "assembly_instance_w_overridden_values",
+        Plecs_assembly_instance_w_overridden_values
+    },
+    {
+        "assembly_w_child",
+        Plecs_assembly_w_child
+    },
+    {
+        "assembly_w_child_parse_script",
+        Plecs_assembly_w_child_parse_script
+    },
+    {
+        "assembly_w_child_parse_script_twice",
+        Plecs_assembly_w_child_parse_script_twice
+    },
+    {
+        "assembly_w_child_update_after_parse",
+        Plecs_assembly_w_child_update_after_parse
+    },
+    {
+        "assembly_w_nested_child",
+        Plecs_assembly_w_nested_child
+    },
+    {
+        "assembly_w_prefab",
+        Plecs_assembly_w_prefab
+    },
+    {
+        "assembly_w_prefab_tree",
+        Plecs_assembly_w_prefab_tree
+    },
+    {
+        "assembly_w_nested_assembly",
+        Plecs_assembly_w_nested_assembly
+    },
+    {
+        "instantiate_prefab_w_assembly",
+        Plecs_instantiate_prefab_w_assembly
+    },
+    {
+        "assembly_w_prefab_w_assembly",
+        Plecs_assembly_w_prefab_w_assembly
     }
 };
 
@@ -6116,7 +6231,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        151,
+        174,
         Plecs_testcases
     },
     {
