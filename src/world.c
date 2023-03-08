@@ -1425,12 +1425,20 @@ ecs_type_info_t* flecs_type_info_ensure(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+    } else {
+        ti_mut = (ecs_type_info_t*)ti;
+    }
+
+    if (!ti_mut->name) {
         const char *sym = ecs_get_symbol(world, component);
         if (sym) {
             ti_mut->name = ecs_os_strdup(sym);
+        } else {
+            const char *name = ecs_get_name(world, component);
+            if (name) {
+                ti_mut->name = ecs_os_strdup(name);
+            }
         }
-    } else {
-        ti_mut = (ecs_type_info_t*)ti;
     }
 
     return ti_mut;

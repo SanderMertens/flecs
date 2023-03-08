@@ -203,6 +203,25 @@ bool flecs_defer_clone(
     return false;   
 }
 
+bool flecs_defer_path(
+    ecs_stage_t *stage,
+    ecs_entity_t parent,
+    ecs_entity_t entity,
+    const char *name)
+{
+    if (stage->defer > 0) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
+        if (cmd) {
+            cmd->kind = EcsOpPath;
+            cmd->entity = entity;
+            cmd->id = parent;
+            cmd->is._1.value = ecs_os_strdup(name);
+        }
+        return true;
+    }
+    return false;
+}
+
 bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity)
@@ -847,7 +866,7 @@ bool ecs_is_deferred(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->defer != 0;
+    return stage->defer > 0;
 error:
     return false;
 }

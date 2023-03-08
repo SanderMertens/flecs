@@ -2924,3 +2924,75 @@ void OnDelete_delete_observed_symmetric_relation() {
 
     ecs_fini(world);
 }
+
+static void on_remove_delete_with(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_delete_with(it->world, ecs_pair(EcsChildOf, it->entities[0]));
+}
+
+void OnDelete_nested_delete_with() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = on_remove_delete_with
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, e);
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(ecs_is_alive(world, ecs_id(Position)));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, c));
+
+    ecs_fini(world);
+}
+
+void OnDelete_deferred_delete_with_after_create_named() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_defer_begin(world);
+    ecs_delete_with(world, Tag);
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Tag);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_has(world, e2, Tag));
+    test_str(ecs_get_name(world, e2), "e2");
+
+    ecs_fini(world);
+}
+
+void OnDelete_deferred_delete_with_childof_after_create_named() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_add(world, parent, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "parent.e1");
+    ecs_add(world, e1, Tag);
+
+    ecs_defer_begin(world);
+    ecs_delete_with(world, ecs_childof(parent));
+    ecs_entity_t e2 = ecs_new_entity(world, "parent.e2");
+    ecs_add(world, e2, Tag);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_has(world, e2, Tag));
+    test_str(ecs_get_name(world, e2), "e2");
+
+    ecs_fini(world);
+}

@@ -702,7 +702,10 @@
                 "delete_with_inherited_tag_w_query",
                 "delete_with_inherited_tag_w_observer",
                 "delete_symmetric_relation",
-                "delete_observed_symmetric_relation"
+                "delete_observed_symmetric_relation",
+                "nested_delete_with",
+                "deferred_delete_with_after_create_named",
+                "deferred_delete_with_childof_after_create_named"
             ]
         }, {
             "id": "Set",
@@ -910,7 +913,9 @@
                 "ctor_move_dtor_from_move_ctor",
                 "on_add_hook_check_offset",
                 "on_remove_hook_check_offset",
-                "on_set_hook_check_offset"
+                "on_set_hook_check_offset",
+                "on_set_hook_on_override",
+                "on_set_hook_on_auto_override"
             ]
         }, {
             "id": "Sorting",

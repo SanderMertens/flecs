@@ -398,24 +398,36 @@ void flecs_emit_propagate_invalidate(
 
 static
 void flecs_override_copy(
+    ecs_world_t *world,
+    ecs_table_t *table,
     const ecs_type_info_t *ti,
     void *dst,
     const void *src,
+    int32_t offset,
     int32_t count)
 {
+    void *ptr = dst;
     ecs_copy_t copy = ti->hooks.copy;
     ecs_size_t size = ti->size;
     int32_t i;
     if (copy) {
         for (i = 0; i < count; i ++) {
-            copy(dst, src, count, ti);
-            dst = ECS_OFFSET(dst, size);
+            copy(ptr, src, count, ti);
+            ptr = ECS_OFFSET(ptr, size);
         }
     } else {
         for (i = 0; i < count; i ++) {
-            ecs_os_memcpy(dst, src, size);
-            dst = ECS_OFFSET(dst, size);
+            ecs_os_memcpy(ptr, src, size);
+            ptr = ECS_OFFSET(ptr, size);
         }
+    }
+
+    ecs_iter_action_t on_set = ti->hooks.on_set;
+    if (on_set) {
+        ecs_entity_t *entities = ecs_vec_get_t(
+            &table->data.entities, ecs_entity_t, offset);
+        flecs_invoke_hook(world, table, count, entities,
+            dst, ti->component, ti, EcsOnSet, on_set);
     }
 }
 
@@ -1213,7 +1225,8 @@ repeat_event:
                     if (event == EcsOnAdd) {
                         /* If this is a new override, initialize the component
                          * with the value of the overridden component. */
-                        flecs_override_copy(ti, ptr, override_ptr, count);
+                        flecs_override_copy(
+                            world, table, ti, ptr, override_ptr, offset, count);
                     } else if (er_onset) {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual

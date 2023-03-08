@@ -35,7 +35,9 @@ extern ECS_COMPONENT_DECLARE(EcsScript);
 
 /* Script component */
 typedef struct EcsScript {
+    ecs_vec_t using_;
     char *script;
+    ecs_vec_t prop_defaults;
 } EcsScript;
 
 /** Parse plecs string.
@@ -95,13 +97,29 @@ ecs_entity_t ecs_script_init(
  * 
  * @param world The world.
  * @param script The script entity.
+ * @param assembly An assembly instance (optional).
  * @param str The script code.
+ * @param vars Optional preset variables for script parameterization.
  */
 FLECS_API
 int ecs_script_update(
     ecs_world_t *world,
     ecs_entity_t script,
-    const char *str);
+    ecs_entity_t instance,
+    const char *str,
+    ecs_vars_t *vars);
+
+/** Clear all entities associated with script.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @param instance The script instance.
+ */
+FLECS_API
+void ecs_script_clear(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance);
 
 /* Module import */
 FLECS_API
