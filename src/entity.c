@@ -981,6 +981,7 @@ void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t count,
+    int32_t row,
     ecs_entity_t *entities,
     void *ptr,
     ecs_id_t id,
@@ -1005,6 +1006,7 @@ void flecs_invoke_hook(
     it.ctx = ti->hooks.ctx;
     it.binding_ctx = ti->hooks.binding_ctx;
     it.count = count;
+    it.offset = row;
     flecs_iter_validate(&it);
     hook(&it);
     ecs_iter_fini(&it);
@@ -1048,7 +1050,7 @@ void flecs_notify_on_set(
             if (on_set) {
                 ecs_vec_t *c = &table->data.columns[column];
                 void *ptr = ecs_vec_get(c, ti->size, row);
-                flecs_invoke_hook(world, table, count, entities, ptr, id, 
+                flecs_invoke_hook(world, table, count, row, entities, ptr, id, 
                     ti, EcsOnSet, on_set);
             }
         }
@@ -4192,7 +4194,7 @@ void flecs_cmd_batch_for_entity(
                     ecs_type_info_t *ti = ptr.ti;
                     ecs_iter_action_t on_set;
                     if ((on_set = ti->hooks.on_set)) {
-                        flecs_invoke_hook(world, start_table, 1, &entity,
+                        flecs_invoke_hook(world, start_table, 1, row, &entity,
                             ptr.ptr, cmd->id, ptr.ti, EcsOnSet, on_set);
                     }
                 }
