@@ -2218,6 +2218,43 @@ void Pairs_ignore_childof_from_base() {
     ecs_fini(world);
 }
 
+void Pairs_get_target_for_id_from_empty() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
+    test_assert(result == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_target_for_id_from_empty_no_rel() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, 0, Tag);
+    test_assert(result == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_target_for_id_not_empty_not_found() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t result = ecs_get_target_for_id(world, e, 0, TagB);
+    test_assert(result == 0);
+
+    ecs_fini(world);
+}
+
 void Pairs_add_exclusive_relation_twice() {
     ecs_world_t *world = ecs_mini();
 

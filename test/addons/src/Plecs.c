@@ -4196,3 +4196,32 @@ void Plecs_parse_with_w_tag() {
 
     ecs_fini(world);
 }
+
+void Plecs_assign_const_w_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "const var = 5 + 1"
+    LINE "e :- Position{x: $var, y: $var * 2}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 6);
+    test_int(p->y, 12);
+
+    ecs_fini(world);
+}

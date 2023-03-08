@@ -1566,6 +1566,9 @@ void Pairs_get_target_for_id_not_found(void);
 void Pairs_get_target_for_wildcard_from_self(void);
 void Pairs_get_target_for_wildcard_from_base(void);
 void Pairs_get_target_for_wildcard_from_nested_base(void);
+void Pairs_get_target_for_id_from_empty(void);
+void Pairs_get_target_for_id_from_empty_no_rel(void);
+void Pairs_get_target_for_id_not_empty_not_found(void);
 void Pairs_ignore_childof_from_base(void);
 void Pairs_add_exclusive_relation_twice(void);
 void Pairs_add_same_exclusive_relation_twice(void);
@@ -8479,6 +8482,18 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_target_for_wildcard_from_nested_base
     },
     {
+        "get_target_for_id_from_empty",
+        Pairs_get_target_for_id_from_empty
+    },
+    {
+        "get_target_for_id_from_empty_no_rel",
+        Pairs_get_target_for_id_from_empty_no_rel
+    },
+    {
+        "get_target_for_id_not_empty_not_found",
+        Pairs_get_target_for_id_not_empty_not_found
+    },
+    {
         "ignore_childof_from_base",
         Pairs_ignore_childof_from_base
     },
@@ -12013,7 +12028,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        105,
+        108,
         Pairs_testcases
     },
     {

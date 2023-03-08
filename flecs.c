@@ -8676,7 +8676,7 @@ ecs_entity_t ecs_get_target_for_id(
         if (column == -1) {
             return 0;
         }
-    } else {
+    } else if (table) {
         ecs_id_t *ids = table->type.array;
         int32_t i, count = table->type.count;
 

@@ -382,7 +382,8 @@
                 "scope_w_component_after_const_var",
                 "parse_with",
                 "parse_with_w_with",
-                "parse_with_w_tag"
+                "parse_with_w_tag",
+                "assign_const_w_expr"
             ]
         }, {
             "id": "Doc",

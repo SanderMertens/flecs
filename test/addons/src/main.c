@@ -376,6 +376,7 @@ void Plecs_scope_w_component_after_const_var(void);
 void Plecs_parse_with(void);
 void Plecs_parse_with_w_with(void);
 void Plecs_parse_with_w_tag(void);
+void Plecs_assign_const_w_expr(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2724,6 +2725,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "parse_with_w_tag",
         Plecs_parse_with_w_tag
+    },
+    {
+        "assign_const_w_expr",
+        Plecs_assign_const_w_expr
     }
 };
 
@@ -6111,7 +6116,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        150,
+        151,
         Plecs_testcases
     },
     {
