@@ -8676,20 +8676,24 @@ ecs_entity_t ecs_get_target_for_id(
         if (column == -1) {
             return 0;
         }
-    } else if (table) {
-        ecs_id_t *ids = table->type.array;
-        int32_t i, count = table->type.count;
+    } else {
+        entity = 0; /* Don't return entity if id was not found */
 
-        for (i = 0; i < count; i ++) {
-            ecs_id_t ent = ids[i];
-            if (ent & ECS_ID_FLAGS_MASK) {
-                /* Skip ids with pairs, roles since 0 was provided for rel */
-                break;
-            }
+        if (table) {
+            ecs_id_t *ids = table->type.array;
+            int32_t i, count = table->type.count;
 
-            if (ecs_has_id(world, ent, id)) {
-                subject = ent;
-                break;
+            for (i = 0; i < count; i ++) {
+                ecs_id_t ent = ids[i];
+                if (ent & ECS_ID_FLAGS_MASK) {
+                    /* Skip ids with pairs, roles since 0 was provided for rel */
+                    break;
+                }
+
+                if (ecs_has_id(world, ent, id)) {
+                    subject = ent;
+                    break;
+                }
             }
         }
     }
@@ -34265,26 +34269,6 @@ void http_sock_keep_alive(
 }
 
 static
-void http_sock_nonblock(ecs_http_socket_t sock) {
-    (void)sock;
-#ifdef ECS_TARGET_POSIX
-    int flags;
-    flags = fcntl(sock,F_GETFL,0);
-    if (flags == -1) {
-        ecs_warn("http: failed to set socket NONBLOCK: %s",
-            ecs_os_strerror(errno));
-        return;
-    }
-    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-    if (flags == -1) {
-        ecs_warn("http: failed to set socket NONBLOCK: %s",
-            ecs_os_strerror(errno));
-        return;
-    }
-#endif
-}
-
-static
 int http_getnameinfo(
     const struct sockaddr* addr,
     ecs_size_t addr_len,
@@ -35145,8 +35129,6 @@ void http_accept_connections(
             }
         }
 
-        http_sock_nonblock(sock);
-
         result = http_bind(sock, addr, addr_len);
         if (result) {
             ecs_err("http: failed to bind to '%s:%s': %s", 
@@ -35172,43 +35154,24 @@ void http_accept_connections(
     }
     ecs_os_mutex_unlock(srv->lock);
 
-    ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
     ecs_size_t remote_addr_len = 0;
-    http_conn_res_t conn[FD_SETSIZE];
-
-    fd_set fds, readfds;
-    FD_ZERO(&fds);
-    FD_SET(srv->sock, &fds);
 
     while (srv->should_run) {
-        readfds = fds;
-        int r = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
-        if (r == -1) {
-            ecs_err("http: select failed: %s", ecs_os_strerror(errno));
+        remote_addr_len = ECS_SIZEOF(remote_addr);
+        ecs_http_socket_t sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
+            &remote_addr_len);
+
+        if (!http_socket_is_valid(sock_conn)) {
+            if (srv->should_run) {
+                ecs_dbg("http: connection attempt failed: %s", 
+                    ecs_os_strerror(errno));
+            }
             continue;
         }
 
-        int i;
-        for (i = 0; i < FD_SETSIZE; i++) {
-            if (FD_ISSET(i, &readfds)) {
-                if (i == srv->sock) {
-                    sock_conn = http_accept(srv->sock, 
-                        (struct sockaddr*) &remote_addr, &remote_addr_len);
-                    if (!http_socket_is_valid(sock_conn)) {
-                        break;
-                    }
-
-                    FD_SET(sock_conn, &fds);
-                    conn[sock_conn] = http_init_connection(srv, sock_conn, 
-                        &remote_addr, remote_addr_len);
-                } else {
-                    if (http_recv_connection(srv, conn[i].conn, conn[i].id, i)){
-                        FD_CLR(i, &fds);
-                    }
-                }
-            }
-        }
+        http_conn_res_t conn = http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        http_recv_connection(srv, conn.conn, conn.id, sock_conn);
     }
 
 done:
