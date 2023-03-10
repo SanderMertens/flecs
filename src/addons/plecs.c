@@ -21,6 +21,14 @@ int flecs_plecs_parse(
 static void flecs_dtor_script(EcsScript *ptr) {
     ecs_os_free(ptr->script);
     ecs_vec_fini_t(NULL, &ptr->using_, ecs_entity_t);
+
+    int i, count = ptr->prop_defaults.count;
+    ecs_value_t *values = ptr->prop_defaults.array;
+    for (i = 0; i < count; i ++) {
+        ecs_value_free(ptr->world, values[i].type, values[i].ptr);
+    }
+
+    ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
 }
 
 ECS_MOVE(EcsScript, dst, src, {
@@ -204,7 +212,7 @@ void flecs_assembly_on_set(
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
         /* Create variables to hold assembly properties */
-        ecs_vars_t vars;
+        ecs_vars_t vars = {0};
         ecs_vars_init(world, &vars);
 
         /* Populate properties from assembly members */
@@ -212,8 +220,9 @@ void flecs_assembly_on_set(
         for (m = 0; m < st->members.count; m ++) {
             const ecs_member_t *member = &members[m];
 
-            ecs_expr_var_t *var = ecs_vars_declare(
-                &vars, member->name, member->type);
+            ecs_value_t v = {0}; /* Prevent allocating value */
+            ecs_expr_var_t *var = ecs_vars_declare_w_value(
+                &vars, member->name, &v);
             if (var == NULL) {
                 ecs_err("could not create prop '%s' for assembly '%s'", 
                     member->name, name);
@@ -221,6 +230,7 @@ void flecs_assembly_on_set(
             }
 
             /* Assign assembly property from assembly instance */
+            var->value.type = member->type;
             var->value.ptr = ECS_OFFSET(data, member->offset);
             var->owned = false;
         }
@@ -319,6 +329,7 @@ int flecs_assembly_create(
 
     EcsScript *script = ecs_get_mut(world, assembly, EcsScript);
     flecs_dtor_script(script);
+    script->world = world;
     script->script = script_code;
     ecs_vec_reset_t(NULL, &script->using_, ecs_entity_t);
 
@@ -1816,9 +1827,11 @@ int ecs_script_update(
 {
     int result = 0;
     bool is_defer = ecs_is_deferred(world);
+    ecs_suspend_readonly_state_t srs;
+    ecs_world_t *real_world;
     if (is_defer) {
         ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-        ecs_defer_suspend(world);
+        real_world = flecs_suspend_readonly(world, &srs);
     }
 
     ecs_script_clear(world, e, instance);
@@ -1837,7 +1850,7 @@ int ecs_script_update(
     ecs_set_with(world, prev);
 
     if (is_defer) {
-        ecs_defer_resume(world);
+        flecs_resume_readonly(real_world, &srs);
     }
 
     return result;

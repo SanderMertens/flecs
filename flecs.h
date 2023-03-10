@@ -13511,6 +13511,7 @@ typedef struct EcsScript {
     ecs_vec_t using_;
     char *script;
     ecs_vec_t prop_defaults;
+    ecs_world_t *world;
 } EcsScript;
 
 /** Parse plecs string.

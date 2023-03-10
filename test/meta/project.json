@@ -803,7 +803,8 @@
                 "struct_expr_w_struct_var",
                 "nested_struct_expr_w_struct_var",
                 "declare_w_value",
-                "redeclare_in_scope"
+                "redeclare_in_scope",
+                "init_fini_vars"
             ]
         }, {
             "id": "DeserExprOperators",

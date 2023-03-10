@@ -19176,6 +19176,14 @@ int flecs_plecs_parse(
 static void flecs_dtor_script(EcsScript *ptr) {
     ecs_os_free(ptr->script);
     ecs_vec_fini_t(NULL, &ptr->using_, ecs_entity_t);
+
+    int i, count = ptr->prop_defaults.count;
+    ecs_value_t *values = ptr->prop_defaults.array;
+    for (i = 0; i < count; i ++) {
+        ecs_value_free(ptr->world, values[i].type, values[i].ptr);
+    }
+
+    ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
 }
 
 ECS_MOVE(EcsScript, dst, src, {
@@ -19473,6 +19481,7 @@ int flecs_assembly_create(
 
     EcsScript *script = ecs_get_mut(world, assembly, EcsScript);
     flecs_dtor_script(script);
+    script->world = world;
     script->script = script_code;
     ecs_vec_reset_t(NULL, &script->using_, ecs_entity_t);
 
@@ -19960,6 +19969,7 @@ const char* plecs_parse_assign_var_expr(
         value.type = state->last_assign_id;
         value.ptr = ecs_value_new(world, state->last_assign_id);
         var = ecs_vars_lookup(&state->vars, state->var_name);
+        printf("value_new\n");
     }
 
     ptr = ecs_parse_expr(world, ptr, &value, 
@@ -19978,14 +19988,17 @@ const char* plecs_parse_assign_var_expr(
         bool ignore = state->var_is_prop && state->assembly_instance;
         if (!ignore) {
             if (var->value.ptr) {
+                printf("value_free\n");
                 ecs_value_free(world, var->value.type, var->value.ptr);
                 var->value.ptr = value.ptr;
                 var->value.type = value.type;
             }
         } else {
+            printf("value_free\n");
             ecs_value_free(world, value.type, value.ptr);
         }
     } else {
+        printf("declare_w_value\n");
         var = ecs_vars_declare_w_value(
             &state->vars, state->var_name, &value);
         if (!var) {
@@ -20969,11 +20982,6 @@ int ecs_script_update(
     ecs_vars_t *vars)
 {
     int result = 0;
-    bool is_defer = ecs_is_deferred(world);
-    if (is_defer) {
-        ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-        ecs_defer_suspend(world);
-    }
 
     ecs_script_clear(world, e, instance);
 
@@ -20989,10 +20997,6 @@ int ecs_script_update(
         result = -1;
     }
     ecs_set_with(world, prev);
-
-    if (is_defer) {
-        ecs_defer_resume(world);
-    }
 
     return result;
 }
@@ -44900,6 +44904,12 @@ void flecs_emit_propagate(
 
             ecs_record_t **records = ecs_vec_first(&table->data.records);
             for (e = 0; e < entity_count; e ++) {
+                ecs_record_t *r = records[e];
+                if (!r) {
+                    flecs_dump_backtrace(stdout);
+                    continue;
+                }
+
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
