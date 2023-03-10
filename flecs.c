@@ -3110,6 +3110,10 @@ void flecs_table_init(
 
         /* Initialize event flags */
         table->flags |= idr->flags & EcsIdEventMask;
+
+        if (idr->flags & EcsIdAlwaysOverride) {
+            table->flags |= EcsTableHasOverrides;
+        }
     }
 
     flecs_table_init_storage_table(world, table);
@@ -4325,9 +4329,6 @@ void flecs_table_move(
     ecs_vec_t *src_columns = src_table->data.columns;
     ecs_vec_t *dst_columns = dst_table->data.columns;
 
-    printf("\n\nMove [%s] <- [%s]\n", 
-        ecs_table_str(world, dst_table), ecs_table_str(world, src_table));
-
     for (; (i_new < dst_column_count) && (i_old < src_column_count); ) {
         ecs_id_t dst_id = dst_ids[i_new];
         ecs_id_t src_id = src_ids[i_old];
@@ -4337,14 +4338,6 @@ void flecs_table_move(
             ecs_vec_t *src_column = &src_columns[i_old];
             ecs_type_info_t *ti = dst_type_info[i_new];
             int32_t size = ti->size;
-
-
-            printf("     [%s] <- [%s]\n", 
-                ecs_table_str(world, dst_table), ecs_table_str(world, src_table));
-            printf("\n[%d <- %d] %s\n", i_new, i_old,
-                ecs_get_fullpath(world, ti->component));
-            printf("dst.get(%d, %d)\n", ecs_vec_count(dst_column), dst_index);
-            printf("src.get(%d, %d)\n", ecs_vec_count(src_column), src_index);
 
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
             void *dst = ecs_vec_get(dst_column, size, dst_index);
@@ -4360,40 +4353,32 @@ void flecs_table_move(
                 }
 
                 if (move) {
-                    printf("  MOVE\n");
                     move(dst, src, 1, ti);
                 } else {
-                    printf("  MEMCPY\n");
                     ecs_os_memcpy(dst, src, size);
                 }
             } else {
                 ecs_copy_t copy = ti->hooks.copy_ctor;
                 if (copy) {
-                    printf("  COPY\n");
                     copy(dst, src, 1, ti);
                 } else {
-                    printf("  MEMCPY 2\n");
                     ecs_os_memcpy(dst, src, size);
                 }
             }
         } else {
             if (dst_id < src_id) {
-                printf("  RUN_ADD\n");
                 flecs_run_add_hooks(world, dst_table, dst_type_info[i_new],
                     &dst_columns[i_new], &dst_entity, dst_id, 
                         dst_index, 1, construct);
             } else {
-                printf("  RUN_REMOVE\n");
                 flecs_run_remove_hooks(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
                         src_index, 1, use_move_dtor);
             }
         }
 
-        printf(" - inc (%d, %d)\n", i_new, i_old);
         i_new += dst_id <= src_id;
         i_old += dst_id >= src_id;
-        printf("   inc (%d, %d)\n", i_new, i_old);
     }
 
     for (; (i_new < dst_column_count); i_new ++) {
@@ -9798,7 +9783,9 @@ bool flecs_defer_end(
                     world->info.cmd.clear_count ++;
                     break;
                 case EcsOpOnDeleteAction:
+                    ecs_defer_begin(world);
                     flecs_on_delete(world, id, e, false);
+                    ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;
                 case EcsOpEnable:
@@ -19851,9 +19838,7 @@ int plecs_create_term(
 
     if (subj) {
         if (!obj) {
-            printf("pred %s, %s\n", ecs_id_str(world, subj), ecs_id_str(world, pred));
             ecs_add_id(world, subj, pred);
-            printf("pred done\n");
             state->last_assign_id = pred;
         } else {
             ecs_add_pair(world, subj, pred, obj);
@@ -20513,7 +20498,6 @@ const char *plecs_parse_plecs_term(
     const char *ptr,
     plecs_state_t *state)
 {
-    printf("\n\nPTR --\n%s\n", ptr);
     ecs_term_t term = {0};
     ecs_entity_t decl_id = 0;
     if (state->decl_stmt) {
@@ -42698,24 +42682,24 @@ const ecs_entity_t EcsWildcard =                      ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                           ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsThis =                          ECS_HI_COMPONENT_ID + 12;
 const ecs_entity_t EcsVariable =                      ECS_HI_COMPONENT_ID + 13;
-
 const ecs_entity_t EcsTransitive =                    ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsReflexive =                     ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsSymmetric =                     ECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsFinal =                         ECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsDontInherit =                   ECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsTag =                           ECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsUnion =                         ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsExclusive =                     ECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsAcyclic =                       ECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsTraversable =                   ECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 24;
-const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsAlwaysOverride =                ECS_HI_COMPONENT_ID + 19;
+const ecs_entity_t EcsTag =                           ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsUnion =                         ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsExclusive =                     ECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsAcyclic =                       ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsTraversable =                   ECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsWith =                          ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsOneOf =                         ECS_HI_COMPONENT_ID + 26;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 27;
-const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsChildOf =                       ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsIsA =                           ECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsDependsOn =                     ECS_HI_COMPONENT_ID + 29;
 
 /* Identifier tags */
 const ecs_entity_t EcsName =                          ECS_HI_COMPONENT_ID + 30;
@@ -42803,7 +42787,7 @@ const ecs_entity_t ecs_id(EcsMember) =                ECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t ecs_id(EcsStruct) =                ECS_HI_COMPONENT_ID + 103;
 const ecs_entity_t ecs_id(EcsArray) =                 ECS_HI_COMPONENT_ID + 104;
 const ecs_entity_t ecs_id(EcsVector) =                ECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsOpaque) =        ECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsOpaque) =                ECS_HI_COMPONENT_ID + 106;
 const ecs_entity_t ecs_id(EcsUnit) =                  ECS_HI_COMPONENT_ID + 107;
 const ecs_entity_t ecs_id(EcsUnitPrefix) =            ECS_HI_COMPONENT_ID + 108;
 const ecs_entity_t EcsConstant =                      ECS_HI_COMPONENT_ID + 109;
@@ -54211,7 +54195,7 @@ void flecs_add_overrides_for_base(
     if (!base_table) {
         return;
     }
-    
+
     ecs_id_t *ids = base_table->type.array;
 
     ecs_flags32_t flags = base_table->flags;
@@ -54221,6 +54205,12 @@ void flecs_add_overrides_for_base(
             ecs_id_t id = ids[i];
             if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
                 flecs_type_add(world, dst_type, id & ~ECS_OVERRIDE);
+            } else {
+                ecs_table_record_t *tr = &base_table->records[i];
+                ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+                if (idr->flags & EcsIdAlwaysOverride) {
+                    flecs_type_add(world, dst_type, id);
+                }
             }
         }
     }
@@ -56571,6 +56561,12 @@ void flecs_register_dont_inherit(ecs_iter_t *it) {
 }
 
 static
+void flecs_register_always_override(ecs_iter_t *it) {
+    flecs_register_id_flag_for_relation(it, EcsAlwaysOverride, 
+        EcsIdAlwaysOverride, EcsIdAlwaysOverride, 0);
+}
+
+static
 void flecs_register_with(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsWith, EcsIdWith, 0, 0);
 }
@@ -56785,6 +56781,8 @@ void flecs_bootstrap_builtin(
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
+    ecs_defer_begin(world);
+
     int32_t index = flecs_table_append(world, table, entity, record, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
@@ -56809,6 +56807,8 @@ void flecs_bootstrap_builtin(
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
     symbol_col[index].index_hash = 0;
     symbol_col[index].index = NULL;
+
+    ecs_defer_end(world);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -57025,6 +57025,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsDontInherit);
+    flecs_bootstrap_tag(world, EcsAlwaysOverride);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
@@ -57150,10 +57151,15 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = ecs_entity(world, { .name = "RegisterDontInherit" }),
         .filter.terms = {{ .id = EcsDontInherit, .src.flags = EcsSelf }, match_prefab },
         .events = {EcsOnAdd},
         .callback = flecs_register_dont_inherit
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = EcsAlwaysOverride, .src.flags = EcsSelf } },
+        .events = {EcsOnAdd},
+        .callback = flecs_register_always_override
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){

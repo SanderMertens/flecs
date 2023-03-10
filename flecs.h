@@ -268,6 +268,7 @@ extern "C" {
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
 #define EcsIdUnion                     (1u << 11)
+#define EcsIdAlwaysOverride            (1u << 12)
 
 #define EcsIdHasOnAdd                  (1u << 15) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 16) 
@@ -3868,6 +3869,13 @@ FLECS_API extern const ecs_entity_t EcsFinal;
  *   if DontInherit(X) and X(B) and IsA(A, B) then X(A) is false.
  */
 FLECS_API extern const ecs_entity_t EcsDontInherit;
+
+/** Ensures a component is always overridden.
+ * 
+ * Behavior:
+ *   As if the component is added together with OVERRIDE | T
+ */
+FLECS_API extern const ecs_entity_t EcsAlwaysOverride;
 
 /** Marks relationship as commutative.
  * Behavior:

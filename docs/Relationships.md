@@ -970,7 +970,7 @@ ecs_entity_t base = ecs_new_id(world);
 ecs_add_id(world, base, TagA);
 ecs_add_id(world, base, TagB);
 
-ecs_entity_t inst = ecs_new_id(world);
+ecs_entity_t inst = ecs_new_w_pair(world, base);
 ecs_has_id(world, inst, TagA); // true
 ecs_has_id(world, inst, TagB); // false
 ```
@@ -990,6 +990,39 @@ inst.has<TagB>(); // false
 ```
 
 The builtin `Prefab`, `Disabled`, `Identifier` and `ChildOf` tags/relationships are marked as `DontInherit`.
+
+### AlwaysOverride property
+The `AlwaysOverride` property ensures that a component is always automatically overridden when an inheritance (`IsA`) relationship is added. The behavior of this property is as if `OVERRIDE | Component` is always added together with `Component`.
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_add_id(world, ecs_id(Position), EcsAlwaysOverride);
+
+ecs_entity_t base = ecs_new_id(world);
+ecs_set(world, base, Position, {10, 20});
+ecs_set(world, base, Velocity, {1, 2});
+
+ecs_entity_t inst = ecs_new_w_pair(world, base);
+ecs_has(world, inst, Position); // true
+ecs_has(world, inst, Velocity); // true
+ecs_owns(world, inst, Position); // true
+ecs_owns(world, inst, Velocity); // false
+```
+```cpp
+world.component<Position>().add(flecs::AlwaysOverride);
+
+auto base = world.entity()
+  .set<Position>({10, 20})
+  .add<Velocity>({1, 2})
+
+auto inst = world.entity().is_a(base);
+inst.has<Position>(); // true
+inst.has<Velocity>(); // true
+inst.owns<Position>(); // true
+inst.owns<Velocity>(); // false
+```
 
 ### Transitive property
 Relationships can be marked as transitive. A formal-ish definition if transitivity in the context of relationships is:

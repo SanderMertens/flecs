@@ -66,6 +66,7 @@ extern "C" {
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
 #define EcsIdUnion                     (1u << 11)
+#define EcsIdAlwaysOverride            (1u << 12)
 
 #define EcsIdHasOnAdd                  (1u << 15) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 16) 

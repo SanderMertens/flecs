@@ -684,9 +684,7 @@ int plecs_create_term(
 
     if (subj) {
         if (!obj) {
-            printf("pred %s, %s\n", ecs_id_str(world, subj), ecs_id_str(world, pred));
             ecs_add_id(world, subj, pred);
-            printf("pred done\n");
             state->last_assign_id = pred;
         } else {
             ecs_add_pair(world, subj, pred, obj);
@@ -1346,7 +1344,6 @@ const char *plecs_parse_plecs_term(
     const char *ptr,
     plecs_state_t *state)
 {
-    printf("\n\nPTR --\n%s\n", ptr);
     ecs_term_t term = {0};
     ecs_entity_t decl_id = 0;
     if (state->decl_stmt) {
