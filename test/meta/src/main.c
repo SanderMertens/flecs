@@ -781,6 +781,8 @@ void DeserExprOperators_sub_3_int_literals(void);
 void DeserExprOperators_mul_3_int_literals(void);
 void DeserExprOperators_div_3_int_literals(void);
 void DeserExprOperators_int_to_bool(void);
+void DeserExprOperators_bool_to_int(void);
+void DeserExprOperators_bool_to_uint(void);
 void DeserExprOperators_add_mul_3_int_literals(void);
 void DeserExprOperators_sub_mul_3_int_literals(void);
 void DeserExprOperators_div_mul_3_int_literals(void);
@@ -3886,6 +3888,14 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_int_to_bool
     },
     {
+        "bool_to_int",
+        DeserExprOperators_bool_to_int
+    },
+    {
+        "bool_to_uint",
+        DeserExprOperators_bool_to_uint
+    },
+    {
         "add_mul_3_int_literals",
         DeserExprOperators_add_mul_3_int_literals
     },
@@ -4402,7 +4412,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        91,
+        93,
         DeserExprOperators_testcases
     },
     {
