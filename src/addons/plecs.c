@@ -34,9 +34,13 @@ static void flecs_dtor_script(EcsScript *ptr) {
 ECS_MOVE(EcsScript, dst, src, {
     flecs_dtor_script(dst);
     dst->using_ = src->using_;
+    dst->prop_defaults = src->prop_defaults;
     dst->script = src->script;
+    dst->world = src->world;
     ecs_os_zeromem(&src->using_);
+    ecs_os_zeromem(&src->prop_defaults);
     src->script = NULL;
+    src->world = NULL;
 })
 
 ECS_DTOR(EcsScript, ptr, {

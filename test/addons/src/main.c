@@ -400,6 +400,7 @@ void Plecs_assembly_w_prefab_tree(void);
 void Plecs_assembly_w_nested_assembly(void);
 void Plecs_instantiate_prefab_w_assembly(void);
 void Plecs_assembly_w_prefab_w_assembly(void);
+void Plecs_3_assemblies(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2844,6 +2845,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_w_prefab_w_assembly",
         Plecs_assembly_w_prefab_w_assembly
+    },
+    {
+        "3_assemblies",
+        Plecs_3_assemblies
     }
 };
 
@@ -6231,7 +6236,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        174,
+        175,
         Plecs_testcases
     },
     {
