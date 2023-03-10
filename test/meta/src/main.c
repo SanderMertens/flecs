@@ -767,6 +767,7 @@ void Vars_struct_expr_w_struct_var(void);
 void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_declare_w_value(void);
 void Vars_redeclare_in_scope(void);
+void Vars_init_fini_vars(void);
 
 // Testsuite 'DeserExprOperators'
 void DeserExprOperators_add_2_int_literals(void);
@@ -3832,6 +3833,10 @@ bake_test_case Vars_testcases[] = {
     {
         "redeclare_in_scope",
         Vars_redeclare_in_scope
+    },
+    {
+        "init_fini_vars",
+        Vars_init_fini_vars
     }
 };
 
@@ -4390,7 +4395,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        14,
+        15,
         Vars_testcases
     },
     {

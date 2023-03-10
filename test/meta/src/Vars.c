@@ -392,3 +392,15 @@ void Vars_redeclare_in_scope() {
 
     ecs_fini(world);
 }
+
+void Vars_init_fini_vars() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_vars_fini(&vars);
+    ecs_fini(world);
+
+    test_assert(true);
+}

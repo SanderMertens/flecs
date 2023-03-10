@@ -306,6 +306,12 @@ void flecs_emit_propagate(
 
             ecs_record_t **records = ecs_vec_first(&table->data.records);
             for (e = 0; e < entity_count; e ++) {
+                ecs_record_t *r = records[e];
+                if (!r) {
+                    flecs_dump_backtrace(stdout);
+                    continue;
+                }
+
                 ecs_id_record_t *idr_t = records[e]->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
