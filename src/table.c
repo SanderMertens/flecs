@@ -725,27 +725,9 @@ void flecs_on_component_callback(
     ecs_type_info_t *ti)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_iter_t it = { .field_count = 1 };
-    it.entities = entities;
-
-    ecs_size_t size = ti->size;
-    void *ptr = ecs_vec_get(column, size, row);
-
-    flecs_iter_init(world, &it, flecs_iter_cache_all);
-    it.world = world;
-    it.real_world = world;
-    it.table = table;
-    it.ptrs[0] = ptr;
-    it.sizes[0] = size;
-    it.ids[0] = id;
-    it.event = event;
-    it.event_id = id;
-    it.ctx = ti->hooks.ctx;
-    it.binding_ctx = ti->hooks.binding_ctx;
-    it.count = count;
-    flecs_iter_validate(&it);
-    callback(&it);
-    ecs_iter_fini(&it);
+    void *ptr = ecs_vec_get(column, ti->size, row);
+    flecs_invoke_hook(
+        world, table, count, row, entities, ptr, id, ti, event, callback);
 }
 
 static
@@ -756,11 +738,26 @@ void flecs_ctor_component(
     int32_t count)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_xtor_t ctor = ti->hooks.ctor;
     if (ctor) {
         void *ptr = ecs_vec_get(column, ti->size, row);
         ctor(ptr, count, ti);
+    }
+}
+
+static
+void flecs_dtor_component(
+    ecs_type_info_t *ti,
+    ecs_vec_t *column,
+    int32_t row,
+    int32_t count)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_xtor_t dtor = ti->hooks.dtor;
+    if (dtor) {
+        void *ptr = ecs_vec_get(column, ti->size, row);
+        dtor(ptr, count, ti);
     }
 }
 
@@ -786,22 +783,6 @@ void flecs_run_add_hooks(
     if (on_add) {
         flecs_on_component_callback(world, table, on_add, EcsOnAdd, column,
             entities, id, row, count, ti);
-    }
-}
-
-static
-void flecs_dtor_component(
-    ecs_type_info_t *ti,
-    ecs_vec_t *column,
-    int32_t row,
-    int32_t count)
-{
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        void *ptr = ecs_vec_get(column, ti->size, row);
-        dtor(ptr, count, ti);
     }
 }
 

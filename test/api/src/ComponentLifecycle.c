@@ -2898,3 +2898,105 @@ void ComponentLifecycle_ctor_move_dtor_from_move_ctor() {
 
     ecs_fini(world);
 }
+
+static int hook_w_offset_invoked = 0;
+static int hook_w_offset_offset = 0;
+static Position hook_w_offset_position;
+
+static
+void hook_w_offset(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 1);
+    test_int(it->count, 1);
+    hook_w_offset_offset = it->offset;
+    hook_w_offset_invoked ++;
+    hook_w_offset_position = *p;
+}
+
+void ComponentLifecycle_on_add_hook_check_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = hook_w_offset
+    });
+
+    ecs_set(world, 0, Position, {10, 20});
+    test_int(hook_w_offset_invoked, 1);
+    test_int(hook_w_offset_offset, 0);
+
+    ecs_set(world, 0, Position, {30, 40});
+    test_int(hook_w_offset_invoked, 2);
+    test_int(hook_w_offset_offset, 1);
+
+    ecs_set(world, 0, Position, {50, 60});
+    test_int(hook_w_offset_invoked, 3);
+    test_int(hook_w_offset_offset, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_remove_hook_check_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = hook_w_offset
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {50, 60});
+    test_int(hook_w_offset_invoked, 0);
+
+    ecs_remove(world, e3, Position);
+    test_int(hook_w_offset_invoked, 1);
+    test_int(hook_w_offset_offset, 2);
+    test_int(hook_w_offset_position.x, 50);
+    test_int(hook_w_offset_position.y, 60);
+
+    ecs_remove(world, e2, Position);
+    test_int(hook_w_offset_invoked, 2);
+    test_int(hook_w_offset_offset, 1);
+    test_int(hook_w_offset_position.x, 30);
+    test_int(hook_w_offset_position.y, 40);
+
+    ecs_remove(world, e1, Position);
+    test_int(hook_w_offset_invoked, 3);
+    test_int(hook_w_offset_offset, 0);
+    test_int(hook_w_offset_position.x, 10);
+    test_int(hook_w_offset_position.y, 20);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_set_hook_check_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = hook_w_offset
+    });
+
+    ecs_set(world, 0, Position, {10, 20});
+    test_int(hook_w_offset_invoked, 1);
+    test_int(hook_w_offset_offset, 0);
+    test_int(hook_w_offset_position.x, 10);
+    test_int(hook_w_offset_position.y, 20);
+
+    ecs_set(world, 0, Position, {30, 40});
+    test_int(hook_w_offset_invoked, 2);
+    test_int(hook_w_offset_offset, 1);
+    test_int(hook_w_offset_position.x, 30);
+    test_int(hook_w_offset_position.y, 40);
+
+    ecs_set(world, 0, Position, {50, 60});
+    test_int(hook_w_offset_invoked, 3);
+    test_int(hook_w_offset_offset, 2);
+    test_int(hook_w_offset_position.x, 50);
+    test_int(hook_w_offset_position.y, 60);
+
+    ecs_fini(world);
+}

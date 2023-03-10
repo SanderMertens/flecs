@@ -907,7 +907,10 @@
                 "with_before_hooks",
                 "move_ctor_on_move",
                 "ptr_to_self",
-                "ctor_move_dtor_from_move_ctor"
+                "ctor_move_dtor_from_move_ctor",
+                "on_add_hook_check_offset",
+                "on_remove_hook_check_offset",
+                "on_set_hook_check_offset"
             ]
         }, {
             "id": "Sorting",

@@ -857,6 +857,9 @@ void ComponentLifecycle_with_before_hooks(void);
 void ComponentLifecycle_move_ctor_on_move(void);
 void ComponentLifecycle_ptr_to_self(void);
 void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void);
+void ComponentLifecycle_on_add_hook_check_offset(void);
+void ComponentLifecycle_on_remove_hook_check_offset(void);
+void ComponentLifecycle_on_set_hook_check_offset(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -5679,6 +5682,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_move_dtor_from_move_ctor",
         ComponentLifecycle_ctor_move_dtor_from_move_ctor
+    },
+    {
+        "on_add_hook_check_offset",
+        ComponentLifecycle_on_add_hook_check_offset
+    },
+    {
+        "on_remove_hook_check_offset",
+        ComponentLifecycle_on_remove_hook_check_offset
+    },
+    {
+        "on_set_hook_check_offset",
+        ComponentLifecycle_on_set_hook_check_offset
     }
 };
 
@@ -11979,7 +11994,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        79,
+        82,
         ComponentLifecycle_testcases
     },
     {

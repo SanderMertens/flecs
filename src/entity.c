@@ -976,7 +976,6 @@ error:
 }
 
 /* -- Private functions -- */
-static
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
