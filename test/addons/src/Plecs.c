@@ -5442,8 +5442,92 @@ void Plecs_assembly_w_prefab_w_assembly() {
     {
         const void *ptr = ecs_get_id(world, tree_prefab, tree);
         test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
         test_str(str, "{count: 0}");
+        ecs_os_free(str);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_3_assemblies() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop t: flecs.meta.f32 = 10"
+    LINE "}"
+    LINE ""
+    LINE "assembly Forest {"
+    LINE "  prop f: flecs.meta.f32 = 20"
+    LINE "}"
+    LINE ""
+    LINE "assembly Park {"
+    LINE "  prop p: flecs.meta.f32 = 30"
+    LINE "}"
+    LINE ""
+    LINE "a :- Tree{}"
+    LINE "b :- Forest{}"
+    LINE "c :- Park{}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    test_assert(forest != 0);
+    ecs_entity_t park = ecs_lookup_fullpath(world, "Park");
+    test_assert(park != 0);
+    
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+    ecs_entity_t b = ecs_lookup_fullpath(world, "b");
+    test_assert(b != 0);
+    ecs_entity_t c = ecs_lookup_fullpath(world, "c");
+    test_assert(c != 0);
+
+    {
+        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 1);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "t");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    }  
+    {
+        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 1);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "f");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    }
+    {
+        const EcsStruct *st = ecs_get(world, park, EcsStruct);
+        test_assert(st != NULL);
+        test_int(st->members.count, 1);
+        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "p");
+        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    }
+    
+    {
+        const void *ptr = ecs_get_id(world, a, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{t: 10}");
+        ecs_os_free(str);
+    }
+    {
+        const void *ptr = ecs_get_id(world, b, forest);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, forest, ptr);
+        test_str(str, "{f: 20}");
+        ecs_os_free(str);
+    }
+    {
+        const void *ptr = ecs_get_id(world, c, park);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, park, ptr);
+        test_str(str, "{p: 30}");
         ecs_os_free(str);
     }
 

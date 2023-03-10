@@ -406,7 +406,8 @@
                 "assembly_w_prefab_tree",
                 "assembly_w_nested_assembly",
                 "instantiate_prefab_w_assembly",
-                "assembly_w_prefab_w_assembly"
+                "assembly_w_prefab_w_assembly",
+                "3_assemblies"
             ]
         }, {
             "id": "Doc",
