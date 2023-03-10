@@ -164,6 +164,44 @@ void DeserExprOperators_int_to_bool() {
     ecs_fini(world);
 }
 
+void DeserExprOperators_bool_to_int() {
+    ecs_world_t *world = ecs_init();
+
+    int32_t i = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_i32_t), .ptr = &i };
+
+    test_assert(ecs_parse_expr(world, "true", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_i32_t*)v.ptr, 1);
+
+    test_assert(ecs_parse_expr(world, "false", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_i32_t*)v.ptr, 0);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_bool_to_uint() {
+    ecs_world_t *world = ecs_init();
+
+    uint32_t i = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_u32_t), .ptr = &i };
+
+    test_assert(ecs_parse_expr(world, "true", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u32_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_u32_t*)v.ptr, 1);
+
+    test_assert(ecs_parse_expr(world, "false", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_u32_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_u32_t*)v.ptr, 0);
+
+    ecs_fini(world);
+}
+
 void DeserExprOperators_add_mul_3_int_literals() {
     ecs_world_t *world = ecs_init();
 
@@ -1714,3 +1752,4 @@ void DeserExprOperators_mul_int_shift_left_int_mul_int() {
 
     ecs_fini(world);
 }
+

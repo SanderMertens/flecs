@@ -19366,7 +19366,7 @@ void flecs_assembly_on_set(
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
         /* Create variables to hold assembly properties */
-        ecs_vars_t vars;
+        ecs_vars_t vars = {0};
         ecs_vars_init(world, &vars);
 
         /* Populate properties from assembly members */
@@ -19374,8 +19374,9 @@ void flecs_assembly_on_set(
         for (m = 0; m < st->members.count; m ++) {
             const ecs_member_t *member = &members[m];
 
-            ecs_expr_var_t *var = ecs_vars_declare(
-                &vars, member->name, member->type);
+            ecs_value_t v = {0}; /* Prevent allocating value */
+            ecs_expr_var_t *var = ecs_vars_declare_w_value(
+                &vars, member->name, &v);
             if (var == NULL) {
                 ecs_err("could not create prop '%s' for assembly '%s'", 
                     member->name, name);
@@ -19383,6 +19384,7 @@ void flecs_assembly_on_set(
             }
 
             /* Assign assembly property from assembly instance */
+            var->value.type = member->type;
             var->value.ptr = ECS_OFFSET(data, member->offset);
             var->owned = false;
         }
@@ -19969,7 +19971,6 @@ const char* plecs_parse_assign_var_expr(
         value.type = state->last_assign_id;
         value.ptr = ecs_value_new(world, state->last_assign_id);
         var = ecs_vars_lookup(&state->vars, state->var_name);
-        printf("value_new\n");
     }
 
     ptr = ecs_parse_expr(world, ptr, &value, 
@@ -19988,17 +19989,14 @@ const char* plecs_parse_assign_var_expr(
         bool ignore = state->var_is_prop && state->assembly_instance;
         if (!ignore) {
             if (var->value.ptr) {
-                printf("value_free\n");
                 ecs_value_free(world, var->value.type, var->value.ptr);
                 var->value.ptr = value.ptr;
                 var->value.type = value.type;
             }
         } else {
-            printf("value_free\n");
             ecs_value_free(world, value.type, value.ptr);
         }
     } else {
-        printf("declare_w_value\n");
         var = ecs_vars_declare_w_value(
             &state->vars, state->var_name, &value);
         if (!var) {
@@ -20982,6 +20980,13 @@ int ecs_script_update(
     ecs_vars_t *vars)
 {
     int result = 0;
+    bool is_defer = ecs_is_deferred(world);
+    ecs_suspend_readonly_state_t srs;
+    ecs_world_t *real_world;
+    if (is_defer) {
+        ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+        real_world = flecs_suspend_readonly(world, &srs);
+    }
 
     ecs_script_clear(world, e, instance);
 
@@ -20997,6 +21002,10 @@ int ecs_script_update(
         result = -1;
     }
     ecs_set_with(world, prev);
+
+    if (is_defer) {
+        flecs_resume_readonly(real_world, &srs);
+    }
 
     return result;
 }
@@ -24228,6 +24237,7 @@ int ecs_meta_set_bool(
 
     switch(op->kind) {
     cases_T_bool(ptr, value);
+    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     case EcsOpOpaque: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);

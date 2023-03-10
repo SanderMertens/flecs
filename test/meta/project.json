@@ -820,6 +820,8 @@
                 "mul_3_int_literals",
                 "div_3_int_literals",
                 "int_to_bool",
+                "bool_to_int",
+                "bool_to_uint",
                 "add_mul_3_int_literals",
                 "sub_mul_3_int_literals",
                 "div_mul_3_int_literals",
