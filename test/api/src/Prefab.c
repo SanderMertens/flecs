@@ -4160,3 +4160,75 @@ void Prefab_auto_override_copy_once() {
 
     ecs_fini(world);
 }
+
+void Prefab_always_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsAlwaysOverride);
+
+    ecs_entity_t b = ecs_new_id(world);
+    ecs_set(world, b, Position, {10, 20});
+    ecs_set(world, b, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, b);
+    test_assert(ecs_has(world, i, Position));
+    test_assert(ecs_has(world, i, Velocity));
+    test_assert(ecs_owns(world, i, Position));
+    test_assert(!ecs_owns(world, i, Velocity));
+
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        const Velocity *ptr = ecs_get(world, i, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_always_override_pair() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, RelA, EcsAlwaysOverride);
+
+    ecs_entity_t b = ecs_new_id(world);
+    ecs_set_pair_second(world, b, RelA, Position, {10, 20});
+    ecs_set_pair_second(world, b, RelB, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, b);
+    test_assert(ecs_has_pair(world, i, RelA, ecs_id(Position)));
+    test_assert(ecs_has_pair(world, i, RelB, ecs_id(Velocity)));
+    test_assert(ecs_owns_pair(world, i, RelA, ecs_id(Position)));
+    test_assert(!ecs_owns_pair(world, i, RelB, ecs_id(Velocity)));
+
+    {
+        const Position *ptr = ecs_get_pair_second(world, i, RelA, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        const Velocity *ptr = ecs_get_pair_second(world, i, RelB, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}

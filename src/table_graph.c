@@ -753,7 +753,7 @@ void flecs_add_overrides_for_base(
     if (!base_table) {
         return;
     }
-    
+
     ecs_id_t *ids = base_table->type.array;
 
     ecs_flags32_t flags = base_table->flags;
@@ -763,6 +763,12 @@ void flecs_add_overrides_for_base(
             ecs_id_t id = ids[i];
             if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
                 flecs_type_add(world, dst_type, id & ~ECS_OVERRIDE);
+            } else {
+                ecs_table_record_t *tr = &base_table->records[i];
+                ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+                if (idr->flags & EcsIdAlwaysOverride) {
+                    flecs_type_add(world, dst_type, id);
+                }
             }
         }
     }

@@ -4395,7 +4395,9 @@ bool flecs_defer_end(
                     world->info.cmd.clear_count ++;
                     break;
                 case EcsOpOnDeleteAction:
+                    ecs_defer_begin(world);
                     flecs_on_delete(world, id, e, false);
+                    ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;
                 case EcsOpEnable:

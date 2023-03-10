@@ -2146,7 +2146,9 @@
                 "prefab_child_w_union",
                 "override_twice_w_add",
                 "override_twice_w_set",
-                "auto_override_copy_once"
+                "auto_override_copy_once",
+                "always_override",
+                "always_override_pair"
             ]
         }, {
             "id": "World",

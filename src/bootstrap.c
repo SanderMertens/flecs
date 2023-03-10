@@ -332,6 +332,12 @@ void flecs_register_dont_inherit(ecs_iter_t *it) {
 }
 
 static
+void flecs_register_always_override(ecs_iter_t *it) {
+    flecs_register_id_flag_for_relation(it, EcsAlwaysOverride, 
+        EcsIdAlwaysOverride, EcsIdAlwaysOverride, 0);
+}
+
+static
 void flecs_register_with(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsWith, EcsIdWith, 0, 0);
 }
@@ -546,6 +552,8 @@ void flecs_bootstrap_builtin(
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
+    ecs_defer_begin(world);
+
     int32_t index = flecs_table_append(world, table, entity, record, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
@@ -570,6 +578,8 @@ void flecs_bootstrap_builtin(
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
     symbol_col[index].index_hash = 0;
     symbol_col[index].index = NULL;
+
+    ecs_defer_end(world);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -786,6 +796,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsDontInherit);
+    flecs_bootstrap_tag(world, EcsAlwaysOverride);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
@@ -911,10 +922,15 @@ void flecs_bootstrap(
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = ecs_entity(world, { .name = "RegisterDontInherit" }),
         .filter.terms = {{ .id = EcsDontInherit, .src.flags = EcsSelf }, match_prefab },
         .events = {EcsOnAdd},
         .callback = flecs_register_dont_inherit
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = EcsAlwaysOverride, .src.flags = EcsSelf } },
+        .events = {EcsOnAdd},
+        .callback = flecs_register_always_override
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
