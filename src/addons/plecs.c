@@ -315,6 +315,8 @@ int flecs_assembly_create(
         return -1;
     }
 
+    ecs_add_id(world, assembly, EcsAlwaysOverride);
+
     EcsScript *script = ecs_get_mut(world, assembly, EcsScript);
     flecs_dtor_script(script);
     script->script = script_code;
@@ -336,7 +338,6 @@ int flecs_assembly_create(
 
     ecs_set_hooks_id(world, assembly, &(ecs_type_hooks_t) {
         .ctor = flecs_assembly_ctor,
-        .on_add = flecs_assembly_on_add,
         .on_set = flecs_assembly_on_set,
         .on_remove = flecs_assembly_on_remove,
         .ctx = world
