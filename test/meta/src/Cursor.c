@@ -1846,6 +1846,309 @@ void Cursor_struct_member_2_nested_i32_i32_reverse() {
     ecs_fini(world);
 }
 
+void Cursor_struct_dotmember() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1},
+        }
+    });
+
+    T value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+    test_ok( ecs_meta_dotmember(&cur, "n_1.y"));
+    test_ok( ecs_meta_set_int(&cur, 20) );
+    test_ok( ecs_meta_dotmember(&cur, "n_1.x"));
+    test_ok( ecs_meta_set_int(&cur, 10) );
+
+    test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+    test_ok( ecs_meta_set_int(&cur, 40) );
+    test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+    test_ok( ecs_meta_set_int(&cur, 30) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_bool(value.n_1.x, 10);
+    test_bool(value.n_1.y, 20);
+    test_bool(value.n_2.x, 30);
+    test_bool(value.n_2.y, 40);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_dotmember_assign_twice() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1},
+        }
+    });
+
+    T value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+    test_ok( ecs_meta_dotmember(&cur, "n_1.y"));
+    test_ok( ecs_meta_set_int(&cur, 20) );
+    test_ok( ecs_meta_set_int(&cur, 25) );
+    test_ok( ecs_meta_dotmember(&cur, "n_1.x"));
+    test_ok( ecs_meta_set_int(&cur, 10) );
+    test_ok( ecs_meta_set_int(&cur, 15) );
+
+    test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+    test_ok( ecs_meta_set_int(&cur, 40) );
+    test_ok( ecs_meta_set_int(&cur, 45) );
+    test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+    test_ok( ecs_meta_set_int(&cur, 30) );
+    test_ok( ecs_meta_set_int(&cur, 35) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_bool(value.n_1.x, 15);
+    test_bool(value.n_1.y, 25);
+    test_bool(value.n_2.x, 35);
+    test_bool(value.n_2.y, 45);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_member_after_dotmember() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1},
+        }
+    });
+
+    T value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+        test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+        test_ok( ecs_meta_set_int(&cur, 40) );
+        test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+        test_ok( ecs_meta_set_int(&cur, 30) );
+
+        test_ok( ecs_meta_member(&cur, "n_1"));
+        test_ok( ecs_meta_push(&cur) );
+            test_ok( ecs_meta_member(&cur, "y"));
+            test_ok( ecs_meta_set_int(&cur, 20) );
+            test_ok( ecs_meta_member(&cur, "x"));
+            test_ok( ecs_meta_set_int(&cur, 10) );
+        test_ok( ecs_meta_pop(&cur) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_bool(value.n_1.x, 10);
+    test_bool(value.n_1.y, 20);
+    test_bool(value.n_2.x, 30);
+    test_bool(value.n_2.y, 40);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_next_after_dotmember() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1},
+        }
+    });
+
+    T value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+        test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+        test_ok( ecs_meta_set_int(&cur, 40) );
+        test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+        test_ok( ecs_meta_set_int(&cur, 30) );
+        test_ok( ecs_meta_next(&cur));
+
+        test_ok( ecs_meta_member(&cur, "n_1"));
+        test_ok( ecs_meta_push(&cur) );
+            test_ok( ecs_meta_member(&cur, "y"));
+            test_ok( ecs_meta_set_int(&cur, 20) );
+            test_ok( ecs_meta_member(&cur, "x"));
+            test_ok( ecs_meta_set_int(&cur, 10) );
+        test_ok( ecs_meta_pop(&cur) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_bool(value.n_1.x, 10);
+    test_bool(value.n_1.y, 20);
+    test_bool(value.n_2.x, 30);
+    test_bool(value.n_2.y, 40);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_pop_after_dotmember() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N2;
+
+    typedef struct {
+        N2 n_1;
+        N2 n_2;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n2 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N2"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"n_1", n2},
+            {"n_2", n2}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1},
+        }
+    });
+
+    T value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+        test_ok( ecs_meta_member(&cur, "n_2"));
+        test_ok( ecs_meta_push(&cur) );
+            test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+            test_ok( ecs_meta_set_int(&cur, 80) );
+            test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+            test_ok( ecs_meta_set_int(&cur, 70) );
+            test_ok( ecs_meta_dotmember(&cur, "n_1.y"));
+            test_ok( ecs_meta_set_int(&cur, 60) );
+            test_ok( ecs_meta_dotmember(&cur, "n_1.x"));
+            test_ok( ecs_meta_set_int(&cur, 50) );
+        test_ok( ecs_meta_pop(&cur) );
+
+        test_ok( ecs_meta_member(&cur, "n_1"));
+        test_ok( ecs_meta_push(&cur) );
+            test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
+            test_ok( ecs_meta_set_int(&cur, 40) );
+            test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
+            test_ok( ecs_meta_set_int(&cur, 30) );
+            test_ok( ecs_meta_dotmember(&cur, "n_1.y"));
+            test_ok( ecs_meta_set_int(&cur, 20) );
+            test_ok( ecs_meta_dotmember(&cur, "n_1.x"));
+            test_ok( ecs_meta_set_int(&cur, 10) );
+        test_ok( ecs_meta_pop(&cur) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_bool(value.n_1.n_1.x, 10);
+    test_bool(value.n_1.n_1.y, 20);
+    test_bool(value.n_1.n_2.x, 30);
+    test_bool(value.n_1.n_2.y, 40);
+
+    test_bool(value.n_2.n_1.x, 50);
+    test_bool(value.n_2.n_1.y, 60);
+    test_bool(value.n_2.n_2.x, 70);
+    test_bool(value.n_2.n_2.y, 80);
+
+    ecs_fini(world);
+}
+
 void Cursor_struct_w_array_type_i32_i32() {
     typedef int32_t N1[2];
 

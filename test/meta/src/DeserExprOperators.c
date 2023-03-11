@@ -1752,4 +1752,3 @@ void DeserExprOperators_mul_int_shift_left_int_mul_int() {
 
     ecs_fini(world);
 }
-
