@@ -314,6 +314,11 @@ void Cursor_struct_member_i32_i32_reverse(void);
 void Cursor_struct_member_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32_reverse(void);
+void Cursor_struct_dotmember(void);
+void Cursor_struct_dotmember_assign_twice(void);
+void Cursor_struct_member_after_dotmember(void);
+void Cursor_struct_next_after_dotmember(void);
+void Cursor_struct_pop_after_dotmember(void);
 void Cursor_struct_w_array_type_i32_i32(void);
 void Cursor_struct_w_array_type_struct(void);
 void Cursor_struct_w_2_array_type_i32_i32(void);
@@ -2058,6 +2063,26 @@ bake_test_case Cursor_testcases[] = {
     {
         "struct_member_2_nested_i32_i32_reverse",
         Cursor_struct_member_2_nested_i32_i32_reverse
+    },
+    {
+        "struct_dotmember",
+        Cursor_struct_dotmember
+    },
+    {
+        "struct_dotmember_assign_twice",
+        Cursor_struct_dotmember_assign_twice
+    },
+    {
+        "struct_member_after_dotmember",
+        Cursor_struct_member_after_dotmember
+    },
+    {
+        "struct_next_after_dotmember",
+        Cursor_struct_next_after_dotmember
+    },
+    {
+        "struct_pop_after_dotmember",
+        Cursor_struct_pop_after_dotmember
     },
     {
         "struct_w_array_type_i32_i32",
@@ -4356,7 +4381,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        115,
+        120,
         Cursor_testcases
     },
     {

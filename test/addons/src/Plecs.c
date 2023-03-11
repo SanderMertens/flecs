@@ -2249,6 +2249,59 @@ void Plecs_dot_assign_nested_member() {
     ecs_fini(world);
 }
 
+void Plecs_dot_assign_binary_expr() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        struct {
+            float x;
+            float y;
+        } start;
+
+        struct {
+            float x;
+            float y;
+        } stop;
+    } Line;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct Line {"
+    LINE "  Member start {"
+    LINE "    x :- Member{f32}"
+    LINE "    y :- Member{f32}"
+    LINE "  }"
+    LINE "  Member stop {"
+    LINE "    x :- Member{f32}"
+    LINE "    y :- Member{f32}"
+    LINE "  }"
+    LINE "}"
+    LINE
+    LINE "l :- Line{start.x: 2 + 8, start.y: 5 + 15, stop.x: 10 + 20, stop.y: 15 + 25}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
+    ecs_entity_t l = ecs_lookup_fullpath(world, "l");
+
+    test_assert(ecs_id(Line) != 0);
+    test_assert(l != 0);
+
+    test_assert( ecs_has(world, ecs_id(Line), EcsComponent));
+    test_assert( ecs_has(world, ecs_id(Line), EcsStruct));
+    test_assert( ecs_has(world, l, Line));
+
+    const Line *ptr = ecs_get(world, l, Line);
+    test_assert(ptr != NULL);
+    test_int(ptr->start.x, 10);
+    test_int(ptr->start.y, 20);
+    test_int(ptr->stop.x, 30);
+    test_int(ptr->stop.y, 40);
+    
+    
+    ecs_fini(world);
+}
+
 void Plecs_open_scope_no_parent() {
     ecs_world_t *world = ecs_init();
 
@@ -5586,3 +5639,4 @@ void Plecs_3_assemblies() {
 
     ecs_fini(world);
 }
+
