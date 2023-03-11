@@ -23493,7 +23493,7 @@ error:
 
 /* Restore scope, if dotmember was used */
 static
-void flecs_meta_cursor_restore_scope(
+ecs_meta_scope_t* flecs_meta_cursor_restore_scope(
     ecs_meta_cursor_t *cursor,
     const ecs_meta_scope_t* scope)
 {
@@ -23503,7 +23503,7 @@ void flecs_meta_cursor_restore_scope(
         cursor->depth = scope->prev_depth;
     }
 error:
-    return;
+    return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
 }
 
 /* Get current operation for scope */
@@ -23660,6 +23660,7 @@ int ecs_meta_next(
     ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    scope = flecs_meta_cursor_restore_scope(cursor, scope);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
 
     if (scope->is_collection) {
@@ -23717,6 +23718,8 @@ int ecs_meta_member(
     }
 
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    scope = flecs_meta_cursor_restore_scope(cursor, scope);
+
     ecs_hashmap_t *members = scope->members;
     const ecs_world_t *world = cursor->world;
 
@@ -23752,6 +23755,9 @@ int ecs_meta_dotmember(
     const char *name)
 {
 #ifdef FLECS_PARSER
+    ecs_meta_scope_t *cur_scope = flecs_meta_cursor_get_scope(cursor);
+    flecs_meta_cursor_restore_scope(cursor, cur_scope);
+
     int32_t prev_depth = cursor->depth;
     int dotcount = 0;
 
@@ -23781,7 +23787,7 @@ int ecs_meta_dotmember(
         dotcount ++;
     }
 
-    ecs_meta_scope_t *cur_scope = flecs_meta_cursor_get_scope(cursor);
+    cur_scope = flecs_meta_cursor_get_scope(cursor);
     if (dotcount) {
         cur_scope->prev_depth = prev_depth;
     }
@@ -24007,6 +24013,7 @@ int ecs_meta_pop(
     }
 
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    scope = flecs_meta_cursor_restore_scope(cursor, scope);
     cursor->depth --;
     if (cursor->depth < 0) {
         ecs_err("unexpected end of scope");
@@ -24069,7 +24076,6 @@ int ecs_meta_pop(
         ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
     }
 
-    flecs_meta_cursor_restore_scope(cursor, next_scope);
     return 0;
 }
 
@@ -24256,7 +24262,6 @@ int ecs_meta_set_bool(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24291,7 +24296,6 @@ int ecs_meta_set_char(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24333,7 +24337,6 @@ int ecs_meta_set_int(
     }
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24374,7 +24377,6 @@ int ecs_meta_set_uint(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24417,7 +24419,6 @@ int ecs_meta_set_float(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24474,7 +24475,6 @@ int ecs_meta_set_value(
             ecs_os_free(type_str);
             goto error;
         }
-        flecs_meta_cursor_restore_scope(cursor, scope);
         return ecs_value_copy(cursor->world, value->type, ptr, value->ptr);
     }
 
@@ -24695,7 +24695,6 @@ int ecs_meta_set_string(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24737,7 +24736,6 @@ int ecs_meta_set_string_literal(
         break;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24766,7 +24764,6 @@ int ecs_meta_set_entity(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -24794,7 +24791,6 @@ int ecs_meta_set_null(
         return -1;
     }
 
-    flecs_meta_cursor_restore_scope(cursor, scope);
     return 0;
 }
 
@@ -26333,8 +26329,13 @@ ecs_entity_t flecs_binary_expr_type(
     const EcsPrimitive *ltype_ptr = ecs_get(world, lvalue->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, rvalue->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
+        char *lname = ecs_get_fullpath(world, lvalue->type);
+        char *rname = ecs_get_fullpath(world, rvalue->type);
         ecs_parser_error(name, expr, ptr - expr, 
-            "invalid non-primitive type in binary expression");
+            "invalid non-primitive type in binary expression (%s, %s)",
+                lname, rname);
+        ecs_os_free(lname);
+        ecs_os_free(rname);
         return 0;
     }
 
@@ -26774,7 +26775,7 @@ const char* flecs_parse_expr(
             is_lvalue = true;
 
         } else {
-            const char *tptr = ecs_parse_ws_eol(ptr);
+            const char *tptr = ecs_parse_ws(ptr);
             for (; ptr != tptr; ptr ++) {
                 if (ptr[0] == '\n') {
                     newline = true;
