@@ -541,9 +541,10 @@ void flecs_add_path(
     const char *name)
 {
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world;
+    ecs_world_t *real_world = NULL;
     if (defer_suspend) {
         real_world = flecs_suspend_readonly(world, &srs);
+        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     if (parent) {

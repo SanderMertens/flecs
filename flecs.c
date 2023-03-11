@@ -19365,7 +19365,7 @@ void flecs_assembly_on_set(
         return;
     }
 
-    void *data = ecs_field_w_size(it, ct->size, 1);
+    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 1);
 
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
@@ -20462,7 +20462,7 @@ const char* plecs_parse_scope_close(
 #ifdef FLECS_EXPR
     ecs_entity_t cur = state->scope[state->sp], assembly = state->assembly;
     if (cur && cur == assembly) {
-        ecs_size_t assembly_len = ptr - state->assembly_start;
+        ecs_size_t assembly_len = flecs_ito(ecs_size_t, ptr - state->assembly_start);
         if (assembly_len) {
             assembly_len --;
             char *script = ecs_os_malloc_n(char, assembly_len + 1);
@@ -20991,10 +20991,11 @@ int ecs_script_update(
     int result = 0;
     bool is_defer = ecs_is_deferred(world);
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world;
+    ecs_world_t *real_world = NULL;
     if (is_defer) {
         ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
         real_world = flecs_suspend_readonly(world, &srs);
+        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_script_clear(world, e, instance);
@@ -25213,7 +25214,8 @@ int expr_ser_elements(
     const void *base, 
     int32_t elem_count, 
     int32_t elem_size,
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     ecs_strbuf_list_push(str, "[", ", ");
 
@@ -25222,7 +25224,7 @@ int expr_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (flecs_expr_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
+        if (flecs_expr_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -25239,7 +25241,8 @@ int expr_ser_type_elements(
     ecs_entity_t type, 
     const void *base, 
     int32_t elem_count, 
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
@@ -25251,7 +25254,7 @@ int expr_ser_type_elements(
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
     int32_t op_count = ecs_vec_count(&ser->ops);
     return expr_ser_elements(
-        world, ops, op_count, base, elem_count, comp->size, str);
+        world, ops, op_count, base, elem_count, comp->size, str, is_array);
 }
 
 /* Serialize array */
@@ -25266,7 +25269,7 @@ int expr_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return expr_ser_type_elements(
-        world, a->type, ptr, a->count, str);
+        world, a->type, ptr, a->count, str, true);
 }
 
 /* Serialize vector */
@@ -25277,12 +25280,7 @@ int expr_ser_vector(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_vec_t *value = *(ecs_vec_t**)base;
-    if (!value) {
-        ecs_strbuf_appendlit(str, "null");
-        return 0;
-    }
-
+    const ecs_vec_t *value = base;
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -25290,7 +25288,7 @@ int expr_ser_vector(
     void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
-    return expr_ser_type_elements(world, v->type, array, count, str);
+    return expr_ser_type_elements(world, v->type, array, count, str, false);
 }
 
 /* Forward serialization to the different type kinds */
@@ -25366,7 +25364,7 @@ int flecs_expr_ser_type_ops(
             if (elem_count > 1) {
                 /* Serialize inline array */
                 if (expr_ser_elements(world, op, op->op_count, base,
-                    elem_count, op->size, str))
+                    elem_count, op->size, str, true))
                 {
                     return -1;
                 }
@@ -30301,7 +30299,8 @@ int json_ser_elements(
     const void *base, 
     int32_t elem_count, 
     int32_t elem_size,
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     flecs_json_array_push(str);
 
@@ -30310,7 +30309,7 @@ int json_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (json_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
+        if (json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -30327,7 +30326,8 @@ int json_ser_type_elements(
     ecs_entity_t type, 
     const void *base, 
     int32_t elem_count, 
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
@@ -30340,7 +30340,7 @@ int json_ser_type_elements(
     int32_t op_count = ecs_vec_count(&ser->ops);
 
     return json_ser_elements(
-        world, ops, op_count, base, elem_count, comp->size, str);
+        world, ops, op_count, base, elem_count, comp->size, str, is_array);
 }
 
 /* Serialize array */
@@ -30355,7 +30355,7 @@ int json_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return json_ser_type_elements(
-        world, a->type, ptr, a->count, str);
+        world, a->type, ptr, a->count, str, true);
 }
 
 /* Serialize vector */
@@ -30366,12 +30366,7 @@ int json_ser_vector(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_vec_t *value = *(ecs_vec_t**)base;
-    if (!value) {
-        ecs_strbuf_appendlit(str, "null");
-        return 0;
-    }
-
+    const ecs_vec_t *value = base;
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -30379,7 +30374,7 @@ int json_ser_vector(
     void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
-    return json_ser_type_elements(world, v->type, array, count, str);
+    return json_ser_type_elements(world, v->type, array, count, str, false);
 }
 
 typedef struct json_serializer_ctx_t {
@@ -30565,7 +30560,7 @@ int json_ser_type_ops(
             if (elem_count > 1) {
                 /* Serialize inline array */
                 if (json_ser_elements(world, op, op->op_count, base,
-                    elem_count, op->size, str))
+                    elem_count, op->size, str, true))
                 {
                     return -1;
                 }
@@ -57820,9 +57815,10 @@ void flecs_add_path(
     const char *name)
 {
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world;
+    ecs_world_t *real_world = NULL;
     if (defer_suspend) {
         real_world = flecs_suspend_readonly(world, &srs);
+        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     if (parent) {

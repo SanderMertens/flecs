@@ -119,7 +119,8 @@ int json_ser_elements(
     const void *base, 
     int32_t elem_count, 
     int32_t elem_size,
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     flecs_json_array_push(str);
 
@@ -128,7 +129,7 @@ int json_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (json_ser_type_ops(world, ops, op_count, ptr, str, 1)) {
+        if (json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -145,7 +146,8 @@ int json_ser_type_elements(
     ecs_entity_t type, 
     const void *base, 
     int32_t elem_count, 
-    ecs_strbuf_t *str)
+    ecs_strbuf_t *str,
+    bool is_array)
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
@@ -158,7 +160,7 @@ int json_ser_type_elements(
     int32_t op_count = ecs_vec_count(&ser->ops);
 
     return json_ser_elements(
-        world, ops, op_count, base, elem_count, comp->size, str);
+        world, ops, op_count, base, elem_count, comp->size, str, is_array);
 }
 
 /* Serialize array */
@@ -173,7 +175,7 @@ int json_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return json_ser_type_elements(
-        world, a->type, ptr, a->count, str);
+        world, a->type, ptr, a->count, str, true);
 }
 
 /* Serialize vector */
@@ -184,12 +186,7 @@ int json_ser_vector(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_vec_t *value = *(ecs_vec_t**)base;
-    if (!value) {
-        ecs_strbuf_appendlit(str, "null");
-        return 0;
-    }
-
+    const ecs_vec_t *value = base;
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -197,7 +194,7 @@ int json_ser_vector(
     void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
-    return json_ser_type_elements(world, v->type, array, count, str);
+    return json_ser_type_elements(world, v->type, array, count, str, false);
 }
 
 typedef struct json_serializer_ctx_t {
@@ -383,7 +380,7 @@ int json_ser_type_ops(
             if (elem_count > 1) {
                 /* Serialize inline array */
                 if (json_ser_elements(world, op, op->op_count, base,
-                    elem_count, op->size, str))
+                    elem_count, op->size, str, true))
                 {
                     return -1;
                 }
