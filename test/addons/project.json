@@ -413,7 +413,8 @@
                 "assembly_w_nested_assembly",
                 "instantiate_prefab_w_assembly",
                 "assembly_w_prefab_w_assembly",
-                "3_assemblies"
+                "3_assemblies",
+                "assembly_nested_w_default_var"
             ]
         }, {
             "id": "Doc",
