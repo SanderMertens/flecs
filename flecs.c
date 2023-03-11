@@ -26764,6 +26764,17 @@ const char* flecs_parse_expr(
                 return NULL;
             }
 
+            if (!token[1]) {
+                /* Empty name means default to assigned member */
+                const char *member = ecs_meta_get_member(&cur);
+                if (!member) {
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "invalid default variable outside member assignment");
+                    return NULL;
+                }
+                ecs_os_strcpy(&token[1], member);
+            }
+
             const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &token[1]);
             if (!var) {
                 ecs_parser_error(name, expr, ptr - expr, 
