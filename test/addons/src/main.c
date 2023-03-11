@@ -375,12 +375,16 @@ void Plecs_const_var_struct(void);
 void Plecs_const_var_redeclare(void);
 void Plecs_const_var_scoped(void);
 void Plecs_scope_w_component_after_const_var(void);
+void Plecs_component_after_const_paren_expr(void);
+void Plecs_component_after_const_add_expr(void);
+void Plecs_component_after_const_sub_expr(void);
+void Plecs_component_after_const_mul_expr(void);
+void Plecs_component_after_const_div_expr(void);
 void Plecs_parse_with(void);
 void Plecs_parse_with_w_with(void);
 void Plecs_parse_with_w_tag(void);
 void Plecs_assign_const_w_expr(void);
 void Plecs_const_w_type(void);
-void Plecs_component_after_const_paren_expr(void);
 void Plecs_assembly_no_scope(void);
 void Plecs_assembly_empty(void);
 void Plecs_assembly_no_props(void);
@@ -2749,6 +2753,26 @@ bake_test_case Plecs_testcases[] = {
         Plecs_scope_w_component_after_const_var
     },
     {
+        "component_after_const_paren_expr",
+        Plecs_component_after_const_paren_expr
+    },
+    {
+        "component_after_const_add_expr",
+        Plecs_component_after_const_add_expr
+    },
+    {
+        "component_after_const_sub_expr",
+        Plecs_component_after_const_sub_expr
+    },
+    {
+        "component_after_const_mul_expr",
+        Plecs_component_after_const_mul_expr
+    },
+    {
+        "component_after_const_div_expr",
+        Plecs_component_after_const_div_expr
+    },
+    {
         "parse_with",
         Plecs_parse_with
     },
@@ -2767,10 +2791,6 @@ bake_test_case Plecs_testcases[] = {
     {
         "const_w_type",
         Plecs_const_w_type
-    },
-    {
-        "component_after_const_paren_expr",
-        Plecs_component_after_const_paren_expr
     },
     {
         "assembly_no_scope",
@@ -6246,7 +6266,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        177,
+        181,
         Plecs_testcases
     },
     {

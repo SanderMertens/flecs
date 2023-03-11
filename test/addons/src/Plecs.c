@@ -4196,6 +4196,163 @@ void Plecs_scope_w_component_after_const_var() {
     ecs_fini(world);
 }
 
+void Plecs_component_after_const_add_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  const var = 5 + 15"
+    LINE "  - Position{x: 10, y: $var}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_after_const_sub_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  const var = 25 - 5"
+    LINE "  - Position{x: 10, y: $var}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_after_const_mul_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  const var = 2 * 10"
+    LINE "  - Position{x: 10, y: $var}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_after_const_div_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  const var = 40 / 2"
+    LINE "  - Position{x: 10, y: $var}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_after_const_paren_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "e {"
+    LINE "  const val = (10 + 20)"
+    LINE "  - Position{$val, $val * 2}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}
+
 void Plecs_parse_with() {
     ecs_world_t *world = ecs_init();
 
@@ -4357,39 +4514,6 @@ void Plecs_const_w_type() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 6);
-
-    ecs_fini(world);
-}
-
-void Plecs_component_after_const_paren_expr() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "e {"
-    LINE "  const val = (10 + 20)"
-    LINE "  - Position{$val, $val * 2}"
-    LINE "}";
-
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
-    test_assert(e != 0);
-    test_assert(ecs_has(world, e, Position));
-
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 60);
 
     ecs_fini(world);
 }
@@ -5639,4 +5763,3 @@ void Plecs_3_assemblies() {
 
     ecs_fini(world);
 }
-
