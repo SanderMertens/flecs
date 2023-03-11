@@ -309,6 +309,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void);
 void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void);
 void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void);
 void Plecs_type_and_assign_in_plecs_nested_member(void);
+void Plecs_dot_assign_nested_member(void);
 void Plecs_open_scope_no_parent(void);
 void Plecs_create_subject_in_root_scope_w_resolvable_id(void);
 void Plecs_create_subject_in_scope_w_resolvable_id(void);
@@ -2481,6 +2482,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "type_and_assign_in_plecs_nested_member",
         Plecs_type_and_assign_in_plecs_nested_member
+    },
+    {
+        "dot_assign_nested_member",
+        Plecs_dot_assign_nested_member
     },
     {
         "open_scope_no_parent",
@@ -6236,7 +6241,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        175,
+        176,
         Plecs_testcases
     },
     {

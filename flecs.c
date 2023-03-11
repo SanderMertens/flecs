@@ -26784,7 +26784,7 @@ const char* flecs_parse_expr(
             if (ptr[0] == ':') {
                 /* Member assignment */
                 ptr ++;
-                if (ecs_meta_member(&cur, token) != 0) {
+                if (ecs_meta_dotmember(&cur, token) != 0) {
                     goto error;
                 }
             } else {

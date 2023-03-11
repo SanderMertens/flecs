@@ -316,6 +316,7 @@
                 "type_and_assign_in_plecs_w_enum_primitive_using_meta",
                 "type_and_assign_in_plecs_w_enum_primitive_and_struct",
                 "type_and_assign_in_plecs_nested_member",
+                "dot_assign_nested_member",
                 "open_scope_no_parent",
                 "create_subject_in_root_scope_w_resolvable_id",
                 "create_subject_in_scope_w_resolvable_id",
