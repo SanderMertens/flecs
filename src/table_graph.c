@@ -830,7 +830,7 @@ ecs_table_t* flecs_find_table_with(
     ecs_id_t with)
 {    
     ecs_ensure_id(world, with);
-    
+
     ecs_id_record_t *idr = NULL;
     ecs_entity_t r = 0, o = 0;
 
@@ -853,7 +853,7 @@ ecs_table_t* flecs_find_table_with(
             const ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
-                    * a new id sequence with the existing id replaced */
+                 * a new id sequence with the existing id replaced */
                 ecs_type_t dst_type = flecs_type_copy(world, &node->type);
                 ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
                 dst_type.array[tr->column] = with;
@@ -875,6 +875,11 @@ ecs_table_t* flecs_find_table_with(
     if (r == EcsIsA) {
         /* If adding a prefab, check if prefab has overrides */
         flecs_add_overrides_for_base(world, &dst_type, with);
+    } else if (r == EcsChildOf) {
+        o = ecs_get_alive(world, o);
+        if (ecs_has_id(world, o, EcsPrefab)) {
+            flecs_type_add(world, &dst_type, EcsPrefab);
+        }
     }
 
     if (idr->flags & EcsIdWith) {

@@ -4232,3 +4232,15 @@ void Prefab_always_override_pair() {
 
     ecs_fini(world);
 }
+
+void Prefab_child_of_prefab_is_prefab() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+    test_assert(ecs_has_id(world, inst, EcsPrefab));
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    test_assert(ecs_has_id(world, inst_child, EcsPrefab));
+
+    ecs_fini(world);
+}
