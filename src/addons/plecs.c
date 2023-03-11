@@ -468,9 +468,11 @@ ecs_entity_t plecs_ensure_entity(
 
     ecs_entity_t e = 0;
     bool is_anonymous = !ecs_os_strcmp(path, "_");
+    bool is_new = false;
     if (is_anonymous) {
         path = NULL;
         e = ecs_new_id(world);
+        is_new = true;
     }
 
     if (!e) {
@@ -478,6 +480,7 @@ ecs_entity_t plecs_ensure_entity(
     }
 
     if (!e) {
+        is_new = true;
         if (rel && flecs_get_oneof(world, rel)) {
             /* If relationship has oneof and entity was not found, don't proceed
              * with creating an entity as this can cause asserts later on */
@@ -499,14 +502,6 @@ ecs_entity_t plecs_ensure_entity(
         e = ecs_add_path(world, e, 0, path);
         ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
-        if (state->global_with) {
-            ecs_add_id(world, e, state->global_with);
-        }
-
-        if (state->assembly && !state->assembly_instance) {
-            ecs_add_id(world, e, EcsPrefab);
-        }
-
         if (prev_scope) {
             ecs_set_scope(world, prev_scope);
         }
@@ -525,6 +520,16 @@ ecs_entity_t plecs_ensure_entity(
             if (with) {
                 ecs_add_id(world, e, with);
             }
+        }
+    }
+
+    if (is_new) {
+        if (state->assembly && !state->assembly_instance) {
+            ecs_add_id(world, e, EcsPrefab);
+        }
+
+        if (state->global_with) {
+            ecs_add_id(world, e, state->global_with);
         }
     }
 
