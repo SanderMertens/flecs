@@ -13571,7 +13571,7 @@ ecs_entity_t ecs_script_init(
  * 
  * @param world The world.
  * @param script The script entity.
- * @param assembly An assembly instance (optional).
+ * @param instance An assembly instance (optional).
  * @param str The script code.
  * @param vars Optional preset variables for script parameterization.
  */

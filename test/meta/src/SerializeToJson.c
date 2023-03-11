@@ -1103,6 +1103,105 @@ void SerializeToJson_array_array_i32_3() {
     ecs_fini(world);
 }
 
+void SerializeToJson_vector_i32_3() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_vec_t v;
+    ecs_vec_init_t(NULL, &v, ecs_i32_t, 3);
+    ecs_vec_append_t(NULL, &v, ecs_i32_t)[0] = 10;
+    ecs_vec_append_t(NULL, &v, ecs_i32_t)[0] = 20;
+    ecs_vec_append_t(NULL, &v, ecs_i32_t)[0] = 30;
+
+    char *expr = ecs_ptr_to_json(world, t, &v);
+    test_assert(expr != NULL);
+    test_str(expr, "[10, 20, 30]");
+    ecs_os_free(expr);
+
+    ecs_vec_fini_t(NULL, &v, ecs_i32_t);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_vector_struct_i32_i32() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = ecs_id(Position)
+    });
+
+    ecs_vec_t v;
+    ecs_vec_init_t(NULL, &v, Position, 3);
+    ecs_vec_append_t(NULL, &v, Position)[0] = (Position){10, 20};
+    ecs_vec_append_t(NULL, &v, Position)[0] = (Position){30, 40};
+    ecs_vec_append_t(NULL, &v, Position)[0] = (Position){50, 60};
+
+    char *expr = ecs_ptr_to_json(world, t, &v);
+    test_assert(expr != NULL);
+    test_str(expr, "[{\"x\":10, \"y\":20}, {\"x\":30, \"y\":40}, {\"x\":50, \"y\":60}]");
+    ecs_os_free(expr);
+
+    ecs_vec_fini_t(NULL, &v, Position);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_vector_array_i32_3() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = ecs_entity(world, { .name = "a" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = a
+    });
+
+    typedef int32_t IntArray[2];
+
+    ecs_vec_t v;
+    ecs_vec_init_t(NULL, &v, IntArray, 3);
+    {
+        IntArray *av = ecs_vec_append_t(NULL, &v, IntArray);
+        av[0][0] = 10;
+        av[0][1] = 20;
+    }
+    {
+        IntArray *av = ecs_vec_append_t(NULL, &v, IntArray);
+        av[0][0] = 30;
+        av[0][1] = 40;
+    }
+    {
+        IntArray *av = ecs_vec_append_t(NULL, &v, IntArray);
+        av[0][0] = 50;
+        av[0][1] = 60;
+    }
+
+    char *expr = ecs_ptr_to_json(world, t, &v);
+    test_assert(expr != NULL);
+    test_str(expr, "[[10, 20], [30, 40], [50, 60]]");
+    ecs_os_free(expr);
+
+    ecs_vec_fini_t(NULL, &v, IntArray);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_empty() {
     ecs_world_t *world = ecs_init();
 

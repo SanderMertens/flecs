@@ -211,7 +211,7 @@ void flecs_assembly_on_set(
         return;
     }
 
-    void *data = ecs_field_w_size(it, ct->size, 1);
+    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 1);
 
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
@@ -1308,7 +1308,7 @@ const char* plecs_parse_scope_close(
 #ifdef FLECS_EXPR
     ecs_entity_t cur = state->scope[state->sp], assembly = state->assembly;
     if (cur && cur == assembly) {
-        ecs_size_t assembly_len = ptr - state->assembly_start;
+        ecs_size_t assembly_len = flecs_ito(ecs_size_t, ptr - state->assembly_start);
         if (assembly_len) {
             assembly_len --;
             char *script = ecs_os_malloc_n(char, assembly_len + 1);
@@ -1837,10 +1837,11 @@ int ecs_script_update(
     int result = 0;
     bool is_defer = ecs_is_deferred(world);
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world;
+    ecs_world_t *real_world = NULL;
     if (is_defer) {
         ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
         real_world = flecs_suspend_readonly(world, &srs);
+        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_script_clear(world, e, instance);
