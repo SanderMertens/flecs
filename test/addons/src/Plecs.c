@@ -5843,3 +5843,124 @@ void Plecs_assembly_nested_w_default_var() {
 
     ecs_fini(world);
 }
+
+void Plecs_assembly_w_anonymous() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop count: flecs.meta.i32 = 0"
+    LINE "  _ :- Position{$count, $count * 2}"
+    LINE "  _ :- Position{$count, $count * 2}"
+    LINE "}"
+    LINE ""
+    LINE "t :- Tree{10}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    test_assert(t != 0);
+
+    {
+        ecs_filter_t *f = ecs_filter(world, {
+            .terms = {
+                { .id = ecs_childof(tree) },
+                { .id = ecs_id(Position) },
+                { .id = EcsPrefab },
+            }
+        });
+
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        test_int(2, ecs_iter_count(&it));
+        ecs_filter_fini(f);
+    }
+
+    {
+        ecs_filter_t *f = ecs_filter(world, {
+            .terms = {
+                { .id = ecs_childof(t) },
+                { .id = ecs_id(Position) },
+            }
+        });
+
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        test_int(2, ecs_iter_count(&it));
+        ecs_filter_fini(f);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_anonymous_parse_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop count: flecs.meta.i32 = 0"
+    LINE "  _ :- Position{$count, $count * 2}"
+    LINE "  _ :- Position{$count, $count * 2}"
+    LINE "}"
+    LINE ""
+    LINE "t :- Tree{10}";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    const char *expr_again =
+    LINE "t :- Tree{10}";
+    test_assert(ecs_plecs_from_str(world, NULL, expr_again) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    test_assert(t != 0);
+
+    {
+        ecs_filter_t *f = ecs_filter(world, {
+            .terms = {
+                { .id = ecs_childof(tree) },
+                { .id = ecs_id(Position) },
+                { .id = EcsPrefab },
+            }
+        });
+
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        test_int(2, ecs_iter_count(&it));
+        ecs_filter_fini(f);
+    }
+
+    {
+        ecs_filter_t *f = ecs_filter(world, {
+            .terms = {
+                { .id = ecs_childof(t) },
+                { .id = ecs_id(Position) },
+            }
+        });
+
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        test_int(2, ecs_iter_count(&it));
+        ecs_filter_fini(f);
+    }
+
+    ecs_fini(world);
+}
