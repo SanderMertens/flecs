@@ -2856,7 +2856,7 @@ void Query_query_change_parent_term_w_tag() {
     ecs_add_id(world, parent, EcsPrefab);
     ecs_new_w_pair(world, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "[in] Position(parent)");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(parent), ?Prefab");
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q, 0) == true);
     test_assert(ecs_query_changed(q, 0) == true);

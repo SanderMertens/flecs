@@ -2148,7 +2148,8 @@
                 "override_twice_w_set",
                 "auto_override_copy_once",
                 "always_override",
-                "always_override_pair"
+                "always_override_pair",
+                "child_of_prefab_is_prefab"
             ]
         }, {
             "id": "World",
