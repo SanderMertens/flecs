@@ -6030,3 +6030,164 @@ void Plecs_assembly_w_anonymous_parse_again() {
 
     ecs_fini(world);
 }
+
+void Plecs_typed_const_w_composite_type_invalid_assignment() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos : Position = Position{10, 20}"
+    LINE "a :- $var_pos"
+    LINE "";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_typed_const_w_composite_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos : Position = {10, 20}"
+    LINE "a :- $var_pos"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    test_assert(var == 0);
+
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_var_to_typed_const_w_composite_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos_a : Position = {10, 20}"
+    HEAD "const var_pos_b = $var_pos_a"
+    LINE "a :- $var_pos_b"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    test_assert(var == 0);
+
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_composite_prop_invalid_assignment() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop pos: Position = Position{10, 20}"
+    LINE "  child :- $pos"
+    LINE "}"
+    LINE ""
+    LINE "t :- Tree{pos: {20, 30}}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_composite_prop() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop pos: Position = {10, 20}"
+    LINE "  child :- $pos"
+    LINE "}"
+    LINE "t :- Tree{pos: {20, 30}}"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    test_assert(t != 0);
+    ecs_entity_t t_child = ecs_lookup_fullpath(world, "t.child");
+    test_assert(t_child != 0);
+
+    {
+        const void *ptr = ecs_get_id(world, t, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{pos: {x: 20, y: 30}}");
+        ecs_os_free(str);
+    }
+
+    {
+        const Position *p = ecs_get(world, t_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+    }
+
+    ecs_fini(world);
+}

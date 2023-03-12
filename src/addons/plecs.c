@@ -1690,6 +1690,8 @@ assign_var_as_component: {
     if (!ptr) {
         goto error;
     }
+    state->assign_stmt = false;
+    state->assign_to = 0;
     goto done;
 }
 

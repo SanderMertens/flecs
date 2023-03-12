@@ -418,7 +418,13 @@
                 "3_assemblies",
                 "assembly_nested_w_default_var",
                 "assembly_w_anonymous",
-                "assembly_w_anonymous_parse_again"
+                "assembly_w_anonymous_parse_again",
+                "typed_const_w_composite_type_invalid_assignment",
+                "typed_const_w_composite_type",
+                "assign_var_to_typed_const_w_composite_type",
+                "typed_const_w_composite_type_invalid_assignment",
+                "assembly_w_composite_prop_invalid_assignment",
+                "assembly_w_composite_prop"
             ]
         }, {
             "id": "Doc",

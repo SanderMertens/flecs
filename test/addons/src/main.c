@@ -412,6 +412,12 @@ void Plecs_3_assemblies(void);
 void Plecs_assembly_nested_w_default_var(void);
 void Plecs_assembly_w_anonymous(void);
 void Plecs_assembly_w_anonymous_parse_again(void);
+void Plecs_typed_const_w_composite_type_invalid_assignment(void);
+void Plecs_typed_const_w_composite_type(void);
+void Plecs_assign_var_to_typed_const_w_composite_type(void);
+void Plecs_typed_const_w_composite_type_invalid_assignment(void);
+void Plecs_assembly_w_composite_prop_invalid_assignment(void);
+void Plecs_assembly_w_composite_prop(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2904,6 +2910,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_w_anonymous_parse_again",
         Plecs_assembly_w_anonymous_parse_again
+    },
+    {
+        "typed_const_w_composite_type_invalid_assignment",
+        Plecs_typed_const_w_composite_type_invalid_assignment
+    },
+    {
+        "typed_const_w_composite_type",
+        Plecs_typed_const_w_composite_type
+    },
+    {
+        "assign_var_to_typed_const_w_composite_type",
+        Plecs_assign_var_to_typed_const_w_composite_type
+    },
+    {
+        "typed_const_w_composite_type_invalid_assignment",
+        Plecs_typed_const_w_composite_type_invalid_assignment
+    },
+    {
+        "assembly_w_composite_prop_invalid_assignment",
+        Plecs_assembly_w_composite_prop_invalid_assignment
+    },
+    {
+        "assembly_w_composite_prop",
+        Plecs_assembly_w_composite_prop
     }
 };
 
@@ -6291,7 +6321,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        186,
+        192,
         Plecs_testcases
     },
     {
