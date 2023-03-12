@@ -31,6 +31,7 @@ static void flecs_dtor_script(EcsScript *ptr) {
     ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
 }
 
+static
 ECS_MOVE(EcsScript, dst, src, {
     flecs_dtor_script(dst);
     dst->using_ = src->using_;
@@ -43,6 +44,7 @@ ECS_MOVE(EcsScript, dst, src, {
     src->world = NULL;
 })
 
+static
 ECS_DTOR(EcsScript, ptr, {
     flecs_dtor_script(ptr);
 })
@@ -162,26 +164,6 @@ void flecs_assembly_ctor(
             ecs_value_copy_w_type_info(world, mti, 
                 ECS_OFFSET(el, member->offset), value->ptr);
         }
-    }
-}
-
-static
-void flecs_assembly_on_add(
-    ecs_iter_t *it)
-{
-    if (!(it->table->flags & EcsTableIsPrefab)) {
-        return;
-    }
-
-    ecs_world_t *world = it->world;
-    ecs_entity_t assembly = ecs_field_id(it, 1);
-
-    /* Add override flag when assembly is added to prefab, so prefab instances
-     * always get a private instance of the assembly. */
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t prefab = it->entities[i];
-        ecs_add_id(world, prefab, ECS_OVERRIDE | assembly);
     }
 }
 
@@ -1479,6 +1461,10 @@ const char* plecs_parse_scope_close(
 
 #ifdef FLECS_EXPR
     ecs_entity_t cur = state->scope[state->sp], assembly = state->assembly;
+    if (state->sp && (cur == state->scope[state->sp - 1])) {
+        /* Previous scope is also from the assembly, not found the end yet */
+        cur = 0;
+    }
     if (cur && cur == assembly) {
         ecs_size_t assembly_len = flecs_ito(ecs_size_t, ptr - state->assembly_start);
         if (assembly_len) {
@@ -1869,13 +1855,10 @@ int flecs_plecs_parse(
     state.scope[0] = 0;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
-    bool global_with_is_parent = false;
 
     if (ECS_IS_PAIR(prev_with) && ECS_PAIR_FIRST(prev_with) == EcsChildOf) {
         ecs_set_scope(world, ECS_PAIR_SECOND(prev_with));
         state.scope[0] = ecs_pair_second(world, prev_with);
-        // state.sp ++;
-        global_with_is_parent = true;
     } else {
         state.global_with = prev_with;
     }
@@ -1925,10 +1908,6 @@ int flecs_plecs_parse(
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
     plecs_clear_annotations(&state);
-
-    if (global_with_is_parent) {
-        // state.sp --;
-    }
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");
@@ -2024,6 +2003,7 @@ int ecs_plecs_from_file(
     return result;
 }
 
+static
 ecs_id_t flecs_script_tag(
     ecs_entity_t script,
     ecs_entity_t instance)
@@ -2153,13 +2133,13 @@ void FlecsScriptImport(
     ecs_struct(world, {
         .entity = ecs_id(EcsScript),
         .members = {
-            { .name = "using", 
-                .type = ecs_vector(world, { 
+            { .name = "using", .type = ecs_vector(world, { 
                     .entity = ecs_entity(world, { .name = "UsingVector" }),
-                    .type = ecs_id(ecs_entity_t) 
-                })
+                    .type = ecs_id(ecs_entity_t)
+                }),
+                .count = 0
             },
-            { .name = "script", .type = ecs_id(ecs_string_t) }
+            { .name = "script", .type = ecs_id(ecs_string_t), .count = 0 }
         }
     });
 #endif

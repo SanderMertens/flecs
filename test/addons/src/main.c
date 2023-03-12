@@ -391,6 +391,7 @@ void Plecs_parse_with_2_nested_values(void);
 void Plecs_parse_with_var(void);
 void Plecs_parse_with_2_vars(void);
 void Plecs_parse_with_2_nested_vars(void);
+void Plecs_parse_with_var_in_scope(void);
 void Plecs_assign_const_w_expr(void);
 void Plecs_const_w_type(void);
 void Plecs_assembly_no_scope(void);
@@ -424,6 +425,7 @@ void Plecs_assign_var_to_typed_const_w_composite_type(void);
 void Plecs_typed_const_w_composite_type_invalid_assignment(void);
 void Plecs_assembly_w_composite_prop_invalid_assignment(void);
 void Plecs_assembly_w_composite_prop(void);
+void Plecs_assembly_with_with(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2834,6 +2836,10 @@ bake_test_case Plecs_testcases[] = {
         Plecs_parse_with_2_nested_vars
     },
     {
+        "parse_with_var_in_scope",
+        Plecs_parse_with_var_in_scope
+    },
+    {
         "assign_const_w_expr",
         Plecs_assign_const_w_expr
     },
@@ -2964,6 +2970,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_w_composite_prop",
         Plecs_assembly_w_composite_prop
+    },
+    {
+        "assembly_with_with",
+        Plecs_assembly_with_with
     }
 };
 
@@ -6351,7 +6361,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        198,
+        200,
         Plecs_testcases
     },
     {

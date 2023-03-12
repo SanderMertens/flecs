@@ -4882,6 +4882,55 @@ void Plecs_parse_with_2_nested_vars() {
     ecs_fini(world);
 }
 
+void Plecs_parse_with_var_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "Parent {"
+    LINE "  const pos : Position = {10, 20}"
+    LINE "  with $pos { "
+    LINE "    Foo"
+    LINE "    Bar"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Parent.Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Parent.Bar");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    {
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    {
+        const Position *ptr = ecs_get(world, bar, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+
 void Plecs_assign_const_w_expr() {
     ecs_world_t *world = ecs_init();
 
@@ -6543,6 +6592,57 @@ void Plecs_assembly_w_composite_prop() {
         test_assert(p != NULL);
         test_int(p->x, 20);
         test_int(p->y, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_with_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop count: flecs.meta.i32 = 0"
+    LINE "  with Foo {"
+    LINE "    child :- Position{$count, $count * 2}"
+    LINE "  }"
+    LINE "}"
+    LINE "t :- Tree{count: 10}"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    test_assert(t != 0);
+    ecs_entity_t t_child = ecs_lookup_fullpath(world, "t.child");
+    test_assert(t_child != 0);
+
+    {
+        const void *ptr = ecs_get_id(world, t, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{count: 10}");
+        ecs_os_free(str);
+    }
+
+    {
+        const Position *p = ecs_get(world, t_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
     }
 
     ecs_fini(world);

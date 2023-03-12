@@ -533,6 +533,7 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
+static
 void flecs_add_path(
     ecs_world_t *world,
     bool defer_suspend,
