@@ -385,6 +385,12 @@ void Plecs_component_after_const_div_expr(void);
 void Plecs_parse_with(void);
 void Plecs_parse_with_w_with(void);
 void Plecs_parse_with_w_tag(void);
+void Plecs_parse_with_value(void);
+void Plecs_parse_with_2_values(void);
+void Plecs_parse_with_2_nested_values(void);
+void Plecs_parse_with_var(void);
+void Plecs_parse_with_2_vars(void);
+void Plecs_parse_with_2_nested_vars(void);
 void Plecs_assign_const_w_expr(void);
 void Plecs_const_w_type(void);
 void Plecs_assembly_no_scope(void);
@@ -2802,6 +2808,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "parse_with_w_tag",
         Plecs_parse_with_w_tag
+    },
+    {
+        "parse_with_value",
+        Plecs_parse_with_value
+    },
+    {
+        "parse_with_2_values",
+        Plecs_parse_with_2_values
+    },
+    {
+        "parse_with_2_nested_values",
+        Plecs_parse_with_2_nested_values
+    },
+    {
+        "parse_with_var",
+        Plecs_parse_with_var
+    },
+    {
+        "parse_with_2_vars",
+        Plecs_parse_with_2_vars
+    },
+    {
+        "parse_with_2_nested_vars",
+        Plecs_parse_with_2_nested_vars
     },
     {
         "assign_const_w_expr",
@@ -6321,7 +6351,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        192,
+        198,
         Plecs_testcases
     },
     {
