@@ -1010,6 +1010,70 @@ const char* plecs_parse_assign_stmt(
 }
 
 static
+const char* plecs_parse_var_as_component(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!state->var_stmt, ECS_INTERNAL_ERROR, NULL);
+#ifdef FLECS_EXPR
+    char var_name[ECS_MAX_TOKEN_SIZE];
+    const char *tmp = ptr;
+    ptr = ecs_parse_token(name, expr, ptr + 1, var_name, 0);
+    if (!ptr) {
+        ecs_parser_error(name, expr, tmp - expr, 
+            "unresolved variable '%s'", var_name);
+        return NULL;
+    }
+
+    ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, var_name);
+    if (!var) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "unresolved variable '%s'", var_name);
+        return NULL;
+    }
+
+    if (!state->assign_to) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing lvalue for variable assignment '%s'", var_name);
+        return NULL;
+    }
+
+    /* Use type of variable as component */
+    ecs_entity_t type = var->value.type;
+    void *dst = ecs_get_mut_id(world, state->assign_to, type);
+    if (!dst) {
+        char *type_name = ecs_get_fullpath(world, type);
+        ecs_parser_error(name, expr, ptr - expr, 
+            "failed to obtain component for type '%s' of variable '%s'",    
+                type_name, var_name);
+        ecs_os_free(type_name);
+        return NULL;
+    }
+
+    if (ecs_value_copy(world, type, dst, var->value.ptr)) {
+        char *type_name = ecs_get_fullpath(world, type);
+        ecs_parser_error(name, expr, ptr - expr, 
+            "failed to copy value for variable '%s' of type '%s'",    
+                var_name, type_name);
+        ecs_os_free(type_name);
+        return NULL;
+    }
+
+    ecs_modified_id(world, state->assign_to, type);
+
+#else
+    ecs_parser_error(name, expr, (ptr - expr), 
+        "variables not supported, missing FLECS_EXPR addon");
+#endif
+
+    return ptr;
+}
+
+static
 const char* plecs_parse_using_stmt(
     const char *name,
     const char *expr,
@@ -1577,6 +1641,10 @@ assign_stmt:
     /* Assignment without a preceding component */
     if (ptr[0] == '{') {
         goto assign_expr;
+    } else if (ptr[0] == '$') {
+        if (!state->var_stmt) {
+            goto assign_var_as_component;
+        }
     }
 
     /* Expect component identifiers */
@@ -1616,6 +1684,14 @@ assign_expr:
     state->assign_stmt = false;
     state->assign_to = 0;
     goto done;
+
+assign_var_as_component: {
+    ptr = plecs_parse_var_as_component(world, name, expr, ptr, state);
+    if (!ptr) {
+        goto error;
+    }
+    goto done;
+}
 
 scope_open:
     ptr = plecs_parse_scope_open(world, name, expr, ptr, state);

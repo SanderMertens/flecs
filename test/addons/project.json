@@ -381,6 +381,8 @@
                 "const_var_struct",
                 "const_var_redeclare",
                 "const_var_scoped",
+                "assign_component_from_var",
+                "assign_component_from_var_in_scope",
                 "scope_w_component_after_const_var",
                 "component_after_const_paren_expr",
                 "component_after_const_add_expr",

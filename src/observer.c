@@ -476,7 +476,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
                 user_it.columns, user_it.sources, NULL, NULL, false, -1, 
                 user_it.flags | EcsFilterPopulate);
         }
-        
+
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
             it->count, user_it.ptrs, user_it.sizes);
 
