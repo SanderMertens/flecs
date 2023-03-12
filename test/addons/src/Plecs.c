@@ -4165,6 +4165,72 @@ void Plecs_const_var_scoped() {
     ecs_fini(world);
 }
 
+void Plecs_assign_component_from_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos = Position{10, 20}"
+    LINE "a :- $var_pos"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    test_assert(var == 0);
+
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_component_from_var_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos = Position{10, 20}"
+    LINE "a {"
+    LINE " - $var_pos"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    test_assert(var == 0);
+
+    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Plecs_scope_w_component_after_const_var() {
     ecs_world_t *world = ecs_init();
 

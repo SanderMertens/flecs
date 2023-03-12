@@ -374,6 +374,8 @@ void Plecs_const_var_string(void);
 void Plecs_const_var_struct(void);
 void Plecs_const_var_redeclare(void);
 void Plecs_const_var_scoped(void);
+void Plecs_assign_component_from_var(void);
+void Plecs_assign_component_from_var_in_scope(void);
 void Plecs_scope_w_component_after_const_var(void);
 void Plecs_component_after_const_paren_expr(void);
 void Plecs_component_after_const_add_expr(void);
@@ -2750,6 +2752,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "const_var_scoped",
         Plecs_const_var_scoped
+    },
+    {
+        "assign_component_from_var",
+        Plecs_assign_component_from_var
+    },
+    {
+        "assign_component_from_var_in_scope",
+        Plecs_assign_component_from_var_in_scope
     },
     {
         "scope_w_component_after_const_var",
@@ -6281,7 +6291,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        184,
+        186,
         Plecs_testcases
     },
     {
