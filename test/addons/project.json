@@ -398,6 +398,7 @@
                 "parse_with_var",
                 "parse_with_2_vars",
                 "parse_with_2_nested_vars",
+                "parse_with_var_in_scope",
                 "assign_const_w_expr",
                 "const_w_type",
                 "assembly_no_scope",
@@ -430,7 +431,8 @@
                 "assign_var_to_typed_const_w_composite_type",
                 "typed_const_w_composite_type_invalid_assignment",
                 "assembly_w_composite_prop_invalid_assignment",
-                "assembly_w_composite_prop"
+                "assembly_w_composite_prop",
+                "assembly_with_with"
             ]
         }, {
             "id": "Doc",
