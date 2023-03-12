@@ -5063,6 +5063,16 @@ void* ecs_value_new(
     ecs_world_t *world,
     ecs_entity_t type);
 
+/** Construct a value in new storage 
+ * 
+ * @param world The world.
+ * @param ti The type info of the type to create.
+ * @return Pointer to type if success, NULL if failed.
+ */
+void* ecs_value_new_w_type_info(
+    ecs_world_t *world,
+    const ecs_type_info_t *ti);
+
 /** Destruct a value 
  * 
  * @param world The world.

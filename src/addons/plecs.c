@@ -60,6 +60,11 @@ ECS_DTOR(EcsScript, ptr, {
 #define STACK_MAX_SIZE (64)
 
 typedef struct {
+    ecs_value_t value;
+    bool owned;
+} plecs_with_value_t;
+
+typedef struct {
     const char *name;
     const char *code;
 
@@ -75,6 +80,7 @@ typedef struct {
     ecs_entity_t with[STACK_MAX_SIZE];
     ecs_entity_t using[STACK_MAX_SIZE];
     int32_t with_frames[STACK_MAX_SIZE];
+    plecs_with_value_t with_value_frames[STACK_MAX_SIZE];
     int32_t using_frames[STACK_MAX_SIZE];
     int32_t sp;
     int32_t with_frame;
@@ -760,7 +766,15 @@ int plecs_create_term(
         if (subj) {
             int32_t i, frame_count = state->with_frames[state->sp];
             for (i = 0; i < frame_count; i ++) {
-                ecs_add_id(world, subj, state->with[i]);
+                ecs_id_t id = state->with[i];
+                plecs_with_value_t *v = &state->with_value_frames[i];
+                if (v->value.type) {
+                    void *ptr = ecs_get_mut_id(world, subj, id);
+                    ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
+                    ecs_modified_id(world, subj, id);
+                } else {
+                    ecs_add_id(world, subj, id);
+                }
             }
         }
     }
@@ -1005,6 +1019,100 @@ const char* plecs_parse_assign_stmt(
 
         state->last_assign_id = type;
     }
+
+    return ptr;
+}
+
+static
+const char* plecs_parse_assign_with_stmt(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    int32_t with_frame = state->with_frame - 1;
+    if (with_frame < 0) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing type in with value");
+        return NULL;
+    }
+
+    ecs_id_t id = state->with[with_frame];
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    const ecs_type_info_t *ti = idr->type_info;
+    if (!ti) {
+        char *typename = ecs_id_str(world, id);
+        ecs_parser_error(name, expr, ptr - expr, 
+            "id '%s' in with value is not a type", typename);
+        ecs_os_free(typename);
+        return NULL;
+    }
+
+    plecs_with_value_t *v = &state->with_value_frames[with_frame];
+    v->value.type = ti->component;
+    v->value.ptr = ecs_value_new(world, ti->component);
+    v->owned = true;
+    if (!v->value.ptr) {
+        char *typename = ecs_id_str(world, id);
+        ecs_parser_error(name, expr, ptr - expr, 
+            "failed to create value for '%s'", typename);
+        ecs_os_free(typename);
+        return NULL;
+    }
+
+    ptr = ecs_parse_expr(world, ptr, &v->value,
+        &(ecs_parse_expr_desc_t){
+            .name = name,
+            .expr = expr,
+            .lookup_action = plecs_lookup_action,
+            .lookup_ctx = state,
+            .vars = &state->vars
+        });
+    if (!ptr) {
+        return NULL;
+    }
+
+    return ptr;
+}
+
+static
+const char* plecs_parse_assign_with_var(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(state->with_stmt, ECS_INTERNAL_ERROR, NULL);
+
+#ifdef FLECS_EXPR
+    char var_name[ECS_MAX_TOKEN_SIZE];
+    const char *tmp = ptr;
+    ptr = ecs_parse_token(name, expr, ptr + 1, var_name, 0);
+    if (!ptr) {
+        ecs_parser_error(name, expr, tmp - expr, 
+            "unresolved variable '%s'", var_name);
+        return NULL;
+    }
+
+    ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, var_name);
+    if (!var) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "unresolved variable '%s'", var_name);
+        return NULL;
+    }
+
+    int32_t with_frame = state->with_frame;
+    state->with[with_frame] = var->value.type;
+    state->with_value_frames[with_frame].value = var->value;
+    state->with_value_frames[with_frame].owned = false;
+    state->with_frame ++;
+
+#else
+    ecs_parser_error(name, expr, (ptr - expr), 
+        "variables not supported, missing FLECS_EXPR addon");
+#endif
 
     return ptr;
 }
@@ -1409,6 +1517,20 @@ const char* plecs_parse_scope_close(
         ecs_set_scope(world, id);
     }
 
+    int32_t i, prev_with = state->with_frames[state->sp];
+    for (i = prev_with; i < state->with_frame; i ++) {
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (!v->owned) {
+            continue;
+        }
+        if (v->value.type) {
+            ecs_value_free(world, v->value.type, v->value.ptr);
+            v->value.type = 0;
+            v->value.ptr = NULL;
+            v->owned = false;
+        }
+    }
+
     state->with_frame = state->with_frames[state->sp];
     state->using_frame = state->using_frames[state->sp];
     state->last_subject = 0;
@@ -1582,7 +1704,16 @@ term_expr:
         goto done;
     }
 
-    if (!(ptr = plecs_parse_plecs_term(world, name, ptr, ptr, state))) {
+    if (ptr[0] == '$') {
+        if (state->with_stmt) {
+            ptr = plecs_parse_assign_with_var(name, expr, ptr, state);
+            if (!ptr) {
+                return NULL;
+            }
+        } else if (!state->var_stmt) {
+            goto assign_var_as_component;
+        }
+    } else if (!(ptr = plecs_parse_plecs_term(world, name, ptr, ptr, state))) {
         goto error;
     }
 
@@ -1591,11 +1722,13 @@ term_expr:
         if (state->decl_stmt) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected ' ' in declaration statement");
+            goto error;
         }
         ptr = tptr;
         goto decl_stmt;
     }
 
+next_term:
     ptr = plecs_parse_fluff(ptr);
 
     if (!state->using_stmt) {
@@ -1611,6 +1744,15 @@ term_expr:
         } else if (ptr[0] == '{') {
             if (state->assign_stmt) {
                 goto assign_expr;
+            } else if (state->with_stmt && !isspace(ptr[-1])) {
+                /* If this is a { in a with statement which directly follows a
+                 * non-whitespace character, the with id has a value */
+                ptr = plecs_parse_assign_with_stmt(world, name, expr, ptr, state);
+                if (!ptr) {
+                    goto error;
+                }
+
+                goto next_term;
             } else {
                 ptr = plecs_parse_fluff(ptr + 1);
                 goto scope_open;
@@ -1641,10 +1783,6 @@ assign_stmt:
     /* Assignment without a preceding component */
     if (ptr[0] == '{') {
         goto assign_expr;
-    } else if (ptr[0] == '$') {
-        if (!state->var_stmt) {
-            goto assign_var_as_component;
-        }
     }
 
     /* Expect component identifiers */
