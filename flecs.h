@@ -9408,6 +9408,7 @@ int ecs_log_last_error(void);
 #endif // FLECS_LOG_H
 
 
+/* Handle addon dependencies that need declarations to be visible in header */
 #ifdef FLECS_MONITOR
 #ifndef FLECS_STATS
 #define FLECS_STATS
@@ -9422,6 +9423,10 @@ int ecs_log_last_error(void);
 
 #ifdef FLECS_REST
 #define FLECS_HTTP
+#endif
+
+#ifdef FLECS_PLECS
+#define FLECS_EXPR
 #endif
 
 #ifdef FLECS_APP
@@ -13504,6 +13509,10 @@ int ecs_meta_from_desc(
 
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
+#endif
+
+#ifndef FLECS_EXPR
+#define FLECS_EXPR
 #endif
 
 #ifndef FLECS_PLECS_H

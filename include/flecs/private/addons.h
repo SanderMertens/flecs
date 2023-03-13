@@ -86,6 +86,7 @@
 #include "flecs/addons/journal.h"
 #include "flecs/addons/log.h"
 
+/* Handle addon dependencies that need declarations to be visible in header */
 #ifdef FLECS_MONITOR
 #ifndef FLECS_STATS
 #define FLECS_STATS
@@ -100,6 +101,10 @@
 
 #ifdef FLECS_REST
 #define FLECS_HTTP
+#endif
+
+#ifdef FLECS_PLECS
+#define FLECS_EXPR
 #endif
 
 #ifdef FLECS_APP
