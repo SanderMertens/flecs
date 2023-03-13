@@ -6647,3 +6647,65 @@ void Plecs_assembly_with_with() {
 
     ecs_fini(world);
 }
+
+void Plecs_using_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p1 = ecs_new_entity(world, "foo.p1");
+    ecs_entity_t p2 = ecs_new_entity(world, "foo.p2");
+
+    ecs_set_scope(world, p1);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_set_scope(world, p2);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_set_scope(world, 0);
+
+    const char *expr =
+    LINE "using foo.*\n"
+    LINE "e :- Position{10, 20}\n"
+    LINE "e :- Velocity{1, 2}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t pos = ecs_lookup_fullpath(world, "foo.p1.Position");
+    test_assert(pos == ecs_id(Position));
+    ecs_entity_t vel = ecs_lookup_fullpath(world, "foo.p2.Velocity");
+    test_assert(vel == ecs_id(Velocity));
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *ptr = ecs_get(world, e, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    {
+        const Velocity *ptr = ecs_get(world, e, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}

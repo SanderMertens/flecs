@@ -432,7 +432,8 @@
                 "typed_const_w_composite_type_invalid_assignment",
                 "assembly_w_composite_prop_invalid_assignment",
                 "assembly_w_composite_prop",
-                "assembly_with_with"
+                "assembly_with_with",
+                "using_wildcard"
             ]
         }, {
             "id": "Doc",
