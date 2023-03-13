@@ -9,46 +9,6 @@
 
 ECS_COMPONENT_DECLARE(EcsScript);
 
-static
-int flecs_plecs_parse(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_vars_t *vars,
-    ecs_entity_t script,
-    ecs_entity_t instance);
-
-static void flecs_dtor_script(EcsScript *ptr) {
-    ecs_os_free(ptr->script);
-    ecs_vec_fini_t(NULL, &ptr->using_, ecs_entity_t);
-
-    int i, count = ptr->prop_defaults.count;
-    ecs_value_t *values = ptr->prop_defaults.array;
-    for (i = 0; i < count; i ++) {
-        ecs_value_free(ptr->world, values[i].type, values[i].ptr);
-    }
-
-    ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
-}
-
-static
-ECS_MOVE(EcsScript, dst, src, {
-    flecs_dtor_script(dst);
-    dst->using_ = src->using_;
-    dst->prop_defaults = src->prop_defaults;
-    dst->script = src->script;
-    dst->world = src->world;
-    ecs_os_zeromem(&src->using_);
-    ecs_os_zeromem(&src->prop_defaults);
-    src->script = NULL;
-    src->world = NULL;
-})
-
-static
-ECS_DTOR(EcsScript, ptr, {
-    flecs_dtor_script(ptr);
-})
-
 #include "../private_api.h"
 #include <ctype.h>
 
@@ -100,7 +60,6 @@ typedef struct {
 
     bool with_stmt;
     bool scope_assign_stmt;
-    bool using_stmt;
     bool assign_stmt;
     bool assembly_stmt;
     bool assembly_instance;
@@ -112,6 +71,46 @@ typedef struct {
 
     int32_t errors;
 } plecs_state_t;
+
+static
+int flecs_plecs_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_vars_t *vars,
+    ecs_entity_t script,
+    ecs_entity_t instance);
+
+static void flecs_dtor_script(EcsScript *ptr) {
+    ecs_os_free(ptr->script);
+    ecs_vec_fini_t(NULL, &ptr->using_, ecs_entity_t);
+
+    int i, count = ptr->prop_defaults.count;
+    ecs_value_t *values = ptr->prop_defaults.array;
+    for (i = 0; i < count; i ++) {
+        ecs_value_free(ptr->world, values[i].type, values[i].ptr);
+    }
+
+    ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
+}
+
+static
+ECS_MOVE(EcsScript, dst, src, {
+    flecs_dtor_script(dst);
+    dst->using_ = src->using_;
+    dst->prop_defaults = src->prop_defaults;
+    dst->script = src->script;
+    dst->world = src->world;
+    ecs_os_zeromem(&src->using_);
+    ecs_os_zeromem(&src->prop_defaults);
+    src->script = NULL;
+    src->world = NULL;
+})
+
+static
+ECS_DTOR(EcsScript, ptr, {
+    flecs_dtor_script(ptr);
+})
 
 /* Assembly ctor to initialize with default property values */
 static
@@ -539,9 +538,6 @@ bool plecs_pred_is_subj(
     if (state->isa_stmt) {
         return false;
     }
-    if (state->using_stmt) {
-        return false;
-    }
     if (state->decl_type) {
         return false;
     }
@@ -673,12 +669,6 @@ int plecs_create_term(
         return -1;
     }
 
-    if (state->using_stmt && (obj || subj)) {
-        ecs_parser_error(name, expr, column, 
-            "invalid predicate/object in using statement");
-        return -1;
-    }
-
     if (state->isa_stmt) {
         pred = ecs_pair(EcsIsA, pred);
     }
@@ -727,15 +717,7 @@ int plecs_create_term(
         }
 
         state->with[state->with_frame ++] = id;
-    
-    } else if (state->using_stmt) {
-        ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(obj == 0, ECS_INTERNAL_ERROR, NULL);
 
-        state->using[state->using_frame ++] = pred;
-        state->using_frames[state->sp] = state->using_frame;
-
-    /* If this is not a with/using clause, add with frames to subject */
     } else {
         if (subj) {
             int32_t i, frame_count = state->with_frames[state->sp];
@@ -1131,7 +1113,22 @@ const char* plecs_parse_var_as_component(
 }
 
 static
+void plecs_push_using(
+    ecs_entity_t scope,
+    plecs_state_t *state)
+{
+    for (int i = 0; i < state->using_frame; i ++) {
+        if (state->using[i] == scope) {
+            return;
+        }
+    }
+
+    state->using[state->using_frame ++] = scope;
+}
+
+static
 const char* plecs_parse_using_stmt(
+    ecs_world_t *world,
     const char *name,
     const char *expr,
     const char *ptr,
@@ -1143,10 +1140,62 @@ const char* plecs_parse_using_stmt(
         return NULL;
     }
 
-    /* Add following expressions to using list */
-    state->using_stmt = true;
+    char using_path[ECS_MAX_TOKEN_SIZE];
+    const char *tmp = ptr + 1;
+    ptr = ecs_parse_token(name, expr, ptr + 5, using_path, 0);
+    if (!ptr) {
+        ecs_parser_error(name, expr, tmp - expr, 
+            "expected identifier for using statement");
+        return NULL;
+    }
 
-    return ptr + 5;
+    ecs_size_t len = ecs_os_strlen(using_path);
+    if (!len) {
+        ecs_parser_error(name, expr, tmp - expr, 
+            "missing identifier for using statement");
+        return NULL;
+    }
+
+    /* Lookahead as * is not matched by parse_token */
+    if (ptr[0] == '*') {
+        using_path[len] = '*';
+        using_path[len + 1] = '\0';
+        len ++;
+        ptr ++;
+    }
+
+    ecs_entity_t scope;
+    if (len > 2 && !ecs_os_strcmp(&using_path[len - 2], ".*")) {
+        using_path[len - 2] = '\0';
+        scope = ecs_lookup_fullpath(world, using_path);
+        if (!scope) {
+            ecs_parser_error(name, expr, ptr - expr,
+                "unresolved identifier '%s' in using statement", using_path);
+            return NULL;
+        }
+
+        /* Add each child of the scope to using stack */
+        ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ 
+            .id = ecs_childof(scope) });
+        while (ecs_term_next(&it)) {
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                plecs_push_using(it.entities[i], state);
+            }
+        }
+    } else {
+        scope = plecs_ensure_entity(world, state, using_path, 0, false);
+        if (!scope) {
+            ecs_parser_error(name, expr, ptr - expr,
+                "unresolved identifier '%s' in using statement", using_path);
+            return NULL;
+        }
+
+        plecs_push_using(scope, state);
+    }
+
+    state->using_frames[state->sp] = state->using_frame;
+    return ptr;
 }
 
 static
@@ -1585,7 +1634,6 @@ const char* plecs_parse_stmt(
     state->scope_assign_stmt = false;
     state->isa_stmt = false;
     state->with_stmt = false;
-    state->using_stmt = false;
     state->decl_stmt = false;
     state->var_stmt = false;
     state->last_subject = 0;
@@ -1617,9 +1665,9 @@ const char* plecs_parse_stmt(
         if (!ptr) goto error;
         goto term_expr;
     } else if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
-        ptr = plecs_parse_using_stmt(name, expr, ptr, state);
+        ptr = plecs_parse_using_stmt(world, name, expr, ptr, state);
         if (!ptr) goto error;
-        goto term_expr;
+        goto done;
     } else if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
         ptr = plecs_parse_with_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
@@ -1672,32 +1720,30 @@ term_expr:
 next_term:
     ptr = plecs_parse_fluff(ptr);
 
-    if (!state->using_stmt) {
-        if (ptr[0] == ':' && ptr[1] == '-') {
-            ptr = plecs_parse_fluff(ptr + 2);
-            goto assign_stmt;
-        } else if (ptr[0] == ':') {
-            ptr = plecs_parse_fluff(ptr + 1);
-            goto inherit_stmt;
-        } else if (ptr[0] == ',') {
-            ptr = plecs_parse_fluff(ptr + 1);
-            goto term_expr;
-        } else if (ptr[0] == '{') {
-            if (state->assign_stmt) {
-                goto assign_expr;
-            } else if (state->with_stmt && !isspace(ptr[-1])) {
-                /* If this is a { in a with statement which directly follows a
-                 * non-whitespace character, the with id has a value */
-                ptr = plecs_parse_assign_with_stmt(world, name, expr, ptr, state);
-                if (!ptr) {
-                    goto error;
-                }
-
-                goto next_term;
-            } else {
-                ptr = plecs_parse_fluff(ptr + 1);
-                goto scope_open;
+    if (ptr[0] == ':' && ptr[1] == '-') {
+        ptr = plecs_parse_fluff(ptr + 2);
+        goto assign_stmt;
+    } else if (ptr[0] == ':') {
+        ptr = plecs_parse_fluff(ptr + 1);
+        goto inherit_stmt;
+    } else if (ptr[0] == ',') {
+        ptr = plecs_parse_fluff(ptr + 1);
+        goto term_expr;
+    } else if (ptr[0] == '{') {
+        if (state->assign_stmt) {
+            goto assign_expr;
+        } else if (state->with_stmt && !isspace(ptr[-1])) {
+            /* If this is a { in a with statement which directly follows a
+                * non-whitespace character, the with id has a value */
+            ptr = plecs_parse_assign_with_stmt(world, name, expr, ptr, state);
+            if (!ptr) {
+                goto error;
             }
+
+            goto next_term;
+        } else {
+            ptr = plecs_parse_fluff(ptr + 1);
+            goto scope_open;
         }
     }
 

@@ -426,6 +426,7 @@ void Plecs_typed_const_w_composite_type_invalid_assignment(void);
 void Plecs_assembly_w_composite_prop_invalid_assignment(void);
 void Plecs_assembly_w_composite_prop(void);
 void Plecs_assembly_with_with(void);
+void Plecs_using_wildcard(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2974,6 +2975,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_with_with",
         Plecs_assembly_with_with
+    },
+    {
+        "using_wildcard",
+        Plecs_using_wildcard
     }
 };
 
@@ -6361,7 +6366,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        200,
+        201,
         Plecs_testcases
     },
     {
