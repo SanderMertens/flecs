@@ -94,11 +94,9 @@ typedef struct {
     char *annot[STACK_MAX_SIZE];
     int32_t annot_count;
 
-#ifdef FLECS_EXPR
     ecs_vars_t vars;
     char var_name[256];
     ecs_entity_t var_type;
-#endif
 
     bool with_stmt;
     bool scope_assign_stmt;
@@ -114,8 +112,6 @@ typedef struct {
 
     int32_t errors;
 } plecs_state_t;
-
-#ifdef FLECS_EXPR
 
 /* Assembly ctor to initialize with default property values */
 static
@@ -349,8 +345,6 @@ int flecs_assembly_create(
     return 0;
 }
 
-#endif
-
 /* Parser */
 
 static
@@ -431,7 +425,6 @@ ecs_entity_t plecs_lookup(
 }
 
 /* Lookup action used for deserializing entity refs in component values */
-#ifdef FLECS_EXPR
 static
 ecs_entity_t plecs_lookup_action(
     const ecs_world_t *world,
@@ -440,7 +433,6 @@ ecs_entity_t plecs_lookup_action(
 {
     return plecs_lookup(world, path, ctx, 0, false);
 }
-#endif
 
 static
 ecs_entity_t plecs_ensure_entity(
@@ -806,7 +798,6 @@ const char* plecs_parse_inherit_stmt(
     return ptr;
 }
 
-#ifdef FLECS_EXPR
 static
 const char* plecs_parse_assign_var_expr(
     ecs_world_t *world,
@@ -859,7 +850,6 @@ const char* plecs_parse_assign_var_expr(
 
     return ptr;
 }
-#endif
 
 static
 const char* plecs_parse_assign_expr(
@@ -872,12 +862,7 @@ const char* plecs_parse_assign_expr(
     (void)world;
     
     if (state->var_stmt) {
-#ifdef FLECS_EXPR
         return plecs_parse_assign_var_expr(world, name, expr, ptr, state);
-#else
-    ecs_parser_error(name, expr, ptr - expr,
-        "variables not supported, missing FLECS_EXPR addon");
-#endif
     }
 
     if (!state->assign_stmt) {
@@ -893,11 +878,6 @@ const char* plecs_parse_assign_expr(
         return NULL;
     }
 
-#ifndef FLECS_EXPR
-    ecs_parser_error(name, expr, ptr - expr,
-        "cannot parse value, missing FLECS_EXPR addon");
-    return NULL;
-#else
     ecs_entity_t assign_to = state->assign_to;
     if (!assign_to) {
         assign_to = state->last_subject;
@@ -933,7 +913,6 @@ const char* plecs_parse_assign_expr(
     }
 
     ecs_modified_id(world, assign_to, assign_id);
-#endif
 
     return ptr;
 }
@@ -1068,7 +1047,6 @@ const char* plecs_parse_assign_with_var(
     ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
     ecs_assert(state->with_stmt, ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_EXPR
     char var_name[ECS_MAX_TOKEN_SIZE];
     const char *tmp = ptr;
     ptr = ecs_parse_token(name, expr, ptr + 1, var_name, 0);
@@ -1091,11 +1069,6 @@ const char* plecs_parse_assign_with_var(
     state->with_value_frames[with_frame].owned = false;
     state->with_frame ++;
 
-#else
-    ecs_parser_error(name, expr, (ptr - expr), 
-        "variables not supported, missing FLECS_EXPR addon");
-#endif
-
     return ptr;
 }
 
@@ -1109,7 +1082,6 @@ const char* plecs_parse_var_as_component(
 {
     ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!state->var_stmt, ECS_INTERNAL_ERROR, NULL);
-#ifdef FLECS_EXPR
     char var_name[ECS_MAX_TOKEN_SIZE];
     const char *tmp = ptr;
     ptr = ecs_parse_token(name, expr, ptr + 1, var_name, 0);
@@ -1154,11 +1126,6 @@ const char* plecs_parse_var_as_component(
     }
 
     ecs_modified_id(world, state->assign_to, type);
-
-#else
-    ecs_parser_error(name, expr, (ptr - expr), 
-        "variables not supported, missing FLECS_EXPR addon");
-#endif
 
     return ptr;
 }
@@ -1229,7 +1196,6 @@ const char* plecs_parse_assembly_stmt(
     return ptr + 9;
 }
 
-#ifdef FLECS_EXPR
 static
 const char* plecs_parse_var_type(
     ecs_world_t *world,
@@ -1358,7 +1324,6 @@ const char* plecs_parse_prop_stmt(
 
     return plecs_parse_fluff(ptr + 1);
 }
-#endif
 
 static
 const char* plecs_parse_scope_open(
@@ -1410,7 +1375,6 @@ const char* plecs_parse_scope_open(
         state->scope[state->sp] = scope;
         state->default_scope_type[state->sp] = default_scope_type;
 
-#ifdef FLECS_EXPR
         if (state->assembly_stmt) {
             if (state->assembly) {
                 ecs_parser_error(name, expr, ptr - expr, 
@@ -1420,7 +1384,6 @@ const char* plecs_parse_scope_open(
             state->assembly = scope;
             state->assembly_stmt = false;
             state->assembly_start = ptr;
-#endif
         }
     } else {
         state->scope[state->sp] = state->scope[state->sp - 1];
@@ -1432,9 +1395,7 @@ const char* plecs_parse_scope_open(
     state->with_frames[state->sp] = state->with_frame;
     state->with_stmt = false;
 
-#ifdef FLECS_EXPR
     ecs_vars_push(&state->vars);
-#endif
 
     return ptr;
 }
@@ -1459,7 +1420,6 @@ const char* plecs_parse_scope_close(
         return NULL;
     }
 
-#ifdef FLECS_EXPR
     ecs_entity_t cur = state->scope[state->sp], assembly = state->assembly;
     if (state->sp && (cur == state->scope[state->sp - 1])) {
         /* Previous scope is also from the assembly, not found the end yet */
@@ -1483,7 +1443,6 @@ const char* plecs_parse_scope_close(
             return NULL;
         }
     }
-#endif
 
     state->scope[state->sp] = 0;
     state->default_scope_type[state->sp] = 0;
@@ -1522,9 +1481,7 @@ const char* plecs_parse_scope_close(
     state->last_subject = 0;
     state->assign_stmt = false;
 
-#ifdef FLECS_EXPR
     ecs_vars_pop(&state->vars);
-#endif
 
     return plecs_parse_fluff(ptr + 1);
 }
@@ -1667,7 +1624,6 @@ const char* plecs_parse_stmt(
         ptr = plecs_parse_with_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
         goto term_expr;
-#ifdef FLECS_EXPR
     } else if (!ecs_os_strncmp(ptr, TOK_CONST " ", 6)) {
         ptr = plecs_parse_const_stmt(world, name, expr, ptr, state);
         if (!ptr) goto error;
@@ -1680,7 +1636,6 @@ const char* plecs_parse_stmt(
         ptr = plecs_parse_prop_stmt(world, name, expr, ptr, state);
         if (!ptr) goto error;
         goto assign_expr;
-#endif
     } else {
         goto term_expr;
     }
@@ -1784,7 +1739,6 @@ assign_expr:
         goto term_expr;
     } else if (ptr[0] == '{') {
         if (state->var_stmt) {
-#ifdef FLECS_EXPR
             const ecs_expr_var_t *var = ecs_vars_lookup(
                 &state->vars, state->var_name);
             if (var && var->value.type == ecs_id(ecs_entity_t)) {
@@ -1795,10 +1749,8 @@ assign_expr:
                 ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
                 goto done;
             }
-#else
             ecs_parser_error(name, expr, (ptr - expr), 
                 "variables not supported, missing FLECS_EXPR addon");
-#endif
         }
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected '{' after assignment");
@@ -1863,7 +1815,6 @@ int flecs_plecs_parse(
         state.global_with = prev_with;
     }
 
-#ifdef FLECS_EXPR
     ecs_vars_init(world, &state.vars);
 
     if (script) {
@@ -1892,7 +1843,6 @@ int flecs_plecs_parse(
     if (vars) {
         state.vars.root.parent = vars->cur;
     }
-#endif
 
     do {
         expr = ptr = plecs_parse_stmt(world, name, expr, ptr, &state);
@@ -1923,14 +1873,11 @@ int flecs_plecs_parse(
         goto error;
     }
 
-#ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
-#endif
+
     return 0;
 error:
-#ifdef FLECS_EXPR
     ecs_vars_fini(&state.vars);
-#endif
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
     ecs_term_fini(&term);
@@ -2030,6 +1977,9 @@ int ecs_script_update(
     const char *script,
     ecs_vars_t *vars)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+
     int result = 0;
     bool is_defer = ecs_is_deferred(world);
     ecs_suspend_readonly_state_t srs;
@@ -2113,10 +2063,7 @@ void FlecsScriptImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsScript);
-
-#ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
@@ -2129,7 +2076,6 @@ void FlecsScriptImport(
 
     ecs_add_id(world, ecs_id(EcsScript), EcsTag);
 
-#ifdef FLECS_META
     ecs_struct(world, {
         .entity = ecs_id(EcsScript),
         .members = {
@@ -2142,7 +2088,6 @@ void FlecsScriptImport(
             { .name = "script", .type = ecs_id(ecs_string_t), .count = 0 }
         }
     });
-#endif
 }
 
 #endif

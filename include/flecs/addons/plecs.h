@@ -23,6 +23,10 @@
 #define FLECS_PARSER
 #endif
 
+#ifndef FLECS_EXPR
+#define FLECS_EXPR
+#endif
+
 #ifndef FLECS_PLECS_H
 #define FLECS_PLECS_H
 
