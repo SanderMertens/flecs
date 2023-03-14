@@ -430,6 +430,12 @@ void Plecs_using_wildcard(void);
 void Plecs_single_line_comment_in_value(void);
 void Plecs_multi_line_comment_in_value(void);
 void Plecs_unterminated_multi_line_comment_in_value(void);
+void Plecs_module_stmt(void);
+void Plecs_nested_module_stmt(void);
+void Plecs_module_stmt_w_scope(void);
+void Plecs_module_stmt_w_nested_scope(void);
+void Plecs_module_w_assembly(void);
+void Plecs_module_w_nested_assembly(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2994,6 +3000,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "unterminated_multi_line_comment_in_value",
         Plecs_unterminated_multi_line_comment_in_value
+    },
+    {
+        "module_stmt",
+        Plecs_module_stmt
+    },
+    {
+        "nested_module_stmt",
+        Plecs_nested_module_stmt
+    },
+    {
+        "module_stmt_w_scope",
+        Plecs_module_stmt_w_scope
+    },
+    {
+        "module_stmt_w_nested_scope",
+        Plecs_module_stmt_w_nested_scope
+    },
+    {
+        "module_w_assembly",
+        Plecs_module_w_assembly
+    },
+    {
+        "module_w_nested_assembly",
+        Plecs_module_w_nested_assembly
     }
 };
 
@@ -6381,7 +6411,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        204,
+        210,
         Plecs_testcases
     },
     {
