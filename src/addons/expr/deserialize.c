@@ -152,6 +152,26 @@ const char *ecs_parse_expr_token(
     const char *start = ptr;
     char *token_ptr = token;
 
+    if (ptr[0] == '/') {
+        char ch;
+        if (ptr[1] == '/') {
+            // Single line comment
+            for (ptr = &ptr[2]; (ch = ptr[0]) && (ch != '\n'); ptr ++) {}
+            return ptr;
+        } else if (ptr[1] == '*') {
+            // Multi line comment
+            for (ptr = &ptr[2]; (ch = ptr[0]); ptr ++) {
+                if (ch == '*' && ptr[1] == '/') {
+                    return ptr + 2;
+                }
+            }
+
+            ecs_parser_error(name, expr, ptr - expr, 
+                "missing */ for multiline comment");
+            return NULL;
+        }
+    }
+
     ecs_expr_oper_t op;
     if (ptr[0] == '(') {
         token[0] = '(';
