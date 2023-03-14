@@ -427,6 +427,9 @@ void Plecs_assembly_w_composite_prop_invalid_assignment(void);
 void Plecs_assembly_w_composite_prop(void);
 void Plecs_assembly_with_with(void);
 void Plecs_using_wildcard(void);
+void Plecs_single_line_comment_in_value(void);
+void Plecs_multi_line_comment_in_value(void);
+void Plecs_unterminated_multi_line_comment_in_value(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2979,6 +2982,18 @@ bake_test_case Plecs_testcases[] = {
     {
         "using_wildcard",
         Plecs_using_wildcard
+    },
+    {
+        "single_line_comment_in_value",
+        Plecs_single_line_comment_in_value
+    },
+    {
+        "multi_line_comment_in_value",
+        Plecs_multi_line_comment_in_value
+    },
+    {
+        "unterminated_multi_line_comment_in_value",
+        Plecs_unterminated_multi_line_comment_in_value
     }
 };
 
@@ -6366,7 +6381,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        201,
+        204,
         Plecs_testcases
     },
     {

@@ -433,7 +433,10 @@
                 "assembly_w_composite_prop_invalid_assignment",
                 "assembly_w_composite_prop",
                 "assembly_with_with",
-                "using_wildcard"
+                "using_wildcard",
+                "single_line_comment_in_value",
+                "multi_line_comment_in_value",
+                "unterminated_multi_line_comment_in_value"
             ]
         }, {
             "id": "Doc",
