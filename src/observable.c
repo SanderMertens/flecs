@@ -307,12 +307,8 @@ void flecs_emit_propagate(
             ecs_record_t **records = ecs_vec_first(&table->data.records);
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = records[e];
-                if (!r) {
-                    flecs_dump_backtrace(stdout);
-                    continue;
-                }
-
-                ecs_id_record_t *idr_t = records[e]->idr;
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_id_record_t *idr_t = r->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -432,7 +428,7 @@ void flecs_override_copy(
     if (on_set) {
         ecs_entity_t *entities = ecs_vec_get_t(
             &table->data.entities, ecs_entity_t, offset);
-        flecs_invoke_hook(world, table, count, entities,
+        flecs_invoke_hook(world, table, count, offset, entities,
             dst, ti->component, ti, EcsOnSet, on_set);
     }
 }

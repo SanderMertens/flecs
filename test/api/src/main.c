@@ -860,14 +860,11 @@ void ComponentLifecycle_with_before_hooks(void);
 void ComponentLifecycle_move_ctor_on_move(void);
 void ComponentLifecycle_ptr_to_self(void);
 void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void);
-<<<<<<< HEAD
 void ComponentLifecycle_on_add_hook_check_offset(void);
 void ComponentLifecycle_on_remove_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_check_offset(void);
-=======
 void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
->>>>>>> 37a1760cb (Implement support for assemblies)
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -5707,7 +5704,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_ctor_move_dtor_from_move_ctor
     },
     {
-<<<<<<< HEAD
         "on_add_hook_check_offset",
         ComponentLifecycle_on_add_hook_check_offset
     },
@@ -5718,14 +5714,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_hook_check_offset",
         ComponentLifecycle_on_set_hook_check_offset
-=======
+    },
+    {
         "on_set_hook_on_override",
         ComponentLifecycle_on_set_hook_on_override
     },
     {
         "on_set_hook_on_auto_override",
         ComponentLifecycle_on_set_hook_on_auto_override
->>>>>>> 37a1760cb (Implement support for assemblies)
     }
 };
 
@@ -12038,11 +12034,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-<<<<<<< HEAD
-        82,
-=======
-        81,
->>>>>>> 37a1760cb (Implement support for assemblies)
+        84,
         ComponentLifecycle_testcases
     },
     {

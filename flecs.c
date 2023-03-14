@@ -19967,7 +19967,10 @@ const char* plecs_parse_assign_var_expr(
             .vars = &state->vars
         });
     if (!ptr) {
-        return NULL;
+        if (state->last_assign_id) {
+            ecs_value_free(world, value.type, value.ptr);
+        }
+        goto error;
     }
 
     if (var) {
@@ -19985,13 +19988,14 @@ const char* plecs_parse_assign_var_expr(
         var = ecs_vars_declare_w_value(
             &state->vars, state->var_name, &value);
         if (!var) {
-            return NULL;
+            goto error;
         }
     }
 
     state->var_is_prop = false;
-
     return ptr;
+error:
+    return NULL;
 }
 
 static
@@ -20383,9 +20387,9 @@ const char* plecs_parse_module_stmt(
         return NULL;
     }
 
-    ecs_entity_t module = ecs_module_init(world, NULL, &(ecs_component_desc_t){
-        .entity = ecs_entity(world, { .name = module_path })
-    });
+    ecs_component_desc_t desc = {0};
+    desc.entity = ecs_entity(world, { .name = module_path });
+    ecs_entity_t module = ecs_module_init(world, NULL, &desc);
     if (!module) {
         return NULL;
     }
@@ -26858,6 +26862,7 @@ const char* flecs_parse_expr(
     ecs_meta_cursor_t cur = {0};
     const char *name = desc ? desc->name : NULL;
     const char *expr = desc ? desc->expr : NULL;
+    token[0] = '\0';
     expr = expr ? expr : ptr;
 
     ptr = ecs_parse_ws_eol(ptr);
@@ -45191,12 +45196,8 @@ void flecs_emit_propagate(
             ecs_record_t **records = ecs_vec_first(&table->data.records);
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = records[e];
-                if (!r) {
-                    flecs_dump_backtrace(stdout);
-                    continue;
-                }
-
-                ecs_id_record_t *idr_t = records[e]->idr;
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_id_record_t *idr_t = r->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -45316,7 +45317,7 @@ void flecs_override_copy(
     if (on_set) {
         ecs_entity_t *entities = ecs_vec_get_t(
             &table->data.entities, ecs_entity_t, offset);
-        flecs_invoke_hook(world, table, count, entities,
+        flecs_invoke_hook(world, table, count, offset, entities,
             dst, ti->component, ti, EcsOnSet, on_set);
     }
 }

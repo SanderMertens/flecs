@@ -906,6 +906,7 @@ INPUT                  = include/flecs.h \
                          docs/Quickstart.md \
                          docs/FAQ.md \
                          docs/DesignWithFlecs.md \
+                         docs/FlecsScriptTutorial.md \
                          docs/Manual.md \
                          docs/Queries.md \
                          docs/Systems.md \

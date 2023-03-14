@@ -3,6 +3,7 @@
 ## Getting Started
 - [FAQ](/flecs/md_docs_FAQ.html)
 - [Quickstart](/flecs/md_docs_Quickstart.html)
+- [Flecs Script Tutorial](/flecs/md_docs_FlecsScriptTutorial.html)
 - [Designing with Flecs](/flecs/md_docs_DesignWithFlecs.html)
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 
