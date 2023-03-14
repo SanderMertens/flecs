@@ -813,7 +813,10 @@ const char* plecs_parse_assign_var_expr(
             .vars = &state->vars
         });
     if (!ptr) {
-        return NULL;
+        if (state->last_assign_id) {
+            ecs_value_free(world, value.type, value.ptr);
+        }
+        goto error;
     }
 
     if (var) {
@@ -831,13 +834,14 @@ const char* plecs_parse_assign_var_expr(
         var = ecs_vars_declare_w_value(
             &state->vars, state->var_name, &value);
         if (!var) {
-            return NULL;
+            goto error;
         }
     }
 
     state->var_is_prop = false;
-
     return ptr;
+error:
+    return NULL;
 }
 
 static
@@ -1229,9 +1233,9 @@ const char* plecs_parse_module_stmt(
         return NULL;
     }
 
-    ecs_entity_t module = ecs_module_init(world, NULL, &(ecs_component_desc_t){
-        .entity = ecs_entity(world, { .name = module_path })
-    });
+    ecs_component_desc_t desc = {0};
+    desc.entity = ecs_entity(world, { .name = module_path });
+    ecs_entity_t module = ecs_module_init(world, NULL, &desc);
     if (!module) {
         return NULL;
     }

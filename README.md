@@ -24,7 +24,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance)
 - [Statistics addon](https://www.flecs.dev/flecs/group__c__addons__stats.html) for profiling ECS performance
-- A web-based dashboard ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)) for inspecting entities, running ECS queries and monitoring games:
+- A web-based UI for monitoring & controlling your apps ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)):
 
 [![Flecs Explorer](docs/img/explorer.png)](https://flecs.dev/explorer)
 
@@ -38,8 +38,16 @@ ECS is a way of organizing code and data that lets you build games that are larg
 
 For more information, check the [ECS FAQ](https://github.com/SanderMertens/ecs-faq)!
 
+## Try it out!
+The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js) lets you try Flecs without writing any C/C++ code!
+
+[![Flecs playground](docs/img/script_tutorial/tut_playground.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js)
+
+To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_FlecsScriptTutorial.html).
+
 ## Documentation
 - [Quickstart](https://www.flecs.dev/flecs/md_docs_Quickstart.html)
+- [FAQ](https://www.flecs.dev/flecs/md_docs_Quickstart.html)
 - [Examples](https://github.com/SanderMertens/flecs/tree/master/examples)
 - [All Documentation](https://www.flecs.dev/flecs/md_docs_Docs.html)
 
