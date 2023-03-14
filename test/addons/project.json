@@ -436,7 +436,13 @@
                 "using_wildcard",
                 "single_line_comment_in_value",
                 "multi_line_comment_in_value",
-                "unterminated_multi_line_comment_in_value"
+                "unterminated_multi_line_comment_in_value",
+                "module_stmt",
+                "nested_module_stmt",
+                "module_stmt_w_scope",
+                "module_stmt_w_nested_scope",
+                "module_w_assembly",
+                "module_w_nested_assembly"
             ]
         }, {
             "id": "Doc",

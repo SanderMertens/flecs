@@ -19167,8 +19167,9 @@ ECS_COMPONENT_DECLARE(EcsScript);
 #include <ctype.h>
 
 #define TOK_NEWLINE '\n'
-#define TOK_WITH "with"
 #define TOK_USING "using"
+#define TOK_MODULE "module"
+#define TOK_WITH "with"
 #define TOK_CONST "const"
 #define TOK_PROP "prop"
 #define TOK_ASSEMBLY "assembly"
@@ -19222,6 +19223,7 @@ typedef struct {
     bool decl_type;
     bool var_stmt;
     bool var_is_prop;
+    bool is_module;
 
     int32_t errors;
 } plecs_state_t;
@@ -19473,6 +19475,11 @@ int flecs_assembly_create(
     script->world = world;
     script->script = script_code;
     ecs_vec_reset_t(NULL, &script->using_, ecs_entity_t);
+
+    ecs_entity_t scope = ecs_get_scope(world);
+    if (scope && (scope = ecs_get_target(world, scope, EcsChildOf, 0))) {
+        ecs_vec_append_t(NULL, &script->using_, ecs_entity_t)[0] = scope;
+    }
 
     int i, count = state->using_frame;
     for (i = 0; i < count; i ++) {
@@ -20353,6 +20360,44 @@ const char* plecs_parse_using_stmt(
 }
 
 static
+const char* plecs_parse_module_stmt(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    const char *expr_start = ecs_parse_ws_eol(expr);
+    if (expr_start != ptr) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "module must be first statement of script");
+        return NULL;
+    }
+
+    char module_path[ECS_MAX_TOKEN_SIZE];
+    const char *tmp = ptr + 1;
+    ptr = ecs_parse_token(name, expr, ptr + 6, module_path, 0);
+    if (!ptr) {
+        ecs_parser_error(name, expr, tmp - expr, 
+            "expected identifier for module statement");
+        return NULL;
+    }
+
+    ecs_entity_t module = ecs_module_init(world, NULL, &(ecs_component_desc_t){
+        .entity = ecs_entity(world, { .name = module_path })
+    });
+    if (!module) {
+        return NULL;
+    }
+
+    state->is_module = true;
+    state->sp ++;
+    state->scope[state->sp] = module;
+    ecs_set_scope(world, module);
+    return ptr;
+}
+
+static
 const char* plecs_parse_with_stmt(
     const char *name,
     const char *expr,
@@ -20822,6 +20867,10 @@ const char* plecs_parse_stmt(
         ptr = plecs_parse_using_stmt(world, name, expr, ptr, state);
         if (!ptr) goto error;
         goto done;
+    } else if (!ecs_os_strncmp(ptr, TOK_MODULE " ", 6)) {
+        ptr = plecs_parse_module_stmt(world, name, expr, ptr, state);
+        if (!ptr) goto error;
+        goto done;
     } else if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
         ptr = plecs_parse_with_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
@@ -21058,6 +21107,10 @@ int flecs_plecs_parse(
     ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
     plecs_clear_annotations(&state);
+
+    if (state.is_module) {
+        state.sp --;
+    }
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");

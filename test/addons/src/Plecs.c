@@ -6805,3 +6805,335 @@ void Plecs_unterminated_multi_line_comment_in_value() {
 
     ecs_fini(world);
 }
+
+void Plecs_module_stmt() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello\n"
+    LINE "e :- Position{10, 20}\n"
+    LINE "e :- Foo\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.e");
+    test_assert(e != 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, foo));
+
+    {
+        const Position *ptr = ecs_get(world, e, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_nested_module_stmt() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello.world\n"
+    LINE "e :- Position{10, 20}\n"
+    LINE "e :- Foo\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    test_assert(hello_world != 0);
+    test_assert(ecs_has_id(world, hello_world, EcsModule));
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.e");
+    test_assert(e != 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, foo));
+
+    {
+        const Position *ptr = ecs_get(world, e, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_module_stmt_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello.world\n"
+    LINE "parent {\n"
+    LINE "  e :- Position{10, 20}\n"
+    LINE "  e :- Foo\n"
+    LINE "}\n"
+    LINE "f :- Position{30, 40}\n"
+    LINE "f :- Foo\n"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    test_assert(hello_world != 0);
+    test_assert(ecs_has_id(world, hello_world, EcsModule));
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "hello.world.parent");
+    test_assert(parent != 0);
+    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.parent.e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_fullpath(world, "hello.world.f");
+    test_assert(f != 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has(world, f, Position));
+    test_assert(ecs_has_id(world, f, foo));
+
+    {
+        const Position *ptr = ecs_get(world, e, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    {
+        const Position *ptr = ecs_get(world, f, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30);
+        test_int(ptr->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_module_stmt_w_nested_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello.world\n"
+    LINE "parent {\n"
+    LINE "  child {\n"
+    LINE "    e :- Position{10, 20}\n"
+    LINE "    e :- Foo\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "f :- Position{30, 40}\n"
+    LINE "f :- Foo\n"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    test_assert(hello_world != 0);
+    test_assert(ecs_has_id(world, hello_world, EcsModule));
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "hello.world.parent");
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "hello.world.parent.child");
+    test_assert(child != 0);
+    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.parent.child.e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_fullpath(world, "hello.world.f");
+    test_assert(f != 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has(world, f, Position));
+    test_assert(ecs_has_id(world, f, foo));
+
+    {
+        const Position *ptr = ecs_get(world, e, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    {
+        const Position *ptr = ecs_get(world, f, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30);
+        test_int(ptr->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_module_w_assembly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello.world\n"
+    LINE "assembly Tree {\n"
+    LINE "  prop count: flecs.meta.i32 = 0\n"
+    LINE "  child :- Position{$count, $count * 2}\n"
+    LINE "}\n"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    const char *expr_inst =
+    LINE "t :- hello.world.Tree{10}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
+
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "hello.world.Tree");
+    test_assert(tree != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    test_assert(t != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "t.child");
+    test_assert(child != 0);
+
+    {
+        const void *ptr = ecs_get_id(world, t, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{count: 10}");
+        ecs_os_free(str);
+    }
+
+    test_assert(ecs_has(world, child, Position));
+
+    {
+        const Position *ptr = ecs_get(world, child, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_module_w_nested_assembly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "module hello.world\n"
+    LINE "assembly Tree {\n"
+    LINE "  prop count: flecs.meta.i32 = 0\n"
+    LINE "  child :- Position{$count, $count * 2}\n"
+    LINE "}\n"
+    LINE "assembly Forest {\n"
+    LINE "  prop count: flecs.meta.i32 = 0\n"
+    LINE "  t :- Tree{count:$}\n"
+    LINE "}\n"
+    LINE "";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    const char *expr_inst =
+    LINE "f :- hello.world.Forest{10}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
+
+    ecs_entity_t forest = ecs_lookup_fullpath(world, "hello.world.Forest");
+    test_assert(forest != 0);
+    ecs_entity_t tree = ecs_lookup_fullpath(world, "hello.world.Tree");
+    test_assert(tree != 0);
+    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    test_assert(f != 0);
+    ecs_entity_t t = ecs_lookup_fullpath(world, "f.t");
+    test_assert(t != 0);
+    ecs_entity_t child = ecs_lookup_fullpath(world, "f.t.child");
+    test_assert(child != 0);
+
+    {
+        const void *ptr = ecs_get_id(world, f, forest);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, forest, ptr);
+        test_str(str, "{count: 10}");
+        ecs_os_free(str);
+    }
+    {
+        const void *ptr = ecs_get_id(world, t, tree);
+        test_assert(ptr != NULL);
+        char *str = ecs_ptr_to_expr(world, tree, ptr);
+        test_str(str, "{count: 10}");
+        ecs_os_free(str);
+    }
+
+    test_assert(ecs_has(world, child, Position));
+
+    {
+        const Position *ptr = ecs_get(world, child, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
