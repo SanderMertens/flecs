@@ -42864,8 +42864,8 @@ ecs_http_server_t *flecs_wasm_rest_server;
 
 EMSCRIPTEN_KEEPALIVE
 char* flecs_explorer_request(const char *method, char *request) {
-    ecs_http_reply_t reply = ecs_http_server_request(
-        flecs_wasm_rest_server, method, request);
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_http_server_request(flecs_wasm_rest_server, method, request, &reply);
     if (reply.code == 200) {
         return ecs_strbuf_get(&reply.body);
     } else {
