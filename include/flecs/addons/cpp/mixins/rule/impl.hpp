@@ -26,14 +26,13 @@ struct rule_base {
         : m_world(world)
     {
         m_rule = ecs_rule_init(world, desc);
-
-        if (!m_rule) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
         if (desc->terms_buffer) {
             ecs_os_free(desc->terms_buffer);
         }
+    }
+
+    bool is_valid() const {
+        return m_rule != nullptr;
     }
 
     operator rule_t*() const {

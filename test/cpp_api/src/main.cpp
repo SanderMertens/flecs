@@ -746,6 +746,7 @@ void RuleBuilder_term_w_second_var_string(void);
 void RuleBuilder_term_type_w_second_var_string(void);
 void RuleBuilder_named_rule(void);
 void RuleBuilder_named_scoped_rule(void);
+void RuleBuilder_is_valid(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -4061,6 +4062,10 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "named_scoped_rule",
         RuleBuilder_named_scoped_rule
+    },
+    {
+        "is_valid",
+        RuleBuilder_is_valid
     }
 };
 
@@ -5778,7 +5783,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        25,
+        26,
         RuleBuilder_testcases
     },
     {

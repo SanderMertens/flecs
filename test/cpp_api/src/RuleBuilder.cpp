@@ -697,3 +697,14 @@ void RuleBuilder_named_scoped_rule() {
     test_str(qe.name(), "query");
     test_str(qe.path(), "::my::query");
 }
+
+void RuleBuilder_is_valid() {
+    flecs::world ecs;
+
+    auto q_1 = ecs.rule<Position>();
+    test_assert(q_1.is_valid());
+
+    flecs::log::set_level(-4);
+    auto q_2 = ecs.rule_builder().expr("foo").build();
+    test_assert(!q_2.is_valid());
+}

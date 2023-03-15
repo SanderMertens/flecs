@@ -775,7 +775,8 @@
                 "term_w_second_var_string",
                 "term_type_w_second_var_string",
                 "named_rule",
-                "named_scoped_rule"
+                "named_scoped_rule",
+                "is_valid"
             ]
         }, {
             "id": "SystemBuilder",
