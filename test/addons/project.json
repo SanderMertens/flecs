@@ -681,7 +681,8 @@
                 "find_this_lowercase",
                 "find_this_uppercase",
                 "find_this_tgt_lowercase",
-                "find_this_tgt_uppercase"
+                "find_this_tgt_uppercase",
+                "get_filter"
             ]
         }, {
             "id": "RulesVariables",

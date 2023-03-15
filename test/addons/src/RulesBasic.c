@@ -3931,3 +3931,24 @@ void RulesBasic_find_this_tgt_uppercase() {
 
     ecs_fini(world);
 }
+
+void RulesBasic_get_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Rel"
+    });
+
+    test_assert(r != NULL);
+
+    const ecs_filter_t *f = ecs_rule_get_filter(r);
+    test_assert(f != NULL);
+    test_int(f->term_count, 1);
+    test_uint(f->terms[0].id, Rel);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

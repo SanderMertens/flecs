@@ -38577,6 +38577,12 @@ char* ecs_rule_str(
     return ecs_rule_str_w_profile(rule, NULL);
 }
 
+const ecs_filter_t* ecs_rule_get_filter(
+    const ecs_rule_t *rule)
+{
+    return &rule->filter;
+}
+
 const char* ecs_rule_parse_vars(
     ecs_rule_t *rule,
     ecs_iter_t *it,
