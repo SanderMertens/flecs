@@ -151,8 +151,13 @@ int flecs_term_id_lookup(
     }
 
     if (!e) {
-        flecs_filter_error(ctx, "unresolved identifier '%s'", name);
-        return -1;
+        if (ctx->filter && (ctx->filter->flags & EcsFilterUnresolvedByName)) {
+            term_id->flags |= EcsIsName;
+            term_id->flags &= ~EcsIsEntity;
+        } else {
+            flecs_filter_error(ctx, "unresolved identifier '%s'", name);
+            return -1;
+        }
     }
 
     if (term_id->id && term_id->id != e) {
@@ -173,16 +178,18 @@ int flecs_term_id_lookup(
     }
 
     /* Check if looked up id is alive (relevant for numerical ids) */
-    if (!ecs_is_alive(world, term_id->id)) {
-        flecs_filter_error(ctx, "identifier '%s' is not alive", term_id->name);
-        return -1;
-    }
+    if (!(term_id->flags & EcsIsName)) {
+        if (!ecs_is_alive(world, term_id->id)) {
+            flecs_filter_error(ctx, "identifier '%s' is not alive", term_id->name);
+            return -1;
+        }
 
-    if (free_name) {
-        ecs_os_free(name);
-    }
+        if (free_name) {
+            ecs_os_free(name);
+        }
 
-    term_id->name = NULL;
+        term_id->name = NULL;
+    }
 
     return 0;
 }

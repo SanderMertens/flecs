@@ -2683,3 +2683,34 @@ void RulesBuiltinPredicates_this_match_3_or_written() {
 
     ecs_fini(world);
 }
+
+void RulesBuiltinPredicates_unresolved_by_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$this == ent",
+        .flags = EcsFilterUnresolvedByName
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(ent, it.entities[0]);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

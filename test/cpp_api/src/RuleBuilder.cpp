@@ -708,3 +708,20 @@ void RuleBuilder_is_valid() {
     auto q_2 = ecs.rule_builder().expr("foo").build();
     test_assert(!q_2.is_valid());
 }
+
+void RuleBuilder_unresolved_by_name() {
+    flecs::world ecs;
+
+    auto q = ecs.rule_builder()
+        .filter_flags(EcsFilterUnresolvedByName)
+        .expr("$this == Foo")
+        .build();
+
+    test_assert(q.is_valid());
+
+    test_false(q.iter().is_true());
+
+    ecs.entity("Foo");
+
+    test_true(q.iter().is_true());
+}

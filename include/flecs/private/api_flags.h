@@ -123,6 +123,7 @@ extern "C" {
 #define EcsFilterIsInstanced           (1u << 8u)  /* Is filter instanced (see ecs_filter_desc_t) */
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
 #define EcsFilterHasCondSet            (1u << 10u) /* Does filter have conditionally set fields */
+#define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

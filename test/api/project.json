@@ -1098,6 +1098,8 @@
                 "filter_w_first_var_inout_none",
                 "filter_w_pair_wildcard_inout_none",
                 "filter_w_pair_var_inout_none",
+                "filter_w_unresolved_by_name",
+                "filter_w_unresolved_by_name_eq",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",

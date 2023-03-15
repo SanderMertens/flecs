@@ -26,6 +26,11 @@ struct filter_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    Base& filter_flags(ecs_flags32_t flags) {
+        m_desc->flags |= flags;
+        return *this;
+    }
+
     Base& expr(const char *expr) {
         ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
             "filter_builder::expr() called more than once");

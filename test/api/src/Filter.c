@@ -3011,6 +3011,38 @@ void Filter_filter_w_pair_var_inout_none() {
     ecs_fini(world);
 }
 
+void Filter_filter_w_unresolved_by_name() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter(world, {
+        .storage = &f,
+        .terms = { { .first.name = "Foo" } },
+        .flags = EcsFilterUnresolvedByName
+    }));
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_unresolved_by_name_eq() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .expr = "$this == Foo",
+        .flags = EcsFilterUnresolvedByName
+    }));
+
+    test_assert(f.terms[0].second.flags & EcsIsName);
+    test_str(f.terms[0].second.name, "Foo");
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 

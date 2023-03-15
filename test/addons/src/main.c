@@ -1020,6 +1020,7 @@ void RulesBuiltinPredicates_this_match_2_or(void);
 void RulesBuiltinPredicates_this_match_2_or_written(void);
 void RulesBuiltinPredicates_this_match_3_or(void);
 void RulesBuiltinPredicates_this_match_3_or_written(void);
+void RulesBuiltinPredicates_unresolved_by_name(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -5311,6 +5312,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "this_match_3_or_written",
         RulesBuiltinPredicates_this_match_3_or_written
+    },
+    {
+        "unresolved_by_name",
+        RulesBuiltinPredicates_unresolved_by_name
     }
 };
 
@@ -6486,7 +6491,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        64,
+        65,
         RulesBuiltinPredicates_testcases
     },
     {
