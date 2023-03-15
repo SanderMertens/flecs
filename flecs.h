@@ -27431,12 +27431,22 @@ struct rule_base {
         return flecs::entity(m_world, ecs_get_entity(m_rule));
     }
 
-    /** Free the rule.
-     */
+    /** Free the rule. */
     void destruct() {
-        ecs_rule_fini(m_rule);
-        m_world = nullptr;
-        m_rule = nullptr;
+        if (m_rule) {
+            ecs_rule_fini(m_rule);
+            m_world = nullptr;
+            m_rule = nullptr;
+        }
+    }
+
+    /** Move the rule. */
+    void move(flecs::rule_base&& obj) {
+        this->destruct();
+        this->m_world = obj.m_world;
+        this->m_rule = obj.m_rule;
+        obj.m_world = nullptr;
+        obj.m_rule = nullptr;
     }
 
     flecs::string str() {
