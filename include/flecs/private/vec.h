@@ -6,6 +6,10 @@
 #ifndef FLECS_VEC_H
 #define FLECS_VEC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** A component column. */
 typedef struct ecs_vec_t {
     void *array;
@@ -177,5 +181,9 @@ void* ecs_vec_last(
 
 #define ecs_vec_last_t(vec, T) \
     ECS_CAST(T*, ecs_vec_last(vec, ECS_SIZEOF(T)))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif 

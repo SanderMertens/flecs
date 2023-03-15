@@ -525,7 +525,7 @@ fence_b {
 
 [![two instantiated fence assemblies](img/script_tutorial/tut_playground_assembly.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&p=using%20flecs.components.*%0Ausing%20flecs.meta%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aassembly%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2020%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2010%2C%20height%3A%2020%7D%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2025%2C%20height%3A%2010%7D%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
 
-We are now well on our way to define a procedural fence. Note how similar assigning an assembly looks to assigning a component. This is because an assembly and its properties are translated to a component with members.
+We are now well on our way to define a procedural fence. Note how similar assigning an assembly looks to assigning a component. This is no coincidence: an assembly is translated to a component, where each property becomes a member of that component.
 
 This is something we can exploit in C/C++ code to make assigning assemblies to entities as easy as assigning a component:
 
@@ -572,18 +572,20 @@ fence_a.set<Position3>({-10});
 fence_b.set<Position3>({10});
 ```
 
+For this to work, we have to make sure that the types and ordering of the properties in the script match up with the types and ordering of members in the component type.
+
 ## Grids
-Now that we have a fence we can instantiate with different parameters, it's time to take a look at how we can change the number of pillars and bars depending on the fence width and height.
+Let's now see if we can change the number of pillars and bars depending on the fence width and height.
 
-At first glance this sounds like something that would require loops, and those are not supported in Flecs Script. However, there is a way around this, which is to use a `Grid`. component that does the instantiating for us.
+At first glance this sounds like something that would require loops, and those are not supported in Flecs script. There is a way around this however, which is to use a `Grid`. component that does the instantiating for us.
 
-The `Grid` component is implemented in the `flecs.game` module, so before using it add this to the top of the script:
+The `Grid` component is provided by the `flecs.game` module, so before using it lets add this to the top of the script:
 
 ```js
 using flecs.game
 ```
 
-The implementation for the `Grid` component can be found [here](https://github.com/flecs-hub/flecs-game/blob/main/src/main.c). We only use it in the tutorial for demonstration purposes. Projects could easily define their own, and other components with custom behavior.
+The implementation for the `Grid` component can be found [here](https://github.com/flecs-hub/flecs-game/blob/main/src/main.c). We only use it in the tutorial for demonstration purposes. In practice we could create many different components that handle layout for us.
 
 The grid component lets us create multiple instances of an entity that are laid out in a 1, 2 or 3 dimensional grid. Let's apply this to the number of pillars, which we want to scale with the width of our fence. For this we need two things:
 
@@ -602,7 +604,7 @@ We can now calculate the number of pillars we want:
 const pillar_count = $width / $pillar_spacing
 ```
 
-The `Grid` component can't consume the current pillar code directly. Instead it accepts a prefab, so we need to turn the existing pillars code into a single prefab:
+The `Grid` component can't consume the pillar code directly. Instead it accepts a prefab, so lets turn the existing pillars code into a prefab:
 
 ```js
 Prefab Pillar {
@@ -631,7 +633,7 @@ Let's disect what this code does:
 - Spaced `$pillar_spacing` apart
 - Using `Pillar` as prefab to instantiate the entities
 
-Let's also change the code that instantiates our fence to just one:
+Let's also change the code that instantiates our two fences to just one:
 
 ```
 fence :- Fence{}
