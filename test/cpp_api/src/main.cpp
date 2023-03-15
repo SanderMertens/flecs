@@ -1060,6 +1060,7 @@ void World_register_nested_w_root_name(void);
 void World_set_lookup_path(void);
 void World_run_post_frame(void);
 void World_component_w_low_id(void);
+void World_get_set_log_level(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5268,6 +5269,10 @@ bake_test_case World_testcases[] = {
     {
         "component_w_low_id",
         World_component_w_low_id
+    },
+    {
+        "get_set_log_level",
+        World_get_set_log_level
     }
 };
 
@@ -5853,7 +5858,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        92,
+        93,
         World_testcases
     },
     {

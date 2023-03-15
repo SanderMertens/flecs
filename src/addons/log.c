@@ -503,6 +503,10 @@ bool _ecs_assert(
 
 #endif
 
+int ecs_log_get_level(void) {
+    return ecs_os_api.log_level_;
+}
+
 int ecs_log_set_level(
     int level)
 {

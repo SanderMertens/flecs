@@ -1657,3 +1657,9 @@ void World_get_ref() {
     auto space = ecs.get_ref<Space>();
     test_int(12, space->v);
 }
+
+void World_get_set_log_level() {
+    test_int(flecs::log::get_level(), -1);
+    flecs::log::set_level(4);
+    test_int(flecs::log::get_level(), 4);
+}

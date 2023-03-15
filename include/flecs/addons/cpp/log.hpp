@@ -21,6 +21,10 @@ inline void set_level(int level) {
     ecs_log_set_level(level);
 }
 
+inline int get_level(void) {
+    return ecs_log_get_level();
+}
+
 /** Enable colors in logging */
 inline void enable_colors(bool enabled = true) {
     ecs_log_enable_colors(enabled);

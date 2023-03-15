@@ -1109,7 +1109,8 @@
                 "register_nested_w_root_name",
                 "set_lookup_path",
                 "run_post_frame",
-                "component_w_low_id"
+                "component_w_low_id",
+                "get_set_log_level"
             ]
         }, {
             "id": "Singleton",
