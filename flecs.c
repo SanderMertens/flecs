@@ -33891,7 +33891,6 @@ bool flecs_rest_reply_entity(
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
     flecs_rest_parse_json_ser_entity_params(&desc, req);
-
     ecs_entity_to_json_buf(world, e, &reply->body, &desc);
     return true;
 }
@@ -36457,10 +36456,11 @@ error:
     return;
 }
 
-ecs_http_reply_t ecs_http_server_http_request(
+int ecs_http_server_http_request(
     ecs_http_server_t* srv,
     const char *req,
-    ecs_size_t len)
+    ecs_size_t len,
+    ecs_http_reply_t *reply_out)
 {
     if (!len) {
         len = ecs_os_strlen(req);
@@ -36469,26 +36469,28 @@ ecs_http_reply_t ecs_http_server_http_request(
     ecs_http_fragment_t frag = {0};
     if (!http_parse_request(&frag, req, len)) {
         ecs_strbuf_reset(&frag.buf);
-        return (ecs_http_reply_t){ .code = 400 };
+        reply_out->code = 400;
+        return -1;
     }
 
     ecs_http_request_impl_t request;
     char *res = http_decode_request(&request, &frag);
     if (!res) {
-        return (ecs_http_reply_t){ .code = 400 };
+        reply_out->code = 400;
+        return -1;
     }
 
-    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-    http_do_request(srv, &reply, &request);
+    http_do_request(srv, reply_out, &request);
     ecs_os_free(res);
 
-    return reply;
+    return (reply_out->code >= 400) ? -1 : 0;
 }
 
-ecs_http_reply_t ecs_http_server_request(
+int ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
-    const char *req)
+    const char *req,
+    ecs_http_reply_t *reply_out)
 {
     ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
@@ -36497,9 +36499,9 @@ ecs_http_reply_t ecs_http_server_request(
     ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
     int32_t len = ecs_strbuf_written(&reqbuf);
     char *reqstr = ecs_strbuf_get(&reqbuf);
-    ecs_http_reply_t reply = ecs_http_server_http_request(srv, reqstr, len);
+    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
     ecs_os_free(reqstr);
-    return reply;
+    return result;
 }
 
 void* ecs_http_server_ctx(

@@ -9758,17 +9758,19 @@ void ecs_http_server_stop(
  * @return The reply.
  */
 FLECS_API
-ecs_http_reply_t ecs_http_server_http_request(
+int ecs_http_server_http_request(
     ecs_http_server_t* srv,
     const char *req,
-    ecs_size_t len);
+    ecs_size_t len,
+    ecs_http_reply_t *reply_out);
 
 /** Convenience wrapper around ecs_http_server_request. */
 FLECS_API
-ecs_http_reply_t ecs_http_server_request(
+int ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
-    const char *req);
+    const char *req,
+    ecs_http_reply_t *reply_out);
 
 /** Get context provided in ecs_http_server_desc_t */
 FLECS_API

@@ -210,7 +210,6 @@ bool flecs_rest_reply_entity(
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
     flecs_rest_parse_json_ser_entity_params(&desc, req);
-
     ecs_entity_to_json_buf(world, e, &reply->body, &desc);
     return true;
 }
