@@ -129,6 +129,7 @@ void Entity_entity_init_w_empty_sep_from_scope(void);
 void Entity_entity_init_w_empty_sep_w_prefix(void);
 void Entity_set_name_w_same_ptr(void);
 void Entity_set_name_w_overlapping_ptr(void);
+void Entity_defer_set_name_w_overlapping_ptr(void);
 void Entity_ensure_from_stage(void);
 void Entity_ensure_after_deleted_1_entity(void);
 void Entity_ensure_after_deleted_2_entities(void);
@@ -2916,6 +2917,10 @@ bake_test_case Entity_testcases[] = {
     {
         "set_name_w_overlapping_ptr",
         Entity_set_name_w_overlapping_ptr
+    },
+    {
+        "defer_set_name_w_overlapping_ptr",
+        Entity_defer_set_name_w_overlapping_ptr
     },
     {
         "ensure_from_stage",
@@ -11880,7 +11885,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        99,
+        100,
         Entity_testcases
     },
     {

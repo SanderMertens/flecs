@@ -1924,6 +1924,25 @@ void Entity_set_name_w_overlapping_ptr() {
     ecs_fini(world);
 }
 
+void Entity_defer_set_name_w_overlapping_ptr() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    const char *name = ecs_get_name(world, e);
+    test_assert(name != NULL);
+    test_str(name, "foo");
+
+    ecs_defer_begin(world);
+    ecs_set_name(world, e, &name[1]);
+    ecs_defer_end(world);
+
+    name = ecs_get_name(world, e); 
+    test_assert(name != NULL);
+    test_str(name, "oo");
+
+    ecs_fini(world);
+}
+
 void Entity_ensure_from_stage() {
     ecs_world_t *world = ecs_mini();
 

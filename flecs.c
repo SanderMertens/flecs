@@ -8796,10 +8796,10 @@ ecs_entity_t ecs_set_name(
         });
     }
 
-    flecs_set_identifier(world, entity, EcsName, name);
-
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_defer_path(stage, 0, entity, name);
+
+    flecs_set_identifier(world, entity, EcsName, name);
 
     return entity;
 }

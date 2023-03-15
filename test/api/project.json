@@ -136,6 +136,7 @@
                 "entity_init_w_empty_sep_w_prefix",
                 "set_name_w_same_ptr",
                 "set_name_w_overlapping_ptr",
+                "defer_set_name_w_overlapping_ptr",
                 "ensure_from_stage",
                 "ensure_after_deleted_1_entity",
                 "ensure_after_deleted_2_entities",
