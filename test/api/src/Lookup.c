@@ -641,3 +641,16 @@ void Lookup_lookup_core_entity_from_wrong_scope() {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_alias_w_number() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_entity(world, "p");
+    test_assert(parent != 0);
+    ecs_set_alias(world, parent, "10p");
+
+    test_assert(parent == ecs_lookup_fullpath(world, "p"));
+    test_assert(parent == ecs_lookup_fullpath(world, "10p"));
+
+    ecs_fini(world);
+}

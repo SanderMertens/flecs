@@ -756,6 +756,7 @@ void Lookup_lookup_invalid_digit(void);
 void Lookup_lookup_child_invalid_digit(void);
 void Lookup_lookup_digit_from_wrong_scope(void);
 void Lookup_lookup_core_entity_from_wrong_scope(void);
+void Lookup_lookup_alias_w_number(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -5306,6 +5307,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_core_entity_from_wrong_scope",
         Lookup_lookup_core_entity_from_wrong_scope
+    },
+    {
+        "lookup_alias_w_number",
+        Lookup_lookup_alias_w_number
     }
 };
 
@@ -12018,7 +12023,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        44,
+        45,
         Lookup_testcases
     },
     {
