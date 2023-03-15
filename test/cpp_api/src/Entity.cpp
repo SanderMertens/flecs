@@ -4219,3 +4219,13 @@ void Entity_to_view_from_stage() {
     test_assert(e.world() == stage);
     test_assert(ev.world() == world);
 }
+
+void Entity_set_alias() {
+    flecs::world world;
+
+    flecs::entity e = world.entity("parent::child");
+    e.set_alias("parent_child");
+
+    test_assert(e == world.lookup("parent::child"));
+    test_assert(e == world.lookup("parent_child"));
+}

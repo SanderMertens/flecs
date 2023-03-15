@@ -244,6 +244,7 @@ void Entity_get_depth(void);
 void Entity_get_depth_w_type(void);
 void Entity_to_view(void);
 void Entity_to_view_from_stage(void);
+void Entity_set_alias(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2110,6 +2111,10 @@ bake_test_case Entity_testcases[] = {
     {
         "to_view_from_stage",
         Entity_to_view_from_stage
+    },
+    {
+        "set_alias",
+        Entity_set_alias
     }
 };
 
@@ -5711,7 +5716,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        231,
+        232,
         Entity_testcases
     },
     {

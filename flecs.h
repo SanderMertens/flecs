@@ -21590,6 +21590,13 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+    /* Set entity alias.
+     */
+    Self& set_alias(const char *name) {
+        ecs_set_alias(this->m_world, this->m_id, name);
+        return to_base();
+    }
+
 #   ifdef FLECS_DOC
 /**
  * @file addons/cpp/mixins/doc/entity_builder.inl
