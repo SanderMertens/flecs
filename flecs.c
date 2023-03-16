@@ -49640,12 +49640,10 @@ void flecs_unregister_observer(
 
 static
 bool flecs_ignore_observer(
-    ecs_world_t *world,
     ecs_observer_t *observer,
     ecs_table_t *table,
     int32_t evtx)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -49767,7 +49765,7 @@ void flecs_uni_observer_invoke(
 {
     ecs_filter_t *filter = &observer->filter;
     ecs_term_t *term = &filter->terms[0];
-    if (flecs_ignore_observer(world, observer, table, evtx)) {
+    if (flecs_ignore_observer(observer, table, evtx)) {
         return;
     }
 

@@ -286,7 +286,7 @@ C descriptor API:
 ```c
 ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
     .query.filter.terms = {
-        { .id = ecs_id(EcsSystem) },
+        { .id = EcsSystem },
         { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
         { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
         { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
@@ -313,7 +313,7 @@ ECS_TAG(world, Foo);
 // Create custom pipeline
 ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
     .query.filter.terms = {
-        { .id = ecs_id(EcsSystem) }, // mandatory
+        { .id = EcsSystem }, // mandatory
         { .id = Foo }
     }
 });
