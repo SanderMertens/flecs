@@ -33,19 +33,6 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable);
 
-void flecs_observers_notify(
-    ecs_iter_t *it,
-    ecs_observable_t *observable,
-    const ecs_type_t *ids,
-    ecs_entity_t event);
-
-void flecs_set_observers_notify(
-    ecs_iter_t *it,
-    ecs_observable_t *observable,
-    const ecs_type_t *ids,
-    ecs_entity_t event,
-    ecs_id_t set_id);
-
 bool flecs_check_observers_for_event(
     const ecs_poly_t *world,
     ecs_id_t id,
@@ -67,7 +54,8 @@ void flecs_observers_invoke(
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav);
+    ecs_entity_t trav,
+    int32_t evtx);
 
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,

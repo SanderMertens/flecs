@@ -8,7 +8,7 @@ In this tutorial we will be designing a simple fence asset from scratch, and mak
 Note: in order to use Flecs script an app needs to be built with the `FLECS_PLECS` addon.
 
 ## Getting Started with the Explorer
-The Flecs explorer is a web-based application that lets us write scripts and see the results directly. In the tutorial we will use the explorer in combination with the Flecs playground, which has a rendering canvas and comes preloaded with a number modules and assets.
+The Flecs explorer is a web-based application that lets us write scripts and see the results directly. In the tutorial we will use the explorer in combination with the Flecs playground, which has a rendering canvas and comes preloaded with a number of modules and assets.
 
 Go to this URL to open the explorer with the playground:
 https://www.flecs.dev/explorer/?wasm=https://www.flecs.dev/explorer/playground.js
@@ -512,7 +512,7 @@ fence_b {
 }
 ```
 
-The fences are back, with the default values we provided to our props! But we now have a new power! Try changing it to this:
+The fences are back, with the default values we provided to our props. But we now have a new power! Try changing it to this:
 
 ```js
 fence_a {
@@ -579,7 +579,7 @@ For this to work, we have to make sure that the types and ordering of the proper
 ## Grids
 Let's now see if we can change the number of pillars and bars depending on the fence width and height.
 
-At first glance this sounds like something that would require loops, and those are not supported in Flecs script. There is a way around this however, which is to use a `Grid`. component that does the instantiating for us.
+At first glance this sounds like something that would require loops, and those are not supported in Flecs script. There is a way around this however, which is to use a `Grid` component that does the instantiating for us.
 
 The `Grid` component is provided by the `flecs.game` module, so before using it lets add this to the top of the script:
 
@@ -661,7 +661,7 @@ Note that this takes into account that there is one more pillar than there are s
 
 [![a fence with correctly aligned pillars](img/script_tutorial/tut_playground_pillar_grid.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&p=using%20flecs.components.*%0Ausing%20flecs.meta%0Ausing%20flecs.game%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aassembly%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2060%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_spacing%20%3D%2010%0A%20%20const%20pillar_count%20%3D%20%24width%20%2F%20%24pillar_spacing%0A%20%20const%20grid_spacing%20%3D%20%24width%20%2F%20(%24pillar_count%20-%201)%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20Prefab%20Pillar%20%7B%0A%20%20%20%20-%20%24color%0A%20%20%20%20-%20%24pillar_box%0A%20%20%7D%0A%20%20%20%20%0A%20%20pillars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20x.count%3A%20%24pillar_count%0A%20%20%20%20%20%20x.spacing%3A%20%24grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Pillar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%20%20%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%7B%0A%20%20-%20Fence%7B%7D%0A%20%20-%20Position3%7B-10%7D%0A%7D%0A)
 
-We can do the same thing for the bars. I'll skip right to the result since it involves the very similar steps:
+We can do the same thing for the bars. I'll skip right to the result since it involves very similar steps:
 
 [![a fence with multiple pillars and bars](img/script_tutorial/tut_playground_grids.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&p=using%20flecs.components.*%0Ausing%20flecs.meta%0Ausing%20flecs.game%0A%0Aconst%20PI%20%3D%203.1415926%0A%0A%2F%2F%20The%20ground%20plane%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%2F2%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aassembly%20Fence%20%7B%0A%20%20%2F%2F%20Fence%20parameters%0A%20%20prop%20width%20%3A%20f32%20%3D%2040%0A%20%20prop%20height%20%3A%20f32%20%3D%2020%0A%20%20const%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%0A%20%20%2F%2F%20Pillar%20parameters%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_spacing%20%3D%2010%0A%20%20const%20pillar_count%20%3D%20%24width%20%2F%20%24pillar_spacing%0A%20%20const%20p_grid_spacing%20%3D%20%24width%20%2F%20(%24pillar_count%20-%201)%0A%20%0A%20%20%2F%2F%20Bar%20parameters%0A%20%20const%20bar_spacing%20%3D%203%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%20%2F%202%0A%20%20const%20bar_count%20%3D%20%24height%20%2F%20%24bar_spacing%0A%20%20const%20b_grid_spacing%20%3D%20%24height%20%2F%20%24bar_count%0A%20%20%20%0A%20%20with%20Prefab%2C%20%24color%20%7B%0A%20%20%20%20Pillar%20%3A-%20Box%20%7B%0A%20%20%20%20%20%20%24pillar_width%2C%20%24height%2C%20%24pillar_width%0A%20%20%20%20%7D%0A%20%20%20%20Bar%20%3A-%20Box%20%7B%24width%2C%20%24bar_height%2C%20%24bar_depth%7D%0A%20%20%7D%20%20%20%20%0A%20%20%0A%20%20%2F%2F%20Pillars%0A%20%20pillars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20x.count%3A%20%24pillar_count%2C%0A%20%20%20%20%20%20x.spacing%3A%20%24p_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Pillar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20%2F%2F%20Bars%0A%20%20bars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20y.count%3A%20%24bar_count%2C%0A%20%20%20%20%20%20y.spacing%3A%20%24b_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Bar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20assembly%20Fence%0A%0Afence%20%3A-%20Fence%7B%7D)
 
