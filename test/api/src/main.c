@@ -737,6 +737,7 @@ void Lookup_lookup_symbol_null(void);
 void Lookup_lookup_this(void);
 void Lookup_lookup_wildcard(void);
 void Lookup_lookup_any(void);
+void Lookup_lookup_variable(void);
 void Lookup_lookup_path_this(void);
 void Lookup_lookup_path_wildcard(void);
 void Lookup_lookup_path_this_from_scope(void);
@@ -5236,6 +5237,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_any",
         Lookup_lookup_any
+    },
+    {
+        "lookup_variable",
+        Lookup_lookup_variable
     },
     {
         "lookup_path_this",
@@ -12048,7 +12053,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        45,
+        46,
         Lookup_testcases
     },
     {

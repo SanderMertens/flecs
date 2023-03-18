@@ -782,6 +782,7 @@
                 "lookup_this",
                 "lookup_wildcard",
                 "lookup_any",
+                "lookup_variable",
                 "lookup_path_this",
                 "lookup_path_wildcard",
                 "lookup_path_this_from_scope",

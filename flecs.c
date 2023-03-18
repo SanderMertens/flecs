@@ -19834,6 +19834,10 @@ int plecs_create_term(
         pred = ecs_pair(EcsIsA, pred);
     }
 
+    if (subj == EcsVariable) {
+        subj = pred;
+    }
+
     if (subj) {
         if (!obj) {
             ecs_add_id(world, subj, pred);
@@ -20045,6 +20049,10 @@ const char* plecs_parse_assign_expr(
         return NULL;
     }
 
+    if (assign_to == EcsVariable) {
+        assign_to = type;
+    }
+
     void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, &(ecs_value_t){type, value_ptr}, 
@@ -20253,7 +20261,12 @@ const char* plecs_parse_var_as_component(
 
     /* Use type of variable as component */
     ecs_entity_t type = var->value.type;
-    void *dst = ecs_get_mut_id(world, state->assign_to, type);
+    ecs_entity_t assign_to = state->assign_to;
+    if (!assign_to) {
+        assign_to = state->last_subject;
+    }
+
+    void *dst = ecs_get_mut_id(world, assign_to, type);
     if (!dst) {
         char *type_name = ecs_get_fullpath(world, type);
         ecs_parser_error(name, expr, ptr - expr, 
@@ -20272,7 +20285,7 @@ const char* plecs_parse_var_as_component(
         return NULL;
     }
 
-    ecs_modified_id(world, state->assign_to, type);
+    ecs_modified_id(world, assign_to, type);
 
     return ptr;
 }
@@ -20900,7 +20913,7 @@ term_expr:
         goto done;
     }
 
-    if (ptr[0] == '$') {
+    if (ptr[0] == '$' && !isspace(ptr[1])) {
         if (state->with_stmt) {
             ptr = plecs_parse_assign_with_var(name, expr, ptr, state);
             if (!ptr) {
@@ -57681,6 +57694,8 @@ ecs_entity_t flecs_get_builtin(
         return EcsWildcard;
     } else if (name[0] == '_' && name[1] == '\0') {
         return EcsAny;
+    } else if (name[0] == '$' && name[1] == '\0') {
+        return EcsVariable;
     }
 
     return 0;

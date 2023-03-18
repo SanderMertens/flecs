@@ -332,6 +332,16 @@ void Lookup_lookup_any() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_variable() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t lookup = ecs_lookup(world, "$");
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsVariable);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_path_this() {
     ecs_world_t *world = ecs_mini();
 

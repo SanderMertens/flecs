@@ -7137,3 +7137,154 @@ void Plecs_module_w_nested_assembly() {
 
     ecs_fini(world);
 }
+
+void Plecs_assign_singleton_tag() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "$ :- Foo\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_singleton_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "$ :- Position{10, 20}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    test_assert(ecs_has(world, ecs_id(Position), Position));
+
+    const Position *p = ecs_get(world, ecs_id(Position), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_singleton_tag_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "$ {\n"
+    LINE "  - Foo\n"
+    LINE "}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_singleton_2_tags_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "$ {\n"
+    LINE "  - Foo\n"
+    LINE "  - Bar\n"
+    LINE "}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    test_assert(bar != 0);
+
+    test_assert(ecs_has_id(world, foo, foo));
+    test_assert(ecs_has_id(world, bar, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_singleton_component_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "$ {\n"
+    LINE "  - Position{10, 20}\n"
+    LINE "}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    test_assert(ecs_has(world, ecs_id(Position), Position));
+
+    const Position *p = ecs_get(world, ecs_id(Position), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_singleton_2_components_w_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "$ {\n"
+    LINE "  - Position{10, 20}\n"
+    LINE "  - Velocity{1, 2}\n"
+    LINE "}\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    const Position *p = ecs_get(world, ecs_id(Position), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, ecs_id(Velocity), Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

@@ -436,6 +436,12 @@ void Plecs_module_stmt_w_scope(void);
 void Plecs_module_stmt_w_nested_scope(void);
 void Plecs_module_w_assembly(void);
 void Plecs_module_w_nested_assembly(void);
+void Plecs_assign_singleton_tag(void);
+void Plecs_assign_singleton_component(void);
+void Plecs_assign_singleton_tag_w_scope(void);
+void Plecs_assign_singleton_2_tags_w_scope(void);
+void Plecs_assign_singleton_component_w_scope(void);
+void Plecs_assign_singleton_2_components_w_scope(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -3026,6 +3032,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "module_w_nested_assembly",
         Plecs_module_w_nested_assembly
+    },
+    {
+        "assign_singleton_tag",
+        Plecs_assign_singleton_tag
+    },
+    {
+        "assign_singleton_component",
+        Plecs_assign_singleton_component
+    },
+    {
+        "assign_singleton_tag_w_scope",
+        Plecs_assign_singleton_tag_w_scope
+    },
+    {
+        "assign_singleton_2_tags_w_scope",
+        Plecs_assign_singleton_2_tags_w_scope
+    },
+    {
+        "assign_singleton_component_w_scope",
+        Plecs_assign_singleton_component_w_scope
+    },
+    {
+        "assign_singleton_2_components_w_scope",
+        Plecs_assign_singleton_2_components_w_scope
     }
 };
 
@@ -6421,7 +6451,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        210,
+        216,
         Plecs_testcases
     },
     {

@@ -110,6 +110,8 @@ ecs_entity_t flecs_get_builtin(
         return EcsWildcard;
     } else if (name[0] == '_' && name[1] == '\0') {
         return EcsAny;
+    } else if (name[0] == '$' && name[1] == '\0') {
+        return EcsVariable;
     }
 
     return 0;

@@ -442,7 +442,13 @@
                 "module_stmt_w_scope",
                 "module_stmt_w_nested_scope",
                 "module_w_assembly",
-                "module_w_nested_assembly"
+                "module_w_nested_assembly",
+                "assign_singleton_tag",
+                "assign_singleton_component",
+                "assign_singleton_tag_w_scope",
+                "assign_singleton_2_tags_w_scope",
+                "assign_singleton_component_w_scope",
+                "assign_singleton_2_components_w_scope"
             ]
         }, {
             "id": "Doc",
