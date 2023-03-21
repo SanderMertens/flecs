@@ -41,7 +41,7 @@ For more information, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 ## Try it out!
 The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js) lets you try Flecs without writing any C/C++ code!
 
-[![Flecs playground](docs/img/script_tutorial/tut_playground.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js)
+[![Flecs playground](docs/img/playground.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js)
 
 To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_FlecsScriptTutorial.html).
 
