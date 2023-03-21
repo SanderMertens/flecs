@@ -1649,6 +1649,8 @@
                 "get_target_for_id_from_empty",
                 "get_target_for_id_from_empty_no_rel",
                 "get_target_for_id_not_empty_not_found",
+                "get_target_for_id_from_stage",
+                "get_target_for_id_no_id",
                 "ignore_childof_from_base",
                 "add_exclusive_relation_twice",
                 "add_same_exclusive_relation_twice",

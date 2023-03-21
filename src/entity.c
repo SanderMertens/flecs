@@ -3272,6 +3272,15 @@ ecs_entity_t ecs_get_target_for_id(
     ecs_entity_t rel,
     ecs_id_t id)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    if (!id) {
+        return ecs_get_target(world, entity, rel, 0);
+    }
+
+    world = ecs_get_world(world);
+
     ecs_table_t *table = ecs_get_table(world, entity);
     ecs_entity_t subject = 0;
 
@@ -3308,6 +3317,8 @@ ecs_entity_t ecs_get_target_for_id(
     } else {
         return subject;
     }
+error:
+    return 0;
 }
 
 int32_t ecs_get_depth(
