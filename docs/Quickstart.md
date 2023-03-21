@@ -23,6 +23,22 @@ When compiling [flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/m
 
 Alternatively Flecs can also be built as a dynamic library with the cmake, meson, bazel or [bake](https://github.com/SanderMertens/bake) build files provided in the repository. These use the files from `src` to build as opposed to the amalgamated files, which is better suited for development.
 
+### Building with CMake
+
+Locate `flecs` on your system (either by cloning or as a submodule) and use `add_subdirectory` or use `FetchContent` to download the source code from the master branch of the [flecs repository](https://github.com/SanderMertens/flecs). After that, add the following to your `CMakeLists.txt` file:
+
+```cmake
+target_link_libraries(${PROJECT_NAME} flecs::flecs_static)
+```
+
+### Building with Bake
+
+Download or `git clone` the [flecs repository](https://github.com/SanderMertens/flecs) and run `bake` from inside the directory. After that, add the following to your `project.json` file's value property:
+
+```json
+"use": ["flecs"]
+```
+
 ### Running tests
 To run the Flecs test suite, first make sure you have [bake](https://github.com/SanderMertens/bake) installed (see the bake repository for instructions). 
 
