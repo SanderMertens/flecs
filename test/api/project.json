@@ -143,7 +143,8 @@
                 "defer_entity_init_w_set_name_w_add_childof",
                 "entity_w_digit_name",
                 "entity_w_existing_digit_name",
-                "entity_w_conflicting_digit_name"
+                "entity_w_conflicting_digit_name",
+                "set_generation_on_nonempty_entity"
             ]
         }, {
             "id": "Search",

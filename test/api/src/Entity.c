@@ -2050,3 +2050,24 @@ void Entity_entity_w_conflicting_digit_name() {
 
     ecs_fini(world);
 }
+
+void Entity_set_generation_on_nonempty_entity() {
+    ecs_world_t* world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .id = 123456
+    });
+
+    ecs_add(world, e1, Tag);
+
+    e1 |= 0x200000000ul;
+    ecs_set_entity_generation(world, e1);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ .id = Tag });
+    ecs_entity_t first = ecs_iter_first(&it);
+    test_uint(first, e1);
+
+    ecs_fini(world);
+}
