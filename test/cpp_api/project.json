@@ -1048,6 +1048,7 @@
                 "register_meta_after_reset",
                 "reregister_after_reset_w_hooks_and_in_use",
                 "reregister_after_reset_w_hooks_and_in_use_implicit",
+                "register_component_w_reset_in_multithreaded",
                 "count",
                 "count_id",
                 "count_pair",

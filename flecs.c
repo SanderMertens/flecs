@@ -7196,6 +7196,26 @@ error:
     return NULL;
 }
 
+static
+void flecs_check_component(
+    ecs_world_t *world,
+    ecs_entity_t result,
+    const EcsComponent *ptr,
+    ecs_size_t size,
+    ecs_size_t alignment)
+{
+    if (ptr->size != size) {
+        char *path = ecs_get_fullpath(world, result);
+        ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
+        ecs_os_free(path);
+    }
+    if (ptr->alignment != alignment) {
+        char *path = ecs_get_fullpath(world, result);
+        ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
+        ecs_os_free(path);
+    }
+}
+
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
@@ -7204,11 +7224,24 @@ ecs_entity_t ecs_component_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
+    /* If existing entity is provided, check if it is already registered as a
+     * component and matches the size/alignment. This can prevent having to
+     * suspend readonly mode, and increases the number of scenarios in which
+     * this function can be called in multithreaded mode. */
+    ecs_entity_t result = desc->entity;
+    if (result && ecs_is_alive(world, result)) {
+        const EcsComponent *const_ptr = ecs_get(world, result, EcsComponent);
+        if (const_ptr) {
+            flecs_check_component(world, result, const_ptr,
+                desc->type.size, desc->type.alignment);
+            return result;
+        }
+    }
+
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
     bool new_component = true;
-    ecs_entity_t result = desc->entity;
     if (!result) {
         result = ecs_new_low_id(world);
     } else {
@@ -7231,16 +7264,8 @@ ecs_entity_t ecs_component_init(
             }
         }
     } else {
-        if (ptr->size != desc->type.size) {
-            char *path = ecs_get_fullpath(world, result);
-            ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
-            ecs_os_free(path);
-        }
-        if (ptr->alignment != desc->type.alignment) {
-            char *path = ecs_get_fullpath(world, result);
-            ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
-            ecs_os_free(path);
-        }
+        flecs_check_component(world, result, ptr,
+            desc->type.size, desc->type.alignment);
     }
 
     ecs_modified(world, result, EcsComponent);

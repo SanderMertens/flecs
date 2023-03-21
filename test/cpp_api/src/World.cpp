@@ -280,6 +280,28 @@ void World_reregister_after_reset_different_name() {
     ecs.component<Position>("Velocity");
 }
 
+void World_register_component_w_reset_in_multithreaded() {
+    flecs::world ecs;
+
+    ecs.set_threads(2);
+
+    flecs::entity pos = ecs.component<Position>();
+    flecs::entity e = ecs.entity();
+
+    flecs::_::cpp_type<Position>::reset();
+
+    ecs.readonly_begin();
+    e.set<Position>({10, 20});
+    ecs.readonly_end();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(pos));
+    const Position *p = e.get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 template <typename T>
 struct Tmp { int32_t v; };
 struct Test { };
