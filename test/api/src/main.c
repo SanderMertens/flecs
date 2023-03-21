@@ -138,6 +138,7 @@ void Entity_entity_w_digit_name(void);
 void Entity_entity_w_existing_digit_name(void);
 void Entity_entity_w_conflicting_digit_name(void);
 void Entity_set_generation_on_nonempty_entity(void);
+void Entity_set_generation_while_deferred(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -2961,6 +2962,10 @@ bake_test_case Entity_testcases[] = {
     {
         "set_generation_on_nonempty_entity",
         Entity_set_generation_on_nonempty_entity
+    },
+    {
+        "set_generation_while_deferred",
+        Entity_set_generation_while_deferred
     }
 };
 
@@ -11925,7 +11930,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        101,
+        102,
         Entity_testcases
     },
     {

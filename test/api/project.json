@@ -144,7 +144,8 @@
                 "entity_w_digit_name",
                 "entity_w_existing_digit_name",
                 "entity_w_conflicting_digit_name",
-                "set_generation_on_nonempty_entity"
+                "set_generation_on_nonempty_entity",
+                "set_generation_while_deferred"
             ]
         }, {
             "id": "Search",
