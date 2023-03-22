@@ -716,6 +716,8 @@ void flecs_bootstrap(
 
     flecs_type_info_init(world, EcsIterable, { 0 });
 
+    flecs_type_info_init(world, EcsTarget, { 0 });
+
     /* Cache often used id records */
     flecs_init_id_records(world);
 
@@ -727,6 +729,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsIterable);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
+    flecs_bootstrap_builtin_t(world, table, EcsTarget);
 
     world->info.last_component_id = EcsFirstUserComponentId;
     world->info.last_id = EcsFirstUserEntityId;
@@ -811,6 +814,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
 
+    flecs_bootstrap_tag(world, EcsFlatten);
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 
     /* Builtin predicates */
@@ -839,6 +843,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsSlotOf, EcsTag);
     ecs_add_id(world, EcsDependsOn, EcsTag);
+    ecs_add_id(world, EcsFlatten, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
     ecs_add_id(world, EcsUnion, EcsTag);
     ecs_add_id(world, EcsFlag, EcsTag);
@@ -991,6 +996,7 @@ void flecs_bootstrap(
     /* Exclusive properties */
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
+    ecs_add_id(world, EcsFlatten, EcsExclusive);
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);

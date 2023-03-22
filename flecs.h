@@ -327,6 +327,7 @@ extern "C" {
 #define EcsFilterHasCondSet            (1u << 10u) /* Does filter have conditionally set fields */
 #define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,6 +353,7 @@ extern "C" {
 #define EcsTableHasUnSet               (1u << 18u)
 
 #define EcsTableHasObserved            (1u << 20u)
+#define EcsTableHasTarget              (1u << 21u)
 
 #define EcsTableMarkedForDelete        (1u << 30u)
 
@@ -652,6 +654,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 
 #define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Debug macros
 ////////////////////////////////////////////////////////////////////////////////
@@ -664,6 +667,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_TABLE_UNLOCK(world, table)
 #endif
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Actions that drive iteration
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsIterNextYield  (0)   /* Move to next table, yield current */
+#define EcsIterCurYield   (-1)  /* Stay on current table, yield */
+#define EcsIterNext       (1)   /* Move to next table, don't yield */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macros for ctor, dtor, move and copy
@@ -3743,6 +3754,12 @@ typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
+/** Target data for flattened relationships. */
+typedef struct EcsTarget {
+    int32_t count;
+    ecs_record_t *target;
+} EcsTarget;
+
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
 
@@ -4015,6 +4032,9 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
+
+FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
+FLECS_API extern const ecs_entity_t EcsFlatten;
 
 /** Used like (EcsDefaultChildComponent, Component). When added to an entity,
  * this informs serialization formats which component to use when a value is
@@ -5215,6 +5235,15 @@ FLECS_API
 void ecs_read_end(
     const ecs_record_t *record);
 
+/** Get entity corresponding with record.
+ * This operation only works for entities that are not empty.
+ * 
+ * @param record The record for which to obtain the entity id.
+ */
+FLECS_API
+ecs_entity_t ecs_record_get_entity(
+    const ecs_record_t *record);
+
 /** Get component from entity record.
  * This operation returns a pointer to a component for the entity 
  * associated with the provided record. For safe access to the component, obtain
@@ -5246,6 +5275,18 @@ FLECS_API
 void* ecs_record_get_mut_id(
     ecs_world_t *world,
     ecs_record_t *record,
+    ecs_id_t id);
+
+/** Test if entity for record has component. 
+ * 
+ * @param world The world.
+ * @param record Record to the entity.
+ * @param id The (component) id.
+ */
+FLECS_API
+bool ecs_record_has_id(
+    ecs_world_t *world,
+    const ecs_record_t *record,
     ecs_id_t id);
 
 /** Emplace a component.
@@ -5601,6 +5642,48 @@ int32_t ecs_get_depth(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel);
+
+typedef struct ecs_flatten_desc_t {
+    /* When true, the flatten operation will not remove names from entities in
+     * the flattened tree. This may fail if entities from different subtrees
+     * have the same name. */
+    bool keep_names;
+
+    /* When true, the flattened tree won't contain information about the 
+     * original depth of the entities. This can reduce fragmentation, but may
+     * cause existing code, such as cascade queries, to no longer work. */
+    bool lose_depth;
+} ecs_flatten_desc_t;
+
+/** Recursively flatten relationship for target entity (experimental).
+ * This operation combines entities in the subtree of the specified pair from
+ * different parents in the same table. This can reduce memory fragmentation
+ * and reduces the number of tables in the storage, which improves RAM 
+ * utilization and various other operations, such as entity cleanup.
+ * 
+ * The lifecycle of entities in a fixed subtree are bound to the specified
+ * parent. Entities in a fixed subtree cannot be deleted individually. Entities
+ * can also not change the target of the fixed relationship, which includes
+ * removing the relationship.
+ * 
+ * Entities in a fixed subtree are still fragmented on subtree depth. This 
+ * ensures that entities can still be iterated in breadth-first order with the
+ * cascade query modifier.
+ * 
+ * The current implementation is limited to exclusive acyclic relationships, and
+ * does not allow for adding/removing to entities in flattened tables. An entity
+ * may only be flattened for a single relationship. Future iterations of the
+ * feature may remove these limitations.
+ * 
+ * @param world The world.
+ * @param pair The relationship pair from which to start flattening.
+ * @param desc Options for flattening the tree.
+ */
+FLECS_API
+void ecs_flatten(
+    ecs_world_t *world,
+    ecs_id_t pair,
+    const ecs_flatten_desc_t *desc);
 
 /** Count entities that have the specified id.
  * Returns the number of entities that have the specified id.
@@ -6669,7 +6752,7 @@ bool ecs_query_next_table(
  * @param iter The iterator.
  */
 FLECS_API
-void ecs_query_populate(
+int ecs_query_populate(
     ecs_iter_t *iter);
 
 /** Returns whether the query data changed since the last iteration.
@@ -8280,6 +8363,9 @@ int ecs_value_move_ctor(
 
 #define ecs_record_get(world, record, T)\
     (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
+
+#define ecs_record_has(world, record, T)\
+    (ecs_record_has_id(world, record, ecs_id(T)))
 
 #define ecs_record_get_pair(world, record, First, second)\
     (ECS_CAST(const First*, ecs_record_get_id(world, record, \
@@ -14539,6 +14625,7 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
+using Target = EcsTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -14612,7 +14699,8 @@ static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
 
 /* Misc */
-static const flecs::entity_t EcsDefaultChildComponent = EcsDefaultChildComponent;
+static const flecs::entity_t Flatten = EcsFlatten;
+static const flecs::entity_t DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;
@@ -22053,6 +22141,13 @@ struct entity : entity_builder<entity>
         _::cpp_type<Second>::id(m_world);
         return ref<Second>(m_world, m_id, 
             ecs_pair(first, _::cpp_type<Second>::id(m_world)));
+    }
+
+    /** Recursively flatten relationship.
+     * @see ecs_flatten
+     */
+    void flatten(flecs::entity_t r, const ecs_flatten_desc_t *desc = nullptr) {
+        ecs_flatten(m_world, ecs_pair(r, m_id), desc);
     }
 
     /** Clear an entity.

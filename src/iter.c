@@ -165,10 +165,11 @@ bool flecs_iter_populate_term_data(
     }
 
     if (column < 0) {
+        table = it->table;
         is_shared = true;
 
         /* Data is not from This */
-        if (it->references) {
+        if (it->references && (!table || !(table->flags & EcsTableHasTarget))) {
             /* The reference array is used only for components matched on a
              * table (vs. individual entities). Remaining components should be
              * assigned outside of this function */
@@ -400,6 +401,7 @@ bool flecs_iter_next_instanced(
     if (result && !is_instanced && it->count && has_shared) {
         it->count = 1;
     }
+
     return result;
 }
 

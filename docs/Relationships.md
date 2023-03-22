@@ -1356,6 +1356,19 @@ Applications that make extensive use of relationships might observe high levels 
 
 Fragmentation can be reduced by using [union relationships](#union-property). There are additional storage improvements on the roadmap that will decrease the overhead of fragmentation introduced by relationships.
 
+### Relationship flattening
+To reduce fragmentation, a relationship can be flattened by calling the `ecs_flatten` operation. This combines entities from different relationship targets in the same table, provided that they otherwise have the same components. The operation is recursive, meaning that for a specified relationship, the entire subtree is flattened.
+
+Flattening a subtree can be done with or without preserving depth information of the original tree. Preserving depth information ensures that features like `cascade` still work as usual, whereas not preserving depth information further decreases fragmentation. 
+
+The flattening operation by default removes names of the flattened entities. This behavior can be overridden with an option. When flattening for the builtin `ChildOf` relationship, flattening with preservation of names can cause the operation to fail, if entities from different subtrees have the same name.
+
+After the flatten operation, entities for the same target are stored in contiguous slices in the new table. The new table will have a `(Target, Relationship)` pair, which contains data about the original target, and the start and number of entities in the contiguous block. This information is used by queries when iterating to ensure entities for the same target can still be iterated in bulk.
+
+Relationship flattening is an experimental feature, and some limitations apply for the current implementation. After a subtree has been flattened, the entities in that subtree can no longer be individually deleted from a target, and cannot be moved to another parent. Additionally, no components can be added/removed to entities in a flattened subtree. Relationship flattening is currently only supported for exclusive, acyclic relationships.
+
+For additional information, see the API documentation for the `ecs_flatten` operation.
+
 ### Table Creation
 When an id added to an entity is deleted, all references to that id are deleted from the storage (see [cleanup properties](#cleanup-properties)). For example, when the component `Position` is deleted, it is removed from all entities and all tables with the `Position` component are deleted. While not unique to relationships, it more common for relationships to trigger cleanup actions, as relationship pairs contain regular entities.
 

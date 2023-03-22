@@ -125,6 +125,7 @@ extern "C" {
 #define EcsFilterHasCondSet            (1u << 10u) /* Does filter have conditionally set fields */
 #define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +151,7 @@ extern "C" {
 #define EcsTableHasUnSet               (1u << 18u)
 
 #define EcsTableHasObserved            (1u << 20u)
+#define EcsTableHasTarget              (1u << 21u)
 
 #define EcsTableMarkedForDelete        (1u << 30u)
 
