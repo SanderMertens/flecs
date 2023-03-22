@@ -1846,6 +1846,13 @@ bool flecs_term_match_table(
         result = true;
     }
 
+    if ((column == -1) && (src->flags & EcsUp) && (table->flags & EcsTableHasTarget)) {
+        ecs_id_t rel = ECS_PAIR_SECOND(table->type.array[table->ft_offset]);
+        if (rel == (uint32_t)src->trav) {
+            result = true;
+        }
+    }
+
     if (!result) {
         if (iter_flags & EcsFilterPopulate) {
             column = 0;

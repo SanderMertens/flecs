@@ -348,5 +348,26 @@ int32_t flecs_relation_depth(
     if (!idr) {
         return 0;
     }
-    return flecs_relation_depth_walk(world, idr, table, table);
+
+    int32_t depth_offset = 0;
+    if (table->flags & EcsTableHasTarget) {
+        if (ecs_table_get_index(world, table, 
+            ecs_pair_t(EcsTarget, r)) != -1)
+        {
+            ecs_id_t id;
+            int32_t col = ecs_search(world, table, 
+                ecs_pair(EcsFlatten, EcsWildcard), &id);
+            if (col == -1) {
+                return 0;
+            }
+
+            ecs_entity_t did = ecs_pair_second(world, id);
+            ecs_assert(did != 0, ECS_INTERNAL_ERROR, NULL);
+            uint64_t *val = ecs_map_get(&world->store.entity_to_depth, did);
+            ecs_assert(val != NULL, ECS_INTERNAL_ERROR, NULL);
+            depth_offset = flecs_uto(int32_t, val[0]);
+        }
+    }
+
+    return flecs_relation_depth_walk(world, idr, table, table) + depth_offset;
 }

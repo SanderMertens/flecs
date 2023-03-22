@@ -91,12 +91,14 @@ const ecs_entity_t EcsDelete =                        ECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                         ECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t ecs_id(EcsTarget) =                ECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t EcsFlatten =                       ECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsDefaultChildComponent =         ECS_HI_COMPONENT_ID + 55;
 
 /* Builtin predicate ids (used by rule engine) */
-const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 54;
-const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsPredEq =                        ECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsPredMatch =                     ECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t EcsPredLookup =                    ECS_HI_COMPONENT_ID + 58;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                       ECS_HI_COMPONENT_ID + 61;
@@ -113,7 +115,6 @@ const ecs_entity_t EcsPostUpdate =                    ECS_HI_COMPONENT_ID + 71;
 const ecs_entity_t EcsPreStore =                      ECS_HI_COMPONENT_ID + 72;
 const ecs_entity_t EcsOnStore =                       ECS_HI_COMPONENT_ID + 73;
 const ecs_entity_t EcsPostFrame =                     ECS_HI_COMPONENT_ID + 74;
-
 const ecs_entity_t EcsPhase =                         ECS_HI_COMPONENT_ID + 75;
 
 /* Meta primitive components (don't use low ids to save id space) */
@@ -397,6 +398,8 @@ void flecs_init_store(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &world->store.records, ecs_table_record_t, 0);
     ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
+    ecs_vec_init_t(a, &world->store.depth_ids, ecs_entity_t, 0);
+    ecs_map_init(&world->store.entity_to_depth, &world->allocator);
 
     /* Initialize entity index */
     flecs_sparse_init_t(&world->store.entity_index, 
@@ -504,6 +507,8 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
+    ecs_vec_fini_t(a, &world->store.depth_ids, ecs_entity_t);
+    ecs_map_fini(&world->store.entity_to_depth);
 }
 
 /* Implementation for iterable mixin */

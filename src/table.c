@@ -383,6 +383,9 @@ void flecs_table_init_flags(
                         table->sw_offset = flecs_ito(int16_t, i);
                     }
                     table->sw_count ++;
+                } else if (r == ecs_id(EcsTarget)) {
+                    table->flags |= EcsTableHasTarget;
+                    table->ft_offset = flecs_ito(int16_t, i);
                 } else if (r == ecs_id(EcsPoly)) {
                     table->flags |= EcsTableHasBuiltins;
                 }
@@ -1526,6 +1529,8 @@ int32_t flecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(!(table->flags & EcsTableHasTarget), 
+        ECS_INVALID_OPERATION, NULL);
 
     flecs_table_check_sanity(table);
 
@@ -1653,6 +1658,8 @@ void flecs_table_delete(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(!(table->flags & EcsTableHasTarget), 
+        ECS_INVALID_OPERATION, NULL);
 
     flecs_table_check_sanity(table);
 
@@ -2164,7 +2171,7 @@ void flecs_merge_column(
 
         void *dst_ptr = ECS_ELEM(dst->array, size, dst_count);
         void *src_ptr = src->array;
-        
+
         /* Move values into column */
         ecs_move_t move = NULL;
         if (ti) {
@@ -2230,14 +2237,14 @@ void flecs_merge_table_data(
             flecs_table_mark_table_dirty(world, dst_table, i_new + 1);
             ecs_assert(dst[i_new].size == dst_data->entities.size, 
                 ECS_INTERNAL_ERROR, NULL);
-            
+
             i_new ++;
             i_old ++;
         } else if (dst_id < src_id) {
             /* New column, make sure vector is large enough. */
             ecs_vec_t *column = &dst[i_new];
             ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
-            flecs_ctor_component(dst_ti, column, 0, src_count + dst_count);
+            flecs_ctor_component(dst_ti, column, dst_count, src_count);
             i_new ++;
         } else if (dst_id > src_id) {
             /* Old column does not occur in new table, destruct */
@@ -2256,10 +2263,10 @@ void flecs_merge_table_data(
     for (; i_new < dst_column_count; i_new ++) {
         ecs_vec_t *column = &dst[i_new];
         ecs_type_info_t *ti = dst_type_info[i_new];
-        int32_t size = ti->size;        
+        int32_t size = ti->size;
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
-        flecs_ctor_component(ti, column, 0, src_count + dst_count);
+        flecs_ctor_component(ti, column, dst_count, src_count);
     }
 
     /* Destruct remaining columns */
@@ -2555,6 +2562,7 @@ void* ecs_table_get_column(
 {
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(table->storage_map != NULL, ECS_INVALID_PARAMETER, NULL);
 
     int32_t storage_index = table->storage_map[index];
     if (storage_index == -1) {

@@ -177,20 +177,22 @@ void flecs_assembly_on_set(
     ecs_world_t *world = it->world;
     ecs_entity_t assembly = ecs_field_id(it, 1);
     const char *name = ecs_get_name(world, assembly);
+    ecs_record_t *r = ecs_record_find(world, assembly);
 
-    const EcsComponent *ct = ecs_get(world, assembly, EcsComponent);
+    const EcsComponent *ct = ecs_record_get(world, r, EcsComponent);
+    ecs_get(world, assembly, EcsComponent);
     if (!ct) {
         ecs_err("assembly '%s' is not a component", name);
         return;
     }
 
-    const EcsStruct *st = ecs_get(world, assembly, EcsStruct);
+    const EcsStruct *st = ecs_record_get(world, r, EcsStruct);
     if (!st) {
         ecs_err("assembly '%s' is not a struct", name);
         return;
     }
 
-    const EcsScript *script = ecs_get(world, assembly, EcsScript);
+    const EcsScript *script = ecs_record_get(world, r, EcsScript);
     if (!script) {
         ecs_err("assembly '%s' is missing a script", name);
         return;
@@ -228,6 +230,10 @@ void flecs_assembly_on_set(
         ecs_entity_t instance = it->entities[i];
         ecs_script_update(world, assembly, instance, script->script, &vars);
         ecs_vars_fini(&vars);
+
+        if (ecs_record_has_id(world, r, EcsFlatten)) {
+            ecs_flatten(it->real_world, ecs_childof(instance), NULL);
+        }
 
         data = ECS_OFFSET(data, ct->size);
     }

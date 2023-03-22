@@ -866,6 +866,7 @@ void flecs_query_match_tables(
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
+    ECS_BIT_SET(it.flags, EcsIterTableOnly);
     ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     while (ecs_filter_next(&it)) {
@@ -2104,34 +2105,31 @@ ecs_iter_t ecs_query_iter(
     flecs_filter_apply_iter_flags(&result, &query->filter);
 
     ecs_filter_t *filter = &query->filter;
-    if (filter->flags & EcsFilterMatchOnlyThis) {
-        /* When the query only matches This terms, we can reuse the storage from
-        * the cache to populate the iterator */
-        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs);
-    } else {
+    ecs_iter_t fit;
+    if (!(filter->flags & EcsFilterMatchOnlyThis)) {
         /* Check if non-This terms (like singleton terms) still match */
-        ecs_iter_t fit = flecs_filter_iter_w_flags(
+        fit = flecs_filter_iter_w_flags(
             (ecs_world_t*)stage, &query->filter, EcsIterIgnoreThis);
         if (!ecs_filter_next(&fit)) {
             /* No match, so return nothing */
             ecs_iter_fini(&fit);
             goto noresults;
         }
+    }
 
-        /* Initialize iterator with private storage for ids, ptrs, sizes and 
-        * columns so we have a place to store the non-This data */
-        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs | flecs_iter_cache_ids |
-            flecs_iter_cache_columns | flecs_iter_cache_sizes);
+    flecs_iter_init(stage, &result, flecs_iter_cache_all);
 
-        /* Copy the data */
-        int32_t term_count = filter->field_count;
-        if (term_count) {
+    /* Copy the data */
+    if (!(filter->flags & EcsFilterMatchOnlyThis)) {
+        int32_t field_count = filter->field_count;
+        if (field_count) {
             if (result.ptrs) {
-                ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
+                ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, field_count);
             }
-            ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, term_count);
-            ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, term_count);
-            ecs_os_memcpy_n(result.columns, fit.columns, int32_t, term_count);
+            ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, field_count);
+            ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
+            ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
+            ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
         }
 
         ecs_iter_fini(&fit);
@@ -2244,9 +2242,9 @@ bool ecs_query_next_table(
     flecs_iter_validate(it);
 
     ecs_query_iter_t *iter = &it->priv.iter.query;
-    ecs_query_table_node_t *node = iter->node; 
+    ecs_query_table_node_t *node = iter->node;
     ecs_query_t *query = iter->query;
-    
+
     if ((query->flags & EcsQueryHasOutColumns)) {
         ecs_query_table_node_t *prev = iter->prev;
         if (prev && it->count) {
@@ -2268,7 +2266,7 @@ error:
     return false;
 }
 
-void ecs_query_populate(
+int ecs_query_populate(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -2279,48 +2277,66 @@ void ecs_query_populate(
     ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_table_node_t *node = iter->prev;
     ecs_assert(node != NULL, ECS_INVALID_OPERATION, NULL);
+    int result = EcsIterNextYield;
 
-    ecs_table_t *table = node->table;
     ecs_query_table_match_t *match = node->match;
+    ecs_table_t *table = match->node.table;
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->filter.world;
     const ecs_filter_t *filter = &query->filter;
-    bool only_this = filter->flags & EcsFilterMatchOnlyThis;
+    ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
 
-    /* Match has been iterated, update monitor for change tracking */
-    if (query->flags & EcsQueryHasMonitor) {
-        flecs_query_sync_match_monitor(query, match);
-    }
+    ecs_assert(ent_it != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_range_t *range = &ent_it->range;
 
-    if (only_this) {
-        /* If query has only This terms, reuse cache storage */
-        it->ids = match->ids;
-        it->columns = match->columns;
-        it->sizes = match->sizes;
-    } else {
-        /* If query has non-This terms make sure not to overwrite them */
-        int32_t t, term_count = filter->term_count;
-        for (t = 0; t < term_count; t ++) {
-            ecs_term_t *term = &filter->terms[t];
-            if (!ecs_term_match_this(term)) {
-                continue;
-            }
-
-            int32_t field = term->field_index;
-            it->ids[field] = match->ids[field];
-            it->columns[field] = match->columns[field];
-            it->sizes[field] = match->sizes[field];
+    int32_t t, term_count = filter->term_count;
+    for (t = 0; t < term_count; t ++) {
+        ecs_term_t *term = &filter->terms[t];
+        int32_t field = term->field_index;
+        it->sources[field] = match->sources[field];
+        if (!ecs_term_match_this(term)) {
+            continue;
         }
+
+        it->ids[field] = match->ids[field];
+        it->columns[field] = match->columns[field];
+        it->sizes[field] = match->sizes[field];
     }
 
-    it->sources = match->sources;
+    if (table) {
+        range->offset = node->offset;
+        range->count = node->count;
+        if (!range->count) {
+            range->count = ecs_table_count(table);
+            ecs_assert(range->count != 0, ECS_INTERNAL_ERROR, NULL);
+        }
+
+        if (match->entity_filter.has_filter) {
+            ent_it->entity_filter = &match->entity_filter;
+            ent_it->columns = match->columns;
+            ent_it->range.table = table;
+            ent_it->it = it;
+            result = flecs_entity_filter_next(ent_it);
+            if (result == EcsIterNext) {
+                goto done;
+            }
+        }
+
+        it->group_id = match->node.group_id;
+    } else {
+        range->offset = 0;
+        range->count = 0;
+    }
+
     it->references = ecs_vec_first(&match->refs);
     it->instance_count = 0;
 
-    flecs_iter_populate_data(world, it, table, 0, ecs_table_count(table),
+    flecs_iter_populate_data(world, it, table, range->offset, range->count,
         it->ptrs, NULL);
+
 error:
-    return;
+done:
+    return result;
 }
 
 bool ecs_query_next(
@@ -2346,14 +2362,9 @@ bool ecs_query_next_instanced(
 
     ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_t *query = iter->query;
-    ecs_world_t *world = query->filter.world;
     ecs_flags32_t flags = query->flags;
-    const ecs_filter_t *filter = &query->filter;
-    bool only_this = filter->flags & EcsFilterMatchOnlyThis;
-    ecs_poly_assert(world, ecs_world_t);
 
-    ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
-    ecs_query_table_node_t *node, *next, *prev, *last;
+    ecs_query_table_node_t *prev, *next, *node = iter->node, *last = iter->last;
     if ((prev = iter->prev)) {
         /* Match has been iterated, update monitor for change tracking */
         if (flags & EcsQueryHasMonitor) {
@@ -2366,72 +2377,17 @@ bool ecs_query_next_instanced(
 
     flecs_iter_validate(it);
     iter->skip_count = 0;
-    last = iter->last;
 
-    for (node = iter->node; node != last; node = next) {     
-        ecs_assert(ent_it != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_range_t *range = &ent_it->range;
-        ecs_query_table_match_t *match = node->match;
-        ecs_table_t *table = match->node.table;
-
+    for (; node != last; node = next) {
         next = node->next;
-
-        if (table) {
-            range->offset = node->offset;
-            range->count = node->count;
-            if (!range->count) {
-                range->count = ecs_table_count(table);
-                ecs_assert(range->count != 0, ECS_INTERNAL_ERROR, NULL);
-            }
-
-            if (match->entity_filter.has_filter) {
-                ent_it->entity_filter = &match->entity_filter;
-                ent_it->columns = match->columns;
-                ent_it->range.table = table;
-                switch(flecs_entity_filter_next(ent_it)) {
-                case 1: continue;
-                case -1: next = node;
-                default: break;
-                }
-            }
-
-            it->group_id = match->node.group_id;
-        } else {
-            range->offset = 0;
-            range->count = 0;
-        }
-
-        if (only_this) {
-            /* If query has only This terms, reuse cache storage */
-            it->ids = match->ids;
-            it->columns = match->columns;
-            it->sizes = match->sizes;
-        } else {
-            /* If query has non-This terms make sure not to overwrite them */
-            int32_t t, term_count = filter->term_count;
-            for (t = 0; t < term_count; t ++) {
-                ecs_term_t *term = &filter->terms[t];
-                if (!ecs_term_match_this(term)) {
-                    continue;
-                }
-
-                int32_t field = term->field_index;
-                it->ids[field] = match->ids[field];
-                it->columns[field] = match->columns[field];
-                it->sizes[field] = match->sizes[field];
-            }
-        }
-
-        it->sources = match->sources;
-        it->references = ecs_vec_first(&match->refs);
-        it->instance_count = 0;
-
-        flecs_iter_populate_data(world, it, table, range->offset, range->count,
-            it->ptrs, NULL);
-
-        iter->node = next;
         iter->prev = node;
-        goto yield;
+
+        switch(ecs_query_populate(it)) {
+        case EcsIterNext: iter->node = next; continue;
+        case EcsIterCurYield: next = node; /* fall through */
+        case EcsIterNextYield: goto yield;
+        default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
 error:
@@ -2439,7 +2395,9 @@ error:
     return false;
 
 yield:
-    return true;  
+    iter->node = next;
+    iter->prev = node;
+    return true;
 }
 
 bool ecs_query_changed(

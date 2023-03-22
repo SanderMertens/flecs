@@ -187,11 +187,12 @@ struct ecs_table_t {
     int16_t sw_offset;
     int16_t bs_count;
     int16_t bs_offset;
+    int16_t ft_offset;
 
+    uint16_t record_count;           /* Table record count including wildcards */
     int32_t refcount;                /* Increased when used as storage table */
     int32_t lock;                    /* Prevents modifications */
     int32_t observed_count;          /* Number of observed entities in table */
-    uint16_t record_count;           /* Table record count including wildcards */
 };
 
 /** Must appear as first member in payload of table cache */
@@ -216,34 +217,45 @@ typedef struct ecs_table_cache_t {
     ecs_table_cache_list_t empty_tables;
 } ecs_table_cache_t;
 
-/* Sparse query column */
+/* Sparse query term */
 typedef struct flecs_switch_term_t {
     ecs_switch_t *sw_column;
     ecs_entity_t sw_case; 
     int32_t signature_column_index;
 } flecs_switch_term_t;
 
-/* Bitset query column */
+/* Bitset query term */
 typedef struct flecs_bitset_term_t {
     ecs_bitset_t *bs_column;
     int32_t column_index;
 } flecs_bitset_term_t;
+
+/* Flat table term */
+typedef struct flecs_flat_table_term_t {
+    int32_t field_index;
+    ecs_term_t *term;
+} flecs_flat_table_term_t;
 
 /* Entity filter. This filters the entities of a matched table, for example when
  * it has disabled components or union relationships (switch). */
 typedef struct ecs_entity_filter_t {
     ecs_vec_t sw_terms;       /* Terms with switch (union) entity filter */
     ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
+    ecs_vec_t ft_terms;       /* Terms with components from flattened tree */
+    int32_t flat_tree_column;
     bool has_filter;
 } ecs_entity_filter_t;
 
 typedef struct ecs_entity_filter_iter_t {
     ecs_entity_filter_t *entity_filter;
+    ecs_iter_t *it;
     int32_t *columns;
+    ecs_table_t *prev;
     ecs_table_range_t range;
     int32_t bs_offset;
     int32_t sw_offset;
     int32_t sw_smallest;
+    int32_t flat_tree_offset;
 } ecs_entity_filter_iter_t;
 
 typedef struct ecs_query_table_match_t ecs_query_table_match_t;
@@ -549,6 +561,10 @@ typedef struct ecs_store_t {
 
     /* Stack of ids being deleted. */
     ecs_vec_t marked_ids;    /* vector<ecs_marked_ids_t> */
+    
+    /* Entity ids associated with depth (for flat hierarchies) */
+    ecs_vec_t depth_ids;
+    ecs_map_t entity_to_depth; /* What it says */
 } ecs_store_t;
 
 /* fini actions */
