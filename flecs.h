@@ -28180,18 +28180,18 @@ bool world::has() const {
 }
 
 template <typename First, typename Second>
-bool world::has() const {
+inline bool world::has() const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.has<First, Second>();
 }
 
 template <typename First>
-bool world::has(flecs::id_t second) const {
+inline bool world::has(flecs::id_t second) const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.has<First>(second);
 }
 
-bool world::has(flecs::id_t first, flecs::id_t second) const {
+inline bool world::has(flecs::id_t first, flecs::id_t second) const {
     flecs::entity e(m_world, first);
     return e.has(first, second);
 }
@@ -28203,18 +28203,18 @@ void world::add() const {
 }
 
 template <typename First, typename Second>
-void world::add() const {
+inline void world::add() const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     e.add<First, Second>();
 }
 
 template <typename First>
-void world::add(flecs::entity_t second) const {
+inline void world::add(flecs::entity_t second) const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     e.add<First>(second);
 }
 
-void world::add(flecs::entity_t first, flecs::entity_t second) const {
+inline void world::add(flecs::entity_t first, flecs::entity_t second) const {
     flecs::entity e(m_world, first);
     e.add(first, second);
 }
