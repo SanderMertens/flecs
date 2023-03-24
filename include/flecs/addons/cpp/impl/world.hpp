@@ -114,6 +114,17 @@ bool world::has() const {
     return e.has<First, Second>();
 }
 
+template <typename First>
+bool world::has(flecs::id_t second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.has<First>(second);
+}
+
+bool world::has(flecs::id_t first, flecs::id_t second) const {
+    flecs::entity e(m_world, first);
+    return e.has(first, second);
+}
+
 template <typename T>
 void world::add() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
@@ -124,6 +135,17 @@ template <typename First, typename Second>
 void world::add() const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     e.add<First, Second>();
+}
+
+template <typename First>
+void world::add(flecs::entity_t second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.add<First>(second);
+}
+
+void world::add(flecs::entity_t first, flecs::entity_t second) const {
+    flecs::entity e(m_world, first);
+    e.add(first, second);
 }
 
 template <typename T>
