@@ -585,9 +585,19 @@ struct world {
     template <typename T>
     bool has() const;
 
+    /** Test if world has the provided pair.
+     */
+    template <typename First, typename Second>
+    bool has() const;
+
     /** Add singleton component.
      */
     template <typename T>
+    void add() const;
+
+    /** Adds a pair to the singleton component.
+     */
+    template <typename First, typename Second>
     void add() const;
 
     /** Remove singleton component.

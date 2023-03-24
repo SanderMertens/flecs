@@ -18387,9 +18387,19 @@ struct world {
     template <typename T>
     bool has() const;
 
+    /** Test if world has the provided pair.
+     */
+    template <typename First, typename Second>
+    bool has() const;
+
     /** Add singleton component.
      */
     template <typename T>
+    void add() const;
+
+    /** Adds a pair to the singleton component.
+     */
+    template <typename First, typename Second>
     void add() const;
 
     /** Remove singleton component.
@@ -28133,10 +28143,22 @@ bool world::has() const {
     return e.has<T>();
 }
 
+template <typename First, typename Second>
+bool world::has() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.has<First, Second>();
+}
+
 template <typename T>
 void world::add() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.add<T>();
+}
+
+template <typename First, typename Second>
+void world::add() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.add<First, Second>();
 }
 
 template <typename T>
