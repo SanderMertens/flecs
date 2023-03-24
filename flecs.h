@@ -18388,9 +18388,27 @@ struct world {
     bool has() const;
 
     /** Test if world has the provided pair.
+     * 
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
      */
     template <typename First, typename Second>
     bool has() const;
+
+    /** Test if world has the provided pair.
+     * 
+     * @tparam First The first element of the pair
+     * @param second The second element of the pair.
+     */
+    template <typename First>
+    bool has(flecs::id_t second) const;
+
+    /** Test if world has the provided pair.
+     * 
+     * @param first The first element of the pair
+     * @param second The second element of the pair
+     */
+    bool has(flecs::id_t first, flecs::id_t second) const;
 
     /** Add singleton component.
      */
@@ -18398,9 +18416,27 @@ struct world {
     void add() const;
 
     /** Adds a pair to the singleton component.
+     * 
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
      */
     template <typename First, typename Second>
     void add() const;
+
+    /** Adds a pair to the singleton component.
+     * 
+     * @tparam First The first element of the pair
+     * @param second The second element of the pair.
+     */
+    template <typename First>
+    void add(flecs::entity_t second) const;
+
+    /** Adds a pair to the singleton entity.
+     * 
+     * @param first The first element of the pair
+     * @param second The second element of the pair
+     */
+    void add(flecs::entity_t first, flecs::entity_t second) const;
 
     /** Remove singleton component.
      */
@@ -28149,6 +28185,17 @@ bool world::has() const {
     return e.has<First, Second>();
 }
 
+template <typename First>
+bool world::has(flecs::id_t second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.has<First>(second);
+}
+
+bool world::has(flecs::id_t first, flecs::id_t second) const {
+    flecs::entity e(m_world, first);
+    return e.has(first, second);
+}
+
 template <typename T>
 void world::add() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
@@ -28159,6 +28206,17 @@ template <typename First, typename Second>
 void world::add() const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     e.add<First, Second>();
+}
+
+template <typename First>
+void world::add(flecs::entity_t second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.add<First>(second);
+}
+
+void world::add(flecs::entity_t first, flecs::entity_t second) const {
+    flecs::entity e(m_world, first);
+    e.add(first, second);
 }
 
 template <typename T>
