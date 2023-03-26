@@ -729,6 +729,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
 
+    world->flags |= EcsWorldInit;
+
     flecs_world_allocators_init(world);
     ecs_allocator_t *a = &world->allocator;
 
@@ -762,6 +764,8 @@ ecs_world_t *ecs_mini(void) {
     flecs_init_store(world);
 
     flecs_bootstrap(world);
+
+    world->flags &= ~EcsWorldInit;
 
     ecs_trace("world ready!");
     ecs_log_pop();
