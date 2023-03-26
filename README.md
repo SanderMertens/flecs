@@ -11,7 +11,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
 - Modern type-safe [C++11 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
 - First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_Relationships.html)!
-- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md277) and [prefabs](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md275)
+- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md277) and [prefabs](https://www.flecs.dev/flecs/md_docs_Manual.html#autotoc_md165)
 - Code base that builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
