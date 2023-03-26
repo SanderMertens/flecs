@@ -491,6 +491,7 @@ void FixedHierarchies_make_fixed_3_lvl_w_name(void);
 void FixedHierarchies_make_fixed_3_2_lvl_w_name(void);
 void FixedHierarchies_make_fixed_2_lvl_nested(void);
 void FixedHierarchies_make_fixed_3_lvl_nested(void);
+void FixedHierarchies_make_fixed_1_lvl_after_delete(void);
 void FixedHierarchies_get_target_1_lvl(void);
 void FixedHierarchies_get_target_2_lvl(void);
 void FixedHierarchies_get_depth_1_lvl(void);
@@ -4372,6 +4373,10 @@ bake_test_case FixedHierarchies_testcases[] = {
     {
         "make_fixed_3_lvl_nested",
         FixedHierarchies_make_fixed_3_lvl_nested
+    },
+    {
+        "make_fixed_1_lvl_after_delete",
+        FixedHierarchies_make_fixed_1_lvl_after_delete
     },
     {
         "get_target_1_lvl",
@@ -12307,7 +12312,7 @@ static bake_test_suite suites[] = {
         "FixedHierarchies",
         NULL,
         NULL,
-        56,
+        57,
         FixedHierarchies_testcases
     },
     {

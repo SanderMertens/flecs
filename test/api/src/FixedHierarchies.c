@@ -648,6 +648,35 @@ void FixedHierarchies_make_fixed_3_lvl_nested() {
     ecs_fini(world);
 }
 
+void FixedHierarchies_make_fixed_1_lvl_after_delete() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_id(world);
+    
+    ecs_entity_t p_1 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t p_1_1 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t p_1_2 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t p_1_3 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t p_1_4 = ecs_new_w_pair(world, EcsChildOf, p_1);
+
+    ecs_delete(world, p_1_3);
+    ecs_delete(world, p_1_4);
+
+    test_assert(ecs_get_target(world, p_1, EcsChildOf, 0) == p);
+    test_assert(ecs_get_target(world, p_1_1, EcsChildOf, 0) == p_1);
+    test_assert(ecs_get_target(world, p_1_2, EcsChildOf, 0) == p_1);
+    test_assert(!ecs_is_alive(world, p_1_3));
+    test_assert(!ecs_is_alive(world, p_1_4));
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_target(world, p_1, EcsChildOf, 0) == p);
+    test_assert(ecs_get_target(world, p_1_1, EcsChildOf, 0) == p_1);
+    test_assert(ecs_get_target(world, p_1_2, EcsChildOf, 0) == p_1);
+
+    ecs_fini(world);
+}
+
 void FixedHierarchies_get_target_1_lvl() {
     ecs_world_t *world = ecs_mini();
 

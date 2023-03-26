@@ -520,6 +520,7 @@
                 "make_fixed_3_2_lvl_w_name",
                 "make_fixed_2_lvl_nested",
                 "make_fixed_3_lvl_nested",
+                "make_fixed_1_lvl_after_delete",
                 "get_target_1_lvl",
                 "get_target_2_lvl",
                 "get_depth_1_lvl",

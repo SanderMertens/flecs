@@ -2220,6 +2220,7 @@ void flecs_merge_table_data(
     ecs_assert(dst_data->entities.count == src_count + dst_count, 
         ECS_INTERNAL_ERROR, NULL);
     int32_t column_size = dst_data->entities.size;
+    ecs_allocator_t *a = &world->allocator;
 
     /* Merge record pointers */
     flecs_merge_column(world, &dst_data->records, &src_data->records, 
@@ -2243,7 +2244,8 @@ void flecs_merge_table_data(
         } else if (dst_id < src_id) {
             /* New column, make sure vector is large enough. */
             ecs_vec_t *column = &dst[i_new];
-            ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
+            ecs_vec_set_size(a, column, size, column_size);
+            ecs_vec_set_count(a, column, size, src_count + dst_count);
             flecs_ctor_component(dst_ti, column, dst_count, src_count);
             i_new ++;
         } else if (dst_id > src_id) {
@@ -2251,7 +2253,7 @@ void flecs_merge_table_data(
             ecs_vec_t *column = &src[i_old];
             ecs_type_info_t *ti = src_type_info[i_old];
             flecs_dtor_component(ti, column, 0, src_count);
-            ecs_vec_fini(&world->allocator, column, ti->size);
+            ecs_vec_fini(a, column, ti->size);
             i_old ++;
         }
     }
@@ -2265,7 +2267,8 @@ void flecs_merge_table_data(
         ecs_type_info_t *ti = dst_type_info[i_new];
         int32_t size = ti->size;
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_set_count(&world->allocator, column, size, src_count + dst_count);
+        ecs_vec_set_size(a, column, size, column_size);
+        ecs_vec_set_count(a, column, size, src_count + dst_count);
         flecs_ctor_component(ti, column, dst_count, src_count);
     }
 
@@ -2274,7 +2277,7 @@ void flecs_merge_table_data(
         ecs_vec_t *column = &src[i_old];
         ecs_type_info_t *ti = src_type_info[i_old];
         flecs_dtor_component(ti, column, 0, src_count);
-        ecs_vec_fini(&world->allocator, column, ti->size);
+        ecs_vec_fini(a, column, ti->size);
     }    
 
     /* Mark entity column as dirty */
@@ -2298,8 +2301,8 @@ void flecs_table_merge(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!src_table->lock, ECS_LOCKED_STORAGE, NULL);
 
-    flecs_table_check_sanity(dst_table);
     flecs_table_check_sanity(src_table);
+    flecs_table_check_sanity(dst_table);
     
     bool move_data = false;
     
