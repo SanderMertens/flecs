@@ -24375,6 +24375,7 @@ int ecs_meta_next(
     }
 
     scope->op_cur += op->op_count;
+
     if (scope->op_cur >= scope->op_count) {
         ecs_err("out of bounds");
         return -1;
@@ -24928,9 +24929,13 @@ void flecs_meta_conversion_error(
     ecs_meta_type_op_t *op,
     const char *from)
 {
-    char *path = ecs_get_fullpath(cursor->world, op->type);
-    ecs_err("unsupported conversion from %s to '%s'", from, path);
-    ecs_os_free(path);
+    if (op->kind == EcsOpPop) {
+        ecs_err("cursor: out of bounds");
+    } else {
+        char *path = ecs_get_fullpath(cursor->world, op->type);
+        ecs_err("unsupported conversion from %s to '%s'", from, path);
+        ecs_os_free(path);
+    }
 }
 
 int ecs_meta_set_bool(

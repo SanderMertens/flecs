@@ -366,6 +366,8 @@ void Cursor_struct_w_3_opaque_vectors(void);
 void Cursor_struct_w_3_opaque_arrays(void);
 void Cursor_opaque_struct_w_opaque_vec(void);
 void Cursor_opaque_vec_w_opaque_elem(void);
+void Cursor_next_out_of_bounds(void);
+void Cursor_set_out_of_bounds(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -2277,6 +2279,14 @@ bake_test_case Cursor_testcases[] = {
     {
         "opaque_vec_w_opaque_elem",
         Cursor_opaque_vec_w_opaque_elem
+    },
+    {
+        "next_out_of_bounds",
+        Cursor_next_out_of_bounds
+    },
+    {
+        "set_out_of_bounds",
+        Cursor_set_out_of_bounds
     }
 };
 
@@ -4411,7 +4421,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        120,
+        122,
         Cursor_testcases
     },
     {
