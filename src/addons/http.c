@@ -993,7 +993,7 @@ void http_send_reply(
 }
 
 static
-bool http_recv_connection(
+void http_recv_connection(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -1009,7 +1009,7 @@ bool http_recv_connection(
         bool is_alive = conn->pub.id == conn_id;
         if (!is_alive) {
             /* Connection has been purged by main thread */
-            return true;
+            goto done;
         }
 
         if (http_parse_request(&frag, recv_buf, bytes_read)) {
@@ -1041,13 +1041,13 @@ bool http_recv_connection(
                     ecs_os_mutex_unlock(srv->lock);
                 }
             }
-            return true;
         } else {
             ecs_os_linc(&ecs_http_request_invalid_count);
         }
     }
 
-    return false;
+done:
+    ecs_strbuf_reset(&frag.buf);
 }
 
 typedef struct {
