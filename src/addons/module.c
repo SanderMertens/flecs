@@ -205,6 +205,12 @@ ecs_entity_t ecs_module_init(
         e = ecs_new_from_fullpath(world, module_path);
         ecs_set_symbol(world, e, module_path);
         ecs_os_free(module_path);
+    } else if (!ecs_exists(world, e)) {
+        char *module_path = ecs_module_path_from_c(c_name);
+        ecs_ensure(world, e);
+        ecs_add_fullpath(world, e, module_path);
+        ecs_set_symbol(world, e, module_path);
+        ecs_os_free(module_path);
     }
     
     ecs_add_id(world, e, EcsModule);

@@ -357,3 +357,46 @@ void Modules_module_tag_on_namespace_on_add_2_levels() {
 
     ecs_fini(world);
 }
+
+void Modules_import_2_worlds() {
+    ecs_world_t *world_1 = ecs_init();
+    ecs_world_t *world_2 = ecs_init();
+
+    ECS_IMPORT(world_1, SimpleModule);
+    ECS_IMPORT(world_2, SimpleModule);
+
+    test_assert(ecs_lookup_fullpath(world_1, "simple.module") != 0);
+    test_assert(ecs_lookup_fullpath(world_2, "simple.module") != 0);
+
+    {
+        ecs_entity_t e = ecs_new(world_1, Position);
+        test_assert(e != 0);
+        test_assert( ecs_has(world_1, e, Position));
+        ecs_add(world_1, e, Velocity);
+        test_assert( ecs_has(world_1, e, Velocity));
+    }
+    {
+        ecs_entity_t e = ecs_new(world_2, Position);
+        test_assert(e != 0);
+        test_assert( ecs_has(world_2, e, Position));
+        ecs_add(world_2, e, Velocity);
+        test_assert( ecs_has(world_2, e, Velocity));
+    }
+    
+    ecs_fini(world_1);
+    ecs_fini(world_2);
+}
+
+void Modules_import_monitor_2_worlds() {
+    ecs_world_t *world_1 = ecs_init();
+    ecs_world_t *world_2 = ecs_init();
+
+    ECS_IMPORT(world_1, FlecsMonitor);
+    ECS_IMPORT(world_2, FlecsMonitor);
+    
+    test_assert(ecs_exists(world_1, ecs_id(FlecsMonitor)));
+    test_assert(ecs_exists(world_2, ecs_id(FlecsMonitor)));
+
+    ecs_fini(world_1);
+    ecs_fini(world_2);
+}

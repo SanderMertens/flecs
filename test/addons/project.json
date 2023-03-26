@@ -1367,7 +1367,9 @@
                 "nested_module",
                 "module_tag_on_namespace",
                 "module_tag_on_namespace_on_add",
-                "module_tag_on_namespace_on_add_2_levels"
+                "module_tag_on_namespace_on_add_2_levels",
+                "import_monitor_2_worlds",
+                "import_2_worlds"
             ]
         }, {
             "id": "App",
