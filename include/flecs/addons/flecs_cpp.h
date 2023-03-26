@@ -39,7 +39,8 @@ FLECS_API
 char* ecs_cpp_get_type_name(
     char *type_name, 
     const char *func_name,
-    size_t len);
+    size_t len,
+    size_t front_len);
 
 FLECS_API
 char* ecs_cpp_get_symbol_name(
@@ -51,7 +52,8 @@ FLECS_API
 char* ecs_cpp_get_constant_name(
     char *constant_name,
     const char *func_name,
-    size_t len);
+    size_t len,
+    size_t back_len);
 
 FLECS_API
 const char* ecs_cpp_trim_module(

@@ -84,9 +84,10 @@ void ecs_cpp_trim_type_name(
 char* ecs_cpp_get_type_name(
     char *type_name, 
     const char *func_name,
-    size_t len)
+    size_t len,
+    size_t front_len)
 {
-    memcpy(type_name, func_name + ECS_FUNC_NAME_FRONT(const char*, type_name), len);
+    memcpy(type_name, func_name + front_len, len);
     type_name[len] = '\0';
     ecs_cpp_trim_type_name(type_name);
     return type_name;
@@ -117,20 +118,21 @@ char* ecs_cpp_get_symbol_name(
 }
 
 static
-const char* cpp_func_rchr(
+const char* flecs_cpp_func_rchr(
     const char *func_name,
     ecs_size_t func_name_len,
+    ecs_size_t func_back_len,
     char ch)
 {
     const char *r = strrchr(func_name, ch);
-    if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, ECS_FUNC_NAME_BACK))) {
+    if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, func_back_len))) {
         return NULL;
     }
     return r;
 }
 
 static
-const char* cpp_func_max(
+const char* flecs_cpp_func_max(
     const char *a,
     const char *b)
 {
@@ -141,18 +143,23 @@ const char* cpp_func_max(
 char* ecs_cpp_get_constant_name(
     char *constant_name,
     const char *func_name,
-    size_t func_name_len)
+    size_t func_name_len,
+    size_t func_back_len)
 {
     ecs_size_t f_len = flecs_uto(ecs_size_t, func_name_len);
-    const char *start = cpp_func_rchr(func_name, f_len, ' ');
-    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ')'));
-    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ':'));
-    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ','));
+    ecs_size_t fb_len = flecs_uto(ecs_size_t, func_back_len);
+    const char *start = flecs_cpp_func_rchr(func_name, f_len, fb_len, ' ');
+    start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
+        func_name, f_len, fb_len, ')'));
+    start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
+        func_name, f_len, fb_len, ':'));
+    start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
+        func_name, f_len, fb_len, ','));
     ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
     start ++;
     
     ecs_size_t len = flecs_uto(ecs_size_t, 
-        (f_len - (start - func_name) - flecs_uto(ecs_size_t, ECS_FUNC_NAME_BACK)));
+        (f_len - (start - func_name) - fb_len));
     ecs_os_memcpy_n(constant_name, start, char, len);
     constant_name[len] = '\0';
     return constant_name;

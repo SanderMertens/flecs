@@ -14449,7 +14449,8 @@ FLECS_API
 char* ecs_cpp_get_type_name(
     char *type_name, 
     const char *func_name,
-    size_t len);
+    size_t len,
+    size_t front_len);
 
 FLECS_API
 char* ecs_cpp_get_symbol_name(
@@ -14461,7 +14462,8 @@ FLECS_API
 char* ecs_cpp_get_constant_name(
     char *constant_name,
     const char *func_name,
-    size_t len);
+    size_t len,
+    size_t back_len);
 
 FLECS_API
 const char* ecs_cpp_trim_module(
@@ -15257,7 +15259,8 @@ static const char* enum_constant_to_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, enum_constant_to_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_constant_name(
-        result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME));
+        result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME),
+            ECS_FUNC_NAME_BACK);
 }
 
 /** Enumeration constant data */
@@ -23282,7 +23285,8 @@ template <typename T>
 inline static const char* type_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
-    return ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len);
+    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
+    return ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
 } 
 #else
 #error "implicit component registration not supported"
