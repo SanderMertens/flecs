@@ -3321,6 +3321,13 @@ error:
     return 0;
 }
 
+ecs_entity_t ecs_get_parent(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return ecs_get_target(world, entity, EcsChildOf, 0);
+}
+
 ecs_entity_t ecs_get_target_for_id(
     const ecs_world_t *world,
     ecs_entity_t entity,

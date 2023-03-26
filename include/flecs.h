@@ -2862,6 +2862,19 @@ ecs_entity_t ecs_get_target(
     ecs_entity_t rel,
     int32_t index);
 
+/** Get parent (target of ChildOf relationship) for entity.
+ * This operation is the same as calling:
+ *   ecs_get_target(world, entity, EcsChildOf, 0);
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @return The parent of the entity, 0 if the entity has no parent.
+ */
+FLECS_API
+ecs_entity_t ecs_get_parent(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
 /** Get the target of a relationship for a given id.
  * This operation returns the first entity that has the provided id by following
  * the specified relationship. If the entity itself has the id then entity will

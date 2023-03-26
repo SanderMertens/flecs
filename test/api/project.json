@@ -1712,6 +1712,8 @@
                 "get_target_for_id_not_empty_not_found",
                 "get_target_for_id_from_stage",
                 "get_target_for_id_no_id",
+                "get_parent",
+                "get_parent_from_root",
                 "ignore_childof_from_base",
                 "add_exclusive_relation_twice",
                 "add_same_exclusive_relation_twice",

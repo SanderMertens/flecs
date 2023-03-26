@@ -2082,6 +2082,28 @@ void Pairs_get_dontinherit_target_from_base() {
     ecs_fini(world);
 }
 
+void Pairs_get_parent() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_assert(ecs_get_target(world, e, EcsChildOf, 0) == parent);
+    test_assert(ecs_get_parent(world, e) == parent);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_parent_from_root() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    test_assert(ecs_get_parent(world, e) == 0);
+
+    ecs_fini(world);
+}
+
 void Pairs_get_target_for_id_from_self() {
     ecs_world_t *world = ecs_mini();
 

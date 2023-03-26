@@ -2543,10 +2543,6 @@ void flecs_table_check_sanity(ecs_table_t *table) {
 
         for (i = 0; i < storage_count; i ++) {
             ecs_vec_t *column = &table->data.columns[i];
-            if (size != column->size) {
-                printf(" - column %d (%d vs %d)\n", i, count, column->count);
-                printf(" - column %d (%d vs %d)\n", i, size, column->size);
-            }
             ecs_assert(size == column->size, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(count == column->count, ECS_INTERNAL_ERROR, NULL);
             int32_t storage_map_id = storage_map[i + type_count];
@@ -8726,6 +8722,13 @@ look_in_base:
 not_found:
 error:
     return 0;
+}
+
+ecs_entity_t ecs_get_parent(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return ecs_get_target(world, entity, EcsChildOf, 0);
 }
 
 ecs_entity_t ecs_get_target_for_id(
