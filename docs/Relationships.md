@@ -129,7 +129,15 @@ ecs_has_pair(world, Bob, Eats, EcsWildcard);
 Bob.has(Eats, flecs::Wildcard);
 ```
 
-### Find first instance of a relationship for entity
+### Get parent for entity
+```c
+ecs_entity_t parent = ecs_get_parent(world, Bob);
+```
+```cpp
+flecs::entity parent = Bob.parent();
+```
+
+### Find first target of a relationship for entity
 ```c
 ecs_entity_t food = ecs_get_target(world, Bob, Eats, 0);
 ```
@@ -137,7 +145,7 @@ ecs_entity_t food = ecs_get_target(world, Bob, Eats, 0);
 flecs::entity food = Bob.target(Eats);
 ```
 
-### Find all instances of a relationship for entity
+### Find all targets of a relationship for entity
 ```c
 int32_t index = 0;
 while ((food = ecs_get_target(world, Bob, Eats, index ++))) {
@@ -149,6 +157,14 @@ int32_t index = 0;
 while ((food = Bob.target(Eats, index ++))) {
   // ...
 }
+```
+
+### Find target of a relationship with component
+```c
+ecs_entity_t parent = ecs_get_target_for(world, Bob, EcsChildOf, Position);
+```
+```cpp
+flecs::entity parent = Bob.target_for<Position>(flecs::ChildOf);
 ```
 
 ### Iterate all pairs for entity
