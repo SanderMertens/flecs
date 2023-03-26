@@ -608,6 +608,15 @@ The `ChildOf` relationship is defined so that when a parent is deleted, its chil
 
 The `ChildOf` relationship is defined as a regular relationship in Flecs. There are however a number of features that interact with `ChildOf`. The following sections describe these features.
 
+The following example shows how to find the parent of an entity which has a `ChildOf` relationship:
+
+```c
+ecs_entity_t Spaceship = ecs_get_target_for_id(world, Cockpit, EcsChildOf, 0);
+```
+```cpp
+auto Spaceship = Cockpit.parent();
+```
+
 #### Namespacing
 Entities in flecs can have names, and name lookups can be relative to a parent. Relative name lookups can be used as a namespacing mechanism to prevent clashes between entity names. This example shows a few examples of name lookups in combination with hierarchies:
 
