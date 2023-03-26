@@ -43278,6 +43278,10 @@ int flecs_default_run_action(
         while ((result = ecs_app_run_frame(world, desc)) == 0) { }
     }
 
+    /* Ensure quit flag is set on world, which can be used to determine if
+     * world needs to be cleaned up. */
+    ecs_quit(world);
+
     if (result == 1) {
         return 0; /* Normal exit */
     } else {

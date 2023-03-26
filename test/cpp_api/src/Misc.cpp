@@ -243,3 +243,22 @@ void Misc_app_run_set_frames() {
 
     test_int(count, 100);
 }
+
+void Misc_app_on_remove_on_fini() {
+    flecs::world ecs;
+
+    ecs.entity().set<Position>({10, 20});
+
+    int invoked = 0;
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([&](Position& p) {
+            invoked ++;
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        });
+
+    test_int(invoked, 0);
+    ecs.app().frames(1).run();
+    test_int(invoked, 1);
+}

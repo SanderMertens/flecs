@@ -1094,6 +1094,7 @@ void Misc_c_macros(void);
 void Misc_app_run(void);
 void Misc_app_run_target_fps(void);
 void Misc_app_run_set_frames(void);
+void Misc_app_on_remove_on_fini(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5394,6 +5395,10 @@ bake_test_case Misc_testcases[] = {
     {
         "app_run_set_frames",
         Misc_app_run_set_frames
+    },
+    {
+        "app_on_remove_on_fini",
+        Misc_app_on_remove_on_fini
     }
 };
 
@@ -5887,7 +5892,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        12,
+        13,
         Misc_testcases
     },
     {
