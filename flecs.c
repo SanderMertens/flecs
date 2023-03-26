@@ -44115,6 +44115,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
 
+    world->flags |= EcsWorldInit;
+
     flecs_world_allocators_init(world);
     ecs_allocator_t *a = &world->allocator;
 
@@ -44148,6 +44150,8 @@ ecs_world_t *ecs_mini(void) {
     flecs_init_store(world);
 
     flecs_bootstrap(world);
+
+    world->flags &= ~EcsWorldInit;
 
     ecs_trace("world ready!");
     ecs_log_pop();
@@ -57168,7 +57172,7 @@ void flecs_assert_relation_unused(
     ecs_entity_t rel,
     ecs_entity_t property)
 {
-    if (world->flags & EcsWorldFini) {
+    if (world->flags & (EcsWorldInit|EcsWorldFini)) {
         return;
     }
 
@@ -57183,7 +57187,11 @@ void flecs_assert_relation_unused(
         }
     }
 
-    if (ecs_id_in_use(world, ecs_pair(rel, EcsWildcard))) {
+    bool in_use = ecs_id_in_use(world, ecs_pair(rel, EcsWildcard));
+    if (property != EcsUnion) {
+        in_use |= ecs_id_in_use(world, rel);
+    }
+    if (in_use) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
 

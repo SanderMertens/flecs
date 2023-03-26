@@ -1662,6 +1662,7 @@ void Pairs_2_with(void);
 void Pairs_nested_with(void);
 void Pairs_with_relation(void);
 void Pairs_2_with_relation(void);
+void Pairs_with_for_existing(void);
 void Pairs_nested_with_relation(void);
 void Pairs_65k_relations(void);
 void Pairs_add_not_alive_relation(void);
@@ -8942,6 +8943,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_2_with_relation
     },
     {
+        "with_for_existing",
+        Pairs_with_for_existing
+    },
+    {
         "nested_with_relation",
         Pairs_nested_with_relation
     },
@@ -12435,7 +12440,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        110,
+        111,
         Pairs_testcases
     },
     {

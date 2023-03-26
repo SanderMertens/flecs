@@ -2655,6 +2655,22 @@ void Pairs_nested_with_relation() {
     ecs_fini(world);
 }
 
+void Pairs_with_for_existing() {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagB);
+    test_assert( !ecs_has(world, e, TagA));
+    test_assert( ecs_has(world, e, TagB));
+    
+    test_expect_abort();
+    ecs_add_pair(world, TagB, EcsWith, TagA);
+}
+
 void Pairs_65k_relations() {
     ecs_world_t *world = ecs_mini();
 
