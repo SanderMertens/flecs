@@ -35,6 +35,7 @@ extern "C" {
 typedef struct EcsTimer {
     ecs_ftime_t timeout;         /**< Timer timeout period */
     ecs_ftime_t time;            /**< Incrementing time value */
+    ecs_ftime_t overshoot;       /**< Used to correct returned interval time */
     int32_t fired_count;         /**< Number of times ticked */
     bool active;                 /**< Is the timer active or not */
     bool single_shot;            /**< Is this a single shot timer */

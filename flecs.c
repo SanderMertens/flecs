@@ -18260,9 +18260,10 @@ void ProgressTimers(ecs_iter_t *it) {
                 t = 0;
             }
 
-            timer[i].time = t; /* Initialize with remainder */            
+            timer[i].time = t; /* Initialize with remainder */
             tick_source[i].tick = true;
-            tick_source[i].time_elapsed = time_elapsed;
+            tick_source[i].time_elapsed = time_elapsed - timer[i].overshoot;
+            timer[i].overshoot = t;
 
             if (timer[i].single_shot) {
                 timer[i].active = false;
