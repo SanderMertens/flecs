@@ -806,6 +806,10 @@ void flecs_query_set_table_match(
 
         flecs_entity_filter_init(world, &qm->entity_filter, filter, 
             table, qm->ids, qm->columns);
+
+        if (qm->entity_filter.has_filter) {
+            query->flags &= ~EcsQueryTrivialIter;
+        }
     }
 
     /* Add references for substituted terms */
@@ -1907,6 +1911,9 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
+    ECS_BIT_COND(result->flags, EcsQueryTrivialIter, 
+        !!(result->filter.flags & EcsFilterMatchOnlyThis));
+
     flecs_query_allocators_init(result);
 
     if (result->filter.term_count) {
@@ -2106,33 +2113,38 @@ ecs_iter_t ecs_query_iter(
 
     ecs_filter_t *filter = &query->filter;
     ecs_iter_t fit;
-    if (!(filter->flags & EcsFilterMatchOnlyThis)) {
+    if (!(query->flags & EcsQueryTrivialIter)) {
         /* Check if non-This terms (like singleton terms) still match */
-        fit = flecs_filter_iter_w_flags(
-            (ecs_world_t*)stage, &query->filter, EcsIterIgnoreThis);
-        if (!ecs_filter_next(&fit)) {
-            /* No match, so return nothing */
-            ecs_iter_fini(&fit);
-            goto noresults;
-        }
-    }
-
-    flecs_iter_init(stage, &result, flecs_iter_cache_all);
-
-    /* Copy the data */
-    if (!(filter->flags & EcsFilterMatchOnlyThis)) {
-        int32_t field_count = filter->field_count;
-        if (field_count) {
-            if (result.ptrs) {
-                ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, field_count);
+        if (!(filter->flags & EcsFilterMatchOnlyThis)) {
+            fit = flecs_filter_iter_w_flags(
+                (ecs_world_t*)stage, &query->filter, EcsIterIgnoreThis);
+            if (!ecs_filter_next(&fit)) {
+                /* No match, so return nothing */
+                ecs_iter_fini(&fit);
+                goto noresults;
             }
-            ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, field_count);
-            ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
-            ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
-            ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
         }
 
-        ecs_iter_fini(&fit);
+        flecs_iter_init(stage, &result, flecs_iter_cache_all);
+
+        /* Copy the data */
+        if (!(filter->flags & EcsFilterMatchOnlyThis)) {
+            int32_t field_count = filter->field_count;
+            if (field_count) {
+                if (result.ptrs) {
+                    ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, field_count);
+                }
+                ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, field_count);
+                ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
+                ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
+                ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
+            }
+
+            ecs_iter_fini(&fit);
+        }
+    } else {
+        /* Trivial iteration, use arrays from query cache */
+        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs);
     }
 
     return result;
@@ -2266,6 +2278,32 @@ error:
     return false;
 }
 
+static
+void flecs_query_populate_trivial(
+    ecs_iter_t *it,
+    ecs_query_table_node_t *node)
+{
+    ecs_query_table_match_t *match = node->match;
+    ecs_table_t *table = match->node.table;
+
+    it->ids = match->ids;
+    it->sources = match->sources;
+    it->columns = match->columns;
+    it->sizes = match->sizes;
+    it->group_id = match->node.group_id;
+    it->instance_count = 0;
+    it->offset = node->offset;
+    it->count = node->count;
+
+    if (!it->count) {
+        it->count = ecs_table_count(table);
+        ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    flecs_iter_populate_data(it->real_world, it, table, it->offset, 
+        it->count, it->ptrs, NULL);
+}
+
 int ecs_query_populate(
     ecs_iter_t *it)
 {
@@ -2275,13 +2313,17 @@ int ecs_query_populate(
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *iter = &it->priv.iter.query;
+    ecs_query_t *query = iter->query;
     ecs_query_table_node_t *node = iter->prev;
     ecs_assert(node != NULL, ECS_INVALID_OPERATION, NULL);
-    int result = EcsIterNextYield;
+    if (query->flags & EcsQueryTrivialIter) {
+        flecs_query_populate_trivial(it, node);
+        return EcsIterNextYield;
+    }
 
+    int result = EcsIterNextYield;
     ecs_query_table_match_t *match = node->match;
     ecs_table_t *table = match->node.table;
-    ecs_query_t *query = iter->query;
     ecs_world_t *world = query->filter.world;
     const ecs_filter_t *filter = &query->filter;
     ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
@@ -2378,10 +2420,23 @@ bool ecs_query_next_instanced(
     flecs_iter_validate(it);
     iter->skip_count = 0;
 
+    /* Trivial iteration: each entry in the cache is a full match and ids are
+     * only matched on $this or through traversal starting from $this. */
+    if (flags & EcsQueryTrivialIter) {
+        if (node == last) {
+            goto done;
+        }
+        iter->node = node->next;
+        iter->prev = node;
+        flecs_query_populate_trivial(it, node);
+        return true;
+    }
+
+    /* Non-trivial iteration: query matches with static sources, or matches with
+     * tables that require per-entity filtering. */
     for (; node != last; node = next) {
         next = node->next;
         iter->prev = node;
-
         switch(ecs_query_populate(it)) {
         case EcsIterNext: iter->node = next; continue;
         case EcsIterCurYield: next = node; /* fall through */
@@ -2390,7 +2445,7 @@ bool ecs_query_next_instanced(
         }
     }
 
-error:
+done: error:
     ecs_iter_fini(it);
     return false;
 

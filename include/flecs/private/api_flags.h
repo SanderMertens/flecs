@@ -172,6 +172,7 @@ extern "C" {
 #define EcsQueryIsOrphaned             (1u << 3u)  /* Is subquery orphaned */
 #define EcsQueryHasOutColumns          (1u << 4u)  /* Does query have out columns */
 #define EcsQueryHasMonitor             (1u << 5u)  /* Does query track changes */
+#define EcsQueryTrivialIter            (1u << 6u)  /* Does the query require special features to iterate */
 
 
 ////////////////////////////////////////////////////////////////////////////////
