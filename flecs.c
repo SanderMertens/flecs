@@ -54042,16 +54042,18 @@ void flecs_query_populate_trivial(
 
     if (!it->references) {
         ecs_data_t *data = &table->data;
-        int32_t i;
-        for (i = 0; i < it->field_count; i ++) {
-            int32_t column = match->storage_columns[i];
-            if (column < 0) {
-                it->ptrs[i] = NULL;
-                continue;
-            }
+        if (!(it->flags & EcsIterNoData)) {
+            int32_t i;
+            for (i = 0; i < it->field_count; i ++) {
+                int32_t column = match->storage_columns[i];
+                if (column < 0) {
+                    it->ptrs[i] = NULL;
+                    continue;
+                }
 
-            it->ptrs[i] = ecs_vec_get(&data->columns[column], 
-                it->sizes[i], it->offset);
+                it->ptrs[i] = ecs_vec_get(&data->columns[column], 
+                    it->sizes[i], it->offset);
+            }
         }
 
         it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
