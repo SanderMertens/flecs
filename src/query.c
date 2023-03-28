@@ -794,6 +794,11 @@ void flecs_query_set_table_match(
     if (table) {
         /* Initialize storage columns for faster access to component storage */
         for (i = 0; i < field_count; i ++) {
+            if (terms[i].inout == EcsInOutNone) {
+                qm->storage_columns[i] = -1;
+                continue;
+            }
+
             int32_t column = qm->columns[i];
             if (column > 0) {
                 qm->storage_columns[i] = ecs_table_type_to_storage_index(table,
@@ -808,6 +813,9 @@ void flecs_query_set_table_match(
             table, qm->ids, qm->columns);
 
         if (qm->entity_filter.has_filter) {
+            query->flags &= ~EcsQueryTrivialIter;
+        }
+        if (table->flags & EcsTableHasUnion) {
             query->flags &= ~EcsQueryTrivialIter;
         }
     }
@@ -2294,14 +2302,34 @@ void flecs_query_populate_trivial(
     it->instance_count = 0;
     it->offset = node->offset;
     it->count = node->count;
+    it->references = ecs_vec_first(&match->refs);
 
     if (!it->count) {
         it->count = ecs_table_count(table);
         ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
     }
 
-    flecs_iter_populate_data(it->real_world, it, table, it->offset, 
-        it->count, it->ptrs, NULL);
+    if (!it->references) {
+        ecs_data_t *data = &table->data;
+        int32_t i;
+        for (i = 0; i < it->field_count; i ++) {
+            int32_t column = match->storage_columns[i];
+            if (column < 0) {
+                it->ptrs[i] = NULL;
+                continue;
+            }
+
+            it->ptrs[i] = ecs_vec_get(&data->columns[column], 
+                it->sizes[i], it->offset);
+        }
+
+        it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
+        it->table = table;
+        it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, it->offset);
+    } else {
+        flecs_iter_populate_data(it->real_world, it, table, it->offset, 
+            it->count, it->ptrs, NULL);
+    }
 }
 
 int ecs_query_populate(
