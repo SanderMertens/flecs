@@ -8172,7 +8172,7 @@ void Query_query_next_table_w_changed() {
 
     test_bool(true, ecs_query_changed(qr, NULL));
     ecs_iter_t it = ecs_query_iter(world, qr);
-    while (ecs_query_next(&it)) { }
+    while (ecs_query_next_table(&it)) { }
     test_bool(false, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, q);
@@ -8188,11 +8188,11 @@ void Query_query_next_table_w_changed() {
     test_bool(false, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, qr);
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next_table(&it));
 
     ecs_fini(world);
 }
@@ -8291,11 +8291,11 @@ void Query_query_next_table_w_populate_first_changed() {
     test_bool(true, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, qr);
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(true, ecs_query_changed(NULL, &it));
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next_table(&it));
 
     ecs_fini(world);
 }
@@ -8343,11 +8343,11 @@ void Query_query_next_table_w_populate_last_changed() {
     test_bool(true, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, qr);
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(true, ecs_query_changed(NULL, &it));
-    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next_table(&it));
 
     ecs_fini(world);
 }
@@ -8398,11 +8398,11 @@ void Query_query_next_table_w_populate_skip_first() {
     test_bool(true, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, qr);
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(true, ecs_query_changed(NULL, &it));
-    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next_table(&it));
 
     ecs_fini(world);
 }
@@ -8453,11 +8453,11 @@ void Query_query_next_table_w_populate_skip_last() {
     test_bool(true, ecs_query_changed(qr, NULL));
 
     it = ecs_query_iter(world, qr);
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(true, ecs_query_changed(NULL, &it));
-    test_bool(true, ecs_query_next(&it));
+    test_bool(true, ecs_query_next_table(&it));
     test_bool(false, ecs_query_changed(NULL, &it));
-    test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next_table(&it));
 
     ecs_fini(world);
 }

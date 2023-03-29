@@ -53996,10 +53996,15 @@ bool ecs_query_next_table(
     ecs_query_table_node_t *node = iter->node;
     ecs_query_t *query = iter->query;
 
-    if ((query->flags & EcsQueryHasOutColumns)) {
-        ecs_query_table_node_t *prev = iter->prev;
-        if (prev && it->count) {
-            flecs_query_mark_columns_dirty(query, prev->match);
+    ecs_query_table_node_t *prev = iter->prev;
+    if (prev) {
+        if (query->flags & EcsQueryHasMonitor) {
+            flecs_query_sync_match_monitor(query, prev->match);
+        }
+        if (query->flags & EcsQueryHasOutColumns) {
+            if (it->count) {
+                flecs_query_mark_columns_dirty(query, prev->match);
+            }
         }
     }
 
