@@ -230,10 +230,16 @@ typedef struct flecs_bitset_term_t {
     int32_t column_index;
 } flecs_bitset_term_t;
 
+typedef struct flecs_flat_monitor_t {
+    int32_t table_state;
+    int32_t monitor;
+} flecs_flat_monitor_t;
+
 /* Flat table term */
 typedef struct flecs_flat_table_term_t {
-    int32_t field_index;
+    int32_t field_index; /* Iterator field index */
     ecs_term_t *term;
+    ecs_vec_t monitor;
 } flecs_flat_table_term_t;
 
 /* Entity filter. This filters the entities of a matched table, for example when
@@ -256,6 +262,7 @@ typedef struct ecs_entity_filter_iter_t {
     int32_t sw_offset;
     int32_t sw_smallest;
     int32_t flat_tree_offset;
+    int32_t target_count;
 } ecs_entity_filter_iter_t;
 
 typedef struct ecs_query_table_match_t ecs_query_table_match_t;

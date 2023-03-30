@@ -521,6 +521,14 @@ void FixedHierarchies_query_nested_make_fixed_w_optional(void);
 void FixedHierarchies_query_nested_make_fixed_w_optional_match_children_only(void);
 void FixedHierarchies_query_nested_w_2_parents_make_fixed(void);
 void FixedHierarchies_query_table_w_3_parents(void);
+void FixedHierarchies_query_w_parent_change_detection_1st(void);
+void FixedHierarchies_query_w_parent_change_detection_2nd(void);
+void FixedHierarchies_query_w_parent_change_detection_iter_twice(void);
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent(void);
+void FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed(void);
+void FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed(void);
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_changed(void);
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed(void);
 void FixedHierarchies_staged_query_w_parent_field_1_lvl(void);
 void FixedHierarchies_staged_query_w_parent_field_2_lvl(void);
 void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular(void);
@@ -4495,6 +4503,38 @@ bake_test_case FixedHierarchies_testcases[] = {
     {
         "query_table_w_3_parents",
         FixedHierarchies_query_table_w_3_parents
+    },
+    {
+        "query_w_parent_change_detection_1st",
+        FixedHierarchies_query_w_parent_change_detection_1st
+    },
+    {
+        "query_w_parent_change_detection_2nd",
+        FixedHierarchies_query_w_parent_change_detection_2nd
+    },
+    {
+        "query_w_parent_change_detection_iter_twice",
+        FixedHierarchies_query_w_parent_change_detection_iter_twice
+    },
+    {
+        "query_w_parent_change_detection_iter_twice_each_parent",
+        FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent
+    },
+    {
+        "query_w_parent_change_detection_1st_populate_when_changed",
+        FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed
+    },
+    {
+        "query_w_parent_change_detection_2nd_populate_when_changed",
+        FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed
+    },
+    {
+        "query_w_parent_change_detection_iter_twice_populate_when_changed",
+        FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_changed
+    },
+    {
+        "query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed",
+        FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed
     },
     {
         "staged_query_w_parent_field_1_lvl",
@@ -12322,7 +12362,7 @@ static bake_test_suite suites[] = {
         "FixedHierarchies",
         NULL,
         NULL,
-        57,
+        65,
         FixedHierarchies_testcases
     },
     {

@@ -501,6 +501,16 @@ bool flecs_query_get_match_monitor(
         monitor[t + 1] = 0;
     }
 
+    /* If matched table needs entity filter, make sure to test fields that could
+     * be matched by flattened parents. */
+    if (match->entity_filter.flat_tree_column != -1) {
+        int32_t *fields = ecs_vec_first(&match->entity_filter.ft_terms);
+        int32_t field_count = ecs_vec_count(&match->entity_filter.ft_terms);
+        for (i = 0; i < field_count; i ++) {
+            monitor[fields[i] + 1] = 0;
+        }
+    }
+
     match->monitor = monitor;
 
     query->flags |= EcsQueryHasMonitor;
@@ -542,6 +552,20 @@ void flecs_query_sync_match_monitor(
         ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
     }
+
+    ecs_entity_filter_t *ef = &match->entity_filter;
+    if (ef->flat_tree_column != -1) {
+        flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
+        int32_t field_count = ecs_vec_count(&ef->ft_terms);
+        for (i = 0; i < field_count; i ++) {
+            flecs_flat_table_term_t *field = &fields[i];
+            flecs_flat_monitor_t *tgt_mon = ecs_vec_first(&field->monitor);
+            int32_t t, tgt_count = ecs_vec_count(&field->monitor);
+            for (t = 0; t < tgt_count; t ++) {
+                tgt_mon[t].monitor = tgt_mon[t].table_state;
+            }
+        }
+    }
 }
 
 /* Check if single match term has changed */
@@ -582,7 +606,8 @@ bool flecs_query_check_match_monitor_term(
 static
 bool flecs_query_check_match_monitor(
     ecs_query_t *query,
-    ecs_query_table_match_t *match)
+    ecs_query_table_match_t *match,
+    const ecs_iter_t *it)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -593,6 +618,7 @@ bool flecs_query_check_match_monitor(
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->node.table;
     int32_t *dirty_state = flecs_table_get_dirty_state(query->filter.world, table);
+    bool has_flat = false;
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (monitor[0] != dirty_state[0]) {
@@ -602,7 +628,10 @@ bool flecs_query_check_match_monitor(
     ecs_world_t *world = query->filter.world;
     int32_t i, field_count = query->filter.field_count;
     int32_t *storage_columns = match->storage_columns;
-    int32_t *columns = match->columns;
+    int32_t *columns = it ? it->columns : NULL;
+    if (!columns) {
+        columns = match->columns;
+    }
     ecs_vec_t *refs = &match->refs;
     for (i = 0; i < field_count; i ++) {
         int32_t mon = monitor[i + 1];
@@ -628,18 +657,42 @@ bool flecs_query_check_match_monitor(
         }
 
         ecs_assert(column < 0, ECS_INTERNAL_ERROR, NULL);
+        column = -column;
 
-        int32_t ref_index = -column - 1;
-        ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
-        if (ref->id != 0) {
-            ecs_ref_update(world, ref);
-            ecs_table_record_t *tr = ref->tr;
-            ecs_table_t *src_table = tr->hdr.table;
-            column = tr->column;
-            column = ecs_table_type_to_storage_index(src_table, column);
-            int32_t *src_dirty_state = flecs_table_get_dirty_state(
-                world, src_table);
-            if (mon != src_dirty_state[column + 1]) {
+        /* Flattened fields are encoded by adding field_count to the column
+         * index of the parent component. */
+        if (it && (column > field_count)) {
+            has_flat = true;
+        } else {
+            int32_t ref_index = column - 1;
+            ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
+            if (ref->id != 0) {
+                ecs_ref_update(world, ref);
+                ecs_table_record_t *tr = ref->tr;
+                ecs_table_t *src_table = tr->hdr.table;
+                column = tr->column;
+                column = ecs_table_type_to_storage_index(src_table, column);
+                int32_t *src_dirty_state = flecs_table_get_dirty_state(
+                    world, src_table);
+                if (mon != src_dirty_state[column + 1]) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    if (has_flat) {
+        ecs_entity_filter_t *ef = &match->entity_filter;
+        flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
+        ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
+        int32_t cur_tgt = ent_it->target_count - 1;
+        field_count = ecs_vec_count(&ef->ft_terms);
+
+        for (i = 0; i < field_count; i ++) {
+            flecs_flat_table_term_t *field = &fields[i];
+            flecs_flat_monitor_t *fmon = ecs_vec_get_t(&field->monitor, 
+                flecs_flat_monitor_t, cur_tgt);
+            if (fmon->monitor != fmon->table_state) {
                 return true;
             }
         }
@@ -660,7 +713,7 @@ bool flecs_query_check_table_monitor(
     for (cur = &table->first->node; cur != end; cur = cur->next) {
         ecs_query_table_match_t *match = (ecs_query_table_match_t*)cur;
         if (term == -1) {
-            if (flecs_query_check_match_monitor(query, match)) {
+            if (flecs_query_check_match_monitor(query, match, NULL)) {
                 return true;
             }
         } else {
@@ -2340,7 +2393,8 @@ void flecs_query_populate_trivial(
 }
 
 int ecs_query_populate(
-    ecs_iter_t *it)
+    ecs_iter_t *it,
+    bool when_changed)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
@@ -2356,28 +2410,31 @@ int ecs_query_populate(
         return EcsIterNextYield;
     }
 
-    int result = EcsIterNextYield;
     ecs_query_table_match_t *match = node->match;
     ecs_table_t *table = match->node.table;
     ecs_world_t *world = query->filter.world;
     const ecs_filter_t *filter = &query->filter;
     ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
-
     ecs_assert(ent_it != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_range_t *range = &ent_it->range;
-
     int32_t t, term_count = filter->term_count;
+    int result;
+
+repeat:
+    result = EcsIterNextYield;
+
+    ecs_os_memcpy_n(it->sources, match->sources, ecs_entity_t, 
+        filter->field_count);
+
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &filter->terms[t];
         int32_t field = term->field_index;
-        it->sources[field] = match->sources[field];
         if (!ecs_term_match_this(term)) {
             continue;
         }
 
         it->ids[field] = match->ids[field];
         it->columns[field] = match->columns[field];
-        it->sizes[field] = match->sizes[field];
     }
 
     if (table) {
@@ -2405,6 +2462,18 @@ int ecs_query_populate(
         range->count = 0;
     }
 
+    if (when_changed) {
+        if (!ecs_query_changed(NULL, it)) {
+            if (result == EcsIterYield) {
+                goto repeat;
+            } else {
+                result = EcsIterNext;
+                goto done;
+            }
+        }
+    }
+
+    ecs_os_memcpy_n(it->sizes, match->sizes, ecs_size_t, filter->field_count);
     it->references = ecs_vec_first(&match->refs);
     it->instance_count = 0;
 
@@ -2472,9 +2541,9 @@ bool ecs_query_next_instanced(
     for (; node != last; node = next) {
         next = node->next;
         iter->prev = node;
-        switch(ecs_query_populate(it)) {
+        switch(ecs_query_populate(it, false)) {
         case EcsIterNext: iter->node = next; continue;
-        case EcsIterCurYield: next = node; /* fall through */
+        case EcsIterYield: next = node; /* fall through */
         case EcsIterNextYield: goto yield;
         default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
@@ -2513,7 +2582,7 @@ bool ecs_query_changed(
         ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_poly_assert(query, ecs_query_t);
 
-        return flecs_query_check_match_monitor(query, qm);
+        return flecs_query_check_match_monitor(query, qm, it);
     }
 
     ecs_poly_assert(query, ecs_query_t);

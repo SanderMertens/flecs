@@ -1800,7 +1800,7 @@ void FixedHierarchies_query_next_table() {
     ecs_iter_t it = ecs_query_iter(world, q);
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(2, it.count);
         test_uint(p_1, it.entities[0]);
         test_uint(p_2, it.entities[1]);
@@ -1815,7 +1815,7 @@ void FixedHierarchies_query_next_table() {
     }
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterCurYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterYield);
         test_uint(1, it.count);
         test_uint(p_1_1, it.entities[0]);
         test_uint(0, it.sources[0]);
@@ -1827,7 +1827,7 @@ void FixedHierarchies_query_next_table() {
         test_int(pp[0].x, 11); test_int(pp[0].y, 21);
     }
     {
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(1, it.count);
         test_uint(p_2_1, it.entities[0]);
         test_uint(0, it.sources[0]);
@@ -1868,7 +1868,7 @@ void FixedHierarchies_query_next_table_1_elem() {
     ecs_iter_t it = ecs_query_iter(world, q);
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(1, it.count);
         test_uint(p_1, it.entities[0]);
         test_uint(0, it.sources[0]);
@@ -1881,7 +1881,7 @@ void FixedHierarchies_query_next_table_1_elem() {
     }
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(1, it.count);
         test_uint(p_1_1, it.entities[0]);
         test_uint(0, it.sources[0]);
@@ -1921,7 +1921,7 @@ void FixedHierarchies_query_next_table_1_elem_no_match() {
     ecs_iter_t it = ecs_query_iter(world, q);
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNext);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNext);
         test_uint(0, it.count);
     }
     test_bool(ecs_query_next_table(&it), false);
@@ -1958,7 +1958,7 @@ void FixedHierarchies_query_nested_make_fixed() {
     ecs_iter_t it = ecs_query_iter(world, q);
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(1, it.count);
         test_uint(p_1, it.entities[0]);
         test_uint(0, it.sources[0]);
@@ -1971,7 +1971,7 @@ void FixedHierarchies_query_nested_make_fixed() {
     }
     {
         test_bool(ecs_query_next_table(&it), true);
-        test_assert(ecs_query_populate(&it) == EcsIterNextYield);
+        test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
         test_uint(2, it.count);
         test_uint(p_1_1, it.entities[0]);
         test_uint(p_1_2, it.entities[1]);
@@ -2347,6 +2347,944 @@ void FixedHierarchies_query_table_w_3_parents() {
     }
 
     test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_1st() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_2nd() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_2, Position, {24, 44});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 24); test_int(pp->y, 44);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_iter_twice() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_2, Position, {24, 44});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, false) == EcsIterYield);
+            test_bool(ecs_query_changed(NULL, &it), false);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, false) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 24); test_int(pp->y, 44);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNext);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_2, Position, {24, 44});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_bool(ecs_query_changed(NULL, &it), true);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 24); test_int(pp->y, 44);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNext);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterNext);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_fini(world);
+}
+
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ 
+                .id = ecs_id(Position), 
+                .inout = EcsIn
+            },
+            { 
+                .id = ecs_id(Position), 
+                .src.flags = EcsParent|EcsCascade,
+                .inout = EcsIn
+            },
+        },
+        .filter.instanced = true
+    });
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p_1 = ecs_new_entity(world, "p._1");
+    ecs_entity_t p_1_1 = ecs_new_entity(world, "p._1._1");
+    ecs_entity_t p_2 = ecs_new_entity(world, "p._2");
+    ecs_entity_t p_2_1 = ecs_new_entity(world, "p._2._1");
+
+    ecs_set(world, p_1, Position, {11, 21});
+    ecs_set(world, p_1_1, Position, {111, 211});
+    ecs_set(world, p_2, Position, {12, 22});
+    ecs_set(world, p_2_1, Position, {121, 221});
+    
+    // offset the column of Position to verify change detection is testing
+    // againt the right one.
+    ecs_add(world, p_2, Velocity); 
+
+    ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
+
+    test_assert(ecs_get_table(world, p_1_1) == ecs_get_table(world, p_2_1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 11); test_int(pp->y, 21);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 12); test_int(pp->y, 22);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_1, Position, {22, 42});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterYield);
+            test_uint(1, it.count);
+            test_uint(p_1_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_1, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 111); test_int(p[0].y, 211);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 22); test_int(pp->y, 42);
+        }
+        {
+            test_assert(ecs_query_populate(&it, true) == EcsIterNext);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
+
+    ecs_set(world, p_2, Position, {24, 44});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        {
+            test_bool(ecs_query_next_table(&it), true);
+            test_assert(ecs_query_populate(&it, true) == EcsIterNextYield);
+            test_uint(1, it.count);
+            test_uint(p_2_1, it.entities[0]);
+            test_uint(0, it.sources[0]);
+            test_uint(p_2, it.sources[1]);
+            Position *p = ecs_field(&it, Position, 1);
+            test_int(p[0].x, 121); test_int(p[0].y, 221);
+
+            Position *pp = ecs_field(&it, Position, 2);
+            test_assert(pp != NULL);
+            test_int(pp->x, 24); test_int(pp->y, 44);
+        }
+        test_bool(ecs_query_next_table(&it), false);
+    }
 
     ecs_fini(world);
 }

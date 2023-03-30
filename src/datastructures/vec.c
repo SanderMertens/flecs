@@ -178,6 +178,20 @@ void ecs_vec_set_min_count(
     }
 }
 
+void ecs_vec_set_min_count_zeromem(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count)
+{
+    int32_t count = vec->count;
+    if (count < elem_count) {
+        ecs_vec_set_min_count(allocator, vec, size, elem_count);
+        ecs_os_memset(ECS_ELEM(vec->array, size, count), 0, 
+            size * (elem_count - count));
+    }
+}
+
 void ecs_vec_set_count(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,

@@ -4022,11 +4022,16 @@ bool ecs_query_next_table(
  * This operation does should not be used with queries that match disabled 
  * components, union relationships, or with queries that use order_by.
  * 
+ * When the when_changed argument is set to true, the iterator data will only
+ * populate when the data has changed, using query change detection.
+ * 
  * @param iter The iterator.
+ * @param when_changed Only populate data when result has changed.
  */
 FLECS_API
 int ecs_query_populate(
-    ecs_iter_t *iter);
+    ecs_iter_t *iter,
+    bool when_changed);
 
 /** Returns whether the query data changed since the last iteration.
  * The operation will return true after:
