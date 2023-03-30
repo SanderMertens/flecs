@@ -8130,7 +8130,7 @@ void Query_query_next_table_w_populate() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e1));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
     test_assert(it.table == ecs_get_table(world, e1));
     test_uint(it.entities[0], e1);
@@ -8138,7 +8138,7 @@ void Query_query_next_table_w_populate() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e2));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
     test_assert(it.table == ecs_get_table(world, e2));
     test_uint(it.entities[0], e2);
@@ -8280,7 +8280,7 @@ void Query_query_next_table_w_populate_first_changed() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e1));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
 
     test_bool(true, ecs_query_next_table(&it));
@@ -8336,7 +8336,7 @@ void Query_query_next_table_w_populate_last_changed() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e2));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
     test_bool(false, ecs_query_next_table(&it));
 
@@ -8384,14 +8384,14 @@ void Query_query_next_table_w_populate_skip_first() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e1));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     ecs_query_skip(&it);
     test_int(1, it.count);
 
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e2));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
     test_bool(false, ecs_query_next_table(&it));
 
@@ -8439,13 +8439,13 @@ void Query_query_next_table_w_populate_skip_last() {
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e1));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
 
     test_bool(true, ecs_query_next_table(&it));
     test_int(0, it.count);
     test_assert(it.table == ecs_get_table(world, e2));
-    ecs_query_populate(&it);
+    ecs_query_populate(&it, false);
     test_int(1, it.count);
     ecs_query_skip(&it);
     test_bool(false, ecs_query_next_table(&it));

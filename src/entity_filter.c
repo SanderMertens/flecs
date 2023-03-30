@@ -322,16 +322,17 @@ done:
 
 #undef BS_MAX
 
-static
-ecs_entity_t flecs_get_flattened_target(
+int32_t flecs_get_flattened_target(
     ecs_world_t *world,
     EcsTarget *cur,
     ecs_entity_t rel,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_entity_t *src_out,
+    ecs_table_record_t **tr_out)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
-        return 0;
+        return -1;
     }
 
     ecs_record_t *r = cur->target;
@@ -339,12 +340,14 @@ ecs_entity_t flecs_get_flattened_target(
 
     ecs_table_t *table = r->table;
     if (!table) {
-        return 0;
+        return -1;
     }
 
     const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (tr) {
-        return ecs_record_get_entity(r);
+        *src_out = ecs_record_get_entity(r);
+        *tr_out = (ecs_table_record_t*)tr;
+        return tr->column;
     }
 
     if (table->flags & EcsTableHasTarget) {
@@ -352,17 +355,12 @@ ecs_entity_t flecs_get_flattened_target(
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
         EcsTarget *next = table->data.columns[col].array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
-        return flecs_get_flattened_target(world, next, rel, id);
+        return flecs_get_flattened_target(
+            world, next, rel, id, src_out, tr_out);
     }
 
-    ecs_entity_t src;
-    int32_t col = ecs_search_relation(
-        world, table, 0, id, rel, EcsSelf|EcsUp, &src, NULL, NULL);
-    if (col == -1) {
-        return 0;
-    }
-
-    return src;
+    return ecs_search_relation(
+        world, table, 0, id, rel, EcsSelf|EcsUp, src_out, NULL, tr_out);
 }
 
 void flecs_entity_filter_init(
@@ -470,6 +468,7 @@ void flecs_entity_filter_init(
                     a, ft_terms, flecs_flat_table_term_t);
                 term->field_index = terms[i].field_index;
                 term->term = &terms[i];
+                ecs_os_zeromem(&term->monitor);
             }
         }
     }
@@ -477,12 +476,19 @@ void flecs_entity_filter_init(
 
 void flecs_entity_filter_fini(
     ecs_world_t *world,
-    ecs_entity_filter_t *entity_filter)
+    ecs_entity_filter_t *ef)
 {
     ecs_allocator_t *a = &world->allocator;
-    ecs_vec_fini_t(a, &entity_filter->sw_terms, flecs_switch_term_t);
-    ecs_vec_fini_t(a, &entity_filter->bs_terms, flecs_bitset_term_t);
-    ecs_vec_fini_t(a, &entity_filter->ft_terms, flecs_flat_table_term_t);
+
+    flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
+    int32_t i, term_count = ecs_vec_count(&ef->ft_terms);
+    for (i = 0; i < term_count; i ++) {
+        ecs_vec_fini_t(NULL, &fields[i].monitor, flecs_flat_monitor_t);
+    }
+
+    ecs_vec_fini_t(a, &ef->sw_terms, flecs_switch_term_t);
+    ecs_vec_fini_t(a, &ef->bs_terms, flecs_bitset_term_t);
+    ecs_vec_fini_t(a, &ef->ft_terms, flecs_flat_table_term_t);
 }
 
 int flecs_entity_filter_next(
@@ -507,7 +513,7 @@ int flecs_entity_filter_next(
                 it->bs_offset = 0;
                 break;
             } else {
-                result = EcsIterCurYield;
+                result = EcsIterYield;
                 found = true;
             }
         }
@@ -525,7 +531,7 @@ int flecs_entity_filter_next(
                     break;
                 }
             } else {
-                result = EcsIterCurYield;
+                result = EcsIterYield;
                 found = true;
                 it->bs_offset = range->offset + range->count;
             }
@@ -541,9 +547,11 @@ int flecs_entity_filter_next(
 
             if (first_for_table) {
                 ft_offset = it->flat_tree_offset = range->offset;
+                it->target_count = 1;
             } else {
                 it->flat_tree_offset += ft[it->flat_tree_offset].count;
                 ft_offset = it->flat_tree_offset;
+                it->target_count ++;
             }
 
             ecs_assert(ft_offset < ecs_table_count(table), 
@@ -557,15 +565,31 @@ int flecs_entity_filter_next(
             flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
             for (i = 0; i < field_count; i ++) {
                 flecs_flat_table_term_t *field = &fields[i];
+                ecs_vec_init_if_t(&field->monitor, flecs_flat_monitor_t);
                 int32_t field_index = field->field_index;
                 ecs_id_t id = it->it->ids[field_index];
                 ecs_id_t flat_pair = table->type.array[flat_tree_column];
                 ecs_entity_t rel = ECS_PAIR_FIRST(flat_pair);
-                ecs_entity_t tgt = flecs_get_flattened_target(
-                    world, cur, rel, id);
-                if (tgt) {
+                ecs_entity_t tgt;
+                ecs_table_record_t *tr;
+                int32_t tgt_col = flecs_get_flattened_target(
+                    world, cur, rel, id, &tgt, &tr);
+                if (tgt_col != -1) {
                     iter->sources[field_index] = tgt;
-                    iter->columns[field_index] = -1;
+                    iter->columns[field_index] = /* encode flattened field */
+                        -(iter->field_count + tgt_col + 1);
+                    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                    /* Keep track of maximum value encountered in target table
+                     * dirty state so this doesn't have to be recomputed when
+                     * synchronizing the query monitor. */
+                    ecs_vec_set_min_count_zeromem_t(NULL, &field->monitor, 
+                        flecs_flat_monitor_t, it->target_count);
+                    ecs_table_t *tgt_table = tr->hdr.table;
+                    int32_t *ds = flecs_table_get_dirty_state(world, tgt_table);
+                    ecs_assert(ds != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_vec_get_t(&field->monitor, flecs_flat_monitor_t, 
+                        it->target_count - 1)->table_state = ds[tgt_col + 1];
                 } else {
                     if (field->term->oper == EcsOptional) {
                         iter->columns[field_index] = 0;
@@ -585,7 +609,7 @@ int flecs_entity_filter_next(
                 if ((ft_offset + ft_count) == range_end) {
                     result = EcsIterNextYield;
                 } else {
-                    result = EcsIterCurYield;
+                    result = EcsIterYield;
                 }
             }
 

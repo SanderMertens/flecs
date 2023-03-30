@@ -675,8 +675,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIterNextYield  (0)   /* Move to next table, yield current */
-#define EcsIterCurYield   (-1)  /* Stay on current table, yield */
-#define EcsIterNext       (1)   /* Move to next table, don't yield */
+#define EcsIterYield      (-1)  /* Stay on current table, yield */
+#define EcsIterNext  (1)   /* Move to next table, don't yield */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macros for ctor, dtor, move and copy
@@ -894,6 +894,16 @@ void ecs_vec_set_min_count(
 
 #define ecs_vec_set_min_count_t(allocator, vec, T, elem_count) \
     ecs_vec_set_min_count(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+void ecs_vec_set_min_count_zeromem(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count);
+
+#define ecs_vec_set_min_count_zeromem_t(allocator, vec, T, elem_count) \
+    ecs_vec_set_min_count_zeromem(allocator, vec, ECS_SIZEOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_set_count(
@@ -6764,11 +6774,16 @@ bool ecs_query_next_table(
  * This operation does should not be used with queries that match disabled 
  * components, union relationships, or with queries that use order_by.
  * 
+ * When the when_changed argument is set to true, the iterator data will only
+ * populate when the data has changed, using query change detection.
+ * 
  * @param iter The iterator.
+ * @param when_changed Only populate data when result has changed.
  */
 FLECS_API
 int ecs_query_populate(
-    ecs_iter_t *iter);
+    ecs_iter_t *iter,
+    bool when_changed);
 
 /** Returns whether the query data changed since the last iteration.
  * The operation will return true after:

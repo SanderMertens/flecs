@@ -256,8 +256,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIterNextYield  (0)   /* Move to next table, yield current */
-#define EcsIterCurYield   (-1)  /* Stay on current table, yield */
-#define EcsIterNext       (1)   /* Move to next table, don't yield */
+#define EcsIterYield      (-1)  /* Stay on current table, yield */
+#define EcsIterNext  (1)   /* Move to next table, don't yield */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macros for ctor, dtor, move and copy
