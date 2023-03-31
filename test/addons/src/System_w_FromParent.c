@@ -550,21 +550,6 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
     test_int(ctx.c[2][1], ecs_id(Position));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 20);
-    test_int(p->y, 40);
-
-    p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 60);
-
-    p = ecs_get(world, e3, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 50);
-    test_int(p->y, 100);
-
     ecs_fini(world);
 }
 

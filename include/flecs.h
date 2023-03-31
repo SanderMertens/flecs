@@ -576,6 +576,7 @@ struct ecs_filter_t {
     ecs_flags32_t flags;       /**< Filter flags */
     
     char *variable_names[1];   /**< Placeholder variable names array */
+    int32_t *sizes;            /**< Field size (same for each result) */
 
     /* Mixins */
     ecs_entity_t entity;       /**< Entity associated with filter (optional) */

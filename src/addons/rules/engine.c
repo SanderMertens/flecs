@@ -1797,7 +1797,7 @@ bool ecs_rule_next_instanced(
                 range->count = ecs_table_count(table);
             }
             flecs_iter_populate_data(ctx.world, it, range->table, range->offset,
-                range->count, it->ptrs, it->sizes);
+                range->count, it->ptrs);
             return true;
         }
     } while (next >= 0);
@@ -1875,13 +1875,13 @@ ecs_iter_t ecs_rule_iter(
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
+    it.sizes = rule->filter.sizes;
     flecs_filter_apply_iter_flags(&it, &rule->filter);
 
     flecs_iter_init(world, &it, 
         flecs_iter_cache_ids |
         flecs_iter_cache_columns |
         flecs_iter_cache_sources |
-        flecs_iter_cache_sizes |
         flecs_iter_cache_ptrs);
 
     rit->rule = rule;

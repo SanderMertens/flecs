@@ -322,6 +322,7 @@ done:
 
 #undef BS_MAX
 
+static
 int32_t flecs_get_flattened_target(
     ecs_world_t *world,
     EcsTarget *cur,

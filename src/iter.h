@@ -20,8 +20,7 @@ void flecs_iter_populate_data(
     ecs_table_t *table,
     int32_t offset,
     int32_t count,
-    void **ptrs,
-    ecs_size_t *sizes);
+    void **ptrs);
 
 bool flecs_iter_next_row(
     ecs_iter_t *it);

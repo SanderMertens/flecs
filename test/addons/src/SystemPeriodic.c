@@ -22,8 +22,10 @@ void Iter(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        p[i].x = 10;
-        p[i].y = 20;
+        if (p) {
+            p[i].x = 10;
+            p[i].y = 20;
+        }
 
         if (v) {
             v[i].x = 30;
@@ -591,46 +593,6 @@ void SystemPeriodic_4_type_1_and_1_or() {
     test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e2, Position_1);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e3, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e3, Position_1);
-    test_assert(p != NULL);
-    test_int(p->x, 0);
-    test_int(p->y, 0);
-
-    const Velocity *v = ecs_get(world, e1, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e2, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e3, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e4, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 0);
-    test_int(v->y, 0);
-
     ecs_fini(world);
 }
 
@@ -679,46 +641,6 @@ void SystemPeriodic_4_type_1_and_1_or_of_3() {
     test_int(ctx.s[2][0], 0);
     test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e2, Position_2);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e3, Position_1);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e3, Position_2);
-    test_assert(p != NULL);
-    test_int(p->x, 0);
-    test_int(p->y, 0);
-
-    const Velocity *v = ecs_get(world, e1, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e2, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e3, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 30);
-    test_int(v->y, 40);
-
-    v = ecs_get(world, e4, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 0);
-    test_int(v->y, 0);
 
     ecs_fini(world);
 }

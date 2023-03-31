@@ -289,7 +289,6 @@ struct ecs_query_table_match_t {
     int32_t *storage_columns; /* Mapping from query fields to storage columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
-    ecs_size_t *sizes;        /* Sizes for ids for current table */
     ecs_vec_t refs;           /* Cached components for non-this terms */
     ecs_entity_filter_t entity_filter; /* Entity specific filters */
 
@@ -335,7 +334,6 @@ typedef struct ecs_query_allocators_t {
     ecs_block_allocator_t columns;
     ecs_block_allocator_t ids;
     ecs_block_allocator_t sources;
-    ecs_block_allocator_t sizes;
     ecs_block_allocator_t monitors;
 } ecs_query_allocators_t;
 

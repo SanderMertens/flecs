@@ -813,7 +813,6 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     qm->storage_columns = flecs_balloc(&query->allocators.columns);
     qm->ids = flecs_balloc(&query->allocators.ids);
     qm->sources = flecs_balloc(&query->allocators.sources);
-    qm->sizes = flecs_balloc(&query->allocators.sizes);
 
     /* Insert match to iteration list if table is not empty */
     if (!table || ecs_table_count(table) != 0) {
@@ -842,7 +841,6 @@ void flecs_query_set_table_match(
     ecs_os_memcpy_n(qm->columns, it->columns, int32_t, field_count);
     ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
     ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
-    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, field_count);
 
     if (table) {
         /* Initialize storage columns for faster access to component storage */
@@ -1091,7 +1089,7 @@ void flecs_query_build_sorted_table_range(
             const ecs_term_t *term = &query->filter.terms[order_by_term];
             int32_t field = term->field_index;
             int32_t column = match->columns[field];
-            ecs_size_t size = match->sizes[field];
+            ecs_size_t size = query->filter.sizes[field];
             ecs_assert(column != 0, ECS_INTERNAL_ERROR, NULL);
             if (column >= 0) {
                 column = table->storage_map[column - 1];
@@ -1503,7 +1501,6 @@ void flecs_query_table_match_free(
         flecs_bfree(&query->allocators.columns, cur->storage_columns);
         flecs_bfree(&query->allocators.ids, cur->ids);
         flecs_bfree(&query->allocators.sources, cur->sources);
-        flecs_bfree(&query->allocators.sizes, cur->sizes);
 
         if (cur->monitor) {
             flecs_bfree(&query->allocators.monitors, cur->monitor);
@@ -1880,8 +1877,6 @@ void flecs_query_allocators_init(
             field_count * ECS_SIZEOF(ecs_id_t));
         flecs_ballocator_init(&query->allocators.sources,
             field_count * ECS_SIZEOF(ecs_entity_t));
-        flecs_ballocator_init(&query->allocators.sizes,
-            field_count * ECS_SIZEOF(ecs_size_t));
         flecs_ballocator_init(&query->allocators.monitors,
             (1 + field_count) * ECS_SIZEOF(int32_t));
     }
@@ -1896,7 +1891,6 @@ void flecs_query_allocators_fini(
         flecs_ballocator_fini(&query->allocators.columns);
         flecs_ballocator_fini(&query->allocators.ids);
         flecs_ballocator_fini(&query->allocators.sources);
-        flecs_ballocator_fini(&query->allocators.sizes);
         flecs_ballocator_fini(&query->allocators.monitors);
     }
 }
@@ -2196,7 +2190,7 @@ ecs_iter_t ecs_query_iter(
                     ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, field_count);
                 }
                 ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, field_count);
-                ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
+                // ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
                 ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
                 ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
             }
@@ -2207,6 +2201,8 @@ ecs_iter_t ecs_query_iter(
         /* Trivial iteration, use arrays from query cache */
         flecs_iter_init(stage, &result, flecs_iter_cache_ptrs);
     }
+
+    result.sizes = query->filter.sizes;
 
     return result;
 error:
@@ -2355,7 +2351,6 @@ void flecs_query_populate_trivial(
     it->ids = match->ids;
     it->sources = match->sources;
     it->columns = match->columns;
-    it->sizes = match->sizes;
     it->group_id = match->node.group_id;
     it->instance_count = 0;
     it->offset = node->offset;
@@ -2378,6 +2373,12 @@ void flecs_query_populate_trivial(
                     continue;
                 }
 
+                ecs_size_t size = it->sizes[i];
+                if (!size) {
+                    it->ptrs[i] = NULL;
+                    continue;
+                }
+
                 it->ptrs[i] = ecs_vec_get(&data->columns[column], 
                     it->sizes[i], it->offset);
             }
@@ -2388,7 +2389,7 @@ void flecs_query_populate_trivial(
         it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, it->offset);
     } else {
         flecs_iter_populate_data(it->real_world, it, table, it->offset, 
-            it->count, it->ptrs, NULL);
+            it->count, it->ptrs);
     }
 }
 
@@ -2473,12 +2474,11 @@ repeat:
         }
     }
 
-    ecs_os_memcpy_n(it->sizes, match->sizes, ecs_size_t, filter->field_count);
     it->references = ecs_vec_first(&match->refs);
     it->instance_count = 0;
 
     flecs_iter_populate_data(world, it, table, range->offset, range->count,
-        it->ptrs, NULL);
+        it->ptrs);
 
 error:
 done:

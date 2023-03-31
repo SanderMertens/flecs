@@ -997,7 +997,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.ptrs[0] = ptr;
-    it.sizes[0] = ti->size;
+    it.sizes = (ecs_size_t*)&ti->size;
     it.ids[0] = id;
     it.event = event;
     it.event_id = id;
