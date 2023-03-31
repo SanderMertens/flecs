@@ -829,7 +829,6 @@ int flecs_term_finalize(
     }
 
     term->idr = flecs_query_id_record_get(world, term->id);
-
     return 0;
 }
 
@@ -1105,6 +1104,10 @@ int ecs_filter_finalize(
             field_count ++;
         }
 
+        if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
+            filter_terms ++;
+        }
+
         term->field_index = field_count - 1;
 
         if (ecs_term_match_this(term)) {
@@ -1176,7 +1179,48 @@ int ecs_filter_finalize(
 
     f->field_count = field_count;
 
-    if (filter_terms == term_count) {
+    if (field_count) {
+        f->sizes = ecs_os_calloc_n(ecs_size_t, field_count);
+        for (i = 0; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+            ecs_id_record_t *idr = term->idr;
+            int32_t field = term->field_index;
+
+            if (term->oper == EcsOr || (i && (term[-1].oper == EcsOr))) {
+                f->sizes[field] = 0;
+                continue;
+            }
+
+            if (idr) {
+                if (idr->flags & EcsIdUnion) {
+                    f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
+                } else if (idr->type_info) {
+                    f->sizes[field] = term->idr->type_info->size;
+                }
+            } else {
+                bool is_union = false;
+                if (ECS_IS_PAIR(term->id)) {
+                    ecs_entity_t first = ecs_pair_first(world, term->id);
+                    if (ecs_has_id(world, first, EcsUnion)) {
+                        is_union = true;
+                    }
+                }
+                if (is_union) {
+                    f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
+                } else {
+                    const ecs_type_info_t *ti = ecs_get_type_info(
+                        world, term->id);
+                    if (ti) {
+                        f->sizes[field] = ti->size;
+                    }
+                }
+            }
+        }
+    } else {
+        f->sizes = NULL;
+    }
+
+    if (filter_terms >= term_count) {
         ECS_BIT_SET(f->flags, EcsFilterNoData);
     }
 
@@ -1227,6 +1271,7 @@ void flecs_filter_fini(
         }
     }
 
+    ecs_os_free(filter->sizes);
     filter->terms = NULL;
 
     if (filter->owned) {
@@ -1413,6 +1458,11 @@ void ecs_filter_copy(
         for (i = 0; i < term_count; i ++) {
             dst->terms[i] = ecs_term_copy(&src->terms[i]);
         }
+
+        if (src->field_count) {
+            dst->sizes = ecs_os_memdup_n(
+                src->sizes, ecs_size_t, src->field_count);
+        }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -1435,6 +1485,7 @@ void ecs_filter_move(
             ecs_filter_copy(dst, src);
         }
         src->terms = NULL;
+        src->sizes = NULL;
         src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
@@ -1997,6 +2048,7 @@ void term_iter_init_no_data(
 
 static
 void term_iter_init_w_idr(
+    const ecs_term_t *term,
     ecs_term_iter_t *iter, 
     ecs_id_record_t *idr, 
     bool empty_tables)
@@ -2013,6 +2065,10 @@ void term_iter_init_w_idr(
 
     iter->index = 0;
     iter->empty_tables = empty_tables;
+    iter->size = 0;
+    if (term && term->idr && term->idr->type_info) {
+        iter->size = term->idr->type_info->size;
+    }
 }
 
 static
@@ -2024,7 +2080,7 @@ void term_iter_init_wildcard(
     iter->term = (ecs_term_t){ .field_index = -1 };
     iter->self_index = flecs_id_record_get(world, EcsAny);
     ecs_id_record_t *idr = iter->cur = iter->self_index;
-    term_iter_init_w_idr(iter, idr, empty_tables);
+    term_iter_init_w_idr(NULL, iter, idr, empty_tables);
 }
 
 static
@@ -2057,7 +2113,7 @@ void term_iter_init(
         idr = iter->cur = iter->set_index;
     }
 
-    term_iter_init_w_idr(iter, idr, empty_tables);
+    term_iter_init_w_idr(term, iter, idr, empty_tables);
 }
 
 ecs_iter_t ecs_term_iter(
@@ -2091,8 +2147,8 @@ ecs_iter_t ecs_term_iter(
      * iterator keeps the filter iterator code simple, as it doesn't need to
      * worry about the term iter overwriting the iterator fields. */
     flecs_iter_init(stage, &it, 0);
-
     term_iter_init(world, term, &it.priv.iter.term, false);
+    ECS_BIT_COND(it.flags, EcsIterNoData, it.priv.iter.term.size == 0);
 
     return it;
 error:
@@ -2380,7 +2436,7 @@ bool ecs_term_next(
 
 yield:
     flecs_iter_populate_data(world, it, table, 0, ecs_table_count(table), 
-        it->ptrs, it->sizes);
+        it->ptrs);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;
 done:
@@ -2478,7 +2534,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
         .world = (ecs_world_t*)stage,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
-        .flags = flags
+        .flags = flags,
+        .sizes = filter->sizes
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
@@ -2555,7 +2612,8 @@ ecs_iter_t ecs_filter_chain_iter(
         .world = chain_it->world,
         .real_world = chain_it->real_world,
         .chain_it = (ecs_iter_t*)chain_it,
-        .next = ecs_filter_next
+        .next = ecs_filter_next,
+        .sizes = filter->sizes
     };
 
     flecs_iter_init(chain_it->world, &it, flecs_iter_cache_all);
@@ -2799,7 +2857,7 @@ error:
 yield:
     it->offset = 0;
     flecs_iter_populate_data(world, it, table, 0, 
-        table ? ecs_table_count(table) : 0, it->ptrs, it->sizes);
+        table ? ecs_table_count(table) : 0, it->ptrs);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;    
 }

@@ -453,6 +453,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.columns[0] = 0;
     user_it.columns[pivot_term] = column;
     user_it.sources[pivot_term] = it->sources[0];
+    user_it.sizes = o->filter.sizes;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
         user_it.columns, user_it.sources, NULL, NULL, false, pivot_term, 
@@ -479,10 +480,9 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
         }
 
         flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
-            it->count, user_it.ptrs, user_it.sizes);
+            it->count, user_it.ptrs);
 
         user_it.ptrs[pivot_term] = it->ptrs[0];
-        user_it.sizes[pivot_term] = it->sizes[0];
         user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->filter.entity;
         user_it.term_index = pivot_term;

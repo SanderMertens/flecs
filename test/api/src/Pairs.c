@@ -310,16 +310,6 @@ void Pairs_add_tag_pair_for_component() {
 
     ecs_progress(world, 0);
 
-    const Position* tr_p = ecs_get_pair_object(world, e1, Rel, Position);
-    test_assert(tr_p != NULL);
-    test_int(tr_p->x, 11);
-    test_int(tr_p->y, 22);
-
-    const Velocity* tr_v = ecs_get_pair_object(world, e2, Rel, Velocity);
-    test_assert(tr_v != NULL);
-    test_int(tr_v->x, 13);
-    test_int(tr_v->y, 24);
-
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessValuePairs);
@@ -849,9 +839,6 @@ void Pairs_query_pair_or_component() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_field(&it, Position, 1);
-        test_assert(t != NULL);
-
         int i;
         for (i = 0; i < it.count; i ++) {
             test_assert(it.entities[i] == e1 || it.entities[i] == e2);
@@ -881,9 +868,6 @@ void Pairs_query_pair_or_pair() {
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *t = ecs_field(&it, Position, 1);
-        test_assert(t != NULL);
-
         int i;
         for (i = 0; i < it.count; i ++) {
             test_assert(it.entities[i] == e1 || it.entities[i] == e2);

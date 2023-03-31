@@ -67,7 +67,6 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, match_indices, int32_t, it->field_count);
     INIT_CACHE(it, stack, fields, columns, int32_t, it->field_count);
     INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
-    INIT_CACHE(it, stack, fields, sizes, ecs_size_t, it->field_count);
     INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
@@ -106,7 +105,6 @@ void ecs_iter_fini(
     FINI_CACHE(it, match_indices, int32_t, it->field_count);
     FINI_CACHE(it, columns, int32_t, it->field_count);
     FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
-    FINI_CACHE(it, sizes, ecs_size_t, it->field_count);
     FINI_CACHE(it, ptrs, void*, it->field_count);
     flecs_stack_free_t(it->priv.entity_iter, ecs_entity_filter_iter_t);
 
@@ -116,39 +114,16 @@ void ecs_iter_fini(
 }
 
 static
-ecs_size_t flecs_iter_get_size_for_id(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return 0;
-    }
-
-    if (idr->flags & EcsIdUnion) {
-        return ECS_SIZEOF(ecs_entity_t);
-    }
-
-    if (idr->type_info) {
-        return idr->type_info->size;
-    }
-
-    return 0;
-}
-
-static
 bool flecs_iter_populate_term_data(
     ecs_world_t *world,
     ecs_iter_t *it,
     int32_t t,
     int32_t column,
-    void **ptr_out,
-    ecs_size_t *size_out)
+    void **ptr_out)
 {
     bool is_shared = false;
     ecs_table_t *table;
     void *data;
-    ecs_size_t size = 0;
     int32_t row, u_index;
 
     if (!column) {
@@ -158,9 +133,12 @@ bool flecs_iter_populate_term_data(
 
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutNone) {
-        if (size_out) {
-            size = flecs_iter_get_size_for_id(world, it->ids[t]);
-        }
+        goto no_data;
+    }
+
+    ecs_assert(it->sizes != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t size = it->sizes[t];
+    if (!size) {
         goto no_data;
     }
 
@@ -189,11 +167,6 @@ bool flecs_iter_populate_term_data(
                     is_shared = false;
                 }
 
-                /* If cached references were provided, the code that populated
-                * the iterator also had a chance to cache sizes, so size array
-                * should already have been assigned. This saves us from having
-                * to do additional lookups to find the component size. */
-                ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
                 return is_shared;
             }
 
@@ -225,9 +198,7 @@ bool flecs_iter_populate_term_data(
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
             column = tr->column;
-            ecs_type_info_t *ti = table->type_info[column];
             ecs_vec_t *s = &table->data.columns[column];
-            size = ti->size;
             data = ecs_vec_first(s);
             /* Fallthrough to has_data */
         }
@@ -248,8 +219,6 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
-        ecs_type_info_t *ti = table->type_info[storage_column];
-        size = ti->size;
         if (!it->count) {
             goto no_data;
         }
@@ -262,7 +231,6 @@ bool flecs_iter_populate_term_data(
 
 has_data:
     if (ptr_out) ptr_out[0] = ECS_ELEM(data, size, row);
-    if (size_out) size_out[0] = size;
     return is_shared;
 
 has_union: {
@@ -270,13 +238,11 @@ has_union: {
          * identifiers. Will be replaced in the future with pluggable storage */
         ecs_switch_t *sw = &table->data.sw_columns[u_index];
         data = ecs_vec_first(flecs_switch_values(sw));
-        size = ECS_SIZEOF(ecs_entity_t);
         goto has_data;
     }
 
 no_data:
     if (ptr_out) ptr_out[0] = NULL;
-    if (size_out) size_out[0] = size;
     return false;
 }
 
@@ -286,8 +252,7 @@ void flecs_iter_populate_data(
     ecs_table_t *table,
     int32_t offset,
     int32_t count,
-    void **ptrs,
-    ecs_size_t *sizes)
+    void **ptrs)
 {
     ecs_table_t *prev_table = it->table;
     if (prev_table) {
@@ -311,43 +276,15 @@ void flecs_iter_populate_data(
     int t, field_count = it->field_count;
     if (ECS_BIT_IS_SET(it->flags, EcsIterNoData)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
-
-        if (!sizes) {
-            return;
-        }
-
-        /* Fetch sizes, skip fetching data */
-        for (t = 0; t < field_count; t ++) {
-            sizes[t] = flecs_iter_get_size_for_id(world, it->ids[t]);
-        }
         return;
     }
 
     bool has_shared = false;
-
-    if (ptrs && sizes) {
+    if (ptrs) {
         for (t = 0; t < field_count; t ++) {
             int32_t column = it->columns[t];
             has_shared |= flecs_iter_populate_term_data(world, it, t, column,
-                &ptrs[t], 
-                &sizes[t]);
-        }
-    } else if (ptrs || sizes) {
-        for (t = 0; t < field_count; t ++) {
-            ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            int32_t column = it->columns[t];
-            void **ptr = NULL;
-            if (ptrs) {
-                ptr = &ptrs[t];
-            }
-            ecs_size_t *size = NULL;
-            if (sizes) {
-                size = &sizes[t];
-            }
-
-            has_shared |= flecs_iter_populate_term_data(world, it, t, column,
-                ptr, size);
+                &ptrs[t]);
         }
     }
 

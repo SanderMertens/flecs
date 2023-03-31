@@ -1218,11 +1218,6 @@ void Query_query_only_from_entity_or() {
     test_int(it.count, 0);
 
     test_bool(ecs_field_is_set(&it, 1), true);
-    
-    Position *ptr = ecs_field(&it, Position, 1);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
 
     test_assert(!ecs_query_next(&it));
 
@@ -1266,10 +1261,6 @@ void Query_query_only_from_entity_or_change() {
     test_bool(ecs_field_is_set(&it, 1), true);
     test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(Ent, it.sources[0]);
-    Position *p = ecs_field(&it, Position, 1);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
     test_assert(!ecs_query_next(&it));
 
     ecs_remove(world, Ent, Position);
@@ -1282,10 +1273,6 @@ void Query_query_only_from_entity_or_change() {
     test_bool(ecs_field_is_set(&it, 1), true);
     test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
     test_uint(Ent, it.sources[0]);
-    Velocity *v = ecs_field(&it, Velocity, 1);
-    test_assert(v != NULL);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
     test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1316,10 +1303,6 @@ void Query_query_from_entity_or_change() {
     test_uint(e, it.entities[0]);
     test_uint(Ent, it.sources[0]);
     test_uint(0, it.sources[1]);
-    Position *p = ecs_field(&it, Position, 1);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
     test_assert(!ecs_query_next(&it));
 
     ecs_remove(world, Ent, Position);
@@ -1335,10 +1318,6 @@ void Query_query_from_entity_or_change() {
     test_uint(e, it.entities[0]);
     test_uint(Ent, it.sources[0]);
     test_uint(0, it.sources[1]);
-    Velocity *v = ecs_field(&it, Velocity, 1);
-    test_assert(v != NULL);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
     test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
