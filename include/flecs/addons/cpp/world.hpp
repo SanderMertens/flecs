@@ -555,7 +555,7 @@ struct world {
 
     /** Set singleton pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(const A& value) const {
         flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), value);
@@ -563,7 +563,7 @@ struct world {
 
     /** Set singleton pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(A&& value) const {
         flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), FLECS_FWD(value));
@@ -613,7 +613,7 @@ struct world {
 
     /** Get singleton pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
         typename A = actual_type_t<P>>
     const A* get() const;
 
