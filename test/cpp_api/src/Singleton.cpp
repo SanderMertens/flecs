@@ -209,3 +209,59 @@ void Singleton_get_write_lambda() {
     test_int(p->x, 11);
     test_int(p->y, 21);
 }
+
+void Singleton_get_set_singleton_pair_R_T() {
+    flecs::world world;
+
+    world.set<Position, Tag>({10, 20});
+
+    const Position *p = world.get<Position, Tag>();
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_set_singleton_pair_R_t() {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    world.set<Position>(tgt, {10, 20});
+
+    const Position *p = world.get<Position>(tgt);
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_add_remove_singleton_pair_R_T() {
+    flecs::world world;
+
+    world.add<Position, Tag>();
+    test_assert((world.has<Position, Tag>()));
+    world.remove<Position, Tag>();
+    test_assert(!(world.has<Position, Tag>()));
+}
+
+void Singleton_add_remove_singleton_pair_R_t() {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    world.add<Position>(tgt);
+    test_assert((world.has<Position>(tgt)));
+    world.remove<Position>(tgt);
+    test_assert(!(world.has<Position>(tgt)));
+}
+
+void Singleton_add_remove_singleton_pair_r_t() {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    flecs::entity tgt = world.entity();
+
+    world.add(rel, tgt);
+    test_assert((world.has(rel, tgt)));
+    world.remove(rel, tgt);
+    test_assert(!(world.has(rel, tgt)));
+}

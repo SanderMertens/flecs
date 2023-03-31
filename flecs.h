@@ -18092,6 +18092,14 @@ struct world {
         }
     }
 
+    /** Deletes and recreates the world. */
+    void reset() {
+        // Can only reset the world if we own the world object.
+        ecs_assert(this->m_owned, ECS_INVALID_OPERATION, NULL);
+        ecs_fini(m_world);
+        m_world = ecs_init();
+    }
+
     /** Obtain pointer to C world object.
      */
     world_t* c_ptr() const {
@@ -18461,12 +18469,40 @@ struct world {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), value);
     }
 
+    /** Set singleton component.
+     */
     template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
             FLECS_FWD(value));
     }
-    
+
+    /** Set singleton pair.
+     */
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
+    void set(const A& value) const {
+        flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), value);
+    }
+
+    /** Set singleton pair.
+     */
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
+    void set(A&& value) const {
+        flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), FLECS_FWD(value));
+    }
+
+    /** Set singleton pair.
+     */
+    template <typename First, typename Second>
+    void set(Second second, const First& value) const;
+
+    /** Set singleton pair.
+     */
+    template <typename First, typename Second>
+    void set(Second second, First&& value) const;
+
     /** Set singleton component inside a callback.
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
@@ -18498,6 +18534,17 @@ struct world {
      */
     template <typename T>
     const T* get() const;
+
+    /** Get singleton pair.
+     */
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>>
+    const A* get() const;
+
+    /** Get singleton pair.
+     */
+    template <typename First, typename Second>
+    const First* get(Second second) const;
     
     /** Get singleton component inside a callback.
      */
@@ -18564,6 +18611,29 @@ struct world {
      */
     template <typename T>
     void remove() const;
+
+    /** Adds a pair to the singleton component.
+     * 
+     * @tparam First The first element of the pair
+     * @tparam Second The second element of the pair
+     */
+    template <typename First, typename Second>
+    void remove() const;
+
+    /** Adds a pair to the singleton component.
+     * 
+     * @tparam First The first element of the pair
+     * @param second The second element of the pair.
+     */
+    template <typename First>
+    void remove(flecs::entity_t second) const;
+
+    /** Adds a pair to the singleton entity.
+     * 
+     * @param first The first element of the pair
+     * @param second The second element of the pair
+     */
+    void remove(flecs::entity_t first, flecs::entity_t second) const;
 
     /** Get singleton entity for type.
      */
@@ -28280,31 +28350,55 @@ inline entity world::lookup(const char *name) const {
 }
 
 template <typename T>
-T* world::get_mut() const {
+inline T* world::get_mut() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get_mut<T>();
 }
 
 template <typename T>
-void world::modified() const {
+inline void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.modified<T>();
 }
 
+template <typename First, typename Second>
+inline void world::set(Second second, const First& value) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.set<First>(second, value);
+}
+
+template <typename First, typename Second>
+inline void world::set(Second second, First&& value) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.set<First>(second, value);
+}
+
 template <typename T>
-ref<T> world::get_ref() const {
+inline ref<T> world::get_ref() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get_ref<T>();
 }
 
 template <typename T>
-const T* world::get() const {
+inline const T* world::get() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get<T>();
 }
 
+template <typename First, typename Second, typename P, typename A>
+const A* world::get() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get<First, Second>();
+}
+
+template <typename First, typename Second>
+const First* world::get(Second second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get<First>(second);
+}
+
 template <typename T>
-bool world::has() const {
+inline bool world::has() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.has<T>();
 }
@@ -28327,7 +28421,7 @@ inline bool world::has(flecs::id_t first, flecs::id_t second) const {
 }
 
 template <typename T>
-void world::add() const {
+inline void world::add() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.add<T>();
 }
@@ -28350,9 +28444,26 @@ inline void world::add(flecs::entity_t first, flecs::entity_t second) const {
 }
 
 template <typename T>
-void world::remove() const {
+inline void world::remove() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.remove<T>();
+}
+
+template <typename First, typename Second>
+inline void world::remove() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.remove<First, Second>();
+}
+
+template <typename First>
+inline void world::remove(flecs::entity_t second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    e.remove<First>(second);
+}
+
+inline void world::remove(flecs::entity_t first, flecs::entity_t second) const {
+    flecs::entity e(m_world, first);
+    e.remove(first, second);
 }
 
 template <typename T>
@@ -28361,14 +28472,14 @@ inline flecs::entity world::singleton() const {
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
-void world::get(const Func& func) const {
+inline void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
-void world::set(const Func& func) const {
+inline void world::set(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);

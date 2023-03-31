@@ -1685,3 +1685,12 @@ void World_get_set_log_level() {
     flecs::log::set_level(4);
     test_int(flecs::log::get_level(), 4);
 }
+
+void World_reset_world() {
+    flecs::world ecs;
+    flecs::entity e = ecs.entity();
+
+    test_assert(ecs.exists(e));
+    ecs.reset();
+    test_assert(!ecs.exists(e));
+}

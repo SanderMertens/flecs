@@ -1113,7 +1113,8 @@
                 "set_lookup_path",
                 "run_post_frame",
                 "component_w_low_id",
-                "get_set_log_level"
+                "get_set_log_level",
+                "reset_world"
             ]
         }, {
             "id": "Singleton",
@@ -1130,7 +1131,12 @@
                 "type_id_from_world",
                 "set_lambda",
                 "get_lambda",
-                "get_write_lambda"
+                "get_write_lambda",
+                "get_set_singleton_pair_R_T",
+                "get_set_singleton_pair_R_t",
+                "add_remove_singleton_pair_R_T",
+                "add_remove_singleton_pair_R_t",
+                "add_remove_singleton_pair_r_t"
             ]
         }, {
             "id": "Misc",

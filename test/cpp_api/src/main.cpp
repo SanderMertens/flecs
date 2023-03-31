@@ -1064,6 +1064,7 @@ void World_set_lookup_path(void);
 void World_run_post_frame(void);
 void World_component_w_low_id(void);
 void World_get_set_log_level(void);
+void World_reset_world(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1079,6 +1080,11 @@ void Singleton_type_id_from_world(void);
 void Singleton_set_lambda(void);
 void Singleton_get_lambda(void);
 void Singleton_get_write_lambda(void);
+void Singleton_get_set_singleton_pair_R_T(void);
+void Singleton_get_set_singleton_pair_R_t(void);
+void Singleton_add_remove_singleton_pair_R_T(void);
+void Singleton_add_remove_singleton_pair_R_t(void);
+void Singleton_add_remove_singleton_pair_r_t(void);
 
 // Testsuite 'Misc'
 void Misc_setup(void);
@@ -5289,6 +5295,10 @@ bake_test_case World_testcases[] = {
     {
         "get_set_log_level",
         World_get_set_log_level
+    },
+    {
+        "reset_world",
+        World_reset_world
     }
 };
 
@@ -5344,6 +5354,26 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_write_lambda",
         Singleton_get_write_lambda
+    },
+    {
+        "get_set_singleton_pair_R_T",
+        Singleton_get_set_singleton_pair_R_T
+    },
+    {
+        "get_set_singleton_pair_R_t",
+        Singleton_get_set_singleton_pair_R_t
+    },
+    {
+        "add_remove_singleton_pair_R_T",
+        Singleton_add_remove_singleton_pair_R_T
+    },
+    {
+        "add_remove_singleton_pair_R_t",
+        Singleton_add_remove_singleton_pair_R_t
+    },
+    {
+        "add_remove_singleton_pair_r_t",
+        Singleton_add_remove_singleton_pair_r_t
     }
 };
 
@@ -5878,14 +5908,14 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        94,
+        95,
         World_testcases
     },
     {
         "Singleton",
         NULL,
         NULL,
-        13,
+        18,
         Singleton_testcases
     },
     {
