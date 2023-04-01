@@ -1898,7 +1898,8 @@ bool flecs_term_match_table(
     }
 
     if ((column == -1) && (src->flags & EcsUp) && (table->flags & EcsTableHasTarget)) {
-        ecs_id_t rel = ECS_PAIR_SECOND(table->type.array[table->ft_offset]);
+        ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_id_t rel = ECS_PAIR_SECOND(table->type.array[table->ext->ft_offset]);
         if (rel == (uint32_t)src->trav) {
             result = true;
         }
