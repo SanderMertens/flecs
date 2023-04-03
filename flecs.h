@@ -27734,9 +27734,12 @@ struct rule_base {
         obj.m_rule = nullptr;
     }
 
-    flecs::string str() {
-        const ecs_filter_t *f = ecs_rule_get_filter(m_rule);
-        char *result = ecs_filter_str(m_world, f);
+    flecs::filter_base filter() const {
+        return filter_base(m_world, ecs_rule_get_filter(m_rule));
+    }
+
+    flecs::string str() const {
+        char *result = ecs_rule_str(m_rule);
         return flecs::string(result);
     }
 
