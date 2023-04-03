@@ -76,7 +76,7 @@ struct rule_base {
 
 
     /** Converts this rule to a string that can be used to aid debugging
-     * the behavior rule.
+     * the behavior of the rule.
      * @see ecs_rule_str
      */
     flecs::string rule_str() const {
