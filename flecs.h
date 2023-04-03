@@ -2754,9 +2754,9 @@ struct ecs_filter_t {
 
     /* Mixins */
     ecs_entity_t entity;       /**< Entity associated with filter (optional) */
-    ecs_world_t *world;
     ecs_iterable_t iterable;   /**< Iterable mixin */
     ecs_poly_dtor_t dtor;      /**< Dtor mixin */
+    ecs_world_t *world;        /**< World mixin */
 };
 
 /* An observer reacts to events matching a filter */
@@ -7538,6 +7538,20 @@ void* ecs_table_get_column(
  */
 FLECS_API
 int32_t ecs_table_get_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
+
+/** Test if table has id.
+ * Same as ecs_table_get_index(world, table, id) != -1.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id The id.
+ * @return True if the table has the id, false if the table doesn't.
+ */
+FLECS_API
+bool ecs_table_has_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
