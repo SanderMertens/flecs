@@ -1272,10 +1272,12 @@ void flecs_filter_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &filter->terms[i];
             if (term->idr) {
-                if (ecs_os_has_threading()) {
-                    ecs_os_adec(&term->idr->keep_alive);
-                } else {
-                    term->idr->keep_alive --;
+                if (!(filter->world->flags & EcsWorldQuit)) {
+                    if (ecs_os_has_threading()) {
+                        ecs_os_adec(&term->idr->keep_alive);
+                    } else {
+                        term->idr->keep_alive --;
+                    }
                 }
             }
             ecs_term_fini(&filter->terms[i]);
@@ -1338,6 +1340,7 @@ ecs_filter_t* ecs_filter_init(
     ECS_BIT_COND(f->flags, EcsFilterIsInstanced, desc->instanced);
     ECS_BIT_SET(f->flags, EcsFilterMatchAnything);
     f->flags |= desc->flags;
+    f->world = world;
 
     /* If terms_buffer was not set, count number of initialized terms in
      * static desc::terms array */
@@ -1444,9 +1447,7 @@ ecs_filter_t* ecs_filter_init(
 
     f->variable_names[0] = NULL;
     f->iterable.init = flecs_filter_iter_init;
-
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
-    f->world = world;
     f->entity = entity;
 
     if (entity && f->owned) {
