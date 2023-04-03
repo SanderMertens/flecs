@@ -65,7 +65,21 @@ struct rule_base {
         return filter_base(m_world, ecs_rule_get_filter(m_rule));
     }
 
+    /** Converts this rule to a string expression
+     * @see ecs_filter_str
+     */
     flecs::string str() const {
+        const ecs_filter_t *f = ecs_rule_get_filter(m_rule);
+        char *result = ecs_filter_str(m_world, f);
+        return flecs::string(result);
+    }
+
+
+    /** Converts this rule to a string that can be used to aid debugging
+     * the behavior rule.
+     * @see ecs_rule_str
+     */
+    flecs::string rule_str() const {
         char *result = ecs_rule_str(m_rule);
         return flecs::string(result);
     }
