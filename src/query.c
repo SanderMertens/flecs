@@ -549,7 +549,10 @@ void flecs_query_sync_match_monitor(
         }
                 
         flecs_query_get_dirty_state(query, match, t, &cur);
-        ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+        if (cur.column < 0) {
+            continue;
+        }
+
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
     }
 
