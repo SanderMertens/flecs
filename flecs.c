@@ -5121,6 +5121,14 @@ error:
     return -1;
 }
 
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    return ecs_table_get_index(world, table, id) != -1;
+}
+
 void* ecs_table_get_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -14779,10 +14787,10 @@ void ecs_map_copy(
  */
 
 
-// #ifdef FLECS_SANITIZE
-// #define FLECS_USE_OS_ALLOC
-// #define FLECS_MEMSET_UNINITIALIZED
-// #endif
+#ifdef FLECS_SANITIZE
+#define FLECS_USE_OS_ALLOC
+#define FLECS_MEMSET_UNINITIALIZED
+#endif
 
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
@@ -47585,28 +47593,30 @@ int flecs_term_finalize(
         first_id = term->first.id;
     }
 
-    if (first_id) {
-        /* If component id is final, don't attempt component inheritance */
-        if (ecs_has_id(world, first_id, EcsFinal)) {
-            if (first_flags & EcsDown) {
-                flecs_filter_error(ctx, "final id cannot be traversed down");
-                return -1;
-            }
-        }
+    term->idr = flecs_query_id_record_get(world, term->id);
+    ecs_flags32_t id_flags = term->idr ? term->idr->flags : 0;
 
+    if (first_id) {
         ecs_entity_t first_trav = first->trav;
-        if (first_trav) {
-            if (!ecs_has_id(world, first_trav, EcsTraversable)) {
-                flecs_filter_error(ctx, "first.trav is not traversable");
-                return -1;
-            }
-        }
 
         /* If component is inherited from, set correct traversal flags */
         ecs_flags32_t first_trav_flags = first_flags & EcsTraverseFlags;
         if (!first_trav && first_trav_flags != EcsSelf) {
             /* Inheritance uses IsA by default, but can use any relationship */
             first_trav = EcsIsA;
+        }
+
+        ecs_record_t *trav_record = NULL;
+        ecs_table_t *trav_table = NULL;
+        if (first_trav) {
+            trav_record = flecs_entities_get(world, first_trav);
+            trav_table = trav_record ? trav_record->table : NULL;
+            if (first_trav != EcsIsA) {
+                if (!trav_table || !ecs_table_has_id(world, trav_table, EcsTraversable)) {
+                    flecs_filter_error(ctx, "first.trav is not traversable");
+                    return -1;
+                }
+            }
         }
 
         /* Only enable inheritance for ids which are inherited from at the time
@@ -47626,7 +47636,10 @@ int flecs_term_finalize(
                 if (!first_trav_flags) {
                     first->flags &= ~EcsTraverseFlags;
                     first->flags |= EcsDown;
-                    if (ecs_has_id(world, first_trav, EcsReflexive)) {
+                    ecs_assert(trav_table != NULL, ECS_INTERNAL_ERROR, NULL);
+                    if ((first_trav == EcsIsA) || ecs_table_has_id(
+                        world, trav_table, EcsReflexive)) 
+                    {
                         first->flags |= EcsSelf;
                     }
                 }
@@ -47634,7 +47647,7 @@ int flecs_term_finalize(
         }
 
         /* Don't traverse ids that cannot be inherited */
-        if (ecs_has_id(world, first_id, EcsDontInherit) && src->trav == EcsIsA) {
+        if ((id_flags & EcsIdDontInherit) && (src->trav == EcsIsA)) {
             if (src_flags & (EcsUp | EcsDown)) {
                 flecs_filter_error(ctx, 
                     "traversing not allowed for id that can't be inherited");
@@ -47644,21 +47657,33 @@ int flecs_term_finalize(
             src->trav = 0;
         }
 
-        /* Add traversal flags for transitive relationships */
-        if (!(second_flags & EcsTraverseFlags) && ecs_term_id_is_set(second)) {
-            if (!((src->flags & EcsIsVariable) && (src->id == EcsAny))) {
-                if (!((second->flags & EcsIsVariable) && (second->id == EcsAny))) {
-                    if (ecs_has_id(world, first_id, EcsTransitive)) {
-                        second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
-                        second->trav = first_id;
-                        term->flags |= EcsTermTransitive;
+        /* If component id is final, don't attempt component inheritance */
+        ecs_record_t *first_record = flecs_entities_get(world, first_id);
+        ecs_table_t *first_table = first_record ? first_record->table : NULL;
+        if (first_table) {
+            if (ecs_table_has_id(world, first_table, EcsFinal)) {
+                if (first_flags & EcsDown) {
+                    flecs_filter_error(ctx, "final id cannot be traversed down");
+                    return -1;
+                }
+            }
+
+            /* Add traversal flags for transitive relationships */
+            if (!(second_flags & EcsTraverseFlags) && ecs_term_id_is_set(second)) {
+                if (!((src->flags & EcsIsVariable) && (src->id == EcsAny))) {
+                    if (!((second->flags & EcsIsVariable) && (second->id == EcsAny))) {
+                        if (ecs_table_has_id(world, first_table, EcsTransitive)) {
+                            second->flags |= EcsSelf|EcsUp|EcsTraverseAll;
+                            second->trav = first_id;
+                            term->flags |= EcsTermTransitive;
+                        }
                     }
                 }
             }
-        }
 
-        if (ecs_has_id(world, first_id, EcsReflexive)) {
-            term->flags |= EcsTermReflexive;
+            if (ecs_table_has_id(world, first_table, EcsReflexive)) {
+                term->flags |= EcsTermReflexive;
+            }
         }
     }
 
@@ -47685,7 +47710,6 @@ int flecs_term_finalize(
         return -1;
     }
 
-    term->idr = flecs_query_id_record_get(world, term->id);
     return 0;
 }
 
@@ -48037,7 +48061,6 @@ int ecs_filter_finalize(
     f->field_count = field_count;
 
     if (field_count) {
-        f->sizes = ecs_os_calloc_n(ecs_size_t, field_count);
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
             ecs_id_record_t *idr = term->idr;
@@ -48124,11 +48147,13 @@ void flecs_filter_fini(
         }
 
         if (filter->terms_owned) {
+            /* Memory allocated for both terms & sizes */
             ecs_os_free(filter->terms);
+        } else {
+            ecs_os_free(filter->sizes);
         }
     }
 
-    ecs_os_free(filter->sizes);
     filter->terms = NULL;
 
     if (filter->owned) {
@@ -48242,14 +48267,18 @@ ecs_filter_t* ecs_filter_init(
         ECS_INVALID_PARAMETER, NULL);
 
     if (term_count || expr_count) {
-        /* If no storage is provided, create it */
+        /* Allocate storage for terms and sizes array */
         if (!storage_terms) {
-            f->terms = ecs_os_calloc_n(ecs_term_t, term_count + expr_count);
-            f->term_count = term_count + expr_count;
             ecs_assert(f->terms_owned == true, ECS_INTERNAL_ERROR, NULL);
+            f->term_count = term_count + expr_count;
+            ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * f->term_count;
+            ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * f->term_count;
+            f->terms = ecs_os_calloc(terms_size + sizes_size);
+            f->sizes = ECS_OFFSET(f->terms, terms_size);
         } else {
             f->terms = storage_terms;
             f->term_count = storage_count;
+            f->sizes = ecs_os_calloc_n(ecs_size_t, term_count);
         }
 
         /* Copy terms to filter storage */
@@ -48309,16 +48338,15 @@ void ecs_filter_copy(
         *dst = *src;
 
         int32_t i, term_count = src->term_count;
-        dst->terms = ecs_os_malloc_n(ecs_term_t, term_count);
+        ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * term_count;
+        ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * term_count;
+        dst->terms = ecs_os_malloc(terms_size + sizes_size);
+        dst->sizes = ECS_OFFSET(dst->terms, terms_size);
         dst->terms_owned = true;
+        ecs_os_memcpy_n(dst->sizes, src->sizes, int32_t, term_count);
 
         for (i = 0; i < term_count; i ++) {
             dst->terms[i] = ecs_term_copy(&src->terms[i]);
-        }
-
-        if (src->field_count) {
-            dst->sizes = ecs_os_memdup_n(
-                src->sizes, ecs_size_t, src->field_count);
         }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
@@ -48337,6 +48365,7 @@ void ecs_filter_move(
         *dst = *src;
         if (src->terms_owned) {
             dst->terms = src->terms;
+            dst->sizes = src->sizes;
             dst->terms_owned = true;
         } else {
             ecs_filter_copy(dst, src);

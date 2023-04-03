@@ -8,10 +8,10 @@
 
 #include "../private_api.h"
 
-// #ifdef FLECS_SANITIZE
-// #define FLECS_USE_OS_ALLOC
-// #define FLECS_MEMSET_UNINITIALIZED
-// #endif
+#ifdef FLECS_SANITIZE
+#define FLECS_USE_OS_ALLOC
+#define FLECS_MEMSET_UNINITIALIZED
+#endif
 
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;

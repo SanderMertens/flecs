@@ -2646,6 +2646,14 @@ error:
     return -1;
 }
 
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    return ecs_table_get_index(world, table, id) != -1;
+}
+
 void* ecs_table_get_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
