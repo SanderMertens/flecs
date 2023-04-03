@@ -1217,6 +1217,8 @@
                 "filter_iter_only_3_or",
                 "filter_iter_2_or",
                 "filter_iter_3_or",
+                "filter_iter_2_or_other_type",
+                "filter_iter_2_or_same_type",
                 "filter_iter_1_component",
                 "filter_iter_2_components",
                 "filter_iter_pair_id",

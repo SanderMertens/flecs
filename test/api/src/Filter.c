@@ -4414,6 +4414,88 @@ void Filter_filter_iter_only_3_or() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_2_or_other_type() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "Position || Velocity"
+    }));
+
+    test_assert(f.flags & EcsFilterNoData);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {10, 20});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+
+void Filter_filter_iter_2_or_same_type() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "Position || (Rel, Position)"
+    }));
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set_pair_second(world, 0, Rel, Position, {10, 20});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(sizeof(Position), ecs_field_size(&it, 1));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_uint(p->x, 10);
+        test_uint(p->y, 20);
+    }
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ecs_id(Position)), ecs_field_id(&it, 1));
+    test_uint(sizeof(Position), ecs_field_size(&it, 1));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_uint(p->x, 10);
+        test_uint(p->y, 20);
+    }
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_2_or() {
     ecs_world_t *world = ecs_mini();
 

@@ -14801,10 +14801,10 @@ void ecs_map_copy(
  */
 
 
-#ifdef FLECS_SANITIZE
-#define FLECS_USE_OS_ALLOC
-#define FLECS_MEMSET_UNINITIALIZED
-#endif
+// #ifdef FLECS_SANITIZE
+// #define FLECS_USE_OS_ALLOC
+// #define FLECS_MEMSET_UNINITIALIZED
+// #endif
 
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
@@ -47964,6 +47964,44 @@ void ecs_term_fini(
     term->name = NULL;
 }
 
+static
+ecs_term_t* flecs_filter_or_other_type(
+    ecs_filter_t *f,
+    int32_t t)
+{
+    ecs_term_t *term = &f->terms[t];
+    ecs_term_t *first = NULL;
+    while (t--) {
+        if (f->terms[t].oper != EcsOr) {
+            break;
+        }
+        first = &f->terms[t];
+    }
+
+    if (first) {
+        ecs_world_t *world = f->world;
+        const ecs_type_info_t *first_type;
+        if (first->idr) {
+            first_type = first->idr->type_info;
+        } else {
+            first_type = ecs_get_type_info(world, first->id);
+        }
+        const ecs_type_info_t *term_type;
+        if (term->idr) {
+            term_type = term->idr->type_info;
+        } else {
+            term_type = ecs_get_type_info(world, term->id);
+        }
+
+        if (first_type == term_type) {
+            return NULL;
+        }
+        return first;
+    } else {
+        return NULL;
+    }
+}
+
 int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
@@ -48000,7 +48038,13 @@ int ecs_filter_finalize(
         }
 
         if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
-            filter_terms ++;
+            ecs_term_t *first = flecs_filter_or_other_type(f, i);
+            if (first) {
+                filter_terms ++;
+                if (first == &term[-1]) {
+                    filter_terms ++;
+                }
+            }
         }
 
         term->field_index = field_count - 1;
@@ -48081,8 +48125,10 @@ int ecs_filter_finalize(
             int32_t field = term->field_index;
 
             if (term->oper == EcsOr || (i && (term[-1].oper == EcsOr))) {
-                f->sizes[field] = 0;
-                continue;
+                if (flecs_filter_or_other_type(f, i)) {
+                    f->sizes[field] = 0;
+                    continue;
+                }
             }
 
             if (idr) {
@@ -48219,6 +48265,7 @@ ecs_filter_t* ecs_filter_init(
     ECS_BIT_COND(f->flags, EcsFilterIsInstanced, desc->instanced);
     ECS_BIT_SET(f->flags, EcsFilterMatchAnything);
     f->flags |= desc->flags;
+    f->world = world;
 
     /* If terms_buffer was not set, count number of initialized terms in
      * static desc::terms array */
@@ -48325,9 +48372,7 @@ ecs_filter_t* ecs_filter_init(
 
     f->variable_names[0] = NULL;
     f->iterable.init = flecs_filter_iter_init;
-
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
-    f->world = world;
     f->entity = entity;
 
     if (entity && f->owned) {
@@ -52478,7 +52523,10 @@ void flecs_query_sync_match_monitor(
         }
                 
         flecs_query_get_dirty_state(query, match, t, &cur);
-        ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+        if (cur.column < 0) {
+            continue;
+        }
+
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
     }
 

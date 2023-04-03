@@ -1085,6 +1085,44 @@ void ecs_term_fini(
     term->name = NULL;
 }
 
+static
+ecs_term_t* flecs_filter_or_other_type(
+    ecs_filter_t *f,
+    int32_t t)
+{
+    ecs_term_t *term = &f->terms[t];
+    ecs_term_t *first = NULL;
+    while (t--) {
+        if (f->terms[t].oper != EcsOr) {
+            break;
+        }
+        first = &f->terms[t];
+    }
+
+    if (first) {
+        ecs_world_t *world = f->world;
+        const ecs_type_info_t *first_type;
+        if (first->idr) {
+            first_type = first->idr->type_info;
+        } else {
+            first_type = ecs_get_type_info(world, first->id);
+        }
+        const ecs_type_info_t *term_type;
+        if (term->idr) {
+            term_type = term->idr->type_info;
+        } else {
+            term_type = ecs_get_type_info(world, term->id);
+        }
+
+        if (first_type == term_type) {
+            return NULL;
+        }
+        return first;
+    } else {
+        return NULL;
+    }
+}
+
 int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *f)
@@ -1121,7 +1159,13 @@ int ecs_filter_finalize(
         }
 
         if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
-            filter_terms ++;
+            ecs_term_t *first = flecs_filter_or_other_type(f, i);
+            if (first) {
+                filter_terms ++;
+                if (first == &term[-1]) {
+                    filter_terms ++;
+                }
+            }
         }
 
         term->field_index = field_count - 1;
@@ -1202,8 +1246,10 @@ int ecs_filter_finalize(
             int32_t field = term->field_index;
 
             if (term->oper == EcsOr || (i && (term[-1].oper == EcsOr))) {
-                f->sizes[field] = 0;
-                continue;
+                if (flecs_filter_or_other_type(f, i)) {
+                    f->sizes[field] = 0;
+                    continue;
+                }
             }
 
             if (idr) {
