@@ -1297,6 +1297,7 @@ void Filter_set_this_to_isa_cascade(void);
 void Filter_set_this_to_childof_cascade(void);
 void Filter_set_this_w_wildcard_2_matches(void);
 void Filter_set_this_to_entity_superset_self_has_component(void);
+void Filter_set_this_to_1_entity_in_table(void);
 void Filter_oneof(void);
 void Filter_oneof_expr(void);
 void Filter_oneof_w_mismatching_obj(void);
@@ -7516,6 +7517,10 @@ bake_test_case Filter_testcases[] = {
         Filter_set_this_to_entity_superset_self_has_component
     },
     {
+        "set_this_to_1_entity_in_table",
+        Filter_set_this_to_1_entity_in_table
+    },
+    {
         "oneof",
         Filter_oneof
     },
@@ -12477,7 +12482,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        295,
+        296,
         Filter_testcases
     },
     {

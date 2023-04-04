@@ -2794,12 +2794,18 @@ bool ecs_filter_next_instanced(
                             goto done;
                         }
 
+                        it->offset = this_var->range.offset;
+                        it->count = this_var->range.count;
+
                         /* But if it does, forward it to filter matching */
                         ecs_assert(term_iter->table == this_table,
                             ECS_INTERNAL_ERROR, NULL);
 
                     /* If This variable is not constrained, iterate as usual */
                     } else {
+                        it->offset = 0;
+                        it->count = 0;
+
                         /* Find new match, starting with the leading term */
                         if (!flecs_term_iter_next(world, term_iter, 
                             ECS_BIT_IS_SET(filter->flags, 
@@ -2924,9 +2930,10 @@ error:
     return false;
 
 yield:
-    it->offset = 0;
-    flecs_iter_populate_data(world, it, table, 0, 
-        table ? ecs_table_count(table) : 0, it->ptrs);
+    if (!it->count && table) {
+        it->count = ecs_table_count(table);
+    }
+    flecs_iter_populate_data(world, it, table, it->offset, it->count, it->ptrs);
     ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;    
 }

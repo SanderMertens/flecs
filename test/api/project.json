@@ -1356,6 +1356,7 @@
                 "set_this_to_childof_cascade",
                 "set_this_w_wildcard_2_matches",
                 "set_this_to_entity_superset_self_has_component",
+                "set_this_to_1_entity_in_table",
                 "oneof",
                 "oneof_expr",
                 "oneof_w_mismatching_obj",

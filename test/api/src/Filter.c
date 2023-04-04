@@ -4448,7 +4448,6 @@ void Filter_filter_iter_2_or_other_type() {
     ecs_fini(world);
 }
 
-
 void Filter_filter_iter_2_or_same_type() {
     ecs_world_t *world = ecs_mini();
 
@@ -11265,6 +11264,49 @@ void Filter_set_this_to_entity_superset_self_has_component() {
     ecs_fini(world);
 }
 
+void Filter_set_this_to_1_entity_in_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms[0].id = ecs_id(Position)
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+
+    {
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_filter_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_filter_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_filter_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_filter_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        test_bool(false, ecs_filter_next(&it));
+    }
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
 void Filter_oneof() {
     ecs_world_t *world = ecs_mini();
 
@@ -11561,3 +11603,4 @@ void Filter_filter_w_short_notation() {
 
     ecs_fini(world);
 }
+
