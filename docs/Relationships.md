@@ -3,7 +3,7 @@ The relationships feature makes it possible to describe entity graphs natively i
 
 Adding/removing relationships is similar to adding/removing regular components, with as difference that instead of a single component id, a relationship adds a pair of two things to an entity. In this pair, the first element represents the relationship (e.g. "Eats"), and the second element represents the relationship target (e.g. "Apples").
 
-Relationships can be used to describe many things, from hierarchies to inventory systems to trade relationships betweein players in a game. The following sections go over how to use relationships, and what features they support.
+Relationships can be used to describe many things, from hierarchies to inventory systems to trade relationships between players in a game. The following sections go over how to use relationships, and what features they support.
 
 ## Definitions
 
@@ -1078,7 +1078,7 @@ auto Manhattan = world.entity();
 auto NewYork = world.entity();
 auto USA = world.entity();
 
-ManHattan.add(LocatedIn, NewYork);
+Manhattan.add(LocatedIn, NewYork);
 NewYork.add(LocatedIn, USA);
 ```
 
@@ -1133,12 +1133,12 @@ A relationship can be marked with the `Acyclic` property to indicate that it can
 Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
 
 ### Traversable property
-Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` (upwards traversal, see query traversal flags). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
+Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` bitflag (upwards traversal, see [query traversal flags](Queries.md#traversal-flags)). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
 
 Events are propagated along the edges of traversable relationships. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Traversable`.
 
 ### Exclusive property
-The `Exclusive` property enforces that an entity can only have a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relationship with the `Exclusive` property is the builtin `ChildOf` relationship:
+The `Exclusive` property enforces that an entity can have only a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relationship with the `Exclusive` property is the builtin `ChildOf` relationship:
 
 ```c
 ecs_add_pair(world, child, EcsChildOf, parent_a);
@@ -1160,7 +1160,7 @@ flecs::entity MarriedTo = world.entity()
 ```
 
 ### Union property
-The `Union` is similar to `Exclusive` in that it enforces that an entity can only have a single instance of a relationship. The difference between `Exclusive` and `Union` is that `Union` combines different relationship targets in a single table. This reduces table fragmentation, and as a result speeds up add/remove operations. This increase in add/remove speed does come at a cost: iterating a query with union terms is more expensive than iterating a regular relationship.
+The `Union` is similar to `Exclusive` in that it enforces that an entity can have only a single instance of a relationship. The difference between `Exclusive` and `Union` is that `Union` combines different relationship targets in a single table. This reduces table fragmentation, and as a result speeds up add/remove operations. This increase in add/remove speed does come at a cost: iterating a query with union terms is more expensive than iterating a regular relationship.
 
 The API for using the `Union` property is similar to regular relationships, as this example shows:
 
@@ -1189,7 +1189,7 @@ When compared to regular relationships, union relationships have some difference
 - Removing a union relationship removes any target, even if the specified target is different
 - Filters and rules do not support union relationships
 - Union relationships cannot have data
-- Union relationship query terms can only use the `And` operator
+- Union relationship query terms can use only the `And` operator
 - Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
 
 ### Symmetric property
@@ -1248,7 +1248,7 @@ auto e = world.entity().add(Loves, Pears);
 ```
 
 ### OneOf property
-The `OneOf` property enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to either indicate that the target needs to be a child of the relationship (common for enum relationships), or of another entity.
+The `OneOf` property enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to indicate that the target needs to be either a child of the relationship (common for enum relationships), or of another entity.
 
 The following example shows how to constrain the relationship target to a child of the relationship:
 
@@ -1323,8 +1323,8 @@ The ECS storage needs to know two things in order to store components for entiti
 
 Ids represent anything that can be added to an entity. An id that is not associated with a type is called a tag. An id associated with a type is a component. For regular components, the id is a regular entity that has the builtin `Component` component. This component contains the information needed by the storage to associate the entity with a type. If an entity does not have the `Component` component, it is a tag.
 
-### Storing Relationships
-Relationships do not fundamentally change or extend the capabilities of the storage. Relationship pairs are two elements encoded into a single 64 bit id, which means that on the storage level they are treated the same way as regular component ids. What changes is the function that determines which type is associated with an id. For regular components this is simply a check on whether an entity has `Component`. To support relationships, [new rules](#relationship-components) are added to determine the type of an id.
+### Storing relationships
+Relationships do not fundamentally change or extend the capabilities of the storage. Relationship pairs are two elements encoded into a single 64-bit id, which means that on the storage level they are treated the same way as regular component ids. What changes is the function that determines which type is associated with an id. For regular components this is simply a check on whether an entity has `Component`. To support relationships, [new rules](#relationship-components) are added to determine the type of an id.
 
 Because of this, adding/removing relationships to entities has the same performance as adding/removing regular components. This becomes more obvious when looking more closely at a function that adds a relationship pair. The following example shows how the function that adds a regular component and the function that adds a pair actually map to the same functions:
 
@@ -1381,14 +1381,14 @@ The flattening operation by default removes names of the flattened entities. Thi
 
 After the flatten operation, entities for the same target are stored in contiguous slices in the new table. The new table will have a `(Target, Relationship)` pair, which contains data about the original target, and the start and number of entities in the contiguous block. This information is used by queries when iterating to ensure entities for the same target can still be iterated in bulk.
 
-Relationship flattening is an experimental feature, and some limitations apply for the current implementation. After a subtree has been flattened, the entities in that subtree can no longer be individually deleted from a target, and cannot be moved to another parent. Additionally, no components can be added/removed to entities in a flattened subtree. Relationship flattening is currently only supported for exclusive, acyclic relationships.
+Relationship flattening is an experimental feature, and some limitations apply for the current implementation. After a subtree has been flattened, the entities in that subtree can no longer be individually deleted from a target, and cannot be moved to another parent. Additionally, no components can be added/removed to entities in a flattened subtree. Relationship flattening is currently supported only for exclusive, acyclic relationships.
 
 For additional information, see the API documentation for the `ecs_flatten` operation.
 
 ### Table Creation
-When an id added to an entity is deleted, all references to that id are deleted from the storage (see [cleanup properties](#cleanup-properties)). For example, when the component `Position` is deleted, it is removed from all entities and all tables with the `Position` component are deleted. While not unique to relationships, it more common for relationships to trigger cleanup actions, as relationship pairs contain regular entities.
+When an id added to an entity is deleted, all references to that id are deleted from the storage (see [cleanup properties](#cleanup-properties)). For example, when the component `Position` is deleted it is removed from all entities, and all tables with the `Position` component are deleted. While not unique to relationships, it is more common for relationships to trigger cleanup actions, as relationship pairs contain regular entities.
 
-The opposite is also true, because relationship pairs can contain regular entities which can be created on the fly, table creation is more common than in applications that do not use relationships. While Flecs is optimized for fast table creation, creating and cleaning up tables is inherently more expensive than creating/deleting an entity. Therefore table creation is a factor to consider, especially for applications that make extensive use of relationships.
+The opposite is also true. Because relationship pairs can contain regular entities which can be created on the fly, table creation is more common than in applications that do not use relationships. While Flecs is optimized for fast table creation, creating and cleaning up tables is inherently more expensive than creating/deleting an entity. Therefore table creation is a factor to consider, especially for applications that make extensive use of relationships.
 
 ### Indexing
 To improve the speed of evaluating queries, Flecs has indices that store all tables for a given component id. Whenever a new table is created, it is registered with the indices for the ids the table has, including ids for relationship pairs.
@@ -1396,14 +1396,14 @@ To improve the speed of evaluating queries, Flecs has indices that store all tab
 While registering a table for a relationship index is not more expensive than registering a table for a regular index, a table with relationships has to also register itself with the appropriate wildcard indices for its relationships. For example, a table with relationship `(Likes, Apples)` registers itself with the `(Likes, Apples)`, `(Likes, *)`, `(*, Apples)` and `(*, *)` indices. For this reason, creating new tables with relationships has a higher overhead than a table without relationships.
 
 ### Wildcard Queries
-A wildcard query for a relationship pair, like `(Likes, *)` may return multiple results for each instance of the relationship. To find all instances of a relationship, the table index (see previous section) stores two additional pieces of information
+A wildcard query for a relationship pair, like `(Likes, *)` may return multiple results for each instance of the relationship. To find all instances of a relationship, the table index (see previous section) stores two additional pieces of information:
 
-- The `column`: at which offset in the table type does the id first occur
+- The `column`: At which offset in the table type does the id first occur
 - The `count`: How many occurrences of the id does the table have
 
-If the id is not a wildcard id, the number of occurrences will always be one. When the id is a wildcard, a table type may have multiple occurrences of a relationship. For wildcard queries in the form of `(Likes, *)` finding all occurrences is cheap, as a query can start at the `column`, and iterate the next `count` members.
+If the id is not a wildcard id, the number of occurrences will always be one. When the id is a wildcard, a table type may have multiple occurrences of a relationship. For wildcard queries in the form of `(Likes, *)`, finding all occurrences is cheap, as a query can start at the `column` and iterate the next `count` members.
 
-For wildcard queries in the form of `(*, Apples)` however, the pair ids are not stored contiguously in a table type. This means that if a table has multiple instances that match `(*, Apples)`, a query will have to perform a linear search starting from `column`. Once the query has found `count` occurrences, it can stop searching.
+For wildcard queries in the form of `(*, Apples)`, however, the pair ids are not stored contiguously in a table type. This means that if a table has multiple instances that match `(*, Apples)`, a query will have to perform a linear search starting from `column`. Once the query has found `count` occurrences, it can stop searching.
 
 The following example of a table type shows how relationships are ordered, and demonstrates why `(Likes, *)` wildcards are easier to resolve than `(*, Apples)` wildcards:
 
