@@ -4868,7 +4868,7 @@ const ecs_entity_t* ecs_bulk_init(
 
 /** Create N new entities.
  * This operation is the same as ecs_new_w_id, but creates N entities
- * instead of one and does not recycle ids.
+ * instead of one.
  * 
  * @param world The world.
  * @param id The component id to create the entities with.
