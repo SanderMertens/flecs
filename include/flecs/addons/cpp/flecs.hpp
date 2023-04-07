@@ -83,6 +83,9 @@ struct each_invoker;
 #ifdef FLECS_MONITOR
 #include "mixins/monitor/decl.hpp"
 #endif
+#ifdef FLECS_METRICS
+#include "mixins/metrics/decl.hpp"
+#endif
 #ifdef FLECS_JSON
 #include "mixins/json/decl.hpp"
 #endif
@@ -148,6 +151,9 @@ struct each_invoker;
 #endif
 #ifdef FLECS_MONITOR
 #include "mixins/monitor/impl.hpp"
+#endif
+#ifdef FLECS_METRICS
+#include "mixins/metrics/impl.hpp"
 #endif
 
 #include "impl/iter.hpp"

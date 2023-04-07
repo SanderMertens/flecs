@@ -1009,6 +1009,9 @@ struct world {
 #   ifdef FLECS_APP
 #   include "mixins/app/mixin.inl"
 #   endif
+#   ifdef FLECS_METRICS
+#   include "mixins/metrics/mixin.inl"
+#   endif
 
 public:
     void init_builtin_components();

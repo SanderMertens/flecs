@@ -262,3 +262,125 @@ void Misc_app_on_remove_on_fini() {
     ecs.app().frames(1).run();
     test_int(invoked, 1);
 }
+
+void Misc_member_gauge_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    ecs.metric("metrics::position_y")
+        .kind<flecs::metrics::Counter>()
+        .member<Position>("y");
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 20);
+            test_int(i[1].value, 30);
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_id_gauge_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.metric("metrics::has_foo")
+        .kind<flecs::metrics::Counter>()
+        .id<Tag>();
+
+    flecs::entity e1 = ecs.entity().add<Tag>();
+    flecs::entity e2 = ecs.entity().add<Tag>();
+
+    ecs.progress(1.0);
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 1);
+            test_int(i[1].value, 1);
+        });
+
+    ecs.progress(1.0);
+    test_int(count, 2);
+    count = 0;
+
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 2);
+            test_int(i[1].value, 2);
+        });
+
+    test_int(count, 2);
+}
+
+enum Color {
+    Red, Green, Blue
+};
+
+void Misc_oneof_gauge_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    struct ColorMetric {
+        double value[3];
+    };
+
+    flecs::entity m = ecs.metric("metrics::has_oneof")
+        .kind<flecs::metrics::Counter>()
+        .id<Color>(flecs::Wildcard)
+        .targets();
+
+    flecs::entity e1 = ecs.entity().add(Color::Red);
+    flecs::entity e2 = ecs.entity().add(Color::Green);
+    flecs::entity e3 = ecs.entity().add(Color::Blue);
+
+    ecs.progress(1.0);
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
+            ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Instance>()));
+            test_assert(i != nullptr);
+
+            count += it.count();
+            test_int(count, 3);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+            test_uint(s[2].entity, e3);
+
+            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+        });
+
+    test_int(count, 3);
+}

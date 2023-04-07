@@ -1154,7 +1154,10 @@
                 "app_run",
                 "app_run_target_fps",
                 "app_run_set_frames",
-                "app_on_remove_on_fini"
+                "app_on_remove_on_fini",
+                "member_gauge_metric",
+                "id_gauge_metric",
+                "oneof_gauge_metric"
             ]
         }, {
             "id": "Meta",
