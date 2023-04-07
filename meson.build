@@ -30,6 +30,7 @@ flecs_src = files(
     'src/addons/meta/serialized.c',
     'src/addons/meta/cursor.c',
     'src/addons/meta_c.c',
+    'src/addons/metrics.c',
     'src/addons/module.c',
     'src/addons/monitor.c',
     'src/addons/os_api_impl/os_api_impl.c',

@@ -1480,13 +1480,12 @@ error:
     return 0;
 }
 
-double ecs_meta_get_float(
-    const ecs_meta_cursor_t *cursor)
+static
+double flecs_meta_to_float(
+    ecs_meta_type_op_kind_t kind,
+    const void *ptr)
 {
-    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
-    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
-    switch(op->kind) {
+    switch(kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return *(ecs_i8_t*)ptr;
     case EcsOpU8:   return *(ecs_u8_t*)ptr;
@@ -1515,6 +1514,15 @@ error:
     return 0;
 }
 
+double ecs_meta_get_float(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+    return flecs_meta_to_float(op->kind, ptr);
+}
+
 const char* ecs_meta_get_string(
     const ecs_meta_cursor_t *cursor)
 {
@@ -1541,6 +1549,14 @@ ecs_entity_t ecs_meta_get_entity(
     }
 error:
     return 0;
+}
+
+double ecs_meta_ptr_to_float(
+    ecs_primitive_kind_t type_kind,
+    const void *ptr)
+{
+    ecs_meta_type_op_kind_t kind = flecs_meta_primitive_to_op_kind(type_kind);
+    return flecs_meta_to_float(kind, ptr);
 }
 
 #endif

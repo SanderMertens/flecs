@@ -2486,6 +2486,13 @@ void flecs_colorize_buf(
 bool flecs_isident(
     char ch);
 
+int32_t flecs_search_w_idr(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *id_out,
+    ecs_id_record_t *idr);
+
 int32_t flecs_search_relation_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -8252,7 +8259,10 @@ bool ecs_record_has_id(
     ecs_id_t id)
 {
     const ecs_world_t *world = ecs_get_world(stage);
-    return ecs_search(world, r->table, id, 0) != -1;
+    if (r->table) {
+        return ecs_table_has_id(world, r->table, id);
+    }
+    return false;
 }
 
 void* ecs_record_get_mut_id(
@@ -22289,6 +22299,678 @@ error:
 #endif
 
 /**
+ * @file addons/metrics.c
+ * @brief Metrics addon.
+ */
+
+
+#ifdef FLECS_METRICS
+
+/* Public components */
+ECS_COMPONENT_DECLARE(FlecsMetrics);
+ECS_COMPONENT_DECLARE(EcsMetricInstance);
+ECS_COMPONENT_DECLARE(EcsMetricSource);
+ECS_TAG_DECLARE(EcsMetricKind);
+ECS_TAG_DECLARE(EcsCounter);
+ECS_TAG_DECLARE(EcsGauge);
+
+/* Internal components */
+ECS_COMPONENT_DECLARE(EcsMetricMember);
+ECS_COMPONENT_DECLARE(EcsMetricId);
+ECS_COMPONENT_DECLARE(EcsMetricOneOf);
+ECS_COMPONENT_DECLARE(EcsMetricMemberInstance);
+ECS_COMPONENT_DECLARE(EcsMetricIdInstance);
+ECS_COMPONENT_DECLARE(EcsMetricOneOfInstance);
+
+/** Context for metric */
+typedef struct {
+    ecs_entity_t metric;              /**< Metric entity */
+    ecs_entity_t kind;                /**< Metric kind (gauge, counter) */
+} ecs_metric_ctx_t;
+
+/** Context for metric that monitors member */
+typedef struct {
+    ecs_metric_ctx_t metric;
+    ecs_primitive_kind_t type_kind;  /**< Primitive type kind of member */
+    uint16_t offset;                 /**< Offset of member in component */
+} ecs_member_metric_ctx_t;
+
+/** Context for metric that monitors whether entity has id */
+typedef struct {
+    ecs_metric_ctx_t metric;
+    ecs_id_record_t *idr;            /**< Id record for monitored component */
+} ecs_id_metric_ctx_t;
+
+/** Context for metric that monitors whether entity has pair target */
+typedef struct {
+    ecs_metric_ctx_t metric;
+    ecs_id_record_t *idr;            /**< Id record for monitored component */
+    ecs_size_t size;                 /**< Size of metric type */
+    ecs_map_t target_offset;         /**< Pair target to metric type offset */
+} ecs_oneof_metric_ctx_t;
+
+/** Stores context shared for all instances of member metric */
+typedef struct {
+    ecs_member_metric_ctx_t *ctx;
+} EcsMetricMember;
+
+/** Stores context shared for all instances of id metric */
+typedef struct {
+    ecs_id_metric_ctx_t *ctx;
+} EcsMetricId;
+
+/** Stores context shared for all instances of oneof metric */
+typedef struct {
+    ecs_oneof_metric_ctx_t *ctx;
+} EcsMetricOneOf;
+
+/** Instance of member metric */
+typedef struct {
+    ecs_ref_t ref;
+    ecs_member_metric_ctx_t *ctx;
+} EcsMetricMemberInstance;
+
+/** Instance of id metric */
+typedef struct {
+    ecs_record_t *r;
+    ecs_id_metric_ctx_t *ctx;
+} EcsMetricIdInstance;
+
+/** Instance of oneof metric */
+typedef struct {
+    ecs_record_t *r;
+    ecs_oneof_metric_ctx_t *ctx;
+} EcsMetricOneOfInstance;
+
+/** Component lifecycle */
+
+static ECS_DTOR(EcsMetricMember, ptr, {
+    ecs_os_free(ptr->ctx);
+})
+
+static ECS_MOVE(EcsMetricMember, dst, src, {
+    *dst = *src;
+    src->ctx = NULL;
+})
+
+static ECS_DTOR(EcsMetricId, ptr, {
+    ecs_os_free(ptr->ctx);
+})
+
+static ECS_MOVE(EcsMetricId, dst, src, {
+    *dst = *src;
+    src->ctx = NULL;
+})
+
+static ECS_DTOR(EcsMetricOneOf, ptr, {
+    if (ptr->ctx) {
+        ecs_map_fini(&ptr->ctx->target_offset);
+        ecs_os_free(ptr->ctx);
+    }
+})
+
+static ECS_MOVE(EcsMetricOneOf, dst, src, {
+    *dst = *src;
+    src->ctx = NULL;
+})
+
+/** Observer used for creating new instances of member metric */
+static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_member_metric_ctx_t *ctx = it->ctx;
+    ecs_id_t id = ecs_field_id(it, 1);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
+
+        EcsMetricMemberInstance *src = ecs_emplace(
+            world, m, EcsMetricMemberInstance);
+        src->ref = ecs_ref_init_id(world, e, id);
+        src->ctx = ctx;
+        ecs_modified(world, m, EcsMetricMemberInstance);
+        ecs_set(world, m, EcsMetricInstance, { 0 });
+        ecs_set(world, m, EcsMetricSource, { e });
+        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+    }
+}
+
+/** Observer used for creating new instances of id metric */
+static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_id_metric_ctx_t *ctx = it->ctx;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
+
+        EcsMetricIdInstance *src = ecs_emplace(world, m, EcsMetricIdInstance);
+        src->r = ecs_record_find(world, e);
+        src->ctx = ctx;
+        ecs_modified(world, m, EcsMetricIdInstance);
+        ecs_set(world, m, EcsMetricInstance, { 0 });
+        ecs_set(world, m, EcsMetricSource, { e });
+        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+    }
+}
+
+/** Observer used for creating new instances of oneof metric */
+static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
+    if (it->event == EcsOnRemove) {
+        return;
+    }
+
+    ecs_world_t *world = it->world;
+    ecs_oneof_metric_ctx_t *ctx = it->ctx;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
+
+        EcsMetricOneOfInstance *src = ecs_emplace(world, m, EcsMetricOneOfInstance);
+        src->r = ecs_record_find(world, e);
+        src->ctx = ctx;
+        ecs_modified(world, m, EcsMetricIdInstance);
+        ecs_add_pair(world, m, ctx->metric.metric, ecs_id(EcsMetricInstance));
+        ecs_set(world, m, EcsMetricSource, { e });
+        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+    }
+}
+
+/** Delete metric instances for entities that are no longer alive */
+static void ClearMetricInstance(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t src_e = src[i].entity;
+        if (!ecs_is_alive(world, src_e)) {
+            ecs_delete(world, it->entities[i]);
+        }
+    }
+}
+
+/** Update member metric */
+static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
+    ecs_world_t *world = it->real_world;
+    EcsMetricInstance *m = ecs_field(it, EcsMetricInstance, 1);
+    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 2);
+    ecs_ftime_t dt = it->delta_time;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_member_metric_ctx_t *ctx = mi[i].ctx;
+        ecs_ref_t *ref = &mi[i].ref;
+        const void *ptr = ecs_ref_get_id(world, ref, ref->id);
+        if (ptr) {
+            ptr = ECS_OFFSET(ptr, ctx->offset);
+            if (!counter) {
+                m[i].value = ecs_meta_ptr_to_float(ctx->type_kind, ptr);
+            } else {
+                m[i].value += 
+                    ecs_meta_ptr_to_float(ctx->type_kind, ptr) * (double)dt;
+            }
+        } else {
+            ecs_delete(it->world, it->entities[i]);
+        }
+    }
+}
+
+static void UpdateGaugeMemberInstance(ecs_iter_t *it) {
+    UpdateMemberInstance(it, false);
+}
+
+static void UpdateCounterMemberInstance(ecs_iter_t *it) {
+    UpdateMemberInstance(it, true);
+}
+
+/** Update id metric */
+static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
+    ecs_world_t *world = it->real_world;
+    EcsMetricInstance *m = ecs_field(it, EcsMetricInstance, 1);
+    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 2);
+    ecs_ftime_t dt = it->delta_time;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = mi[i].r->table;
+        if (!table) {
+            continue;
+        }
+
+        ecs_id_metric_ctx_t *ctx = mi[i].ctx;
+        ecs_id_record_t *idr = ctx->idr;
+        if (flecs_search_w_idr(world, table, idr->id, NULL, idr) != -1) {
+            if (!counter) {
+                m[i].value = 1.0;
+            } else {
+                m[i].value += 1.0 * (double)dt;
+            }
+        } else {
+            ecs_delete(it->world, it->entities[i]);
+        }
+    }
+}
+
+static void UpdateGaugeIdInstance(ecs_iter_t *it) {
+    UpdateIdInstance(it, false);
+}
+
+static void UpdateCounterIdInstance(ecs_iter_t *it) {
+    UpdateIdInstance(it, true);
+}
+
+/** Update oneof metric */
+static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
+    ecs_world_t *world = it->real_world;
+    void *m = ecs_table_get_column(it->table, it->columns[0] - 1, it->offset);
+    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
+    ecs_ftime_t dt = it->delta_time;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_oneof_metric_ctx_t *ctx = mi[i].ctx;
+        ecs_table_t *table = mi[i].r->table;
+
+        double *value = ECS_ELEM(m, ctx->size, i);
+        if (!counter) {
+            ecs_os_memset(value, 0, ctx->size);
+        }
+
+        if (!table) {
+            continue;
+        }
+
+        ecs_id_record_t *idr = ctx->idr;
+        ecs_id_t id;
+        if (flecs_search_w_idr(world, table, idr->id, &id, idr) == -1) {
+            ecs_delete(it->world, it->entities[i]);
+            continue;
+        }
+
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        uint64_t *offset = ecs_map_get(&ctx->target_offset, tgt);
+        if (!offset) {
+            ecs_err("unexpected relationship target for metric");
+            continue;
+        }
+
+        value = ECS_OFFSET(value, *offset);
+
+        if (!counter) {
+            *value = 1.0;
+        } else {
+            *value += 1.0 * (double)dt;
+        }
+    }
+}
+
+static void UpdateGaugeOneOfInstance(ecs_iter_t *it) {
+    UpdateOneOfInstance(it, false);
+}
+
+static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
+    UpdateOneOfInstance(it, true);
+}
+
+/** Initialize member metric */
+static
+int flecs_member_metric_init(
+    ecs_world_t *world,
+    ecs_entity_t metric,
+    const ecs_metric_desc_t *desc)
+{
+    const EcsMember *m = ecs_get(world, desc->member, EcsMember);
+    if (!m) {
+        char *metric_name = ecs_get_fullpath(world, metric);
+        char *member_name = ecs_get_fullpath(world, desc->member);
+        ecs_err("entity '%s' provided for metric '%s' is not a member",
+            member_name, metric_name);
+        ecs_os_free(member_name);
+        ecs_os_free(metric_name);
+        goto error;
+    }
+
+    const EcsPrimitive *p = ecs_get(world, m->type, EcsPrimitive);
+    if (!p) {
+        char *metric_name = ecs_get_fullpath(world, metric);
+        char *member_name = ecs_get_fullpath(world, desc->member);
+        ecs_err("member '%s' provided for metric '%s' must have primitive type",
+            member_name, metric_name);
+        ecs_os_free(member_name);
+        ecs_os_free(metric_name);
+        goto error;
+    }
+
+    ecs_entity_t type = ecs_get_parent(world, desc->member);
+    if (!type) {
+        char *metric_name = ecs_get_fullpath(world, metric);
+        char *member_name = ecs_get_fullpath(world, desc->member);
+        ecs_err("member '%s' provided for metric '%s' is not part of a type",
+            member_name, metric_name);
+        ecs_os_free(member_name);
+        ecs_os_free(metric_name);
+        goto error;
+    }
+
+    const EcsMetaType *mt = ecs_get(world, type, EcsMetaType);
+    if (!mt) {
+        char *metric_name = ecs_get_fullpath(world, metric);
+        char *member_name = ecs_get_fullpath(world, desc->member);
+        ecs_err("parent of member '%s' for metric '%s' is not a type",
+            member_name, metric_name);
+        ecs_os_free(member_name);
+        ecs_os_free(metric_name);
+        goto error;
+    }
+
+    if (mt->kind != EcsStructType) {
+        char *metric_name = ecs_get_fullpath(world, metric);
+        char *member_name = ecs_get_fullpath(world, desc->member);
+        ecs_err("parent of member '%s' for metric '%s' is not a struct",
+            member_name, metric_name);
+        ecs_os_free(member_name);
+        ecs_os_free(metric_name);
+        goto error;
+    }
+
+    ecs_member_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_member_metric_ctx_t);
+    ctx->metric.metric = metric;
+    ctx->metric.kind = desc->kind;
+    ctx->type_kind = p->kind;
+    ctx->offset = flecs_ito(uint16_t, m->offset);
+
+    ecs_observer(world, {
+        .entity = metric,
+        .events = { EcsOnAdd },
+        .filter.terms[0] = {
+            .id = type,
+            .src.flags = EcsSelf,
+            .inout = EcsInOutNone
+        },
+        .callback = flecs_metrics_on_member_metric,
+        .yield_existing = true,
+        .ctx = ctx
+    });
+
+    ecs_set(world, metric, EcsMetricMember, { .ctx = ctx });
+
+    return 0;
+error:
+    return -1;
+}
+
+/** Update id metric */
+static
+int flecs_id_metric_init(
+    ecs_world_t *world,
+    ecs_entity_t metric,
+    const ecs_metric_desc_t *desc)
+{
+    ecs_id_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_id_metric_ctx_t);
+    ctx->metric.metric = metric;
+    ctx->metric.kind = desc->kind;
+    ctx->idr = flecs_id_record_ensure(world, desc->id);
+    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_observer(world, {
+        .entity = metric,
+        .events = { EcsOnAdd },
+        .filter.terms[0] = {
+            .id = desc->id,
+            .src.flags = EcsSelf,
+            .inout = EcsInOutNone
+        },
+        .callback = flecs_metrics_on_id_metric,
+        .yield_existing = true,
+        .ctx = ctx
+    });
+
+    ecs_set(world, metric, EcsMetricId, { .ctx = ctx });
+
+    return 0;
+error:
+    return -1;
+}
+
+/** Update oneof metric */
+static
+int flecs_oneof_metric_init(
+    ecs_world_t *world,
+    ecs_entity_t metric,
+    ecs_entity_t scope,
+    const ecs_metric_desc_t *desc)
+{
+    ecs_oneof_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_oneof_metric_ctx_t);
+    ctx->metric.metric = metric;
+    ctx->metric.kind = desc->kind;
+    ctx->idr = flecs_id_record_ensure(world, desc->id);
+    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_map_init(&ctx->target_offset, NULL);
+
+    /* Add member for each child of oneof to metric, so it can be used as metric
+     * instance type that holds values for all targets */
+    ecs_iter_t it = ecs_children(world, scope);
+    uint64_t offset = 0;
+    while (ecs_children_next(&it)) {
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t tgt = it.entities[i];
+            const char *name = ecs_get_name(world, tgt);
+            if (!name) {
+                /* Member must have name */
+                continue;
+            }
+
+            ecs_entity_t mbr = ecs_entity(world, {
+                .name = name,
+                .add = { ecs_childof(metric) }
+            });
+
+            ecs_set(world, mbr, EcsMember, {
+                .type = ecs_id(ecs_f64_t),
+                .unit = EcsSeconds
+            });
+
+            /* Truncate upper 32 bits of target so we can lookup the offset
+             * with the id we get from the pair */
+            ecs_map_ensure(&ctx->target_offset, (uint32_t)tgt)[0] = offset;
+
+            offset += sizeof(double);
+        }
+    }
+
+    ctx->size = flecs_uto(ecs_size_t, offset);
+
+    ecs_observer(world, {
+        .entity = metric,
+        .events = { EcsMonitor },
+        .filter.terms[0] = {
+            .id = desc->id,
+            .src.flags = EcsSelf,
+            .inout = EcsInOutNone
+        },
+        .callback = flecs_metrics_on_oneof_metric,
+        .yield_existing = true,
+        .ctx = ctx
+    });
+
+    ecs_set(world, metric, EcsMetricOneOf, { .ctx = ctx });
+
+    return 0;
+error:
+    return -1;
+}
+
+ecs_entity_t ecs_metric_init(
+    ecs_world_t *world,
+    const ecs_metric_desc_t *desc)
+{
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
+
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        result = ecs_new_id(world);
+    }
+
+    if (desc->kind != EcsCounter && desc->kind != EcsGauge) {
+        ecs_err("invalid metric kind");
+        goto error;
+    }
+
+    if (desc->member) {
+        if (desc->id) {
+            ecs_err("cannot specify both member and id for metric");
+            goto error;
+        }
+        if (flecs_member_metric_init(world, result, desc)) {
+            goto error;
+        }
+    } else if (desc->id) {
+        if (desc->id_targets) {
+            if (!ecs_id_is_pair(desc->id)) {
+                ecs_err("cannot specify id_targets for id that is not a pair");
+                goto error;
+            }
+            if (ECS_PAIR_FIRST(desc->id) == EcsWildcard) {
+                ecs_err("first element of pair cannot be wildcard with "
+                    " id_targets enabled");
+                goto error;
+            }
+            if (ECS_PAIR_SECOND(desc->id) != EcsWildcard) {
+                ecs_err("second element of pair must be wildcard with "
+                    " id_targets enabled");
+                goto error;
+            }
+
+            ecs_entity_t first = ecs_pair_first(world, desc->id);
+            ecs_entity_t scope = flecs_get_oneof(world, first);
+            if (!scope) {
+                ecs_err("first element of pair must have OneOf with "
+                    " id_targets enabled");
+                goto error;
+            }
+
+            if (flecs_oneof_metric_init(world, result, scope, desc)) {
+                goto error;
+            }
+        } else {
+            if (flecs_id_metric_init(world, result, desc)) {
+                goto error;
+            }
+        }
+    } else {
+        ecs_err("missing source specified for metric");
+        goto error;
+    }
+
+    return result;
+error:
+    if (result && result != desc->entity) {
+        ecs_delete(world, result);
+    }
+    return 0;
+}
+
+void FlecsMetricsImport(ecs_world_t *world) {
+    ECS_MODULE_DEFINE(world, FlecsMetrics);
+
+    ECS_IMPORT(world, FlecsMeta);
+    ECS_IMPORT(world, FlecsUnits);
+
+    ecs_set_name_prefix(world, "EcsMetric");
+    ECS_TAG_DEFINE(world, EcsMetricKind);
+    ECS_COMPONENT_DEFINE(world, EcsMetricInstance);
+    ECS_COMPONENT_DEFINE(world, EcsMetricSource);
+    ECS_COMPONENT_DEFINE(world, EcsMetricMemberInstance);
+    ECS_COMPONENT_DEFINE(world, EcsMetricIdInstance);
+    ECS_COMPONENT_DEFINE(world, EcsMetricOneOfInstance);
+    ECS_COMPONENT_DEFINE(world, EcsMetricMember);
+    ECS_COMPONENT_DEFINE(world, EcsMetricId);
+    ECS_COMPONENT_DEFINE(world, EcsMetricOneOf);
+
+    ecs_set_name_prefix(world, "Ecs");
+    ecs_entity_t old_scope = ecs_set_scope(world, EcsMetricKind);
+    ECS_TAG_DEFINE(world, EcsGauge);
+    ECS_TAG_DEFINE(world, EcsCounter);
+    ecs_set_scope(world, old_scope);
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsMetricInstance),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_f64_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsMetricSource),
+        .members = {
+            { .name = "entity", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_set_hooks(world, EcsMetricMember, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsMetricMember),
+        .move = ecs_move(EcsMetricMember)
+    });
+
+    ecs_set_hooks(world, EcsMetricId, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsMetricId),
+        .move = ecs_move(EcsMetricId)
+    });
+
+    ecs_set_hooks(world, EcsMetricOneOf, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsMetricOneOf),
+        .move = ecs_move(EcsMetricOneOf)
+    });
+
+    ecs_add_id(world, EcsMetricKind, EcsOneOf);
+
+    ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,
+        [in] Source);
+
+    ECS_SYSTEM(world, UpdateGaugeMemberInstance, EcsPreStore, 
+        [out]  Instance, 
+        [in]   MemberInstance,
+        [none] (Kind, Gauge));
+
+    ECS_SYSTEM(world, UpdateCounterMemberInstance, EcsPreStore, 
+        [out]  Instance, 
+        [in]   MemberInstance,
+        [none] (Kind, Counter));
+
+    ECS_SYSTEM(world, UpdateGaugeIdInstance, EcsPreStore, 
+        [out]  Instance, 
+        [in]   IdInstance,
+        [none] (Kind, Gauge));
+
+    ECS_SYSTEM(world, UpdateCounterIdInstance, EcsPreStore, 
+        [inout] Instance, 
+        [in]    IdInstance,
+        [none]  (Kind, Counter));
+
+    ECS_SYSTEM(world, UpdateGaugeOneOfInstance, EcsPreStore, 
+        [none] (_, Instance), 
+        [in]   OneOfInstance,
+        [none] (Kind, Gauge));
+
+    ECS_SYSTEM(world, UpdateCounterOneOfInstance, EcsPreStore, 
+        [none] (_, Instance), 
+        [in]   OneOfInstance,
+        [none] (Kind, Counter));
+}
+
+#endif
+
+/**
  * @file meta/api.c
  * @brief API for creating entities with reflection data.
  */
@@ -22310,6 +22992,8 @@ void ecs_meta_type_serialized_init(
 void ecs_meta_dtor_serialized(
     EcsMetaTypeSerialized *ptr);
 
+ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(
+    ecs_primitive_kind_t kind);
 
 bool flecs_unit_validate(
     ecs_world_t *world,
@@ -22619,7 +23303,6 @@ int flecs_meta_serialize_type(
     ecs_size_t offset,
     ecs_vec_t *ops);
 
-static
 ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(ecs_primitive_kind_t kind) {
     return EcsOpPrimitive + kind;
 }
@@ -25747,13 +26430,12 @@ error:
     return 0;
 }
 
-double ecs_meta_get_float(
-    const ecs_meta_cursor_t *cursor)
+static
+double flecs_meta_to_float(
+    ecs_meta_type_op_kind_t kind,
+    const void *ptr)
 {
-    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
-    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
-    switch(op->kind) {
+    switch(kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
     case EcsOpI8:   return *(ecs_i8_t*)ptr;
     case EcsOpU8:   return *(ecs_u8_t*)ptr;
@@ -25782,6 +26464,15 @@ error:
     return 0;
 }
 
+double ecs_meta_get_float(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+    return flecs_meta_to_float(op->kind, ptr);
+}
+
 const char* ecs_meta_get_string(
     const ecs_meta_cursor_t *cursor)
 {
@@ -25808,6 +26499,14 @@ ecs_entity_t ecs_meta_get_entity(
     }
 error:
     return 0;
+}
+
+double ecs_meta_ptr_to_float(
+    ecs_primitive_kind_t type_kind,
+    const void *ptr)
+{
+    ecs_meta_type_op_kind_t kind = flecs_meta_primitive_to_op_kind(type_kind);
+    return flecs_meta_to_float(kind, ptr);
 }
 
 #endif
@@ -44161,6 +44860,9 @@ void flecs_log_addons(void) {
     #ifdef FLECS_MONITOR
         ecs_trace("FLECS_MONITOR");
     #endif
+    #ifdef FLECS_METRICS
+        ecs_trace("FLECS_METRICS");
+    #endif
     #ifdef FLECS_SYSTEM
         ecs_trace("FLECS_SYSTEM");
     #endif
@@ -50080,6 +50782,24 @@ int32_t ecs_search_relation(
             id_out, tr_out);
 
     return result;
+}
+
+int32_t flecs_search_w_idr(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *id_out,
+    ecs_id_record_t *idr)
+{
+    if (!table) return -1;
+
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+    (void)world;
+
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = type.array;
+    return flecs_type_search(table, id, idr, ids, id_out, 0);
 }
 
 int32_t ecs_search(
