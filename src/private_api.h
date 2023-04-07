@@ -314,6 +314,13 @@ void flecs_colorize_buf(
 bool flecs_isident(
     char ch);
 
+int32_t flecs_search_w_idr(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *id_out,
+    ecs_id_record_t *idr);
+
 int32_t flecs_search_relation_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,

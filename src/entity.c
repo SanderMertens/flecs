@@ -2794,7 +2794,10 @@ bool ecs_record_has_id(
     ecs_id_t id)
 {
     const ecs_world_t *world = ecs_get_world(stage);
-    return ecs_search(world, r->table, id, 0) != -1;
+    if (r->table) {
+        return ecs_table_has_id(world, r->table, id);
+    }
+    return false;
 }
 
 void* ecs_record_get_mut_id(
