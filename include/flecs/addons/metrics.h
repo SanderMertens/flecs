@@ -40,13 +40,16 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricInstance);
 /** Component with entity source of metric */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricSource);
 
-/** Parent for Counter and Gauge */
+/** Parent for metric kinds */
 FLECS_API extern ECS_TAG_DECLARE(EcsMetricKind);
 
-/** Metric that is increased by value of source */
+/** Metric that has monotonically increasing value */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounter);
 
-/** Metric that tracks current value of source */
+/** Counter metric that is auto-incremented by source value */
+FLECS_API extern ECS_TAG_DECLARE(EcsCounterIncrement);
+
+/** Metric that represents current value */
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
 typedef struct EcsMetricInstance {
@@ -73,7 +76,7 @@ typedef struct ecs_metric_desc_t {
      * setting this value to true will track individual targets. */
     bool id_targets;
 
-    /* Must be either EcsGauge or EcsCounter. */
+    /* Must be either EcsGauge, EcsCounter or EcsCounterIncrement. */
     ecs_entity_t kind;
 } ecs_metric_desc_t;
 
@@ -87,7 +90,7 @@ ecs_entity_t ecs_metric_init(
  * Example:
  *   ecs_metric(world, {
  *     .member = ecs_lookup_fullpath(world, "Position.x")
- *     .kind = EcsMetricGauge
+ *     .kind = EcsGauge
  *   });
  */
 #define ecs_metric(world, ...)\

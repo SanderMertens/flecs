@@ -22312,6 +22312,7 @@ ECS_COMPONENT_DECLARE(EcsMetricInstance);
 ECS_COMPONENT_DECLARE(EcsMetricSource);
 ECS_TAG_DECLARE(EcsMetricKind);
 ECS_TAG_DECLARE(EcsCounter);
+ECS_TAG_DECLARE(EcsCounterIncrement);
 ECS_TAG_DECLARE(EcsGauge);
 
 /* Internal components */
@@ -22473,7 +22474,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         EcsMetricOneOfInstance *src = ecs_emplace(world, m, EcsMetricOneOfInstance);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
-        ecs_modified(world, m, EcsMetricIdInstance);
+        ecs_modified(world, m, EcsMetricOneOfInstance);
         ecs_add_pair(world, m, ctx->metric.metric, ecs_id(EcsMetricInstance));
         ecs_set(world, m, EcsMetricSource, { e });
         ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
@@ -22525,6 +22526,10 @@ static void UpdateGaugeMemberInstance(ecs_iter_t *it) {
 }
 
 static void UpdateCounterMemberInstance(ecs_iter_t *it) {
+    UpdateMemberInstance(it, false);
+}
+
+static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
     UpdateMemberInstance(it, true);
 }
 
@@ -22539,6 +22544,7 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = mi[i].r->table;
         if (!table) {
+            ecs_delete(it->world, it->entities[i]);
             continue;
         }
 
@@ -22582,6 +22588,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
         }
 
         if (!table) {
+            ecs_delete(it->world, it->entities[i]);
             continue;
         }
 
@@ -22818,8 +22825,14 @@ ecs_entity_t ecs_metric_init(
         result = ecs_new_id(world);
     }
 
-    if (desc->kind != EcsCounter && desc->kind != EcsGauge) {
+    ecs_entity_t kind = desc->kind;
+    if (kind != EcsCounter && kind != EcsGauge && kind != EcsCounterIncrement) {
         ecs_err("invalid metric kind");
+        goto error;
+    }
+
+    if (kind == EcsCounterIncrement && !desc->member) {
+        ecs_err("CounterIncrement can only be used in combination with member");
         goto error;
     }
 
@@ -22896,8 +22909,9 @@ void FlecsMetricsImport(ecs_world_t *world) {
 
     ecs_set_name_prefix(world, "Ecs");
     ecs_entity_t old_scope = ecs_set_scope(world, EcsMetricKind);
-    ECS_TAG_DEFINE(world, EcsGauge);
     ECS_TAG_DEFINE(world, EcsCounter);
+    ECS_TAG_DEFINE(world, EcsCounterIncrement);
+    ECS_TAG_DEFINE(world, EcsGauge);
     ecs_set_scope(world, old_scope);
 
     ecs_struct(world, {
@@ -22946,6 +22960,11 @@ void FlecsMetricsImport(ecs_world_t *world) {
         [out]  Instance, 
         [in]   MemberInstance,
         [none] (Kind, Counter));
+
+    ECS_SYSTEM(world, UpdateCounterIncrementMemberInstance, EcsPreStore, 
+        [out]  Instance, 
+        [in]   MemberInstance,
+        [none] (Kind, CounterIncrement));
 
     ECS_SYSTEM(world, UpdateGaugeIdInstance, EcsPreStore, 
         [out]  Instance, 

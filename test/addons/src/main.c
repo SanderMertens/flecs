@@ -1331,6 +1331,30 @@ void Http_stop_start(void);
 void Rest_teardown(void);
 void Rest_get(void);
 
+// Testsuite 'Metrics'
+void Metrics_member_gauge_1_entity(void);
+void Metrics_member_gauge_2_entities(void);
+void Metrics_member_gauge_2_entities_1_existing(void);
+void Metrics_member_gauge_2_entities_update(void);
+void Metrics_member_gauge_w_remove(void);
+void Metrics_member_gauge_w_clear(void);
+void Metrics_member_gauge_w_delete(void);
+void Metrics_id_gauge_1_entity(void);
+void Metrics_id_gauge_2_entities(void);
+void Metrics_id_gauge_2_entities_1_existing(void);
+void Metrics_id_gauge_w_remove(void);
+void Metrics_id_gauge_w_clear(void);
+void Metrics_id_gauge_w_delete(void);
+void Metrics_oneof_gauge_3_entities(void);
+void Metrics_oneof_gauge_3_entities_1_existing(void);
+void Metrics_oneof_gauge_w_remove(void);
+void Metrics_oneof_gauge_w_clear(void);
+void Metrics_oneof_gauge_w_delete(void);
+void Metrics_member_counter(void);
+void Metrics_member_auto_counter(void);
+void Metrics_id_counter(void);
+void Metrics_oneof_counter(void);
+
 bake_test_case Parser_testcases[] = {
     {
         "resolve_this",
@@ -6449,6 +6473,97 @@ bake_test_case Rest_testcases[] = {
     }
 };
 
+bake_test_case Metrics_testcases[] = {
+    {
+        "member_gauge_1_entity",
+        Metrics_member_gauge_1_entity
+    },
+    {
+        "member_gauge_2_entities",
+        Metrics_member_gauge_2_entities
+    },
+    {
+        "member_gauge_2_entities_1_existing",
+        Metrics_member_gauge_2_entities_1_existing
+    },
+    {
+        "member_gauge_2_entities_update",
+        Metrics_member_gauge_2_entities_update
+    },
+    {
+        "member_gauge_w_remove",
+        Metrics_member_gauge_w_remove
+    },
+    {
+        "member_gauge_w_clear",
+        Metrics_member_gauge_w_clear
+    },
+    {
+        "member_gauge_w_delete",
+        Metrics_member_gauge_w_delete
+    },
+    {
+        "id_gauge_1_entity",
+        Metrics_id_gauge_1_entity
+    },
+    {
+        "id_gauge_2_entities",
+        Metrics_id_gauge_2_entities
+    },
+    {
+        "id_gauge_2_entities_1_existing",
+        Metrics_id_gauge_2_entities_1_existing
+    },
+    {
+        "id_gauge_w_remove",
+        Metrics_id_gauge_w_remove
+    },
+    {
+        "id_gauge_w_clear",
+        Metrics_id_gauge_w_clear
+    },
+    {
+        "id_gauge_w_delete",
+        Metrics_id_gauge_w_delete
+    },
+    {
+        "oneof_gauge_3_entities",
+        Metrics_oneof_gauge_3_entities
+    },
+    {
+        "oneof_gauge_3_entities_1_existing",
+        Metrics_oneof_gauge_3_entities_1_existing
+    },
+    {
+        "oneof_gauge_w_remove",
+        Metrics_oneof_gauge_w_remove
+    },
+    {
+        "oneof_gauge_w_clear",
+        Metrics_oneof_gauge_w_clear
+    },
+    {
+        "oneof_gauge_w_delete",
+        Metrics_oneof_gauge_w_delete
+    },
+    {
+        "member_counter",
+        Metrics_member_counter
+    },
+    {
+        "member_auto_counter",
+        Metrics_member_auto_counter
+    },
+    {
+        "id_counter",
+        Metrics_id_counter
+    },
+    {
+        "oneof_counter",
+        Metrics_oneof_counter
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Parser",
@@ -6659,9 +6774,16 @@ static bake_test_suite suites[] = {
         NULL,
         2,
         Rest_testcases
+    },
+    {
+        "Metrics",
+        NULL,
+        NULL,
+        22,
+        Metrics_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 30);
+    return bake_test_run("addons", argc, argv, suites, 31);
 }
