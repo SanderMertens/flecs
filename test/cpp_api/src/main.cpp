@@ -1101,6 +1101,9 @@ void Misc_app_run(void);
 void Misc_app_run_target_fps(void);
 void Misc_app_run_set_frames(void);
 void Misc_app_on_remove_on_fini(void);
+void Misc_member_gauge_metric(void);
+void Misc_id_gauge_metric(void);
+void Misc_oneof_gauge_metric(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5429,6 +5432,18 @@ bake_test_case Misc_testcases[] = {
     {
         "app_on_remove_on_fini",
         Misc_app_on_remove_on_fini
+    },
+    {
+        "member_gauge_metric",
+        Misc_member_gauge_metric
+    },
+    {
+        "id_gauge_metric",
+        Misc_id_gauge_metric
+    },
+    {
+        "oneof_gauge_metric",
+        Misc_oneof_gauge_metric
     }
 };
 
@@ -5922,7 +5937,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        13,
+        16,
         Misc_testcases
     },
     {

@@ -22826,6 +22826,11 @@ ecs_entity_t ecs_metric_init(
     }
 
     ecs_entity_t kind = desc->kind;
+    if (!kind) {
+        ecs_err("missing metric kind");
+        goto error;
+    }
+
     if (kind != EcsCounter && kind != EcsGauge && kind != EcsCounterIncrement) {
         ecs_err("invalid metric kind");
         goto error;
@@ -22845,19 +22850,19 @@ ecs_entity_t ecs_metric_init(
             goto error;
         }
     } else if (desc->id) {
-        if (desc->id_targets) {
+        if (desc->targets) {
             if (!ecs_id_is_pair(desc->id)) {
-                ecs_err("cannot specify id_targets for id that is not a pair");
+                ecs_err("cannot specify targets for id that is not a pair");
                 goto error;
             }
             if (ECS_PAIR_FIRST(desc->id) == EcsWildcard) {
                 ecs_err("first element of pair cannot be wildcard with "
-                    " id_targets enabled");
+                    " targets enabled");
                 goto error;
             }
             if (ECS_PAIR_SECOND(desc->id) != EcsWildcard) {
                 ecs_err("second element of pair must be wildcard with "
-                    " id_targets enabled");
+                    " targets enabled");
                 goto error;
             }
 
@@ -22865,7 +22870,7 @@ ecs_entity_t ecs_metric_init(
             ecs_entity_t scope = flecs_get_oneof(world, first);
             if (!scope) {
                 ecs_err("first element of pair must have OneOf with "
-                    " id_targets enabled");
+                    " targets enabled");
                 goto error;
             }
 
@@ -22893,6 +22898,7 @@ error:
 void FlecsMetricsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsMetrics);
 
+    ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsMeta);
     ECS_IMPORT(world, FlecsUnits);
 

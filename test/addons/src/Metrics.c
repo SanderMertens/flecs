@@ -836,7 +836,7 @@ void Metrics_oneof_gauge_3_entities() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -910,7 +910,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -982,7 +982,7 @@ void Metrics_oneof_gauge_w_remove() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1092,7 +1092,7 @@ void Metrics_oneof_gauge_w_clear() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1202,7 +1202,7 @@ void Metrics_oneof_gauge_w_delete() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1493,7 +1493,7 @@ void Metrics_oneof_counter() {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
         .id = ecs_pair(Color, EcsWildcard),
-        .id_targets = true,
+        .targets = true,
         .kind = EcsCounter
     });
     test_assert(m != 0);

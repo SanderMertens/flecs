@@ -11,7 +11,7 @@
 /**
  * @defgroup c_addons_monitor Monitor
  * @brief  * The metrics module extracts metrics from components and makes them 
- * available through a unified component interface.
+ *           available through a unified component interface.
  * 
  * \ingroup c_addons
  * @{
@@ -26,6 +26,10 @@
 
 #ifndef FLECS_UNITS
 #define FLECS_UNITS
+#endif
+
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
 #endif
 
 #ifdef __cplusplus
@@ -74,7 +78,7 @@ typedef struct ecs_metric_desc_t {
 
     /* If id is a (R, *) wildcard and relationship R has the OneOf property, the
      * setting this value to true will track individual targets. */
-    bool id_targets;
+    bool targets;
 
     /* Must be either EcsGauge, EcsCounter or EcsCounterIncrement. */
     ecs_entity_t kind;
