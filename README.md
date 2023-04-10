@@ -47,7 +47,7 @@ To learn how to use the playground, check the [Flecs Script Tutorial](https://ww
 
 ## Documentation
 - [Quickstart](https://www.flecs.dev/flecs/md_docs_Quickstart.html)
-- [FAQ](https://www.flecs.dev/flecs/md_docs_Quickstart.html)
+- [FAQ](https://www.flecs.dev/flecs/md_docs_FAQ.html)
 - [Examples](https://github.com/SanderMertens/flecs/tree/master/examples)
 - [All Documentation](https://www.flecs.dev/flecs/md_docs_Docs.html)
 
