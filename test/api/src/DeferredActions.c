@@ -3373,3 +3373,39 @@ void DeferredActions_defer_2_sets_w_observer_other_component() {
 
     ecs_fini(world);
 }
+
+static int remove_tag_invoked = 0;
+static void remove_tag(ecs_iter_t *it) {
+    remove_tag_invoked ++;
+}
+
+void DeferredActions_on_remove_after_deferred_clear_and_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_observer(world, {
+        .filter.terms[0].id = TagA,
+        .events = { EcsOnRemove },
+        .callback = remove_tag
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_defer_begin(world);
+    ecs_clear(world, e);
+    ecs_add(world, e, TagC);
+    test_int(remove_tag_invoked, 0);
+    ecs_defer_end(world);
+    test_int(remove_tag_invoked, 1);
+
+    test_assert(!ecs_has(world, e, TagA));
+    test_assert(!ecs_has(world, e, TagB));
+    test_assert(ecs_has(world, e, TagC));
+
+    ecs_fini(world);
+}
