@@ -20,21 +20,19 @@ struct Character { bool alive; };
 struct Health { int amount; };
 
 // Removes all entities who are children of
-// the current scene root and returns it.
+// the current scene root.
 // (NOTE: should use defer_begin() / defer_end())
-flecs::entity reset_scene(flecs::world& ecs) {
-    auto scene = ecs.component<SceneRoot>();
-    scene.children([](flecs::entity child) {
-            child.destruct();
-        });
-    return scene;
+void reset_scene(flecs::world& ecs) {
+    ecs.delete_with(flecs::ChildOf, ecs.entity<SceneRoot>());
 }
 
 void menu_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `MenuScene`\n\n";
 
     auto ecs = it.world();
-    auto scene = reset_scene(ecs);
+    auto scene = ecs.component<SceneRoot>();
+    
+    reset_scene(ecs);
 
     // Creates a start menu button
     // when we enter the menu scene.
@@ -50,7 +48,9 @@ void game_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `GameScene`\n\n";
 
     auto ecs = it.world();
-    auto scene = reset_scene(ecs);
+    auto scene = ecs.component<SceneRoot>();
+    
+    reset_scene(ecs);
 
     // Creates a player character
     // when we enter the game scene.
