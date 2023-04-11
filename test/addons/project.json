@@ -448,7 +448,8 @@
                 "assign_singleton_tag_w_scope",
                 "assign_singleton_2_tags_w_scope",
                 "assign_singleton_component_w_scope",
-                "assign_singleton_2_components_w_scope"
+                "assign_singleton_2_components_w_scope",
+                "with_pair_in_scope"
             ]
         }, {
             "id": "Doc",

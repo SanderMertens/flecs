@@ -7288,3 +7288,36 @@ void Plecs_assign_singleton_2_components_w_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_with_pair_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "Tgt\n"
+    LINE "Rel\n"
+    LINE "\n"
+    LINE "Parent {\n"
+    LINE "  with (Rel, Tgt) {\n"
+    LINE "    Child\n"
+    LINE "  }\n"
+    LINE "}\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
+    ecs_entity_t tgt = ecs_lookup_fullpath(world, "Tgt");
+
+    test_assert(!ecs_lookup_fullpath(world, "Parent.Rel"));
+    test_assert(!ecs_lookup_fullpath(world, "Parent.Tgt"));
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(rel != 0);
+    test_assert(tgt != 0);
+
+    test_assert(ecs_has_pair(world, child, rel, tgt));
+
+    ecs_fini(world);
+}

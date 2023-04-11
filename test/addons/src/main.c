@@ -442,6 +442,7 @@ void Plecs_assign_singleton_tag_w_scope(void);
 void Plecs_assign_singleton_2_tags_w_scope(void);
 void Plecs_assign_singleton_component_w_scope(void);
 void Plecs_assign_singleton_2_components_w_scope(void);
+void Plecs_with_pair_in_scope(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -3082,6 +3083,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_singleton_2_components_w_scope",
         Plecs_assign_singleton_2_components_w_scope
+    },
+    {
+        "with_pair_in_scope",
+        Plecs_with_pair_in_scope
     }
 };
 
@@ -6576,7 +6581,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        216,
+        217,
         Plecs_testcases
     },
     {

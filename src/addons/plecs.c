@@ -666,7 +666,7 @@ int plecs_create_term(
 
     if (ecs_term_id_is_set(&term->second)) {
         obj = plecs_ensure_entity(world, state, obj_name, pred,
-            state->assign_stmt == false);
+            !state->assign_stmt && !state->with_stmt);
         if (!obj) {
             return -1;
         }
