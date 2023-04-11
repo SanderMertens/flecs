@@ -1157,7 +1157,8 @@
                 "app_on_remove_on_fini",
                 "member_gauge_metric",
                 "id_gauge_metric",
-                "oneof_gauge_metric"
+                "oneof_gauge_metric",
+                "component_mixin_member_metric"
             ]
         }, {
             "id": "Meta",

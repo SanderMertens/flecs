@@ -1104,6 +1104,7 @@ void Misc_app_on_remove_on_fini(void);
 void Misc_member_gauge_metric(void);
 void Misc_id_gauge_metric(void);
 void Misc_oneof_gauge_metric(void);
+void Misc_component_mixin_member_metric(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5444,6 +5445,10 @@ bake_test_case Misc_testcases[] = {
     {
         "oneof_gauge_metric",
         Misc_oneof_gauge_metric
+    },
+    {
+        "component_mixin_member_metric",
+        Misc_component_mixin_member_metric
     }
 };
 
@@ -5937,7 +5942,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        16,
+        17,
         Misc_testcases
     },
     {

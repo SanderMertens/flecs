@@ -334,6 +334,9 @@ struct untyped_component : entity {
 #   ifdef FLECS_META
 #   include "mixins/meta/untyped_component.inl"
 #   endif
+#   ifdef FLECS_METRICS
+#   include "mixins/metrics/untyped_component.inl"
+#   endif
 };
 
 /** Component class.
