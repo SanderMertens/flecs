@@ -1104,7 +1104,11 @@ void Misc_app_on_remove_on_fini(void);
 void Misc_member_gauge_metric(void);
 void Misc_id_gauge_metric(void);
 void Misc_oneof_gauge_metric(void);
+void Misc_id_counter_metric(void);
+void Misc_oneof_counter_metric(void);
 void Misc_component_mixin_member_metric(void);
+void Misc_component_mixin_member_metric_custom_parent_string(void);
+void Misc_component_mixin_member_metric_custom_parent_entity(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5447,8 +5451,24 @@ bake_test_case Misc_testcases[] = {
         Misc_oneof_gauge_metric
     },
     {
+        "id_counter_metric",
+        Misc_id_counter_metric
+    },
+    {
+        "oneof_counter_metric",
+        Misc_oneof_counter_metric
+    },
+    {
         "component_mixin_member_metric",
         Misc_component_mixin_member_metric
+    },
+    {
+        "component_mixin_member_metric_custom_parent_string",
+        Misc_component_mixin_member_metric_custom_parent_string
+    },
+    {
+        "component_mixin_member_metric_custom_parent_entity",
+        Misc_component_mixin_member_metric_custom_parent_entity
     }
 };
 
@@ -5942,7 +5962,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        17,
+        21,
         Misc_testcases
     },
     {

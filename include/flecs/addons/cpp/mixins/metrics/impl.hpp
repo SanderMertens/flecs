@@ -56,7 +56,7 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric() {
+inline untyped_component& untyped_component::metric(flecs::entity_t parent) {
     flecs::world w(m_world);
     flecs::entity e = w.entity(m_id);
     const flecs::Struct *s = e.get<flecs::Struct>();
@@ -77,9 +77,17 @@ inline untyped_component& untyped_component::metric() {
         return *this;
     }
 
-    w.metric(m->name).member(me).kind<Kind>();
+    flecs::entity metric_entity = w.scope(parent).entity(m->name);
+    w.metric(metric_entity).member(me).kind<Kind>();
 
     return *this;
+}
+
+template <typename Kind>
+inline untyped_component& untyped_component::metric(const char *parent) {
+    flecs::world w(m_world);
+    flecs::entity p = w.lookup(parent);
+    return metric<Kind>(p);
 }
 
 }

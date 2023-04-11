@@ -273,7 +273,7 @@ void Misc_member_gauge_metric() {
         .member<float>("y");
 
     ecs.metric("metrics::position_y")
-        .kind<flecs::metrics::Counter>()
+        .kind<flecs::metrics::Gauge>()
         .member<Position>("y");
 
     flecs::entity e1 = ecs.entity().set<Position>({10, 20});
@@ -298,6 +298,113 @@ void Misc_member_gauge_metric() {
 }
 
 void Misc_id_gauge_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.metric("metrics::has_foo")
+        .kind<flecs::metrics::Gauge>()
+        .id<Tag>();
+
+    flecs::entity e1 = ecs.entity().add<Tag>();
+    flecs::entity e2 = ecs.entity().add<Tag>();
+
+    ecs.progress(1.0);
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 1);
+            test_int(i[1].value, 1);
+        });
+
+    ecs.progress(1.0);
+    test_int(count, 2);
+    count = 0;
+
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 1);
+            test_int(i[1].value, 1);
+        });
+
+    test_int(count, 2);
+}
+
+enum Color {
+    Red, Green, Blue
+};
+
+void Misc_oneof_gauge_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    struct ColorMetric {
+        double value[3];
+    };
+
+    flecs::entity m = ecs.metric("metrics::has_oneof")
+        .kind<flecs::metrics::Gauge>()
+        .id<Color>(flecs::Wildcard)
+        .targets();
+
+    flecs::entity e1 = ecs.entity().add(Color::Red);
+    flecs::entity e2 = ecs.entity().add(Color::Green);
+    flecs::entity e3 = ecs.entity().add(Color::Blue);
+
+    ecs.progress(1.0);
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
+            ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Instance>()));
+            test_assert(i != nullptr);
+
+            count += it.count();
+            test_int(count, 3);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+            test_uint(s[2].entity, e3);
+
+            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+        });
+
+    test_int(count, 3);
+    count = 0;
+
+    ecs.filter<flecs::metrics::Source>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
+            ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Instance>()));
+            test_assert(i != nullptr);
+
+            count += it.count();
+            test_int(count, 3);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+            test_uint(s[2].entity, e3);
+
+            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+        });
+
+    test_int(count, 3);
+}
+
+void Misc_id_counter_metric() {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -341,11 +448,7 @@ void Misc_id_gauge_metric() {
     test_int(count, 2);
 }
 
-enum Color {
-    Red, Green, Blue
-};
-
-void Misc_oneof_gauge_metric() {
+void Misc_oneof_counter_metric() {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -383,6 +486,26 @@ void Misc_oneof_gauge_metric() {
         });
 
     test_int(count, 3);
+    ecs.progress(1.0);
+    count = 0;
+
+    ecs.filter<flecs::metrics::Source>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
+            ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Instance>()));
+            test_assert(i != nullptr);
+
+            count += it.count();
+            test_int(count, 3);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+            test_uint(s[2].entity, e3);
+
+            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":2}");
+            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":2, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":2, \"Green\":0, \"Red\":0}");
+        });
+
+    test_int(count, 3);
 }
 
 void Misc_component_mixin_member_metric() {
@@ -410,6 +533,80 @@ void Misc_component_mixin_member_metric() {
 
             test_int(i[0].value, 20);
             test_int(i[1].value, 30);
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_component_mixin_member_metric_custom_parent_string() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity parent = ecs.entity("parent");
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y").metric<flecs::metrics::Gauge>("parent");
+
+    test_assert(parent.lookup("y") != 0);
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 20);
+            test_int(i[1].value, 30);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_component_mixin_member_metric_custom_parent_entity() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity parent = ecs.entity();
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y").metric<flecs::metrics::Gauge>(parent);
+
+    test_assert(parent.lookup("y") != 0);
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 20);
+            test_int(i[1].value, 30);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
         });
 
     test_int(count, 2);

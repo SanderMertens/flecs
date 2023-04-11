@@ -1158,7 +1158,11 @@
                 "member_gauge_metric",
                 "id_gauge_metric",
                 "oneof_gauge_metric",
-                "component_mixin_member_metric"
+                "id_counter_metric",
+                "oneof_counter_metric",
+                "component_mixin_member_metric",
+                "component_mixin_member_metric_custom_parent_string",
+                "component_mixin_member_metric_custom_parent_entity"
             ]
         }, {
             "id": "Meta",
