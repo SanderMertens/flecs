@@ -30,7 +30,7 @@ flecs::entity reset_scene(flecs::world& ecs) {
     return scene;
 }
 
-void menu_scene(flecs::iter& it, size_t index, ActiveScene) {
+void menu_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `MenuScene`\n\n";
 
     auto ecs = it.world();
@@ -40,13 +40,13 @@ void menu_scene(flecs::iter& it, size_t index, ActiveScene) {
     // when we enter the menu scene.
     ecs.entity("Start Button")
         .set(Button{ "Play the Game!" })
-        .set(Position{ .x = 50, .y = 50 })
+        .set(Position{ 50, 50 })
         .child_of(scene);
 
     ecs.set_pipeline(ecs.get<MenuScene>()->pip);
 }
 
-void game_scene(flecs::iter& it, size_t index, ActiveScene) {
+void game_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `GameScene`\n\n";
 
     auto ecs = it.world();
@@ -56,8 +56,8 @@ void game_scene(flecs::iter& it, size_t index, ActiveScene) {
     // when we enter the game scene.
     ecs.entity("Player")
         .set(Character{ })
-        .set(Health{ .amount = 2 })
-        .set(Position{ .x = 0, .y = 0 })
+        .set(Health{ 2 })
+        .set(Position{ 0, 0 })
         .child_of(scene);
 
     ecs.set_pipeline(ecs.get<GameScene>()->pip);
@@ -86,8 +86,8 @@ void init_scenes(flecs::world& ecs) {
 
     // Set pipeline entities on the scenes
     // to easily find them later with get().
-    ecs.set<MenuScene>({ .pip = menu });
-    ecs.set<GameScene>({ .pip = game });
+    ecs.set<MenuScene>({ menu });
+    ecs.set<GameScene>({ game });
 
     // Observer to call scene change logic for
     // MenuScene when added to the ActiveScene.
