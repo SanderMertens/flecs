@@ -86,7 +86,7 @@ inline untyped_component& untyped_component::metric(flecs::entity_t parent) {
 template <typename Kind>
 inline untyped_component& untyped_component::metric(const char *parent) {
     flecs::world w(m_world);
-    flecs::entity p = w.lookup(parent);
+    flecs::entity p = w.entity(parent);
     return metric<Kind>(p);
 }
 

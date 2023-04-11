@@ -611,3 +611,41 @@ void Misc_component_mixin_member_metric_custom_parent_entity() {
 
     test_int(count, 2);
 }
+
+void Misc_component_mixin_member_metric_custom_nonexisting_parent_string() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y").metric<flecs::metrics::Gauge>("parent");
+
+    test_assert(ecs.lookup("parent") != 0);
+
+    flecs::entity parent = ecs.entity("parent");
+    test_assert(parent.lookup("y") != 0);
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Instance>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Instance *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 20);
+            test_int(i[1].value, 30);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
+        });
+
+    test_int(count, 2);
+}
