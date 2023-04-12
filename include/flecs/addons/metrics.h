@@ -82,6 +82,9 @@ typedef struct ecs_metric_desc_t {
 
     /* Must be either EcsGauge, EcsCounter or EcsCounterIncrement. */
     ecs_entity_t kind;
+
+    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    const char *brief;
 } ecs_metric_desc_t;
 
 FLECS_API

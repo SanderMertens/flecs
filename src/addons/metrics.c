@@ -542,6 +542,14 @@ ecs_entity_t ecs_metric_init(
         goto error;
     }
 
+    if (desc->brief) {
+#ifdef FLECS_DOC
+        ecs_doc_set_brief(world, result, desc->brief);
+#else
+        ecs_warn("FLECS_DOC is not enabled, ignoring metrics brief");
+#endif        
+    }
+
     if (desc->member) {
         if (desc->id) {
             ecs_err("cannot specify both member and id for metric");

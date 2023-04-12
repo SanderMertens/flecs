@@ -1419,7 +1419,8 @@
                 "member_counter",
                 "member_auto_counter",
                 "id_counter",
-                "oneof_counter"
+                "oneof_counter",
+                "metric_description"
             ]
         }]
     }

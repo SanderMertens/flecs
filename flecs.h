@@ -11337,6 +11337,9 @@ typedef struct ecs_metric_desc_t {
 
     /* Must be either EcsGauge, EcsCounter or EcsCounterIncrement. */
     ecs_entity_t kind;
+
+    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    const char *brief;
 } ecs_metric_desc_t;
 
 FLECS_API
@@ -17331,6 +17334,11 @@ struct metric_builder {
     template <typename Kind>
     metric_builder& kind() {
         return kind(_::cpp_type<Kind>::id(m_world));
+    }
+
+    metric_builder& brief(const char *b) {
+        m_desc.brief = b;
+        return *this;
     }
 
     operator flecs::entity();
@@ -24066,24 +24074,13 @@ untyped_component& bit(const char *name, uint32_t value) {
  * 
  * @tparam Kind Metric kind (Counter, CounterIncrement or Gauge).
  * @param parent Parent entity of the metric.
+ * @param brief Description for metric.
  * 
  * \ingroup cpp_addons_metrics
  * \memberof flecs::world
  */
 template <typename Kind>
-untyped_component& metric(flecs::entity_t parent = 0);
-
-/** Register member as metric.
- * 
- * @tparam Kind Metric kind (Counter, CounterIncrement or Gauge).
- * @param parent Parent entity of the metric.
- * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
- */
-template <typename Kind>
-untyped_component& metric(const char *parent);
-
+untyped_component& metric(flecs::entity_t parent = 0, const char *brief = nullptr);
 
 /** @} */
 
@@ -28564,7 +28561,7 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent) {
+inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief) {
     flecs::world w(m_world);
     flecs::entity e = w.entity(m_id);
     const flecs::Struct *s = e.get<flecs::Struct>();
@@ -28585,17 +28582,13 @@ inline untyped_component& untyped_component::metric(flecs::entity_t parent) {
         return *this;
     }
 
-    flecs::entity metric_entity = w.scope(parent).entity(m->name);
-    w.metric(metric_entity).member(me).kind<Kind>();
+    flecs::entity metric_entity = me;
+    if (parent) {
+        metric_entity = w.scope(parent).entity(m->name);
+    }
+    w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
 
     return *this;
-}
-
-template <typename Kind>
-inline untyped_component& untyped_component::metric(const char *parent) {
-    flecs::world w(m_world);
-    flecs::entity p = w.entity(parent);
-    return metric<Kind>(p);
 }
 
 }

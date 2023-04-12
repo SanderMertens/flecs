@@ -74,6 +74,11 @@ struct metric_builder {
         return kind(_::cpp_type<Kind>::id(m_world));
     }
 
+    metric_builder& brief(const char *b) {
+        m_desc.brief = b;
+        return *this;
+    }
+
     operator flecs::entity();
 
 protected:

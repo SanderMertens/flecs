@@ -1161,9 +1161,9 @@
                 "id_counter_metric",
                 "oneof_counter_metric",
                 "component_mixin_member_metric",
-                "component_mixin_member_metric_custom_parent_string",
                 "component_mixin_member_metric_custom_parent_entity",
-                "component_mixin_member_metric_custom_nonexisting_parent_string"
+                "metric_description",
+                "component_mixin_member_metric_description"
             ]
         }, {
             "id": "Meta",

@@ -1107,9 +1107,9 @@ void Misc_oneof_gauge_metric(void);
 void Misc_id_counter_metric(void);
 void Misc_oneof_counter_metric(void);
 void Misc_component_mixin_member_metric(void);
-void Misc_component_mixin_member_metric_custom_parent_string(void);
 void Misc_component_mixin_member_metric_custom_parent_entity(void);
-void Misc_component_mixin_member_metric_custom_nonexisting_parent_string(void);
+void Misc_metric_description(void);
+void Misc_component_mixin_member_metric_description(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5464,16 +5464,16 @@ bake_test_case Misc_testcases[] = {
         Misc_component_mixin_member_metric
     },
     {
-        "component_mixin_member_metric_custom_parent_string",
-        Misc_component_mixin_member_metric_custom_parent_string
-    },
-    {
         "component_mixin_member_metric_custom_parent_entity",
         Misc_component_mixin_member_metric_custom_parent_entity
     },
     {
-        "component_mixin_member_metric_custom_nonexisting_parent_string",
-        Misc_component_mixin_member_metric_custom_nonexisting_parent_string
+        "metric_description",
+        Misc_metric_description
+    },
+    {
+        "component_mixin_member_metric_description",
+        Misc_component_mixin_member_metric_description
     }
 };
 
