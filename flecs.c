@@ -22710,7 +22710,8 @@ int flecs_member_metric_init(
         .ctx = ctx
     });
 
-    ecs_set(world, metric, EcsMetricMember, { .ctx = ctx });
+    ecs_set_pair(world, metric, EcsMetricMember, desc->member, { .ctx = ctx });
+    ecs_add_id(world, metric, desc->kind);
 
     return 0;
 error:
@@ -22744,6 +22745,7 @@ int flecs_id_metric_init(
     });
 
     ecs_set(world, metric, EcsMetricId, { .ctx = ctx });
+    ecs_add_id(world, metric, desc->kind);
 
     return 0;
 error:
@@ -22813,6 +22815,7 @@ int flecs_oneof_metric_init(
     });
 
     ecs_set(world, metric, EcsMetricOneOf, { .ctx = ctx });
+    ecs_add_id(world, metric, desc->kind);
 
     return 0;
 error:

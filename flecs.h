@@ -8392,6 +8392,9 @@ int ecs_value_move_ctor(
 #define ecs_emplace(world, entity, T)\
     (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
 
+#define ecs_emplace_pair(world, entity, First, second)\
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second))))
+
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
 
@@ -28513,6 +28516,8 @@ inline monitor::monitor(flecs::world& world) {
 namespace flecs {
 
 inline metrics::metrics(flecs::world& world) {
+    world.import<flecs::units>();
+
     /* Import C module  */
     FlecsMetricsImport(world);
 

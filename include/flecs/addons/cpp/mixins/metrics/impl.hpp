@@ -8,6 +8,8 @@
 namespace flecs {
 
 inline metrics::metrics(flecs::world& world) {
+    world.import<flecs::units>();
+
     /* Import C module  */
     FlecsMetricsImport(world);
 
