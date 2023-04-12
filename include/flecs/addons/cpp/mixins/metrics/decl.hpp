@@ -10,9 +10,11 @@
 namespace flecs {
 
 struct metrics {
-    using Instance = EcsMetricInstance;
+    using Value = EcsMetricValue;
     using Source = EcsMetricSource;
 
+    struct Instance { };
+    struct Metric { };
     struct Counter { };
     struct CounterIncrement { };
     struct Gauge { };

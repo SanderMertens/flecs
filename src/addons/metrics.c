@@ -9,9 +9,10 @@
 
 /* Public components */
 ECS_COMPONENT_DECLARE(FlecsMetrics);
-ECS_COMPONENT_DECLARE(EcsMetricInstance);
+ECS_TAG_DECLARE(EcsMetricInstance);
+ECS_COMPONENT_DECLARE(EcsMetricValue);
 ECS_COMPONENT_DECLARE(EcsMetricSource);
-ECS_TAG_DECLARE(EcsMetricKind);
+ECS_TAG_DECLARE(EcsMetric);
 ECS_TAG_DECLARE(EcsCounter);
 ECS_TAG_DECLARE(EcsCounterIncrement);
 ECS_TAG_DECLARE(EcsGauge);
@@ -132,9 +133,10 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         src->ref = ecs_ref_init_id(world, e, id);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
-        ecs_set(world, m, EcsMetricInstance, { 0 });
+        ecs_set(world, m, EcsMetricValue, { 0 });
         ecs_set(world, m, EcsMetricSource, { e });
-        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+        ecs_add(world, m, EcsMetricInstance);
+        ecs_add_pair(world, m, EcsMetric, ctx->metric.kind);
     }
 }
 
@@ -152,9 +154,10 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricIdInstance);
-        ecs_set(world, m, EcsMetricInstance, { 0 });
+        ecs_set(world, m, EcsMetricValue, { 0 });
         ecs_set(world, m, EcsMetricSource, { e });
-        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+        ecs_add(world, m, EcsMetricInstance);
+        ecs_add_pair(world, m, EcsMetric, ctx->metric.kind);
     }
 }
 
@@ -176,9 +179,10 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricOneOfInstance);
-        ecs_add_pair(world, m, ctx->metric.metric, ecs_id(EcsMetricInstance));
+        ecs_add_pair(world, m, ctx->metric.metric, ecs_id(EcsMetricValue));
         ecs_set(world, m, EcsMetricSource, { e });
-        ecs_add_pair(world, m, EcsMetricKind, ctx->metric.kind);
+        ecs_add(world, m, EcsMetricInstance);
+        ecs_add_pair(world, m, EcsMetric, ctx->metric.kind);
     }
 }
 
@@ -199,7 +203,7 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricInstance *m = ecs_field(it, EcsMetricInstance, 1);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
     EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 2);
     ecs_ftime_t dt = it->delta_time;
 
@@ -237,7 +241,7 @@ static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
 /** Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricInstance *m = ecs_field(it, EcsMetricInstance, 1);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
     EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 2);
     ecs_ftime_t dt = it->delta_time;
 
@@ -406,7 +410,8 @@ int flecs_member_metric_init(
     });
 
     ecs_set_pair(world, metric, EcsMetricMember, desc->member, { .ctx = ctx });
-    ecs_add_id(world, metric, desc->kind);
+    ecs_add_pair(world, metric, EcsMetric, desc->kind);
+    ecs_add_id(world, metric, EcsMetric);
 
     return 0;
 error:
@@ -440,7 +445,8 @@ int flecs_id_metric_init(
     });
 
     ecs_set(world, metric, EcsMetricId, { .ctx = ctx });
-    ecs_add_id(world, metric, desc->kind);
+    ecs_add_pair(world, metric, EcsMetric, desc->kind);
+    ecs_add_id(world, metric, EcsMetric);
 
     return 0;
 error:
@@ -510,7 +516,8 @@ int flecs_oneof_metric_init(
     });
 
     ecs_set(world, metric, EcsMetricOneOf, { .ctx = ctx });
-    ecs_add_id(world, metric, desc->kind);
+    ecs_add_pair(world, metric, EcsMetric, desc->kind);
+    ecs_add_id(world, metric, EcsMetric);
 
     return 0;
 error:
@@ -614,9 +621,17 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_IMPORT(world, FlecsMeta);
     ECS_IMPORT(world, FlecsUnits);
 
+    ecs_set_name_prefix(world, "Ecs");
+    ECS_TAG_DEFINE(world, EcsMetric);
+    ecs_entity_t old_scope = ecs_set_scope(world, EcsMetric);
+    ECS_TAG_DEFINE(world, EcsCounter);
+    ECS_TAG_DEFINE(world, EcsCounterIncrement);
+    ECS_TAG_DEFINE(world, EcsGauge);
+    ecs_set_scope(world, old_scope);
+
     ecs_set_name_prefix(world, "EcsMetric");
-    ECS_TAG_DEFINE(world, EcsMetricKind);
-    ECS_COMPONENT_DEFINE(world, EcsMetricInstance);
+    ECS_TAG_DEFINE(world, EcsMetricInstance);
+    ECS_COMPONENT_DEFINE(world, EcsMetricValue);
     ECS_COMPONENT_DEFINE(world, EcsMetricSource);
     ECS_COMPONENT_DEFINE(world, EcsMetricMemberInstance);
     ECS_COMPONENT_DEFINE(world, EcsMetricIdInstance);
@@ -625,15 +640,12 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsMetricId);
     ECS_COMPONENT_DEFINE(world, EcsMetricOneOf);
 
-    ecs_set_name_prefix(world, "Ecs");
-    ecs_entity_t old_scope = ecs_set_scope(world, EcsMetricKind);
-    ECS_TAG_DEFINE(world, EcsCounter);
-    ECS_TAG_DEFINE(world, EcsCounterIncrement);
-    ECS_TAG_DEFINE(world, EcsGauge);
-    ecs_set_scope(world, old_scope);
+    ecs_add_id(world, ecs_id(EcsMetricMemberInstance), EcsPrivate);
+    ecs_add_id(world, ecs_id(EcsMetricIdInstance), EcsPrivate);
+    ecs_add_id(world, ecs_id(EcsMetricOneOfInstance), EcsPrivate);
 
     ecs_struct(world, {
-        .entity = ecs_id(EcsMetricInstance),
+        .entity = ecs_id(EcsMetricValue),
         .members = {
             { .name = "value", .type = ecs_id(ecs_f64_t) }
         }
@@ -664,45 +676,45 @@ void FlecsMetricsImport(ecs_world_t *world) {
         .move = ecs_move(EcsMetricOneOf)
     });
 
-    ecs_add_id(world, EcsMetricKind, EcsOneOf);
+    ecs_add_id(world, EcsMetric, EcsOneOf);
 
     ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,
         [in] Source);
 
     ECS_SYSTEM(world, UpdateGaugeMemberInstance, EcsPreStore, 
-        [out]  Instance, 
+        [out]  Value, 
         [in]   MemberInstance,
-        [none] (Kind, Gauge));
+        [none] (Metric, Gauge));
 
     ECS_SYSTEM(world, UpdateCounterMemberInstance, EcsPreStore, 
-        [out]  Instance, 
+        [out]  Value, 
         [in]   MemberInstance,
-        [none] (Kind, Counter));
+        [none] (Metric, Counter));
 
     ECS_SYSTEM(world, UpdateCounterIncrementMemberInstance, EcsPreStore, 
-        [out]  Instance, 
+        [out]  Value, 
         [in]   MemberInstance,
-        [none] (Kind, CounterIncrement));
+        [none] (Metric, CounterIncrement));
 
     ECS_SYSTEM(world, UpdateGaugeIdInstance, EcsPreStore, 
-        [out]  Instance, 
+        [out]  Value, 
         [in]   IdInstance,
-        [none] (Kind, Gauge));
+        [none] (Metric, Gauge));
 
     ECS_SYSTEM(world, UpdateCounterIdInstance, EcsPreStore, 
-        [inout] Instance, 
+        [inout] Value, 
         [in]    IdInstance,
-        [none]  (Kind, Counter));
+        [none]  (Metric, Counter));
 
     ECS_SYSTEM(world, UpdateGaugeOneOfInstance, EcsPreStore, 
-        [none] (_, Instance), 
+        [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Kind, Gauge));
+        [none] (Metric, Gauge));
 
     ECS_SYSTEM(world, UpdateCounterOneOfInstance, EcsPreStore, 
-        [none] (_, Instance), 
+        [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Kind, Counter));
+        [none] (Metric, Counter));
 }
 
 #endif

@@ -30,9 +30,9 @@ void Metrics_member_gauge_1_entity() {
     test_uint(it.count, 1);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -75,9 +75,9 @@ void Metrics_member_gauge_2_entities() {
     test_uint(it.count, 2);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -85,9 +85,9 @@ void Metrics_member_gauge_2_entities() {
     }
     {
         ecs_entity_t e = it.entities[1];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -131,9 +131,9 @@ void Metrics_member_gauge_2_entities_1_existing() {
     test_uint(it.count, 2);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -141,9 +141,9 @@ void Metrics_member_gauge_2_entities_1_existing() {
     }
     {
         ecs_entity_t e = it.entities[1];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -187,9 +187,9 @@ void Metrics_member_gauge_2_entities_update() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -197,9 +197,9 @@ void Metrics_member_gauge_2_entities_update() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -219,9 +219,9 @@ void Metrics_member_gauge_2_entities_update() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -229,9 +229,9 @@ void Metrics_member_gauge_2_entities_update() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -278,9 +278,9 @@ void Metrics_member_gauge_w_remove() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -288,9 +288,9 @@ void Metrics_member_gauge_w_remove() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -308,9 +308,9 @@ void Metrics_member_gauge_w_remove() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -357,9 +357,9 @@ void Metrics_member_gauge_w_clear() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -367,9 +367,9 @@ void Metrics_member_gauge_w_clear() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -387,9 +387,9 @@ void Metrics_member_gauge_w_clear() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -436,9 +436,9 @@ void Metrics_member_gauge_w_delete() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -446,9 +446,9 @@ void Metrics_member_gauge_w_delete() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -466,9 +466,9 @@ void Metrics_member_gauge_w_delete() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -502,9 +502,9 @@ void Metrics_id_gauge_1_entity() {
     test_uint(it.count, 1);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -539,9 +539,9 @@ void Metrics_id_gauge_2_entities() {
     test_uint(it.count, 2);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -549,9 +549,9 @@ void Metrics_id_gauge_2_entities() {
     }
     {
         ecs_entity_t e = it.entities[1];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -587,9 +587,9 @@ void Metrics_id_gauge_2_entities_1_existing() {
     test_uint(it.count, 2);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -597,9 +597,9 @@ void Metrics_id_gauge_2_entities_1_existing() {
     }
     {
         ecs_entity_t e = it.entities[1];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -638,9 +638,9 @@ void Metrics_id_gauge_w_remove() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -648,9 +648,9 @@ void Metrics_id_gauge_w_remove() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -668,9 +668,9 @@ void Metrics_id_gauge_w_remove() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -709,9 +709,9 @@ void Metrics_id_gauge_w_clear() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -719,9 +719,9 @@ void Metrics_id_gauge_w_clear() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -739,9 +739,9 @@ void Metrics_id_gauge_w_clear() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -780,9 +780,9 @@ void Metrics_id_gauge_w_delete() {
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -790,9 +790,9 @@ void Metrics_id_gauge_w_delete() {
         }
         {
             ecs_entity_t e = it.entities[1];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -810,9 +810,9 @@ void Metrics_id_gauge_w_delete() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -850,7 +850,7 @@ void Metrics_oneof_gauge_3_entities() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsGauge) }
+            { .id = ecs_pair(EcsMetric, EcsGauge) }
         }
     });
     test_assert(f != NULL);
@@ -861,7 +861,7 @@ void Metrics_oneof_gauge_3_entities() {
     {
         ecs_entity_t e = it.entities[0];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -872,7 +872,7 @@ void Metrics_oneof_gauge_3_entities() {
     {
         ecs_entity_t e = it.entities[1];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -883,7 +883,7 @@ void Metrics_oneof_gauge_3_entities() {
     {
         ecs_entity_t e = it.entities[2];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e3);
@@ -923,7 +923,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsGauge) }
+            { .id = ecs_pair(EcsMetric, EcsGauge) }
         }
     });
     test_assert(f != NULL);
@@ -934,7 +934,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     {
         ecs_entity_t e = it.entities[0];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);
@@ -945,7 +945,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     {
         ecs_entity_t e = it.entities[1];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e2);
@@ -956,7 +956,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     {
         ecs_entity_t e = it.entities[2];
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+        const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e3);
@@ -999,7 +999,7 @@ void Metrics_oneof_gauge_w_remove() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsGauge) }
+            { .id = ecs_pair(EcsMetric, EcsGauge) }
         }
     });
     test_assert(f != NULL);
@@ -1011,7 +1011,7 @@ void Metrics_oneof_gauge_w_remove() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1022,7 +1022,7 @@ void Metrics_oneof_gauge_w_remove() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -1033,7 +1033,7 @@ void Metrics_oneof_gauge_w_remove() {
         {
             ecs_entity_t e = it.entities[2];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1054,7 +1054,7 @@ void Metrics_oneof_gauge_w_remove() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1065,7 +1065,7 @@ void Metrics_oneof_gauge_w_remove() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1109,7 +1109,7 @@ void Metrics_oneof_gauge_w_clear() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsGauge) }
+            { .id = ecs_pair(EcsMetric, EcsGauge) }
         }
     });
     test_assert(f != NULL);
@@ -1121,7 +1121,7 @@ void Metrics_oneof_gauge_w_clear() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1132,7 +1132,7 @@ void Metrics_oneof_gauge_w_clear() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -1143,7 +1143,7 @@ void Metrics_oneof_gauge_w_clear() {
         {
             ecs_entity_t e = it.entities[2];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1164,7 +1164,7 @@ void Metrics_oneof_gauge_w_clear() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1175,7 +1175,7 @@ void Metrics_oneof_gauge_w_clear() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1219,7 +1219,7 @@ void Metrics_oneof_gauge_w_delete() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsGauge) }
+            { .id = ecs_pair(EcsMetric, EcsGauge) }
         }
     });
     test_assert(f != NULL);
@@ -1231,7 +1231,7 @@ void Metrics_oneof_gauge_w_delete() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1242,7 +1242,7 @@ void Metrics_oneof_gauge_w_delete() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e2);
@@ -1253,7 +1253,7 @@ void Metrics_oneof_gauge_w_delete() {
         {
             ecs_entity_t e = it.entities[2];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1274,7 +1274,7 @@ void Metrics_oneof_gauge_w_delete() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1285,7 +1285,7 @@ void Metrics_oneof_gauge_w_delete() {
         {
             ecs_entity_t e = it.entities[1];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e3);
@@ -1329,9 +1329,9 @@ void Metrics_member_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounter));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounter));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1348,9 +1348,9 @@ void Metrics_member_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounter));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounter));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1392,9 +1392,9 @@ void Metrics_member_auto_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounterIncrement));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1411,9 +1411,9 @@ void Metrics_member_auto_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounterIncrement));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1448,9 +1448,9 @@ void Metrics_id_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounter));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounter));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1467,9 +1467,9 @@ void Metrics_id_counter() {
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
-            test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsCounter));
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounter));
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1505,7 +1505,7 @@ void Metrics_oneof_counter() {
     ecs_filter_t *f = ecs_filter(world, {
         .terms = {
             { .id = ecs_childof(m) },
-            { .id = ecs_pair(EcsMetricKind, EcsCounter) }
+            { .id = ecs_pair(EcsMetric, EcsCounter) }
         }
     });
     test_assert(f != NULL);
@@ -1517,7 +1517,7 @@ void Metrics_oneof_counter() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1538,7 +1538,7 @@ void Metrics_oneof_counter() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1559,7 +1559,7 @@ void Metrics_oneof_counter() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1579,7 +1579,7 @@ void Metrics_oneof_counter() {
         {
             ecs_entity_t e = it.entities[0];
             const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricInstance)));
+            const void *inst = ecs_get_id(world, e, ecs_pair(m, ecs_id(EcsMetricValue)));
             test_assert(src != NULL);
             test_assert(inst != NULL);
             test_uint(src->entity, e1);
@@ -1626,9 +1626,9 @@ void Metrics_metric_description() {
     test_uint(it.count, 1);
     {
         ecs_entity_t e = it.entities[0];
-        test_assert(ecs_has_pair(world, e, EcsMetricKind, EcsGauge));
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
         const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
-        const EcsMetricInstance *inst = ecs_get(world, e, EcsMetricInstance);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
         test_assert(src != NULL);
         test_assert(inst != NULL);
         test_uint(src->entity, e1);

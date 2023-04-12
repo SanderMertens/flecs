@@ -38,14 +38,8 @@ extern "C" {
 
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMetrics);
 
-/** Component with metric value */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricInstance);
-
-/** Component with entity source of metric */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricSource);
-
-/** Parent for metric kinds */
-FLECS_API extern ECS_TAG_DECLARE(EcsMetricKind);
+/** Tag added to metrics, and used as first element of metric kind pair */
+FLECS_API extern ECS_TAG_DECLARE(EcsMetric);
 
 /** Metric that has monotonically increasing value */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounter);
@@ -56,9 +50,18 @@ FLECS_API extern ECS_TAG_DECLARE(EcsCounterIncrement);
 /** Metric that represents current value */
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
-typedef struct EcsMetricInstance {
+/** Tag added to metric instances */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricInstance);
+
+/** Component with metric instance value */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricValue);
+
+/** Component with entity source of metric instance */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricSource);
+
+typedef struct EcsMetricValue {
     double value;
-} EcsMetricInstance;
+} EcsMetricValue;
 
 typedef struct EcsMetricSource {
     ecs_entity_t entity;

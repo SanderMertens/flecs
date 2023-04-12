@@ -13,9 +13,11 @@ inline metrics::metrics(flecs::world& world) {
     /* Import C module  */
     FlecsMetricsImport(world);
 
-    world.entity<metrics::Counter>("::flecs::metrics::Kind::Counter");
-    world.entity<metrics::CounterIncrement>("::flecs::metrics::Kind::CounterIncrement");
-    world.entity<metrics::Gauge>("::flecs::metrics::Kind::Gauge");
+    world.entity<metrics::Instance>("::flecs::metrics::Instance");
+    world.entity<metrics::Metric>("::flecs::metrics::Metric");
+    world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");
+    world.entity<metrics::CounterIncrement>("::flecs::metrics::Metric::CounterIncrement");
+    world.entity<metrics::Gauge>("::flecs::metrics::Metric::Gauge");
 }
 
 inline metric_builder::~metric_builder() {
