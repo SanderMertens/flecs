@@ -563,7 +563,7 @@ void flecs_stage_init(
     flecs_stack_init(&stage->allocators.deser_stack);
     flecs_allocator_init(&stage->allocator);
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
-        FLECS_SPARSE_CHUNK_SIZE);
+        FLECS_SPARSE_PAGE_SIZE);
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->commands, ecs_cmd_t, 0);

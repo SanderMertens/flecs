@@ -401,7 +401,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
         return edge;
     }
 
-    if (id < ECS_HI_COMPONENT_ID) {
+    if (id < FLECS_HI_COMPONENT_ID) {
         edge = &edges->lo[id];
     } else {
         edge = flecs_bcalloc(&world->allocators.graph_edge);
@@ -419,7 +419,7 @@ ecs_graph_edge_t* flecs_table_ensure_edge(
 {
     ecs_graph_edge_t *edge;
     
-    if (id < ECS_HI_COMPONENT_ID) {
+    if (id < FLECS_HI_COMPONENT_ID) {
         if (!edges->lo) {
             edges->lo = flecs_bcalloc(&world->allocators.graph_edge_lo);
         }
@@ -459,7 +459,7 @@ void flecs_table_disconnect_edge(
     }
 
     /* If edge id is low, clear it from fast lookup array */
-    if (id < ECS_HI_COMPONENT_ID) {
+    if (id < FLECS_HI_COMPONENT_ID) {
         ecs_os_memset_t(edge, 0, ecs_graph_edge_t);
     } else {
         flecs_bfree(&world->allocators.graph_edge, edge);

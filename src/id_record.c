@@ -135,7 +135,7 @@ ecs_id_record_t* flecs_id_record_new(
 {
     ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
-    if (hash >= ECS_HI_ID_RECORD_ID) {
+    if (hash >= FLECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
     } else {
@@ -372,7 +372,7 @@ void flecs_id_record_free(
     ecs_vec_fini_t(&world->allocator, &idr->reachable.ids, ecs_reachable_elem_t);
 
     ecs_id_t hash = flecs_id_record_hash(id);
-    if (hash >= ECS_HI_ID_RECORD_ID) {
+    if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_remove(&world->id_index_hi, hash);
         flecs_bfree(&world->allocators.id_record, idr);
     } else {
@@ -412,7 +412,7 @@ ecs_id_record_t* flecs_id_record_get(
 
     ecs_id_t hash = flecs_id_record_hash(id);
     ecs_id_record_t *idr = NULL;
-    if (hash >= ECS_HI_ID_RECORD_ID) {
+    if (hash >= FLECS_HI_ID_RECORD_ID) {
         idr = ecs_map_get_deref(&world->id_index_hi, ecs_id_record_t, hash);
     } else {
         idr = &world->id_index_lo[hash];
@@ -605,7 +605,7 @@ void flecs_fini_id_records(
     }
 
     int32_t i;
-    for (i = 0; i < ECS_HI_ID_RECORD_ID; i ++) {
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
         ecs_id_record_t *idr = &world->id_index_lo[i];
         if (idr->id) {
             flecs_id_record_release(world, idr);

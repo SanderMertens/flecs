@@ -150,7 +150,7 @@ void World_multi_world_recycled_component() {
     flecs::entity c;
     {
         flecs::world ecs;
-        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
             ecs_new_low_id(ecs);
         }
 
@@ -167,7 +167,7 @@ void World_multi_world_recycled_component_different_generation() {
     flecs::entity c;
     {
         flecs::world ecs;
-        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
             ecs_new_low_id(ecs);
         }
 
@@ -176,7 +176,7 @@ void World_multi_world_recycled_component_different_generation() {
     }
     {
         flecs::world ecs;
-        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
             ecs_new_low_id(ecs);
         }
 
@@ -1637,7 +1637,7 @@ void World_component_w_low_id() {
 
     flecs::entity p = ecs.component<Position>();
 
-    test_assert(p.id() < ECS_HI_COMPONENT_ID);
+    test_assert(p.id() < FLECS_HI_COMPONENT_ID);
 }
 
 void World_reregister_after_reset_w_hooks_and_in_use() {

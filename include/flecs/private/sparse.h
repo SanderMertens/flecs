@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 /** The number of elements in a single page */
-#define FLECS_SPARSE_CHUNK_SIZE (4096)
+#define FLECS_SPARSE_PAGE_SIZE (1 << FLECS_SPARSE_PAGE_BITS)
 
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;        /* Dense array with indices to sparse array. The

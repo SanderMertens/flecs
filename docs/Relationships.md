@@ -1358,7 +1358,7 @@ This example also applies to C++, as the C++ API maps to the same C API function
 While most of the storage uses the same code paths for regular components and relationships, there are a few properties of the storage that can impact performance when using relationships. These properties are not unique to relationships, but are more likely to be significant when using relationships.
 
 ### Id ranges
-Flecs reserves entity ids under a threshold (`ECS_HI_COMPONENT_ID`, default is 256) for components. This low id range is used by the storage to more efficiently encode graph edges between tables. Graph edges for components with low ids use direct array indexing, whereas graph edges for high ids use a hashmap. Graph edges are used to find the next archetype when adding/removing component ids, and are a contributing factor to the performance overhead of add/remove operations.
+Flecs reserves entity ids under a threshold (`FLECS_HI_COMPONENT_ID`, default is 256) for components. This low id range is used by the storage to more efficiently encode graph edges between tables. Graph edges for components with low ids use direct array indexing, whereas graph edges for high ids use a hashmap. Graph edges are used to find the next archetype when adding/removing component ids, and are a contributing factor to the performance overhead of add/remove operations.
 
 Because of the way pair ids are encoded, a pair will never be in the low id range. This means that adding/removing a pair id always uses a hashmap to find the next archetype. This introduces a small overhead, which is usually 5-10% of the total cost of an operation.
 

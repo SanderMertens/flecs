@@ -25,7 +25,7 @@ void flecs_allocator_init(
     ecs_allocator_t *a)
 {
     flecs_ballocator_init_n(&a->chunks, ecs_block_allocator_t,
-        FLECS_SPARSE_CHUNK_SIZE);
+        FLECS_SPARSE_PAGE_SIZE);
     flecs_sparse_init_t(&a->sizes, NULL, &a->chunks, ecs_block_allocator_t);
 }
 
