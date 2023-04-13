@@ -16,19 +16,6 @@
 extern "C" {
 #endif
 
-/** This reserves entity ids for components. Regular entity ids will start after
- * this constant. This affects performance of table traversal, as edges with ids 
- * lower than this constant are looked up in an array, whereas constants higher
- * than this id are looked up in a map. Increasing this value can improve
- * performance at the cost of (significantly) higher memory usage. */
-#ifndef ECS_HI_COMPONENT_ID
-#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
-#endif
-
-#ifndef ECS_HI_ID_RECORD_ID
-#define ECS_HI_ID_RECORD_ID (1024)
-#endif
-
 /** This is the largest possible component id. Components for the most part
  * occupy the same id range as entities, however they are not allowed to overlap
  * with (8) bits reserved for id flags. */

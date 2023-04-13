@@ -141,7 +141,7 @@ void New_new_component_id() {
 
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
-    test_assert(e < ECS_HI_COMPONENT_ID);
+    test_assert(e < FLECS_HI_COMPONENT_ID);
     test_assert(!ecs_get_type(world, e));
 
     ecs_fini(world);
@@ -154,7 +154,7 @@ void New_new_component_id_skip_used() {
 
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
-    test_assert(e < ECS_HI_COMPONENT_ID);
+    test_assert(e < FLECS_HI_COMPONENT_ID);
     test_assert(!ecs_get_type(world, e));
 
     /* Explicitly set an id that is one above the last issued id */
@@ -163,7 +163,7 @@ void New_new_component_id_skip_used() {
 
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
-    test_assert(e2 < ECS_HI_COMPONENT_ID);
+    test_assert(e2 < FLECS_HI_COMPONENT_ID);
     test_assert(!ecs_get_type(world, e2));    
     test_assert(e2 != (e + 1));
 
@@ -180,14 +180,14 @@ void New_new_component_id_skip_to_hi_id() {
 
     /* Use up all low component ids */
     int i;
-    for (i = (int)e; i < ECS_HI_COMPONENT_ID; i ++) {
+    for (i = (int)e; i < FLECS_HI_COMPONENT_ID; i ++) {
         ecs_ensure(world, i);
         ecs_add_id(world, i, Foo);
     }
 
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
-    test_assert(e2 > ECS_HI_COMPONENT_ID);
+    test_assert(e2 > FLECS_HI_COMPONENT_ID);
     test_assert(!ecs_get_type(world, e2));
 
     ecs_entity_t e3 = ecs_new_id(world);
@@ -207,7 +207,7 @@ void New_new_hi_component_id() {
     ecs_entity_t c;
     do {
         c = ecs_new_low_id(world);
-    } while (c < ECS_HI_COMPONENT_ID);
+    } while (c < FLECS_HI_COMPONENT_ID);
 
     test_assert(c != e);
     test_assert(c > e);

@@ -9,7 +9,6 @@
 #include "../private_api.h"
 
 // #ifdef FLECS_SANITIZE
-// #define FLECS_USE_OS_ALLOC
 // #define FLECS_MEMSET_UNINITIALIZED
 // #endif
 

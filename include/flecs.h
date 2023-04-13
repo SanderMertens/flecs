@@ -167,6 +167,56 @@
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
+/** \def FLECS_LOW_FOOTPRINT
+ * Set a number of constants to values that decrease memory footprint, at the
+ * cost of decreased performance. */
+// #define FLECS_LOW_FOOTPRINT
+#ifdef FLECS_LOW_FOOTPRINT
+#define FLECS_HI_COMPONENT_ID (16)
+#define FLECS_HI_ID_RECORD_ID (16)
+#define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_USE_OS_ALLOC
+#endif
+
+/** \def FLECS_HI_COMPONENT_ID
+ * This constant can be used to balance between performance and memory 
+ * utilization. The constant is used in two ways:
+ * - Entity ids 0..FLECS_HI_COMPONENT_ID are reserved for component ids.
+ * - Used as lookup array size in table edges.
+ * 
+ * Increasing this value increases the size of the lookup array, which allows
+ * fast table traversal, which improves performance of ECS add/remove 
+ * operations. Component ids that fall outside of this range use a regular map
+ * lookup, which is slower but more memory efficient. */
+#ifndef FLECS_HI_COMPONENT_ID
+#define FLECS_HI_COMPONENT_ID (256)
+#endif
+
+/** \def FLECS_HI_ID_RECORD_ID
+ * This constant can be used to balance between performance and memory 
+ * utilization. The constant is used to determine the size of the id record
+ * lookup array. Id values that fall outside of this range use a regular map
+ * lookup, which is slower but more memory efficient.
+ */
+#ifndef FLECS_HI_ID_RECORD_ID
+#define FLECS_HI_ID_RECORD_ID (1024)
+#endif
+
+/** \def FLECS_SPARSE_PAGE_BITS
+ * This constant is used to determine the number of bits of an id that is used
+ * to determine the page index when used with a sparse set. The number of bits
+ * determines the page size, which is (1 << bits).
+ * Lower values decrease memory utilization, at the cost of more allocations. */
+#ifndef FLECS_SPARSE_PAGE_BITS
+#define FLECS_SPARSE_PAGE_BITS (12)
+#endif
+
+/** \def FLECS_USE_OS_ALLOC 
+ * When enabled, Flecs will use the OS allocator provided in the OS API directly
+ * instead of the builtin block allocator. This can decrease memory utilization
+ * as memory will be freed more often, at the cost of decreased performance. */
+// #define FLECS_USE_OS_ALLOC
+
 /** \def ECS_ID_CACHE_SIZE
  * Maximum number of components to add/remove in a single operation */
 #ifndef ECS_ID_CACHE_SIZE
@@ -1338,7 +1388,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserEntityId (ECS_HI_COMPONENT_ID + 128)
+#define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128)
 
 /** @} */
 /** @} */
@@ -2018,10 +2068,10 @@ ecs_entity_t ecs_new_id(
 
 /** Create new low id.
  * This operation returns a new low id. Entity ids start after the
- * ECS_HI_COMPONENT_ID constant. This reserves a range of low ids for things 
+ * FLECS_HI_COMPONENT_ID constant. This reserves a range of low ids for things 
  * like components, and allows parts of the code to optimize operations.
  *
- * Note that ECS_HI_COMPONENT_ID does not represent the maximum number of 
+ * Note that FLECS_HI_COMPONENT_ID does not represent the maximum number of 
  * components that can be created, only the maximum number of components that
  * can take advantage of these optimizations.
  * 

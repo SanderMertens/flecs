@@ -169,6 +169,56 @@
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
+/** \def FLECS_LOW_FOOTPRINT
+ * Set a number of constants to values that decrease memory footprint, at the
+ * cost of decreased performance. */
+// #define FLECS_LOW_FOOTPRINT
+#ifdef FLECS_LOW_FOOTPRINT
+#define FLECS_HI_COMPONENT_ID (16)
+#define FLECS_HI_ID_RECORD_ID (16)
+#define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_USE_OS_ALLOC
+#endif
+
+/** \def FLECS_HI_COMPONENT_ID
+ * This constant can be used to balance between performance and memory 
+ * utilization. The constant is used in two ways:
+ * - Entity ids 0..FLECS_HI_COMPONENT_ID are reserved for component ids.
+ * - Used as lookup array size in table edges.
+ * 
+ * Increasing this value increases the size of the lookup array, which allows
+ * fast table traversal, which improves performance of ECS add/remove 
+ * operations. Component ids that fall outside of this range use a regular map
+ * lookup, which is slower but more memory efficient. */
+#ifndef FLECS_HI_COMPONENT_ID
+#define FLECS_HI_COMPONENT_ID (256)
+#endif
+
+/** \def FLECS_HI_ID_RECORD_ID
+ * This constant can be used to balance between performance and memory 
+ * utilization. The constant is used to determine the size of the id record
+ * lookup array. Id values that fall outside of this range use a regular map
+ * lookup, which is slower but more memory efficient.
+ */
+#ifndef FLECS_HI_ID_RECORD_ID
+#define FLECS_HI_ID_RECORD_ID (1024)
+#endif
+
+/** \def FLECS_SPARSE_PAGE_BITS
+ * This constant is used to determine the number of bits of an id that is used
+ * to determine the page index when used with a sparse set. The number of bits
+ * determines the page size, which is (1 << bits).
+ * Lower values decrease memory utilization, at the cost of more allocations. */
+#ifndef FLECS_SPARSE_PAGE_BITS
+#define FLECS_SPARSE_PAGE_BITS (12)
+#endif
+
+/** \def FLECS_USE_OS_ALLOC 
+ * When enabled, Flecs will use the OS allocator provided in the OS API directly
+ * instead of the builtin block allocator. This can decrease memory utilization
+ * as memory will be freed more often, at the cost of decreased performance. */
+// #define FLECS_USE_OS_ALLOC
+
 /** \def ECS_ID_CACHE_SIZE
  * Maximum number of components to add/remove in a single operation */
 #ifndef ECS_ID_CACHE_SIZE
@@ -978,7 +1028,7 @@ extern "C" {
 #endif
 
 /** The number of elements in a single page */
-#define FLECS_SPARSE_CHUNK_SIZE (4096)
+#define FLECS_SPARSE_PAGE_SIZE (1 << FLECS_SPARSE_PAGE_BITS)
 
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;        /* Dense array with indices to sparse array. The
@@ -3185,19 +3235,6 @@ struct ecs_iter_t {
 extern "C" {
 #endif
 
-/** This reserves entity ids for components. Regular entity ids will start after
- * this constant. This affects performance of table traversal, as edges with ids 
- * lower than this constant are looked up in an array, whereas constants higher
- * than this id are looked up in a map. Increasing this value can improve
- * performance at the cost of (significantly) higher memory usage. */
-#ifndef ECS_HI_COMPONENT_ID
-#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
-#endif
-
-#ifndef ECS_HI_ID_RECORD_ID
-#define ECS_HI_ID_RECORD_ID (1024)
-#endif
-
 /** This is the largest possible component id. Components for the most part
  * occupy the same id range as entities, however they are not allowed to overlap
  * with (8) bits reserved for id flags. */
@@ -4089,7 +4126,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserEntityId (ECS_HI_COMPONENT_ID + 128)
+#define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128)
 
 /** @} */
 /** @} */
@@ -4769,10 +4806,10 @@ ecs_entity_t ecs_new_id(
 
 /** Create new low id.
  * This operation returns a new low id. Entity ids start after the
- * ECS_HI_COMPONENT_ID constant. This reserves a range of low ids for things 
+ * FLECS_HI_COMPONENT_ID constant. This reserves a range of low ids for things 
  * like components, and allows parts of the code to optimize operations.
  *
- * Note that ECS_HI_COMPONENT_ID does not represent the maximum number of 
+ * Note that FLECS_HI_COMPONENT_ID does not represent the maximum number of 
  * components that can be created, only the maximum number of components that
  * can take advantage of these optimizations.
  * 
@@ -17259,126 +17296,7 @@ struct monitor {
 }
 #endif
 #ifdef FLECS_METRICS
-/**
- * @file addons/cpp/mixins/metrics/decl.hpp
- * @brief Metrics declarations.
- */
-
-#pragma once
-
-/**
- * @file addons/cpp/mixins/metrics/builder.hpp
- * @brief Metric builder.
- */
-
-#pragma once
-
-#define ECS_EVENT_DESC_ID_COUNT_MAX (8)
-
-namespace flecs {
-
-/**
- * \ingroup cpp_addon_metrics
- * @{
- */
-
-/** Event builder interface */
-struct metric_builder {
-    metric_builder(flecs::world_t *world, flecs::entity_t entity) 
-        : m_world(world) 
-    {
-        m_desc.entity = entity;
-    }
-
-    ~metric_builder();
-
-    metric_builder& member(flecs::entity_t e) {
-        m_desc.member = e;
-        return *this;
-    }
-
-    metric_builder& member(const char *name);
-
-    template <typename T>
-    metric_builder& member(const char *name);
-
-    metric_builder& id(flecs::id_t the_id) {
-        m_desc.id = the_id;
-        return *this;
-    }
-
-    metric_builder& id(flecs::entity_t first, flecs::entity_t second) {
-        m_desc.id = ecs_pair(first, second);
-        return *this;
-    }
-
-    template <typename T>
-    metric_builder& id() {
-        return id(_::cpp_type<T>::id(m_world));
-    }
-
-    template <typename First>
-    metric_builder& id(flecs::entity_t second) {
-        return id(_::cpp_type<First>::id(m_world), second);
-    }
-
-    template <typename First, typename Second>
-    metric_builder& id() {
-        return id<First>(_::cpp_type<Second>::id(m_world));
-    }
-
-    metric_builder& targets(bool value = true) {
-        m_desc.targets = value;
-        return *this;
-    }
-
-    metric_builder& kind(flecs::entity_t the_kind) {
-        m_desc.kind = the_kind;
-        return *this;
-    }
-
-    template <typename Kind>
-    metric_builder& kind() {
-        return kind(_::cpp_type<Kind>::id(m_world));
-    }
-
-    metric_builder& brief(const char *b) {
-        m_desc.brief = b;
-        return *this;
-    }
-
-    operator flecs::entity();
-
-protected:
-    flecs::world_t *m_world;
-    ecs_metric_desc_t m_desc = {};
-    bool m_created = false;
-};
-
-/**
- * @}
- */
-
-}
-
-
-namespace flecs {
-
-struct metrics {
-    using Value = EcsMetricValue;
-    using Source = EcsMetricSource;
-
-    struct Instance { };
-    struct Metric { };
-    struct Counter { };
-    struct CounterIncrement { };
-    struct Gauge { };
-
-    metrics(flecs::world& world);
-};
-
-}
-
+#include "mixins/metrics/decl.hpp"
 #endif
 #ifdef FLECS_JSON
 /**
@@ -19870,15 +19788,7 @@ flecs::app_builder app() {
 
 #   endif
 #   ifdef FLECS_METRICS
-
-/** Create metric.
- * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
- */
-template <typename... Args>
-flecs::metric_builder metric(Args &&... args) const;
-
+#   include "mixins/metrics/mixin.inl"
 #   endif
 
 public:
@@ -24083,32 +23993,7 @@ untyped_component& bit(const char *name, uint32_t value) {
 
 #   endif
 #   ifdef FLECS_METRICS
-/**
- * @file addons/cpp/mixins/meta/untyped_component.inl
- * @brief Metrics component mixin.
- */
-
-/**
- * \memberof flecs::component
- * \ingroup cpp_addons_metrics
- * 
- * @{
- */
-
-/** Register member as metric.
- * 
- * @tparam Kind Metric kind (Counter, CounterIncrement or Gauge).
- * @param parent Parent entity of the metric.
- * @param brief Description for metric.
- * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
- */
-template <typename Kind>
-untyped_component& metric(flecs::entity_t parent = 0, const char *brief = nullptr);
-
-/** @} */
-
+#   include "mixins/metrics/untyped_component.inl"
 #   endif
 };
 
@@ -28528,100 +28413,7 @@ inline monitor::monitor(flecs::world& world) {
 
 #endif
 #ifdef FLECS_METRICS
-/**
- * @file addons/cpp/mixins/metrics/impl.hpp
- * @brief Metrics module implementation.
- */
-
-#pragma once
-
-namespace flecs {
-
-inline metrics::metrics(flecs::world& world) {
-    world.import<flecs::units>();
-
-    /* Import C module  */
-    FlecsMetricsImport(world);
-
-    world.entity<metrics::Instance>("::flecs::metrics::Instance");
-    world.entity<metrics::Metric>("::flecs::metrics::Metric");
-    world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");
-    world.entity<metrics::CounterIncrement>("::flecs::metrics::Metric::CounterIncrement");
-    world.entity<metrics::Gauge>("::flecs::metrics::Metric::Gauge");
-}
-
-inline metric_builder::~metric_builder() {
-    if (!m_created) {
-        ecs_metric_init(m_world, &m_desc);
-    }
-}
-
-inline metric_builder& metric_builder::member(const char *name) {
-    return member(flecs::world(m_world).lookup(name));
-}
-
-template <typename T>
-inline metric_builder& metric_builder::member(const char *name) {
-    flecs::entity e (m_world, _::cpp_type<T>::id(m_world));
-    flecs::entity_t m = e.lookup(name);
-    if (!m) {
-        flecs::log::err("member '%s' not found in type '%s'", 
-            name, e.path().c_str());
-        return *this;
-    }
-    return member(m);
-}
-
-inline metric_builder::operator flecs::entity() {
-    if (!m_created) {
-        m_created = true;
-        flecs::entity result(m_world, ecs_metric_init(m_world, &m_desc));
-        m_desc.entity = result;
-        return result;
-    } else {
-        return flecs::entity(m_world, m_desc.entity);
-    }
-}
-
-template <typename... Args>
-inline flecs::metric_builder world::metric(Args &&... args) const {
-    flecs::entity result(m_world, FLECS_FWD(args)...);
-    return flecs::metric_builder(m_world, result);
-}
-
-template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief) {
-    flecs::world w(m_world);
-    flecs::entity e = w.entity(m_id);
-    const flecs::Struct *s = e.get<flecs::Struct>();
-    if (!s) {
-        flecs::log::err("can't register metric, component '%s' is not a struct",    
-            e.path().c_str());
-        return *this;
-    }
-
-    ecs_member_t *m = ecs_vec_get_t(&s->members, ecs_member_t, 
-        ecs_vec_count(&s->members) - 1);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity me = e.lookup(m->name);
-    if (!me) {
-        flecs::log::err("can't find member '%s' in component '%s' for metric",    
-            m->name, e.path().c_str());
-        return *this;
-    }
-
-    flecs::entity metric_entity = me;
-    if (parent) {
-        metric_entity = w.scope(parent).entity(m->name);
-    }
-    w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
-
-    return *this;
-}
-
-}
-
+#include "mixins/metrics/impl.hpp"
 #endif
 
 /**

@@ -1209,13 +1209,13 @@ ecs_entity_t ecs_new_low_id(
     }
 
     ecs_entity_t id = 0;
-    if (unsafe_world->info.last_component_id < ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->info.last_component_id < FLECS_HI_COMPONENT_ID) {
         do {
             id = unsafe_world->info.last_component_id ++;
-        } while (ecs_exists(unsafe_world, id) && id <= ECS_HI_COMPONENT_ID);        
+        } while (ecs_exists(unsafe_world, id) && id <= FLECS_HI_COMPONENT_ID);        
     }
 
-    if (!id || id >= ECS_HI_COMPONENT_ID) {
+    if (!id || id >= FLECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
         id = ecs_new_id(unsafe_world);
     } else {
@@ -1905,7 +1905,7 @@ ecs_entity_t ecs_component_init(
         ecs_set_hooks_id(world, result, &desc->type.hooks);
     }
 
-    if (result >= world->info.last_component_id && result < ECS_HI_COMPONENT_ID) {
+    if (result >= world->info.last_component_id && result < FLECS_HI_COMPONENT_ID) {
         world->info.last_component_id = result + 1;
     }
 

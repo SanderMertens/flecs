@@ -1773,7 +1773,7 @@ void Entity_use_low_id_for_component() {
 
     ECS_COMPONENT(world, Position);
 
-    test_assert(ecs_id(Position) < ECS_HI_COMPONENT_ID);
+    test_assert(ecs_id(Position) < FLECS_HI_COMPONENT_ID);
 
     ecs_fini(world);
 }

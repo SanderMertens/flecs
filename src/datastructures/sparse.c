@@ -37,10 +37,10 @@
 #include "../private_api.h"
 
 /** Compute the page index from an id by stripping the first 12 bits */
-#define PAGE(index) ((int32_t)((uint32_t)index >> 12))
+#define PAGE(index) ((int32_t)((uint32_t)index >> FLECS_SPARSE_PAGE_BITS))
 
 /** This computes the offset of an index inside a page */
-#define OFFSET(index) ((int32_t)index & 0xFFF)
+#define OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
 
 /* Utility to get a pointer to the payload */
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
@@ -80,13 +80,13 @@ ecs_page_t* flecs_sparse_page_new(
      * as this means we can take advantage of calloc having a possibly better 
      * performance than malloc + memset. */
     result->sparse = ca ? flecs_bcalloc(ca)
-                        : ecs_os_calloc_n(int32_t, FLECS_SPARSE_CHUNK_SIZE);
+                        : ecs_os_calloc_n(int32_t, FLECS_SPARSE_PAGE_SIZE);
 
     /* Initialize the data array with zero's to guarantee that data is 
      * always initialized. When an entry is removed, data is reset back to
      * zero. Initialize now, as this can take advantage of calloc. */
-    result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_CHUNK_SIZE)
-                     : ecs_os_calloc(sparse->size * FLECS_SPARSE_CHUNK_SIZE);
+    result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_PAGE_SIZE)
+                     : ecs_os_calloc(sparse->size * FLECS_SPARSE_PAGE_SIZE);
 
     ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -108,7 +108,7 @@ void flecs_sparse_page_free(
         ecs_os_free(page->sparse);
     }
     if (a) {
-        flecs_free(a, sparse->size * FLECS_SPARSE_CHUNK_SIZE, page->data);
+        flecs_free(a, sparse->size * FLECS_SPARSE_PAGE_SIZE, page->data);
     } else {
         ecs_os_free(page->data);
     }
@@ -330,7 +330,7 @@ void flecs_sparse_clear(
     for (i = 0; i < count; i ++) {
         int32_t *indices = pages[i].sparse;
         if (indices) {
-            ecs_os_memset_n(indices, 0, int32_t, FLECS_SPARSE_CHUNK_SIZE);
+            ecs_os_memset_n(indices, 0, int32_t, FLECS_SPARSE_PAGE_SIZE);
         }
     }
 

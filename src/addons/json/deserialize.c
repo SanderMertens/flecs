@@ -399,7 +399,7 @@ ecs_entity_t flecs_json_new_id(
     ecs_entity_t ser_id)
 {
     /* Try to honor low id requirements */
-    if (ser_id < ECS_HI_COMPONENT_ID) {
+    if (ser_id < FLECS_HI_COMPONENT_ID) {
         return ecs_new_low_id(world);
     } else {
         return ecs_new_id(world);
