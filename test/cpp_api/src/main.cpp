@@ -826,6 +826,7 @@ void Filter_each_w_iter_no_this(void);
 void Filter_invalid_each_w_no_this(void);
 void Filter_named_filter(void);
 void Filter_named_scoped_filter(void);
+void Filter_set_this_var(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -4393,6 +4394,10 @@ bake_test_case Filter_testcases[] = {
     {
         "named_scoped_filter",
         Filter_named_scoped_filter
+    },
+    {
+        "set_this_var",
+        Filter_set_this_var
     }
 };
 
@@ -5934,7 +5939,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        21,
+        22,
         Filter_testcases
     },
     {

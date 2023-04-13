@@ -439,3 +439,20 @@ void Filter_named_scoped_filter() {
     test_str(qe.name(), "query");
     test_str(qe.path(), "::my::query");
 }
+
+void Filter_set_this_var() {
+    flecs::world ecs;
+
+    /* auto e_1 = */ ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    /* auto e_3 = */ ecs.entity().set<Position>({5, 6});
+
+    auto q = ecs.filter<Position>("my::query");
+
+    int32_t count = 0;
+    q.iter().set_var(0, e_2).each([&](flecs::entity e, Position&) {
+        test_assert(e == e_2);
+        count ++;
+    });
+    test_int(count, 1);
+}

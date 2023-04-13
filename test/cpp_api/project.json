@@ -861,7 +861,8 @@
                 "each_w_iter_no_this",
                 "invalid_each_w_no_this",
                 "named_filter",
-                "named_scoped_filter"
+                "named_scoped_filter",
+                "set_this_var"
             ]
         }, {
             "id": "ComponentLifecycle",

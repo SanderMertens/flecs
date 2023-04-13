@@ -12,7 +12,7 @@ template <typename ... Components>
 struct page_iterable;
 
 template <typename ... Components>
-struct worker_iterable;
+struct worker_iterable; 
 
 template <typename ... Components>
 struct iterable {
@@ -154,6 +154,12 @@ struct iter_iterable final : iterable<Components...> {
         m_it = it->get_iter(world);
         m_next = it->next_action();
         m_next_each = it->next_action();
+    }
+
+    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+        ecs_iter_set_var(&m_it, var_id, value);
+        return *this;
     }
 
 #   ifdef FLECS_RULES
