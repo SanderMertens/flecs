@@ -17296,7 +17296,126 @@ struct monitor {
 }
 #endif
 #ifdef FLECS_METRICS
-#include "mixins/metrics/decl.hpp"
+/**
+ * @file addons/cpp/mixins/metrics/decl.hpp
+ * @brief Metrics declarations.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/metrics/builder.hpp
+ * @brief Metric builder.
+ */
+
+#pragma once
+
+#define ECS_EVENT_DESC_ID_COUNT_MAX (8)
+
+namespace flecs {
+
+/**
+ * \ingroup cpp_addon_metrics
+ * @{
+ */
+
+/** Event builder interface */
+struct metric_builder {
+    metric_builder(flecs::world_t *world, flecs::entity_t entity) 
+        : m_world(world) 
+    {
+        m_desc.entity = entity;
+    }
+
+    ~metric_builder();
+
+    metric_builder& member(flecs::entity_t e) {
+        m_desc.member = e;
+        return *this;
+    }
+
+    metric_builder& member(const char *name);
+
+    template <typename T>
+    metric_builder& member(const char *name);
+
+    metric_builder& id(flecs::id_t the_id) {
+        m_desc.id = the_id;
+        return *this;
+    }
+
+    metric_builder& id(flecs::entity_t first, flecs::entity_t second) {
+        m_desc.id = ecs_pair(first, second);
+        return *this;
+    }
+
+    template <typename T>
+    metric_builder& id() {
+        return id(_::cpp_type<T>::id(m_world));
+    }
+
+    template <typename First>
+    metric_builder& id(flecs::entity_t second) {
+        return id(_::cpp_type<First>::id(m_world), second);
+    }
+
+    template <typename First, typename Second>
+    metric_builder& id() {
+        return id<First>(_::cpp_type<Second>::id(m_world));
+    }
+
+    metric_builder& targets(bool value = true) {
+        m_desc.targets = value;
+        return *this;
+    }
+
+    metric_builder& kind(flecs::entity_t the_kind) {
+        m_desc.kind = the_kind;
+        return *this;
+    }
+
+    template <typename Kind>
+    metric_builder& kind() {
+        return kind(_::cpp_type<Kind>::id(m_world));
+    }
+
+    metric_builder& brief(const char *b) {
+        m_desc.brief = b;
+        return *this;
+    }
+
+    operator flecs::entity();
+
+protected:
+    flecs::world_t *m_world;
+    ecs_metric_desc_t m_desc = {};
+    bool m_created = false;
+};
+
+/**
+ * @}
+ */
+
+}
+
+
+namespace flecs {
+
+struct metrics {
+    using Value = EcsMetricValue;
+    using Source = EcsMetricSource;
+
+    struct Instance { };
+    struct Metric { };
+    struct Counter { };
+    struct CounterIncrement { };
+    struct Gauge { };
+
+    metrics(flecs::world& world);
+};
+
+}
+
 #endif
 #ifdef FLECS_JSON
 /**
@@ -19788,7 +19907,15 @@ flecs::app_builder app() {
 
 #   endif
 #   ifdef FLECS_METRICS
-#   include "mixins/metrics/mixin.inl"
+
+/** Create metric.
+ * 
+ * \ingroup cpp_addons_metrics
+ * \memberof flecs::world
+ */
+template <typename... Args>
+flecs::metric_builder metric(Args &&... args) const;
+
 #   endif
 
 public:
@@ -23210,7 +23337,7 @@ template <typename ... Components>
 struct page_iterable;
 
 template <typename ... Components>
-struct worker_iterable;
+struct worker_iterable; 
 
 template <typename ... Components>
 struct iterable {
@@ -23354,6 +23481,12 @@ struct iter_iterable final : iterable<Components...> {
         m_next_each = it->next_action();
     }
 
+    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+        ecs_iter_set_var(&m_it, var_id, value);
+        return *this;
+    }
+
 #   ifdef FLECS_RULES
 /**
  * @file addons/cpp/mixins/rule/iterable.inl
@@ -23364,13 +23497,6 @@ struct iter_iterable final : iterable<Components...> {
  * \memberof flecs::iter
  * \ingroup cpp_addons_rules
  */
-
-iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
-    ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-    ecs_iter_set_var(&m_it, var_id, value);
-    return *this;
-}
 
 iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
     ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
@@ -23993,7 +24119,32 @@ untyped_component& bit(const char *name, uint32_t value) {
 
 #   endif
 #   ifdef FLECS_METRICS
-#   include "mixins/metrics/untyped_component.inl"
+/**
+ * @file addons/cpp/mixins/meta/untyped_component.inl
+ * @brief Metrics component mixin.
+ */
+
+/**
+ * \memberof flecs::component
+ * \ingroup cpp_addons_metrics
+ * 
+ * @{
+ */
+
+/** Register member as metric.
+ * 
+ * @tparam Kind Metric kind (Counter, CounterIncrement or Gauge).
+ * @param parent Parent entity of the metric.
+ * @param brief Description for metric.
+ * 
+ * \ingroup cpp_addons_metrics
+ * \memberof flecs::world
+ */
+template <typename Kind>
+untyped_component& metric(flecs::entity_t parent = 0, const char *brief = nullptr);
+
+/** @} */
+
 #   endif
 };
 
@@ -28413,7 +28564,100 @@ inline monitor::monitor(flecs::world& world) {
 
 #endif
 #ifdef FLECS_METRICS
-#include "mixins/metrics/impl.hpp"
+/**
+ * @file addons/cpp/mixins/metrics/impl.hpp
+ * @brief Metrics module implementation.
+ */
+
+#pragma once
+
+namespace flecs {
+
+inline metrics::metrics(flecs::world& world) {
+    world.import<flecs::units>();
+
+    /* Import C module  */
+    FlecsMetricsImport(world);
+
+    world.entity<metrics::Instance>("::flecs::metrics::Instance");
+    world.entity<metrics::Metric>("::flecs::metrics::Metric");
+    world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");
+    world.entity<metrics::CounterIncrement>("::flecs::metrics::Metric::CounterIncrement");
+    world.entity<metrics::Gauge>("::flecs::metrics::Metric::Gauge");
+}
+
+inline metric_builder::~metric_builder() {
+    if (!m_created) {
+        ecs_metric_init(m_world, &m_desc);
+    }
+}
+
+inline metric_builder& metric_builder::member(const char *name) {
+    return member(flecs::world(m_world).lookup(name));
+}
+
+template <typename T>
+inline metric_builder& metric_builder::member(const char *name) {
+    flecs::entity e (m_world, _::cpp_type<T>::id(m_world));
+    flecs::entity_t m = e.lookup(name);
+    if (!m) {
+        flecs::log::err("member '%s' not found in type '%s'", 
+            name, e.path().c_str());
+        return *this;
+    }
+    return member(m);
+}
+
+inline metric_builder::operator flecs::entity() {
+    if (!m_created) {
+        m_created = true;
+        flecs::entity result(m_world, ecs_metric_init(m_world, &m_desc));
+        m_desc.entity = result;
+        return result;
+    } else {
+        return flecs::entity(m_world, m_desc.entity);
+    }
+}
+
+template <typename... Args>
+inline flecs::metric_builder world::metric(Args &&... args) const {
+    flecs::entity result(m_world, FLECS_FWD(args)...);
+    return flecs::metric_builder(m_world, result);
+}
+
+template <typename Kind>
+inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief) {
+    flecs::world w(m_world);
+    flecs::entity e = w.entity(m_id);
+    const flecs::Struct *s = e.get<flecs::Struct>();
+    if (!s) {
+        flecs::log::err("can't register metric, component '%s' is not a struct",    
+            e.path().c_str());
+        return *this;
+    }
+
+    ecs_member_t *m = ecs_vec_get_t(&s->members, ecs_member_t, 
+        ecs_vec_count(&s->members) - 1);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs::entity me = e.lookup(m->name);
+    if (!me) {
+        flecs::log::err("can't find member '%s' in component '%s' for metric",    
+            m->name, e.path().c_str());
+        return *this;
+    }
+
+    flecs::entity metric_entity = me;
+    if (parent) {
+        metric_entity = w.scope(parent).entity(m->name);
+    }
+    w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
+
+    return *this;
+}
+
+}
+
 #endif
 
 /**

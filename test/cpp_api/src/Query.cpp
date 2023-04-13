@@ -2086,7 +2086,7 @@ void Query_named_scoped_query() {
 }
 
 void Query_instanced_nested_query_w_iter() {
-    auto ecs = flecs::world();
+    flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
         .term<Position>()
@@ -2115,7 +2115,7 @@ void Query_instanced_nested_query_w_iter() {
 }
 
 void Query_instanced_nested_query_w_entity() {
-    auto ecs = flecs::world();
+    flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
         .term<Position>()
@@ -2144,7 +2144,7 @@ void Query_instanced_nested_query_w_entity() {
 }
 
 void Query_instanced_nested_query_w_world() {
-    auto ecs = flecs::world();
+    flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
         .term<Position>()
@@ -2170,4 +2170,62 @@ void Query_instanced_nested_query_w_world() {
     });
 
     test_int(count, 2);
+}
+
+void Query_captured_query() {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query<Position>();
+    flecs::entity e_1 = ecs.entity().set<Position>({10, 20});
+
+    [=]() {
+        int count = 0;
+        q.each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_1);
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
+}
+
+void Query_page_iter_captured_query() {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query<Position>();
+    /* flecs::entity e_1 = */ ecs.entity().set<Position>({10, 20});
+    flecs::entity e_2 = ecs.entity().set<Position>({20, 30});
+    /* flecs::entity e_3 = */ ecs.entity().set<Position>({10, 20});
+
+    [=]() {
+        int count = 0;
+        q.iter().page(1, 1).each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_2);
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
+}
+
+void Query_worker_iter_captured_query() {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query<Position>();
+    /* flecs::entity e_1 = */ ecs.entity().set<Position>({10, 20});
+    flecs::entity e_2 = ecs.entity().set<Position>({20, 30});
+    /* flecs::entity e_3 = */ ecs.entity().set<Position>({10, 20});
+
+    [=]() {
+        int count = 0;
+        q.iter().worker(1, 3).each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_2);
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
 }
