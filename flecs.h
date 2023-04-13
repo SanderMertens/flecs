@@ -20497,7 +20497,16 @@ struct entity_view : public id {
     flecs::string path_from(flecs::entity_t parent, const char *sep = "::", const char *init_sep = "::") const {
         char *path = ecs_get_path_w_sep(m_world, parent, m_id, sep, init_sep);
         return flecs::string(path);
-    }   
+    }
+
+    /** Return the entity path relative to a parent.
+     *
+     * @return The relative hierarchical entity path.
+     */
+    template <typename Parent>
+    flecs::string path_from(const char *sep = "::", const char *init_sep = "::") const {
+        return path_from(_::cpp_type<Parent>::id(m_world), sep, init_sep);
+    }
 
     bool enabled() const {
         return !ecs_has_id(m_world, m_id, flecs::Disabled);

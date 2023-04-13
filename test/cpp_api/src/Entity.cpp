@@ -1,5 +1,9 @@
 #include <cpp_api.h>
 
+struct Parent {
+    struct EntityType { };
+};
+
 void Entity_new() {
     flecs::world world;
 
@@ -1663,6 +1667,16 @@ void Entity_path_from() {
     test_str(grandchild.path_from(parent).c_str(), "child::grandchild");
 }
 
+void Entity_path_from_type() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity<Parent>();
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    test_str(grandchild.path().c_str(), "::Parent::child::grandchild");
+    test_str(grandchild.path_from<Parent>().c_str(), "child::grandchild");
+}
+
 void Entity_path_custom_sep() {
     flecs::world world;
 
@@ -1679,6 +1693,16 @@ void Entity_path_from_custom_sep() {
     flecs::entity grandchild = world.scope(child).entity("grandchild");
     test_str(grandchild.path().c_str(), "::parent::child::grandchild");
     test_str(grandchild.path_from(parent, "_").c_str(), "child_grandchild");
+}
+
+void Entity_path_from_type_custom_sep() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity<Parent>();
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    test_str(grandchild.path().c_str(), "::Parent::child::grandchild");
+    test_str(grandchild.path_from<Parent>("_").c_str(), "child_grandchild");
 }
 
 void Entity_implicit_path_to_char() {
@@ -3891,10 +3915,6 @@ void Entity_prefab_hierarchy_w_child_override() {
     test_assert(ib.has<Foo>());
     test_assert(ib.has<Bar>());
 }
-
-struct Parent {
-    struct EntityType { };
-};
 
 void Entity_entity_w_nested_type() {
     flecs::world ecs;
