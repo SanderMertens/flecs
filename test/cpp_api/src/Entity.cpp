@@ -1645,6 +1645,42 @@ void Entity_implicit_name_to_char() {
     test_str(entity.name(), "Foo");
 }
 
+void Entity_path() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    test_str(child.path().c_str(), "::parent::child");
+}
+
+void Entity_path_from() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    test_str(grandchild.path().c_str(), "::parent::child::grandchild");
+    test_str(grandchild.path_from(parent).c_str(), "child::grandchild");
+}
+
+void Entity_path_custom_sep() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    test_str(child.path("_", "").c_str(), "parent_child");
+}
+
+void Entity_path_from_custom_sep() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    test_str(grandchild.path().c_str(), "::parent::child::grandchild");
+    test_str(grandchild.path_from(parent, "_").c_str(), "child_grandchild");
+}
+
 void Entity_implicit_path_to_char() {
     flecs::world world;
 

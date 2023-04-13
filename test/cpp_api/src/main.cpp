@@ -111,6 +111,10 @@ void Entity_set_override_pair_w_tgt_id(void);
 void Entity_set_override_pair_w_rel_tag(void);
 void Entity_emplace_override(void);
 void Entity_emplace_override_pair(void);
+void Entity_path(void);
+void Entity_path_from(void);
+void Entity_path_custom_sep(void);
+void Entity_path_from_custom_sep(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
 void Entity_implicit_type_str_to_char(void);
@@ -1597,6 +1601,22 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_override_pair",
         Entity_emplace_override_pair
+    },
+    {
+        "path",
+        Entity_path
+    },
+    {
+        "path_from",
+        Entity_path_from
+    },
+    {
+        "path_custom_sep",
+        Entity_path_custom_sep
+    },
+    {
+        "path_from_custom_sep",
+        Entity_path_from_custom_sep
     },
     {
         "implicit_name_to_char",
@@ -5806,7 +5826,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        232,
+        236,
         Entity_testcases
     },
     {
