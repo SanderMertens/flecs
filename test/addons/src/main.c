@@ -1351,6 +1351,7 @@ void Metrics_oneof_gauge_3_entities_1_existing(void);
 void Metrics_oneof_gauge_w_remove(void);
 void Metrics_oneof_gauge_w_clear(void);
 void Metrics_oneof_gauge_w_delete(void);
+void Metrics_oneof_to_snake_case(void);
 void Metrics_member_counter(void);
 void Metrics_member_auto_counter(void);
 void Metrics_id_counter(void);
@@ -6553,6 +6554,10 @@ bake_test_case Metrics_testcases[] = {
         Metrics_oneof_gauge_w_delete
     },
     {
+        "oneof_to_snake_case",
+        Metrics_oneof_to_snake_case
+    },
+    {
         "member_counter",
         Metrics_member_counter
     },
@@ -6789,7 +6794,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        23,
+        24,
         Metrics_testcases
     }
 };

@@ -1416,6 +1416,7 @@
                 "oneof_gauge_w_remove",
                 "oneof_gauge_w_clear",
                 "oneof_gauge_w_delete",
+                "oneof_to_snake_case",
                 "member_counter",
                 "member_auto_counter",
                 "id_counter",

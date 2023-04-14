@@ -1299,6 +1299,36 @@ void Metrics_oneof_gauge_w_delete() {
     ecs_fini(world);
 }
 
+void Metrics_oneof_to_snake_case() {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_ENTITY(world, Color, OneOf, Exclusive);
+    ECS_ENTITY(world, RedColor,    (ChildOf, Color));
+    ECS_ENTITY(world, Green_Color, (ChildOf, Color));
+    ECS_ENTITY(world, Blue,        (ChildOf, Color));
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.color" }),
+        .id = ecs_pair(Color, EcsWildcard),
+        .targets = true,
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    const EcsStruct *s = ecs_get(world, m, EcsStruct);
+    test_assert(s != NULL);
+    test_int(s->members.count, 3);
+
+    ecs_member_t *members = s->members.array;
+    test_str(members[0].name, "red_color");
+    test_str(members[1].name, "green_color");
+    test_str(members[2].name, "blue");
+
+    ecs_fini(world);
+}
+
 void Metrics_member_counter() {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
@@ -1595,6 +1625,7 @@ void Metrics_oneof_counter() {
 
 void Metrics_metric_description() {
     ecs_world_t *world = ecs_init();
+
     ECS_IMPORT(world, FlecsMetrics);
 
     ECS_COMPONENT(world, Position);

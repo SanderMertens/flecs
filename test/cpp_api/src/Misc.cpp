@@ -386,9 +386,9 @@ void Misc_oneof_gauge_metric() {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -409,9 +409,9 @@ void Misc_oneof_gauge_metric() {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -503,9 +503,9 @@ void Misc_oneof_counter_metric() {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":1, \"Red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":1, \"Green\":0, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
+            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -527,9 +527,9 @@ void Misc_oneof_counter_metric() {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"Blue\":0, \"Green\":0, \"Red\":2}");
-            test_str(ecs.to_json(m, &i[1]), "{\"Blue\":0, \"Green\":2, \"Red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"Blue\":2, \"Green\":0, \"Red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":2}");
+            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":2, \"red\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"blue\":2, \"green\":0, \"red\":0}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());

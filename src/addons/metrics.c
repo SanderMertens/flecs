@@ -4,6 +4,7 @@
  */
 
 #include "../private_api.h"
+#include <ctype.h>
 
 #ifdef FLECS_METRICS
 
@@ -453,6 +454,39 @@ error:
     return -1;
 }
 
+static
+char* flecs_metrics_to_snake_case(const char *str) {
+    int32_t upper_count = 0, len = 1;
+    const char *ptr = str;
+    char ch, *out, *out_ptr;
+
+    for (ptr = &str[1]; (ch = *ptr); ptr ++) {
+        if (isupper(ch)) {
+            upper_count ++;
+        }
+        len ++;
+    }
+
+    out = out_ptr = ecs_os_malloc_n(char, len + upper_count + 1);
+    for (ptr = str; (ch = *ptr); ptr ++) {
+        if (isupper(ch)) {
+            if ((ptr != str) && (out_ptr[-1] != '_')) {
+                out_ptr[0] = '_';
+                out_ptr ++;
+            }
+            out_ptr[0] = (char)tolower(ch);
+            out_ptr ++;
+        } else {
+            out_ptr[0] = ch;
+            out_ptr ++;
+        }
+    }
+
+    out_ptr[0] = '\0';
+
+    return out;
+}
+
 /** Update oneof metric */
 static
 int flecs_oneof_metric_init(
@@ -482,10 +516,14 @@ int flecs_oneof_metric_init(
                 continue;
             }
 
+            char *to_snake_case = flecs_metrics_to_snake_case(name);
+
             ecs_entity_t mbr = ecs_entity(world, {
-                .name = name,
+                .name = to_snake_case,
                 .add = { ecs_childof(metric) }
             });
+
+            ecs_os_free(to_snake_case);
 
             ecs_set(world, mbr, EcsMember, {
                 .type = ecs_id(ecs_f64_t),
