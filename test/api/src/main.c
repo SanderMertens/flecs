@@ -2474,6 +2474,7 @@ void Table_get_from_stage(void);
 void Table_get_depth(void);
 void Table_get_depth_non_acyclic(void);
 void Table_get_depth_2_paths(void);
+void Table_get_column_size(void);
 
 // Testsuite 'Poly'
 void Poly_iter_query(void);
@@ -12108,6 +12109,10 @@ bake_test_case Table_testcases[] = {
     {
         "get_depth_2_paths",
         Table_get_depth_2_paths
+    },
+    {
+        "get_column_size",
+        Table_get_column_size
     }
 };
 
@@ -12635,7 +12640,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        13,
+        14,
         Table_testcases
     },
     {

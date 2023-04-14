@@ -7578,6 +7578,18 @@ void* ecs_table_get_column(
     int32_t index,
     int32_t offset);
 
+/** Get column size from table.
+ * This operation returns the component size for the provided index.
+ * 
+ * @param table The table.
+ * @param index The index of the column (corresponds with element in type).
+ * @return The component size, or 0 if the index is not a component.
+ */
+FLECS_API
+size_t ecs_table_get_column_size(
+    const ecs_table_t *table,
+    int32_t index);
+
 /** Get column index for id.
  * This operation returns the index for an id in the table's type.
  * 
@@ -24698,6 +24710,11 @@ struct table {
         return static_cast<A*>(get<First>(_::cpp_type<Second>::id(m_world)));
     }
 
+    /** Get column size */
+    size_t column_size(int32_t column_index) {
+        return ecs_table_get_column_size(m_table, column_index);
+    }
+
     /** Get depth for given relationship.
      *
      * @param rel The relationship.
@@ -24746,7 +24763,6 @@ struct table_range : table {
         return m_count;
     }
 
-private:
     /** Get pointer to component array by column index. 
      * 
      * @param index The column index.
@@ -24756,6 +24772,7 @@ private:
         return ecs_table_get_column(m_table, index, m_offset);
     }
 
+private:
     int32_t m_offset = 0;
     int32_t m_count = 0;
 };

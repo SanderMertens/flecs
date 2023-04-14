@@ -2570,7 +2570,8 @@
                 "get_from_stage",
                 "get_depth",
                 "get_depth_non_acyclic",
-                "get_depth_2_paths"
+                "get_depth_2_paths",
+                "get_column_size"
             ]
         }, {
             "id": "Poly",

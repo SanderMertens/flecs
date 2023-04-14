@@ -339,3 +339,22 @@ void Table_get_depth_2_paths() {
 
     ecs_fini(world);
 }
+
+void Table_get_column_size() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_add(world, e1, Tag);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    test_uint(8, ecs_table_get_column_size(table, 0));
+    test_uint(0, ecs_table_get_column_size(table, 1));
+
+    ecs_fini(world);
+}

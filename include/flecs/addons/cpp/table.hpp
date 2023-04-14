@@ -214,6 +214,11 @@ struct table {
         return static_cast<A*>(get<First>(_::cpp_type<Second>::id(m_world)));
     }
 
+    /** Get column size */
+    size_t column_size(int32_t column_index) {
+        return ecs_table_get_column_size(m_table, column_index);
+    }
+
     /** Get depth for given relationship.
      *
      * @param rel The relationship.
@@ -262,7 +267,6 @@ struct table_range : table {
         return m_count;
     }
 
-private:
     /** Get pointer to component array by column index. 
      * 
      * @param index The column index.
@@ -272,6 +276,7 @@ private:
         return ecs_table_get_column(m_table, index, m_offset);
     }
 
+private:
     int32_t m_offset = 0;
     int32_t m_count = 0;
 };
