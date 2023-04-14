@@ -1944,3 +1944,135 @@ void Iter_worker_iter_w_binding_ctx() {
 
     ecs_fini(world);
 }
+
+void Iter_column_index_owned() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagB }, { TagC }, { TagA }}
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e1, TagC);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e2, TagC);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_int(1, ecs_field_column_index(&it, 1));
+    test_int(2, ecs_field_column_index(&it, 2));
+    test_int(0, ecs_field_column_index(&it, 3));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_int(2, ecs_field_column_index(&it, 1));
+    test_int(3, ecs_field_column_index(&it, 2));
+    test_int(1, ecs_field_column_index(&it, 3));
+    
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_column_index_shared() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagB }, { TagC }, { TagA }}
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e1, TagC);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e2, TagC);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_int(0, ecs_field_column_index(&it, 1));
+    test_int(1, ecs_field_column_index(&it, 2));
+    test_int(-1, ecs_field_column_index(&it, 3));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_int(1, ecs_field_column_index(&it, 1));
+    test_int(2, ecs_field_column_index(&it, 2));
+    test_int(-1, ecs_field_column_index(&it, 3));
+    
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_column_index_not() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ TagB }, { TagC }, { TagA, .oper = EcsNot }}
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e1, TagC);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e2, TagC);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_int(0, ecs_field_column_index(&it, 1));
+    test_int(1, ecs_field_column_index(&it, 2));
+    test_int(-1, ecs_field_column_index(&it, 3));
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_int(1, ecs_field_column_index(&it, 1));
+    test_int(2, ecs_field_column_index(&it, 2));
+    test_int(-1, ecs_field_column_index(&it, 3));
+    
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}

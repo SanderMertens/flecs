@@ -456,6 +456,21 @@ ecs_id_t ecs_field_id(
     return it->ids[index - 1];
 }
 
+int32_t ecs_field_column_index(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t result = it->columns[index - 1];
+    if (result <= 0) {
+        return -1;
+    }
+
+    return result - 1;
+}
+
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)

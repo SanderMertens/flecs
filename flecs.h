@@ -7475,6 +7475,19 @@ ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index);
 
+/** Return index of matched table column.
+ * This function only returns column indices for fields that have been matched
+ * on the the $this variable. Fields matched on other tables will return -1.
+ * 
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The index of the matched column, -1 if not matched.
+ */
+FLECS_API
+int32_t ecs_field_column_index(
+    const ecs_iter_t *it,
+    int32_t index);
+
 /** Return field source.
  * The field source is the entity on which the field was matched.
  * 
@@ -20274,6 +20287,14 @@ public:
      * @param index The field index.
      */
     flecs::id pair(int32_t index) const;
+
+    /** Obtain column index for field.
+     *
+     * @param index The field index.
+     */    
+    int32_t column_index(int32_t index) const {
+        return ecs_field_column_index(m_iter, index);
+    }
 
     /** Convert current iterator result to string.
      */

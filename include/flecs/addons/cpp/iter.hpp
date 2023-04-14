@@ -318,6 +318,14 @@ public:
      */
     flecs::id pair(int32_t index) const;
 
+    /** Obtain column index for field.
+     *
+     * @param index The field index.
+     */    
+    int32_t column_index(int32_t index) const {
+        return ecs_field_column_index(m_iter, index);
+    }
+
     /** Convert current iterator result to string.
      */
     flecs::string str() const {
