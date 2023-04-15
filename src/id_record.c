@@ -511,7 +511,8 @@ bool flecs_id_record_set_type_info(
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti)
 {
-    if (!ecs_id_is_wildcard(idr->id)) {
+    bool is_wildcard = ecs_id_is_wildcard(idr->id);
+    if (!is_wildcard) {
         if (ti) {
             if (!idr->type_info) {
                 world->info.tag_id_count --;
@@ -527,6 +528,7 @@ bool flecs_id_record_set_type_info(
 
     bool changed = idr->type_info != ti;
     idr->type_info = ti;
+
     return changed;
 }
 

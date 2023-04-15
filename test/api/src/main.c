@@ -1217,6 +1217,7 @@ void Filter_filter_iter_superset_2_relations_instanced(void);
 void Filter_filter_iter_superset_2_relations_w_component(void);
 void Filter_filter_iter_superset_2_relations_instanced_w_component(void);
 void Filter_filter_iter_not_up_disabled(void);
+void Filter_filter_iter_pair_wildcard_component(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
 void Filter_filter_w_10_terms_copy(void);
@@ -7202,6 +7203,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_not_up_disabled
     },
     {
+        "filter_iter_pair_wildcard_component",
+        Filter_filter_iter_pair_wildcard_component
+    },
+    {
         "filter_w_10_terms",
         Filter_filter_w_10_terms
     },
@@ -12507,7 +12512,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        296,
+        297,
         Filter_testcases
     },
     {

@@ -1276,6 +1276,7 @@
                 "filter_iter_superset_2_relations_w_component",
                 "filter_iter_superset_2_relations_instanced_w_component",
                 "filter_iter_not_up_disabled",
+                "filter_iter_pair_wildcard_component",
                 "filter_w_10_terms",
                 "filter_w_10_terms_move",
                 "filter_w_10_terms_copy",

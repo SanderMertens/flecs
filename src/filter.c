@@ -1253,10 +1253,12 @@ int ecs_filter_finalize(
             }
 
             if (idr) {
-                if (idr->flags & EcsIdUnion) {
-                    f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
-                } else if (idr->type_info) {
-                    f->sizes[field] = term->idr->type_info->size;
+                if (!ECS_IS_PAIR(idr->id) || ECS_PAIR_FIRST(idr->id) != EcsWildcard) {
+                    if (idr->flags & EcsIdUnion) {
+                        f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
+                    } else if (idr->type_info) {
+                        f->sizes[field] = idr->type_info->size;
+                    }
                 }
             } else {
                 bool is_union = false;

@@ -7644,6 +7644,34 @@ void Filter_filter_iter_not_up_disabled() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_pair_wildcard_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {
+            { .id = ecs_pair(EcsWildcard, ecs_id(Position)) },
+        }
+    });
+    test_assert(f != NULL);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, ecs_id(Mass), ecs_id(Position));
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, it.sizes[0]);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
+    
+    ecs_fini(world);
+}
+
 void Filter_filter_w_10_terms() {
     ecs_world_t *world = ecs_mini();
 
@@ -11603,4 +11631,3 @@ void Filter_filter_w_short_notation() {
 
     ecs_fini(world);
 }
-
