@@ -687,3 +687,127 @@ void Misc_component_mixin_member_metric_description() {
 
     test_int(count, 2);
 }
+
+void Misc_member_metric_w_value_name() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity parent = ecs.entity();
+
+    ecs.component<Mass>()
+        .member<float>("value").metric<flecs::metrics::Gauge>(parent);
+
+    test_assert(parent.lookup("value") == 0);
+    test_assert(parent.lookup("mass") != 0);
+
+    flecs::entity e1 = ecs.entity().set<Mass>({10});
+    flecs::entity e2 = ecs.entity().set<Mass>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}
+
+struct FooBar {
+    float value;
+};
+
+void Misc_member_metric_w_value_name_camel_case_type() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity parent = ecs.entity();
+
+    ecs.component<FooBar>()
+        .member<float>("value").metric<flecs::metrics::Gauge>(parent);
+
+    test_assert(parent.lookup("value") == 0);
+    test_assert(parent.lookup("foo_bar") != 0);
+
+    flecs::entity e1 = ecs.entity().set<FooBar>({10});
+    flecs::entity e2 = ecs.entity().set<FooBar>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_member_metric_w_custom_name() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity parent = ecs.entity();
+
+    ecs.component<FooBar>()
+        .member<float>("value").metric<flecs::metrics::Gauge>(parent, nullptr, "custom_name");
+
+    test_assert(parent.lookup("value") == 0);
+    test_assert(parent.lookup("custom_name") != 0);
+
+    flecs::entity e1 = ecs.entity().set<FooBar>({10});
+    flecs::entity e2 = ecs.entity().set<FooBar>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent().parent() == parent);
+            test_assert(it.entity(1).parent().parent() == parent);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}

@@ -3280,6 +3280,11 @@ char* ecs_asprintf(
     const char *fmt,
     ...);
 
+/* Convert identifier to snake case */
+FLECS_API
+char* flecs_to_snake_case(
+    const char *str);
+
 FLECS_DBG_API
 int32_t flecs_table_observed_count(
     const ecs_table_t *table);
@@ -24165,16 +24170,27 @@ untyped_component& bit(const char *name, uint32_t value) {
  */
 
 /** Register member as metric.
+ * When no explicit name is provided, this operation will derive the metric name
+ * from the member name. When the member name is "value", the operation will use
+ * the name of the component.
+ * 
+ * When the brief parameter is provided, it is set on the metric as if 
+ * set_doc_brief is used. The brief description can be obtained with 
+ * get_doc_brief.
  * 
  * @tparam Kind Metric kind (Counter, CounterIncrement or Gauge).
- * @param parent Parent entity of the metric.
- * @param brief Description for metric.
+ * @param parent Parent entity of the metric (optional).
+ * @param brief Description for metric (optional).
+ * @param name Name of metric (optional).
  * 
  * \ingroup cpp_addons_metrics
  * \memberof flecs::world
  */
 template <typename Kind>
-untyped_component& metric(flecs::entity_t parent = 0, const char *brief = nullptr);
+untyped_component& metric(
+    flecs::entity_t parent = 0, 
+    const char *brief = nullptr, 
+    const char *name = nullptr);
 
 /** @} */
 
@@ -28664,7 +28680,7 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief) {
+inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief, const char *metric_name) {
     flecs::world w(m_world);
     flecs::entity e = w.entity(m_id);
     const flecs::Struct *s = e.get<flecs::Struct>();
@@ -28687,8 +28703,21 @@ inline untyped_component& untyped_component::metric(flecs::entity_t parent, cons
 
     flecs::entity metric_entity = me;
     if (parent) {
-        metric_entity = w.scope(parent).entity(m->name);
+        const char *component_name = e.name();
+        if (!metric_name) {
+            if (ecs_os_strcmp(m->name, "value") || !component_name) {
+                metric_entity = w.scope(parent).entity(m->name);
+            } else {
+                // If name of member is "value", use name of type.
+                char *snake_name = flecs_to_snake_case(component_name);
+                metric_entity = w.scope(parent).entity(snake_name);
+                ecs_os_free(snake_name);
+            }
+        } else {
+            metric_entity = w.scope(parent).entity(metric_name);
+        }
     }
+
     w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
 
     return *this;

@@ -1120,6 +1120,9 @@ void Misc_component_mixin_member_metric(void);
 void Misc_component_mixin_member_metric_custom_parent_entity(void);
 void Misc_metric_description(void);
 void Misc_component_mixin_member_metric_description(void);
+void Misc_member_metric_w_value_name(void);
+void Misc_member_metric_w_value_name_camel_case_type(void);
+void Misc_member_metric_w_custom_name(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5524,6 +5527,18 @@ bake_test_case Misc_testcases[] = {
     {
         "component_mixin_member_metric_description",
         Misc_component_mixin_member_metric_description
+    },
+    {
+        "member_metric_w_value_name",
+        Misc_member_metric_w_value_name
+    },
+    {
+        "member_metric_w_value_name_camel_case_type",
+        Misc_member_metric_w_value_name_camel_case_type
+    },
+    {
+        "member_metric_w_custom_name",
+        Misc_member_metric_w_custom_name
     }
 };
 
@@ -6017,7 +6032,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        22,
+        25,
         Misc_testcases
     },
     {

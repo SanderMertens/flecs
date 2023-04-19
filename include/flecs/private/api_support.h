@@ -61,6 +61,11 @@ char* ecs_asprintf(
     const char *fmt,
     ...);
 
+/* Convert identifier to snake case */
+FLECS_API
+char* flecs_to_snake_case(
+    const char *str);
+
 FLECS_DBG_API
 int32_t flecs_table_observed_count(
     const ecs_table_t *table);

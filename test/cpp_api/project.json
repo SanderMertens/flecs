@@ -1173,7 +1173,10 @@
                 "component_mixin_member_metric",
                 "component_mixin_member_metric_custom_parent_entity",
                 "metric_description",
-                "component_mixin_member_metric_description"
+                "component_mixin_member_metric_description",
+                "member_metric_w_value_name",
+                "member_metric_w_value_name_camel_case_type",
+                "member_metric_w_custom_name"
             ]
         }, {
             "id": "Meta",

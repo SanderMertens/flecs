@@ -60,7 +60,7 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief) {
+inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief, const char *metric_name) {
     flecs::world w(m_world);
     flecs::entity e = w.entity(m_id);
     const flecs::Struct *s = e.get<flecs::Struct>();
@@ -83,8 +83,21 @@ inline untyped_component& untyped_component::metric(flecs::entity_t parent, cons
 
     flecs::entity metric_entity = me;
     if (parent) {
-        metric_entity = w.scope(parent).entity(m->name);
+        const char *component_name = e.name();
+        if (!metric_name) {
+            if (ecs_os_strcmp(m->name, "value") || !component_name) {
+                metric_entity = w.scope(parent).entity(m->name);
+            } else {
+                // If name of member is "value", use name of type.
+                char *snake_name = flecs_to_snake_case(component_name);
+                metric_entity = w.scope(parent).entity(snake_name);
+                ecs_os_free(snake_name);
+            }
+        } else {
+            metric_entity = w.scope(parent).entity(metric_name);
+        }
     }
+
     w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
 
     return *this;
