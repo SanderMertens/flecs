@@ -394,6 +394,35 @@ struct entity_builder : entity_view {
         return this->override<First>(_::cpp_type<Second>::id(this->m_world));
     }
 
+    /** Mark id for auto-overriding.
+     * When an entity inherits from a base entity (using the IsA relationship)
+     * any ids marked for auto-overriding on the base will be overridden
+     * automatically by the entity.
+     *
+     * @param id The id to mark for overriding.
+     */
+    Self& override_second(flecs::id_t id) {
+        return this->add_second(ECS_OVERRIDE | id);
+    }
+
+    /** Mark component for auto-overriding.
+     * @see override(flecs::id_t id)
+     *
+     * @tparam T The component to mark for overriding.
+     */
+    template <typename T>
+    Self& override_second() {
+        return this->override_second(_::cpp_type<T>::id(this->m_world));
+    }
+
+    /** Mark pair for auto-overriding.
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     */
+    Self& override_second(flecs::entity_t first, flecs::entity_t second) {
+        return this->override_second(ecs_pair(first, second));
+    }
+
     /** Set component, mark component for auto-overriding.
      * @see override(flecs::id_t id)
      *
@@ -500,6 +529,17 @@ struct entity_builder : entity_view {
 
         return to_base();  
     }
+
+     /** Set component, mark component for auto-overriding.
+      * @see override(flexs::id_t id)
+      *
+      * @tparam T the component to set and for which to add the OVERRIDE flag
+      */
+     template<typename T>
+     Self& set_override_second(const T& val) {
+         this->override_second<T>();
+         return this->set_second<T>(val);
+     }
 
     /** Add pair for enum constant.
      * This operation will add a pair to the entity where the first element is
