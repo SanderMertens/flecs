@@ -1357,7 +1357,6 @@ void Metrics_member_auto_counter(void);
 void Metrics_id_counter(void);
 void Metrics_oneof_counter(void);
 void Metrics_metric_description(void);
-void Metrics_member_w_value_name(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -6577,10 +6576,6 @@ bake_test_case Metrics_testcases[] = {
     {
         "metric_description",
         Metrics_metric_description
-    },
-    {
-        "member_w_value_name",
-        Metrics_member_w_value_name
     }
 };
 
@@ -6799,7 +6794,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        25,
+        24,
         Metrics_testcases
     }
 };

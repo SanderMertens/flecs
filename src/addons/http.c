@@ -72,6 +72,9 @@ typedef int ecs_http_socket_t;
 /* Number of dequeues before purging */
 #define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
 
+/* Number of retries receiving request */
+#define ECS_HTTP_REQUEST_RECV_RETRY (10)
+
 /* Minimum interval between dequeueing requests (ms) */
 #define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
 
@@ -296,6 +299,26 @@ void http_sock_keep_alive(
         ecs_warn("http: failed to set socket KEEPALIVE: %s",
             ecs_os_strerror(errno));
     }
+}
+
+static
+void http_sock_nonblock(ecs_http_socket_t sock) {
+    (void)sock;
+#ifdef ECS_TARGET_POSIX
+    int flags;
+    flags = fcntl(sock,F_GETFL,0);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+#endif
 }
 
 static
@@ -1002,48 +1025,57 @@ void http_recv_connection(
     ecs_size_t bytes_read;
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
     ecs_http_fragment_t frag = {0};
+    int32_t retries = 0;
 
-    if ((bytes_read = http_recv(
-        sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
-    {
-        bool is_alive = conn->pub.id == conn_id;
-        if (!is_alive) {
-            /* Connection has been purged by main thread */
-            goto done;
-        }
+    do {
+        if ((bytes_read = http_recv(
+            sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
+        {
+            bool is_alive = conn->pub.id == conn_id;
+            if (!is_alive) {
+                /* Connection has been purged by main thread */
+                goto done;
+            }
 
-        if (http_parse_request(&frag, recv_buf, bytes_read)) {
-            if (frag.method == EcsHttpOptions) {
-                ecs_http_reply_t reply;
-                reply.body = ECS_STRBUF_INIT;
-                reply.code = 200;
-                reply.content_type = NULL;
-                reply.headers = ECS_STRBUF_INIT;
-                reply.status = "OK";
-                http_send_reply(conn, &reply, true);
-                ecs_os_linc(&ecs_http_request_preflight_count);
-            } else {
-                ecs_http_request_entry_t *entry =
-                    http_enqueue_request(conn, conn_id, &frag);
-                if (entry) {
+            if (http_parse_request(&frag, recv_buf, bytes_read)) {
+                if (frag.method == EcsHttpOptions) {
                     ecs_http_reply_t reply;
                     reply.body = ECS_STRBUF_INIT;
                     reply.code = 200;
                     reply.content_type = NULL;
                     reply.headers = ECS_STRBUF_INIT;
                     reply.status = "OK";
-                    ecs_strbuf_appendstrn(&reply.body, 
-                        entry->content, entry->content_length);
-                    http_send_reply(conn, &reply, false);
-                    http_connection_free(conn);
+                    http_send_reply(conn, &reply, true);
+                    ecs_os_linc(&ecs_http_request_preflight_count);
+                } else {
+                    ecs_http_request_entry_t *entry =
+                        http_enqueue_request(conn, conn_id, &frag);
+                    if (entry) {
+                        ecs_http_reply_t reply;
+                        reply.body = ECS_STRBUF_INIT;
+                        reply.code = 200;
+                        reply.content_type = NULL;
+                        reply.headers = ECS_STRBUF_INIT;
+                        reply.status = "OK";
+                        ecs_strbuf_appendstrn(&reply.body, 
+                            entry->content, entry->content_length);
+                        http_send_reply(conn, &reply, false);
+                        http_connection_free(conn);
 
-                    /* Lock was transferred from enqueue_request */
-                    ecs_os_mutex_unlock(srv->lock);
+                        /* Lock was transferred from enqueue_request */
+                        ecs_os_mutex_unlock(srv->lock);
+                    }
                 }
+            } else {
+                ecs_os_linc(&ecs_http_request_invalid_count);
             }
-        } else {
-            ecs_os_linc(&ecs_http_request_invalid_count);
         }
+
+        ecs_os_sleep(0, 10 * 1000 * 1000);
+    } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
+
+    if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
+        http_close(&sock);
     }
 
 done:
@@ -1064,6 +1096,7 @@ http_conn_res_t http_init_connection(
 {
     http_sock_set_timeout(sock_conn, 100);
     http_sock_keep_alive(sock_conn);
+    http_sock_nonblock(sock_conn);
 
     /* Create new connection */
     ecs_os_mutex_lock(srv->lock);
