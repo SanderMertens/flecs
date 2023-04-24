@@ -2996,3 +2996,30 @@ void OnDelete_deferred_delete_with_childof_after_create_named() {
 
     ecs_fini(world);
 }
+
+void OnDelete_match_marked_for_deletion() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ns = ecs_new_entity(world, "ns");
+    ecs_set_scope(world, ns);
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t Foo = ecs_component(world, { .entity = ecs_new(world, 0) });
+    ecs_entity_t Bar = ecs_component(world, { .entity = ecs_new(world, 0) });
+    ecs_set_scope(world, 0);
+
+    /* During cleanup a new table will be created that matches the query */
+    ecs_query_t *q = ecs_query_new(world, "ns.Position");
+    test_assert(q != NULL);
+
+    ecs_entity_t prefab = ecs_new_id(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add(world, prefab, Position);
+    ecs_override_id(world, prefab, Foo);
+
+    ecs_entity_t newEnemy = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_add_id(world, newEnemy, Bar);
+
+    ecs_fini(world);
+
+    test_assert(true); /* Ensure cleanup was successful */
+}

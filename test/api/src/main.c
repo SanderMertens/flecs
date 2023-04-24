@@ -737,6 +737,7 @@ void OnDelete_delete_observed_symmetric_relation(void);
 void OnDelete_nested_delete_with(void);
 void OnDelete_deferred_delete_with_after_create_named(void);
 void OnDelete_deferred_delete_with_childof_after_create_named(void);
+void OnDelete_match_marked_for_deletion(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5334,6 +5335,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "deferred_delete_with_childof_after_create_named",
         OnDelete_deferred_delete_with_childof_after_create_named
+    },
+    {
+        "match_marked_for_deletion",
+        OnDelete_match_marked_for_deletion
     }
 };
 
@@ -12449,7 +12454,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        106,
+        107,
         OnDelete_testcases
     },
     {

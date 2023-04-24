@@ -45867,8 +45867,8 @@ bool flecs_type_info_init_id(
     } while ((idr = idr->first.next));
 
     /* Type info of (*, component) should always point to component */
-    // ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
-    //     type_info == ti, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
+        type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
 }
@@ -48666,12 +48666,6 @@ bool ecs_id_is_valid(
         return false;
     }
     if (ecs_id_is_wildcard(id)) {
-        return false;
-    }
-
-    world = ecs_get_world(world);
-    const ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (idr && idr->flags & EcsIdMarkedForDelete) {
         return false;
     }
 

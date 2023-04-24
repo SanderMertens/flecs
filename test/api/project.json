@@ -777,7 +777,8 @@
                 "delete_observed_symmetric_relation",
                 "nested_delete_with",
                 "deferred_delete_with_after_create_named",
-                "deferred_delete_with_childof_after_create_named"
+                "deferred_delete_with_childof_after_create_named",
+                "match_marked_for_deletion"
             ]
         }, {
             "id": "Set",
