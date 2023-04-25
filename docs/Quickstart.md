@@ -452,9 +452,9 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
     .filter.terms = {
         { ecs_id(Position) },
-        { ecs_id(Position), .src.set = {
-            .mask = EcsCascade,    // Force breadth-first order
-            .relationship = EcsChildOf // Use ChildOf relationship for ordering
+        { ecs_id(Position), .src = {
+            .flags = EcsCascade,       // Breadth-first order
+            .trav = EcsChildOf // Use ChildOf relationship for traversal
         }}
     }
 });
@@ -470,7 +470,7 @@ while (ecs_query_next(&it)) {
 ```
 ```cpp
 auto q = world.query_builder<Position, Position>()
-    .arg(2).set(flecs::Cascade, flecs::ChildOf)
+    .term_at(2).parent().cascade()
     .build();
 
 q.each([](Position& p, Position& p_parent) {
@@ -593,7 +593,7 @@ ecs_query_t *q = ecs_query(ecs, {
         // Regular component
         { .id = ecs_id(Velocity) },
         // A singleton is a component matched on itself
-        { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
+        { .id = ecs_id(Gravity), .src.id = ecs_id(Gravity) }
     }
 });
 
