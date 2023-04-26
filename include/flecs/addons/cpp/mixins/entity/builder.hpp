@@ -408,11 +408,11 @@ struct entity_builder : entity_view {
     /** Mark component for auto-overriding.
      * @see override(flecs::id_t id)
      *
-     * @tparam T The component to mark for overriding.
+     * @tparam Second The component to mark for overriding.
      */
-    template <typename T>
-    Self& override_second() {
-        return this->override_second(_::cpp_type<T>::id(this->m_world));
+    template <typename Second>
+    Self& override_second(flecs::entity_t first) {
+        return this->override(first, _::cpp_type<Second>::id(this->m_world));
     }
 
     /** Mark pair for auto-overriding.
