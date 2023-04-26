@@ -449,7 +449,10 @@
                 "assign_singleton_2_tags_w_scope",
                 "assign_singleton_component_w_scope",
                 "assign_singleton_2_components_w_scope",
-                "with_pair_in_scope"
+                "with_pair_in_scope",
+                "assembly_redeclare_prop_as_const",
+                "assembly_redeclare_prop_as_prop",
+                "assembly_redeclare_const_as_const"
             ]
         }, {
             "id": "Doc",

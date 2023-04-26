@@ -803,15 +803,17 @@ const char* plecs_parse_assign_var_expr(
     const char *name,
     const char *expr,
     const char *ptr,
-    plecs_state_t *state)
+    plecs_state_t *state,
+    ecs_expr_var_t *var)
 {
     ecs_value_t value = {0};
-    ecs_expr_var_t *var = NULL;
 
     if (state->last_assign_id) {
         value.type = state->last_assign_id;
         value.ptr = ecs_value_new(world, state->last_assign_id);
-        var = ecs_vars_lookup(&state->vars, state->var_name);
+        if (!var && state->assembly_instance) {
+            var = ecs_vars_lookup(&state->vars, state->var_name);
+        }
     }
 
     ptr = ecs_parse_expr(world, ptr, &value, 
@@ -860,12 +862,13 @@ const char* plecs_parse_assign_expr(
     const char *name,
     const char *expr,
     const char *ptr,
-    plecs_state_t *state) 
+    plecs_state_t *state,
+    ecs_expr_var_t *var) 
 {
     (void)world;
     
     if (state->var_stmt) {
-        return plecs_parse_assign_var_expr(world, name, expr, ptr, state);
+        return plecs_parse_assign_var_expr(world, name, expr, ptr, state, var);
     }
 
     if (!state->assign_stmt) {
@@ -1848,7 +1851,7 @@ assign_stmt:
     goto term_expr;
 
 assign_expr:
-    ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
+    ptr = plecs_parse_assign_expr(world, name, expr, ptr, state, NULL);
     if (!ptr) goto error;
 
     ptr = plecs_parse_fluff(ptr);
@@ -1857,18 +1860,15 @@ assign_expr:
         goto term_expr;
     } else if (ptr[0] == '{') {
         if (state->var_stmt) {
-            const ecs_expr_var_t *var = ecs_vars_lookup(
-                &state->vars, state->var_name);
+            ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, state->var_name);
             if (var && var->value.type == ecs_id(ecs_entity_t)) {
                 ecs_assert(var->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
                 /* The code contained an entity{...} variable assignment, use
                  * the assigned entity id as type for parsing the expression */
                 state->last_assign_id = *(ecs_entity_t*)var->value.ptr;
-                ptr = plecs_parse_assign_expr(world, name, expr, ptr, state);
+                ptr = plecs_parse_assign_expr(world, name, expr, ptr, state, var);
                 goto done;
             }
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "variables not supported, missing FLECS_EXPR addon");
         }
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected '{' after assignment");

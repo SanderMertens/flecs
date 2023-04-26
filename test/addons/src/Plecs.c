@@ -7321,3 +7321,57 @@ void Plecs_with_pair_in_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_assembly_redeclare_prop_as_const() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "assembly Foo {\n"
+    LINE "  prop x : flecs.meta.f32 = 10\n"
+    LINE "  prop y : flecs.meta.f32 = 10\n"
+    LINE "  const y : flecs.meta.f32 = 20\n"
+    LINE "}"
+    LINE "ent :- Foo{}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_redeclare_prop_as_prop() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "assembly Foo {\n"
+    LINE "  prop x : flecs.meta.f32 = 10\n"
+    LINE "  prop y : flecs.meta.f32 = 10\n"
+    LINE "  prop y : flecs.meta.f32 = 20\n"
+    LINE "}"
+    LINE "ent :- Foo{}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_redeclare_const_as_const() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "assembly Foo {\n"
+    LINE "  prop x : flecs.meta.f32 = 10\n"
+    LINE "  const y : flecs.meta.f32 = 10\n"
+    LINE "  const y : flecs.meta.f32 = 20\n"
+    LINE "}"
+    LINE "ent :- Foo{}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
