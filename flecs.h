@@ -217,7 +217,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-#define FLECS_USE_OS_ALLOC
+// #define FLECS_USE_OS_ALLOC
 
 /** \def ECS_ID_CACHE_SIZE
  * Maximum number of components to add/remove in a single operation */
@@ -12632,7 +12632,7 @@ typedef enum ecs_type_kind_t {
     EcsArrayType,
     EcsVectorType,
     EcsOpaqueType,
-    EcsTypeKindLast = EcsVectorType
+    EcsTypeKindLast = EcsOpaqueType
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
