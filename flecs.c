@@ -35414,7 +35414,21 @@ bool flecs_rest_script(
 }
 
 static
-void flecs_rest_iter_to_reply(
+void flecs_rest_reply_set_captured_log(
+    ecs_http_reply_t *reply)
+{
+    char *err = flecs_rest_get_captured_log();
+    if (err) {
+        char *escaped_err = ecs_astresc('"', err);
+        flecs_reply_error(reply, escaped_err);
+        reply->code = 400;
+        ecs_os_free(escaped_err);
+        ecs_os_free(err);
+    }
+}
+
+static
+int flecs_rest_iter_to_reply(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -35432,11 +35446,16 @@ void flecs_rest_iter_to_reply(
     if (offset < 0 || limit < 0) {
         flecs_reply_error(reply, "invalid offset/limit parameter");
         reply->code = 400;
-        return;
+        return -1;
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
-    ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
+    if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
+        flecs_rest_reply_set_captured_log(reply);
+        return -1;
+    }
+
+    return 0;
 }
 
 static
@@ -35483,13 +35502,8 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
         if (ecs_rule_parse_vars(poly->poly, &it, vars) == NULL) {
-            char *err = flecs_rest_get_captured_log();
-            char *escaped_err = ecs_astresc('"', err);
-            flecs_reply_error(reply, escaped_err);
-            reply->code = 400;
+            flecs_rest_reply_set_captured_log(reply);
             ecs_os_linc(&ecs_rest_query_name_error_count);
-            ecs_os_free(escaped_err);
-            ecs_os_free(err);
             return true;
         }
     }
@@ -35532,13 +35546,8 @@ bool flecs_rest_reply_query(
         .expr = q
     });
     if (!r) {
-        char *err = flecs_rest_get_captured_log();
-        char *escaped_err = ecs_astresc('"', err);
-        flecs_reply_error(reply, escaped_err);
+        flecs_rest_reply_set_captured_log(reply);
         ecs_os_linc(&ecs_rest_query_error_count);
-        reply->code = 400; /* bad request */
-        ecs_os_free(escaped_err);
-        ecs_os_free(err);
     } else {
         ecs_iter_t it = ecs_rule_iter(world, r);
         flecs_rest_iter_to_reply(world, req, reply, &it);
