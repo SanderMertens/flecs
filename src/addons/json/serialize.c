@@ -54,6 +54,11 @@ int json_ser_enum(
     ecs_enum_constant_t *constant = ecs_map_get_deref(&enum_type->constants,
         ecs_enum_constant_t, (ecs_map_key_t)value);
     if (!constant) {
+        /* If the value is not found, it is not a valid enumeration constant */
+        char *name = ecs_get_fullpath(world, op->type);
+        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
+            value, name);
+        ecs_os_free(name);
         goto error;
     }
 

@@ -846,6 +846,18 @@ bool ecs_iter_var_is_constrained(
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
 }
 
+static
+void ecs_chained_iter_fini(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_iter_fini(it->chain_it);
+
+    it->chain_it = NULL;
+}
+
 ecs_iter_t ecs_page_iter(
     const ecs_iter_t *it,
     int32_t offset,
@@ -861,6 +873,7 @@ ecs_iter_t ecs_page_iter(
         .remaining = limit
     };
     result.next = ecs_page_next;
+    result.fini = ecs_chained_iter_fini;
     result.chain_it = (ecs_iter_t*)it;
 
     return result;
@@ -1010,6 +1023,7 @@ ecs_iter_t ecs_worker_iter(
         .count = count
     };
     result.next = ecs_worker_next;
+    result.fini = ecs_chained_iter_fini;
     result.chain_it = (ecs_iter_t*)it;
 
     return result;

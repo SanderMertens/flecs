@@ -2076,3 +2076,107 @@ void Iter_column_index_not() {
 
     ecs_fini(world);
 }
+
+void Iter_page_iter_w_fini() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Foo);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 2);
+    test_bool(true, ecs_page_next(&pit));
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e1);
+    ecs_iter_fini(&pit);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_fini() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Foo);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    ecs_iter_t pit = ecs_worker_iter(&it, 0, 2);
+    test_bool(true, ecs_worker_next(&pit));
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e1);
+    ecs_iter_fini(&pit);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_rule_page_iter_w_fini() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 2);
+    test_bool(true, ecs_page_next(&pit));
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e1);
+    ecs_iter_fini(&pit);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Iter_rule_worker_iter_w_fini() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_add(world, e2, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_worker_iter(&it, 0, 2);
+    test_bool(true, ecs_worker_next(&pit));
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e1);
+    ecs_iter_fini(&pit);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

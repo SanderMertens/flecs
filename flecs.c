@@ -31862,6 +31862,11 @@ int json_ser_enum(
     ecs_enum_constant_t *constant = ecs_map_get_deref(&enum_type->constants,
         ecs_enum_constant_t, (ecs_map_key_t)value);
     if (!constant) {
+        /* If the value is not found, it is not a valid enumeration constant */
+        char *name = ecs_get_fullpath(world, op->type);
+        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
+            value, name);
+        ecs_os_free(name);
         goto error;
     }
 
@@ -42093,6 +42098,7 @@ void flecs_rule_iter_fini(
 {
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
     ecs_assert(rit->rule != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(rit->rule, ecs_rule_t);
     int32_t op_count = rit->rule->op_count;
     int32_t var_count = rit->rule->var_count;
 
@@ -57581,6 +57587,18 @@ bool ecs_iter_var_is_constrained(
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
 }
 
+static
+void ecs_chained_iter_fini(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_iter_fini(it->chain_it);
+
+    it->chain_it = NULL;
+}
+
 ecs_iter_t ecs_page_iter(
     const ecs_iter_t *it,
     int32_t offset,
@@ -57596,6 +57614,7 @@ ecs_iter_t ecs_page_iter(
         .remaining = limit
     };
     result.next = ecs_page_next;
+    result.fini = ecs_chained_iter_fini;
     result.chain_it = (ecs_iter_t*)it;
 
     return result;
@@ -57745,6 +57764,7 @@ ecs_iter_t ecs_worker_iter(
         .count = count
     };
     result.next = ecs_worker_next;
+    result.fini = ecs_chained_iter_fini;
     result.chain_it = (ecs_iter_t*)it;
 
     return result;

@@ -733,6 +733,7 @@
                 "serialize_iterator_ids_2_entities",
                 "serialize_iterator_variable_ids",
                 "serialize_iterator_variable_ids_2_entities",
+                "serialize_iterator_invalid_value",
                 "serialize_paged_iterator",
                 "serialize_paged_iterator_w_optional_component",
                 "serialize_paged_iterator_w_optional_tag",

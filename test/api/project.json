@@ -1647,7 +1647,11 @@
                 "worker_iter_w_binding_ctx",
                 "column_index_owned",
                 "column_index_shared",
-                "column_index_not"
+                "column_index_not",
+                "page_iter_w_fini",
+                "worker_iter_w_fini",
+                "rule_page_iter_w_fini",
+                "rule_worker_iter_w_fini"
             ]
         }, {
             "id": "Pairs",

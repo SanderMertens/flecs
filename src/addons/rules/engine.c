@@ -1836,6 +1836,7 @@ void flecs_rule_iter_fini(
 {
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
     ecs_assert(rit->rule != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(rit->rule, ecs_rule_t);
     int32_t op_count = rit->rule->op_count;
     int32_t var_count = rit->rule->var_count;
 

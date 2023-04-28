@@ -1025,6 +1025,7 @@ void Meta_enum_w_bits() {
 			.add<EnumWithBitsStruct>();
 	}
 
+    flecs::log::set_level(-4);
     auto q = ecs.query<EnumWithBitsStruct>();
     auto s = q.iter().to_json();
     test_str(s.c_str(), "");

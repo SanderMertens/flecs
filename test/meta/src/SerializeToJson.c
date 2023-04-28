@@ -639,6 +639,7 @@ void SerializeToJson_struct_enum() {
 
     {
     T value = {10};
+    ecs_log_set_level(-4);
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr == NULL);
     }
@@ -1591,6 +1592,7 @@ void SerializeToJson_serialize_entity_w_invalid_enum_component() {
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
     desc.serialize_values = true;
 
+    ecs_log_set_level(-4);
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json == NULL);
 
@@ -4028,6 +4030,46 @@ void SerializeToJson_serialize_iterator_variable_ids_2_entities() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_invalid_value() {
+    typedef enum {
+        Red, Blue, Green
+    } E;
+
+    typedef struct {
+        E x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", e}
+        }
+    });
+
+    for (int i = 0; i < 10; i ++) {
+        ecs_entity_t p = ecs_new_id(world);
+        ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+        ecs_set(world, e, T, {4});
+    }
+
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_log_set_level(-4);
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_assert(json == NULL);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 
@@ -4446,3 +4488,4 @@ void SerializeToJson_serialize_anonymous_entities_w_offset() {
 
     ecs_fini(world);
 }
+
