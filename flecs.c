@@ -54869,6 +54869,10 @@ ecs_query_t* ecs_query_init(
     }
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_t);
+    if (poly->poly) {
+        /* If entity already had poly query, delete previous */
+        flecs_query_fini(poly->poly);
+    }
     poly->poly = result;
     result->filter.entity = entity;
 

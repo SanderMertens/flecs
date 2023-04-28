@@ -8440,3 +8440,32 @@ void Query_query_next_table_w_populate_skip_last() {
 
     ecs_fini(world);
 }
+
+void Query_create_query_existing_query_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q_1 = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.entity = ecs_entity(world, { .name = "q" }),
+        .filter.terms = {
+            { .id = Foo },
+            { .id = Bar }
+        },
+    });
+
+    test_assert(q_1 != NULL);
+
+    ecs_query_t *q_2 = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.entity = ecs_entity(world, { .name = "q" }),
+        .filter.terms = {
+            { .id = Foo },
+            { .id = Bar }
+        },
+    });
+
+    test_assert(q_2 != NULL);
+
+    ecs_fini(world);
+}

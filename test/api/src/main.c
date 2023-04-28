@@ -1541,6 +1541,7 @@ void Query_query_next_table_w_populate_first_changed(void);
 void Query_query_next_table_w_populate_last_changed(void);
 void Query_query_next_table_w_populate_skip_first(void);
 void Query_query_next_table_w_populate_skip_last(void);
+void Query_create_query_existing_query_entity(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -8488,6 +8489,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_next_table_w_populate_skip_last",
         Query_query_next_table_w_populate_skip_last
+    },
+    {
+        "create_query_existing_query_entity",
+        Query_create_query_existing_query_entity
     }
 };
 
@@ -12531,7 +12536,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        205,
+        206,
         Query_testcases
     },
     {

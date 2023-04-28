@@ -1603,7 +1603,8 @@
                 "query_next_table_w_populate_first_changed",
                 "query_next_table_w_populate_last_changed",
                 "query_next_table_w_populate_skip_first",
-                "query_next_table_w_populate_skip_last"
+                "query_next_table_w_populate_skip_last",
+                "create_query_existing_query_entity"
             ]
         }, {
             "id": "Iter",
