@@ -64,6 +64,7 @@ static ECS_DTOR(EcsRest, ptr, {
 })
 
 static char *rest_last_err;
+static ecs_os_api_log_t rest_prev_log;
 
 static 
 void flecs_rest_capture_log(
@@ -73,6 +74,15 @@ void flecs_rest_capture_log(
     const char *msg)
 {
     (void)file; (void)line;
+
+    if (level < 0) {
+        if (rest_prev_log) {
+            // Also log to previous log function
+            ecs_log_enable_colors(true);
+            rest_prev_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+        }
+    }
 
     if (!rest_last_err && level < 0) {
         rest_last_err = ecs_os_strdup(msg);
@@ -325,7 +335,7 @@ bool flecs_rest_script(
     }
 
     bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_entity_t script = ecs_script(world, {
@@ -343,7 +353,7 @@ bool flecs_rest_script(
         ecs_os_free(err);
     }
 
-    ecs_os_api.log_ = prev_log_;
+    ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
@@ -428,7 +438,7 @@ bool flecs_rest_reply_existing_query(
 
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
@@ -449,7 +459,7 @@ bool flecs_rest_reply_existing_query(
 
     flecs_rest_iter_to_reply(world, req, reply, &it);
 
-    ecs_os_api.log_ = prev_log_;
+    ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
 
     return true;
@@ -478,7 +488,7 @@ bool flecs_rest_reply_query(
 
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+    rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
@@ -493,7 +503,7 @@ bool flecs_rest_reply_query(
         ecs_rule_fini(r);
     }
 
-    ecs_os_api.log_ = prev_log_;
+    ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
