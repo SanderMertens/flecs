@@ -996,3 +996,36 @@ void Meta_deser_entity_w_path() {
     test_assert(e == ent);
     test_str(e.path().c_str(), "::ent");
 }
+
+enum class EnumWithBits : uint32_t {
+	BitA = 0,
+	BitB = 1 << 0,
+	BitAll = 0xffffffff
+};
+
+struct EnumWithBitsStruct {
+	EnumWithBits bits = EnumWithBits::BitAll;
+};
+
+void Meta_enum_w_bits() {
+    flecs::world ecs;
+
+	ecs.component<EnumWithBits>()
+		.bit("BitA", (uint32_t)EnumWithBits::BitA)
+		.bit("BitB", (uint32_t)EnumWithBits::BitB)
+        .bit("BitAll", (uint32_t)EnumWithBits::BitAll);
+
+	ecs.component<EnumWithBitsStruct>()
+		.member<EnumWithBits>("bits");
+
+	for (int i = 0; i < 30; i++)
+	{
+		ecs.entity()
+			.child_of(ecs.entity())
+			.add<EnumWithBitsStruct>();
+	}
+
+    auto q = ecs.query<EnumWithBitsStruct>();
+    auto s = q.iter().to_json();
+    test_str(s.c_str(), "");
+}

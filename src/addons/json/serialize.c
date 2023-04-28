@@ -100,6 +100,10 @@ int json_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
+        char *name = ecs_get_fullpath(world, op->type);
+        ecs_err("bitmask value '%u' of type '%s' contains invalid/unknown bits", 
+            value, name);
+        ecs_os_free(name);
         goto error;
     }
 
@@ -1505,13 +1509,13 @@ void flecs_json_serialize_iter_result_colors(
 }
 
 static
-void flecs_json_serialize_iter_result_values(
+int flecs_json_serialize_iter_result_values(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
     if (!it->ptrs || (it->flags & EcsIterNoData)) {
-        return;
+        return 0;
     }
 
     flecs_json_memberl(buf, "values");
@@ -1574,24 +1578,30 @@ void flecs_json_serialize_iter_result_values(
 
         if (ecs_field_is_self(it, i + 1)) {
             int32_t count = it->count;
-            array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
+            if (array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser)) {
+                return -1;
+            }
         } else {
-            array_to_json_buf_w_type_data(world, ptr, 0, buf, comp, ser);
+            if (array_to_json_buf_w_type_data(world, ptr, 0, buf, comp, ser)) {
+                return -1;
+            }
         }
     }
 
     flecs_json_array_pop(buf);
+
+    return 0;
 }
 
 static
-void flecs_json_serialize_iter_result_columns(
+int flecs_json_serialize_iter_result_columns(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
     ecs_table_t *table = it->table;
     if (!table || !table->storage_table) {
-        return;
+        return 0;
     }
 
     flecs_json_memberl(buf, "values");
@@ -1634,14 +1644,18 @@ void flecs_json_serialize_iter_result_columns(
         }
 
         void *ptr = ecs_vec_first(&table->data.columns[storage_column]);
-        array_to_json_buf_w_type_data(world, ptr, it->count, buf, comp, ser);
+        if (array_to_json_buf_w_type_data(world, ptr, it->count, buf, comp, ser)) {
+            return -1;
+        }
     }
 
     flecs_json_array_pop(buf);
+
+    return 0;
 }
 
 static
-void flecs_json_serialize_iter_result(
+int flecs_json_serialize_iter_result(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf,
@@ -1708,14 +1722,20 @@ void flecs_json_serialize_iter_result(
 
     /* Serialize component values */
     if (desc && desc->serialize_table) {
-        flecs_json_serialize_iter_result_columns(world, it, buf);
+        if (flecs_json_serialize_iter_result_columns(world, it, buf)) {
+            return -1;
+        }
     } else {
         if (!desc || desc->serialize_values) {
-            flecs_json_serialize_iter_result_values(world, it, buf);
+            if (flecs_json_serialize_iter_result_values(world, it, buf)) {
+                return -1;
+            }
         }
     }
 
     flecs_json_object_pop(buf);
+
+    return 0;
 }
 
 int ecs_iter_to_json_buf(
@@ -1768,7 +1788,11 @@ int ecs_iter_to_json_buf(
 
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {
-        flecs_json_serialize_iter_result(world, it, buf, desc, &ser_idr);
+        if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_idr)) {
+            ecs_strbuf_reset(buf);
+            ecs_iter_fini(it);
+            return -1;
+        }
     }
 
     flecs_json_array_pop(buf);

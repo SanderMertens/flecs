@@ -1166,6 +1166,7 @@ void Meta_new_world_ser_deser_flecs_entity(void);
 void Meta_new_world_ser_deser_empty_flecs_entity(void);
 void Meta_opaque_vector_w_builder(void);
 void Meta_deser_entity_w_path(void);
+void Meta_enum_w_bits(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5706,6 +5707,10 @@ bake_test_case Meta_testcases[] = {
     {
         "deser_entity_w_path",
         Meta_deser_entity_w_path
+    },
+    {
+        "enum_w_bits",
+        Meta_enum_w_bits
     }
 };
 
@@ -6039,7 +6044,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        41,
+        42,
         Meta_testcases
     },
     {

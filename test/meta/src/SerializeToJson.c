@@ -717,6 +717,7 @@ void SerializeToJson_struct_bitmask() {
 
     {
     T value = {16};
+    ecs_log_set_level(-4);
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr == NULL);
     }

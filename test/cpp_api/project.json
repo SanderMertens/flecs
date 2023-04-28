@@ -1221,7 +1221,8 @@
                 "new_world_ser_deser_flecs_entity",
                 "new_world_ser_deser_empty_flecs_entity",
                 "opaque_vector_w_builder",
-                "deser_entity_w_path"
+                "deser_entity_w_path",
+                "enum_w_bits"
             ]
         }, {
             "id": "Table",
