@@ -769,6 +769,7 @@ void Set_get_mut_w_realloc_in_on_add(void);
 void Set_emplace(void);
 void Set_emplace_existing(void);
 void Set_emplace_w_move(void);
+void Set_emplace_w_observer_w_add(void);
 
 // Testsuite 'ReadWrite'
 void ReadWrite_read(void);
@@ -5463,6 +5464,10 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_w_move",
         Set_emplace_w_move
+    },
+    {
+        "emplace_w_observer_w_add",
+        Set_emplace_w_observer_w_add
     }
 };
 
@@ -12486,7 +12491,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        29,
+        30,
         Set_testcases
     },
     {

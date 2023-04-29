@@ -811,7 +811,8 @@
                 "get_mut_w_realloc_in_on_add",
                 "emplace",
                 "emplace_existing",
-                "emplace_w_move"
+                "emplace_w_move",
+                "emplace_w_observer_w_add"
             ]
         }, {
             "id": "ReadWrite",

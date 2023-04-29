@@ -680,3 +680,48 @@ void Set_emplace_w_move() {
 
     ecs_fini(world);
 }
+
+static
+void OnAddMove(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+    }
+}
+
+void Set_emplace_w_observer_w_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .callback = OnAddMove,
+        .events = {EcsOnAdd},
+        .filter.terms[0].id = ecs_id(Position)
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    p->x = 10;
+    p->y = 20;
+
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *pc = ecs_get(world, e, Position);
+        test_assert(p == pc);
+        test_int(pc->x, 10);
+        test_int(pc->y, 20);
+
+        const Velocity *vc = ecs_get(world, e, Velocity);
+        test_assert(vc != NULL);
+        test_int(vc->x, 1);
+        test_int(vc->y, 2);
+    }
+
+    ecs_fini(world);
+}

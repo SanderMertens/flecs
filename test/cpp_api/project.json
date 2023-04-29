@@ -258,7 +258,8 @@
                 "get_depth_w_type",
                 "to_view",
                 "to_view_from_stage",
-                "set_alias"
+                "set_alias",
+                "emplace_w_observer"
             ]
         }, {
             "id": "Pairs",

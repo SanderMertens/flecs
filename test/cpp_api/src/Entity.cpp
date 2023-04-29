@@ -4285,3 +4285,23 @@ void Entity_set_alias() {
     test_assert(e == world.lookup("parent::child"));
     test_assert(e == world.lookup("parent_child"));
 }
+
+void Entity_emplace_w_observer() {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnAdd)
+        .each([](flecs::entity e, Position&) {
+            e.emplace<Velocity>(1.0f, 2.0f);
+        });
+
+    auto e = ecs.entity()
+        .emplace<Position>(10.0f, 20.0f);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+    test_int(e.get<Velocity>()->x, 1);
+    test_int(e.get<Velocity>()->y, 2);
+    test_int(e.get<Position>()->x, 10);
+    test_int(e.get<Position>()->y, 20);
+}

@@ -8409,11 +8409,10 @@ void* ecs_emplace_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
+    flecs_defer_end(world, stage);
 
     void *ptr = flecs_get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    flecs_defer_end(world, stage);
 
     return ptr;
 error:
