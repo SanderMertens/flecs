@@ -45120,6 +45120,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_trace("compiled with gcc %d.%d", __GNUC__, __GNUC_MINOR__);
 #elif defined (_MSC_VER)
     ecs_trace("compiled with msvc %d", _MSC_VER);
+#elif defined (__TINYC__)
+    ecs_trace("compiled with tcc %d", __TINYC__);
 #endif
 
     ecs_world_t *world = ecs_os_calloc_t(ecs_world_t);
