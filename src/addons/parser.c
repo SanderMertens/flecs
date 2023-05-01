@@ -325,6 +325,7 @@ ecs_oper_kind_t flecs_parse_operator(
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+    return 0;
 }
 
 static

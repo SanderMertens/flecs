@@ -381,6 +381,7 @@ ecs_entity_t flecs_largest_type(
     case EcsEntity: return ecs_id(ecs_entity_t);
     default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+    return 0;
 }
 
 /** Test if a normalized type can promote to another type in an expression */
