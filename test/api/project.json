@@ -984,6 +984,7 @@
                 "on_add_after_ctor_w_add",
                 "on_add_after_ctor_w_add_to",
                 "with_before_hooks",
+                "with_component_on_add",
                 "move_ctor_on_move",
                 "ptr_to_self",
                 "ctor_move_dtor_from_move_ctor",

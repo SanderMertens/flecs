@@ -931,6 +931,7 @@ void ComponentLifecycle_component_init_set_hooks(void);
 void ComponentLifecycle_on_add_after_ctor_w_add(void);
 void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 void ComponentLifecycle_with_before_hooks(void);
+void ComponentLifecycle_with_component_on_add(void);
 void ComponentLifecycle_move_ctor_on_move(void);
 void ComponentLifecycle_ptr_to_self(void);
 void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void);
@@ -6079,6 +6080,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "with_before_hooks",
         ComponentLifecycle_with_before_hooks
+    },
+    {
+        "with_component_on_add",
+        ComponentLifecycle_with_component_on_add
     },
     {
         "move_ctor_on_move",
@@ -12526,7 +12531,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        84,
+        85,
         ComponentLifecycle_testcases
     },
     {
