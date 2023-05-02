@@ -19464,6 +19464,13 @@ void ecs_set_os_api_impl(void) {
 #include <time.h>
 #endif
 
+/* This mutex is used to emulate atomic operations when the gnu builtins are
+ * not supported. This is probably not very fast but if the compiler doesn't
+ * support the gnu built-ins, then speed is probably not a priority. */
+#ifndef __GNUC__
+static pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 static
 ecs_os_thread_t posix_thread_new(
     ecs_os_thread_callback_t callback, 
@@ -19504,8 +19511,14 @@ int32_t posix_ainc(
     value = __sync_add_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    if (pthread_mutex_lock(&atomic_mutex)) {
+	    abort();
+    }
+    value = (*count) += 1;
+    if (pthread_mutex_unlock(&atomic_mutex)) {
+	    abort();
+    }
+    return value;
 #endif
 }
 
@@ -19518,8 +19531,14 @@ int32_t posix_adec(
     value = __sync_sub_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    if (pthread_mutex_lock(&atomic_mutex)) {
+	    abort();
+    }
+    value = (*count) -= 1;
+    if (pthread_mutex_unlock(&atomic_mutex)) {
+	    abort();
+    }
+    return value;
 #endif
 }
 
@@ -19532,8 +19551,14 @@ int64_t posix_lainc(
     value = __sync_add_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    if (pthread_mutex_lock(&atomic_mutex)) {
+	    abort();
+    }
+    value = (*count) += 1;
+    if (pthread_mutex_unlock(&atomic_mutex)) {
+	    abort();
+    }
+    return value;
 #endif
 }
 
@@ -19546,8 +19571,14 @@ int64_t posix_ladec(
     value = __sync_sub_and_fetch (count, 1);
     return value;
 #else
-    /* Unsupported */
-    abort();
+    if (pthread_mutex_lock(&atomic_mutex)) {
+	    abort();
+    }
+    value = (*count) -= 1;
+    if (pthread_mutex_unlock(&atomic_mutex)) {
+	    abort();
+    }
+    return value;
 #endif
 }
 
