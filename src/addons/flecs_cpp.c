@@ -425,12 +425,14 @@ void ecs_cpp_enum_init(
     ecs_world_t *world,
     ecs_entity_t id)
 {
+    (void)world;
+    (void)id;
+#ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_add_id(world, id, EcsExclusive);
-    ecs_add_id(world, id, EcsOneOf);
-    ecs_add_id(world, id, EcsTag);
+    ecs_set(world, id, EcsEnum, {0});
     flecs_resume_readonly(world, &readonly_state);
+#endif
 }
 
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -467,7 +469,10 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         "enum component must have 32bit size");
     #endif
 
-    ecs_set_id(world, id, parent, sizeof(int), &value);
+#ifdef FLECS_META
+    ecs_set_id(world, id, ecs_pair(EcsConstant, ecs_id(ecs_i32_t)), 
+        sizeof(ecs_i32_t), &value);
+#endif
 
     flecs_resume_readonly(world, &readonly_state);
 

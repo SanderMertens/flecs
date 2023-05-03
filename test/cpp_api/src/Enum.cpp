@@ -30,6 +30,10 @@ enum class EnumIncorrectType : uint8_t {
     A, B
 };
 
+enum EnumWithLargeConstant {
+    X, Y, Z = 1000
+};
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -784,4 +788,107 @@ void Enum_query_union_enum_invalid_query_type() {
     ecs.query_builder<StandardEnum>()
         .term_at(1).second(flecs::Wildcard)
         .build();
+}
+
+void Enum_component_registered_as_enum() {
+    flecs::world ecs;
+
+    auto e = ecs.component<StandardEnum>();
+
+    test_assert(e.has<flecs::Enum>());
+
+    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::EnumType);
+
+    {
+        auto c = e.lookup("Red");
+        test_assert(c != 0);
+
+        const StandardEnum *v = c.get<StandardEnum>();
+        test_assert(v != nullptr);
+        test_assert(*v == StandardEnum::Red);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, StandardEnum::Red);
+    }
+
+    {
+        auto c = e.lookup("Green");
+        test_assert(c != 0);
+
+        const StandardEnum *v = c.get<StandardEnum>();
+        test_assert(v != nullptr);
+        test_assert(*v == StandardEnum::Green);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, StandardEnum::Green);
+    }
+
+    {
+        auto c = e.lookup("Blue");
+        test_assert(c != 0);
+
+        const StandardEnum *v = c.get<StandardEnum>();
+        test_assert(v != nullptr);
+        test_assert(*v == StandardEnum::Blue);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, StandardEnum::Blue);
+    }
+}
+
+void Enum_mixed_auto_manual_constants() {
+    flecs::world ecs;
+
+    auto e = ecs.component<EnumWithLargeConstant>()
+        .constant("Z", EnumWithLargeConstant::Z);
+
+    test_assert(e.has<flecs::Enum>());
+
+    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::EnumType);
+
+    {
+        auto c = e.lookup("X");
+        test_assert(c != 0);
+
+        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
+        test_assert(v != nullptr);
+        test_assert(*v == EnumWithLargeConstant::X);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, EnumWithLargeConstant::X);
+    }
+
+    {
+        auto c = e.lookup("Y");
+        test_assert(c != 0);
+
+        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
+        test_assert(v != nullptr);
+        test_assert(*v == EnumWithLargeConstant::Y);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, EnumWithLargeConstant::Y);
+    }
+
+    {
+        auto c = e.lookup("Z");
+        test_assert(c != 0);
+
+        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
+        test_assert(v != nullptr);
+        test_assert(*v == EnumWithLargeConstant::Z);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_int(*vi, EnumWithLargeConstant::Z);
+    }
 }

@@ -1010,6 +1010,10 @@ struct EnumWithBitsStruct {
 void Meta_enum_w_bits() {
     flecs::world ecs;
 
+    flecs::log::set_level(-4);
+
+    /* It is illegal to register an enumeration as bitset, this test makes sure
+     * the code doesn't crash. */
 	ecs.component<EnumWithBits>()
 		.bit("BitA", (uint32_t)EnumWithBits::BitA)
 		.bit("BitB", (uint32_t)EnumWithBits::BitB)
@@ -1025,7 +1029,6 @@ void Meta_enum_w_bits() {
 			.add<EnumWithBitsStruct>();
 	}
 
-    flecs::log::set_level(-4);
     auto q = ecs.query<EnumWithBitsStruct>();
     auto s = q.iter().to_json();
     test_str(s.c_str(), "");

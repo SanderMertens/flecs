@@ -355,6 +355,8 @@ void Enum_add_if(void);
 void Enum_add_if_other(void);
 void Enum_query_union_enum(void);
 void Enum_query_union_enum_invalid_query_type(void);
+void Enum_component_registered_as_enum(void);
+void Enum_mixed_auto_manual_constants(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -2578,6 +2580,14 @@ bake_test_case Enum_testcases[] = {
     {
         "query_union_enum_invalid_query_type",
         Enum_query_union_enum_invalid_query_type
+    },
+    {
+        "component_registered_as_enum",
+        Enum_component_registered_as_enum
+    },
+    {
+        "mixed_auto_manual_constants",
+        Enum_mixed_auto_manual_constants
     }
 };
 
@@ -5895,7 +5905,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        32,
+        34,
         Enum_testcases
     },
     {

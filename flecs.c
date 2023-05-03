@@ -19096,12 +19096,14 @@ void ecs_cpp_enum_init(
     ecs_world_t *world,
     ecs_entity_t id)
 {
+    (void)world;
+    (void)id;
+#ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_add_id(world, id, EcsExclusive);
-    ecs_add_id(world, id, EcsOneOf);
-    ecs_add_id(world, id, EcsTag);
+    ecs_set(world, id, EcsEnum, {0});
     flecs_resume_readonly(world, &readonly_state);
+#endif
 }
 
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -19138,7 +19140,10 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         "enum component must have 32bit size");
     #endif
 
-    ecs_set_id(world, id, parent, sizeof(int), &value);
+#ifdef FLECS_META
+    ecs_set_id(world, id, ecs_pair(EcsConstant, ecs_id(ecs_i32_t)), 
+        sizeof(ecs_i32_t), &value);
+#endif
 
     flecs_resume_readonly(world, &readonly_state);
 
@@ -23894,8 +23899,23 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
 
 static ECS_DTOR(EcsUnitPrefix, ptr, { dtor_unit_prefix(ptr); })
 
-
 /* Type initialization */
+
+static
+const char* flecs_type_kind_str(
+    ecs_type_kind_t kind)
+{
+    switch(kind) {
+    case EcsPrimitiveType: return "Primitive";
+    case EcsBitmaskType: return "Bitmask";
+    case EcsEnumType: return "Enum";
+    case EcsStructType: return "Struct";
+    case EcsArrayType: return "Array";
+    case EcsVectorType: return "Vector";
+    case EcsOpaqueType: return "Opaque";
+    default: return "unknown";
+    }
+}
 
 static
 int flecs_init_type(
@@ -23920,8 +23940,10 @@ int flecs_init_type(
         }
     } else {
         if (meta_type->kind != kind) {
-            ecs_err("type '%s' reregistered with different kind", 
-                ecs_get_name(world, type));
+            ecs_err("type '%s' reregistered as '%s' (was '%s')", 
+                ecs_get_name(world, type), 
+                flecs_type_kind_str(kind),
+                flecs_type_kind_str(meta_type->kind));
             return -1;
         }
     }
@@ -24239,6 +24261,9 @@ int flecs_add_constant_to_enum(
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
+    cptr = ecs_get_mut_id(world, e, type);
+    cptr[0] = value;
+
     return 0;
 }
 
@@ -24303,6 +24328,9 @@ int flecs_add_constant_to_bitmask(
     ecs_u32_t *cptr = ecs_get_mut_pair_object(
         world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    cptr[0] = value;
+
+    cptr = ecs_get_mut_id(world, e, type);
     cptr[0] = value;
 
     return 0;
@@ -24687,10 +24715,14 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
          * contain uninitialized memory, which could cause serializers to crash
          * when for example inspecting string fields. */
         if (!type->existing) {
-            ecs_set_hooks_id(world, it->entities[i], 
-                &(ecs_type_hooks_t){ 
-                    .ctor = ecs_default_ctor
-                });
+            ecs_entity_t e = it->entities[i];
+            const ecs_type_info_t *ti = ecs_get_type_info(world, e);
+            if (!ti || !ti->hooks.ctor) {
+                ecs_set_hooks_id(world, e, 
+                    &(ecs_type_hooks_t){ 
+                        .ctor = ecs_default_ctor
+                    });
+            }
         }
     }
 }
