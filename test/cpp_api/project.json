@@ -368,7 +368,8 @@
                 "query_union_enum",
                 "query_union_enum_invalid_query_type",
                 "component_registered_as_enum",
-                "mixed_auto_manual_constants"
+                "mixed_auto_manual_constants",
+                "enum_class_mixed_auto_manual_constants"
             ]
         }, {
             "id": "Switch",

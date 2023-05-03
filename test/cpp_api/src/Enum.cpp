@@ -34,6 +34,10 @@ enum EnumWithLargeConstant {
     X, Y, Z = 1000
 };
 
+enum class EnumClassWithLargeConstant {
+    X, Y, Z = 1000
+};
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -891,4 +895,32 @@ void Enum_mixed_auto_manual_constants() {
         test_assert(vi != nullptr);
         test_int(*vi, EnumWithLargeConstant::Z);
     }
+}
+
+void Enum_enum_class_mixed_auto_manual_constants() {
+    flecs::world ecs;
+
+    auto e = ecs.component<EnumClassWithLargeConstant>()
+        .constant("Z", EnumClassWithLargeConstant::Z);
+
+    test_assert(e.has<flecs::Enum>());
+
+    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    test_assert(mt != nullptr);
+    test_assert(mt->kind == flecs::meta::EnumType);
+
+    {
+        auto c = e.lookup("X");
+        test_assert(c != 0);
+
+        const EnumClassWithLargeConstant *v = c.get<EnumClassWithLargeConstant>();
+        test_assert(v != nullptr);
+        test_assert(*v == EnumClassWithLargeConstant::X);
+
+        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        test_assert(vi != nullptr);
+        test_assert(*vi == static_cast<int32_t>(EnumClassWithLargeConstant::X));
+    }
+
+
 }

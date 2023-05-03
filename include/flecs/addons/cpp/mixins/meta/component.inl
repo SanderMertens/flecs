@@ -26,3 +26,10 @@ template <typename ElemType>
 flecs::opaque<T, ElemType> opaque(flecs::id_t as_type) {
     return flecs::opaque<T, ElemType>(m_world).as_type(as_type);
 }
+
+/** Add constant. */
+component<T>& constant(const char *name, T value) {
+    int32_t v = static_cast<int32_t>(value);
+    untyped_component::constant(name, v);
+    return *this;
+}
