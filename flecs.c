@@ -58761,8 +58761,9 @@ void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
         return;
     }
 
+    ecs_world_t *world = it->world;
     ecs_entity_t rel = ECS_PAIR_FIRST(pair);
-    ecs_entity_t obj = ECS_PAIR_SECOND(pair);
+    ecs_entity_t obj = ecs_pair_second(world, pair);
     ecs_entity_t event = it->event;
     
     int i, count = it->count;

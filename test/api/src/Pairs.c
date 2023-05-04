@@ -2570,6 +2570,33 @@ void Pairs_add_symmetric_exclusive_relation() {
     ecs_fini(world);
 }
 
+void Pairs_add_symmetric_recycled_relation() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+    ecs_delete(world, rel);
+    rel = ecs_new_id(world);
+    ecs_delete(world, obj_a);
+    obj_a = ecs_new_id(world);
+    ecs_delete(world, obj_b);
+    obj_b = ecs_new_id(world);
+
+    test_assert(rel != (uint32_t)rel);
+    test_assert(obj_a != (uint32_t)obj_a);
+    test_assert(obj_b != (uint32_t)obj_b);
+
+    ecs_add_id(world, rel, EcsSymmetric);
+
+    ecs_add_pair(world, obj_a, rel, obj_b);
+
+    test_assert(ecs_has_pair(world, obj_a, rel, obj_b));
+    test_assert(ecs_has_pair(world, obj_b, rel, obj_a));
+
+    ecs_fini(world);
+}
+
 void Pairs_with() {
     ecs_world_t *world = ecs_mini();
 

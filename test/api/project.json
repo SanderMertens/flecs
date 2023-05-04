@@ -1750,6 +1750,7 @@
                 "remove_symmetric_relation",
                 "delete_entity_w_symmetric_relation",
                 "add_symmetric_exclusive_relation",
+                "add_symmetric_recycled_relation",
                 "with",
                 "2_with",
                 "nested_with",
