@@ -1,5 +1,6 @@
 #include <scene_management.h>
 #include <iostream>
+#include <string>
 
 // This example shows one possible way to implement scene management
 // using pipelines.

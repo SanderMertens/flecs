@@ -163,6 +163,47 @@ jobs:
       - name: build examples (release)
         run: bake/bake examples --strict --cfg debug
 
+  build-configs-windows-cmake:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        toolset: [default, v141, v142, clang-cl]
+        include:
+          - toolset: v141
+            toolset_option: -T"v141"
+          - toolset: v142
+            toolset_option: -T"v142"
+          - toolset: clang-cl
+            toolset_option: -T"ClangCl"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: create cmake build folders
+        run: |
+          mkdir cmake_build
+          mkdir examples/c/cmake_build
+          mkdir examples/cpp/cmake_build
+
+      - name: build flecs
+        working-directory: cmake_build
+        run: |
+          cmake ${{ matrix.toolset_option }} ..
+          cmake --build . -j 4
+
+      - name: build c examples
+        working-directory: examples/c/cmake_build
+        run: |
+          cmake ${{ matrix.toolset_option }} ..
+          cmake --build . -j 4
+
+      - name: build c++ examples
+        working-directory: examples/cpp/cmake_build
+        run: |
+          cmake ${{ matrix.toolset_option }} ..
+          cmake --build . -j 4
+
   test-c-unix:
     needs: [build-linux, build-macos]
     runs-on: ${{ matrix.os }}
@@ -484,14 +525,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: "msvc dev"
-        if: matrix.os == 'windows-latest'
-        uses: ilammy/msvc-dev-cmd@v1
 
       - name: create cmake build folders
         run: |
@@ -503,19 +540,19 @@ jobs:
         working-directory: cmake_build
         run: |
           cmake ..
-          cmake --build .
+          cmake --build . -j 4
 
       - name: build c examples
         working-directory: examples/c/cmake_build
         run: |
           cmake ..
-          cmake --build .
+          cmake --build . -j 4
 
       - name: build c++ examples
         working-directory: examples/cpp/cmake_build
         run: |
           cmake ..
-          cmake --build .
+          cmake --build . -j 4
 
   buildsystem-meson:
     runs-on: ubuntu-latest
