@@ -180,9 +180,6 @@
 #define FLECS_USE_OS_ALLOC
 #endif
 
-#define FLECS_HI_ENTITY_ID (0)
-#define FLECS_ENTITY_PAGE_BITS (12)
-
 /** \def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory 
  * utilization. The constant is used in two ways:
@@ -214,6 +211,12 @@
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
 #define FLECS_SPARSE_PAGE_BITS (12)
+#endif
+
+/** \def FLECS_ENTITY_PAGE_BITS
+ * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
+#ifndef FLECS_ENTITY_PAGE_BITS
+#define FLECS_ENTITY_PAGE_BITS (12)
 #endif
 
 /** \def FLECS_USE_OS_ALLOC 
@@ -325,10 +328,10 @@ extern "C" {
 #define EcsIdUnion                     (1u << 11)
 #define EcsIdAlwaysOverride            (1u << 12)
 
-#define EcsIdHasOnAdd                  (1u << 15) /* Same values as table flags */
-#define EcsIdHasOnRemove               (1u << 16) 
-#define EcsIdHasOnSet                  (1u << 17)
-#define EcsIdHasUnSet                  (1u << 18)
+#define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
+#define EcsIdHasOnRemove               (1u << 17) 
+#define EcsIdHasOnSet                  (1u << 18)
+#define EcsIdHasUnSet                  (1u << 19)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet)
 
@@ -391,21 +394,22 @@ extern "C" {
 #define EcsTableIsPrefab               (1u << 2u)  /* Does the table store prefabs */
 #define EcsTableHasIsA                 (1u << 3u)  /* Does the table have IsA relationship */
 #define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relationship */
-#define EcsTableHasPairs               (1u << 5u)  /* Does the table type have pairs */
-#define EcsTableHasModule              (1u << 6u)  /* Does the table have module data */
-#define EcsTableIsDisabled             (1u << 7u)  /* Does the table type has EcsDisabled */
-#define EcsTableHasCtors               (1u << 8u)
-#define EcsTableHasDtors               (1u << 9u)
-#define EcsTableHasCopy                (1u << 10u)
-#define EcsTableHasMove                (1u << 11u)
-#define EcsTableHasUnion               (1u << 12u)
-#define EcsTableHasToggle              (1u << 13u)
-#define EcsTableHasOverrides           (1u << 14u)
+#define EcsTableHasName                (1u << 5u)  /* Does the table type have (Identifier, Name) */
+#define EcsTableHasPairs               (1u << 6u)  /* Does the table type have pairs */
+#define EcsTableHasModule              (1u << 7u)  /* Does the table have module data */
+#define EcsTableIsDisabled             (1u << 8u)  /* Does the table type has EcsDisabled */
+#define EcsTableHasCtors               (1u << 9u)
+#define EcsTableHasDtors               (1u << 10u)
+#define EcsTableHasCopy                (1u << 11u)
+#define EcsTableHasMove                (1u << 12u)
+#define EcsTableHasUnion               (1u << 13u)
+#define EcsTableHasToggle              (1u << 14u)
+#define EcsTableHasOverrides           (1u << 15u)
 
-#define EcsTableHasOnAdd               (1u << 15u) /* Same values as id flags */
-#define EcsTableHasOnRemove            (1u << 16u)
-#define EcsTableHasOnSet               (1u << 17u)
-#define EcsTableHasUnSet               (1u << 18u)
+#define EcsTableHasOnAdd               (1u << 16u) /* Same values as id flags */
+#define EcsTableHasOnRemove            (1u << 17u)
+#define EcsTableHasOnSet               (1u << 18u)
+#define EcsTableHasUnSet               (1u << 19u)
 
 #define EcsTableHasObserved            (1u << 20u)
 #define EcsTableHasTarget              (1u << 21u)

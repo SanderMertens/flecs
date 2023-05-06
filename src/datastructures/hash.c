@@ -44,7 +44,6 @@
 #endif
 
 //128bit multiply function
-static inline uint64_t _wyrot(uint64_t x) { return (x>>32)|(x<<32); }
 static inline void _wymum(uint64_t *A, uint64_t *B){
 #if(WYHASH_32BIT_MUM)
   uint64_t hh=(*A>>32)*(*B>>32), hl=(*A>>32)*(uint32_t)*B, lh=(uint32_t)*A*(*B>>32), ll=(uint64_t)(uint32_t)*A*(uint32_t)*B;

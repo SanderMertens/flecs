@@ -276,7 +276,7 @@ void Stats_get_not_alive_entity_count() {
 
     float count;
     float prev = count = stats.entities.not_alive_count.gauge.avg[stats.t];
-    test_assert(count == 0);
+    test_int(count, 0);
 
     ecs_entity_t e = ecs_new_id(world);
 

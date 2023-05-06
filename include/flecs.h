@@ -178,9 +178,6 @@
 #define FLECS_USE_OS_ALLOC
 #endif
 
-#define FLECS_HI_ENTITY_ID (0)
-#define FLECS_ENTITY_PAGE_BITS (12)
-
 /** \def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory 
  * utilization. The constant is used in two ways:
@@ -212,6 +209,12 @@
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
 #define FLECS_SPARSE_PAGE_BITS (12)
+#endif
+
+/** \def FLECS_ENTITY_PAGE_BITS
+ * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
+#ifndef FLECS_ENTITY_PAGE_BITS
+#define FLECS_ENTITY_PAGE_BITS (12)
 #endif
 
 /** \def FLECS_USE_OS_ALLOC 

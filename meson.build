@@ -51,6 +51,7 @@ flecs_src = files(
     'src/datastructures/allocator.c',
     'src/datastructures/bitset.c',
     'src/datastructures/block_allocator.c',
+    'src/datastructures/entity_index.c',
     'src/datastructures/hash.c',
     'src/datastructures/hashmap.c',
     'src/datastructures/map.c',

@@ -14,7 +14,7 @@ struct ecs_snapshot_t {
     ecs_world_t *world;
     ecs_entity_index_t entity_index;
     ecs_vec_t tables;
-    uint32_t last_id;
+    uint64_t last_id;
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -332,7 +332,7 @@ void ecs_snapshot_restore(
 {
     ecs_run_aperiodic(world, 0);
     
-    if (flecs_entity_index_count(&snapshot->entity_index)) {
+    if (flecs_entity_index_count(&snapshot->entity_index) > 0) {
         /* Unfiltered snapshots have a copy of the entity index which is
          * copied back entirely when the snapshot is restored */
         restore_unfiltered(world, snapshot);

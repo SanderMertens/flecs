@@ -5,7 +5,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id)
 {
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         ecs_vec_set_min_count_zeromem_t(index->allocator, &index->pages, 
             ecs_entity_index_page_t*, page_index + 1);
@@ -39,6 +39,13 @@ void flecs_entity_index_fini(
     ecs_entity_index_t *index)
 {
     ecs_vec_fini_t(index->allocator, &index->dense, uint64_t);
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
+    int32_t i, count = ecs_vec_count(&index->pages);
+    ecs_entity_index_page_t **pages = ecs_vec_first(&index->pages);
+    for (i = 0; i < count; i ++) {
+        flecs_bfree(&index->page_allocator, pages[i]);
+    }
+#endif
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
     flecs_ballocator_fini(&index->page_allocator);
 }
@@ -48,7 +55,7 @@ ecs_record_t* flecs_entity_index_get_any(
     uint64_t entity)
 {
     uint32_t id = (uint32_t)entity;
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
@@ -72,7 +79,7 @@ ecs_record_t* flecs_entity_index_try_get_any(
     uint64_t entity)
 {
     uint32_t id = (uint32_t)entity;
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         return NULL;
     }
@@ -237,7 +244,7 @@ uint64_t flecs_entity_index_new_id(
     }
 
     /* Create new id */
-    uint32_t id = ++ index->max_id;
+    uint32_t id = (uint32_t)++ index->max_id;
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
     ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -268,7 +275,7 @@ uint64_t* flecs_entity_index_new_ids(
     ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, new_count);
     int32_t i, to_add = new_count - dense_count;
     for (i = 0; i < to_add; i ++) {
-        uint32_t id = ++ index->max_id;
+        uint32_t id = (uint32_t)++ index->max_id;
         int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;
         ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -303,7 +310,7 @@ int32_t flecs_entity_index_size(
 int32_t flecs_entity_index_not_alive_count(
     const ecs_entity_index_t *index)
 {
-    return ecs_vec_count(&index->dense) - index->alive_count - 1;
+    return ecs_vec_count(&index->dense) - index->alive_count;
 }
 
 void flecs_entity_index_clear(

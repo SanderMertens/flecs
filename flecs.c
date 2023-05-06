@@ -72,7 +72,7 @@ typedef struct ecs_entity_index_t {
     ecs_vec_t dense;
     ecs_vec_t pages;
     int32_t alive_count;
-    uint32_t max_id;
+    uint64_t max_id;
     ecs_block_allocator_t page_allocator;
     ecs_allocator_t *allocator;
 } ecs_entity_index_t;
@@ -2999,6 +2999,8 @@ void flecs_table_init_flags(
                         table->flags |= EcsTableHasBuiltins;
                         table->flags |= EcsTableHasModule;
                     }
+                } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+                    table->flags |= EcsTableHasName;
                 } else if (r == EcsUnion) {
                     ecs_table_ext_t *ext = flecs_table_ensure_ext(world, table);
                     table->flags |= EcsTableHasUnion;
@@ -11616,7 +11618,6 @@ void flecs_sparse_swap_dense(
     int32_t a,
     int32_t b)
 {
-    ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     uint64_t index_a = dense_array[a];
     uint64_t index_b = dense_array[b];
@@ -12456,7 +12457,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id)
 {
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         ecs_vec_set_min_count_zeromem_t(index->allocator, &index->pages, 
             ecs_entity_index_page_t*, page_index + 1);
@@ -12490,6 +12491,13 @@ void flecs_entity_index_fini(
     ecs_entity_index_t *index)
 {
     ecs_vec_fini_t(index->allocator, &index->dense, uint64_t);
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
+    int32_t i, count = ecs_vec_count(&index->pages);
+    ecs_entity_index_page_t **pages = ecs_vec_first(&index->pages);
+    for (i = 0; i < count; i ++) {
+        flecs_bfree(&index->page_allocator, pages[i]);
+    }
+#endif
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
     flecs_ballocator_fini(&index->page_allocator);
 }
@@ -12499,7 +12507,7 @@ ecs_record_t* flecs_entity_index_get_any(
     uint64_t entity)
 {
     uint32_t id = (uint32_t)entity;
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
@@ -12523,7 +12531,7 @@ ecs_record_t* flecs_entity_index_try_get_any(
     uint64_t entity)
 {
     uint32_t id = (uint32_t)entity;
-    int32_t page_index = id >> FLECS_ENTITY_PAGE_BITS;
+    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         return NULL;
     }
@@ -12688,7 +12696,7 @@ uint64_t flecs_entity_index_new_id(
     }
 
     /* Create new id */
-    uint32_t id = ++ index->max_id;
+    uint32_t id = (uint32_t)++ index->max_id;
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
     ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -12719,7 +12727,7 @@ uint64_t* flecs_entity_index_new_ids(
     ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, new_count);
     int32_t i, to_add = new_count - dense_count;
     for (i = 0; i < to_add; i ++) {
-        uint32_t id = ++ index->max_id;
+        uint32_t id = (uint32_t)++ index->max_id;
         int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;
         ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -12754,7 +12762,7 @@ int32_t flecs_entity_index_size(
 int32_t flecs_entity_index_not_alive_count(
     const ecs_entity_index_t *index)
 {
-    return ecs_vec_count(&index->dense) - index->alive_count - 1;
+    return ecs_vec_count(&index->dense) - index->alive_count;
 }
 
 void flecs_entity_index_clear(
@@ -13111,7 +13119,6 @@ error:
 #endif
 
 //128bit multiply function
-static inline uint64_t _wyrot(uint64_t x) { return (x>>32)|(x<<32); }
 static inline void _wymum(uint64_t *A, uint64_t *B){
 #if(WYHASH_32BIT_MUM)
   uint64_t hh=(*A>>32)*(*B>>32), hl=(*A>>32)*(uint32_t)*B, lh=(uint32_t)*A*(*B>>32), ll=(uint64_t)(uint32_t)*A*(uint32_t)*B;
@@ -30650,7 +30657,7 @@ struct ecs_snapshot_t {
     ecs_world_t *world;
     ecs_entity_index_t entity_index;
     ecs_vec_t tables;
-    uint32_t last_id;
+    uint64_t last_id;
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -30968,7 +30975,7 @@ void ecs_snapshot_restore(
 {
     ecs_run_aperiodic(world, 0);
     
-    if (flecs_entity_index_count(&snapshot->entity_index)) {
+    if (flecs_entity_index_count(&snapshot->entity_index) > 0) {
         /* Unfiltered snapshots have a copy of the entity index which is
          * copied back entirely when the snapshot is restored */
         restore_unfiltered(world, snapshot);
@@ -58977,11 +58984,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_table_t *other_table = it->other_table, *table = it->table;
 
-    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
-        table, EcsIdentifier, EcsName, it->offset);
-    bool has_name = names != NULL;
-    if (!has_name) {
-        /* If tables don't have names, index does not need to be updated */
+    if (!(table->flags & EcsTableHasName)) {
         return;
     }
 
@@ -58992,9 +58995,8 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_search(it->real_world, other_table,
         ecs_pair(EcsChildOf, EcsWildcard), &from_pair);
 
-    bool other_has_name = ecs_search(it->real_world, other_table,
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0) != -1;
-    bool to_has_name = has_name, from_has_name = other_has_name;
+    bool other_has_name = other_table && ((other_table->flags & EcsTableHasName) != 0);
+    bool to_has_name = true, from_has_name = other_has_name;
     if (it->event == EcsOnRemove) {
         if (from_pair != ecs_childof(0)) {
             /* Because ChildOf is an exclusive relationship, events always come
@@ -59010,7 +59012,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
         to_pair = temp;
 
         to_has_name = other_has_name;
-        from_has_name = has_name;
+        from_has_name = true;
     }
 
     ecs_hashmap_t *from_index = 0;
@@ -59021,6 +59023,10 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     if (to_has_name) {
         to_index = flecs_id_name_index_ensure(world, to_pair);
     }
+
+    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
+        table, EcsIdentifier, EcsName, it->offset);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
