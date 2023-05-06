@@ -14,7 +14,7 @@ struct ecs_snapshot_t {
     ecs_world_t *world;
     ecs_entity_index_t entity_index;
     ecs_vec_t tables;
-    ecs_entity_t last_id;
+    uint32_t last_id;
 };
 
 /** Small footprint data structure for storing data associated with a table. */

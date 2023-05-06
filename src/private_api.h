@@ -245,6 +245,10 @@ uint64_t flecs_hash(
     const void *data,
     ecs_size_t length);
 
+uint64_t flecs_wyhash(
+    const void *data,
+    ecs_size_t length);
+
 /* Get next power of 2 */
 int32_t flecs_next_pow_of_2(
     int32_t n);

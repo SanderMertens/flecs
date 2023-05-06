@@ -237,7 +237,7 @@ uint64_t flecs_entity_index_new_id(
     }
 
     /* Create new id */
-    uint64_t id = ++ index->max_id;
+    uint32_t id = ++ index->max_id;
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
     ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -268,7 +268,7 @@ uint64_t* flecs_entity_index_new_ids(
     ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, new_count);
     int32_t i, to_add = new_count - dense_count;
     for (i = 0; i < to_add; i ++) {
-        uint64_t id = ++ index->max_id;
+        uint32_t id = ++ index->max_id;
         int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;
         ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
