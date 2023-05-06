@@ -942,15 +942,13 @@ void DeferredActions_defer_add_to_deleted_id() {
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
-
     ecs_defer_begin(world);
 
     ecs_delete(world, id);
     ecs_entity_t child = ecs_new_w_id(world, id);
     ecs_add(world, child, Velocity);
 
-    ecs_defer_end(world);  
-
+    ecs_defer_end(world);
     ecs_frame_end(world);    
 
     test_assert(!ecs_is_alive(world, id));

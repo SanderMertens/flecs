@@ -12,7 +12,7 @@
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_world_t *world;
-    ecs_sparse_t entity_index;
+    ecs_entity_index_t entity_index;
     ecs_vec_t tables;
     ecs_entity_t last_id;
 };
@@ -93,7 +93,7 @@ void snapshot_table(
 static
 ecs_snapshot_t* snapshot_create(
     const ecs_world_t *world,
-    const ecs_sparse_t *entity_index,
+    const ecs_entity_index_t *entity_index,
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
@@ -108,7 +108,7 @@ ecs_snapshot_t* snapshot_create(
      * world, and we can simply copy the entity index as it will be restored
      * entirely upon snapshote restore. */
     if (!iter && entity_index) {
-        flecs_sparse_copy(&result->entity_index, entity_index);
+        flecs_entities_copy(&result->entity_index, entity_index);
     }
 
     /* Create vector with as many elements as tables, so we can store the
@@ -150,7 +150,7 @@ ecs_snapshot_t* ecs_snapshot_take(
     ecs_snapshot_t *result = snapshot_create(
         world, ecs_eis(world), NULL, NULL);
 
-    result->last_id = world->info.last_id;
+    result->last_id = flecs_entities_max_id(world);
 
     return result;
 }
@@ -165,7 +165,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
     ecs_snapshot_t *result = snapshot_create(
         world, ecs_eis(world), iter, iter ? iter->next : NULL);
 
-    result->last_id = world->info.last_id;
+    result->last_id = flecs_entities_max_id(world);
 
     return result;
 }
@@ -177,10 +177,10 @@ void restore_unfiltered(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    flecs_sparse_restore(ecs_eis(world), &snapshot->entity_index);
-    flecs_sparse_fini(&snapshot->entity_index);
+    flecs_entity_index_restore(ecs_eis(world), &snapshot->entity_index);
+    flecs_entity_index_fini(&snapshot->entity_index);
     
-    world->info.last_id = snapshot->last_id;
+    flecs_entities_max_id(world) = snapshot->last_id;
 
     ecs_table_leaf_t *leafs = ecs_vec_first_t(&snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = (int32_t)flecs_sparse_last_id(&world->store.tables);
@@ -332,7 +332,7 @@ void ecs_snapshot_restore(
 {
     ecs_run_aperiodic(world, 0);
     
-    if (flecs_sparse_count(&snapshot->entity_index)) {
+    if (flecs_entity_index_count(&snapshot->entity_index)) {
         /* Unfiltered snapshots have a copy of the entity index which is
          * copied back entirely when the snapshot is restored */
         restore_unfiltered(world, snapshot);
@@ -403,7 +403,7 @@ yield:
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot)
 {
-    flecs_sparse_fini(&snapshot->entity_index);
+    flecs_entity_index_fini(&snapshot->entity_index);
 
     ecs_table_leaf_t *tables = ecs_vec_first_t(&snapshot->tables, ecs_table_leaf_t);
     int32_t i, count = ecs_vec_count(&snapshot->tables);

@@ -402,10 +402,7 @@ void flecs_init_store(
     ecs_map_init(&world->store.entity_to_depth, &world->allocator);
 
     /* Initialize entity index */
-    flecs_sparse_init_t(&world->store.entity_index, 
-        a, &world->allocators.sparse_chunk, ecs_record_t);
-    flecs_sparse_set_id_source(&world->store.entity_index, 
-        &world->info.last_id);
+    flecs_entities_init(world);
 
     /* Initialize root table */
     flecs_sparse_init_t(&world->store.tables, 
@@ -501,7 +498,7 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
     flecs_table_release(world, &world->store.root);
-    flecs_sparse_clear(&world->store.entity_index);
+    flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
 
     ecs_allocator_t *a = &world->allocator;
@@ -523,9 +520,8 @@ bool flecs_world_iter_next(
     }
 
     ecs_world_t *world = it->real_world;
-    ecs_sparse_t *entity_index = &world->store.entity_index;
-    it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
-    it->count = flecs_sparse_count(entity_index);
+    it->entities = (ecs_entity_t*)flecs_entities_ids(world);
+    it->count = flecs_entities_count(world);
     flecs_iter_validate(it);
 
     return true;
@@ -1270,7 +1266,7 @@ int ecs_fini(
 
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();
-    flecs_sparse_fini(&world->store.entity_index);
+    flecs_entities_fini(world);
     flecs_sparse_fini(world->pending_tables);
     flecs_sparse_fini(world->pending_buffer);
     ecs_os_free(world->pending_tables);
@@ -1382,11 +1378,11 @@ void ecs_set_entity_range(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!id_end || id_end > world->info.last_id, 
+    ecs_check(!id_end || id_end > flecs_entities_max_id(world), 
         ECS_INVALID_PARAMETER, NULL);
 
-    if (world->info.last_id < id_start) {
-        world->info.last_id = id_start - 1;
+    if (flecs_entities_max_id(world) < id_start) {
+        flecs_entities_max_id(world) = id_start - 1;
     }
 
     world->info.min_id = id_start;
@@ -1405,6 +1401,16 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
+ecs_entity_t ecs_get_max_id(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return flecs_entities_max_id(world);
+error:
+    return 0;
+}
+
 void ecs_set_entity_generation(
     ecs_world_t *world,
     ecs_entity_t entity_with_generation)
@@ -1413,8 +1419,7 @@ void ecs_set_entity_generation(
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, NULL);
 
-    flecs_sparse_set_generation(
-        &world->store.entity_index, entity_with_generation);
+    flecs_entities_set_generation(world, entity_with_generation);
 
     ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
     if (r && r->table) {

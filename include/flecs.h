@@ -178,6 +178,9 @@
 #define FLECS_USE_OS_ALLOC
 #endif
 
+#define FLECS_HI_ENTITY_ID (0)
+#define FLECS_ENTITY_PAGE_BITS (12)
+
 /** \def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory 
  * utilization. The constant is used in two ways:
@@ -990,7 +993,6 @@ typedef struct ecs_value_t {
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
     ecs_entity_t last_component_id;   /**< Last issued component entity id */
-    ecs_entity_t last_id;             /**< Last issued entity id */
     ecs_entity_t min_id;              /**< First allowed entity id */
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
@@ -1929,6 +1931,10 @@ FLECS_API
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
+
+FLECS_API
+ecs_entity_t ecs_get_max_id(
+    const ecs_world_t *world);
 
 /** Force aperiodic actions.
  * The world may delay certain operations until they are necessary for the

@@ -554,7 +554,7 @@ typedef struct ecs_marked_id_t {
 
 typedef struct ecs_store_t {
     /* Entity lookup */
-    ecs_sparse_t entity_index;   /* sparse<entity, ecs_record_t> */
+    ecs_entity_index_t entity_index;
 
     /* Table lookup by id */
     ecs_sparse_t tables;         /* sparse<table_id, ecs_table_t> */
