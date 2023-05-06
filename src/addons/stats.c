@@ -277,8 +277,8 @@ void ecs_world_stats_get(
         ECS_GAUGE_RECORD(&s->performance.fps, t, 0);
     }
 
-    ECS_GAUGE_RECORD(&s->entities.count, t, flecs_sparse_count(ecs_eis(world)));
-    ECS_GAUGE_RECORD(&s->entities.not_alive_count, t, flecs_sparse_not_alive_count(ecs_eis(world)));
+    ECS_GAUGE_RECORD(&s->entities.count, t, flecs_entities_count(world));
+    ECS_GAUGE_RECORD(&s->entities.not_alive_count, t, flecs_entities_not_alive_count(world));
 
     ECS_GAUGE_RECORD(&s->ids.count, t, world->info.id_count);
     ECS_GAUGE_RECORD(&s->ids.tag_count, t, world->info.tag_id_count);

@@ -495,6 +495,7 @@ void flecs_table_init(
         idr = NULL;
 
         if (dst_id == src_id) {
+            ecs_assert(src_tr != NULL, ECS_INTERNAL_ERROR, NULL);
             idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
         } else if (dst_id < src_id) {
             idr = flecs_id_record_ensure(world, dst_id);
@@ -669,7 +670,7 @@ void flecs_table_init(
     }
 
     flecs_table_init_storage_table(world, table);
-    flecs_table_init_data(world, table); 
+    flecs_table_init_data(world, table);
 }
 
 static

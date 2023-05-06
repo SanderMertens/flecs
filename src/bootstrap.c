@@ -737,7 +737,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsTarget);
 
     world->info.last_component_id = EcsFirstUserComponentId;
-    world->info.last_id = EcsFirstUserEntityId;
+    flecs_entities_max_id(world) = EcsFirstUserEntityId;
     world->info.min_id = 0;
     world->info.max_id = 0;
 
