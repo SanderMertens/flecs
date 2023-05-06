@@ -385,6 +385,8 @@ void flecs_table_init_flags(
                         table->flags |= EcsTableHasBuiltins;
                         table->flags |= EcsTableHasModule;
                     }
+                } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+                    table->flags |= EcsTableHasName;
                 } else if (r == EcsUnion) {
                     ecs_table_ext_t *ext = flecs_table_ensure_ext(world, table);
                     table->flags |= EcsTableHasUnion;

@@ -455,11 +455,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_table_t *other_table = it->other_table, *table = it->table;
 
-    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
-        table, EcsIdentifier, EcsName, it->offset);
-    bool has_name = names != NULL;
-    if (!has_name) {
-        /* If tables don't have names, index does not need to be updated */
+    if (!(table->flags & EcsTableHasName)) {
         return;
     }
 
@@ -470,9 +466,8 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     ecs_search(it->real_world, other_table,
         ecs_pair(EcsChildOf, EcsWildcard), &from_pair);
 
-    bool other_has_name = ecs_search(it->real_world, other_table,
-        ecs_pair(ecs_id(EcsIdentifier), EcsName), 0) != -1;
-    bool to_has_name = has_name, from_has_name = other_has_name;
+    bool other_has_name = other_table && ((other_table->flags & EcsTableHasName) != 0);
+    bool to_has_name = true, from_has_name = other_has_name;
     if (it->event == EcsOnRemove) {
         if (from_pair != ecs_childof(0)) {
             /* Because ChildOf is an exclusive relationship, events always come
@@ -488,7 +483,7 @@ void flecs_on_parent_change(ecs_iter_t *it) {
         to_pair = temp;
 
         to_has_name = other_has_name;
-        from_has_name = has_name;
+        from_has_name = true;
     }
 
     ecs_hashmap_t *from_index = 0;
@@ -499,6 +494,10 @@ void flecs_on_parent_change(ecs_iter_t *it) {
     if (to_has_name) {
         to_index = flecs_id_name_index_ensure(world, to_pair);
     }
+
+    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
+        table, EcsIdentifier, EcsName, it->offset);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
