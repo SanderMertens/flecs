@@ -5785,3 +5785,16 @@ void RulesVariables_parse_2_vars_paren_w_spaces() {
 
     ecs_fini(world);
 }
+
+void RulesVariables_var_count() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y), $x($this), $y($this)"
+    });
+    test_assert(r != NULL);
+
+    test_int(ecs_rule_var_count(r), 3);
+
+    ecs_fini(world);
+}

@@ -786,7 +786,8 @@
                 "parse_2_vars_w_spaces",
                 "parse_0_var_paren_w_spaces",
                 "parse_1_var_paren_w_spaces",
-                "parse_2_vars_paren_w_spaces"
+                "parse_2_vars_paren_w_spaces",
+                "var_count"
             ]
         }, {
             "id": "RulesOperators",

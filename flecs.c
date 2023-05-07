@@ -38626,6 +38626,12 @@ int32_t ecs_rule_find_var(
     return (int32_t)var_id;
 }
 
+int32_t ecs_rule_var_count(
+    const ecs_rule_t *rule)
+{
+    return rule->var_pub_count;
+}
+
 static
 const char* flecs_term_id_var_name(
     ecs_term_id_t *term_id)
