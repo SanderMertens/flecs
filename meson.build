@@ -8,7 +8,15 @@ endif
 
 flecs_inc = include_directories('include')
 
-flecs_deps = dependency('threads')
+flecs_deps = [
+    dependency('threads')
+]
+
+cc = meson.get_compiler('c')
+
+if host_machine.system() == 'windows'
+    flecs_deps += cc.find_library('ws2_32') # Required for http addon
+endif
 
 flecs_src = files(
     'src/addons/coredoc.c',
@@ -45,7 +53,7 @@ flecs_src = files(
     'src/addons/snapshot.c',
     'src/addons/stats.c',
     'src/addons/system/system.c',
-    'src/addons/timer.c',    
+    'src/addons/timer.c',
     'src/addons/units.c',
     'src/datastructures/allocator.c',
     'src/datastructures/bitset.c',
