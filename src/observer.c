@@ -855,7 +855,7 @@ ecs_entity_t ecs_observer_init(
          * since they require pre/post checking of the filter to test if the
          * entity is entering/leaving the monitor. */
         int i;
-        for (i = 0; i < ECS_OBSERVER_DESC_EVENT_COUNT_MAX; i ++) {
+        for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
             ecs_entity_t event = desc->events[i];
             if (!event) {
                 break;

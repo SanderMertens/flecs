@@ -2855,9 +2855,9 @@ void flecs_table_init_storage_table(
     ecs_id_t *ids = type.array;
     ecs_table_record_t *records = table->records;
 
-    ecs_id_t array[ECS_ID_CACHE_SIZE];
+    ecs_id_t array[FLECS_ID_DESC_MAX];
     ecs_type_t storage_ids = { .array = array };
-    if (count > ECS_ID_CACHE_SIZE) {
+    if (count > FLECS_ID_DESC_MAX) {
         storage_ids.array = flecs_walloc_n(world, ecs_id_t, count);
     }
 
@@ -7070,7 +7070,7 @@ int flecs_traverse_add(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
         bool should_add = true;
         if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -7178,7 +7178,7 @@ void flecs_deferred_add_remove(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
         bool defer = true;
         if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -7293,7 +7293,7 @@ ecs_entity_t ecs_entity_init(
             const ecs_id_t *ids = desc->add;
             ecs_id_t id;
             int32_t i = 0;
-            while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+            while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
                 if (ECS_HAS_ID_FLAG(id, PAIR) && 
                     (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {
@@ -49363,7 +49363,7 @@ ecs_filter_t* ecs_filter_init(
     if (!terms) {
         ecs_check(term_count == 0, ECS_INVALID_PARAMETER, NULL);
         terms = desc->terms;
-        for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
+        for (i = 0; i < FLECS_TERM_DESC_MAX; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
@@ -52155,7 +52155,7 @@ ecs_entity_t ecs_observer_init(
          * since they require pre/post checking of the filter to test if the
          * entity is entering/leaving the monitor. */
         int i;
-        for (i = 0; i < ECS_OBSERVER_DESC_EVENT_COUNT_MAX; i ++) {
+        for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
             ecs_entity_t event = desc->events[i];
             if (!event) {
                 break;
@@ -57753,7 +57753,7 @@ void ecs_iter_set_var(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     /* Can't set variable while iterating */
@@ -57796,7 +57796,7 @@ void ecs_iter_set_var_as_range(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);

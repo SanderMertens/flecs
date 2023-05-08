@@ -1389,7 +1389,7 @@ ecs_filter_t* ecs_filter_init(
     if (!terms) {
         ecs_check(term_count == 0, ECS_INVALID_PARAMETER, NULL);
         terms = desc->terms;
-        for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
+        for (i = 0; i < FLECS_TERM_DESC_MAX; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }

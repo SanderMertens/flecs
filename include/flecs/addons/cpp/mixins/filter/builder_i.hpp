@@ -124,14 +124,14 @@ struct filter_builder_i : term_builder_i<Base> {
                     "filter_builder::term() called without initializing term");
         }
 
-        if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
-            if (m_term_index == ECS_TERM_DESC_CACHE_SIZE) {
+        if (m_term_index >= FLECS_TERM_DESC_MAX) {
+            if (m_term_index == FLECS_TERM_DESC_MAX) {
                 m_desc->terms_buffer = ecs_os_calloc_n(
                     ecs_term_t, m_term_index + 1);
                 ecs_os_memcpy_n(m_desc->terms_buffer, m_desc->terms, 
                     ecs_term_t, m_term_index);
                 ecs_os_memset_n(m_desc->terms, 0, 
-                    ecs_term_t, ECS_TERM_DESC_CACHE_SIZE);
+                    ecs_term_t, FLECS_TERM_DESC_MAX);
             } else {
                 m_desc->terms_buffer = ecs_os_realloc_n(m_desc->terms_buffer, 
                     ecs_term_t, m_term_index + 1);

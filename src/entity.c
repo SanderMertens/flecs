@@ -1452,7 +1452,7 @@ int flecs_traverse_add(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
         bool should_add = true;
         if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -1560,7 +1560,7 @@ void flecs_deferred_add_remove(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
         bool defer = true;
         if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -1675,7 +1675,7 @@ ecs_entity_t ecs_entity_init(
             const ecs_id_t *ids = desc->add;
             ecs_id_t id;
             int32_t i = 0;
-            while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
+            while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
                 if (ECS_HAS_ID_FLAG(id, PAIR) && 
                     (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {

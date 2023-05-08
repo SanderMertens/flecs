@@ -175,6 +175,7 @@
 #define FLECS_HI_COMPONENT_ID (16)
 #define FLECS_HI_ID_RECORD_ID (16)
 #define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_ENTITY_PAGE_BITS (6)
 #define FLECS_USE_OS_ALLOC
 #endif
 
@@ -223,23 +224,23 @@
  * as memory will be freed more often, at the cost of decreased performance. */
 // #define FLECS_USE_OS_ALLOC
 
-/** \def ECS_ID_CACHE_SIZE
- * Maximum number of components to add/remove in a single operation */
-#ifndef ECS_ID_CACHE_SIZE
-#define ECS_ID_CACHE_SIZE (32)
+/** \def FLECS_ID_DESC_MAX
+ * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
+#ifndef FLECS_ID_DESC_MAX
+#define FLECS_ID_DESC_MAX (32)
 #endif
 
-/** \def ECS_TERM_DESC_CACHE_SIZE 
- * Maximum number of terms in desc (larger, as these are temp objects) */
-#define ECS_TERM_DESC_CACHE_SIZE (16)
+/** \def FLECS_TERM_DESC_MAX 
+ * Maximum number of terms in ecs_filter_desc_t */
+#define FLECS_TERM_DESC_MAX (16)
 
-/** \def ECS_OBSERVER_DESC_EVENT_COUNT_MAX
- * Maximum number of events to set in static array of observer descriptor */
-#define ECS_OBSERVER_DESC_EVENT_COUNT_MAX (8)
+/** \def FLECS_EVENT_DESC_MAX
+ * Maximum number of events in ecs_observer_desc_t */
+#define FLECS_EVENT_DESC_MAX (8)
 
-/** \def ECS_VARIABLE_COUNT_MAX
+/** \def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
-#define ECS_VARIABLE_COUNT_MAX (64)
+#define FLECS_VARIABLE_COUNT_MAX (64)
 
 /** @} */
 
@@ -649,7 +650,7 @@ struct ecs_observer_t {
     ecs_filter_t filter;        /**< Query for observer */
 
     /* Observer events */
-    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[FLECS_EVENT_DESC_MAX];
     int32_t event_count;   
     
     ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
@@ -782,7 +783,7 @@ typedef struct ecs_entity_desc_t {
                            * no id is specified. */
 
     /** Array of ids to add to the new or existing entity. */
-    ecs_id_t add[ECS_ID_CACHE_SIZE];
+    ecs_id_t add[FLECS_ID_DESC_MAX];
 
     /** String expression with components to add */
     const char *add_expr;
@@ -802,7 +803,7 @@ typedef struct ecs_bulk_desc_t {
 
     int32_t count;     /**< Number of entities to create/populate */
 
-    ecs_id_t ids[ECS_ID_CACHE_SIZE]; /**< Ids to create the entities with */
+    ecs_id_t ids[FLECS_ID_DESC_MAX]; /**< Ids to create the entities with */
 
     void **data;       /**< Array with component data to insert. Each element in 
                         * the array must correspond with an element in the ids
@@ -840,8 +841,8 @@ typedef struct ecs_filter_desc_t {
     int32_t _canary;
 
     /** Terms of the filter. If a filter has more terms than 
-     * ECS_TERM_DESC_CACHE_SIZE use terms_buffer */
-    ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
+     * FLECS_TERM_DESC_MAX use terms_buffer */
+    ecs_term_t terms[FLECS_TERM_DESC_MAX];
 
     /** For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
@@ -940,7 +941,7 @@ typedef struct ecs_observer_desc_t {
     ecs_filter_desc_t filter;
 
     /** Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
-    ecs_entity_t events[ECS_OBSERVER_DESC_EVENT_COUNT_MAX];
+    ecs_entity_t events[FLECS_EVENT_DESC_MAX];
 
     /** When observer is created, generate events from existing data. For example,
      * EcsOnAdd Position would match all existing instances of Position.

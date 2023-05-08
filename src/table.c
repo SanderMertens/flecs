@@ -241,9 +241,9 @@ void flecs_table_init_storage_table(
     ecs_id_t *ids = type.array;
     ecs_table_record_t *records = table->records;
 
-    ecs_id_t array[ECS_ID_CACHE_SIZE];
+    ecs_id_t array[FLECS_ID_DESC_MAX];
     ecs_type_t storage_ids = { .array = array };
-    if (count > ECS_ID_CACHE_SIZE) {
+    if (count > FLECS_ID_DESC_MAX) {
         storage_ids.array = flecs_walloc_n(world, ecs_id_t, count);
     }
 
