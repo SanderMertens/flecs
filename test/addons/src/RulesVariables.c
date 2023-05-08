@@ -5798,3 +5798,49 @@ void RulesVariables_var_count() {
 
     ecs_fini(world);
 }
+
+void RulesVariables_var_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y), $x($this), $y($this)"
+    });
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    test_str(ecs_rule_var_name(r, x_var), "x");
+
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+    test_str(ecs_rule_var_name(r, y_var), "y");
+
+    int this_var = ecs_rule_find_var(r, "this");
+    test_assert(this_var != -1);
+    test_str(ecs_rule_var_name(r, this_var), "this");
+
+    ecs_fini(world);
+}
+
+void RulesVariables_var_is_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x($this, $y), $x($this), $y($this)"
+    });
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+    test_bool(ecs_rule_var_is_entity(r, x_var), true);
+
+    int y_var = ecs_rule_find_var(r, "y");
+    test_assert(y_var != -1);
+    test_bool(ecs_rule_var_is_entity(r, y_var), true);
+
+    int this_var = ecs_rule_find_var(r, "this");
+    test_assert(this_var != -1);
+    test_bool(ecs_rule_var_is_entity(r, this_var), false);
+
+    ecs_fini(world);
+}

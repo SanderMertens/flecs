@@ -771,6 +771,8 @@ void RulesVariables_parse_0_var_paren_w_spaces(void);
 void RulesVariables_parse_1_var_paren_w_spaces(void);
 void RulesVariables_parse_2_vars_paren_w_spaces(void);
 void RulesVariables_var_count(void);
+void RulesVariables_var_name(void);
+void RulesVariables_var_is_entity(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -4380,6 +4382,14 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "var_count",
         RulesVariables_var_count
+    },
+    {
+        "var_name",
+        RulesVariables_var_name
+    },
+    {
+        "var_is_entity",
+        RulesVariables_var_is_entity
     }
 };
 
@@ -6646,7 +6656,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        91,
+        93,
         RulesVariables_testcases
     },
     {

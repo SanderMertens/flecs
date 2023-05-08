@@ -210,7 +210,11 @@ const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id)
 {
-    return rule->vars[var_id].name;
+    if (var_id) {
+        return rule->vars[var_id].name;
+    } else {
+        return EcsThisName;
+    }
 }
 
 bool ecs_rule_var_is_entity(
