@@ -179,6 +179,12 @@ ecs_var_id_t flecs_rule_find_var_id(
     return flecs_rule_find_var_id(rule, name, EcsVarTable);
 }
 
+int32_t ecs_rule_var_count(
+    const ecs_rule_t *rule)
+{
+    return rule->var_pub_count;
+}
+
 int32_t ecs_rule_find_var(
     const ecs_rule_t *rule,
     const char *name)
@@ -200,10 +206,18 @@ int32_t ecs_rule_find_var(
     return (int32_t)var_id;
 }
 
-int32_t ecs_rule_var_count(
-    const ecs_rule_t *rule)
+const char* ecs_rule_var_name(
+    const ecs_rule_t *rule,
+    int32_t var_id)
 {
-    return rule->var_pub_count;
+    return rule->vars[var_id].name;
+}
+
+bool ecs_rule_var_is_entity(
+    const ecs_rule_t *rule,
+    int32_t var_id)
+{
+    return rule->vars[var_id].kind == EcsVarEntity;
 }
 
 static
