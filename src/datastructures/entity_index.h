@@ -4,7 +4,7 @@
  *
  * The entity index stores the table, row for an entity id.
  */
-
+ 
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 

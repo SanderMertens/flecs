@@ -21095,17 +21095,6 @@ struct entity_view : public id {
         return this->enabled<First>(_::cpp_type<Second>::id(m_world));
     }
 
-    /** Get current delta time.
-     * Convenience function so system implementations can get delta_time, even
-     * if they are using the .each() function.
-     *
-     * @return Current delta_time.
-     */
-    ecs_ftime_t delta_time() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->delta_time;
-    }
-
     flecs::entity clone(bool clone_value = true, flecs::entity_t dst_id = 0) const;
 
     /** Return mutable entity handle for current stage 

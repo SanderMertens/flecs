@@ -157,18 +157,14 @@ for (int i = 0; i < it->count, i++) {
 }
 ```
 ```cpp
-// delta_time() is available on flecs::entity
 world.system<Position, const Velocity>("Move")
-    .each([](flecs::entity e, Position& p, const Velocity &v) {
-        // Each is invoked for each entity
-        p.x += v.x * e.delta_time();
-        p.y += v.y * e.delta_time();
+    .iter([](flecs::iter& it, size_t, Position& p, const Velocity &v) {
+        p.x += v.x * it.delta_time();
+        p.y += v.y * it.delta_time();
     });
 
-// delta_time() is available on flecs::iter
 world.system<Position, const Velocity>("Move")
     .iter([](flecs::iter& it, Position *p, const Velocity *v) {
-        // Each is invoked for each entity
         for (auto i : it) {
             p[i].x += v[i].x * it.delta_time();
             p[i].y += v[i].y * it.delta_time();
