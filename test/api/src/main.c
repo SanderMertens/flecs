@@ -254,6 +254,7 @@ void Add_invalid_add_pair_w_any_obj(void);
 void Add_invalid_pair_w_0(void);
 void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
+void Add_add_random_id(void);
 
 // Testsuite 'Switch'
 void Switch_get_case_no_switch(void);
@@ -3487,6 +3488,10 @@ bake_test_case Add_testcases[] = {
     {
         "invalid_pair_w_0_obj",
         Add_invalid_pair_w_0_obj
+    },
+    {
+        "add_random_id",
+        Add_add_random_id
     }
 };
 
@@ -12410,7 +12415,7 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        25,
+        26,
         Add_testcases
     },
     {

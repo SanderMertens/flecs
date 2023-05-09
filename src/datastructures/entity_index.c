@@ -86,8 +86,11 @@ ecs_record_t* flecs_entity_index_try_get_any(
 
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
-    ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
+    if (!page) {
+        return NULL;
+    }
 
+    ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
     if (!r->dense) {
         return NULL;
     }

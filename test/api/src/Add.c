@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void Add_zero() {
     install_test_abort();
@@ -395,4 +396,18 @@ void Add_invalid_pair_w_0_obj() {
     test_expect_abort();
 
     ecs_add_id(world, e, ecs_pair(Tag, 0));
+}
+
+void Add_add_random_id() {
+    ecs_world_t *world = ecs_mini();
+
+    for (int i = 0; i < 10; i ++) {
+        ecs_entity_t id = rand() % (100 * 1000) + 1000;
+        ecs_ensure(world, id);
+        test_assert(ecs_is_alive(world, id));
+        ecs_entity_t e = ecs_new_w_id(world, id);
+        test_assert(ecs_has_id(world, e, id));
+    }
+
+    ecs_fini(world);
 }

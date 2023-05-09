@@ -270,7 +270,8 @@
                 "invalid_add_pair_w_any_obj",
                 "invalid_pair_w_0",
                 "invalid_pair_w_0_rel",
-                "invalid_pair_w_0_obj"
+                "invalid_pair_w_0_obj",
+                "add_random_id"
             ]
         }, {
             "id": "Switch",

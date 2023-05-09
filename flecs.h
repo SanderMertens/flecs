@@ -177,6 +177,7 @@
 #define FLECS_HI_COMPONENT_ID (16)
 #define FLECS_HI_ID_RECORD_ID (16)
 #define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_ENTITY_PAGE_BITS (6)
 #define FLECS_USE_OS_ALLOC
 #endif
 
@@ -226,17 +227,17 @@
 // #define FLECS_USE_OS_ALLOC
 
 /** \def FLECS_ID_DESC_MAX
- * Maximum number of components to add/remove in a single operation */
+ * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
 #ifndef FLECS_ID_DESC_MAX
 #define FLECS_ID_DESC_MAX (32)
 #endif
 
 /** \def FLECS_TERM_DESC_MAX 
- * Maximum number of terms in desc (larger, as these are temp objects) */
+ * Maximum number of terms in ecs_filter_desc_t */
 #define FLECS_TERM_DESC_MAX (16)
 
 /** \def FLECS_EVENT_DESC_MAX
- * Maximum number of events to set in static array of observer descriptor */
+ * Maximum number of events in ecs_observer_desc_t */
 #define FLECS_EVENT_DESC_MAX (8)
 
 /** \def FLECS_VARIABLE_COUNT_MAX
