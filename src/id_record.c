@@ -601,8 +601,12 @@ void flecs_init_id_records(
 void flecs_fini_id_records(
     ecs_world_t *world)
 {
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
+    /* Loop & delete first element until there are no elements left. Id records
+     * can recursively delete each other, this ensures we always have a
+     * valid iterator. */
+    while (ecs_map_count(&world->id_index_hi) > 0) {
+        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+        ecs_map_next(&it);
         flecs_id_record_release(world, ecs_map_ptr(&it));
     }
 
