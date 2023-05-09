@@ -684,9 +684,5 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    if (!sep) {
-        sep = ".";
-    }
-
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
