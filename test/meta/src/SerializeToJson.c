@@ -4070,6 +4070,36 @@ void SerializeToJson_serialize_iterator_invalid_value() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_recycled_pair_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_new_entity(world, "Rel");
+    ecs_entity_t tgt = ecs_new_entity(world, "Tgt");
+    ecs_delete(world, tgt);
+    tgt = ecs_new_entity(world, "Tgt");
+
+    ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
+    ecs_set_name(world, e, "ent");
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .first.id = rel,
+            .second.id = tgt
+        }
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"ids\":[[\"Rel\",\"Tgt\"]], \"results\":["
+        "{\"ids\":[[\"Rel\",\"Tgt\"]], \"sources\":[0], \"entities\":[\"ent\"]}"
+    "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 
@@ -4488,4 +4518,3 @@ void SerializeToJson_serialize_anonymous_entities_w_offset() {
 
     ecs_fini(world);
 }
-

@@ -1545,6 +1545,7 @@ void Query_query_next_table_w_populate_last_changed(void);
 void Query_query_next_table_w_populate_skip_first(void);
 void Query_query_next_table_w_populate_skip_last(void);
 void Query_create_query_existing_query_entity(void);
+void Query_query_for_recycled_pair(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -8513,6 +8514,10 @@ bake_test_case Query_testcases[] = {
     {
         "create_query_existing_query_entity",
         Query_create_query_existing_query_entity
+    },
+    {
+        "query_for_recycled_pair",
+        Query_query_for_recycled_pair
     }
 };
 
@@ -12576,7 +12581,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        206,
+        207,
         Query_testcases
     },
     {

@@ -31975,8 +31975,8 @@ void flecs_json_id(
     ecs_strbuf_appendch(buf, '[');
 
     if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_entity_t second = ECS_PAIR_SECOND(id);
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
         ecs_strbuf_appendch(buf, '"');
         ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
         ecs_strbuf_appendch(buf, '"');
@@ -48363,7 +48363,7 @@ int flecs_term_populate_from_id(
 
     ecs_entity_t term_first = flecs_term_id_get_entity(&term->first);
     if (term_first) {
-        if (term_first != first) {
+        if ((uint32_t)term_first != first) {
             flecs_filter_error(ctx, "mismatch between term.id and term.first");
             return -1;
         }
@@ -48375,7 +48375,7 @@ int flecs_term_populate_from_id(
 
     ecs_entity_t term_second = flecs_term_id_get_entity(&term->second);
     if (term_second) {
-        if (ecs_entity_t_lo(term_second) != second) {
+        if ((uint32_t)term_second != second) {
             flecs_filter_error(ctx, "mismatch between term.id and term.second");
             return -1;
         }

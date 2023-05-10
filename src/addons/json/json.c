@@ -411,8 +411,8 @@ void flecs_json_id(
     ecs_strbuf_appendch(buf, '[');
 
     if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_entity_t second = ECS_PAIR_SECOND(id);
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
         ecs_strbuf_appendch(buf, '"');
         ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
         ecs_strbuf_appendch(buf, '"');

@@ -8469,3 +8469,33 @@ void Query_create_query_existing_query_entity() {
 
     ecs_fini(world);
 }
+
+void Query_query_for_recycled_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_new_entity(world, "Rel");
+    ecs_entity_t tgt = ecs_new_entity(world, "Tgt");
+    ecs_delete(world, rel);
+    ecs_delete(world, tgt);
+    rel = ecs_new_entity(world, "Rel");
+    tgt = ecs_new_entity(world, "Tgt");
+
+    ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .first.id = rel,
+            .second.id = tgt
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(rel, tgt));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
