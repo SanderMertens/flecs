@@ -39563,6 +39563,11 @@ int flecs_rule_compile_term(
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
     ecs_rule_op_t op = {0};
 
+    if (!term->src.id && term->src.flags & EcsIsEntity) {
+        /* If the term has a 0 source, don't insert operation */
+        return 0;
+    }
+
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
      * just matches against a source (vs. finding a source). */
@@ -60256,10 +60261,6 @@ ecs_entity_t ecs_new_from_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    if (!sep) {
-        sep = ".";
-    }
-
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 

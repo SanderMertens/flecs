@@ -678,6 +678,7 @@ void RulesBasic_find_this_uppercase(void);
 void RulesBasic_find_this_tgt_lowercase(void);
 void RulesBasic_find_this_tgt_uppercase(void);
 void RulesBasic_get_filter(void);
+void RulesBasic_iter_empty_source(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -4016,6 +4017,10 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "get_filter",
         RulesBasic_get_filter
+    },
+    {
+        "iter_empty_source",
+        RulesBasic_iter_empty_source
     }
 };
 
@@ -6654,7 +6659,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        88,
+        89,
         RulesBasic_testcases
     },
     {

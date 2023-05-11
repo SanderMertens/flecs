@@ -692,7 +692,8 @@
                 "find_this_uppercase",
                 "find_this_tgt_lowercase",
                 "find_this_tgt_uppercase",
-                "get_filter"
+                "get_filter",
+                "iter_empty_source"
             ]
         }, {
             "id": "RulesVariables",
