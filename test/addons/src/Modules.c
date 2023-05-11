@@ -400,3 +400,13 @@ void Modules_import_monitor_2_worlds() {
     ecs_fini(world_1);
     ecs_fini(world_2);
 }
+
+void Modules_import_monitor_after_mini() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsMonitor);
+
+    test_assert(ecs_exists(world, ecs_id(FlecsMonitor)));
+
+    ecs_fini(world);
+}

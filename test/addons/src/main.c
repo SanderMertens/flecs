@@ -1319,6 +1319,7 @@ void Modules_module_tag_on_namespace(void);
 void Modules_module_tag_on_namespace_on_add(void);
 void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
+void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
 
 // Testsuite 'App'
@@ -6452,6 +6453,10 @@ bake_test_case Modules_testcases[] = {
         Modules_import_monitor_2_worlds
     },
     {
+        "import_monitor_after_mini",
+        Modules_import_monitor_after_mini
+    },
+    {
         "import_2_worlds",
         Modules_import_2_worlds
     }
@@ -6796,7 +6801,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        22,
+        23,
         Modules_testcases
     },
     {

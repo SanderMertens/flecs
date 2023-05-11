@@ -291,6 +291,8 @@ void FlecsMonitorImport(
     ecs_world_t *world)
 {
     ECS_MODULE_DEFINE(world, FlecsMonitor);
+    ECS_IMPORT(world, FlecsPipeline);
+    ECS_IMPORT(world, FlecsTimer);
 
     ecs_set_name_prefix(world, "Ecs");
 
