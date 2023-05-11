@@ -1927,6 +1927,7 @@
                 "add_after_delete_observer",
                 "remove_after_delete_observer",
                 "delete_observer_w_ctx",
+                "update_ctx",
                 "filter_w_strings",
                 "iter_type_set",
                 "readonly_term",

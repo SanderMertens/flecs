@@ -314,11 +314,29 @@ ecs_entity_t ecs_system_init(
         if (desc->callback) {
             system->action = desc->callback;
         }
+
+        if (system->ctx_free) {
+            if (system->ctx && system->ctx != desc->ctx) {
+                system->ctx_free(system->ctx);
+            }
+        }
+        if (system->binding_ctx_free) {
+            if (system->binding_ctx && system->binding_ctx != desc->binding_ctx) {
+                system->binding_ctx_free(system->binding_ctx);
+            }
+        }
+
         if (desc->ctx) {
             system->ctx = desc->ctx;
         }
         if (desc->binding_ctx) {
             system->binding_ctx = desc->binding_ctx;
+        }
+        if (desc->ctx_free) {
+            system->ctx_free = desc->ctx_free;
+        }
+        if (desc->binding_ctx_free) {
+            system->binding_ctx_free = desc->binding_ctx_free;
         }
         if (desc->query.filter.instanced) {
             ECS_BIT_SET(system->query->filter.flags, EcsFilterIsInstanced);

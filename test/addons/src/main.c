@@ -582,6 +582,7 @@ void SystemMisc_deactivate_after_disable(void);
 void SystemMisc_delete_system(void);
 void SystemMisc_delete_pipeline_system(void);
 void SystemMisc_delete_system_w_ctx(void);
+void SystemMisc_update_ctx(void);
 void SystemMisc_run_custom_run_action(void);
 void SystemMisc_run_w_offset_limit_custom_run_action(void);
 void SystemMisc_pipeline_custom_run_action(void);
@@ -3640,6 +3641,10 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_delete_system_w_ctx
     },
     {
+        "update_ctx",
+        SystemMisc_update_ctx
+    },
+    {
         "run_custom_run_action",
         SystemMisc_run_custom_run_action
     },
@@ -6652,7 +6657,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        62,
+        63,
         SystemMisc_testcases
     },
     {

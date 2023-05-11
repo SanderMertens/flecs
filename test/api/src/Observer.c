@@ -1239,6 +1239,20 @@ void binding_ctx_free(void *ctx) {
     binding_ctx_value ++;
 }
 
+static int ctx_value_2;
+static
+void ctx_free_2(void *ctx) {
+    test_assert(&ctx_value_2 == ctx);
+    ctx_value_2 ++;
+}
+
+static int binding_ctx_value_2;
+static
+void binding_ctx_free_2(void *ctx) {
+    test_assert(&binding_ctx_value_2 == ctx);
+    binding_ctx_value_2 ++;
+}
+
 void Observer_delete_observer_w_ctx() {
     ecs_world_t *world = ecs_mini();
 
@@ -1262,6 +1276,62 @@ void Observer_delete_observer_w_ctx() {
 
     test_int(ctx_value, 1);
     test_int(binding_ctx_value, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_update_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t system = ecs_observer(world, {
+        .filter.terms = {{.id = Tag}},
+        .callback = Dummy,
+        .events = {EcsOnAdd},
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+    test_assert(system != 0);
+
+    test_assert(ecs_get_observer_ctx(world, system) == &ctx_value);
+    test_assert(ecs_get_observer_binding_ctx(world, system) 
+        == &binding_ctx_value);
+
+    ecs_observer(world, {
+        .entity = system,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+
+    test_int(ctx_value, 0);
+    test_int(binding_ctx_value, 0);
+    test_int(ctx_value_2, 0);
+    test_int(binding_ctx_value_2, 0);
+
+    ecs_observer(world, {
+        .entity = system,
+        .ctx = &ctx_value_2,
+        .ctx_free = ctx_free_2,
+        .binding_ctx = &binding_ctx_value_2,
+        .binding_ctx_free = binding_ctx_free_2
+    });
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
+    test_int(ctx_value_2, 0);
+    test_int(binding_ctx_value_2, 0);
+
+    ecs_delete(world, system);
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
+    test_int(ctx_value_2, 1);
+    test_int(binding_ctx_value_2, 1);
 
     ecs_fini(world);
 }
@@ -4735,3 +4805,4 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt() {
 
     ecs_fini(world);
 }
+

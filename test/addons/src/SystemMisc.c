@@ -1312,6 +1312,20 @@ void binding_ctx_free(void *ctx) {
     binding_ctx_value ++;
 }
 
+static int ctx_value_2;
+static
+void ctx_free_2(void *ctx) {
+    test_assert(&ctx_value_2 == ctx);
+    ctx_value_2 ++;
+}
+
+static int binding_ctx_value_2;
+static
+void binding_ctx_free_2(void *ctx) {
+    test_assert(&binding_ctx_value_2 == ctx);
+    binding_ctx_value_2 ++;
+}
+
 void SystemMisc_delete_system_w_ctx() {
     ecs_world_t *world = ecs_init();
 
@@ -1343,6 +1357,61 @@ void SystemMisc_delete_system_w_ctx() {
 
     ecs_delete(world, system);
     test_assert(!ecs_is_alive(world, system));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_update_ctx() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
+        .query.filter.terms = {{.id = Tag}},
+        .callback = Dummy,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+    test_assert(system != 0);
+
+    test_assert(ecs_get_system_ctx(world, system) == &ctx_value);
+    test_assert(ecs_get_system_binding_ctx(world, system) 
+        == &binding_ctx_value);
+
+    ecs_system(world, {
+        .entity = system,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free,
+        .binding_ctx = &binding_ctx_value,
+        .binding_ctx_free = binding_ctx_free
+    });
+
+    test_int(ctx_value, 0);
+    test_int(binding_ctx_value, 0);
+    test_int(ctx_value_2, 0);
+    test_int(binding_ctx_value_2, 0);
+
+    ecs_system(world, {
+        .entity = system,
+        .ctx = &ctx_value_2,
+        .ctx_free = ctx_free_2,
+        .binding_ctx = &binding_ctx_value_2,
+        .binding_ctx_free = binding_ctx_free_2
+    });
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
+    test_int(ctx_value_2, 0);
+    test_int(binding_ctx_value_2, 0);
+
+    ecs_delete(world, system);
+
+    test_int(ctx_value, 1);
+    test_int(binding_ctx_value, 1);
+    test_int(ctx_value_2, 1);
+    test_int(binding_ctx_value_2, 1);
 
     ecs_fini(world);
 }

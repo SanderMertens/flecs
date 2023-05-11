@@ -907,15 +907,37 @@ ecs_entity_t ecs_observer_init(
                 ecs_get_name(world, entity));
         }
     } else {
-        /* If existing entity handle was provided, override existing params */
-        if (desc->callback) {
-            ecs_poly(poly->poly, ecs_observer_t)->callback = desc->callback;
+        ecs_observer_t *observer = ecs_poly(poly->poly, ecs_observer_t);
+
+        if (desc->run) {
+            observer->run = desc->run;
         }
+        if (desc->callback) {
+            observer->callback = desc->callback;
+        }
+
+        if (observer->ctx_free) {
+            if (observer->ctx && observer->ctx != desc->ctx) {
+                observer->ctx_free(observer->ctx);
+            }
+        }
+        if (observer->binding_ctx_free) {
+            if (observer->binding_ctx && observer->binding_ctx != desc->binding_ctx) {
+                observer->binding_ctx_free(observer->binding_ctx);
+            }
+        }
+
         if (desc->ctx) {
-            ecs_poly(poly->poly, ecs_observer_t)->ctx = desc->ctx;
+            observer->ctx = desc->ctx;
         }
         if (desc->binding_ctx) {
-            ecs_poly(poly->poly, ecs_observer_t)->binding_ctx = desc->binding_ctx;
+            observer->binding_ctx = desc->binding_ctx;
+        }
+        if (desc->ctx_free) {
+            observer->ctx_free = desc->ctx_free;
+        }
+        if (desc->binding_ctx_free) {
+            observer->binding_ctx_free = desc->binding_ctx_free;
         }
     }
 
