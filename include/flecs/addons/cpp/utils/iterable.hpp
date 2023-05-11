@@ -21,7 +21,7 @@ struct iterable {
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
      *  - func(flecs::entity e, Components& ...)
-     *  - func(flecs::iter& it, int32_t index, Components& ....)
+     *  - func(flecs::iter& it, size_t index, Components& ....)
      *  - func(Components& ...)
      * 
      * Each iterators are automatically instanced.
