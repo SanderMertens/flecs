@@ -259,7 +259,8 @@
                 "to_view",
                 "to_view_from_stage",
                 "set_alias",
-                "emplace_w_observer"
+                "emplace_w_observer",
+                "world_id_to_entity"
             ]
         }, {
             "id": "Pairs",

@@ -8,7 +8,7 @@
  * \memberof flecs::world
  */
 template <typename T>
-flecs::id id() const;
+flecs::entity id() const;
 
 /** Id factory.
  * 

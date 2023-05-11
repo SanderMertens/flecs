@@ -252,6 +252,7 @@ void Entity_to_view(void);
 void Entity_to_view_from_stage(void);
 void Entity_set_alias(void);
 void Entity_emplace_w_observer(void);
+void Entity_world_id_to_entity(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2179,6 +2180,10 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_w_observer",
         Entity_emplace_w_observer
+    },
+    {
+        "world_id_to_entity",
+        Entity_world_id_to_entity
     }
 };
 
@@ -5896,7 +5901,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        239,
+        240,
         Entity_testcases
     },
     {
