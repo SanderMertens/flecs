@@ -252,7 +252,6 @@ void Entity_to_view(void);
 void Entity_to_view_from_stage(void);
 void Entity_set_alias(void);
 void Entity_emplace_w_observer(void);
-void Entity_world_id_to_entity(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1080,6 +1079,7 @@ void World_run_post_frame(void);
 void World_component_w_low_id(void);
 void World_get_set_log_level(void);
 void World_reset_world(void);
+void World_id_from_pair_type(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -2180,10 +2180,6 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_w_observer",
         Entity_emplace_w_observer
-    },
-    {
-        "world_id_to_entity",
-        Entity_world_id_to_entity
     }
 };
 
@@ -5387,6 +5383,10 @@ bake_test_case World_testcases[] = {
     {
         "reset_world",
         World_reset_world
+    },
+    {
+        "id_from_pair_type",
+        World_id_from_pair_type
     }
 };
 
@@ -5901,7 +5901,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        240,
+        239,
         Entity_testcases
     },
     {
@@ -6048,7 +6048,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        95,
+        96,
         World_testcases
     },
     {

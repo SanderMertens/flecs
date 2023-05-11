@@ -238,7 +238,7 @@ printf("Name: %s\n", ecs_get_name(world, pos_e)); // outputs 'Name: Position'
 ecs_add(world, pos_e, Serializable);
 ```
 ```cpp
-flecs::entity pos_e = world.id<Position>();
+flecs::entity pos_e = world.entity<Position>();
 std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
 
 // It's possible to add components like you would for any entity
@@ -256,7 +256,7 @@ const EcsComponent *c = ecs_get(world, pos_e, EcsComponent);
 printf("Component size: %u\n", c->size);
 ```
 ```cpp
-flecs::entity pos_e = world.id<Position>();
+flecs::entity pos_e = world.entity<Position>();
 
 const EcsComponent *c = pos_e.get<flecs::Component>();
 std::cout << "Component size: " << c->size << std::endl;
@@ -548,7 +548,7 @@ e.each([&](flecs:id id) {
     if (id == world.id<Position>()) {
         // Found Position component!
     }
-}
+});
 ```
 
 ### Singleton
@@ -577,7 +577,7 @@ ecs_set(world, ecs_id(Gravity), Gravity, {10, 20});
 const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 ```
 ```cpp
-flecs::entity grav_e = world.id<Gravity>();
+flecs::entity grav_e = world.entity<Gravity>();
 
 grav_e.set<Gravity>({10, 20});
 

@@ -19189,7 +19189,7 @@ struct world {
  * \memberof flecs::world
  */
 template <typename T>
-flecs::entity id() const;
+flecs::id id() const;
 
 /** Id factory.
  * 
@@ -23319,7 +23319,7 @@ struct iterable {
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
      *  - func(flecs::entity e, Components& ...)
-     *  - func(flecs::iter& it, int32_t index, Components& ....)
+     *  - func(flecs::iter& it, size_t index, Components& ....)
      *  - func(Components& ...)
      * 
      * Each iterators are automatically instanced.
@@ -24810,8 +24810,8 @@ inline flecs::entity id::type_id() const {
 // Id mixin implementation
 
 template <typename T>
-inline flecs::entity world::id() const {
-    return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
+inline flecs::id world::id() const {
+    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
 }
 
 template <typename ... Args>

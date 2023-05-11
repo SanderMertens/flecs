@@ -259,8 +259,7 @@
                 "to_view",
                 "to_view_from_stage",
                 "set_alias",
-                "emplace_w_observer",
-                "world_id_to_entity"
+                "emplace_w_observer"
             ]
         }, {
             "id": "Pairs",
@@ -1129,7 +1128,8 @@
                 "run_post_frame",
                 "component_w_low_id",
                 "get_set_log_level",
-                "reset_world"
+                "reset_world",
+                "id_from_pair_type"
             ]
         }, {
             "id": "Singleton",

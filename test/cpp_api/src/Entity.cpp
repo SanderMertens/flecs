@@ -4305,13 +4305,3 @@ void Entity_emplace_w_observer() {
     test_int(e.get<Position>()->x, 10);
     test_int(e.get<Position>()->y, 20);
 }
-
-void Entity_world_id_to_entity() {
-    flecs::world ecs;
-
-    flecs::entity e1 = ecs.component<Position>();
-    flecs::entity e2 = ecs.id<Position>();
-    test_assert(e1 == e2);
-    flecs::id id = ecs.id<Position>();
-    test_assert(e1 == id);
-}

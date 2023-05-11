@@ -1694,3 +1694,12 @@ void World_reset_world() {
     ecs.reset();
     test_assert(!ecs.exists(e));
 }
+
+void World_id_from_pair_type() {
+    flecs::world ecs;
+
+    flecs::id id = ecs.id<flecs::pair<Position, Velocity>>();
+    test_assert(id.is_pair());
+    test_assert(id.first() == ecs.id<Position>());
+    test_assert(id.second() == ecs.id<Velocity>());
+}
