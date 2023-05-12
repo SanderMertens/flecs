@@ -347,7 +347,7 @@ A pair can be encoded in a single 64 bit identifier by using the `ecs_pair` macr
 ecs_id_t id = ecs_pair(Likes, Bob);
 ```
 ```cpp
-flecs::id id = world.pair(Likes, Bob);
+flecs::id id = world.pair<Likes>(Bob);
 ```
 
 The following examples show how to get back the elements from a pair:
