@@ -47,8 +47,9 @@ struct app_builder {
         return *this;
     }
 
-    app_builder& enable_rest(bool value = true) {
-        m_desc.enable_rest = value;
+    app_builder& enable_rest(uint16_t port = 0) {
+        m_desc.enable_rest = true;
+        m_desc.port = port;
         return *this;
     }
 

@@ -96,7 +96,7 @@ int ecs_app_run(
 #ifdef ECS_TARGET_EM
         flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
 #else
-        ecs_set(world, EcsWorld, EcsRest, {.port = 0});
+        ecs_set(world, EcsWorld, EcsRest, {.port = desc->port });
 #endif
 #else
         ecs_warn("cannot enable remote API, REST addon not available");

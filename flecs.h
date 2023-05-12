@@ -9630,8 +9630,9 @@ typedef struct ecs_app_desc_t {
     ecs_ftime_t delta_time;   /**< Frame time increment (0 for measured values) */
     int32_t threads;          /**< Number of threads. */
     int32_t frames;           /**< Number of frames to run (0 for infinite) */
-    bool enable_rest;         /**< Allows HTTP clients to access ECS data */
+    bool enable_rest;         /**< Enables ECS access over HTTP, necessary for explorer */
     bool enable_monitor;      /**< Periodically collect statistics */
+    uint16_t port;            /**< HTTP port used by REST API */
 
     ecs_app_init_action_t init; /**< If set, function is ran before starting the
                                  * main loop. */
@@ -17477,8 +17478,9 @@ struct app_builder {
         return *this;
     }
 
-    app_builder& enable_rest(bool value = true) {
-        m_desc.enable_rest = value;
+    app_builder& enable_rest(uint16_t port = 0) {
+        m_desc.enable_rest = true;
+        m_desc.port = port;
         return *this;
     }
 
