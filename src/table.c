@@ -2447,7 +2447,9 @@ void flecs_table_replace_data(
 int32_t* flecs_table_get_dirty_state(
     ecs_world_t *world,
     ecs_table_t *table)
-{    
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!table->dirty_state) {
         int32_t column_count = table->storage_count;
         table->dirty_state = flecs_alloc_n(&world->allocator,

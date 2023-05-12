@@ -3108,6 +3108,45 @@ void Query_query_changed_w_singleton() {
     ecs_fini(world);
 }
 
+void Query_query_changed_w_only_singleton() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_set(world, Position, {1, 2});
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{
+            .id = ecs_id(Position),
+            .src.id = ecs_id(Position)
+        }}
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_bool(true, ecs_query_changed(NULL, &it));
+        test_int(0, it.count);
+        Position *p = ecs_field(&it, Position, 1);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_bool(false, ecs_query_changed(NULL, &it));
+        test_int(0, it.count);
+        Position *p = ecs_field(&it, Position, 1);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
 void Query_subquery_match_existing() {
     ecs_world_t *world = ecs_mini();
 

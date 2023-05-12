@@ -5061,7 +5061,9 @@ void flecs_table_replace_data(
 int32_t* flecs_table_get_dirty_state(
     ecs_world_t *world,
     ecs_table_t *table)
-{    
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!table->dirty_state) {
         int32_t column_count = table->storage_count;
         table->dirty_state = flecs_alloc_n(&world->allocator,
@@ -53677,12 +53679,14 @@ void flecs_query_sync_match_monitor(
 
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->node.table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(query->filter.world, table);
-    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (table) {
+        int32_t *dirty_state = flecs_table_get_dirty_state(
+            query->filter.world, table);
+        ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+        monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
+    }
+
     table_dirty_state_t cur;
-
-    monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
-
     int32_t i, term_count = query->filter.term_count;
     for (i = 0; i < term_count; i ++) {
         int32_t t = query->filter.terms[i].field_index;
@@ -53727,20 +53731,24 @@ bool flecs_query_check_match_monitor_term(
     }
     
     int32_t *monitor = match->monitor;
-    ecs_table_t *table = match->node.table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(query->filter.world, table);
-    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-    table_dirty_state_t cur;
-
     int32_t state = monitor[term];
     if (state == -1) {
         return false;
     }
 
-    if (!term) {
-        return monitor[0] != dirty_state[0];
+    ecs_table_t *table = match->node.table;
+    if (table) {
+        int32_t *dirty_state = flecs_table_get_dirty_state(
+            query->filter.world, table);
+        ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!term) {
+            return monitor[0] != dirty_state[0];
+        }
+    } else if (!term) {
+        return false;
     }
 
+    table_dirty_state_t cur;
     flecs_query_get_dirty_state(query, match, term - 1, &cur);
     ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
 
@@ -53762,14 +53770,17 @@ bool flecs_query_check_match_monitor(
 
     int32_t *monitor = match->monitor;
     ecs_table_t *table = match->node.table;
-    int32_t *dirty_state = flecs_table_get_dirty_state(query->filter.world, table);
-    bool has_flat = false;
-    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (monitor[0] != dirty_state[0]) {
-        return true;
+    int32_t *dirty_state = NULL;
+    if (table) {
+        dirty_state = flecs_table_get_dirty_state(
+            query->filter.world, table);
+        ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (monitor[0] != dirty_state[0]) {
+            return true;
+        }
     }
 
+    bool has_flat = false;
     ecs_world_t *world = query->filter.world;
     int32_t i, field_count = query->filter.field_count;
     int32_t *storage_columns = match->storage_columns;
@@ -53787,6 +53798,7 @@ bool flecs_query_check_match_monitor(
         int32_t column = storage_columns[i];
         if (column >= 0) {
             /* owned component */
+            ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
             if (mon != dirty_state[column + 1]) {
                 return true;
             }

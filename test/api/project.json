@@ -1489,6 +1489,7 @@
                 "query_changed_w_or",
                 "query_changed_or",
                 "query_changed_w_singleton",
+                "query_changed_w_only_singleton",
                 "subquery_match_existing",
                 "subquery_match_new",
                 "subquery_inactive",
