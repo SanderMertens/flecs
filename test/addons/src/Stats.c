@@ -242,6 +242,24 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
     ecs_fini(world);
 }
 
+void Stats_get_pipeline_stats_w_task_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, FooSys, EcsOnUpdate, 0);
+
+    ecs_entity_t pipeline = ecs_get_pipeline(world);
+    test_assert(pipeline != 0);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
+    test_assert(ecs_map_count(&stats.system_stats) != 0); /* Inactive systems */
+    test_int(ecs_vec_count(&stats.systems), 0);
+
+    ecs_pipeline_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
 void Stats_get_entity_count() {
     ecs_world_t *world = ecs_init();
 

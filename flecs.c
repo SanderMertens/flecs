@@ -29350,36 +29350,38 @@ bool ecs_pipeline_stats_get(
     ecs_map_init_if(&s->system_stats, NULL);
 
     /* Make sure vector is large enough to store all systems & sync points */
-    ecs_entity_t *systems = NULL;
-    if (pip_count) {
-        ecs_vec_init_if_t(&s->systems, ecs_entity_t);
-        ecs_vec_set_count_t(NULL, &s->systems, ecs_entity_t, pip_count);
-        systems = ecs_vec_first_t(&s->systems, ecs_entity_t);
+    if (op) {
+        ecs_entity_t *systems = NULL;
+        if (pip_count) {
+            ecs_vec_init_if_t(&s->systems, ecs_entity_t);
+            ecs_vec_set_count_t(NULL, &s->systems, ecs_entity_t, pip_count);
+            systems = ecs_vec_first_t(&s->systems, ecs_entity_t);
 
-        /* Populate systems vector, keep track of sync points */
-        it = ecs_query_iter(stage, pq->query);
-        
-        int32_t i, i_system = 0, ran_since_merge = 0;
-        while (ecs_query_next(&it)) {
-            if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
-                continue;
-            }
+            /* Populate systems vector, keep track of sync points */
+            it = ecs_query_iter(stage, pq->query);
+            
+            int32_t i, i_system = 0, ran_since_merge = 0;
+            while (ecs_query_next(&it)) {
+                if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+                    continue;
+                }
 
-            for (i = 0; i < it.count; i ++) {
-                systems[i_system ++] = it.entities[i];
-                ran_since_merge ++;
-                if (op != op_last && ran_since_merge == op->count) {
-                    ran_since_merge = 0;
-                    op++;
-                    systems[i_system ++] = 0; /* 0 indicates a merge point */
+                for (i = 0; i < it.count; i ++) {
+                    systems[i_system ++] = it.entities[i];
+                    ran_since_merge ++;
+                    if (op != op_last && ran_since_merge == op->count) {
+                        ran_since_merge = 0;
+                        op++;
+                        systems[i_system ++] = 0; /* 0 indicates a merge point */
+                    }
                 }
             }
-        }
 
-        systems[i_system ++] = 0; /* Last merge */
-        ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
-    } else {
-        ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
+            systems[i_system ++] = 0; /* Last merge */
+            ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
+        } else {
+            ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
+        }
     }
 
     /* Separately populate system stats map from build query, which includes
