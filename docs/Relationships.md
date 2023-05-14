@@ -1091,7 +1091,7 @@ ecs_add_id(world, LocatedIn, Transitive);
 LocatedIn.add(flecs::Transitive);
 ```
 
-When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relationship and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the [Transitivity section in the query manual](Queries.md#Transitivity).
+When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relationship and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the [Transitive Relationships section in the query manual](Queries.md#transitive-relationships).
 
 ### Reflexive property
 A relationship can be marked reflexive which means that a query like `Relationship(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:

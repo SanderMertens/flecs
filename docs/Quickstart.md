@@ -544,7 +544,7 @@ for (int i = 0; i < type->count; i++) {
 }
 ```
 ```cpp
-e.each([&](flecs:id id) {
+e.each([&](flecs::id id) {
     if (id == world.id<Position>()) {
         // Found Position component!
     }
