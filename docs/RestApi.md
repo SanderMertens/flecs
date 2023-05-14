@@ -82,7 +82,7 @@ flecs::world world(argc, argc);
 ```
 
 ### Queries
-The search bar in the explorer makes it possible to directly query the ECS storage. A query can be entered in the "Search" box, and needs to be specified in the query DSL (see query manual). An example:
+The search bar in the explorer makes it possible to directly query the ECS storage. A query can be entered in the "Search" box, and needs to be specified in the query DSL (see [query manual](Queries.md#query-dsl)). An example:
 
 ![Remote Explorer](img/explorer-query.png)
 

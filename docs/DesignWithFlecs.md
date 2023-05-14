@@ -48,19 +48,19 @@ Flecs has cached queries and uncached queries. Cached queries (`ecs_query_t` and
 
 Another difference is that uncached queries can be created from systems, while cached queries cannot. If you need a cached query in a system, it has to be created in advance and passed into the system, either by setting it as system context, adding a component to the system with the query, or passing it in the lambda capture list (C++ only). Systems themselves use cached queries.
 
-Make sure to not repeatedly create and destroy cached queries! For more information, see [the query manual](https://www.flecs.dev/flecs/#/docs/Queries?id=query-types) for more details.
+Make sure to not repeatedly create and destroy cached queries! For more information, see [the query manual](Queries.md#types) for more details.
 
 ### Use in/inout/out annotations
 Flecs analyzes how components are read and written by queries and uses this for things like change tracking and deciding when to merge command buffers. By default components are marked as `inout`. If a system only reads a component, make sure to mark it as `in`, as this can reduce the time spent by other parts of the application that rely on change detection and sync points.
 
-For more information, see [the query manual](https://www.flecs.dev/flecs/#/docs/Queries?id=access-modifiers).
+For more information, see [the query manual](Queries.md#access-modifiers).
 
 ### Annotations
 You can further annotate queries with components that are not matched with the query, but that are written using ECS operations (like add, remove, set etc.). Such operations are automatically deferred and merged at the end of the frame. With annotations you can enforce merging at an earlier point, by specifying that a component modification has been queued. When Flecs sees this, it will merge back the modifications before the next read.
 
 See the sync point examples for more detail:
-C: https://github.com/SanderMertens/flecs/blob/master/examples/c/systems/sync_point
-C++: https://github.com/SanderMertens/flecs/blob/master/examples/cpp/systems/sync_point
+- C: https://github.com/SanderMertens/flecs/blob/master/examples/c/systems/sync_point
+- C++: https://github.com/SanderMertens/flecs/blob/master/examples/cpp/systems/sync_point
 
 ## Systems
 Designing systems is one of the hardest things to do when not coming from an ECS background. Object oriented code allows you to write logic that is local to a single object, whereas systems in ECS are ran for collections of similar objects. This requires a different approach towards design.
@@ -133,13 +133,12 @@ That was a quick overview of all the builtin phases. Note that these are just gu
 ### Custom phases and pipelines
 An application can add phases to the existing list, or define a pipeline from scratch. See the following examples on how to do this:
 
-C:
-https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_phases
-https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_pipeline
-
-C++
-https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_phases
-https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_pipeline
+- C:
+  - https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_phases
+  - https://github.com/SanderMertens/flecs/tree/master/examples/c/systems/custom_pipeline
+- C++:
+  - https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_phases
+  - https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/custom_pipeline
 
 ## Modules
 Large applications can often contain many components and systems. Some large commercial projects have reported up to 800 components! Managing all those components and systems becomes important on that scale, and that is what modules are for. Modules are one of those features that you usually don't think about when selecting an ECS, but they can make your life a lot easier.
@@ -173,4 +172,4 @@ In many cases you might want to use your own relationships. Here are a few signs
 - You are looking to group entities by something like world cells or layers, and want to be able to lookup all entities for a cell.
 - You're adding an enumeration type as component, but want to query for enumeration constants.
 
-See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/#/docs/Relationships) for more information.
+See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](Relationships.md) for more information.

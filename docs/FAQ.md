@@ -44,7 +44,7 @@ Yes, Flecs is used commercially.
 This is likely because you're creating a query in a loop. Queries should be created once, and iterated often.
 
 ## Can Flecs be compiled to web assembly?
-Yes it can! See the quickstart manual for more information.
+Yes it can! See the [quickstart manual](Quickstart.md) for more information.
 
 ## Why am I getting an “use of undeclared identifier 'FLECS__E …’” compiler error?
 This happens in C if the variable that holds the component id can't be found. This example shows how to fix it: https://github.com/SanderMertens/flecs/tree/master/examples/c/entities/fwd_declare_component
@@ -82,7 +82,7 @@ If it's still not working, check the output of the browser console and post it i
 Flecs has builtin change detection. Additionally, you can use an `OnSet` observer to get notified of changes to component values. See the query change detection and observer examples for more information.
 
 ## Are relationships just a component with an entity handle?
-No, relationships are a deeply integrated feature that is faster in many ways than a component with an entity handle. See the relationship manual for more information.
+No, relationships are a deeply integrated feature that is faster in many ways than a component with an entity handle. See the [relationship manual](Relationships.md) for more information.
 
 ## Can I create systems outside of the main function?
 You can! Systems can be created from any function, except other systems.

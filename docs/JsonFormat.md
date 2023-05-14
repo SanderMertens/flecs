@@ -239,7 +239,7 @@ Array with paths of sources for each term. A subject indicates the actual entity
 Type: Array([Path](#path)), optional
 
 #### variables
-Array with variable values for current result (see [query variables](https://www.flecs.dev/flecs/md_docs_Queries.html/#variables)).
+Array with variable values for current result (see [query variables](Queries.md#variables)).
 
 Type: Array([Path](#path)), optional
 

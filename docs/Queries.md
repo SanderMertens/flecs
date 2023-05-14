@@ -148,7 +148,7 @@ r.each([](Position& p, Velocity& v) {
 });
 ```
 
-For more information on how each implementation performs, see [Query Performance](#query-performance).
+For more information on how each implementation performs, see [Performance](#performance).
 
 ## Creation
 This section explains how to create queries in the different language bindings and the flecs query DSL.
@@ -1708,7 +1708,7 @@ Relationship traversal enables a query to search for a component by traversing a
 
 The arrows in this diagram indicate the direction in which the query is traversing the `ChildOf` relationship to find the component. A query will continue traversing until it has found an entity with the component, or until a root (an entity without the relationship) has been found. The traversal is depth-first. If an entity has multiple instances of a relationship a query will first traverse the first instance until its root entity before continuing with the second instance.
 
-Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the [Query Performance](#query-performance) section for more details.
+Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the [Performance](#performance) section for more details.
 
 Any relationship used for traversal must have the [Traversable](Relationships.md#traversable-property) property. Attempting to create a query that traverses a relationship that does not have the `Traversable` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
 
