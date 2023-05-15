@@ -482,11 +482,20 @@ void SerializeToJson_struct_double_large() {
         }
     });
 
-    T value = {60000};
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"x\":\"6e4\"}");
-    ecs_os_free(expr);
+    {
+        T value = {60000};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"6e4\"}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {1.9885e30};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"1.98849999999e30\"}");
+        ecs_os_free(expr);
+    }
 
     ecs_fini(world);
 }
