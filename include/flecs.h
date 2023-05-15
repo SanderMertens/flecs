@@ -2888,17 +2888,31 @@ char* ecs_entity_str(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Test if an entity has an entity.
- * This operation returns true if the entity has the provided entity in its 
- * type.
+/** Test if an entity has an id.
+ * This operation returns true if the entity has or inherits the specified id.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The id to test for.
- * @return True if the entity has the entity, false if not.
+ * @return True if the entity has the id, false if not.
  */
 FLECS_API
 bool ecs_has_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Test if an entity owns an id.
+ * This operation returns true if the entity has the specified id. Other than
+ * ecs_has_id this operation will not return true if the id is inherited.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id to test for.
+ * @return True if the entity has the id, false if not.
+ */
+FLECS_API
+bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

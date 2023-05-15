@@ -8879,6 +8879,14 @@ error:
     return false;
 }
 
+bool ecs_owns_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    return (ecs_search(world, ecs_get_table(world, entity), id, 0) != -1);
+}
+
 ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,

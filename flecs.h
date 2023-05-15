@@ -5562,17 +5562,31 @@ char* ecs_entity_str(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Test if an entity has an entity.
- * This operation returns true if the entity has the provided entity in its 
- * type.
+/** Test if an entity has an id.
+ * This operation returns true if the entity has or inherits the specified id.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The id to test for.
- * @return True if the entity has the entity, false if not.
+ * @return True if the entity has the id, false if not.
  */
 FLECS_API
 bool ecs_has_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Test if an entity owns an id.
+ * This operation returns true if the entity has the specified id. Other than
+ * ecs_has_id this operation will not return true if the id is inherited.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id to test for.
+ * @return True if the entity has the id, false if not.
+ */
+FLECS_API
+bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -8505,9 +8519,6 @@ int ecs_value_move_ctor(
 
 #define ecs_has_pair(world, entity, first, second)\
     ecs_has_id(world, entity, ecs_pair(first, second))
-
-#define ecs_owns_id(world, entity, id)\
-    (ecs_search(world, ecs_get_table(world, entity), id, 0) != -1)
 
 #define ecs_owns_pair(world, entity, first, second)\
     ecs_owns_id(world, entity, ecs_pair(first, second))
