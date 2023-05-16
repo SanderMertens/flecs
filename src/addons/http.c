@@ -302,7 +302,7 @@ void http_sock_keep_alive(
 }
 
 static
-void http_sock_nonblock(ecs_http_socket_t sock) {
+void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
     (void)sock;
 #ifdef ECS_TARGET_POSIX
     int flags;
@@ -312,7 +312,11 @@ void http_sock_nonblock(ecs_http_socket_t sock) {
             ecs_os_strerror(errno));
         return;
     }
-    flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    if (enable) {
+        flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    } else {
+        flags = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
+    }
     if (flags == -1) {
         ecs_warn("http: failed to set socket NONBLOCK: %s",
             ecs_os_strerror(errno));
@@ -890,6 +894,8 @@ void* http_server_send_queue(void* arg) {
             if (http_socket_is_valid(sock)) {
                 bool error = false;
 
+                http_sock_nonblock(sock, false);
+
                 /* Write headers */
                 ecs_size_t written = http_send(sock, headers, headers_length, 0);
                 if (written != headers_length) {
@@ -1096,7 +1102,7 @@ http_conn_res_t http_init_connection(
 {
     http_sock_set_timeout(sock_conn, 100);
     http_sock_keep_alive(sock_conn);
-    http_sock_nonblock(sock_conn);
+    http_sock_nonblock(sock_conn, true);
 
     /* Create new connection */
     ecs_os_mutex_lock(srv->lock);
