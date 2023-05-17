@@ -264,7 +264,7 @@ void flecs_iter_populate_data(
     it->offset = offset;
     it->count = count;
     if (table) {
-        ecs_assert(count != 0 || !ecs_table_count(table), 
+        ecs_assert(count != 0 || !ecs_table_count(table) || (it->flags & EcsIterTableOnly), 
             ECS_INTERNAL_ERROR, NULL);
         if (count) {
             it->entities = ecs_vec_get_t(

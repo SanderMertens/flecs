@@ -51631,7 +51631,8 @@ void flecs_observer_invoke(
 
     bool instanced = filter->flags & EcsFilterIsInstanced;
     bool match_this = filter->flags & EcsFilterMatchThis;
-    if (match_this && (simple_result || instanced)) {
+    bool table_only = it->flags & EcsIterTableOnly;
+    if (match_this && (simple_result || instanced || table_only)) {
         callback(it);
     } else {
         ecs_entity_t observer_src = term->src.id;
@@ -51778,6 +51779,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
     user_it.ptrs = NULL;
 
     flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
+    user_it.flags |= (it->flags & EcsIterTableOnly);
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
@@ -57333,7 +57335,7 @@ void flecs_iter_populate_data(
     it->offset = offset;
     it->count = count;
     if (table) {
-        ecs_assert(count != 0 || !ecs_table_count(table), 
+        ecs_assert(count != 0 || !ecs_table_count(table) || (it->flags & EcsIterTableOnly), 
             ECS_INTERNAL_ERROR, NULL);
         if (count) {
             it->entities = ecs_vec_get_t(
