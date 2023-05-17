@@ -2384,8 +2384,9 @@ void Query_query_changed_after_delete() {
     test_assert(ecs_query_changed(q, 0) == true);
 
     it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
     test_assert(ecs_query_changed(q, 0) == false);
-    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -2402,7 +2403,7 @@ void Query_query_changed_after_add() {
     test_assert(ecs_query_changed(q, 0) == true);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q, 0) == false);
+    test_assert(ecs_query_changed(q, 0) == true);
     while (ecs_query_next(&it)) { }
     test_assert(ecs_query_changed(q, 0) == false);
 
@@ -2438,7 +2439,7 @@ void Query_query_changed_after_remove() {
     test_assert(ecs_query_changed(q, 0) == true);
 
     it = ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q, 0) == false);
+    test_assert(ecs_query_changed(q, 0) == true);
     while (ecs_query_next(&it)) { }
     test_assert(ecs_query_changed(q, 0) == false);
 

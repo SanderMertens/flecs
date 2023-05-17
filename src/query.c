@@ -571,6 +571,8 @@ void flecs_query_sync_match_monitor(
             }
         }
     }
+
+    query->prev_match_count = query->match_count;
 }
 
 /* Check if single match term has changed */
@@ -2150,8 +2152,6 @@ ecs_iter_t ecs_query_iter(
         flecs_eval_component_monitors(world);
     }
 
-    query->prev_match_count = query->match_count;
-
     /* Prepare iterator */
 
     int32_t table_count;
@@ -2353,6 +2353,7 @@ bool ecs_query_next_table(
     }
 
 error:
+    query->match_count = query->prev_match_count;
     ecs_iter_fini(it);
     return false;
 }
@@ -2567,6 +2568,7 @@ bool ecs_query_next_instanced(
     }
 
 done: error:
+    query->match_count = query->prev_match_count;
     ecs_iter_fini(it);
     return false;
 
