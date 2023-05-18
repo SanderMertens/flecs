@@ -47,6 +47,13 @@ ECS_STRUCT(Struct_w_ptrs, {
     void* ptr_b;
 });
 
+ECS_STRUCT(Struct_w_private, {
+    double x;
+    double y;
+ECS_PRIVATE
+    double z;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -384,6 +391,30 @@ void MetaUtils_struct_w_ptr() {
     {
         ecs_entity_t m = ecs_lookup_child(world, s, "ptr_b");
         test_assert(m != 0);
+    }
+
+    ecs_fini(world);
+}
+
+void MetaUtils_private_members() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_private);
+
+    test_assert(ecs_id(Struct_w_private) != 0);
+    ecs_entity_t s = ecs_id(Struct_w_private);
+
+    {
+        ecs_entity_t m = ecs_lookup_child(world, s, "x");
+        test_assert(m != 0);
+    }
+    {
+        ecs_entity_t m = ecs_lookup_child(world, s, "y");
+        test_assert(m != 0);
+    }
+    {
+        ecs_entity_t m = ecs_lookup_child(world, s, "z");
+        test_assert(m == 0);
     }
 
     ecs_fini(world);

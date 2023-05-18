@@ -319,6 +319,10 @@ const char* meta_parse_member(
         goto error;
     }
 
+    if (!ptr[0]) {
+        return ptr;        
+    }
+
     /* Next token is the identifier */
     ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
     if (!ptr) {

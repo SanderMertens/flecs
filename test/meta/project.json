@@ -800,7 +800,8 @@
                 "enum_nospace",
                 "struct_nospace",
                 "identifier_w_underscore",
-                "struct_w_ptr"
+                "struct_w_ptr",
+                "private_members"
             ]
         }, {
             "id": "Vars",

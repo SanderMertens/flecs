@@ -766,6 +766,7 @@ void MetaUtils_enum_nospace(void);
 void MetaUtils_struct_nospace(void);
 void MetaUtils_identifier_w_underscore(void);
 void MetaUtils_struct_w_ptr(void);
+void MetaUtils_private_members(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -3851,6 +3852,10 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_ptr",
         MetaUtils_struct_w_ptr
+    },
+    {
+        "private_members",
+        MetaUtils_private_members
     }
 };
 
@@ -4473,7 +4478,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        17,
+        18,
         MetaUtils_testcases
     },
     {
