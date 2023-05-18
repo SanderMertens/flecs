@@ -16,6 +16,7 @@ inline metrics::metrics(flecs::world& world) {
     world.entity<metrics::Instance>("::flecs::metrics::Instance");
     world.entity<metrics::Metric>("::flecs::metrics::Metric");
     world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");
+    world.entity<metrics::CounterId>("::flecs::metrics::Metric::CounterId");
     world.entity<metrics::CounterIncrement>("::flecs::metrics::Metric::CounterIncrement");
     world.entity<metrics::Gauge>("::flecs::metrics::Metric::Gauge");
 }

@@ -15,12 +15,15 @@ ECS_COMPONENT_DECLARE(EcsMetricSource);
 ECS_TAG_DECLARE(EcsMetric);
 ECS_TAG_DECLARE(EcsCounter);
 ECS_TAG_DECLARE(EcsCounterIncrement);
+ECS_TAG_DECLARE(EcsCounterId);
 ECS_TAG_DECLARE(EcsGauge);
 
 /* Internal components */
 ECS_COMPONENT_DECLARE(EcsMetricMember);
 ECS_COMPONENT_DECLARE(EcsMetricId);
 ECS_COMPONENT_DECLARE(EcsMetricOneOf);
+ECS_COMPONENT_DECLARE(EcsMetricCountIds);
+ECS_COMPONENT_DECLARE(EcsMetricCountTargets);
 ECS_COMPONENT_DECLARE(EcsMetricMemberInstance);
 ECS_COMPONENT_DECLARE(EcsMetricIdInstance);
 ECS_COMPONENT_DECLARE(EcsMetricOneOfInstance);
@@ -52,6 +55,13 @@ typedef struct {
     ecs_map_t target_offset;         /**< Pair target to metric type offset */
 } ecs_oneof_metric_ctx_t;
 
+/** Context for metric that monitors how many entities have a pair target */
+typedef struct {
+    ecs_metric_ctx_t metric;
+    ecs_id_record_t *idr;            /**< Id record for monitored component */
+    ecs_map_t targets;               /**< Map of counters for each target */
+} ecs_count_targets_metric_ctx_t;
+
 /** Stores context shared for all instances of member metric */
 typedef struct {
     ecs_member_metric_ctx_t *ctx;
@@ -66,6 +76,16 @@ typedef struct {
 typedef struct {
     ecs_oneof_metric_ctx_t *ctx;
 } EcsMetricOneOf;
+
+/** Stores context shared for all instances of id counter metric */
+typedef struct {
+    ecs_id_t id;
+} EcsMetricCountIds;
+
+/** Stores context shared for all instances of target counter metric */
+typedef struct {
+    ecs_count_targets_metric_ctx_t *ctx;
+} EcsMetricCountTargets;
 
 /** Instance of member metric */
 typedef struct {
@@ -113,6 +133,18 @@ static ECS_DTOR(EcsMetricOneOf, ptr, {
 })
 
 static ECS_MOVE(EcsMetricOneOf, dst, src, {
+    *dst = *src;
+    src->ctx = NULL;
+})
+
+static ECS_DTOR(EcsMetricCountTargets, ptr, {
+    if (ptr->ctx) {
+        ecs_map_fini(&ptr->ctx->targets);
+        ecs_os_free(ptr->ctx);
+    }
+})
+
+static ECS_MOVE(EcsMetricCountTargets, dst, src, {
     *dst = *src;
     src->ctx = NULL;
 })
@@ -329,6 +361,49 @@ static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
     UpdateOneOfInstance(it, true);
 }
 
+static void UpdateCountTargets(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 1);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_count_targets_metric_ctx_t *ctx = m[i].ctx;
+        ecs_id_record_t *cur = ctx->idr;
+        while ((cur = cur->first.next)) {
+            ecs_id_t id = cur->id;
+            ecs_entity_t *mi = ecs_map_ensure(&ctx->targets, id);
+            if (!mi[0]) {
+                mi[0] = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
+                ecs_entity_t tgt = ecs_pair_second(world, cur->id);
+                const char *name = ecs_get_name(world, tgt);
+                if (name) {
+                    ecs_set_name(world, mi[0], name);
+                }
+
+                EcsMetricSource *source = ecs_get_mut(
+                    world, mi[0], EcsMetricSource);
+                source->entity = tgt;
+            }
+
+            EcsMetricValue *value = ecs_get_mut(world, mi[0], EcsMetricValue);
+            value->value += (double)ecs_count_id(world, cur->id) * 
+                (double)it->delta_system_time;
+        }
+    }
+}
+
+static void UpdateCountIds(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 1);
+    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 2);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        v[i].value += (double)ecs_count_id(world, m[i].id) * 
+            (double)it->delta_system_time;
+    }
+}
+
 /** Initialize member metric */
 static
 int flecs_member_metric_init(
@@ -528,6 +603,39 @@ error:
     return -1;
 }
 
+static
+int flecs_count_id_targets_metric_init(
+    ecs_world_t *world,
+    ecs_entity_t metric,
+    const ecs_metric_desc_t *desc)
+{
+    ecs_count_targets_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_count_targets_metric_ctx_t);
+    ctx->metric.metric = metric;
+    ctx->metric.kind = desc->kind;
+    ctx->idr = flecs_id_record_ensure(world, desc->id);
+    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_map_init(&ctx->targets, NULL);
+
+    ecs_set(world, metric, EcsMetricCountTargets, { .ctx = ctx });
+    ecs_add_pair(world, metric, EcsMetric, desc->kind);
+    ecs_add_id(world, metric, EcsMetric); 
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_count_ids_metric_init(
+    ecs_world_t *world,
+    ecs_entity_t metric,
+    const ecs_metric_desc_t *desc)
+{
+    ecs_set(world, metric, EcsMetricCountIds, { .id = desc->id });
+    ecs_set(world, metric, EcsMetricValue, { .value = 0 });
+    return 0;
+}
+
 ecs_entity_t ecs_metric_init(
     ecs_world_t *world,
     const ecs_metric_desc_t *desc)
@@ -546,13 +654,22 @@ ecs_entity_t ecs_metric_init(
         goto error;
     }
 
-    if (kind != EcsCounter && kind != EcsGauge && kind != EcsCounterIncrement) {
-        ecs_err("invalid metric kind");
+    if (kind != EcsGauge && 
+        kind != EcsCounter && 
+        kind != EcsCounterId &&
+        kind != EcsCounterIncrement) 
+    {
+        ecs_err("invalid metric kind %s", ecs_get_fullpath(world, kind));
         goto error;
     }
 
     if (kind == EcsCounterIncrement && !desc->member) {
         ecs_err("CounterIncrement can only be used in combination with member");
+        goto error;
+    }
+
+    if (kind == EcsCounterId && desc->member) {
+        ecs_err("CounterIncrement cannot be used in combination with member");
         goto error;
     }
 
@@ -589,20 +706,32 @@ ecs_entity_t ecs_metric_init(
                 goto error;
             }
 
-            ecs_entity_t first = ecs_pair_first(world, desc->id);
-            ecs_entity_t scope = flecs_get_oneof(world, first);
-            if (!scope) {
-                ecs_err("first element of pair must have OneOf with "
-                    " targets enabled");
-                goto error;
-            }
+            if (kind == EcsCounterId) {
+                if (flecs_count_id_targets_metric_init(world, result, desc)) {
+                    goto error;
+                }
+            } else {
+                ecs_entity_t first = ecs_pair_first(world, desc->id);
+                ecs_entity_t scope = flecs_get_oneof(world, first);
+                if (!scope) {
+                    ecs_err("first element of pair must have OneOf with "
+                        " targets enabled");
+                    goto error;
+                }
 
-            if (flecs_oneof_metric_init(world, result, scope, desc)) {
-                goto error;
+                if (flecs_oneof_metric_init(world, result, scope, desc)) {
+                    goto error;
+                }
             }
         } else {
-            if (flecs_id_metric_init(world, result, desc)) {
-                goto error;
+            if (kind == EcsCounterId) {
+                if (flecs_count_ids_metric_init(world, result, desc)) {
+                    goto error;
+                }
+            } else {
+                if (flecs_id_metric_init(world, result, desc)) {
+                    goto error;
+                }
             }
         }
     } else {
@@ -630,6 +759,7 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ecs_entity_t old_scope = ecs_set_scope(world, EcsMetric);
     ECS_TAG_DEFINE(world, EcsCounter);
     ECS_TAG_DEFINE(world, EcsCounterIncrement);
+    ECS_TAG_DEFINE(world, EcsCounterId);
     ECS_TAG_DEFINE(world, EcsGauge);
     ecs_set_scope(world, old_scope);
 
@@ -643,6 +773,8 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsMetricMember);
     ECS_COMPONENT_DEFINE(world, EcsMetricId);
     ECS_COMPONENT_DEFINE(world, EcsMetricOneOf);
+    ECS_COMPONENT_DEFINE(world, EcsMetricCountIds);
+    ECS_COMPONENT_DEFINE(world, EcsMetricCountTargets);
 
     ecs_add_id(world, ecs_id(EcsMetricMemberInstance), EcsPrivate);
     ecs_add_id(world, ecs_id(EcsMetricIdInstance), EcsPrivate);
@@ -678,6 +810,12 @@ void FlecsMetricsImport(ecs_world_t *world) {
         .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricOneOf),
         .move = ecs_move(EcsMetricOneOf)
+    });
+
+    ecs_set_hooks(world, EcsMetricCountTargets, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsMetricCountTargets),
+        .move = ecs_move(EcsMetricCountTargets)
     });
 
     ecs_add_id(world, EcsMetric, EcsOneOf);
@@ -719,6 +857,12 @@ void FlecsMetricsImport(ecs_world_t *world) {
         [none] (_, Value), 
         [in]   OneOfInstance,
         [none] (Metric, Counter));
+
+    ECS_SYSTEM(world, UpdateCountIds, EcsPreStore, 
+        [inout] CountIds, Value);
+
+    ECS_SYSTEM(world, UpdateCountTargets, EcsPreStore, 
+        [inout] CountTargets);
 }
 
 #endif

@@ -34,6 +34,11 @@ struct filter_builder final : _::filter_builder_base<Components...> {
             this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
     }
+
+    template <typename Func>
+    void each(Func&& func) {
+        this->build().each(FLECS_FWD(func));
+    }
 };
 
 }

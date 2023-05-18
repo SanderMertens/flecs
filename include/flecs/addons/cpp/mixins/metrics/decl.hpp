@@ -17,6 +17,7 @@ struct metrics {
     struct Metric { };
     struct Counter { };
     struct CounterIncrement { };
+    struct CounterId { };
     struct Gauge { };
 
     metrics(flecs::world& world);

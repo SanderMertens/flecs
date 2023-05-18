@@ -1670,3 +1670,96 @@ void Metrics_metric_description() {
 
     ecs_fini(world);
 }
+
+void Metrics_id_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position" }),
+        .id = ecs_id(Position),
+        .kind = EcsCounterId
+    });
+    test_assert(m != 0);
+
+    ecs_set(world, 0, Position, {10, 20});
+
+    ecs_progress(world, 1);
+
+    {
+        const EcsMetricValue *v = ecs_get(world, m, EcsMetricValue);
+        test_assert(v != NULL);
+        test_int(v->value, 1);
+    }
+
+    ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, 0, Position, {10, 20});
+
+    ecs_progress(world, 1);
+
+    {
+        const EcsMetricValue *v = ecs_get(world, m, EcsMetricValue);
+        test_assert(v != NULL);
+        test_int(v->value, 4);
+    }
+
+    ecs_fini(world);
+}
+
+void Metrics_id_target_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_TAG(world, Color);
+    ECS_TAG(world, Red);
+    ECS_TAG(world, Green);
+    ECS_TAG(world, Blue);
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.color" }),
+        .id = ecs_pair(Color, EcsWildcard),
+        .targets = true,
+        .kind = EcsCounterId
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, Color, Red);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, Color, Green);
+    ecs_add_pair(world, e2, Color, Blue);
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_pair(world, e3, Color, Blue);
+
+    ecs_progress(world, 1);
+
+    {
+        ecs_entity_t red = ecs_lookup_fullpath(world, "metrics.color.Red");
+        test_assert(red != 0);
+        const EcsMetricValue *v = ecs_get(world, red, EcsMetricValue);
+        test_assert(v != NULL);
+        test_int(v->value, 1);
+    }
+
+    {
+        ecs_entity_t green = ecs_lookup_fullpath(world, "metrics.color.Green");
+        test_assert(green != 0);
+        const EcsMetricValue *v = ecs_get(world, green, EcsMetricValue);
+        test_assert(v != NULL);
+        test_int(v->value, 1);
+    }
+
+    {
+        ecs_entity_t blue = ecs_lookup_fullpath(world, "metrics.color.Blue");
+        test_assert(blue != 0);
+        const EcsMetricValue *v = ecs_get(world, blue, EcsMetricValue);
+        test_assert(v != NULL);
+        test_int(v->value, 2);
+    }
+
+    ecs_fini(world);
+}

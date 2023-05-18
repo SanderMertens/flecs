@@ -811,3 +811,77 @@ void Misc_member_metric_w_custom_name() {
 
     test_int(count, 2);
 }
+
+void Misc_counter_id_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity m = ecs.metric("metrics.position")
+        .kind<flecs::metrics::CounterId>()
+        .id<Position>();
+
+    ecs.entity().set<Position>({10, 20});
+    
+    ecs.progress(1.0);
+
+    {
+        const flecs::metrics::Value *v = m.get<flecs::metrics::Value>();
+        test_assert(v != nullptr);
+        test_int(v->value, 1);
+    }
+
+    ecs.entity().set<Position>({10, 20});
+    ecs.entity().set<Position>({10, 20});
+
+    ecs.progress(1.0);
+
+    {
+        const flecs::metrics::Value *v = m.get<flecs::metrics::Value>();
+        test_assert(v != nullptr);
+        test_int(v->value, 4);
+    }
+}
+
+void Misc_counter_target_metric() {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    flecs::entity m = ecs.metric("metrics::color")
+        .kind<flecs::metrics::CounterId>()
+        .id<Color>(flecs::Wildcard)
+        .targets();
+    test_assert(m != 0);
+
+    ecs.entity().add(Color::Red);
+    ecs.entity().add(Color::Green);
+    ecs.entity().add(Color::Blue);
+    ecs.entity().add(Color::Blue);
+
+    ecs.progress(1.0);
+
+    {
+        flecs::entity red = ecs.lookup("metrics::color::Red");
+        test_assert(red != 0);
+        const flecs::metrics::Value *v = red.get<flecs::metrics::Value>();
+        test_assert(v != nullptr);
+        test_int(v->value, 1);
+    }
+
+    {
+        flecs::entity green = ecs.lookup("metrics::color::Green");
+        test_assert(green != 0);
+        const flecs::metrics::Value *v = green.get<flecs::metrics::Value>();
+        test_assert(v != nullptr);
+        test_int(v->value, 1);
+    }
+
+    {
+        flecs::entity blue = ecs.lookup("metrics::color::Blue");
+        test_assert(blue != 0);
+        const flecs::metrics::Value *v = blue.get<flecs::metrics::Value>();
+        test_assert(v != nullptr);
+        test_int(v->value, 2);
+    }
+}

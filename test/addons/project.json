@@ -1431,7 +1431,9 @@
                 "member_auto_counter",
                 "id_counter",
                 "oneof_counter",
-                "metric_description"
+                "metric_description",
+                "id_count",
+                "id_target_count"
             ]
         }]
     }

@@ -47,6 +47,9 @@ FLECS_API extern ECS_TAG_DECLARE(EcsCounter);
 /** Counter metric that is auto-incremented by source value */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounterIncrement);
 
+/** Counter metric that counts the number of entities with an id */
+FLECS_API extern ECS_TAG_DECLARE(EcsCounterId);
+
 /** Metric that represents current value */
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
@@ -72,7 +75,7 @@ typedef struct ecs_metric_desc_t {
     ecs_entity_t entity;
     
     /* Entity associated with member that stores metric value. Must not be set
-     * at the same time as id. */
+     * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
     /* Tracks whether entities have the specified component id. Must not be set
@@ -80,10 +83,12 @@ typedef struct ecs_metric_desc_t {
     ecs_id_t id;
 
     /* If id is a (R, *) wildcard and relationship R has the OneOf property, the
-     * setting this value to true will track individual targets. */
+     * setting this value to true will track individual targets. 
+     * If the kind is EcsCountId and the id is a (R, *) wildcard, this value
+     * will create a metric per target. */
     bool targets;
 
-    /* Must be either EcsGauge, EcsCounter or EcsCounterIncrement. */
+    /* Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
     ecs_entity_t kind;
 
     /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
