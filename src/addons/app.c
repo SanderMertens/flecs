@@ -53,6 +53,8 @@ static ecs_app_desc_t ecs_app_desc;
 
 /* Serve REST API from wasm image when running in emscripten */
 #ifdef ECS_TARGET_EM
+#include <emscripten.h>
+
 ecs_http_server_t *flecs_wasm_rest_server;
 
 EMSCRIPTEN_KEEPALIVE
