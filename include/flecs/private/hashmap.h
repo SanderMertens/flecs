@@ -48,8 +48,8 @@ void _flecs_hashmap_init(
     ecs_compare_action_t compare,
     ecs_allocator_t *allocator);
 
-#define flecs_hashmap_init(hm, K, V, compare, hash, allocator)\
-    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash, allocator)
+#define flecs_hashmap_init(hm, K, V, hash, compare, allocator)\
+    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(
