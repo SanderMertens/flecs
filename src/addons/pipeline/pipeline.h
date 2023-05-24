@@ -82,4 +82,10 @@ void flecs_workers_progress(
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time);
 
+void flecs_create_worker_threads(
+    ecs_world_t *world);
+
+bool flecs_join_worker_threads(
+    ecs_world_t *world);
+
 #endif

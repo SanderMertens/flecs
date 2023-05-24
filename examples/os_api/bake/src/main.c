@@ -152,6 +152,8 @@ void bake_set_os_api(void) {
     api.fini_ = bake_fini;
     api.thread_new_ = bake_thread_new;
     api.thread_join_ = bake_thread_join;
+    api.task_new_ = bake_thread_new;
+    api.task_join_ = bake_thread_join;
     api.ainc_ = bake_ainc;
     api.adec_ = bake_adec;
     api.mutex_new_ = bake_mutex_new;

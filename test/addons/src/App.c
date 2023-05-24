@@ -56,6 +56,24 @@ void App_app_w_set_threads() {
     ecs_fini(world);
 }
 
+void App_app_w_set_task_threads() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, 0);
+
+    test_int(ecs_get_stage_count(world), 1);
+
+    ecs_set_task_threads(world, 2);
+
+    test_int(ecs_get_stage_count(world), 2);
+
+    ecs_app_run(world, &(ecs_app_desc_t) { 0 });
+
+    test_int(ecs_get_stage_count(world), 2);
+
+    ecs_fini(world);
+}
+
 void App_app_w_set_target_fps() {
     ecs_world_t *world = ecs_init();
 

@@ -181,11 +181,36 @@ void ecs_run_pipeline(
  * Setting this value to a value higher than 1 will start as many threads and
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
- * used, but never while running a system / pipeline. */
+ * used, but never while running a system / pipeline. 
+ * Calling ecs_set_threads will also end the use of task threads setup with 
+ * ecs_set_task_threads and vice-versa */
 FLECS_API
 void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads);
+
+/** Set number of worker task threads.
+ * ecs_set_task_threads is similar to ecs_set_threads, except threads are treated
+ * as short-lived tasks and will be created and joined around each update of the world. 
+ * Creation and joining of these tasks will use the os_api_t tasks APIs rather than the
+ * the standard thread API functions, although they may be the same if desired.
+ * This function is useful for multithreading world updates using an external
+ * asynchronous job system rather than long running threads by providing the APIs
+ * to create tasks for your job system and then wait on their conclusion. 
+ * The operation may be called multiple times to reconfigure the number of task threads
+ * used, but never while running a system / pipeline. 
+ * Calling ecs_set_task_threads will also end the use of threads setup with 
+ * ecs_set_threads and vice-versa */
+
+FLECS_API
+void ecs_set_task_threads(
+    ecs_world_t *world,
+    int32_t task_threads);
+
+/** Returns true if task thread use have been requested. */
+FLECS_API
+bool ecs_using_task_threads(
+    ecs_world_t *world);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module

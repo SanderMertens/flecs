@@ -110,6 +110,8 @@ void stdcpp_set_os_api(void) {
 
     api.thread_new_ = stdcpp_thread_new;
     api.thread_join_ = stdcpp_thread_join;
+    api.task_new_ = stdcpp_thread_new;
+    api.task_join_ = stdcpp_thread_join;
     api.ainc_ = stdcpp_ainc;
     api.adec_ = stdcpp_adec;
     api.mutex_new_ = stdcpp_mutex_new;

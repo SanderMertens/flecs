@@ -1939,6 +1939,16 @@ void* (*ecs_os_api_thread_join_t)(
 typedef
 ecs_os_thread_id_t (*ecs_os_api_thread_self_t)(void);
 
+/* Tasks */
+typedef
+ecs_os_thread_t (*ecs_os_api_task_new_t)(
+    ecs_os_thread_callback_t callback,
+    void *param);
+
+typedef
+void* (*ecs_os_api_task_join_t)(
+    ecs_os_thread_t thread);
+
 /* Atomic increment / decrement */
 typedef
 int32_t (*ecs_os_api_ainc_t)(
@@ -2055,6 +2065,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t thread_new_;
     ecs_os_api_thread_join_t thread_join_;
     ecs_os_api_thread_self_t thread_self_;
+
+    /* Tasks */
+    ecs_os_api_thread_new_t task_new_;
+    ecs_os_api_thread_join_t task_join_;
 
     /* Atomic incremenet / decrement */
     ecs_os_api_ainc_t ainc_;
@@ -2238,6 +2252,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_thread_join(thread) ecs_os_api.thread_join_(thread)
 #define ecs_os_thread_self() ecs_os_api.thread_self_()
 
+/* Tasks */
+#define ecs_os_task_new(callback, param) ecs_os_api.task_new_(callback, param)
+#define ecs_os_task_join(thread) ecs_os_api.task_join_(thread)
+
 /* Atomic increment / decrement */
 #define ecs_os_ainc(value) ecs_os_api.ainc_(value)
 #define ecs_os_adec(value) ecs_os_api.adec_(value)
@@ -2341,6 +2359,10 @@ bool ecs_os_has_heap(void);
 /** Are threading functions available? */
 FLECS_API
 bool ecs_os_has_threading(void);
+
+/** Are task functions available? */
+FLECS_API
+bool ecs_os_has_task_support(void);
 
 /** Are time functions available? */
 FLECS_API
@@ -4425,9 +4447,9 @@ void ecs_set_automerge(
  * multiple threads, where each thread gets its own queue, and commands are
  * merged when threads are synchronized.
  *
- * Note that the ecs_set_threads function already creates the appropriate
- * number of stages. The set_stage_count() operation is useful for applications that
- * want to manage their own stages and/or threads.
+ * Note that the ecs_set_threads and ecs_set_task_threads functions already create
+ * the appropriate number of stages. The set_stage_count() operation is useful 
+ * for applications that want to manage their own stages and/or threads.
  * 
  * @param world The world.
  * @param stages The number of stages.
@@ -10527,11 +10549,36 @@ void ecs_run_pipeline(
  * Setting this value to a value higher than 1 will start as many threads and
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
- * used, but never while running a system / pipeline. */
+ * used, but never while running a system / pipeline.
+ * Calling ecs_set_threads will also end the use of task threads setup with
+ * ecs_set_task_threads and vice-versa */
 FLECS_API
 void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads);
+
+/** Set number of worker task threads.
+ * ecs_set_task_threads is similar to ecs_set_threads, except threads are treated
+ * as short-lived tasks and will be created and joined around each update of the world. 
+ * Creation and joining of these tasks will use the os_api_t tasks APIs rather than the
+ * the standard thread API functions, although they may be the same if desired.
+ * This function is useful for multithreading world updates using an external
+ * asynchronous job system rather than long running threads by providing the APIs
+ * to create tasks for your job system and then wait on their conclusion. 
+ * The operation may be called multiple times to reconfigure the number of task threads
+ * used, but never while running a system / pipeline. 
+ * Calling ecs_set_task_threads will also end the use of threads setup with 
+ * ecs_set_threads and vice-versa */
+
+FLECS_API
+void ecs_set_task_threads(
+    ecs_world_t *world,
+    int32_t task_threads);
+
+/** Returns true if task thread use have been requested. */
+FLECS_API
+bool ecs_using_task_threads(
+    ecs_world_t *world);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -19631,6 +19678,16 @@ void set_threads(int32_t threads) const;
  */
 int32_t get_threads() const;
 
+/** Set number of task threads.
+ * @see ecs_set_task_threads
+ */
+void set_task_threads(int32_t task_threads) const;
+
+/** Returns true if task thread use has been requested.
+ * @see ecs_using_task_threads
+ */
+bool using_task_threads() const;
+
 /** @} */
 
 #   endif
@@ -27745,6 +27802,14 @@ inline void world::set_threads(int32_t threads) const {
 
 inline int32_t world::get_threads() const {
     return ecs_get_stage_count(m_world);
+}
+
+inline void world::set_task_threads(int32_t task_threads) const {
+    ecs_set_task_threads(m_world, task_threads);
+}
+
+inline bool world::using_task_threads() const {
+    return ecs_using_task_threads(m_world);
 }
 
 }
