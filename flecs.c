@@ -3287,6 +3287,16 @@ void flecs_table_init(
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table);
+
+    if (table->flags & EcsTableHasOnTableCreate) {
+        flecs_emit(world, world, &(ecs_event_desc_t) {
+            .ids = &table->type,
+            .event = EcsOnTableCreate,
+            .table = table,
+            .flags = EcsEventTableOnly,
+            .observable = world
+        });
+    }
 }
 
 static
@@ -3698,13 +3708,15 @@ void flecs_table_free(
     ecs_assert(table->refcount == 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!is_root && !(world->flags & EcsWorldQuit)) {
-        flecs_emit(world, world, &(ecs_event_desc_t) {
-            .ids = &table->type,
-            .event = EcsOnTableDelete,
-            .table = table,
-            .flags = EcsEventTableOnly,
-            .observable = world
-        });
+        if (table->flags & EcsTableHasOnTableDelete) {
+            flecs_emit(world, world, &(ecs_event_desc_t) {
+                .ids = &table->type,
+                .event = EcsOnTableDelete,
+                .table = table,
+                .flags = EcsEventTableOnly,
+                .observable = world
+            });
+        }
     }
 
     if (ecs_should_log_2()) {
@@ -51554,6 +51566,12 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnTableEmpty) {
         return EcsIdHasOnTableEmpty;
     }
+    if (e == EcsOnTableCreate) {
+        return EcsIdHasOnTableCreate;
+    }
+    if (e == EcsOnTableDelete) {
+        return EcsIdHasOnTableDelete;
+    }
     return 0;
 }
 
@@ -56573,14 +56591,6 @@ ecs_table_t *flecs_create_table(
 
     flecs_init_table(world, result, prev);
 
-    flecs_emit(world, world, &(ecs_event_desc_t) {
-        .ids = &result->type,
-        .event = EcsOnTableCreate,
-        .table = result,
-        .flags = EcsEventTableOnly,
-        .observable = world
-    });
-
     /* Update counters */
     world->info.table_count ++;
     world->info.table_record_count += result->record_count;
@@ -60756,6 +60766,12 @@ ecs_id_record_t* flecs_id_record_new(
     }
     if (flecs_check_observers_for_event(world, id, EcsOnTableEmpty)) {
         idr->flags |= EcsIdHasOnTableEmpty;
+    }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableCreate)) {
+        idr->flags |= EcsIdHasOnTableCreate;
+    }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableDelete)) {
+        idr->flags |= EcsIdHasOnTableDelete;
     }
 
     if (ecs_should_log_1()) {

@@ -50,6 +50,12 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnTableEmpty) {
         return EcsIdHasOnTableEmpty;
     }
+    if (e == EcsOnTableCreate) {
+        return EcsIdHasOnTableCreate;
+    }
+    if (e == EcsOnTableDelete) {
+        return EcsIdHasOnTableDelete;
+    }
     return 0;
 }
 

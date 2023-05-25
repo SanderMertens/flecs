@@ -75,9 +75,12 @@ extern "C" {
 #define EcsIdHasUnSet                  (1u << 19)
 #define EcsIdHasOnTableFill            (1u << 20)
 #define EcsIdHasOnTableEmpty           (1u << 21)
+#define EcsIdHasOnTableCreate          (1u << 22)
+#define EcsIdHasOnTableDelete          (1u << 23)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
-        EcsIdHasOnTableFill|EcsIdHasOnTableEmpty)
+        EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
+            EcsIdHasOnTableDelete)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -156,6 +159,8 @@ extern "C" {
 #define EcsTableHasUnSet               (1u << 19u)
 #define EcsTableHasOnTableFill         (1u << 20u)
 #define EcsTableHasOnTableEmpty        (1u << 21u)
+#define EcsTableHasOnTableCreate       (1u << 22u)
+#define EcsTableHasOnTableDelete       (1u << 23u)
 
 #define EcsTableHasObserved            (1u << 25u)
 #define EcsTableHasTarget              (1u << 26u)

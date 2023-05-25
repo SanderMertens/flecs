@@ -673,6 +673,16 @@ void flecs_table_init(
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table);
+
+    if (table->flags & EcsTableHasOnTableCreate) {
+        flecs_emit(world, world, &(ecs_event_desc_t) {
+            .ids = &table->type,
+            .event = EcsOnTableCreate,
+            .table = table,
+            .flags = EcsEventTableOnly,
+            .observable = world
+        });
+    }
 }
 
 static
@@ -1084,13 +1094,15 @@ void flecs_table_free(
     ecs_assert(table->refcount == 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!is_root && !(world->flags & EcsWorldQuit)) {
-        flecs_emit(world, world, &(ecs_event_desc_t) {
-            .ids = &table->type,
-            .event = EcsOnTableDelete,
-            .table = table,
-            .flags = EcsEventTableOnly,
-            .observable = world
-        });
+        if (table->flags & EcsTableHasOnTableDelete) {
+            flecs_emit(world, world, &(ecs_event_desc_t) {
+                .ids = &table->type,
+                .event = EcsOnTableDelete,
+                .table = table,
+                .flags = EcsEventTableOnly,
+                .observable = world
+            });
+        }
     }
 
     if (ecs_should_log_2()) {

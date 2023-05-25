@@ -560,14 +560,6 @@ ecs_table_t *flecs_create_table(
 
     flecs_init_table(world, result, prev);
 
-    flecs_emit(world, world, &(ecs_event_desc_t) {
-        .ids = &result->type,
-        .event = EcsOnTableCreate,
-        .table = result,
-        .flags = EcsEventTableOnly,
-        .observable = world
-    });
-
     /* Update counters */
     world->info.table_count ++;
     world->info.table_record_count += result->record_count;
