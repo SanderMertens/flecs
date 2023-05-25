@@ -927,10 +927,7 @@ void flecs_emit_forward(
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
-        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
-            /* Only OnAdd/OnRemove events can validate a cache */
-            rc->current = rc->generation;
-        }
+        rc->current = rc->generation;
 
         if (ecs_should_log_3()) {
             ecs_dbg_3("cache after rebuild:");
