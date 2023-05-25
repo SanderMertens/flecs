@@ -716,6 +716,10 @@ void flecs_table_add_trigger_flags(
         table->flags |= EcsTableHasOnSet;
     } else if (event == EcsUnSet) {
         table->flags |= EcsTableHasUnSet;
+    } else if (event == EcsOnTableFill) {
+        table->flags |= EcsTableHasOnTableFill;
+    } else if (event == EcsOnTableEmpty) {
+        table->flags |= EcsTableHasOnTableEmpty;
     }
 }
 

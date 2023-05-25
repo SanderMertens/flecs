@@ -3330,6 +3330,10 @@ void flecs_table_add_trigger_flags(
         table->flags |= EcsTableHasOnSet;
     } else if (event == EcsUnSet) {
         table->flags |= EcsTableHasUnSet;
+    } else if (event == EcsOnTableFill) {
+        table->flags |= EcsTableHasOnTableFill;
+    } else if (event == EcsOnTableEmpty) {
+        table->flags |= EcsTableHasOnTableEmpty;
     }
 }
 
@@ -46639,30 +46643,32 @@ void flecs_process_pending_tables(
             /* For each id in the table, add it to the empty/non empty list
              * based on its current state */
             if (flecs_table_records_update_empty(table)) {
-                /* Only emit an event when there was a change in the 
-                 * administration. It is possible that a table ended up in the
-                 * pending_tables list by going from empty->non-empty, but then
-                 * became empty again. By the time we run this code, no changes
-                 * in the administration would actually be made. */
                 int32_t table_count = ecs_table_count(table);
-                ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
-                if (ecs_should_log_3()) {
-                    ecs_dbg_3("table %u state change (%s)", (uint32_t)table->id,
-                        table_count ? "non-empty" : "empty");
+                if (table->flags & (EcsTableHasOnTableFill|EcsTableHasOnTableEmpty)) {
+                    /* Only emit an event when there was a change in the 
+                    * administration. It is possible that a table ended up in the
+                    * pending_tables list by going from empty->non-empty, but then
+                    * became empty again. By the time we run this code, no changes
+                    * in the administration would actually be made. */
+                    ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
+                    if (ecs_should_log_3()) {
+                        ecs_dbg_3("table %u state change (%s)", 
+                            (uint32_t)table->id,
+                            table_count ? "non-empty" : "empty");
+                    }
+
+                    ecs_log_push_3();
+
+                    flecs_emit(world, world, &(ecs_event_desc_t){
+                        .event = evt,
+                        .table = table,
+                        .ids = &table->type,
+                        .observable = world,
+                        .flags = EcsEventTableOnly
+                    });
+
+                    ecs_log_pop_3();   
                 }
-
-                ecs_log_push_3();
-
-                flecs_emit(world, world, &(ecs_event_desc_t){
-                    .event = evt,
-                    .table = table,
-                    .ids = &table->type,
-                    .observable = world,
-                    .flags = EcsEventTableOnly
-                });
-
-                ecs_log_pop_3();
-
                 world->info.empty_table_count += (table_count == 0) * 2 - 1;
             }
         }
@@ -51544,6 +51550,12 @@ ecs_flags32_t flecs_id_flag_for_event(
     }
     if (e == EcsUnSet) {
         return EcsIdHasUnSet;
+    }
+    if (e == EcsOnTableFill) {
+        return EcsIdHasOnTableFill;
+    }
+    if (e == EcsOnTableEmpty) {
+        return EcsIdHasOnTableEmpty;
     }
     return 0;
 }
@@ -60741,6 +60753,12 @@ ecs_id_record_t* flecs_id_record_new(
     }
     if (flecs_check_observers_for_event(world, id, EcsUnSet)) {
         idr->flags |= EcsIdHasUnSet;
+    }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableFill)) {
+        idr->flags |= EcsIdHasOnTableFill;
+    }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableEmpty)) {
+        idr->flags |= EcsIdHasOnTableEmpty;
     }
 
     if (ecs_should_log_1()) {

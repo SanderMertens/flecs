@@ -250,6 +250,12 @@ ecs_id_record_t* flecs_id_record_new(
     if (flecs_check_observers_for_event(world, id, EcsUnSet)) {
         idr->flags |= EcsIdHasUnSet;
     }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableFill)) {
+        idr->flags |= EcsIdHasOnTableFill;
+    }
+    if (flecs_check_observers_for_event(world, id, EcsOnTableEmpty)) {
+        idr->flags |= EcsIdHasOnTableEmpty;
+    }
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);

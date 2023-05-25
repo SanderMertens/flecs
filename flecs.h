@@ -333,10 +333,13 @@ extern "C" {
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
 #define EcsIdHasUnSet                  (1u << 19)
+#define EcsIdHasOnTableFill            (1u << 20)
+#define EcsIdHasOnTableEmpty           (1u << 21)
 #define EcsIdEventMask\
-    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet)
+    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
+        EcsIdHasOnTableFill|EcsIdHasOnTableEmpty)
 
-#define EcsIdMarkedForDelete            (1u << 30)
+#define EcsIdMarkedForDelete           (1u << 30)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \
@@ -411,9 +414,11 @@ extern "C" {
 #define EcsTableHasOnRemove            (1u << 17u)
 #define EcsTableHasOnSet               (1u << 18u)
 #define EcsTableHasUnSet               (1u << 19u)
+#define EcsTableHasOnTableFill         (1u << 20u)
+#define EcsTableHasOnTableEmpty        (1u << 21u)
 
-#define EcsTableHasObserved            (1u << 20u)
-#define EcsTableHasTarget              (1u << 21u)
+#define EcsTableHasObserved            (1u << 25u)
+#define EcsTableHasTarget              (1u << 26u)
 
 #define EcsTableMarkedForDelete        (1u << 30u)
 
@@ -3301,8 +3306,8 @@ void _flecs_hashmap_init(
     ecs_compare_action_t compare,
     ecs_allocator_t *allocator);
 
-#define flecs_hashmap_init(hm, K, V, compare, hash, allocator)\
-    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash, allocator)
+#define flecs_hashmap_init(hm, K, V, hash, compare, allocator)\
+    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(
