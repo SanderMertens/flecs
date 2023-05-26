@@ -544,6 +544,18 @@ bool flecs_id_record_set_type_info(
     return changed;
 }
 
+ecs_hashmap_t* flecs_id_record_name_index_ensure(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    ecs_hashmap_t *map = idr->name_index;
+    if (!map) {
+        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
+    }
+
+    return map;
+}
+
 ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id)
@@ -553,12 +565,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_hashmap_t *map = idr->name_index;
-    if (!map) {
-        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
-    }
-
-    return map;
+    return flecs_id_record_name_index_ensure(world, idr);
 }
 
 ecs_hashmap_t* flecs_id_name_index_get(

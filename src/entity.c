@@ -576,6 +576,57 @@ void flecs_notify_on_remove(
 }
 
 static
+void flecs_update_name_index(
+    ecs_world_t *world,
+    ecs_table_t *src, 
+    ecs_table_t *dst, 
+    int32_t offset, 
+    int32_t count) 
+{
+    ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!(dst->flags & EcsTableHasName)) {
+        /* If destination table doesn't have a name, we don't need to update the
+         * name index. Even if the src table had a name, the on_remove hook for
+         * EcsIdentifier will remove the entity from the index. */
+        return;
+    }
+
+    ecs_hashmap_t *src_index = src->name_index;
+    ecs_hashmap_t *dst_index = dst->name_index;
+    if ((src_index == dst_index) || (!src_index && !dst_index)) {
+        /* If the name index didn't change, the entity still has the same parent
+         * so nothing needs to be done. */
+        return;
+    }
+
+    EcsIdentifier *names = ecs_table_get_pair(world, 
+        dst, EcsIdentifier, EcsName, offset);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t i;
+    ecs_entity_t *entities = ecs_vec_get_t(
+        &dst->data.entities, ecs_entity_t, offset);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        EcsIdentifier *name = &names[i];
+
+        uint64_t index_hash = name->index_hash;
+        if (index_hash) {
+            flecs_name_index_remove(src_index, e, index_hash);
+        }
+        const char *name_str = name->value;
+        if (name_str) {
+            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
+
+            flecs_name_index_ensure(
+                dst_index, e, name_str, name->length, name->hash);
+            name->index = dst_index;
+        }
+    }
+}
+
+static
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -609,7 +660,7 @@ void flecs_move_entity(
 {
     ecs_table_t *src_table = record->table;
     int32_t src_row = ECS_RECORD_TO_ROW(record->row);
-    
+
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != dst_table, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table->type.count > 0, ECS_INTERNAL_ERROR, NULL);
@@ -640,6 +691,8 @@ void flecs_move_entity(
     flecs_table_delete(world, src_table, src_row, false);
     flecs_notify_on_add(
         world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags);
+
+    flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
 error:
     return;

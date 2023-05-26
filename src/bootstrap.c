@@ -448,78 +448,6 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-/* -- Triggers for keeping hashed ids in sync -- */
-
-static
-void flecs_on_parent_change(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    ecs_table_t *other_table = it->other_table, *table = it->table;
-
-    if (!(table->flags & EcsTableHasName)) {
-        return;
-    }
-
-    ecs_id_t to_pair = it->event_id;
-    ecs_id_t from_pair = ecs_childof(0);
-
-    /* Find the other ChildOf relationship */
-    ecs_search(it->real_world, other_table,
-        ecs_pair(EcsChildOf, EcsWildcard), &from_pair);
-
-    bool other_has_name = other_table && ((other_table->flags & EcsTableHasName) != 0);
-    bool to_has_name = true, from_has_name = other_has_name;
-    if (it->event == EcsOnRemove) {
-        if (from_pair != ecs_childof(0)) {
-            /* Because ChildOf is an exclusive relationship, events always come
-             * in OnAdd/OnRemove pairs (add for the new, remove for the old 
-             * parent). We only need one of those events, so filter out the
-             * OnRemove events except for the case where a parent is removed and
-             * not replaced with another parent. */
-            return;
-        }
-
-        ecs_id_t temp = from_pair;
-        from_pair = to_pair;
-        to_pair = temp;
-
-        to_has_name = other_has_name;
-        from_has_name = true;
-    }
-
-    ecs_hashmap_t *from_index = 0;
-    if (from_has_name) {
-        from_index = flecs_id_name_index_get(world, from_pair);
-    }
-    ecs_hashmap_t *to_index = NULL;
-    if (to_has_name) {
-        to_index = flecs_id_name_index_ensure(world, to_pair);
-    }
-
-    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
-        table, EcsIdentifier, EcsName, it->offset);
-    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        EcsIdentifier *name = &names[i];
-
-        uint64_t index_hash = name->index_hash;
-        if (from_index && index_hash) {
-            flecs_name_index_remove(from_index, e, index_hash);
-        }
-        const char *name_str = name->value;
-        if (to_index && name_str) {
-            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
-
-            flecs_name_index_ensure(
-                to_index, e, name_str, name->length, name->hash);
-            name->index = to_index;
-        }
-    }
-}
-
-
 /* -- Iterable mixins -- */
 
 static
@@ -570,11 +498,14 @@ void flecs_bootstrap_builtin(
     ecs_size_t name_length = symbol_length - 3;
 
     EcsIdentifier *name_col = ecs_vec_first(&columns[1]);
+    uint64_t name_hash = flecs_hash(name, name_length);
     name_col[index].value = ecs_os_strdup(name);
     name_col[index].length = name_length;
-    name_col[index].hash = flecs_hash(name, name_length);
+    name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
-    name_col[index].index = NULL;
+    name_col[index].index = table->name_index;
+    flecs_name_index_ensure(
+        table->name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = ecs_vec_first(&columns[2]);
     symbol_col[index].value = ecs_os_strdup(symbol);
@@ -622,7 +553,7 @@ ecs_table_t* flecs_bootstrap_component_table(
         ecs_pair(EcsChildOf, EcsFlecsCore),
         ecs_pair(EcsOnDelete, EcsPanic)
     };
-    
+
     ecs_type_t array = {
         .array = ids,
         .count = 6
@@ -719,7 +650,6 @@ void flecs_bootstrap(
     });
 
     flecs_type_info_init(world, EcsIterable, { 0 });
-
     flecs_type_info_init(world, EcsTarget, { 0 });
 
     /* Cache often used id records */
@@ -875,16 +805,6 @@ void flecs_bootstrap(
         .oper = EcsOptional,
         .src.flags = EcsSelf 
     };
-
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
-            { .id = ecs_pair(EcsChildOf, EcsWildcard), .src.flags = EcsSelf },
-            match_prefab
-        },
-        .events = { EcsOnAdd, EcsOnRemove },
-        .yield_existing = true,
-        .callback = flecs_on_parent_change
-    });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ .id = EcsFinal, .src.flags = EcsSelf }, match_prefab },

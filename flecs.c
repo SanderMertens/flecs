@@ -661,6 +661,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     ecs_table_ext_t *ext;            /* Optional extended data structures */
+    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
     uint16_t record_count;           /* Table record count including wildcards */
     int32_t refcount;                /* Increased when used as storage table */
@@ -1314,6 +1315,10 @@ bool flecs_id_record_set_type_info(
 ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id);
+
+ecs_hashmap_t* flecs_id_record_name_index_ensure(
+    ecs_world_t *world,
+    ecs_id_record_t *idr);
 
 /* Get name index for id record */
 ecs_hashmap_t* flecs_id_name_index_get(
@@ -3084,7 +3089,7 @@ void flecs_table_init(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_t *records = &world->store.records;
     ecs_vec_reset_t(a, records, ecs_table_record_t);
-    ecs_id_record_t *idr;
+    ecs_id_record_t *idr, *childof_idr = NULL;
 
     int32_t last_id = -1; /* Track last regular (non-pair) id */
     int32_t first_pair = -1; /* Track the first pair in the table */
@@ -3196,14 +3201,20 @@ void flecs_table_init(
             }
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
-                idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
+
+                ecs_id_record_t *p_idr = (ecs_id_record_t*)tr->hdr.cache;
+                r = ECS_PAIR_FIRST(dst_id);
+                if (r == EcsChildOf) {
+                    childof_idr = p_idr;
+                }
+
+                idr = p_idr->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
                 tr->hdr.cache = (ecs_table_cache_t*)idr;
                 tr->column = dst_i;
                 tr->count = 0;
-                r = ECS_PAIR_FIRST(dst_id);
             }
 
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -3245,7 +3256,8 @@ void flecs_table_init(
     }
     if (dst_count && !has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->idr_childof_0;
+        childof_idr = world->idr_childof_0;
+        tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
         tr->column = 0;
         tr->count = 1;
     }
@@ -3287,6 +3299,13 @@ void flecs_table_init(
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table);
+
+    if (table->flags & EcsTableHasName) {
+        ecs_assert(childof_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        table->name_index = 
+            flecs_id_record_name_index_ensure(world, childof_idr);
+        ecs_assert(table->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
 
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_emit(world, world, &(ecs_event_desc_t) {
@@ -6212,6 +6231,57 @@ void flecs_notify_on_remove(
 }
 
 static
+void flecs_update_name_index(
+    ecs_world_t *world,
+    ecs_table_t *src, 
+    ecs_table_t *dst, 
+    int32_t offset, 
+    int32_t count) 
+{
+    ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!(dst->flags & EcsTableHasName)) {
+        /* If destination table doesn't have a name, we don't need to update the
+         * name index. Even if the src table had a name, the on_remove hook for
+         * EcsIdentifier will remove the entity from the index. */
+        return;
+    }
+
+    ecs_hashmap_t *src_index = src->name_index;
+    ecs_hashmap_t *dst_index = dst->name_index;
+    if ((src_index == dst_index) || (!src_index && !dst_index)) {
+        /* If the name index didn't change, the entity still has the same parent
+         * so nothing needs to be done. */
+        return;
+    }
+
+    EcsIdentifier *names = ecs_table_get_pair(world, 
+        dst, EcsIdentifier, EcsName, offset);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t i;
+    ecs_entity_t *entities = ecs_vec_get_t(
+        &dst->data.entities, ecs_entity_t, offset);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        EcsIdentifier *name = &names[i];
+
+        uint64_t index_hash = name->index_hash;
+        if (index_hash) {
+            flecs_name_index_remove(src_index, e, index_hash);
+        }
+        const char *name_str = name->value;
+        if (name_str) {
+            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
+
+            flecs_name_index_ensure(
+                dst_index, e, name_str, name->length, name->hash);
+            name->index = dst_index;
+        }
+    }
+}
+
+static
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -6245,7 +6315,7 @@ void flecs_move_entity(
 {
     ecs_table_t *src_table = record->table;
     int32_t src_row = ECS_RECORD_TO_ROW(record->row);
-    
+
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != dst_table, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table->type.count > 0, ECS_INTERNAL_ERROR, NULL);
@@ -6276,6 +6346,8 @@ void flecs_move_entity(
     flecs_table_delete(world, src_table, src_row, false);
     flecs_notify_on_add(
         world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags);
+
+    flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
 error:
     return;
@@ -47674,10 +47746,7 @@ void flecs_emit_forward_table_up(
             ecs_os_memcpy_n(dst, src, ecs_reachable_elem_t, count);
         }
 
-        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
-            /* Only OnAdd/OnRemove events can validate a cache */
-            rc->current = rc->generation;
-        }
+        rc->current = rc->generation;
 
         if (ecs_should_log_3()) {
             char *idstr = ecs_id_str(world, tgt_idr->id);
@@ -47747,7 +47816,14 @@ void flecs_emit_forward(
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
-        rc->current = rc->generation;
+        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+            /* Only OnAdd/OnRemove events can validate top-level cache, which
+             * is for the id for which the event is emitted. 
+             * The reason for this is that we don't want to validate the cache
+             * while the administration for the mutated entity isn't up to 
+             * date yet. */
+            rc->current = rc->generation;
+        }
 
         if (ecs_should_log_3()) {
             ecs_dbg_3("cache after rebuild:");
@@ -59257,78 +59333,6 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-/* -- Triggers for keeping hashed ids in sync -- */
-
-static
-void flecs_on_parent_change(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    ecs_table_t *other_table = it->other_table, *table = it->table;
-
-    if (!(table->flags & EcsTableHasName)) {
-        return;
-    }
-
-    ecs_id_t to_pair = it->event_id;
-    ecs_id_t from_pair = ecs_childof(0);
-
-    /* Find the other ChildOf relationship */
-    ecs_search(it->real_world, other_table,
-        ecs_pair(EcsChildOf, EcsWildcard), &from_pair);
-
-    bool other_has_name = other_table && ((other_table->flags & EcsTableHasName) != 0);
-    bool to_has_name = true, from_has_name = other_has_name;
-    if (it->event == EcsOnRemove) {
-        if (from_pair != ecs_childof(0)) {
-            /* Because ChildOf is an exclusive relationship, events always come
-             * in OnAdd/OnRemove pairs (add for the new, remove for the old 
-             * parent). We only need one of those events, so filter out the
-             * OnRemove events except for the case where a parent is removed and
-             * not replaced with another parent. */
-            return;
-        }
-
-        ecs_id_t temp = from_pair;
-        from_pair = to_pair;
-        to_pair = temp;
-
-        to_has_name = other_has_name;
-        from_has_name = true;
-    }
-
-    ecs_hashmap_t *from_index = 0;
-    if (from_has_name) {
-        from_index = flecs_id_name_index_get(world, from_pair);
-    }
-    ecs_hashmap_t *to_index = NULL;
-    if (to_has_name) {
-        to_index = flecs_id_name_index_ensure(world, to_pair);
-    }
-
-    EcsIdentifier *names = ecs_table_get_pair(it->real_world, 
-        table, EcsIdentifier, EcsName, it->offset);
-    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        EcsIdentifier *name = &names[i];
-
-        uint64_t index_hash = name->index_hash;
-        if (from_index && index_hash) {
-            flecs_name_index_remove(from_index, e, index_hash);
-        }
-        const char *name_str = name->value;
-        if (to_index && name_str) {
-            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
-
-            flecs_name_index_ensure(
-                to_index, e, name_str, name->length, name->hash);
-            name->index = to_index;
-        }
-    }
-}
-
-
 /* -- Iterable mixins -- */
 
 static
@@ -59379,11 +59383,14 @@ void flecs_bootstrap_builtin(
     ecs_size_t name_length = symbol_length - 3;
 
     EcsIdentifier *name_col = ecs_vec_first(&columns[1]);
+    uint64_t name_hash = flecs_hash(name, name_length);
     name_col[index].value = ecs_os_strdup(name);
     name_col[index].length = name_length;
-    name_col[index].hash = flecs_hash(name, name_length);
+    name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
-    name_col[index].index = NULL;
+    name_col[index].index = table->name_index;
+    flecs_name_index_ensure(
+        table->name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = ecs_vec_first(&columns[2]);
     symbol_col[index].value = ecs_os_strdup(symbol);
@@ -59431,7 +59438,7 @@ ecs_table_t* flecs_bootstrap_component_table(
         ecs_pair(EcsChildOf, EcsFlecsCore),
         ecs_pair(EcsOnDelete, EcsPanic)
     };
-    
+
     ecs_type_t array = {
         .array = ids,
         .count = 6
@@ -59528,7 +59535,6 @@ void flecs_bootstrap(
     });
 
     flecs_type_info_init(world, EcsIterable, { 0 });
-
     flecs_type_info_init(world, EcsTarget, { 0 });
 
     /* Cache often used id records */
@@ -59684,16 +59690,6 @@ void flecs_bootstrap(
         .oper = EcsOptional,
         .src.flags = EcsSelf 
     };
-
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
-            { .id = ecs_pair(EcsChildOf, EcsWildcard), .src.flags = EcsSelf },
-            match_prefab
-        },
-        .events = { EcsOnAdd, EcsOnRemove },
-        .yield_existing = true,
-        .callback = flecs_on_parent_change
-    });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .filter.terms = {{ .id = EcsFinal, .src.flags = EcsSelf }, match_prefab },
@@ -61055,6 +61051,18 @@ bool flecs_id_record_set_type_info(
     return changed;
 }
 
+ecs_hashmap_t* flecs_id_record_name_index_ensure(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    ecs_hashmap_t *map = idr->name_index;
+    if (!map) {
+        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
+    }
+
+    return map;
+}
+
 ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id)
@@ -61064,12 +61072,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_hashmap_t *map = idr->name_index;
-    if (!map) {
-        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
-    }
-
-    return map;
+    return flecs_id_record_name_index_ensure(world, idr);
 }
 
 ecs_hashmap_t* flecs_id_name_index_get(

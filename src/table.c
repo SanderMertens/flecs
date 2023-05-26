@@ -470,7 +470,7 @@ void flecs_table_init(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_t *records = &world->store.records;
     ecs_vec_reset_t(a, records, ecs_table_record_t);
-    ecs_id_record_t *idr;
+    ecs_id_record_t *idr, *childof_idr = NULL;
 
     int32_t last_id = -1; /* Track last regular (non-pair) id */
     int32_t first_pair = -1; /* Track the first pair in the table */
@@ -582,14 +582,20 @@ void flecs_table_init(
             }
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
-                idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
+
+                ecs_id_record_t *p_idr = (ecs_id_record_t*)tr->hdr.cache;
+                r = ECS_PAIR_FIRST(dst_id);
+                if (r == EcsChildOf) {
+                    childof_idr = p_idr;
+                }
+
+                idr = p_idr->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
                 tr->hdr.cache = (ecs_table_cache_t*)idr;
                 tr->column = dst_i;
                 tr->count = 0;
-                r = ECS_PAIR_FIRST(dst_id);
             }
 
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -631,7 +637,8 @@ void flecs_table_init(
     }
     if (dst_count && !has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->idr_childof_0;
+        childof_idr = world->idr_childof_0;
+        tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
         tr->column = 0;
         tr->count = 1;
     }
@@ -673,6 +680,13 @@ void flecs_table_init(
 
     flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table);
+
+    if (table->flags & EcsTableHasName) {
+        ecs_assert(childof_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        table->name_index = 
+            flecs_id_record_name_index_ensure(world, childof_idr);
+        ecs_assert(table->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
 
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_emit(world, world, &(ecs_event_desc_t) {

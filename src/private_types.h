@@ -192,6 +192,7 @@ struct ecs_table_t {
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     ecs_table_ext_t *ext;            /* Optional extended data structures */
+    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
     uint16_t record_count;           /* Table record count including wildcards */
     int32_t refcount;                /* Increased when used as storage table */

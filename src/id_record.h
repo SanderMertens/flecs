@@ -115,6 +115,10 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id);
 
+ecs_hashmap_t* flecs_id_record_name_index_ensure(
+    ecs_world_t *world,
+    ecs_id_record_t *idr);
+
 /* Get name index for id record */
 ecs_hashmap_t* flecs_id_name_index_get(
     const ecs_world_t *world,

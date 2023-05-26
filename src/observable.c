@@ -854,10 +854,7 @@ void flecs_emit_forward_table_up(
             ecs_os_memcpy_n(dst, src, ecs_reachable_elem_t, count);
         }
 
-        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
-            /* Only OnAdd/OnRemove events can validate a cache */
-            rc->current = rc->generation;
-        }
+        rc->current = rc->generation;
 
         if (ecs_should_log_3()) {
             char *idstr = ecs_id_str(world, tgt_idr->id);
@@ -927,7 +924,14 @@ void flecs_emit_forward(
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
-        rc->current = rc->generation;
+        if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+            /* Only OnAdd/OnRemove events can validate top-level cache, which
+             * is for the id for which the event is emitted. 
+             * The reason for this is that we don't want to validate the cache
+             * while the administration for the mutated entity isn't up to 
+             * date yet. */
+            rc->current = rc->generation;
+        }
 
         if (ecs_should_log_3()) {
             ecs_dbg_3("cache after rebuild:");
