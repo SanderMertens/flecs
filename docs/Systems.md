@@ -192,6 +192,78 @@ world.progress();
 
 A system may also use `delta_system_time`, which is the time elapsed since the last time the system was invoked. This can be useful when a system is not invoked each frame, for example when using a timer.
 
+## Tasks
+A task is a system that matches no entities. Tasks are ran once per frame, and are useful for running code that is not related to entities. An example of a task system:
+
+```c
+// System function
+void PrintTime(ecs_iter_t *it) {
+    printf("Time: %f\n", it->delta_time);
+}
+
+// System declaration using the ECS_SYSTEM macro
+ECS_SYSTEM(world, PrintTime, EcsOnUpdate, 0);
+
+// System declaration using the descriptor API
+ecs_system(world, {
+    .entity = ecs_entity(world, {
+        .name = "PrintTime",
+        .add = { ecs_dependson(EcsOnUpdate) }
+    }),
+    .callback = PrintTime
+});
+
+// Runs PrintTime
+ecs_progress(world, 0);
+```
+```cpp
+world.system("PrintTime")
+    .kind(flecs::OnUpdate)
+    .iter([](flecs::iter& it) {
+        printf("Time: %f\n", it.delta_time());
+    });
+
+// Runs PrintTime
+world.progress();
+```
+
+Tasks may query for components from a fixed source or singleton:
+
+```c
+// System function
+void PrintTime(ecs_iter_t *it) {
+    // Get singleton component
+    Game *g = ecs_field(it, Game, 1);
+
+    printf("Time: %f\n", g->time);
+}
+
+// System declaration using the ECS_SYSTEM macro
+ECS_SYSTEM(world, PrintTime, EcsOnUpdate, Game($));
+
+// System declaration using the descriptor API
+ecs_system(world, {
+    .entity = ecs_entity(world, {
+        .name = "PrintTime",
+        .add = { ecs_dependson(EcsOnUpdate) }
+    }),
+    .query.filter.terms = {
+        { .id = ecs_id(Game), .src.id = ecs_id(Game) } // Singleton source
+    },
+    .callback = PrintTime
+});
+```
+```cpp
+world.system<Game>("PrintTime")
+    .term_at(1).singleton()
+    .kind(flecs::OnUpdate)
+    .iter([](flecs::iter& it, Game *g) {
+        printf("Time: %f\n", g->time);
+    });
+```
+
+Note that `it->count` is always 0 for tasks, as they don't match any entities. In C++ this means that the function passed to `each` is never invoked for tasks. Applications will have to use `iter` instead when using tasks in C++.
+
 ## Pipelines
 A pipeline is a list of systems that is executed when the `ecs_progress`/`world::progress` function is invoked. Which systems are part of the pipeline is determined by a pipeline query. A pipeline query is a regular ECS query, which matches system entities. Flecs has a builtin pipeline with a predefined query, in addition to offering the ability to specify a custom pipeline query.
 
