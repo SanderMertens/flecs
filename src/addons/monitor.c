@@ -181,7 +181,7 @@ void flecs_stats_monitor_import(
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
     // Called each frame, collects 60 measurements per second
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} }),
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
@@ -191,7 +191,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each second, reduces into 60 measurements per minute
-    ecs_entity_t mw1m = ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_entity_t mw1m = ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} }),
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
@@ -205,7 +205,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each minute, reduces into 60 measurements per hour
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} }),
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
@@ -220,7 +220,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each minute, reduces into 60 measurements per day
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} }),
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
@@ -236,7 +236,7 @@ void flecs_stats_monitor_import(
     });
 
     // Called each hour, reduces into 60 measurements per week
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} }),
         .query.filter.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),

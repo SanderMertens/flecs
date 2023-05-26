@@ -203,7 +203,7 @@ bool flecs_table_release(
     ecs_table_t *table);
 
 /* Increase observer count of table */
-void flecs_table_observer_add(
+void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
 

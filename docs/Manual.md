@@ -170,9 +170,7 @@ ecs_os_free(path);
 An application can assign names to entities. Names can be assigned at entity creation, with the `ecs_entity_init` function:
 
 ```c
-ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-    .name = "MyEntity"
-});
+ecs_entity_t e = ecs_entity(world, { .name = "MyEntity" });
 ```
 
 Alternatively, names can be assigned afterwards with the `ecs_set_name` function:

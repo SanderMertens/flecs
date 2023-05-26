@@ -2354,7 +2354,7 @@ bool flecs_term_iter_next(
             }
 
             table = tr->hdr.table;
-            if (table->observed_count) {
+            if (table->traversable_count) {
                 iter->observed_table_count ++;
             }
 

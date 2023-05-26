@@ -840,7 +840,7 @@ void FlecsPipelineImport(
         .move = ecs_move(EcsPipeline)
     });
 
-    world->pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+    world->pipeline = ecs_pipeline(world, {
         .entity = ecs_entity(world, { .name = "BuiltinPipeline" }),
         .query = {
             .filter.terms = {

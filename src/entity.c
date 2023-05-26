@@ -534,7 +534,7 @@ void flecs_notify_on_add(
             flecs_set_union(world, table, row, count, added);
         }
 
-        if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasObserved)) {
+        if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {
             flecs_emit(world, world, &(ecs_event_desc_t){
                 .event = EcsOnAdd,
                 .ids = added,
@@ -561,7 +561,7 @@ void flecs_notify_on_remove(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count && (table->flags & 
-        (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|EcsTableHasObserved))) 
+        (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|EcsTableHasTraversable))) 
     {
         flecs_emit(world, world, &(ecs_event_desc_t) {
             .event = EcsOnRemove,
@@ -765,11 +765,11 @@ void flecs_commit(
     
     ecs_table_t *src_table = NULL;
     uint32_t row_flags = 0;
-    int observed = 0;
+    int is_trav = 0;
     if (record) {
         src_table = record->table;
         row_flags = record->row & ECS_ROW_FLAGS_MASK;
-        observed = (row_flags & EcsEntityIsTraversable) != 0;
+        is_trav = (row_flags & EcsEntityIsTraversable) != 0;
     }
 
     if (src_table == dst_table) {
@@ -786,7 +786,7 @@ void flecs_commit(
 
     if (src_table) {
         ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_table_observer_add(dst_table, observed);
+        flecs_table_traversable_add(dst_table, is_trav);
 
         if (dst_table->type.count) { 
             flecs_move_entity(world, entity, record, dst_table, diff, 
@@ -796,9 +796,9 @@ void flecs_commit(
             record->table = NULL;
         }
 
-        flecs_table_observer_add(src_table, -observed);
+        flecs_table_traversable_add(src_table, -is_trav);
     } else {        
-        flecs_table_observer_add(dst_table, observed);
+        flecs_table_traversable_add(dst_table, is_trav);
         if (dst_table->type.count) {
             flecs_new_entity(world, entity, record, dst_table, diff, 
                 construct, evt_flags);
@@ -1135,7 +1135,7 @@ ecs_record_t* flecs_add_flag(
         if (!(record->row & flag)) {
             ecs_table_t *table = record->table;
             if (table) {
-                flecs_table_observer_add(table, 1);
+                flecs_table_traversable_add(table, 1);
             }
         }
     }
@@ -2028,7 +2028,7 @@ void ecs_clear(
         r->table = NULL;
 
         if (r->row & EcsEntityIsTraversable) {
-            flecs_table_observer_add(table, -1);
+            flecs_table_traversable_add(table, -1);
         }
     }    
 
@@ -2551,7 +2551,7 @@ void ecs_delete(
             if (row_flags & EcsEntityIsTraversable) {
                 table = r->table;
                 if (table) {
-                    flecs_table_observer_add(table, -1);
+                    flecs_table_traversable_add(table, -1);
                 }
             }
             /* Merge operations before deleting entity */
@@ -3647,7 +3647,7 @@ void ecs_flatten(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            if (!table->observed_count) {
+            if (!table->traversable_count) {
                 continue;
             }
 
@@ -3756,7 +3756,7 @@ ecs_entity_t ecs_set_name(
     const char *name)
 {
     if (!entity) {
-        return ecs_entity_init(world, &(ecs_entity_desc_t){
+        return ecs_entity(world, {
             .name = name
         });
     }

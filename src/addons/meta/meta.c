@@ -1139,79 +1139,79 @@ void FlecsMetaImport(
     /* Register triggers to finalize type information from component data */
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsPrimitive), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_primitive
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsMember), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_member
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsEnum), .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_enum
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsBitmask), .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_bitmask
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = EcsConstant, .src.flags = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_constant
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_add_constant
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsArray), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_array
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsVector), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_vector
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsOpaque), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_custom_type
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsUnit), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_unit
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsMetaType), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms[0] = { .id = ecs_id(EcsMetaType), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
     });
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .filter.terms = {
             { .id = ecs_id(EcsUnit) },
             { .id = EcsQuantity }

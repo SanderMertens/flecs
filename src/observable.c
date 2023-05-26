@@ -300,7 +300,7 @@ void flecs_emit_propagate(
                 }
             }
 
-            if (!table->observed_count) {
+            if (!table->traversable_count) {
                 continue;
             }
 
@@ -354,7 +354,7 @@ void flecs_emit_propagate_invalidate_tables(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            if (!table->observed_count) {
+            if (!table->traversable_count) {
                 continue;
             }
 
@@ -1090,7 +1090,7 @@ void flecs_emit(
     bool propagated = false;
 
     /* Does table has observed entities */
-    bool has_observed = table_flags & EcsTableHasObserved;
+    bool has_observed = table_flags & EcsTableHasTraversable;
 
     /* When a relationship is removed, the events reachable through that 
      * relationship should emit UnSet events. This is part of the behavior that
@@ -1285,7 +1285,7 @@ repeat_event:
          * lower in the tree(s). */
         propagated = true;
 
-        /* The table->observed_count value indicates if the table contains any
+        /* The table->traversable_count value indicates if the table contains any
          * entities that are used as targets of traversable relationships. If the
          * entity/entities for which the event was generated is used as such a
          * target, events must be propagated downwards. */

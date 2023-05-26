@@ -422,7 +422,7 @@ extern "C" {
 #define EcsTableHasOnTableCreate       (1u << 22u)
 #define EcsTableHasOnTableDelete       (1u << 23u)
 
-#define EcsTableHasObserved            (1u << 25u)
+#define EcsTableHasTraversable         (1u << 25u)
 #define EcsTableHasTarget              (1u << 26u)
 
 #define EcsTableMarkedForDelete        (1u << 30u)

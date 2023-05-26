@@ -455,7 +455,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     }
 
     ecs_entity_t prev = ecs_set_scope(world, parent);
-    id = ecs_entity_init(world, &(ecs_entity_desc_t){
+    id = ecs_entity(world, {
         .id = id,
         .name = name
     });

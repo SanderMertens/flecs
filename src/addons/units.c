@@ -146,7 +146,7 @@ void FlecsUnitsImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    EcsUnitPrefixes = ecs_entity_init(world, &(ecs_entity_desc_t){
+    EcsUnitPrefixes = ecs_entity(world, {
         .name = "prefixes",
         .add = { EcsModule }
     });

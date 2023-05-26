@@ -691,7 +691,7 @@ int meta_parse_struct(
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
     while ((ptr = meta_parse_member(ptr, &token, &ctx)) && ptr[0]) {
-        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t){
+        ecs_entity_t m = ecs_entity(world, {
             .name = token.name
         });
 
@@ -747,7 +747,7 @@ int meta_parse_constants(
             goto error;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
+        ecs_entity_t c = ecs_entity(world, {
             .name = token.name
         });
 

@@ -629,11 +629,11 @@ Entities in flecs can have names, and name lookups can be relative to a parent. 
 
 ```c
 // Create two entities with a parent/child name
-ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
+ecs_entity_t parent = ecs_entity(world, {
   .name = "Parent"
 });
 
-ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
+ecs_entity_t child = ecs_entity(world, {
   .name = "Child"
 });
 

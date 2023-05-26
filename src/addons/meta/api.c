@@ -41,7 +41,7 @@ ecs_entity_t ecs_enum_init(
             break;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
+        ecs_entity_t c = ecs_entity(world, {
             .name = m_desc->name
         });
 
@@ -84,7 +84,7 @@ ecs_entity_t ecs_bitmask_init(
             break;
         }
 
-        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t){
+        ecs_entity_t c = ecs_entity(world, {
             .name = m_desc->name
         });
 
@@ -165,7 +165,7 @@ ecs_entity_t ecs_struct_init(
             return 0;
         }
 
-        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t){
+        ecs_entity_t m = ecs_entity(world, {
             .name = m_desc->name
         });
 

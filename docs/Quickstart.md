@@ -156,10 +156,10 @@ e.destruct();
 e.is_alive(); // false!
 ```
 
-Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. In C a name can be assigned with the `ecs_entity_init` function. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
+Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. In C a name can be assigned with the `ecs_entity_init` function/`ecs_entity` macro. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
 
 ```c
-ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Bob" });
+ecs_entity_t e = ecs_entity(world, { .name = "Bob" });
 
 printf("Entity name: %s\n", ecs_get_name(world, e));
 ```
@@ -420,11 +420,11 @@ parent.destruct();
 When entities have names, they can be used together with hierarchies to generate path names or do relative lookups:
 
 ```c
-ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
+ecs_entity_t parent = ecs_entity(world, {
     .name = "parent"
 });
 
-ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
+ecs_entity_t child = ecs_entity(world, {
     .name = "child"
 });
 
@@ -725,8 +725,8 @@ A system is a query combined with a callback. Systems can be either ran manually
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
 ecs_run(world, Move, delta_time, NULL); // Run system
 
-// Option 2, use the ecs_system_init function
-ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t){
+// Option 2, use the ecs_system_init function/ecs_system macro
+ecs_entity_t move_sys = ecs_system(world, {
     .query.filter.terms = {
         {ecs_id(Position)},
         {ecs_id(Velocity)},
@@ -837,7 +837,7 @@ When an observer has a query with more than one component, the observer will not
 An example of an observer with two components:
 
 ```c
-ecs_observer_init(world, &(ecs_observer_desc_t){
+ecs_observer(world, {
     .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
     .event = EcsOnSet,
     .callback = OnSetPosition
