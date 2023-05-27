@@ -150,21 +150,24 @@ ecs_id_record_t* flecs_id_record_new(
     idr->reachable.current = -1;
 
     bool is_wildcard = ecs_id_is_wildcard(id);
+    bool is_pair = ECS_IS_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
-    if (ECS_HAS_ID_FLAG(id, PAIR)) {
-        rel = ecs_pair_first(world, id);
+    if (is_pair) {
+        // rel = ecs_pair_first(world, id);
+        rel = ECS_PAIR_FIRST(id);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Relationship object can be 0, as tables without a ChildOf 
          * relationship are added to the (ChildOf, 0) id record */
         tgt = ECS_PAIR_SECOND(id);
+
+#ifdef FLECS_DEBUG
+        /* Check constraints */
         if (tgt) {
             tgt = ecs_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
         }
-
-        /* Check constraints */
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
@@ -180,8 +183,9 @@ ecs_id_record_t* flecs_id_record_new(
                 (void)is_final;
             }
         }
+#endif
 
-        if (!is_wildcard && ECS_IS_PAIR(id) && (rel != EcsFlag)) {
+        if (!is_wildcard && (rel != EcsFlag)) {
             /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
@@ -202,12 +206,11 @@ ecs_id_record_t* flecs_id_record_new(
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
-        rel = ecs_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
     }
 
     /* Initialize type info if id is not a tag */
-    if (!is_wildcard && (!role || ECS_IS_PAIR(id))) {
+    if (!is_wildcard && (!role || is_pair)) {
         if (!(idr->flags & EcsIdTag)) {
             const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
             if (!ti && tgt) {
@@ -225,43 +228,28 @@ ecs_id_record_t* flecs_id_record_new(
     flecs_add_flag(world, rel, EcsEntityIsId);
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
-        flecs_add_flag(world, tgt, EcsEntityIsTarget);
+        ecs_record_t *tgt_r = flecs_entities_get_any(world, tgt);
+        ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
         if (idr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
-            ecs_record_t *r = flecs_add_flag(
-                world, tgt, EcsEntityIsTraversable);
+            flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
 
             /* Add reference to (*, tgt) id record to entity record */
-            r->idr = idr_t;
+            tgt_r->idr = idr_t;
         }
     }
 
-    /* Flags for events */
-    if (flecs_check_observers_for_event(world, id, EcsOnAdd)) {
-        idr->flags |= EcsIdHasOnAdd;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnRemove)) {
-        idr->flags |= EcsIdHasOnRemove;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnSet)) {
-        idr->flags |= EcsIdHasOnSet;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsUnSet)) {
-        idr->flags |= EcsIdHasUnSet;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnTableFill)) {
-        idr->flags |= EcsIdHasOnTableFill;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnTableEmpty)) {
-        idr->flags |= EcsIdHasOnTableEmpty;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnTableCreate)) {
-        idr->flags |= EcsIdHasOnTableCreate;
-    }
-    if (flecs_check_observers_for_event(world, id, EcsOnTableDelete)) {
-        idr->flags |= EcsIdHasOnTableDelete;
-    }
+    ecs_observable_t *o = &world->observable;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
+    idr->flags |= flecs_observers_exist(o, id, EcsUnSet) * EcsIdHasUnSet;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
+    idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -281,7 +269,7 @@ ecs_id_record_t* flecs_id_record_new(
             world->info.tag_id_count ++;
         }
 
-        if (ECS_IS_PAIR(id)) {
+        if (is_pair) {
             world->info.pair_id_count ++;
         }
     } else {
@@ -289,8 +277,10 @@ ecs_id_record_t* flecs_id_record_new(
     }
 
     return idr;
+#ifdef FLECS_DEBUG
 error:
     return NULL;
+#endif
 }
 
 static
@@ -315,20 +305,18 @@ void flecs_id_record_free(
 
     flecs_id_record_assert_empty(idr);
 
-    if (!(world->flags & EcsWorldQuit)) {
-        /* Id is still in use by a filter, query, rule or observer */
-        ecs_assert((idr->keep_alive == 0), 
-            ECS_ID_IN_USE, "cannot delete id that is queried for");
-    }
+    /* Id is still in use by a filter, query, rule or observer */
+    ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
+        ECS_ID_IN_USE, "cannot delete id that is queried for");
 
     if (ECS_IS_PAIR(id)) {
-        ecs_entity_t rel = ecs_pair_first(world, id);
-        ecs_entity_t obj = ECS_PAIR_SECOND(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
                 flecs_remove_id_elem(idr, ecs_pair(rel, EcsWildcard));
-                flecs_remove_id_elem(idr, ecs_pair(EcsWildcard, obj));
+                flecs_remove_id_elem(idr, ecs_pair(EcsWildcard, tgt));
             }
         } else {
             ecs_log_push_2();

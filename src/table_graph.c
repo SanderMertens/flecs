@@ -557,6 +557,7 @@ ecs_table_t *flecs_create_table(
 
     /* Set keyvalue to one that has the same lifecycle as the table */
     *(ecs_type_t*)table_elem.key = result->type;
+    result->hash = table_elem.hash;
 
     flecs_init_table(world, result, prev);
 

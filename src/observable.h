@@ -33,8 +33,8 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable);
 
-bool flecs_check_observers_for_event(
-    const ecs_poly_t *world,
+bool flecs_observers_exist(
+    ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event);
 

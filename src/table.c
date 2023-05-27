@@ -367,14 +367,9 @@ void flecs_table_init_flags(
     ecs_id_t *ids = table->type.array;
     int32_t count = table->type.count;
 
-    /* Iterate components to initialize table flags */
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
-
-        /* As we're iterating over the table components, also set the table
-         * flags. These allow us to quickly determine if the table contains
-         * data that needs to be handled in a special way. */
 
         if (id <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
@@ -1186,7 +1181,8 @@ void flecs_table_free(
             .count = table->type.count
         };
 
-        flecs_hashmap_remove(&world->store.table_map, &ids, ecs_table_t*);
+        flecs_hashmap_remove_w_hash(
+            &world->store.table_map, &ids, ecs_table_t*, table->hash);
     }
 
     flecs_wfree_n(world, int32_t, table->storage_count + 1, table->dirty_state);

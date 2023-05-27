@@ -221,12 +221,11 @@ int32_t flecs_event_observers_get(
     return count;
 }
 
-bool flecs_check_observers_for_event(
-    const ecs_poly_t *object,
+bool flecs_observers_exist(
+    ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event)
-{    
-    ecs_observable_t *observable = ecs_get_observable(object);
+{
     ecs_event_record_t *er = flecs_event_record_get_if(observable, event);
     if (!er) {
         return false;

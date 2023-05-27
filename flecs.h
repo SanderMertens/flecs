@@ -28803,10 +28803,6 @@ namespace flecs
 {
 
 inline void world::init_builtin_components() {
-    component<Component>("flecs::core::Component");
-    component<Identifier>("flecs::core::Identifier");
-    component<Poly>("flecs::core::Poly");
-
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
 #   endif

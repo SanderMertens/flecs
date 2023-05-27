@@ -1123,14 +1123,10 @@ void flecs_notify_on_set(
     }
 }
 
-ecs_record_t* flecs_add_flag(
-    ecs_world_t *world,
-    ecs_entity_t entity,
+void flecs_record_add_flag(
+    ecs_record_t *record,
     uint32_t flag)
 {
-    ecs_record_t *record = flecs_entities_get(world, entity);
-    ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-
     if (flag == EcsEntityIsTraversable) {
         if (!(record->row & flag)) {
             ecs_table_t *table = record->table;
@@ -1140,10 +1136,17 @@ ecs_record_t* flecs_add_flag(
         }
     }
     record->row |= flag;
-
-    return record;
 }
 
+void flecs_add_flag(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    uint32_t flag)
+{
+    ecs_record_t *record = flecs_entities_get_any(world, entity);
+    ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_record_add_flag(record, flag);
+}
 
 /* -- Public functions -- */
 
@@ -2392,6 +2395,7 @@ bool flecs_on_delete_clear_ids(
     int32_t i, count = ecs_vec_count(&world->store.marked_ids);
     ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
     int twice = 2;
+
     do {
         for (i = 0; i < count; i ++) {
             /* Release normal ids before wildcard ids */
@@ -2411,22 +2415,22 @@ bool flecs_on_delete_clear_ids(
             flecs_id_record_release_tables(world, idr);
 
             /* Release the claim taken by flecs_marked_id_push. This may delete the
-            * id record as all other claims may have been released. */
+             * id record as all other claims may have been released. */
             int32_t rc = flecs_id_record_release(world, idr);
             ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
             (void)rc;
 
             /* If rc is 0, the id was likely deleted by a nested delete_with call
-            * made by an on_remove handler/OnRemove observer */
+             * made by an on_remove handler/OnRemove observer */
             if (rc) {
                 if (delete_id) {
                     /* If id should be deleted, release initial claim. This happens when
-                    * a component, tag, or part of a pair is deleted. */
+                     * a component, tag, or part of a pair is deleted. */
                     flecs_id_record_release(world, idr);
                 } else {
                     /* If id should not be deleted, unmark id record for deletion. This
-                    * happens when all instances *of* an id are deleted, for example
-                    * when calling ecs_remove_all or ecs_delete_with. */
+                     * happens when all instances *of* an id are deleted, for example
+                     * when calling ecs_remove_all or ecs_delete_with. */
                     idr->flags &= ~EcsIdMarkedForDelete;
                 }
             }

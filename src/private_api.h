@@ -42,7 +42,6 @@ void flecs_bootstrap(
     ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
-
 /* Bootstrap functions for other parts in the code */
 void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
@@ -53,9 +52,13 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
-ecs_record_t* flecs_add_flag(
+void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,
+    uint32_t flag);
+
+void flecs_record_add_flag(
+    ecs_record_t *record,
     uint32_t flag);
 
 ecs_entity_t flecs_get_oneof(
