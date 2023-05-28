@@ -724,7 +724,6 @@ typedef struct ecs_entity_filter_t {
     ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
     ecs_vec_t ft_terms;       /* Terms with components from flattened tree */
     int32_t flat_tree_column;
-    bool has_filter;
 } ecs_entity_filter_t;
 
 typedef struct ecs_entity_filter_iter_t {
@@ -765,7 +764,7 @@ struct ecs_query_table_match_t {
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_vec_t refs;           /* Cached components for non-this terms */
-    ecs_entity_filter_t entity_filter; /* Entity specific filters */
+    ecs_entity_filter_t *entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
@@ -2533,7 +2532,7 @@ uint64_t _flecs_ito(
 
 void flecs_entity_filter_init(
     ecs_world_t *world,
-    ecs_entity_filter_t *entity_filter,
+    ecs_entity_filter_t **entity_filter,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_id_t *ids,
@@ -16178,7 +16177,7 @@ int32_t flecs_get_flattened_target(
 
 void flecs_entity_filter_init(
     ecs_world_t *world,
-    ecs_entity_filter_t *entity_filter,
+    ecs_entity_filter_t **entity_filter,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_id_t *ids,
@@ -16191,16 +16190,17 @@ void flecs_entity_filter_init(
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &world->allocator;
-    ecs_vec_t *sw_terms = &entity_filter->sw_terms;
-    ecs_vec_t *bs_terms = &entity_filter->bs_terms;
-    ecs_vec_t *ft_terms = &entity_filter->ft_terms;
+    ecs_entity_filter_t ef = {0};
+    ecs_vec_t *sw_terms = &ef.sw_terms;
+    ecs_vec_t *bs_terms = &ef.bs_terms;
+    ecs_vec_t *ft_terms = &ef.ft_terms;
     ecs_vec_reset_t(a, sw_terms, flecs_switch_term_t);
     ecs_vec_reset_t(a, bs_terms, flecs_bitset_term_t);
     ecs_vec_reset_t(a, ft_terms, flecs_flat_table_term_t);
     ecs_term_t *terms = filter->terms;
     int32_t i, term_count = filter->term_count;
-    entity_filter->has_filter = false;
-    entity_filter->flat_tree_column = -1;
+    bool has_filter = false;
+    ef.flat_tree_column = -1;
 
     /* Look for union fields */
     if (table->flags & EcsTableHasUnion) {
@@ -16231,7 +16231,7 @@ void flecs_entity_filter_init(
             el->sw_case = ECS_PAIR_SECOND(id);
             el->sw_column = NULL;
             ids[field] = id;
-            entity_filter->has_filter = true;
+            has_filter = true;
         }
     }
 
@@ -16252,7 +16252,7 @@ void flecs_entity_filter_init(
                     flecs_bitset_term_t);
                 bc->column_index = bs_index;
                 bc->bs_column = NULL;
-                entity_filter->has_filter = true;
+                has_filter = true;
             }
         }
     }
@@ -16272,10 +16272,10 @@ void flecs_entity_filter_init(
             }
 
             if (terms[i].src.trav == rel) {
-                entity_filter->flat_tree_column = table->storage_map[column];
-                ecs_assert(entity_filter->flat_tree_column != -1, 
+                ef.flat_tree_column = table->storage_map[column];
+                ecs_assert(ef.flat_tree_column != -1, 
                     ECS_INTERNAL_ERROR, NULL);
-                entity_filter->has_filter = true;
+                has_filter = true;
                 
                 flecs_flat_table_term_t *term = ecs_vec_append_t(
                     a, ft_terms, flecs_flat_table_term_t);
@@ -16285,12 +16285,22 @@ void flecs_entity_filter_init(
             }
         }
     }
+
+    if (has_filter) {
+        *entity_filter = ecs_os_malloc_t(ecs_entity_filter_t);
+        ecs_assert(*entity_filter != NULL, ECS_OUT_OF_MEMORY, NULL);
+        **entity_filter = ef;
+    }
 }
 
 void flecs_entity_filter_fini(
     ecs_world_t *world,
     ecs_entity_filter_t *ef)
 {
+    if (!ef) {
+        return;
+    }
+
     ecs_allocator_t *a = &world->allocator;
 
     flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
@@ -16302,6 +16312,7 @@ void flecs_entity_filter_fini(
     ecs_vec_fini_t(a, &ef->sw_terms, flecs_switch_term_t);
     ecs_vec_fini_t(a, &ef->bs_terms, flecs_bitset_term_t);
     ecs_vec_fini_t(a, &ef->ft_terms, flecs_flat_table_term_t);
+    ecs_os_free(ef);
 }
 
 int flecs_entity_filter_next(
@@ -54009,11 +54020,13 @@ bool flecs_query_get_match_monitor(
         monitor[t + 1] = 0;
     }
 
+
     /* If matched table needs entity filter, make sure to test fields that could
      * be matched by flattened parents. */
-    if (match->entity_filter.flat_tree_column != -1) {
-        int32_t *fields = ecs_vec_first(&match->entity_filter.ft_terms);
-        int32_t field_count = ecs_vec_count(&match->entity_filter.ft_terms);
+    ecs_entity_filter_t *ef = match->entity_filter;
+    if (ef && ef->flat_tree_column != -1) {
+        int32_t *fields = ecs_vec_first(&ef->ft_terms);
+        int32_t field_count = ecs_vec_count(&ef->ft_terms);
         for (i = 0; i < field_count; i ++) {
             monitor[fields[i] + 1] = 0;
         }
@@ -54066,8 +54079,8 @@ void flecs_query_sync_match_monitor(
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
     }
 
-    ecs_entity_filter_t *ef = &match->entity_filter;
-    if (ef->flat_tree_column != -1) {
+    ecs_entity_filter_t *ef = match->entity_filter;
+    if (ef && ef->flat_tree_column != -1) {
         flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
         int32_t field_count = ecs_vec_count(&ef->ft_terms);
         for (i = 0; i < field_count; i ++) {
@@ -54205,7 +54218,7 @@ bool flecs_query_check_match_monitor(
     }
 
     if (has_flat) {
-        ecs_entity_filter_t *ef = &match->entity_filter;
+        ecs_entity_filter_t *ef = match->entity_filter;
         flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
         ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
         int32_t cur_tgt = ent_it->target_count - 1;
@@ -54386,7 +54399,7 @@ void flecs_query_set_table_match(
         flecs_entity_filter_init(world, &qm->entity_filter, filter, 
             table, qm->ids, qm->columns);
 
-        if (qm->entity_filter.has_filter) {
+        if (qm->entity_filter) {
             query->flags &= ~EcsQueryTrivialIter;
         }
         if (table->flags & EcsTableHasUnion) {
@@ -55033,7 +55046,7 @@ void flecs_query_table_match_free(
         }
         
         ecs_vec_fini_t(&world->allocator, &cur->refs, ecs_ref_t);
-        flecs_entity_filter_fini(world, &cur->entity_filter);
+        flecs_entity_filter_fini(world, cur->entity_filter);
 
         next = cur->next_match;
 
@@ -55264,6 +55277,8 @@ void flecs_query_order_by(
     if (!query->table_slices.array) {
         flecs_query_build_sorted_tables(query);
     }
+
+    query->flags &= ~EcsQueryTrivialIter;
 error:
     return;
 }
@@ -55715,7 +55730,6 @@ ecs_iter_t ecs_query_iter(
                     ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, field_count);
                 }
                 ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, field_count);
-                // ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, field_count);
                 ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
                 ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
             }
@@ -55873,20 +55887,16 @@ void flecs_query_populate_trivial(
 {
     ecs_query_table_match_t *match = node->match;
     ecs_table_t *table = match->node.table;
+    int32_t count = ecs_table_count(table);
 
     it->ids = match->ids;
     it->sources = match->sources;
     it->columns = match->columns;
     it->group_id = match->node.group_id;
     it->instance_count = 0;
-    it->offset = node->offset;
-    it->count = node->count;
+    it->offset = 0;
+    it->count = count;
     it->references = ecs_vec_first(&match->refs);
-
-    if (!it->count) {
-        it->count = ecs_table_count(table);
-        ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
-    }
 
     if (!it->references) {
         ecs_data_t *data = &table->data;
@@ -55906,16 +55916,15 @@ void flecs_query_populate_trivial(
                 }
 
                 it->ptrs[i] = ecs_vec_get(&data->columns[column], 
-                    it->sizes[i], it->offset);
+                    it->sizes[i], 0);
             }
         }
 
         it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
         it->table = table;
-        it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, it->offset);
+        it->entities = ecs_vec_first(&data->entities);
     } else {
-        flecs_iter_populate_data(it->real_world, it, table, it->offset, 
-            it->count, it->ptrs);
+        flecs_iter_populate_data(it->real_world, it, table, 0, count, it->ptrs);
     }
 }
 
@@ -55972,8 +55981,8 @@ repeat:
             ecs_assert(range->count != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
-        if (match->entity_filter.has_filter) {
-            ent_it->entity_filter = &match->entity_filter;
+        if (match->entity_filter) {
+            ent_it->entity_filter = match->entity_filter;
             ent_it->columns = match->columns;
             ent_it->range.table = table;
             ent_it->it = it;

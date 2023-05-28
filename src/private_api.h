@@ -227,7 +227,7 @@ uint64_t _flecs_ito(
 
 void flecs_entity_filter_init(
     ecs_world_t *world,
-    ecs_entity_filter_t *entity_filter,
+    ecs_entity_filter_t **entity_filter,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_id_t *ids,

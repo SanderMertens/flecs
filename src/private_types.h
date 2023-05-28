@@ -255,7 +255,6 @@ typedef struct ecs_entity_filter_t {
     ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
     ecs_vec_t ft_terms;       /* Terms with components from flattened tree */
     int32_t flat_tree_column;
-    bool has_filter;
 } ecs_entity_filter_t;
 
 typedef struct ecs_entity_filter_iter_t {
@@ -296,7 +295,7 @@ struct ecs_query_table_match_t {
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_vec_t refs;           /* Cached components for non-this terms */
-    ecs_entity_filter_t entity_filter; /* Entity specific filters */
+    ecs_entity_filter_t *entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
