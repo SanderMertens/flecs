@@ -2891,7 +2891,7 @@ typedef struct ecs_data_t ecs_data_t;
 typedef struct ecs_switch_t ecs_switch_t;
 
 /* Cached query table data */
-typedef struct ecs_query_table_node_t ecs_query_table_node_t;
+typedef struct ecs_query_table_match_t ecs_query_table_match_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -3022,7 +3022,7 @@ typedef struct ecs_filter_iter_t {
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
-    ecs_query_table_node_t *node, *prev, *last;
+    ecs_query_table_match_t *node, *prev, *last;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;

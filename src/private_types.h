@@ -270,41 +270,30 @@ typedef struct ecs_entity_filter_iter_t {
     int32_t target_count;
 } ecs_entity_filter_iter_t;
 
-typedef struct ecs_query_table_match_t ecs_query_table_match_t;
-
-/** List node used to iterate tables in a query.
- * The list of nodes dictates the order in which tables should be iterated by a
- * query. A single node may refer to the table multiple times with different
- * offset/count parameters, which enables features such as sorting. */
-struct ecs_query_table_node_t {
-    ecs_query_table_node_t *next, *prev;
-    ecs_table_t *table;              /* The current table. */
-    uint64_t group_id;             /* Value used to organize tables in groups */
-    int32_t offset;                  /* Starting point in table  */
-    int32_t count;                   /* Number of entities to iterate in table */
-    ecs_query_table_match_t *match;  /* Reference to the match */
-};
-
-/** Type containing data for a table matched with a query. 
- * A single table can have multiple matches, if the query contains wildcards. */
+/** Table match data.
+ * Each table matched by the query is represented by a ecs_query_table_match_t
+ * instance, which are linked together in a list. A table may match a query
+ * multiple times (due to wildcard queries) with different columns being matched
+ * by the query. */
 struct ecs_query_table_match_t {
-    ecs_query_table_node_t node; /* Embedded list node */
-
+    ecs_query_table_match_t *next, *prev;
+    ecs_table_t *table;       /* The current table. */
+    int32_t offset;           /* Starting point in table  */
+    int32_t count;            /* Number of entities to iterate in table */
     int32_t *columns;         /* Mapping from query fields to table columns */
     int32_t *storage_columns; /* Mapping from query fields to storage columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *sources;    /* Subjects (sources) of ids */
     ecs_vec_t refs;           /* Cached components for non-this terms */
+    uint64_t group_id;        /* Value used to organize tables in groups */
+    int32_t *monitor;         /* Used to monitor table for changes */
     ecs_entity_filter_t *entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
-
-    int32_t *monitor;         /* Used to monitor table for changes */
 };
 
-/** A single table can occur multiple times in the cache when a term matches
- * multiple table columns. */
+/** Table record type for query table cache. A query only has one per table. */
 typedef struct ecs_query_table_t {
     ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_table_match_t *first;  /* List with matches for table */
@@ -315,8 +304,8 @@ typedef struct ecs_query_table_t {
 
 /** Points to the beginning & ending of a query group */
 typedef struct ecs_query_table_list_t {
-    ecs_query_table_node_t *first;
-    ecs_query_table_node_t *last;
+    ecs_query_table_match_t *first;
+    ecs_query_table_match_t *last;
     ecs_query_group_info_t info;
 } ecs_query_table_list_t;
 
@@ -399,14 +388,14 @@ struct ecs_query_t {
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
-    ecs_map_t self;    /* map<trigger_id, trigger_t> */
-    ecs_map_t self_up; /* map<trigger_id, trigger_t> */
-    ecs_map_t up;      /* map<trigger_id, trigger_t> */
+    ecs_map_t self;             /* map<trigger_id, trigger_t> */
+    ecs_map_t self_up;          /* map<trigger_id, trigger_t> */
+    ecs_map_t up;               /* map<trigger_id, trigger_t> */
 
-    ecs_map_t observers;     /* map<trigger_id, trigger_t> */
+    ecs_map_t observers;        /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
-    ecs_map_t set_observers; /* map<trigger_id, trigger_t> */
+    ecs_map_t set_observers;    /* map<trigger_id, trigger_t> */
 
     /* Triggers for Self with non-This subject */
     ecs_map_t entity_observers; /* map<trigger_id, trigger_t> */

@@ -379,7 +379,8 @@ void flecs_entity_filter_init(
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &world->allocator;
-    ecs_entity_filter_t ef = {0};
+    ecs_entity_filter_t ef;
+    ecs_os_zeromem(&ef);
     ecs_vec_t *sw_terms = &ef.sw_terms;
     ecs_vec_t *bs_terms = &ef.bs_terms;
     ecs_vec_t *ft_terms = &ef.ft_terms;
