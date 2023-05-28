@@ -384,6 +384,11 @@ void flecs_entity_filter_init(
     ecs_vec_t *sw_terms = &ef.sw_terms;
     ecs_vec_t *bs_terms = &ef.bs_terms;
     ecs_vec_t *ft_terms = &ef.ft_terms;
+    if (*entity_filter) {
+        ef.sw_terms = (*entity_filter)->sw_terms;
+        ef.bs_terms = (*entity_filter)->bs_terms;
+        ef.ft_terms = (*entity_filter)->ft_terms;
+    }
     ecs_vec_reset_t(a, sw_terms, flecs_switch_term_t);
     ecs_vec_reset_t(a, bs_terms, flecs_bitset_term_t);
     ecs_vec_reset_t(a, ft_terms, flecs_flat_table_term_t);
