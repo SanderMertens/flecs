@@ -32,7 +32,7 @@ void flecs_rule_build_down_cache(
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
             ecs_table_t *table = tr->hdr.table;
-            if (!table->traversable_count) {
+            if (!table->_->traversable_count) {
                 continue;
             }
 

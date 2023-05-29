@@ -299,7 +299,7 @@ void flecs_emit_propagate(
                 }
             }
 
-            if (!table->traversable_count) {
+            if (!table->_->traversable_count) {
                 continue;
             }
 
@@ -353,7 +353,7 @@ void flecs_emit_propagate_invalidate_tables(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            if (!table->traversable_count) {
+            if (!table->_->traversable_count) {
                 continue;
             }
 
@@ -764,7 +764,7 @@ void flecs_emit_forward_table_up(
 
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = ids[i];
-        ecs_table_record_t *tgt_tr = &tgt_table->records[i];
+        ecs_table_record_t *tgt_tr = &tgt_table->_->records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tgt_tr->hdr.cache;
         if (inherit && (idr->flags & EcsIdDontInherit)) {
             continue;

@@ -501,9 +501,9 @@ bool flecs_table_records_update_empty(
     bool result = false;
     bool is_empty = ecs_table_count(table) == 0;
 
-    int32_t i, count = table->record_count;
+    int32_t i, count = table->_->record_count;
     for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &table->records[i];
+        ecs_table_record_t *tr = &table->_->records[i];
         ecs_table_cache_t *cache = tr->hdr.cache;
         result |= ecs_table_cache_set_empty(cache, table, is_empty);
     }
@@ -520,9 +520,9 @@ void flecs_init_table(
     table->type_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
-    table->lock = 0;
-    table->refcount = 1;
-    table->generation = 0;
+    table->_->lock = 0;
+    table->_->refcount = 1;
+    table->_->generation = 0;
 
     flecs_table_init_node(&table->node);
 
@@ -538,7 +538,9 @@ ecs_table_t *flecs_create_table(
 {
     ecs_table_t *result = flecs_sparse_add_t(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
+    result->_ = flecs_calloc_t(&world->allocator, ecs_table__t);
+    ecs_assert(result->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = *type;
 
@@ -557,13 +559,13 @@ ecs_table_t *flecs_create_table(
 
     /* Set keyvalue to one that has the same lifecycle as the table */
     *(ecs_type_t*)table_elem.key = result->type;
-    result->hash = table_elem.hash;
+    result->_->hash = table_elem.hash;
 
     flecs_init_table(world, result, prev);
 
     /* Update counters */
     world->info.table_count ++;
-    world->info.table_record_count += result->record_count;
+    world->info.table_record_count += result->_->record_count;
     world->info.table_storage_count += result->storage_count;
     world->info.empty_table_count ++;
     world->info.table_create_total ++;
@@ -757,7 +759,7 @@ void flecs_add_overrides_for_base(
             if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
                 flecs_type_add(world, dst_type, id & ~ECS_OVERRIDE);
             } else {
-                ecs_table_record_t *tr = &base_table->records[i];
+                ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
                 if (idr->flags & EcsIdAlwaysOverride) {
                     flecs_type_add(world, dst_type, id);
@@ -1104,7 +1106,7 @@ void flecs_init_root_table(
     ecs_poly_assert(world, ecs_world_t);
 
     world->store.root.type = (ecs_type_t){0};
-
+    world->store.root._ = flecs_calloc_t(&world->allocator, ecs_table__t);
     flecs_init_table(world, &world->store.root, NULL);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */

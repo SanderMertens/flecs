@@ -16,7 +16,7 @@ int flecs_entity_filter_find_smallest_term(
     ecs_table_t *table,
     ecs_entity_filter_iter_t *iter)
 {
-    ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_switch_term_t *sw_terms = ecs_vec_first(&iter->entity_filter->sw_terms);
     int32_t i, count = ecs_vec_count(&iter->entity_filter->sw_terms);
     int32_t min = INT_MAX, index = 0;
@@ -35,12 +35,12 @@ int flecs_entity_filter_find_smallest_term(
                 sparse_column->signature_column_index];
 
             /* Translate the table column index to switch column index */
-            table_column_index -= table->ext->sw_offset;
+            table_column_index -= table->_->sw_offset;
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
             sw = sparse_column->sw_column = 
-                &table->ext->sw_columns[table_column_index - 1];
+                &table->_->sw_columns[table_column_index - 1];
         }
 
         /* Find the smallest column */
@@ -190,7 +190,7 @@ int flecs_entity_filter_bitset_next(
 
     int32_t i, count = ecs_vec_count(&iter->entity_filter->bs_terms);
     flecs_bitset_term_t *terms = ecs_vec_first(&iter->entity_filter->bs_terms);
-    int32_t bs_offset = table->ext->bs_offset;
+    int32_t bs_offset = table->_->bs_offset;
     int32_t first = iter->bs_offset;
     int32_t last = 0;
 
@@ -201,7 +201,7 @@ int flecs_entity_filter_bitset_next(
         if (!bs) {
             int32_t index = column->column_index;
             ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
-            bs = &table->ext->bs_columns[index - bs_offset];
+            bs = &table->_->bs_columns[index - bs_offset];
             terms[i].bs_column = bs;
         }
         
@@ -352,7 +352,7 @@ int32_t flecs_get_flattened_target(
     }
 
     if (table->flags & EcsTableHasTarget) {
-        int32_t col = table->storage_map[table->ext->ft_offset];
+        int32_t col = table->storage_map[table->_->ft_offset];
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
         EcsTarget *next = table->data.columns[col].array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));

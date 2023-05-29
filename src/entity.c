@@ -315,7 +315,7 @@ void flecs_instantiate_children(
                  * instances don't all end up with the Union property. */
                 continue;
             }
-            ecs_table_record_t *tr = &child_table->records[i];
+            ecs_table_record_t *tr = &child_table->_->records[i];
             ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
             if (idr->flags & EcsIdDontInherit) {
                 continue;
@@ -415,13 +415,13 @@ void flecs_instantiate_children(
 
         /* If children have union relationships, initialize */
         if (has_union) {
-            ecs_table_ext_t *ext = child_table->ext;
-            ecs_assert(ext != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(i_table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-            int32_t u, u_count = ext->sw_count;
+            ecs_table__t *meta = child_table->_;
+            ecs_assert(meta != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(i_table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+            int32_t u, u_count = meta->sw_count;
             for (u = 0; u < u_count; u ++) {
-                ecs_switch_t *src_sw = &ext->sw_columns[i];
-                ecs_switch_t *dst_sw = &i_table->ext->sw_columns[i];
+                ecs_switch_t *src_sw = &meta->sw_columns[i];
+                ecs_switch_t *dst_sw = &i_table->_->sw_columns[i];
                 ecs_vec_t *v_src_values = flecs_switch_values(src_sw);
                 ecs_vec_t *v_dst_values = flecs_switch_values(dst_sw);
                 uint64_t *src_values = ecs_vec_first(v_src_values);
@@ -501,9 +501,9 @@ void flecs_set_union(
             const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-            int32_t column = tr->column - table->ext->sw_offset;
-            ecs_switch_t *sw = &table->ext->sw_columns[column];
+            ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+            int32_t column = tr->column - table->_->sw_offset;
+            ecs_switch_t *sw = &table->_->sw_columns[column];
             ecs_entity_t union_case = 0;
             union_case = ECS_PAIR_SECOND(id);
 
@@ -592,8 +592,8 @@ void flecs_update_name_index(
         return;
     }
 
-    ecs_hashmap_t *src_index = src->name_index;
-    ecs_hashmap_t *dst_index = dst->name_index;
+    ecs_hashmap_t *src_index = src->_->name_index;
+    ecs_hashmap_t *dst_index = dst->_->name_index;
     if ((src_index == dst_index) || (!src_index && !dst_index)) {
         /* If the name index didn't change, the entity still has the same parent
          * so nothing needs to be done. */
@@ -2149,7 +2149,7 @@ ecs_entity_t flecs_get_delete_action(
     if (!result && delete_target) {
         /* If action is not specified and we're deleting a relationship target,
          * derive the action from the current record */
-        ecs_table_record_t *trr = &table->records[tr->column];
+        ecs_table_record_t *trr = &table->_->records[tr->column];
         ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
         result = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
     }
@@ -2758,7 +2758,7 @@ ecs_record_t* flecs_access_begin(
         return NULL;
     }
 
-    int32_t count = ecs_os_ainc(&table->lock);
+    int32_t count = ecs_os_ainc(&table->_->lock);
     (void)count;
     if (write) {
         ecs_check(count == 1, ECS_ACCESS_VIOLATION, NULL);
@@ -2777,7 +2777,7 @@ void flecs_access_end(
     ecs_check(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t count = ecs_os_adec(&r->table->lock);
+    int32_t count = ecs_os_adec(&r->table->_->lock);
     (void)count;
     if (write) {
         ecs_check(count == 0, ECS_ACCESS_VIOLATION, NULL);
@@ -3208,12 +3208,12 @@ void ecs_enable_id(
         return;
     }
     
-    ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->ext->bs_offset;
+    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+    index -= table->_->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Data cannot be NULl, since entity is stored in the table */
-    ecs_bitset_t *bs = &table->ext->bs_columns[index];
+    ecs_bitset_t *bs = &table->_->bs_columns[index];
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, ECS_RECORD_TO_ROW(r->row), enable);
@@ -3248,10 +3248,10 @@ bool ecs_is_enabled_id(
         return ecs_has_id(world, entity, id);
     }
 
-    ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->ext->bs_offset;
+    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+    index -= table->_->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &table->ext->bs_columns[index];
+    ecs_bitset_t *bs = &table->_->bs_columns[index];
 
     return flecs_bitset_get(bs, ECS_RECORD_TO_ROW(r->row));
 error:
@@ -3302,9 +3302,9 @@ bool ecs_has_id(
         ECS_PAIR_SECOND(id) != EcsWildcard) 
     {
         if (ECS_PAIR_FIRST(table->type.array[column]) == EcsUnion) {
-            ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_switch_t *sw = &table->ext->sw_columns[
-                column - table->ext->sw_offset];
+            ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_switch_t *sw = &table->_->sw_columns[
+                column - table->_->sw_offset];
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             uint64_t value = flecs_switch_get(sw, row);
             return value == ECS_PAIR_SECOND(id);
@@ -3354,9 +3354,9 @@ ecs_entity_t ecs_get_target(
             wc = ecs_pair(EcsUnion, rel);
             tr = flecs_table_record_get(world, table, wc);
             if (tr) {
-                ecs_assert(table->ext != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_switch_t *sw = &table->ext->sw_columns[
-                    tr->column - table->ext->sw_offset];
+                ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_switch_t *sw = &table->_->sw_columns[
+                    tr->column - table->_->sw_offset];
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
                 return flecs_switch_get(sw, row);
                 
@@ -3651,7 +3651,7 @@ void ecs_flatten(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            if (!table->traversable_count) {
+            if (!table->_->traversable_count) {
                 continue;
             }
 

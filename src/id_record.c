@@ -496,7 +496,7 @@ void flecs_id_record_release_tables(
             /* Check if the only thing keeping the next table alive is our
              * claim. If so, move to the next record before releasing */
             if (next) {
-                if (next->refcount == 1) {
+                if (next->_->refcount == 1) {
                     it.next = it.next->next;
                 }
 

@@ -425,7 +425,6 @@ void flecs_clean_tables(
      * that only exists so that there is no table with id 0 */
     ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables, 
         ecs_table_t, 0);
-    ecs_assert(first->id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)first;
 
     for (i = 1; i < count; i ++) {
@@ -1875,7 +1874,7 @@ void flecs_table_set_empty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_table_count(table)) {
-        table->generation = 0;
+        table->_->generation = 0;
     }
 
     flecs_sparse_ensure_fast_t(world->pending_tables, ecs_table_t*, 
@@ -1954,7 +1953,7 @@ int32_t ecs_delete_empty_tables(
 
             ecs_table_t *table = tr->hdr.table;
             ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, NULL);
-            if (table->refcount > 1) {
+            if (table->_->refcount > 1) {
                 /* Don't delete claimed tables */
                 continue;
             }
@@ -1963,7 +1962,7 @@ int32_t ecs_delete_empty_tables(
                 continue;
             }
 
-            uint16_t gen = ++ table->generation;
+            uint16_t gen = ++ table->_->generation;
             if (delete_generation && (gen > delete_generation)) {
                 if (flecs_table_release(world, table)) {
                     delete_count ++;

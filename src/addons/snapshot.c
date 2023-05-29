@@ -131,7 +131,7 @@ ecs_snapshot_t* snapshot_create(
             snapshot_table(world, result, table);
         }
     } else {
-        for (t = 0; t < table_count; t ++) {
+        for (t = 1; t < table_count; t ++) {
             ecs_table_t *table = flecs_sparse_get_t(
                 &world->store.tables, ecs_table_t, t);
             snapshot_table(world, result, table);
@@ -186,7 +186,7 @@ void restore_unfiltered(
     int32_t i, count = (int32_t)flecs_sparse_last_id(&world->store.tables);
     int32_t snapshot_count = ecs_vec_count(&snapshot->tables);
 
-    for (i = 0; i <= count; i ++) {
+    for (i = 1; i <= count; i ++) {
         ecs_table_t *world_table = flecs_sparse_get_t(
             &world->store.tables, ecs_table_t, (uint32_t)i);
 
