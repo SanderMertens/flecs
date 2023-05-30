@@ -393,9 +393,12 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
+    if (!edges->hi) {
+        edges->hi = flecs_alloc_t(&world->allocator, ecs_map_t);
+        ecs_map_init_w_params(edges->hi, &world->allocators.ptr);
+    }
 
-    ecs_graph_edge_t **r = ecs_map_ensure_ref(&edges->hi, ecs_graph_edge_t, id);
+    ecs_graph_edge_t **r = ecs_map_ensure_ref(edges->hi, ecs_graph_edge_t, id);
     ecs_graph_edge_t *edge = r[0];
     if (edge) {
         return edge;
@@ -474,9 +477,9 @@ void flecs_table_remove_edge(
     ecs_graph_edge_t *edge)
 {
     ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_map_is_init(&edges->hi), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edges->hi != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_table_disconnect_edge(world, id, edge);
-    ecs_map_remove(&edges->hi, id);
+    ecs_map_remove(edges->hi, id);
 }
 
 static
@@ -484,7 +487,7 @@ void flecs_table_init_edges(
     ecs_graph_edges_t *edges)
 {
     edges->lo = NULL;
-    ecs_os_zeromem(&edges->hi);
+    edges->hi = NULL;
 }
 
 static
@@ -1128,8 +1131,8 @@ void flecs_table_clear_edges(
     ecs_graph_node_t *table_node = &table->node;
     ecs_graph_edges_t *node_add = &table_node->add;
     ecs_graph_edges_t *node_remove = &table_node->remove;
-    ecs_map_t *add_hi = &node_add->hi;
-    ecs_map_t *remove_hi = &node_remove->hi;
+    ecs_map_t *add_hi = node_add->hi;
+    ecs_map_t *remove_hi = node_remove->hi;
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
     /* Cleanup outgoing edges */
@@ -1176,8 +1179,12 @@ void flecs_table_clear_edges(
 
     ecs_map_fini(add_hi);
     ecs_map_fini(remove_hi);
+    flecs_free_t(&world->allocator, ecs_map_t, add_hi);
+    flecs_free_t(&world->allocator, ecs_map_t, remove_hi);
     table_node->add.lo = NULL;
     table_node->remove.lo = NULL;
+    table_node->add.hi = NULL;
+    table_node->remove.hi = NULL;
 
     ecs_log_pop_1();
 }

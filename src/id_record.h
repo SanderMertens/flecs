@@ -45,14 +45,17 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
+    /* Cached pointer to type info for id, if id contains data. */
+    const ecs_type_info_t *type_info;
+
+    /* Name lookup index (currently only used for ChildOf pairs) */
+    ecs_hashmap_t *name_index;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
     ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t trav; /* (*, O) with only traversable relationships */
-
-    /* Cached pointer to type info for id, if id contains data. */
-    const ecs_type_info_t *type_info;
+    ecs_id_record_elem_t trav;    /* (*, O) with only traversable relationships */
 
     /* Parent id record. For pair records the parent is the (R, *) record. */
     ecs_id_record_t *parent;
@@ -67,9 +70,6 @@ struct ecs_id_record_t {
 
     /* Cache invalidation counter */
     ecs_reachable_cache_t reachable;
-
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
 };
 
 /* Get id record for id */

@@ -573,17 +573,17 @@ typedef struct ecs_table_event_t {
 
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vec_t entities;          /* Entity identifiers */
-    ecs_vec_t records;           /* Ptrs to records in main entity index */
-    ecs_vec_t *columns;          /* Component columns */
+    ecs_vec_t entities;              /* Entity identifiers */
+    ecs_vec_t records;               /* Ptrs to records in main entity index */
+    ecs_vec_t *columns;              /* Component columns */
 };
 
 /** Cache of added/removed components for non-trivial edges between tables */
 #define ECS_TABLE_DIFF_INIT { .added = {0}}
 
 typedef struct ecs_table_diff_t {
-    ecs_type_t added;         /* Components added between tables */
-    ecs_type_t removed;       /* Components removed between tables */
+    ecs_type_t added;                /* Components added between tables */
+    ecs_type_t removed;              /* Components removed between tables */
 } ecs_table_diff_t;
 
 /** Builder for table diff. The table diff type itself doesn't use ecs_vec_t to
@@ -603,16 +603,16 @@ typedef struct ecs_graph_edge_hdr_t {
 /** Single edge. */
 typedef struct ecs_graph_edge_t {
     ecs_graph_edge_hdr_t hdr;
-    ecs_table_t *from;       /* Edge source table */
-    ecs_table_t *to;         /* Edge destination table */
-    ecs_table_diff_t *diff;  /* Index into diff vector, if non trivial edge */
-    ecs_id_t id;             /* Id associated with edge */
+    ecs_table_t *from;               /* Edge source table */
+    ecs_table_t *to;                 /* Edge destination table */
+    ecs_table_diff_t *diff;          /* Index into diff vector, if non trivial edge */
+    ecs_id_t id;                     /* Id associated with edge */
 } ecs_graph_edge_t;
 
 /* Edges to other tables. */
 typedef struct ecs_graph_edges_t {
-    ecs_graph_edge_t *lo; /* Small array optimized for low edges */
-    ecs_map_t hi;  /* Map for hi edges (map<id, edge_t>) */
+    ecs_graph_edge_t *lo;            /* Small array optimized for low edges */
+    ecs_map_t *hi;                   /* Map for hi edges (map<id, edge_t>) */
 } ecs_graph_edges_t;
 
 /* Table graph node */
@@ -637,8 +637,8 @@ typedef struct ecs_table__t {
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
-    ecs_switch_t *sw_columns;    /* Switch columns */
-    ecs_bitset_t *bs_columns;    /* Bitset columns */
+    ecs_switch_t *sw_columns;        /* Switch columns */
+    ecs_bitset_t *bs_columns;        /* Bitset columns */
     int16_t sw_count;
     int16_t sw_offset;
     int16_t bs_count;
@@ -721,9 +721,9 @@ typedef struct flecs_flat_table_term_t {
 /* Entity filter. This filters the entities of a matched table, for example when
  * it has disabled components or union relationships (switch). */
 typedef struct ecs_entity_filter_t {
-    ecs_vec_t sw_terms;       /* Terms with switch (union) entity filter */
-    ecs_vec_t bs_terms;       /* Terms with bitset (toggle) entity filter */
-    ecs_vec_t ft_terms;       /* Terms with components from flattened tree */
+    ecs_vec_t sw_terms;              /* Terms with switch (union) entity filter */
+    ecs_vec_t bs_terms;              /* Terms with bitset (toggle) entity filter */
+    ecs_vec_t ft_terms;              /* Terms with components from flattened tree */
     int32_t flat_tree_column;
 } ecs_entity_filter_t;
 
@@ -747,16 +747,16 @@ typedef struct ecs_entity_filter_iter_t {
  * by the query. */
 struct ecs_query_table_match_t {
     ecs_query_table_match_t *next, *prev;
-    ecs_table_t *table;       /* The current table. */
-    int32_t offset;           /* Starting point in table  */
-    int32_t count;            /* Number of entities to iterate in table */
-    int32_t *columns;         /* Mapping from query fields to table columns */
-    int32_t *storage_columns; /* Mapping from query fields to storage columns */
-    ecs_id_t *ids;            /* Resolved (component) ids for current table */
-    ecs_entity_t *sources;    /* Subjects (sources) of ids */
-    ecs_vec_t refs;           /* Cached components for non-this terms */
-    uint64_t group_id;        /* Value used to organize tables in groups */
-    int32_t *monitor;         /* Used to monitor table for changes */
+    ecs_table_t *table;              /* The current table. */
+    int32_t offset;                  /* Starting point in table  */
+    int32_t count;                   /* Number of entities to iterate in table */
+    int32_t *columns;                /* Mapping from query fields to table columns */
+    int32_t *storage_columns;        /* Mapping from query fields to storage columns */
+    ecs_id_t *ids;                   /* Resolved (component) ids for current table */
+    ecs_entity_t *sources;           /* Subjects (sources) of ids */
+    ecs_vec_t refs;                  /* Cached components for non-this terms */
+    uint64_t group_id;               /* Value used to organize tables in groups */
+    int32_t *monitor;                /* Used to monitor table for changes */
     ecs_entity_filter_t *entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
@@ -842,10 +842,10 @@ struct ecs_query_t {
     /* Monitor generation */
     int32_t monitor_generation;
 
-    int32_t cascade_by;         /* Identify cascade column */
-    int32_t match_count;        /* How often have tables been (un)matched */
-    int32_t prev_match_count;   /* Track if sorting is needed */
-    int32_t rematch_count;      /* Track which tables were added during rematch */
+    int32_t cascade_by;              /* Identify cascade column */
+    int32_t match_count;             /* How often have tables been (un)matched */
+    int32_t prev_match_count;        /* Track if sorting is needed */
+    int32_t rematch_count;           /* Track which tables were added during rematch */
 
     /* Mixins */
     ecs_iterable_t iterable;
@@ -858,17 +858,17 @@ struct ecs_query_t {
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
-    ecs_map_t self;             /* map<trigger_id, trigger_t> */
-    ecs_map_t self_up;          /* map<trigger_id, trigger_t> */
-    ecs_map_t up;               /* map<trigger_id, trigger_t> */
+    ecs_map_t self;                  /* map<trigger_id, trigger_t> */
+    ecs_map_t self_up;               /* map<trigger_id, trigger_t> */
+    ecs_map_t up;                    /* map<trigger_id, trigger_t> */
 
-    ecs_map_t observers;        /* map<trigger_id, trigger_t> */
+    ecs_map_t observers;             /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
-    ecs_map_t set_observers;    /* map<trigger_id, trigger_t> */
+    ecs_map_t set_observers;         /* map<trigger_id, trigger_t> */
 
     /* Triggers for Self with non-This subject */
-    ecs_map_t entity_observers; /* map<trigger_id, trigger_t> */
+    ecs_map_t entity_observers;      /* map<trigger_id, trigger_t> */
 
     /* Number of active observers for (component) id */
     int32_t observer_count;
@@ -920,9 +920,9 @@ typedef enum ecs_cmd_kind_t {
 } ecs_cmd_kind_t;
 
 typedef struct ecs_cmd_1_t {
-    void *value;                /* Component value (used by set / get_mut) */
-    ecs_size_t size;            /* Size of value */
-    bool clone_value;           /* Clone entity with value (used for clone) */ 
+    void *value;                     /* Component value (used by set / get_mut) */
+    ecs_size_t size;                 /* Size of value */
+    bool clone_value;                /* Clone entity with value (used for clone) */ 
 } ecs_cmd_1_t;
 
 typedef struct ecs_cmd_n_t {
@@ -931,22 +931,22 @@ typedef struct ecs_cmd_n_t {
 } ecs_cmd_n_t;
 
 typedef struct ecs_cmd_t {
-    ecs_cmd_kind_t kind;   /* Command kind */
-    int32_t next_for_entity;    /* Next operation for entity */    
-    ecs_id_t id;                /* (Component) id */
-    ecs_id_record_t *idr;       /* Id record (only for set/mut/emplace) */
-    ecs_entity_t entity;        /* Entity id */
+    ecs_cmd_kind_t kind;             /* Command kind */
+    int32_t next_for_entity;         /* Next operation for entity */    
+    ecs_id_t id;                     /* (Component) id */
+    ecs_id_record_t *idr;            /* Id record (only for set/mut/emplace) */
+    ecs_entity_t entity;             /* Entity id */
 
     union {
-        ecs_cmd_1_t _1;    /* Data for single entity operation */
-        ecs_cmd_n_t _n;    /* Data for multi entity operation */
+        ecs_cmd_1_t _1;              /* Data for single entity operation */
+        ecs_cmd_n_t _n;              /* Data for multi entity operation */
     } is;
 } ecs_cmd_t;
 
 /* Entity specific metadata for command in defer queue */
 typedef struct ecs_cmd_entry_t {
     int32_t first;
-    int32_t last; /* If -1, a delete command was inserted */
+    int32_t last;                    /* If -1, a delete command was inserted */
 } ecs_cmd_entry_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
@@ -962,26 +962,26 @@ struct ecs_stage_t {
     /* Deferred command queue */
     int32_t defer;
     ecs_vec_t commands;
-    ecs_stack_t defer_stack;    /* Temp memory used by deferred commands */
-    ecs_sparse_t cmd_entries;   /* <entity, op_entry_t> - command combining */
+    ecs_stack_t defer_stack;         /* Temp memory used by deferred commands */
+    ecs_sparse_t cmd_entries;        /* <entity, op_entry_t> - command combining */
 
     /* Thread context */
-    ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
-    ecs_world_t *world;          /* Reference to world */
-    ecs_os_thread_t thread;      /* Thread handle (0 if no threading is used) */
+    ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
+    ecs_world_t *world;              /* Reference to world */
+    ecs_os_thread_t thread;          /* Thread handle (0 if no threading is used) */
 
     /* One-shot actions to be executed after the merge */
     ecs_vec_t post_frame_actions;
 
     /* Namespacing */
-    ecs_entity_t scope;          /* Entity of current scope */
-    ecs_entity_t with;           /* Id to add by default to new entities */
-    ecs_entity_t base;           /* Currently instantiated top-level base */
-    ecs_entity_t *lookup_path;   /* Search path used by lookup operations */
+    ecs_entity_t scope;              /* Entity of current scope */
+    ecs_entity_t with;               /* Id to add by default to new entities */
+    ecs_entity_t base;               /* Currently instantiated top-level base */
+    ecs_entity_t *lookup_path;       /* Search path used by lookup operations */
 
     /* Properties */
-    bool auto_merge;             /* Should this stage automatically merge? */
-    bool async;                  /* Is stage asynchronous? (write only) */
+    bool auto_merge;                 /* Should this stage automatically merge? */
+    bool async;                      /* Is stage asynchronous? (write only) */
 
     /* Thread specific allocators */
     ecs_stage_allocators_t allocators;
@@ -994,21 +994,21 @@ struct ecs_stage_t {
 
 /* Component monitor */
 typedef struct ecs_monitor_t {
-    ecs_vec_t queries;           /* vector<ecs_query_t*> */
-    bool is_dirty;               /* Should queries be rematched? */
+    ecs_vec_t queries;               /* vector<ecs_query_t*> */
+    bool is_dirty;                   /* Should queries be rematched? */
 } ecs_monitor_t;
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;          /* map<id, ecs_monitor_t> */
-    bool is_dirty;               /* Should monitors be evaluated? */
+    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
+    bool is_dirty;                   /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
 /* Data stored for id marked for deletion */
 typedef struct ecs_marked_id_t {
     ecs_id_record_t *idr;
     ecs_id_t id;
-    ecs_entity_t action; /* Set explicitly for delete_with, remove_all */
+    ecs_entity_t action;             /* Set explicitly for delete_with, remove_all */
     bool delete_id;
 } ecs_marked_id_t;
 
@@ -1017,10 +1017,10 @@ typedef struct ecs_store_t {
     ecs_entity_index_t entity_index;
 
     /* Table lookup by id */
-    ecs_sparse_t tables;         /* sparse<table_id, ecs_table_t> */
+    ecs_sparse_t tables;             /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_hashmap_t table_map;     /* hashmap<ecs_type_t, ecs_table_t*> */
+    ecs_hashmap_t table_map;         /* hashmap<ecs_type_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;
@@ -1029,7 +1029,7 @@ typedef struct ecs_store_t {
     ecs_vec_t records;
 
     /* Stack of ids being deleted. */
-    ecs_vec_t marked_ids;    /* vector<ecs_marked_ids_t> */
+    ecs_vec_t marked_ids;            /* vector<ecs_marked_ids_t> */
     
     /* Entity ids associated with depth (for flat hierarchies) */
     ecs_vec_t depth_ids;
@@ -1049,8 +1049,8 @@ struct ecs_world_t {
 
     /* --  Type metadata -- */
     ecs_id_record_t *id_index_lo;
-    ecs_map_t id_index_hi;       /* map<id, ecs_id_record_t*> */
-    ecs_sparse_t type_info;      /* sparse<type_id, type_info_t> */
+    ecs_map_t id_index_hi;           /* map<id, ecs_id_record_t*> */
+    ecs_sparse_t type_info;          /* sparse<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
     ecs_id_record_t *idr_wildcard;
@@ -1076,34 +1076,34 @@ struct ecs_world_t {
     ecs_store_t store;
 
     /* --  Pending table event buffers -- */
-    ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
-    ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
+    ecs_sparse_t *pending_buffer;    /* sparse<table_id, ecs_table_t*> */
+    ecs_sparse_t *pending_tables;    /* sparse<table_id, ecs_table_t*> */
 
     /* Used to track when cache needs to be updated */
-    ecs_monitor_set_t monitors;  /* map<id, ecs_monitor_t> */
+    ecs_monitor_set_t monitors;      /* map<id, ecs_monitor_t> */
 
     /* -- Systems -- */
-    ecs_entity_t pipeline;       /* Current pipeline */
+    ecs_entity_t pipeline;           /* Current pipeline */
 
     /* -- Identifiers -- */
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
 
     /* -- Staging -- */
-    ecs_stage_t *stages;         /* Stages */
-    int32_t stage_count;         /* Number of stages */
+    ecs_stage_t *stages;             /* Stages */
+    int32_t stage_count;             /* Number of stages */
 
     /* -- Multithreading -- */
-    ecs_os_cond_t worker_cond;   /* Signal that worker threads can start */
-    ecs_os_cond_t sync_cond;     /* Signal that worker thread job is done */
-    ecs_os_mutex_t sync_mutex;   /* Mutex for job_cond */
-    int32_t workers_running;     /* Number of threads running */
-    int32_t workers_waiting;     /* Number of workers waiting on sync */
+    ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
+    ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
+    ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
+    int32_t workers_running;         /* Number of threads running */
+    int32_t workers_waiting;         /* Number of workers waiting on sync */
 
     /* -- Time management -- */
-    ecs_time_t world_start_time; /* Timestamp of simulation start */
-    ecs_time_t frame_start_time; /* Timestamp of frame start */
-    ecs_ftime_t fps_sleep;       /* Sleep time to prevent fps overshoot */
+    ecs_time_t world_start_time;     /* Timestamp of simulation start */
+    ecs_time_t frame_start_time;     /* Timestamp of frame start */
+    ecs_ftime_t fps_sleep;           /* Sleep time to prevent fps overshoot */
 
     /* -- Metrics -- */
     ecs_world_info_t info;
@@ -1116,10 +1116,10 @@ struct ecs_world_t {
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */
-    ecs_allocator_t allocator;         /* Dynamic allocation sizes */
+    ecs_allocator_t allocator;       /* Dynamic allocation sizes */
 
-    void *context;               /* Application context */
-    ecs_vec_t fini_actions;  /* Callbacks to execute when world exits */
+    void *context;                   /* Application context */
+    ecs_vec_t fini_actions;          /* Callbacks to execute when world exits */
 };
 
 #endif
@@ -1236,14 +1236,17 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
+    /* Cached pointer to type info for id, if id contains data. */
+    const ecs_type_info_t *type_info;
+
+    /* Name lookup index (currently only used for ChildOf pairs) */
+    ecs_hashmap_t *name_index;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
     ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t trav; /* (*, O) with only traversable relationships */
-
-    /* Cached pointer to type info for id, if id contains data. */
-    const ecs_type_info_t *type_info;
+    ecs_id_record_elem_t trav;    /* (*, O) with only traversable relationships */
 
     /* Parent id record. For pair records the parent is the (R, *) record. */
     ecs_id_record_t *parent;
@@ -1258,9 +1261,6 @@ struct ecs_id_record_t {
 
     /* Cache invalidation counter */
     ecs_reachable_cache_t reachable;
-
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
 };
 
 /* Get id record for id */
@@ -56557,9 +56557,12 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    ecs_map_init_w_params_if(&edges->hi, &world->allocators.ptr);
+    if (!edges->hi) {
+        edges->hi = flecs_alloc_t(&world->allocator, ecs_map_t);
+        ecs_map_init_w_params(edges->hi, &world->allocators.ptr);
+    }
 
-    ecs_graph_edge_t **r = ecs_map_ensure_ref(&edges->hi, ecs_graph_edge_t, id);
+    ecs_graph_edge_t **r = ecs_map_ensure_ref(edges->hi, ecs_graph_edge_t, id);
     ecs_graph_edge_t *edge = r[0];
     if (edge) {
         return edge;
@@ -56638,9 +56641,9 @@ void flecs_table_remove_edge(
     ecs_graph_edge_t *edge)
 {
     ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_map_is_init(&edges->hi), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edges->hi != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_table_disconnect_edge(world, id, edge);
-    ecs_map_remove(&edges->hi, id);
+    ecs_map_remove(edges->hi, id);
 }
 
 static
@@ -56648,7 +56651,7 @@ void flecs_table_init_edges(
     ecs_graph_edges_t *edges)
 {
     edges->lo = NULL;
-    ecs_os_zeromem(&edges->hi);
+    edges->hi = NULL;
 }
 
 static
@@ -57292,8 +57295,8 @@ void flecs_table_clear_edges(
     ecs_graph_node_t *table_node = &table->node;
     ecs_graph_edges_t *node_add = &table_node->add;
     ecs_graph_edges_t *node_remove = &table_node->remove;
-    ecs_map_t *add_hi = &node_add->hi;
-    ecs_map_t *remove_hi = &node_remove->hi;
+    ecs_map_t *add_hi = node_add->hi;
+    ecs_map_t *remove_hi = node_remove->hi;
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
     /* Cleanup outgoing edges */
@@ -57340,8 +57343,12 @@ void flecs_table_clear_edges(
 
     ecs_map_fini(add_hi);
     ecs_map_fini(remove_hi);
+    flecs_free_t(&world->allocator, ecs_map_t, add_hi);
+    flecs_free_t(&world->allocator, ecs_map_t, remove_hi);
     table_node->add.lo = NULL;
     table_node->remove.lo = NULL;
+    table_node->add.hi = NULL;
+    table_node->remove.hi = NULL;
 
     ecs_log_pop_1();
 }
