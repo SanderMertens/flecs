@@ -6469,12 +6469,10 @@ void flecs_commit(
         &diff->added, &diff->removed);
     
     ecs_table_t *src_table = NULL;
-    uint32_t row_flags = 0;
     int is_trav = 0;
     if (record) {
         src_table = record->table;
-        row_flags = record->row & ECS_ROW_FLAGS_MASK;
-        is_trav = (row_flags & EcsEntityIsTraversable) != 0;
+        is_trav = (record->row & EcsEntityIsTraversable) != 0;
     }
 
     if (src_table == dst_table) {
@@ -6515,7 +6513,7 @@ void flecs_commit(
      * ensures that systems that rely on components from containers or prefabs
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
-    if (row_flags) {
+    if (is_trav) {
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
 
