@@ -1096,7 +1096,8 @@ void Pipeline_stage_write_before_read() {
     ecs_fini(world);
 }
 
-void Pipeline_mixed_multithreaded() {
+static
+void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1149,7 +1150,14 @@ void Pipeline_mixed_multithreaded() {
     ecs_new(world, Position);
     ecs_new(world, Position);
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+    	ecs_set_threads(world, 2);
+    }
 
     ecs_progress(world, 1);
 
@@ -1179,6 +1187,14 @@ void Pipeline_mixed_multithreaded() {
     ecs_pipeline_stats_fini(&stats);
 
     ecs_fini(world);
+}
+
+void Pipeline_mixed_multithreaded() {
+    Pipeline_mixed_multithreaded_internal(false);
+}
+
+void Pipeline_mixed_multithreaded_tasks() {
+    Pipeline_mixed_multithreaded_internal(true);
 }
 
 void Pipeline_mixed_staging() {
@@ -1388,7 +1404,8 @@ void Pipeline_single_threaded_pipeline_change() {
     ecs_fini(world);
 }
 
-void Pipeline_multi_threaded_pipeline_change() {
+static
+void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1432,7 +1449,14 @@ void Pipeline_multi_threaded_pipeline_change() {
         .multi_threaded = true
     });
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     /* Initialize to 1 so asserts inside system won't trigger */
     sys_a_invoked = 1;
@@ -1475,6 +1499,14 @@ void Pipeline_multi_threaded_pipeline_change() {
     test_int(sys_d_invoked, 1 + 3 * 2);
 
     ecs_fini(world);
+}
+
+void Pipeline_multi_threaded_pipeline_change() {
+    Pipeline_multi_threaded_pipeline_change_internal(false);
+}
+
+void Pipeline_multi_threaded_pipeline_change_tasks() {
+    Pipeline_multi_threaded_pipeline_change_internal(true);
 }
 
 void Pipeline_activate_after_add() {
@@ -1747,7 +1779,8 @@ void Sys_w_MainWorldIter(ecs_iter_t *it) {
     ecs_filter_fini(f);
 }
 
-void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
+static
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1756,11 +1789,26 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
 
     ECS_SYSTEM(world, Sys_w_MainWorldIter, EcsOnUpdate, Position());
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     ecs_progress(world, 0);
 
     ecs_fini(world);
+}
+
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
+    Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(false);
+}
+
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app_tasks() {
+    Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(true);
 }
 
 static int staging_system_invoked = 0;
@@ -2020,7 +2068,8 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
     ecs_fini(world);
 }
 
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
+static
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2043,7 +2092,14 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
         .multi_threaded = true
     });
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 1);
@@ -2060,7 +2116,16 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
     ecs_fini(world);
 }
 
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
+    Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(false);
+}
+
+void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer() {
+    Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(true);
+}
+
+static
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2091,7 +2156,14 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
         .no_readonly = true
     });
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     ecs_progress(world, 0);
     test_int(no_staging_create_position_invoked, 1);
@@ -2106,6 +2178,14 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
     test_int(read_position_invoked, 4);
 
     ecs_fini(world);
+}
+
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+    Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(false);
+}
+
+void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+    Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(true);
 }
 
 static int add_id_invoked = 0;
@@ -2127,7 +2207,8 @@ static void FooSystem(ecs_iter_t *it) {
     foo_system_invoked ++;
 }
 
-void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
+static
+void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2136,7 +2217,14 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
     ECS_SYSTEM(world, FooSystem,   EcsOnUpdate, Position);
     ECS_SYSTEM(world, AddId,       EcsOnUpdate, !Position, Tag);
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -2147,6 +2235,14 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
     test_int(add_id_invoked, 1);
 
     ecs_fini(world);
+}
+
+void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
+    Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(false);
+}
+
+void Pipeline_multi_threaded_tasks_pipeline_change_w_only_singlethreaded() {
+    Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(true);
 }
 
 static void SetPosition(ecs_iter_t *it) {
@@ -2452,12 +2548,20 @@ static void NoReadonlyAddPosition(ecs_iter_t *it) {
     ecs_add(it->world, e, Position);
 }
 
-void Pipeline_multi_threaded_no_staging_w_add_after_read() {
+static
+void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    ecs_set_threads(world, 2);
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+        ecs_set_threads(world, 2);
+    }
 
     ecs_system(world, {
         .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
@@ -2484,6 +2588,14 @@ void Pipeline_multi_threaded_no_staging_w_add_after_read() {
     test_int(ecs_count(world, Position), 2);
 
     ecs_fini(world);
+}
+
+void Pipeline_multi_threaded_no_staging_w_add_after_read() {
+    Pipeline_multi_threaded_no_staging_w_add_after_read_internal(false);
+}
+
+void Pipeline_multi_threaded_tasks_no_staging_w_add_after_read() {
+    Pipeline_multi_threaded_no_staging_w_add_after_read_internal(true);
 }
 
 void Pipeline_1_startup_system() {
@@ -2905,3 +3017,76 @@ void Pipeline_custom_pipeline_w_self_system_term() {
 
     ecs_fini(world);
 }
+
+void Pipeline_switch_from_threads_to_tasks() {
+    ecs_world_t* world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter = {.terms = {{ ecs_id(Position) }}},
+        .callback = SysA
+        });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = NoReadonlyAddPosition,
+        .no_readonly = true
+        });
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 0);
+    test_int(no_staging_add_position_invoked, 1);
+    test_int(ecs_count(world, Position), 1);
+
+    ecs_set_task_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(no_staging_add_position_invoked, 2);
+    test_int(ecs_count(world, Position), 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_switch_from_tasks_to_threads() {
+    ecs_world_t* world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .query.filter = {.terms = {{ ecs_id(Position) }}},
+        .callback = SysA
+        });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .callback = NoReadonlyAddPosition,
+        .no_readonly = true
+        });
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 0);
+    test_int(no_staging_add_position_invoked, 1);
+    test_int(ecs_count(world, Position), 1);
+
+    ecs_set_task_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    test_int(sys_a_invoked, 1);
+    test_int(no_staging_add_position_invoked, 2);
+    test_int(ecs_count(world, Position), 2);
+
+    ecs_fini(world);
+}
+

@@ -673,6 +673,12 @@ bool ecs_progress(
         flecs_run_startup_systems(world);
     }
 
+    /* create any worker task threads request */
+    if (ecs_using_task_threads(world))
+    {
+        flecs_create_worker_threads(world);
+    }
+
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
     const EcsPipeline *p = ecs_get(world, world->pipeline, EcsPipeline);
@@ -681,6 +687,12 @@ bool ecs_progress(
     ecs_log_pop_3();
 
     ecs_frame_end(world);
+
+    if (ecs_using_task_threads(world))
+    {
+        /* task threads were temporary and may now be joined */
+        flecs_join_worker_threads(world);
+    }
 
     return !ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
 error:

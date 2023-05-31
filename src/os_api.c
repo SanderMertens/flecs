@@ -487,6 +487,21 @@ bool ecs_os_has_threading(void) {
         (ecs_os_api.thread_self_ != NULL);
 }
 
+bool ecs_os_has_task_support(void) {
+    return
+        (ecs_os_api.mutex_new_ != NULL) &&
+        (ecs_os_api.mutex_free_ != NULL) &&
+        (ecs_os_api.mutex_lock_ != NULL) &&
+        (ecs_os_api.mutex_unlock_ != NULL) &&
+        (ecs_os_api.cond_new_ != NULL) &&
+        (ecs_os_api.cond_free_ != NULL) &&
+        (ecs_os_api.cond_wait_ != NULL) &&
+        (ecs_os_api.cond_signal_ != NULL) &&
+        (ecs_os_api.cond_broadcast_ != NULL) &&
+        (ecs_os_api.task_new_ != NULL) &&
+        (ecs_os_api.task_join_ != NULL);
+}
+
 bool ecs_os_has_time(void) {
     return 
         (ecs_os_api.get_time_ != NULL) &&

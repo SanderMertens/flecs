@@ -306,6 +306,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_new_ = posix_thread_new;
     api.thread_join_ = posix_thread_join;
     api.thread_self_ = posix_thread_self;
+    api.task_new_ = posix_thread_new;
+    api.task_join_ = posix_thread_join;
     api.ainc_ = posix_ainc;
     api.adec_ = posix_adec;
     api.lainc_ = posix_lainc;

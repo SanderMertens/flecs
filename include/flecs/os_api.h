@@ -107,6 +107,16 @@ void* (*ecs_os_api_thread_join_t)(
 typedef
 ecs_os_thread_id_t (*ecs_os_api_thread_self_t)(void);
 
+/* Tasks */
+typedef
+ecs_os_thread_t (*ecs_os_api_task_new_t)(
+    ecs_os_thread_callback_t callback,
+    void *param);
+
+typedef
+void* (*ecs_os_api_task_join_t)(
+    ecs_os_thread_t thread);
+
 /* Atomic increment / decrement */
 typedef
 int32_t (*ecs_os_api_ainc_t)(
@@ -223,6 +233,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t thread_new_;
     ecs_os_api_thread_join_t thread_join_;
     ecs_os_api_thread_self_t thread_self_;
+
+    /* Tasks */
+    ecs_os_api_thread_new_t task_new_;
+    ecs_os_api_thread_join_t task_join_;
 
     /* Atomic incremenet / decrement */
     ecs_os_api_ainc_t ainc_;
@@ -406,6 +420,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_thread_join(thread) ecs_os_api.thread_join_(thread)
 #define ecs_os_thread_self() ecs_os_api.thread_self_()
 
+/* Tasks */
+#define ecs_os_task_new(callback, param) ecs_os_api.task_new_(callback, param)
+#define ecs_os_task_join(thread) ecs_os_api.task_join_(thread)
+
 /* Atomic increment / decrement */
 #define ecs_os_ainc(value) ecs_os_api.ainc_(value)
 #define ecs_os_adec(value) ecs_os_api.adec_(value)
@@ -509,6 +527,10 @@ bool ecs_os_has_heap(void);
 /** Are threading functions available? */
 FLECS_API
 bool ecs_os_has_threading(void);
+
+/** Are task functions available? */
+FLECS_API
+bool ecs_os_has_task_support(void);
 
 /** Are time functions available? */
 FLECS_API

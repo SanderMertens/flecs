@@ -651,6 +651,24 @@ By default systems are created as single threaded. Single threaded systems are a
 
 The way the scheduler ensures that the same entities are processed by the same threads is by slicing up the entities in a table into N slices, where N is the number of threads. For a table that has 1000 entities, the first thread will process entities 0..249, thread 2 250..499, thread 3 500..749 and thread 4 entities 750..999. For more details on this behavior, see `ecs_worker_iter`/`flecs::iterable::worker_iter`.
 
+### Threading with Async Tasks
+Systems in Flecs can also be multithreaded using an external asynchronous task system. Instead of creating regular worker threads using `set_threads`, use the `set_task_threads` function and provide the OS API callbacks to create and wait for task completion using your job system.
+This can be helpful when using Flecs within an application which already has a job queue system to handle multithreaded tasks.
+
+```c
+ecs_set_tasks_threads(world, 4); // Create 4 worker task threads for the duration of each ecs_progress update
+```
+```cpp
+world.set_task_threads(4);
+```
+
+For simplicity, these task callbacks use the same format as Flecs `ecs_os_api_t` thread APIs. In fact, you could provide your regular os thread api functions to create short-duration threads for multithreaded system processing.
+Create multithreaded systems using the `multi_threaded` flag as with `ecs_set_threads` above.
+
+When `ecs_progress` is called, your `ecs_os_api.task_new_` callback will be called once for every task thread needed to create task threads on demand. When `ecs_progress` is complete, your `ecs_os_api.task_join_` function will be called to clean up each task thread.
+By providing callback functions which create and remove tasks for your specific asynchronous task system, you can use Flecs with any kind of async task management scheme. 
+The only limitation is that your async task manager must be able to create and execute the number of simultaneous tasks specified in `ecs_set_task_threads` and must exist for the duration of `ecs_progress`.
+
 ## Timers
 When running a pipeline, systems are ran each time `progress()` is called. The `FLECS_TIMER` addon makes it possible to run systems at a specific time interval or rate.
 

@@ -247,6 +247,8 @@ void ecs_set_os_api_impl(void) {
     api.thread_new_ = win_thread_new;
     api.thread_join_ = win_thread_join;
     api.thread_self_ = win_thread_self;
+    api.task_new_ = win_thread_new;
+    api.task_join_ = win_thread_join;
     api.ainc_ = win_ainc;
     api.adec_ = win_adec;
     api.lainc_ = win_lainc;

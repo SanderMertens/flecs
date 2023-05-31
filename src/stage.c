@@ -647,6 +647,7 @@ void ecs_set_stage_count(
             /* Set thread_ctx to stage, as this stage might be used in a
              * multithreaded context */
             stage->thread_ctx = (ecs_world_t*)stage;
+            stage->thread = 0;
         }
     } else {
         /* Set to NULL to prevent double frees */
