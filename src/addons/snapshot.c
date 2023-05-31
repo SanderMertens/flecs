@@ -263,7 +263,14 @@ void restore_unfiltered(
 
         int32_t tcount = ecs_table_count(table);
         if (tcount) {
-            flecs_notify_on_set(world, table, 0, tcount, NULL, true);
+            int32_t j, storage_count = table->storage_count;
+            for (j = 0; j < storage_count; j ++) {
+                ecs_type_t type = {
+                    .array = &table->data.columns[j].id,
+                    .count = 1
+                };
+                flecs_notify_on_set(world, table, 0, tcount, &type, true);
+            }
         }
     }
 }
@@ -317,8 +324,15 @@ void restore_filtered(
 
         /* Run OnSet systems for merged entities */
         if (new_count) {
-            flecs_notify_on_set(
-                world, table, old_count, new_count, NULL, true);
+            int32_t j, storage_count = table->storage_count;
+            for (j = 0; j < storage_count; j ++) {
+                ecs_type_t type = {
+                    .array = &table->data.columns[j].id,
+                    .count = 1
+                };
+                flecs_notify_on_set(
+                    world, table, old_count, new_count, &type, true);
+            }
         }
 
         flecs_wfree_n(world, ecs_vec_t, table->storage_count,

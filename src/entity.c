@@ -894,7 +894,14 @@ const ecs_entity_t* flecs_bulk_new(
             } 
         };
 
-        flecs_notify_on_set(world, table, row, count, NULL, true);
+        int32_t j, storage_count = table->storage_count;
+        for (j = 0; j < storage_count; j ++) {
+            ecs_type_t set_type = {
+                .array = &table->data.columns[j].id,
+                .count = 1
+            };
+            flecs_notify_on_set(world, table, row, count, &set_type, true);
+        }
     }
 
     flecs_defer_end(world, &world->stages[0]);
@@ -1057,6 +1064,7 @@ void flecs_notify_on_set(
     ecs_type_t *ids,
     bool owned)
 {
+    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_data_t *data = &table->data;
 
     ecs_entity_t *entities = ecs_vec_get_t(
@@ -1064,13 +1072,6 @@ void flecs_notify_on_set(
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vec_count(&data->entities), 
         ECS_INTERNAL_ERROR, NULL);
-
-    ecs_type_t local_ids;
-    if (!ids) {
-        local_ids.array = table->storage_ids;
-        local_ids.count = table->storage_count;
-        ids = &local_ids;
-    }
 
     if (owned) {
         int i;
@@ -2678,7 +2679,14 @@ ecs_entity_t ecs_clone(
     if (copy_value) {
         flecs_table_move(world, dst, src, src_table,
             row, src_table, ECS_RECORD_TO_ROW(src_r->row), true);
-        flecs_notify_on_set(world, src_table, row, 1, NULL, true);
+        int32_t i, count = src_table->storage_count;
+        for (i = 0; i < count; i ++) {
+            ecs_type_t type = {
+                .array = &src_table->data.columns[i].id,
+                .count = 1
+            };
+            flecs_notify_on_set(world, src_table, row, 1, &type, true);
+        }
     }
 
 done:

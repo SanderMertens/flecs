@@ -155,7 +155,7 @@ typedef struct ecs_table__t {
     int32_t lock;                    /* Prevents modifications */
     int32_t traversable_count;       /* Number of observed entities in table */
     uint16_t generation;             /* Used for table cleanup */
-    uint16_t record_count;           /* Table record count including wildcards */
+    int16_t record_count;            /* Table record count including wildcards */
     
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_hashmap_t *name_index;       /* Cached pointer to name index */
@@ -172,6 +172,7 @@ typedef struct ecs_table__t {
 typedef struct ecs_column_t {
     ecs_vec_t data;
     ecs_type_info_t *ti;
+    ecs_id_t id;
 } ecs_column_t;
 
 /** Table storage */
@@ -188,14 +189,13 @@ struct ecs_data_t {
 struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_flags32_t flags;             /* Flags for testing table properties */
-    uint16_t storage_count;          /* Number of components (excluding tags) */
+    int16_t storage_count;           /* Number of components (excluding tags) */
     ecs_type_t type;                 /* Identifies table type in type_index */
 
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t data;                 /* Component storage */
     int32_t *dirty_state;            /* Keep track of changes in columns */
 
-    ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
     int32_t *storage_map;            /* Map type <-> data type
                                       *  - 0..count(T):        type -> data_type
                                       *  - count(T)..count(S): data_type -> type
