@@ -224,3 +224,32 @@ void Get_component_get_mut_equal_get() {
 
     ecs_fini(world);
 }
+
+void Get_component_get_tag() {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    test_assert(e != 0);
+
+    test_expect_abort();
+    ecs_get_id(world, e, Tag);
+
+    ecs_fini(world);
+}
+
+void Get_component_get_pair_tag() {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(e != 0);
+
+    test_expect_abort();
+    ecs_get_id(world, e, ecs_childof(parent));
+
+    ecs_fini(world);
+}

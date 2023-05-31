@@ -615,7 +615,9 @@
                 "get_both_from_2_add_in_progress",
                 "get_both_from_2_add_remove_in_progress",
                 "get_childof_component",
-                "get_mut_equal_get"
+                "get_mut_equal_get",
+                "get_tag",
+                "get_pair_tag"
             ]
         }, {
             "id": "Reference",
