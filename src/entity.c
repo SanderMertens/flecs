@@ -40,7 +40,7 @@ flecs_component_ptr_t flecs_get_component_w_index(
     ecs_column_t *column = &table->data.columns[column_index];
     return (flecs_component_ptr_t){
         .ti = column->ti,
-        .ptr = ecs_vec_get(&column->data, column->ti->size, row)
+        .ptr = ecs_vec_get(&column->data, column->size, row)
     };
 error:
     return (flecs_component_ptr_t){0};
@@ -879,7 +879,7 @@ const ecs_entity_t* flecs_bulk_new(
             int32_t index = tr->storage;
             ecs_column_t *column = &table->data.columns[index];
             ecs_type_info_t *ti = column->ti;
-            int32_t size = ti->size;
+            int32_t size = column->size;
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
             void *ptr = ecs_vec_get(&column->data, size, row);
 
@@ -1033,8 +1033,6 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook)
 {
-    ecs_assert(ti->size != 0, ECS_INVALID_PARAMETER, NULL);
-
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
     
@@ -1089,7 +1087,7 @@ void flecs_notify_on_set(
             ecs_iter_action_t on_set = ti->hooks.on_set;
             if (on_set) {
                 ecs_vec_t *c = &column->data;
-                void *ptr = ecs_vec_get(c, ti->size, row);
+                void *ptr = ecs_vec_get(c, column->size, row);
                 flecs_invoke_hook(world, table, count, row, entities, ptr, id, 
                     ti, EcsOnSet, on_set);
             }
