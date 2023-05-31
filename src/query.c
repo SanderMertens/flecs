@@ -1054,10 +1054,10 @@ void flecs_query_sort_table(
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
-        const ecs_type_info_t *ti = table->type_info[column_index];
-        ecs_vec_t *column = &data->columns[column_index];
+        ecs_column_t *column = &data->columns[column_index];
+        ecs_type_info_t *ti = column->ti;
         size = ti->size;
-        ptr = ecs_vec_first(column);
+        ptr = ecs_vec_first(&column->data);
     }
 
     if (sort) {
@@ -1140,7 +1140,7 @@ void flecs_query_build_sorted_table_range(
             ecs_assert(column != 0, ECS_INTERNAL_ERROR, NULL);
             if (column >= 0) {
                 column = table->storage_map[column - 1];
-                ecs_vec_t *vec = &data->columns[column];
+                ecs_vec_t *vec = &data->columns[column].data;
                 helper[to_sort].ptr = ecs_vec_first(vec);
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = false;
@@ -2441,7 +2441,7 @@ void flecs_query_populate_trivial(
                     continue;
                 }
 
-                it->ptrs[i] = ecs_vec_get(&data->columns[column], 
+                it->ptrs[i] = ecs_vec_get(&data->columns[column].data,
                     it->sizes[i], 0);
             }
         }

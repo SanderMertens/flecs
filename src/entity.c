@@ -37,11 +37,10 @@ flecs_component_ptr_t flecs_get_component_w_index(
     int32_t row)
 {
     ecs_check(column_index < table->storage_count, ECS_NOT_A_COMPONENT, NULL);
-    const ecs_type_info_t *ti = table->type_info[column_index];
-    ecs_vec_t *column = &table->data.columns[column_index];
+    ecs_column_t *column = &table->data.columns[column_index];
     return (flecs_component_ptr_t){
-        .ti = ti,
-        .ptr = ecs_vec_get(column, ti->size, row)
+        .ti = column->ti,
+        .ptr = ecs_vec_get(&column->data, column->ti->size, row)
     };
 error:
     return (flecs_component_ptr_t){0};
@@ -326,7 +325,7 @@ void flecs_instantiate_children(
 
         int32_t storage_index = ecs_table_type_to_storage_index(child_table, i);
         if (storage_index != -1) {
-            ecs_vec_t *column = &child_data->columns[storage_index];
+            ecs_vec_t *column = &child_data->columns[storage_index].data;
             component_data[pos] = ecs_vec_first(column);
         } else {
             component_data[pos] = NULL;
@@ -878,11 +877,11 @@ const ecs_entity_t* flecs_bulk_new(
                 "ids cannot be wildcards");
 
             int32_t index = tr->storage;
-            ecs_type_info_t *ti = table->type_info[index];
-            ecs_vec_t *column = &table->data.columns[index];
+            ecs_column_t *column = &table->data.columns[index];
+            ecs_type_info_t *ti = column->ti;
             int32_t size = ti->size;
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-            void *ptr = ecs_vec_get(column, size, row);
+            void *ptr = ecs_vec_get(&column->data, size, row);
 
             ecs_copy_t copy;
             ecs_move_t move;
@@ -1083,11 +1082,12 @@ void flecs_notify_on_set(
             ecs_assert(tr->storage != -1, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
 
-            int32_t column = tr->storage;
-            const ecs_type_info_t *ti = table->type_info[column];
+            int32_t index = tr->storage;
+            ecs_column_t *column = &table->data.columns[index];
+            const ecs_type_info_t *ti = column->ti;
             ecs_iter_action_t on_set = ti->hooks.on_set;
             if (on_set) {
-                ecs_vec_t *c = &table->data.columns[column];
+                ecs_vec_t *c = &column->data;
                 void *ptr = ecs_vec_get(c, ti->size, row);
                 flecs_invoke_hook(world, table, count, row, entities, ptr, id, 
                     ti, EcsOnSet, on_set);

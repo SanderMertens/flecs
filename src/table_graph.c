@@ -520,7 +520,6 @@ void flecs_init_table(
     ecs_table_t *table,
     ecs_table_t *prev)
 {
-    table->type_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->_->lock = 0;

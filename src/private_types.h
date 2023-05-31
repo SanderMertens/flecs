@@ -169,11 +169,16 @@ typedef struct ecs_table__t {
     int16_t ft_offset;
 } ecs_table__t;
 
-/** Stage-specific component data */
+typedef struct ecs_column_t {
+    ecs_vec_t data;
+    ecs_type_info_t *ti;
+} ecs_column_t;
+
+/** Table storage */
 struct ecs_data_t {
     ecs_vec_t entities;              /* Entity identifiers */
     ecs_vec_t records;               /* Ptrs to records in main entity index */
-    ecs_vec_t *columns;               /* Component columns */
+    ecs_column_t *columns;           /* Component vectors */
 };
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -188,7 +193,6 @@ struct ecs_table_t {
 
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t data;                 /* Component storage */
-    ecs_type_info_t **type_info;     /* Cached type info */
     int32_t *dirty_state;            /* Keep track of changes in columns */
 
     ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */

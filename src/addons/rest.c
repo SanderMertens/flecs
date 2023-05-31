@@ -840,12 +840,11 @@ void flecs_rest_reply_table_append_memory(
     allocated += table->data.records.size * ECS_SIZEOF(ecs_record_t*);
 
     int32_t i, storage_count = table->storage_count;
-    const ecs_type_info_t **ti = table->type_info;
-    ecs_vec_t *storages = table->data.columns;
+    ecs_column_t *columns = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {
-        used += storages[i].count * ti[i]->size;
-        allocated += storages[i].size * ti[i]->size;
+        used += columns[i].data.count * columns[i].ti->size;
+        allocated += columns[i].data.size * columns[i].ti->size;
     }
 
     ecs_strbuf_list_push(reply, "{", ",");

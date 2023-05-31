@@ -1368,7 +1368,7 @@ bool flecs_rule_pred_match(
         l = op_ctx->range;
     }
 
-    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].array;
+    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].data.array;
     int32_t count = l.offset + l.count, offset = -1;
     for (; op_ctx->index < count; op_ctx->index ++) {
         const char *name = names[op_ctx->index].value;

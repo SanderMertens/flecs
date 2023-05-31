@@ -354,7 +354,7 @@ int32_t flecs_get_flattened_target(
     if (table->flags & EcsTableHasTarget) {
         int32_t col = table->storage_map[table->_->ft_offset];
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
-        EcsTarget *next = table->data.columns[col].array;
+        EcsTarget *next = table->data.columns[col].data.array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
         return flecs_get_flattened_target(
             world, next, rel, id, src_out, tr_out);
@@ -562,7 +562,7 @@ int flecs_entity_filter_next(
             bool first_for_table = it->prev != table;
             ecs_iter_t *iter = it->it;
             ecs_world_t *world = iter->real_world;
-            EcsTarget *ft = table->data.columns[flat_tree_column].array;
+            EcsTarget *ft = table->data.columns[flat_tree_column].data.array;
             int32_t ft_offset;
             int32_t ft_count;
 

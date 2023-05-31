@@ -1863,7 +1863,7 @@ int flecs_json_serialize_iter_result_columns(
             continue;
         }
 
-        ecs_entity_t typeid = table->type_info[storage_column]->component;
+        ecs_entity_t typeid = table->data.columns[storage_column].ti->component;
         if (!typeid) {
             ecs_strbuf_appendch(buf, '0');
             continue;
@@ -1882,7 +1882,7 @@ int flecs_json_serialize_iter_result_columns(
             continue;
         }
 
-        void *ptr = ecs_vec_first(&table->data.columns[storage_column]);
+        void *ptr = ecs_vec_first(&table->data.columns[storage_column].data);
         if (array_to_json_buf_w_type_data(world, ptr, it->count, buf, comp, ser)) {
             return -1;
         }

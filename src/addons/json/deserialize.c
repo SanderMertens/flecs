@@ -653,7 +653,7 @@ static
 const char* flecs_json_parse_column(
     ecs_world_t *world,
     ecs_table_t *table,
-    int32_t column,
+    int32_t index,
     const char *json,
     char *token,
     ecs_vec_t *records,
@@ -665,26 +665,26 @@ const char* flecs_json_parse_column(
         goto error;
     }
 
-    if (column >= table->type.count) {
+    if (index >= table->type.count) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "more value arrays than component columns in table");
         goto error;
     }
 
-    int32_t data_column = table->storage_map[column];
+    int32_t data_column = table->storage_map[index];
     if (data_column == -1) {
         char *table_str = ecs_table_str(world, table);
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "values provided for tag at column %d of table [%s]",   
-                column, table_str);
+                index, table_str);
 
         ecs_os_free(table_str);
         goto error;
     }
 
     ecs_json_token_t token_kind = 0;
-    ecs_vec_t *data = &table->data.columns[data_column];
-    const ecs_type_info_t *ti = table->type_info[data_column];
+    ecs_column_t *column = &table->data.columns[data_column];
+    ecs_type_info_t *ti = column->ti;
     ecs_size_t size = ti->size;
     ecs_entity_t type = ti->component;
     ecs_record_t **record_array = ecs_vec_first_t(records, ecs_record_t*);
@@ -697,7 +697,7 @@ const char* flecs_json_parse_column(
             &table->data.records, ecs_record_t*, row)[0] == r,
                 ECS_INTERNAL_ERROR, NULL);
 
-        void *ptr = ecs_vec_get(data, size, row);
+        void *ptr = ecs_vec_get(&column->data, size, row);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         json = ecs_ptr_from_json(world, type, ptr, json, desc);

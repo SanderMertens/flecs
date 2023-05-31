@@ -197,8 +197,8 @@ bool flecs_iter_populate_term_data(
 
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
-            column = tr->column;
-            ecs_vec_t *s = &table->data.columns[column];
+            column = tr->storage;
+            ecs_vec_t *s = &table->data.columns[column].data;
             data = ecs_vec_first(s);
             /* Fallthrough to has_data */
         }
@@ -223,7 +223,7 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
-        ecs_vec_t *s = &table->data.columns[storage_column];
+        ecs_vec_t *s = &table->data.columns[storage_column].data;
         data = ecs_vec_first(s);
 
         /* Fallthrough to has_data */
