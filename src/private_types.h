@@ -102,13 +102,6 @@ typedef struct ecs_table_event_t {
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
 
-/** Stage-specific component data */
-struct ecs_data_t {
-    ecs_vec_t entities;              /* Entity identifiers */
-    ecs_vec_t records;               /* Ptrs to records in main entity index */
-    ecs_vec_t *columns;              /* Component columns */
-};
-
 /** Cache of added/removed components for non-trivial edges between tables */
 #define ECS_TABLE_DIFF_INIT { .added = {0}}
 
@@ -160,7 +153,6 @@ typedef struct ecs_graph_node_t {
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
     int32_t lock;                    /* Prevents modifications */
-    int32_t refcount;                /* Increased when used as storage table */
     int32_t traversable_count;       /* Number of observed entities in table */
     uint16_t generation;             /* Used for table cleanup */
     uint16_t record_count;           /* Table record count including wildcards */
@@ -177,27 +169,33 @@ typedef struct ecs_table__t {
     int16_t ft_offset;
 } ecs_table__t;
 
+/** Stage-specific component data */
+struct ecs_data_t {
+    ecs_vec_t entities;              /* Entity identifiers */
+    ecs_vec_t records;               /* Ptrs to records in main entity index */
+    ecs_vec_t *columns;               /* Component columns */
+};
+
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
-    uint64_t id;                       /* Table id in sparse set */
-    ecs_flags32_t flags;               /* Flags for testing table properties */
-    uint16_t storage_count;            /* Number of components (excluding tags) */
-    ecs_type_t type;                   /* Identifies table type in type_index */
+    uint64_t id;                     /* Table id in sparse set */
+    ecs_flags32_t flags;             /* Flags for testing table properties */
+    uint16_t storage_count;          /* Number of components (excluding tags) */
+    ecs_type_t type;                 /* Identifies table type in type_index */
 
-    ecs_graph_node_t node;             /* Graph node */
-    ecs_data_t data;                   /* Component storage */
-    const ecs_type_info_t **type_info; /* Cached type info */
-    int32_t *dirty_state;              /* Keep track of changes in columns */
+    ecs_graph_node_t node;           /* Graph node */
+    ecs_data_t data;                 /* Component storage */
+    ecs_type_info_t **type_info;     /* Cached type info */
+    int32_t *dirty_state;            /* Keep track of changes in columns */
 
-    ecs_table_t *storage_table;        /* Table without tags */
-    ecs_id_t *storage_ids;             /* Component ids (prevent indirection) */
-    int32_t *storage_map;              /* Map type <-> data type
-                                        *  - 0..count(T):        type -> data_type
-                                        *  - count(T)..count(S): data_type -> type
-                                        */
+    ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
+    int32_t *storage_map;            /* Map type <-> data type
+                                      *  - 0..count(T):        type -> data_type
+                                      *  - count(T)..count(S): data_type -> type
+                                      */
 
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };

@@ -524,7 +524,6 @@ void flecs_init_table(
     table->flags = 0;
     table->dirty_state = NULL;
     table->_->lock = 0;
-    table->_->refcount = 1;
     table->_->generation = 0;
 
     flecs_table_init_node(&table->node);

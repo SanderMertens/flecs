@@ -50,13 +50,7 @@ void flecs_table_check_sanity(ecs_table_t *table) {
     ecs_assert((sw_count + sw_offset) <= type_count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert((bs_count + bs_offset) <= type_count, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_t *storage_table = table->storage_table;
-    if (storage_table) {
-        ecs_assert(table->storage_count == storage_table->type.count,
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(table->storage_ids == storage_table->type.array, 
-            ECS_INTERNAL_ERROR, NULL);
-
+    if (table->storage_count) {
         int32_t storage_count = table->storage_count;
         ecs_assert(type_count >= storage_count, ECS_INTERNAL_ERROR, NULL);
 
@@ -84,8 +78,8 @@ void flecs_table_check_sanity(ecs_table_t *table) {
                 ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        ecs_assert(table->storage_count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(table->storage_ids == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table->storage_map == NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     if (sw_count) {
@@ -119,63 +113,6 @@ void flecs_table_check_sanity(ecs_table_t *table) {
 #define flecs_table_check_sanity(table)
 #endif
 
-/* Initialize the storage map for a table. A storage map is an integer array
- * that maps type indices to column indices and vice versa. */
-static
-void flecs_table_init_storage_map(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!table->storage_table) {
-        return;
-    }
-
-    ecs_type_t type = table->type;
-    ecs_id_t *ids = type.array;
-    int32_t t, ids_count = type.count;
-    ecs_id_t *storage_ids = table->storage_ids;
-    int32_t s, storage_ids_count = table->storage_count;
-
-    if (!ids_count) {
-        table->storage_map = NULL;
-        return;
-    }
-
-    table->storage_map = flecs_walloc_n(world, int32_t, 
-        ids_count + storage_ids_count);
-
-    int32_t *t2s = table->storage_map;
-    int32_t *s2t = &table->storage_map[ids_count];
-
-    for (s = 0, t = 0; (t < ids_count) && (s < storage_ids_count); ) {
-        ecs_id_t id = ids[t];
-        ecs_id_t storage_id = storage_ids[s];
-
-        if (id == storage_id) {
-            t2s[t] = s;
-            s2t[s] = t;
-        } else {
-            t2s[t] = -1;
-        }
-
-        /* Ids can never get ahead of storage id, as ids are a superset of the
-         * storage ids */
-        ecs_assert(id <= storage_id, ECS_INTERNAL_ERROR, NULL);
-
-        t += (id <= storage_id);
-        s += (id == storage_id);
-    }
-
-    /* Storage ids is always a subset of ids, so all should be iterated */
-    ecs_assert(s == storage_ids_count, ECS_INTERNAL_ERROR, NULL);
-
-    /* Initialize remainder of type -> storage_type map */
-    for (; (t < ids_count); t ++) {
-        t2s[t] = -1;
-    }
-}
-
 /* Set flags for type hooks so table operations can quickly check whether a
  * fast or complex operation that invokes hooks is required. */
 static
@@ -204,99 +141,6 @@ ecs_flags32_t flecs_type_info_flags(
     }  
 
     return flags;  
-}
-
-/* Initialize array with cached pointers to type info. The type info array has
- * an element for each table column. Multiple tables may share the same type
- * info array, as long as they have the same components. */
-static
-void flecs_table_init_type_info(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->storage_table == table, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_table_record_t *records = table->_->records;
-    int32_t i, count = table->type.count;
-    table->type_info = flecs_walloc_n(world, ecs_type_info_t*, count);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        
-        /* All ids in the storage table must be components with type info */
-        const ecs_type_info_t *ti = idr->type_info;
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->flags |= flecs_type_info_flags(ti);
-        table->type_info[i] = ti;
-    }
-}
-
-/* Find or create the storage table for a table. A storage table only contains
- * components, no tags. A table maintains a reference to its storage table as
- * this is used for sharing metadata such as the type info array. A storage 
- * table is found by taking a table type and removing all non-component ids. 
- * For example, for table
- *   [Position, Velocity, Npc]
- * the storage table would be
- *   [Position, Velocity]
- * assuming that Npc is a tag.
- */
-static
-void flecs_table_init_storage_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    if (table->storage_table) {
-        return;
-    }
-
-    ecs_type_t type = table->type;
-    int32_t i, count = type.count;
-    ecs_id_t *ids = type.array;
-    ecs_table_record_t *records = table->_->records;
-
-    ecs_id_t array[FLECS_ID_DESC_MAX];
-    ecs_type_t storage_ids = { .array = array };
-    if (count > FLECS_ID_DESC_MAX) {
-        storage_ids.array = flecs_walloc_n(world, ecs_id_t, count);
-    }
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_id_t id = ids[i];
-
-        if (idr->type_info != NULL) {
-            storage_ids.array[storage_ids.count ++] = id;
-        }
-    }
-
-    if (storage_ids.count && storage_ids.count != count) {
-        ecs_table_t *storage_table = flecs_table_find_or_create(world, 
-            &storage_ids);
-        table->storage_table = storage_table;
-        table->storage_count = flecs_ito(uint16_t, storage_ids.count);
-        table->storage_ids = storage_table->type.array;
-        table->type_info = storage_table->type_info;
-        table->flags |= storage_table->flags;
-        storage_table->_->refcount ++;
-    } else if (storage_ids.count) {
-        table->storage_table = table;
-        table->storage_count = flecs_ito(uint16_t, count);
-        table->storage_ids = type.array;
-        flecs_table_init_type_info(world, table);
-    }
-
-    if (storage_ids.array != array) {
-        flecs_wfree_n(world, ecs_id_t, count, storage_ids.array);
-    }
-
-    if (!table->storage_map) {
-        flecs_table_init_storage_map(world, table);
-    }
 }
 
 /* Initialize table column vectors */
@@ -448,6 +292,49 @@ void flecs_table_append_to_records(
     }
 
     ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+}
+
+static
+void flecs_table_init_storage(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t storage_count)
+{
+    if (!storage_count) {
+        return;
+    }
+
+    int32_t i, cur = 0, ids_count = table->type.count;
+    table->type_info = flecs_walloc_n(world, ecs_type_info_t*, storage_count);
+    table->storage_ids = flecs_walloc_n(world, ecs_id_t, storage_count);
+    table->storage_map = flecs_walloc_n(world, int32_t, 
+        ids_count + storage_count);
+    table->storage_count = storage_count;
+
+    ecs_id_t *ids = table->type.array;
+    ecs_table_record_t *records = table->_->records;
+    int32_t *t2s = table->storage_map;
+    int32_t *s2t = &table->storage_map[ids_count];
+
+    for (i = 0; i < ids_count; i ++) {
+        ecs_table_record_t *tr = &records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        const ecs_type_info_t *ti = idr->type_info;
+        if (!ti) {
+            t2s[i] = -1;
+            tr->storage = -1;
+            continue;
+        }
+
+        t2s[i] = cur;
+        s2t[cur] = i;
+        tr->storage = cur;
+
+        table->type_info[cur] = (ecs_type_info_t*)ti;
+        table->storage_ids[cur] = ids[i];
+        table->flags |= flecs_type_info_flags(ti);
+        cur ++;
+    }
 }
 
 /* Main table initialization function */
@@ -664,6 +551,7 @@ void flecs_table_init(
         dst_record_count, ecs_vec_first_t(records, ecs_table_record_t));
     table->_->record_count = flecs_ito(uint16_t, dst_record_count);
     table->_->records = dst_tr;
+    int32_t storage_count = 0;
 
     /* Register & patch up records */
     for (i = 0; i < dst_record_count; i ++) {
@@ -691,9 +579,13 @@ void flecs_table_init(
         if (idr->flags & EcsIdAlwaysOverride) {
             table->flags |= EcsTableHasOverrides;
         }
-    }
 
-    flecs_table_init_storage_table(world, table);
+        if ((i < table->type.count) && (idr->type_info != NULL)) {
+            storage_count ++;
+        }
+    }
+    
+    flecs_table_init_storage(world, table, storage_count);
     flecs_table_init_data(world, table);
 
     if (table->flags & EcsTableHasName) {
@@ -1129,8 +1021,6 @@ void flecs_table_free(
         ECS_INTERNAL_ERROR, NULL);
     (void)world;
 
-    ecs_assert(table->_->refcount == 0, ECS_INTERNAL_ERROR, NULL);
-
     if (!is_root && !(world->flags & EcsWorldQuit)) {
         if (table->flags & EcsTableHasOnTableDelete) {
             flecs_emit(world, world, &(ecs_event_desc_t) {
@@ -1173,14 +1063,11 @@ void flecs_table_free(
         table->storage_map);
     flecs_table_records_unregister(world, table);
 
-    ecs_table_t *storage_table = table->storage_table;
-    if (storage_table == table) {
-        if (table->type_info) {
-            flecs_wfree_n(world, ecs_type_info_t*, table->storage_count, 
-                ECS_CONST_CAST(ecs_type_info_t**, table->type_info));
-        }
-    } else if (storage_table) {
-        flecs_table_release(world, storage_table);
+    if (table->storage_count) {
+        flecs_wfree_n(world, ecs_type_info_t*, table->storage_count, 
+            table->type_info);
+        flecs_wfree_n(world, ecs_id_t, table->storage_count, 
+            table->storage_ids);
     }
 
     /* Update counters */
@@ -1204,38 +1091,6 @@ void flecs_table_free(
     }
 
     ecs_log_pop_2();
-}
-
-/* Increase refcount of table. A table will not be freed until its refcount
- * reaches zero. Refcounting is primarily used to prevent storage tables from
- * being freed while they are still being referred to. 
- * Tables do not form cyclical dependencies. */
-void flecs_table_claim(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->_->refcount > 0, ECS_INTERNAL_ERROR, NULL);
-    table->_->refcount ++;
-    (void)world;
-}
-
-/* Decrease refcount of table */
-bool flecs_table_release(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->_->refcount > 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (--table->_->refcount == 0) {
-        flecs_table_free(world, table);
-        return true;
-    }
-    
-    return false;
 }
 
 /* Free table type. Do this separately from freeing the table as types can be
@@ -1297,9 +1152,17 @@ void flecs_table_mark_dirty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (table->dirty_state) {
-        int32_t index = ecs_search(world, table->storage_table, component, 0);
-        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-        table->dirty_state[index + 1] ++;
+        ecs_id_record_t *idr = flecs_id_record_get(world, component);
+        if (!idr) {
+            return;
+        }
+
+        const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+        if (!tr || tr->storage == -1) {
+            return;
+        }
+
+        table->dirty_state[tr->storage + 1] ++;
     }
 }
 
@@ -2596,14 +2459,9 @@ ecs_vec_t* ecs_table_column_for_id(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_table_t *storage_table = table->storage_table;
-    if (!storage_table) {
-        return NULL;
-    }
-
-    ecs_table_record_t *tr = flecs_table_record_get(world, storage_table, id);
-    if (tr) {
-        return &table->data.columns[tr->column];
+    ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
+    if (tr && tr->storage != -1) {
+        return &table->data.columns[tr->storage];
     }
 
     return NULL;
@@ -2624,12 +2482,6 @@ const ecs_type_t* ecs_table_get_type(
     } else {
         return NULL;
     }
-}
-
-ecs_table_t* ecs_table_get_storage_table(
-    const ecs_table_t *table)
-{
-    return table->storage_table;
 }
 
 int32_t ecs_table_type_to_storage_index(

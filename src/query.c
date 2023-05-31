@@ -1293,6 +1293,7 @@ void flecs_query_sort_tables(
 
     bool tables_sorted = false;
 
+    ecs_id_record_t *idr = flecs_id_record_get(world, order_by_component);
     ecs_table_cache_iter_t it;
     ecs_query_table_t *qt;
     flecs_table_cache_iter(&query->cache, &it);
@@ -1314,10 +1315,10 @@ void flecs_query_sort_tables(
             if (dirty) {
                 column = -1;
 
-                ecs_table_t *storage_table = table->storage_table;
-                if (storage_table) {
-                    column = ecs_search(world, storage_table, 
-                        order_by_component, 0);
+                const ecs_table_record_t *tr = flecs_id_record_get_table(
+                    idr, table);
+                if (tr) {
+                    column = tr->storage;
                 }
 
                 if (column == -1) {

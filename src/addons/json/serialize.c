@@ -1839,7 +1839,7 @@ int flecs_json_serialize_iter_result_columns(
     ecs_strbuf_t *buf)
 {
     ecs_table_t *table = it->table;
-    if (!table || !table->storage_table) {
+    if (!table || !table->storage_count) {
         return 0;
     }
 

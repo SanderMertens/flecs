@@ -821,6 +821,7 @@ ecs_entity_t ecs_observer_init(
     if (!entity) {
         entity = ecs_new(world, 0);
     }
+
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
         ecs_check(desc->callback != NULL || desc->run != NULL, 

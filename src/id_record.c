@@ -481,27 +481,8 @@ void flecs_id_record_release_tables(
     if (flecs_table_cache_empty_iter(&idr->cache, &it)) {
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            /* Tables can hold claims on each other, so releasing a table can
-             * cause the next element to get invalidated. Claim the next table
-             * so that we can safely iterate. */
-            ecs_table_t *next = NULL;
-            if (it.next) {
-                next = it.next->table;
-                flecs_table_claim(world, next);
-            }
-
             /* Release current table */
-            flecs_table_release(world, tr->hdr.table);
-
-            /* Check if the only thing keeping the next table alive is our
-             * claim. If so, move to the next record before releasing */
-            if (next) {
-                if (next->_->refcount == 1) {
-                    it.next = it.next->next;
-                }
-
-                flecs_table_release(world, next);
-            }
+            flecs_table_free(world, tr->hdr.table);
         }
     }
 }

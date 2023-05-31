@@ -4958,15 +4958,6 @@ int32_t ecs_table_get_depth(
     const ecs_table_t *table,
     ecs_entity_t rel);
 
-/** Get storage type for table.
- *
- * @param table The table.
- * @return The storage type of the table (components only).
- */
-FLECS_API
-ecs_table_t* ecs_table_get_storage_table(
-    const ecs_table_t *table);
-
 /** Convert index in table type to index in table storage type. */
 FLECS_API
 int32_t ecs_table_type_to_storage_index(

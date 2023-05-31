@@ -574,7 +574,7 @@ void flecs_clean_tables(
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables, 
             ecs_table_t, i);
-        flecs_table_release(world, t);
+        flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
@@ -640,7 +640,7 @@ static
 void flecs_fini_store(ecs_world_t *world) {
     flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
-    flecs_table_release(world, &world->store.root);
+    flecs_table_free(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
 
@@ -1853,7 +1853,7 @@ void flecs_delete_table(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t); 
-    flecs_table_release(world, table);
+    flecs_table_free(world, table);
 }
 
 static
@@ -2082,10 +2082,6 @@ int32_t ecs_delete_empty_tables(
 
             ecs_table_t *table = tr->hdr.table;
             ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, NULL);
-            if (table->_->refcount > 1) {
-                /* Don't delete claimed tables */
-                continue;
-            }
 
             if (table->type.count < min_id_count) {
                 continue;
@@ -2093,9 +2089,8 @@ int32_t ecs_delete_empty_tables(
 
             uint16_t gen = ++ table->_->generation;
             if (delete_generation && (gen > delete_generation)) {
-                if (flecs_table_release(world, table)) {
-                    delete_count ++;
-                }
+                flecs_table_free(world, table);
+                delete_count ++;
             } else if (clear_generation && (gen > clear_generation)) {
                 if (flecs_table_shrink(world, table)) {
                     clear_count ++;
