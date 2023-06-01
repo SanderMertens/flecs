@@ -742,6 +742,48 @@ void DeserExprOperators_add_var_to() {
     ecs_fini(world);
 }
 
+void DeserExprOperators_var_member() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(Position));
+    *(Position*)var->value.ptr = (Position){10, 20};
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    {
+        const char *ptr = ecs_parse_expr(world, "$foo.x", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        const char *ptr = ecs_parse_expr(world, "$foo.y", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_vars_fini(&vars);
+    ecs_fini(world);
+}
+
 void DeserExprOperators_bool_cond_and_bool() {
     ecs_world_t *world = ecs_init();
 
@@ -1922,6 +1964,58 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr() {
     test_assert(result != NULL);
     test_str(result, "Hello 30World");
     ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "Hello {$foo + 5}World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello 15World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(Position));
+    test_assert(v != NULL);
+    *(Position*)v->value.ptr = (Position){10, 20};
+
+    char *result = ecs_interpolate_string(world, "Hello {$foo.x + $foo.y}World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello 30World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }

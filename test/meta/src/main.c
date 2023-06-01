@@ -835,6 +835,7 @@ void DeserExprOperators_struct_result_add_3_int_literals(void);
 void DeserExprOperators_struct_result_lparen_int_rparen(void);
 void DeserExprOperators_add_to_var(void);
 void DeserExprOperators_add_var_to(void);
+void DeserExprOperators_var_member(void);
 void DeserExprOperators_bool_cond_and_bool(void);
 void DeserExprOperators_bool_cond_or_bool(void);
 void DeserExprOperators_int_cond_and_int(void);
@@ -888,6 +889,8 @@ void DeserExprOperators_interpolate_string_w_var_special_chars(void);
 void DeserExprOperators_interpolate_string_w_var_before_after_text(void);
 void DeserExprOperators_interpolate_string_w_curly_brackets_var(void);
 void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void);
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var(void);
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var(void);
 void DeserExprOperators_interpolate_string_w_escape_var_operator(void);
 void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void);
 void DeserExprOperators_iter_to_vars_no_data(void);
@@ -4137,6 +4140,10 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_add_var_to
     },
     {
+        "var_member",
+        DeserExprOperators_var_member
+    },
+    {
         "bool_cond_and_bool",
         DeserExprOperators_bool_cond_and_bool
     },
@@ -4347,6 +4354,14 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "interpolate_string_w_curly_brackets_expr",
         DeserExprOperators_interpolate_string_w_curly_brackets_expr
+    },
+    {
+        "interpolate_string_w_curly_brackets_expr_w_var",
+        DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var
+    },
+    {
+        "interpolate_string_w_curly_brackets_expr_w_composite_var",
+        DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var
     },
     {
         "interpolate_string_w_escape_var_operator",
@@ -4577,7 +4592,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        110,
+        113,
         DeserExprOperators_testcases
     },
     {
