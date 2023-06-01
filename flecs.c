@@ -19579,15 +19579,18 @@ typedef struct EcsAlert {
     ecs_map_t instances; /* Active instances for metric */
 } EcsAlert;
 
+static
 ECS_CTOR(EcsAlert, ptr, {
     ecs_map_init(&ptr->instances, NULL);
 })
 
+static
 ECS_DTOR(EcsAlert, ptr, {
     ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
 })
 
+static
 ECS_MOVE(EcsAlert, dst, src, {
     ecs_os_free(dst->message);
     dst->message = src->message;
@@ -19639,6 +19642,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_entity_t ai = ecs_new_w_pair(world, EcsChildOf, a);
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsAlertSource, { .entity = e });
+                    ecs_doc_set_color(world, ai, "#ff0000");
                     ecs_defer_suspend(it->world);
                     flecs_alerts_increase_count(world, e, 1);
                     ecs_defer_resume(it->world);
@@ -19652,7 +19656,8 @@ void MonitorAlerts(ecs_iter_t *it) {
 static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlertSource *alert_source = ecs_field(it, EcsAlertSource, 1);
+    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
+    EcsAlertSource *alert_source = ecs_field(it, EcsAlertSource, 2);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
@@ -19671,6 +19676,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_rule_t *rule = poly->poly;
     ecs_poly_assert(rule, ecs_rule_t);
 
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -19678,9 +19686,20 @@ void MonitorAlertInstances(ecs_iter_t *it) {
 
         /* Check if alert instance still matches rule */
         ecs_iter_t rit = ecs_rule_iter(world, rule);
+        rit.flags |= EcsIterNoData;
+        rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, s);
-        if (ecs_iter_is_true(&rit)) {
+
+        if (ecs_rule_next(&rit)) {
+            /* Check if message needs to be generated */
+            if (alert->message && !alert_instance[i].message) {
+                ecs_iter_to_vars(&rit, &vars, 0);
+                alert_instance[i].message = ecs_interpolate_string(
+                    world, alert->message, &vars);
+            }
+            
             /* Alert instance still matches rule, keep it alive */
+            ecs_iter_fini(&rit);
             continue;
         }
 
@@ -19689,6 +19708,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, e);
     }
+
+    ecs_vars_fini(&vars);
 }
 
 ecs_entity_t ecs_alert_init(
@@ -19743,6 +19764,27 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsAlertSource);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
 
+    ecs_struct(world, {
+        .entity = ecs_id(EcsAlertsActive),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsAlertInstance),
+        .members = {
+            { .name = "message", .type = ecs_id(ecs_string_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsAlertSource),
+        .members = {
+            { .name = "entity", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
     ecs_set_hooks(world, EcsAlert, {
         .ctor = ecs_ctor(EcsAlert),
         .dtor = ecs_dtor(EcsAlert),
@@ -19754,7 +19796,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     });
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
-    ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, AlertSource);
+    ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, AlertInstance, AlertSource);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),

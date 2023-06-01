@@ -1452,6 +1452,9 @@ void Metrics_id_target_count(void);
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
 void Alerts_two_active_alerts(void);
+void Alerts_alert_message(void);
+void Alerts_alert_message_w_this_var(void);
+void Alerts_alert_message_w_var(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7028,6 +7031,18 @@ bake_test_case Alerts_testcases[] = {
     {
         "two_active_alerts",
         Alerts_two_active_alerts
+    },
+    {
+        "alert_message",
+        Alerts_alert_message
+    },
+    {
+        "alert_message_w_this_var",
+        Alerts_alert_message_w_this_var
+    },
+    {
+        "alert_message_w_var",
+        Alerts_alert_message_w_var
     }
 };
 
@@ -7267,7 +7282,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        2,
+        5,
         Alerts_testcases
     }
 };
