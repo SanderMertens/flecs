@@ -13683,7 +13683,7 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
 /** Lookup variable in scope and parent scopes */
 FLECS_API
 ecs_expr_var_t* ecs_vars_lookup(
-    ecs_vars_t *vars,
+    const ecs_vars_t *vars,
     const char *name);
 
 /** Used with ecs_parse_expr. */
@@ -13734,7 +13734,7 @@ char* ecs_ptr_to_expr(
     ecs_entity_t type,
     const void *data);
 
-/** Serialize value into string buffer.
+/** Serialize value into expression buffer.
  * Same as ecs_ptr_to_expr, but serializes to an ecs_strbuf_t instance.
  * 
  * @param world The world.
@@ -13745,6 +13745,39 @@ char* ecs_ptr_to_expr(
  */
 FLECS_API
 int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf);
+
+/** Similar as ecs_ptr_to_expr, but serializes values to string. 
+ * Whereas the output of ecs_ptr_to_expr is a valid expression, the output of
+ * ecs_ptr_to_str is a string representation of the value. In most cases the
+ * output of the two operations is the same, but there are some differences:
+ * - Strings are not quoted
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with result, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into string buffer.
+ * Same as ecs_ptr_to_str, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_str_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *data,
@@ -13784,6 +13817,24 @@ const char *ecs_parse_expr_token(
     const char *expr,
     const char *ptr,
     char *token);
+
+/** Evaluate interpolated expressions in string.
+ * This operation evaluates expressions in a string, and replaces them with
+ * their evaluated result. Supported expression formats are:
+ *  - $variable_name
+ *  - {expression}
+ * 
+ * The $, { and } characters can be escaped with a backslash (\).
+ * 
+ * @param world The world.
+ * @param str The string to evaluate.
+ * @param vars The variables to use for evaluation.
+ */
+FLECS_API
+char* ecs_interpolate_string(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_vars_t *vars);
 
 /** @} */
 

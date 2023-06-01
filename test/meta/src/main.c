@@ -879,6 +879,17 @@ void DeserExprOperators_add_int_shift_left_int(void);
 void DeserExprOperators_mul_int_shift_left_int(void);
 void DeserExprOperators_add_int_shift_left_int_add_int(void);
 void DeserExprOperators_mul_int_shift_left_int_mul_int(void);
+void DeserExprOperators_interpolate_string_w_i32_var(void);
+void DeserExprOperators_interpolate_string_w_string_var(void);
+void DeserExprOperators_interpolate_string_w_entity_var(void);
+void DeserExprOperators_interpolate_string_w_var_not_found(void);
+void DeserExprOperators_interpolate_string_w_entity_var_0(void);
+void DeserExprOperators_interpolate_string_w_var_special_chars(void);
+void DeserExprOperators_interpolate_string_w_var_before_after_text(void);
+void DeserExprOperators_interpolate_string_w_curly_brackets_var(void);
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void);
+void DeserExprOperators_interpolate_string_w_escape_var_operator(void);
+void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -4294,6 +4305,50 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "mul_int_shift_left_int_mul_int",
         DeserExprOperators_mul_int_shift_left_int_mul_int
+    },
+    {
+        "interpolate_string_w_i32_var",
+        DeserExprOperators_interpolate_string_w_i32_var
+    },
+    {
+        "interpolate_string_w_string_var",
+        DeserExprOperators_interpolate_string_w_string_var
+    },
+    {
+        "interpolate_string_w_entity_var",
+        DeserExprOperators_interpolate_string_w_entity_var
+    },
+    {
+        "interpolate_string_w_var_not_found",
+        DeserExprOperators_interpolate_string_w_var_not_found
+    },
+    {
+        "interpolate_string_w_entity_var_0",
+        DeserExprOperators_interpolate_string_w_entity_var_0
+    },
+    {
+        "interpolate_string_w_var_special_chars",
+        DeserExprOperators_interpolate_string_w_var_special_chars
+    },
+    {
+        "interpolate_string_w_var_before_after_text",
+        DeserExprOperators_interpolate_string_w_var_before_after_text
+    },
+    {
+        "interpolate_string_w_curly_brackets_var",
+        DeserExprOperators_interpolate_string_w_curly_brackets_var
+    },
+    {
+        "interpolate_string_w_curly_brackets_expr",
+        DeserExprOperators_interpolate_string_w_curly_brackets_expr
+    },
+    {
+        "interpolate_string_w_escape_var_operator",
+        DeserExprOperators_interpolate_string_w_escape_var_operator
+    },
+    {
+        "interpolate_string_w_escape_curly_brackets",
+        DeserExprOperators_interpolate_string_w_escape_curly_brackets
     }
 };
 
@@ -4492,7 +4547,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        93,
+        104,
         DeserExprOperators_testcases
     },
     {
