@@ -86,6 +86,9 @@ struct each_invoker;
 #ifdef FLECS_METRICS
 #include "mixins/metrics/decl.hpp"
 #endif
+#ifdef FLECS_ALERTS
+#include "mixins/alerts/decl.hpp"
+#endif
 #ifdef FLECS_JSON
 #include "mixins/json/decl.hpp"
 #endif
@@ -154,6 +157,9 @@ struct each_invoker;
 #endif
 #ifdef FLECS_METRICS
 #include "mixins/metrics/impl.hpp"
+#endif
+#ifdef FLECS_ALERTS
+#include "mixins/alerts/impl.hpp"
 #endif
 
 #include "impl/iter.hpp"

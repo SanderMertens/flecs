@@ -761,9 +761,9 @@ void DeserExprOperators_var_member() {
     ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(Position));
     *(Position*)var->value.ptr = (Position){10, 20};
 
-    ecs_value_t v = {0};
     ecs_parse_expr_desc_t desc = { .vars = &vars };
     {
+        ecs_value_t v = {0};
         const char *ptr = ecs_parse_expr(world, "$foo.x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
@@ -772,6 +772,7 @@ void DeserExprOperators_var_member() {
         ecs_value_free(world, v.type, v.ptr);
     }
     {
+        ecs_value_t v = {0};
         const char *ptr = ecs_parse_expr(world, "$foo.y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);

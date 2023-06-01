@@ -885,3 +885,100 @@ void Misc_counter_target_metric() {
         test_int(v->value, 2);
     }
 }
+
+void Misc_alert() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto e1 = ecs.entity("e1").set<Position>({10, 20});
+    auto e2 = ecs.entity("e2").set<Position>({10, 20});
+    e1.set<Velocity>({1, 2});
+
+    ecs.progress(1.0);
+
+    test_assert(!e1.has<flecs::AlertsActive>());
+    test_assert(e2.has<flecs::AlertsActive>());
+    test_int(e2.get<flecs::AlertsActive>()->count, 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::AlertInstance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::AlertInstance>());
+        test_assert(ai.has<flecs::AlertSource>());
+        test_assert(ai.get<flecs::AlertSource>()->entity == e2);
+        test_assert(ai.parent() == a);
+    }
+
+    e2.add<Velocity>();
+
+    ecs.progress(1.0);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::AlertInstance>()
+            .build()
+            .first();
+        test_assert(ai == 0);
+    }
+}
+
+void Misc_alert_w_message() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .message("$this has position but not velocity")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto e1 = ecs.entity("e1").set<Position>({10, 20});
+    auto e2 = ecs.entity("e2").set<Position>({10, 20});
+    e1.set<Velocity>({1, 2});
+
+    ecs.progress(1.0);
+
+    test_assert(!e1.has<flecs::AlertsActive>());
+    test_assert(e2.has<flecs::AlertsActive>());
+    test_int(e2.get<flecs::AlertsActive>()->count, 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::AlertInstance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::AlertInstance>());
+        test_assert(ai.has<flecs::AlertSource>());
+        test_assert(ai.get<flecs::AlertSource>()->entity == e2);
+        test_assert(ai.parent() == a);
+        test_str(ai.get<flecs::AlertInstance>()->message, 
+            "e2 has position but not velocity");
+    }
+
+    e2.add<Velocity>();
+
+    ecs.progress(1.0);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::AlertInstance>()
+            .build()
+            .first();
+        test_assert(ai == 0);
+    }
+}
