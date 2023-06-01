@@ -1449,6 +1449,10 @@ void Metrics_metric_description(void);
 void Metrics_id_count(void);
 void Metrics_id_target_count(void);
 
+// Testsuite 'Alerts'
+void Alerts_one_active_alert(void);
+void Alerts_two_active_alerts(void);
+
 bake_test_case Parser_testcases[] = {
     {
         "resolve_this",
@@ -7016,6 +7020,17 @@ bake_test_case Metrics_testcases[] = {
     }
 };
 
+bake_test_case Alerts_testcases[] = {
+    {
+        "one_active_alert",
+        Alerts_one_active_alert
+    },
+    {
+        "two_active_alerts",
+        Alerts_two_active_alerts
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Parser",
@@ -7247,9 +7262,16 @@ static bake_test_suite suites[] = {
         NULL,
         26,
         Metrics_testcases
+    },
+    {
+        "Alerts",
+        NULL,
+        NULL,
+        2,
+        Alerts_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 33);
+    return bake_test_run("addons", argc, argv, suites, 34);
 }
