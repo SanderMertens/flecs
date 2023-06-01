@@ -1641,3 +1641,43 @@ void SystemMisc_system_w_short_notation() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_update_interval_w_system_init() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t system = ecs_system(world, {
+        .callback = Dummy,
+    });
+    test_assert(system != 0);
+    test_int(ecs_get_interval(world, system), 0);
+
+    ecs_system(world, {
+        .entity = system,
+        .interval = 1.0
+    });
+
+    test_int(ecs_get_interval(world, system), 1.0);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_update_rate_w_system_init() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t system = ecs_system(world, {
+        .callback = Dummy,
+    });
+    test_assert(system != 0);
+    test_assert(ecs_get(world, system, EcsRateFilter) == NULL);
+
+    ecs_system(world, {
+        .entity = system,
+        .rate = 2.0
+    });
+
+    const EcsRateFilter *r = ecs_get(world, system, EcsRateFilter);
+    test_assert(r != NULL);
+    test_int(r->rate, 2.0);
+
+    ecs_fini(world);
+}

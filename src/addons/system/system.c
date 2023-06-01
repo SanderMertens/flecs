@@ -347,6 +347,14 @@ ecs_entity_t ecs_system_init(
         if (desc->no_readonly) {
             system->no_readonly = desc->no_readonly;
         }
+        if (desc->interval) {
+            ecs_set_interval(world, entity, desc->interval);
+        }
+        if (desc->rate) {
+            ecs_set_rate(world, entity, desc->rate, desc->tick_source);
+        } else if (desc->tick_source) {
+            ecs_set_tick_source(world, entity, desc->tick_source);
+        }
     }
 
     ecs_poly_modified(world, entity, ecs_system_t);
