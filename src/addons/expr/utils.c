@@ -337,4 +337,95 @@ error:
     return NULL;
 }
 
+void ecs_iter_to_vars(
+    const ecs_iter_t *it,
+    ecs_vars_t *vars,
+    int offset)
+{
+    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
+
+    /* Set variable for $this */
+    if (it->count) {
+        ecs_expr_var_t *var = ecs_vars_lookup(vars, "this");
+        if (!var) {
+            ecs_value_t v = { 
+                .ptr = &it->entities[offset], 
+                .type = ecs_id(ecs_entity_t) 
+            };
+            var = ecs_vars_declare_w_value(vars, "this", &v);
+            var->owned = false;
+        } else {
+            var->value.ptr = &it->entities[offset];
+        }
+    }
+
+    /* Set variables for fields */
+    {
+        int32_t i, field_count = it->field_count;
+        for (i = 0; i < field_count; i ++) {
+            ecs_size_t size = it->sizes[i];
+            if (!size) {
+                continue;
+            }
+
+            void *ptr = it->ptrs[i];
+            if (!ptr) {
+                continue;
+            }
+
+            ptr = ECS_OFFSET(ptr, offset * size);
+
+            char name[8];
+            sprintf(name, "%d", i + 1);
+            ecs_expr_var_t *var = ecs_vars_lookup(vars, name);
+            if (!var) {
+                ecs_value_t v = { .ptr = ptr, .type = it->ids[i] };
+                var = ecs_vars_declare_w_value(vars, name, &v);
+                var->owned = false;
+            } else {
+                ecs_check(var->value.type == it->ids[i], 
+                    ECS_INVALID_PARAMETER, NULL);
+                var->value.ptr = ptr;
+            }
+        }
+    }
+
+    /* Set variables for query variables */
+    {
+        int32_t i, var_count = it->variable_count;
+        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+            ecs_entity_t *e_ptr = NULL;
+            ecs_var_t *query_var = &it->variables[i];
+            if (query_var->entity) {
+                e_ptr = &query_var->entity;
+            } else {
+                ecs_table_range_t *range = &query_var->range;
+                if (range->count == 1) {
+                    ecs_entity_t *entities = range->table->data.entities.array;
+                    e_ptr = &entities[range->offset];
+                }
+            }
+            if (!e_ptr) {
+                continue;
+            }
+
+            ecs_expr_var_t *var = ecs_vars_lookup(vars, it->variable_names[i]);
+            if (!var) {
+                ecs_value_t v = { .ptr = e_ptr, .type = ecs_id(ecs_entity_t) };
+                var = ecs_vars_declare_w_value(vars, it->variable_names[i], &v);
+                var->owned = false;
+            } else {
+                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                    ECS_INVALID_PARAMETER, NULL);
+                var->value.ptr = e_ptr;
+            }
+        }
+    }
+
+error:
+    return;
+}
+
 #endif

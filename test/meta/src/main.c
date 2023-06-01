@@ -890,6 +890,12 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_var(void);
 void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void);
 void DeserExprOperators_interpolate_string_w_escape_var_operator(void);
 void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void);
+void DeserExprOperators_iter_to_vars_no_data(void);
+void DeserExprOperators_iter_to_vars_1_comp(void);
+void DeserExprOperators_iter_to_vars_2_comps(void);
+void DeserExprOperators_iter_to_vars_1_comp_1_tag(void);
+void DeserExprOperators_iter_to_vars_w_1_query_var(void);
+void DeserExprOperators_iter_to_vars_w_2_query_vars(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -4349,6 +4355,30 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "interpolate_string_w_escape_curly_brackets",
         DeserExprOperators_interpolate_string_w_escape_curly_brackets
+    },
+    {
+        "iter_to_vars_no_data",
+        DeserExprOperators_iter_to_vars_no_data
+    },
+    {
+        "iter_to_vars_1_comp",
+        DeserExprOperators_iter_to_vars_1_comp
+    },
+    {
+        "iter_to_vars_2_comps",
+        DeserExprOperators_iter_to_vars_2_comps
+    },
+    {
+        "iter_to_vars_1_comp_1_tag",
+        DeserExprOperators_iter_to_vars_1_comp_1_tag
+    },
+    {
+        "iter_to_vars_w_1_query_var",
+        DeserExprOperators_iter_to_vars_w_1_query_var
+    },
+    {
+        "iter_to_vars_w_2_query_vars",
+        DeserExprOperators_iter_to_vars_w_2_query_vars
     }
 };
 
@@ -4547,7 +4577,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        104,
+        110,
         DeserExprOperators_testcases
     },
     {
