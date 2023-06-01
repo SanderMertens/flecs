@@ -1518,6 +1518,12 @@
                 "id_count",
                 "id_target_count"
             ]
+        }, {
+            "id": "Alerts",
+            "testcases": [
+                "one_active_alert",
+                "two_active_alerts"
+            ]
         }]
     }
 }

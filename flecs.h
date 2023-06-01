@@ -151,6 +151,7 @@
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */
+#define FLECS_ALERTS        /**< Monitor conditions for errors */
 #define FLECS_SYSTEM        /**< System support */
 #define FLECS_PIPELINE      /**< Pipeline support */
 #define FLECS_TIMER         /**< Timer support */
@@ -4447,9 +4448,9 @@ void ecs_set_automerge(
  * multiple threads, where each thread gets its own queue, and commands are
  * merged when threads are synchronized.
  *
- * Note that the ecs_set_threads and ecs_set_task_threads functions already create
- * the appropriate number of stages. The set_stage_count() operation is useful 
- * for applications that want to manage their own stages and/or threads.
+ * Note that the ecs_set_threads function already creates the appropriate
+ * number of stages. The set_stage_count() operation is useful for applications that
+ * want to manage their own stages and/or threads.
  * 
  * @param world The world.
  * @param stages The number of stages.
@@ -9751,6 +9752,7 @@ int ecs_app_set_frame_action(
 #endif // FLECS_APP
 
 #endif
+
 #ifdef FLECS_HTTP
 #ifdef FLECS_NO_HTTP
 #error "FLECS_NO_HTTP failed: HTTP is required by other addons"
@@ -9996,6 +9998,7 @@ const char* ecs_http_get_param(
 #endif // FLECS_HTTP
 
 #endif
+
 #ifdef FLECS_REST
 #ifdef FLECS_NO_REST
 #error "FLECS_NO_REST failed: REST is required by other addons"
@@ -10111,6 +10114,7 @@ void FlecsRestImport(
 #endif
 
 #endif
+
 #ifdef FLECS_TIMER
 #ifdef FLECS_NO_TIMER
 #error "FLECS_NO_TIMER failed: TIMER is required by other addons"
@@ -10362,6 +10366,7 @@ void FlecsTimerImport(
 #endif
 
 #endif
+
 #ifdef FLECS_PIPELINE
 #ifdef FLECS_NO_PIPELINE
 #error "FLECS_NO_PIPELINE failed: PIPELINE is required by other addons"
@@ -10549,8 +10554,8 @@ void ecs_run_pipeline(
  * Setting this value to a value higher than 1 will start as many threads and
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
- * used, but never while running a system / pipeline.
- * Calling ecs_set_threads will also end the use of task threads setup with
+ * used, but never while running a system / pipeline. 
+ * Calling ecs_set_threads will also end the use of task threads setup with 
  * ecs_set_task_threads and vice-versa */
 FLECS_API
 void ecs_set_threads(
@@ -10599,6 +10604,7 @@ void FlecsPipelineImport(
 #endif
 
 #endif
+
 #ifdef FLECS_SYSTEM
 #ifdef FLECS_NO_SYSTEM
 #error "FLECS_NO_SYSTEM failed: SYSTEM is required by other addons"
@@ -10897,6 +10903,7 @@ void FlecsSystemImport(
 #endif
 
 #endif
+
 #ifdef FLECS_STATS
 #ifdef FLECS_NO_STATS
 #error "FLECS_NO_STATS failed: STATS is required by other addons"
@@ -11329,6 +11336,7 @@ void ecs_metric_copy(
 #endif
 
 #endif
+
 #ifdef FLECS_METRICS
 #ifdef FLECS_NO_METRICS
 #error "FLECS_NO_METRICS failed: METRICS is required by other addons"
@@ -11462,6 +11470,101 @@ void FlecsMetricsImport(
 #endif
 
 #endif
+
+#ifdef FLECS_ALERTS
+#ifdef FLECS_NO_ALERTS
+#error "FLECS_NO_ALERTS failed: ALERTS is required by other addons"
+#endif
+/**
+ * @file addons/alerts.h
+ * @brief Alerts module.
+ *
+ * The alerts module enables applications to register alerts for when certain
+ * conditions are met. Alerts are registered as queries, and automatically
+ * become active when entities match the alert query.
+ */
+
+#ifdef FLECS_ALERTS
+
+/**
+ * @defgroup c_addons_alerts Alert
+ * @brief  * The alerts module enables applications to register alerts for when
+ *           certain conditions are met. Alerts are registered as queries, and 
+ *           automatically become active for matching entities.
+ * 
+ * \ingroup c_addons
+ * @{
+ */
+
+#ifndef FLECS_ALERTS_H
+#define FLECS_ALERTS_H
+
+#ifndef FLECS_RULES
+#define FLECS_RULES
+#endif
+
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Module id */
+FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
+
+/* Module components */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertSource);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
+
+/** Alert information. Added to each alert instance */
+typedef struct EcsAlertInstance {
+    char *message;
+} EcsAlertInstance;
+
+/** Source of alert. Added to each alert instance */
+typedef struct EcsAlertSource {
+    ecs_entity_t entity;
+} EcsAlertSource;
+
+/** Number of active alerts. Added to alert source */
+typedef struct EcsAlertsActive {
+    int32_t count;
+} EcsAlertsActive;
+
+typedef struct ecs_alert_desc_t { 
+    int32_t _canary;
+    ecs_filter_desc_t filter;
+} ecs_alert_desc_t;
+
+FLECS_API
+ecs_entity_t ecs_alert_init(
+    ecs_world_t *world,
+    const ecs_alert_desc_t *desc);
+
+#define ecs_alert(world, ...)\
+    ecs_alert_init(world, &(ecs_alert_desc_t)__VA_ARGS__)
+
+/* Module import */
+FLECS_API
+void FlecsAlertsImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
 #ifdef FLECS_MONITOR
 #ifdef FLECS_NO_MONITOR
 #error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
@@ -11540,6 +11643,7 @@ void FlecsMonitorImport(
 #endif
 
 #endif
+
 #ifdef FLECS_COREDOC
 #ifdef FLECS_NO_COREDOC
 #error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
@@ -11594,6 +11698,7 @@ void FlecsCoreDocImport(
 #endif
 
 #endif
+
 #ifdef FLECS_DOC
 #ifdef FLECS_NO_DOC
 #error "FLECS_NO_DOC failed: DOC is required by other addons"
@@ -11780,6 +11885,7 @@ void FlecsDocImport(
 #endif
 
 #endif
+
 #ifdef FLECS_JSON
 #ifdef FLECS_NO_JSON
 #error "FLECS_NO_JSON failed: JSON is required by other addons"
@@ -12141,6 +12247,7 @@ int ecs_world_to_json_buf(
 #endif
 
 #endif
+
 #if defined(FLECS_EXPR) || defined(FLECS_META_C)
 #ifndef FLECS_META
 #define FLECS_META
@@ -12496,6 +12603,7 @@ void FlecsUnitsImport(
 #endif
 
 #endif
+
 #ifdef FLECS_META
 #ifdef FLECS_NO_META
 #error "FLECS_NO_META failed: META is required by other addons"
@@ -13397,6 +13505,7 @@ void FlecsMetaImport(
 #endif
 
 #endif
+
 #ifdef FLECS_EXPR
 #ifdef FLECS_NO_EXPR
 #error "FLECS_NO_EXPR failed: EXPR is required by other addons"
@@ -13687,6 +13796,7 @@ const char *ecs_parse_expr_token(
 #endif
 
 #endif
+
 #ifdef FLECS_META_C
 #ifdef FLECS_NO_META_C
 #error "FLECS_NO_META_C failed: META_C is required by other addons"
@@ -13849,6 +13959,7 @@ int ecs_meta_from_desc(
 #endif // FLECS_META_C
 
 #endif
+
 #ifdef FLECS_PLECS
 #ifdef FLECS_NO_PLECS
 #error "FLECS_NO_PLECS failed: PLECS is required by other addons"
@@ -13997,6 +14108,7 @@ void FlecsScriptImport(
 #endif
 
 #endif
+
 #ifdef FLECS_RULES
 #ifdef FLECS_NO_RULES
 #error "FLECS_NO_RULES failed: RULES is required by other addons"
@@ -14236,6 +14348,7 @@ const char* ecs_rule_parse_vars(
 #endif // FLECS_RULES
 
 #endif
+
 #ifdef FLECS_SNAPSHOT
 #ifdef FLECS_NO_SNAPSHOT
 #error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
@@ -14349,6 +14462,7 @@ void ecs_snapshot_free(
 #endif
 
 #endif
+
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"
@@ -14481,6 +14595,7 @@ char* ecs_parse_term(
 #endif // FLECS_PARSER
 
 #endif
+
 #ifdef FLECS_OS_API_IMPL
 #ifdef FLECS_NO_OS_API_IMPL
 #error "FLECS_NO_OS_API_IMPL failed: OS_API_IMPL is required by other addons"
@@ -14521,6 +14636,7 @@ void ecs_set_os_api_impl(void);
 #endif // FLECS_OS_API_IMPL
 
 #endif
+
 #ifdef FLECS_MODULE
 #ifdef FLECS_NO_MODULE
 #error "FLECS_NO_MODULE failed: MODULE is required by other addons"
