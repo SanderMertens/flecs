@@ -14,6 +14,7 @@ ECS_COMPONENT_DECLARE(EcsAlertSource);
 ECS_COMPONENT_DECLARE(EcsAlertsActive);
 
 typedef struct EcsAlert {
+    char *message;
     ecs_map_t instances; /* Active instances for metric */
 } EcsAlert;
 
@@ -22,10 +23,15 @@ ECS_CTOR(EcsAlert, ptr, {
 })
 
 ECS_DTOR(EcsAlert, ptr, {
+    ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
 })
 
 ECS_MOVE(EcsAlert, dst, src, {
+    ecs_os_free(dst->message);
+    dst->message = src->message;
+    src->message = NULL;
+
     ecs_map_fini(&dst->instances);
     dst->instances = src->instances;
     src->instances = (ecs_map_t){0};
@@ -128,7 +134,20 @@ ecs_entity_t ecs_alert_init(
     ecs_world_t *world,
     const ecs_alert_desc_t *desc)
 {
-    ecs_rule_t *rule = ecs_rule_init(world, &desc->filter);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        result = ecs_new(world, 0);
+    }
+
+    ecs_filter_desc_t private_desc = desc->filter;
+    private_desc.entity = result;
+
+    ecs_rule_t *rule = ecs_rule_init(world, &private_desc);
     if (!rule) {
         return 0;
     }
@@ -140,10 +159,15 @@ ecs_entity_t ecs_alert_init(
         return 0;
     }
 
-    ecs_entity_t result = filter->entity;
-    ecs_add(world, result, EcsAlert);
+    EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
+    ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
+    alert->message = ecs_os_strdup(desc->message);
+    ecs_map_init(&alert->instances, NULL);
+    ecs_modified(world, result, EcsAlert);
 
     return result;
+error:
+    return 0;
 }
 
 void FlecsAlertsImport(ecs_world_t *world) {

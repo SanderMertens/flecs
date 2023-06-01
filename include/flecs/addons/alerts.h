@@ -60,7 +60,9 @@ typedef struct EcsAlertsActive {
 
 typedef struct ecs_alert_desc_t { 
     int32_t _canary;
+    ecs_entity_t entity;
     ecs_filter_desc_t filter;
+    const char *message;
 } ecs_alert_desc_t;
 
 FLECS_API

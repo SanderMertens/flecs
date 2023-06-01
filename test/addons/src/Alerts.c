@@ -16,7 +16,7 @@ void Alerts_one_active_alert() {
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .filter.entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_new_entity(world, "position_without_velocity"),
         .filter.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
@@ -106,12 +106,12 @@ void Alerts_two_active_alerts() {
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert_1 = ecs_alert(world, {
-        .filter.entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_new_entity(world, "position_without_velocity"),
         .filter.expr = "Position, !Velocity"
     });
 
     ecs_entity_t alert_2 = ecs_alert(world, {
-        .filter.entity = ecs_new_entity(world, "position_without_mass"),
+        .entity = ecs_new_entity(world, "position_without_mass"),
         .filter.expr = "Position, !Mass"
     });
 

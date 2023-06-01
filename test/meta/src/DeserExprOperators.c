@@ -1957,3 +1957,405 @@ void DeserExprOperators_interpolate_string_w_escape_curly_brackets() {
 
     ecs_fini(world);
 }
+
+void DeserExprOperators_iter_to_vars_no_data() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Foo" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new(world, Foo);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e1);
+    }
+
+    ecs_iter_to_vars(&it, &vars, 1);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e2);
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_iter_to_vars_1_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Position" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e1);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+    }
+
+    ecs_iter_to_vars(&it, &vars, 1);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e2);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_iter_to_vars_2_comps() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Position, Velocity" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e2, Velocity);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e1);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "2");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Velocity));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Velocity));
+    }
+
+    ecs_iter_to_vars(&it, &vars, 1);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e2);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "2");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Velocity));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Velocity));
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_iter_to_vars_1_comp_1_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Position, Foo, Velocity" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e1);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+    }
+    test_assert(ecs_vars_lookup(&vars, "2") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "3");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Velocity));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Velocity));
+    }
+
+    ecs_iter_to_vars(&it, &vars, 1);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v->value.ptr, e2);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+    }
+    test_assert(ecs_vars_lookup(&vars, "2") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "3");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Velocity));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Velocity));
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_iter_to_vars_w_1_query_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Position($x)" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == e1);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+    }
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == e2);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_iter_to_vars_w_2_query_vars() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *rule = ecs_rule(world, { .expr = "Position($x), ChildOf($x, $y)" });
+    test_assert(rule != NULL);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_iter_t it = ecs_rule_iter(world, rule);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == e1);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "y");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == parent);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+    }
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+
+    ecs_iter_to_vars(&it, &vars, 0);
+    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == e2);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "y");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(ecs_entity_t));
+        test_assert(v->value.ptr != NULL);
+        test_assert(*(ecs_entity_t*)v->value.ptr == parent);
+    }
+    {
+        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        test_assert(v != NULL);
+        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.ptr != NULL);
+        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+    }
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}

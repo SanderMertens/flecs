@@ -928,7 +928,13 @@
                 "interpolate_string_w_curly_brackets_var",
                 "interpolate_string_w_curly_brackets_expr",
                 "interpolate_string_w_escape_var_operator",
-                "interpolate_string_w_escape_curly_brackets"
+                "interpolate_string_w_escape_curly_brackets",
+                "iter_to_vars_no_data",
+                "iter_to_vars_1_comp",
+                "iter_to_vars_2_comps",
+                "iter_to_vars_1_comp_1_tag",
+                "iter_to_vars_w_1_query_var",
+                "iter_to_vars_w_2_query_vars"
             ]
         }, {
             "id": "OpaqueTypes",

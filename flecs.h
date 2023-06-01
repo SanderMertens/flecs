@@ -11537,7 +11537,9 @@ typedef struct EcsAlertsActive {
 
 typedef struct ecs_alert_desc_t { 
     int32_t _canary;
+    ecs_entity_t entity;
     ecs_filter_desc_t filter;
+    const char *message;
 } ecs_alert_desc_t;
 
 FLECS_API
@@ -13835,6 +13837,44 @@ char* ecs_interpolate_string(
     ecs_world_t *world,
     const char *str,
     const ecs_vars_t *vars);
+
+/** Convert iterator to vars 
+ * This operation converts an iterator to a variable array. This allows for
+ * using iterator results in expressions. The operation only converts a 
+ * single result at a time, and does not progress the iterator.
+ * 
+ * Iterator fields with data will be made available as variables with as name
+ * the field index (e.g. "$1"). The operation does not check if reflection data
+ * is registered for a field type. If no reflection data is registered for the
+ * type, using the field variable in expressions will fail.
+ * 
+ * Field variables will only contain single elements, even if the iterator 
+ * returns component arrays. The offset parameter can be used to specify which
+ * element in the component arrays to return. The offset parameter must be
+ * smaller than it->count.
+ * 
+ * The operation will create a variable for query variables that contain a
+ * single entity.
+ * 
+ * The operation will attempt to use existing variables. If a variable does not
+ * yet exist, the operation will create it. If an existing variable exists with
+ * a mismatching type, the operation will fail.
+ * 
+ * Accessing variables after progressing the iterator or after the iterator is
+ * destroyed will result in undefined behavior.
+ * 
+ * If vars contains a variable that is not present in the iterator, the variable
+ * will not be modified.
+ * 
+ * @param it The iterator to convert to variables.
+ * @param vars The variables to write to.
+ * @param offset The offset to the current element.
+ */
+FLECS_API
+void ecs_iter_to_vars(
+    const ecs_iter_t *it,
+    ecs_vars_t *vars,
+    int offset);
 
 /** @} */
 

@@ -19575,6 +19575,7 @@ ECS_COMPONENT_DECLARE(EcsAlertSource);
 ECS_COMPONENT_DECLARE(EcsAlertsActive);
 
 typedef struct EcsAlert {
+    char *message;
     ecs_map_t instances; /* Active instances for metric */
 } EcsAlert;
 
@@ -19583,10 +19584,15 @@ ECS_CTOR(EcsAlert, ptr, {
 })
 
 ECS_DTOR(EcsAlert, ptr, {
+    ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
 })
 
 ECS_MOVE(EcsAlert, dst, src, {
+    ecs_os_free(dst->message);
+    dst->message = src->message;
+    src->message = NULL;
+
     ecs_map_fini(&dst->instances);
     dst->instances = src->instances;
     src->instances = (ecs_map_t){0};
@@ -19689,7 +19695,20 @@ ecs_entity_t ecs_alert_init(
     ecs_world_t *world,
     const ecs_alert_desc_t *desc)
 {
-    ecs_rule_t *rule = ecs_rule_init(world, &desc->filter);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        result = ecs_new(world, 0);
+    }
+
+    ecs_filter_desc_t private_desc = desc->filter;
+    private_desc.entity = result;
+
+    ecs_rule_t *rule = ecs_rule_init(world, &private_desc);
     if (!rule) {
         return 0;
     }
@@ -19701,10 +19720,15 @@ ecs_entity_t ecs_alert_init(
         return 0;
     }
 
-    ecs_entity_t result = filter->entity;
-    ecs_add(world, result, EcsAlert);
+    EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
+    ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
+    alert->message = ecs_os_strdup(desc->message);
+    ecs_map_init(&alert->instances, NULL);
+    ecs_modified(world, result, EcsAlert);
 
     return result;
+error:
+    return 0;
 }
 
 void FlecsAlertsImport(ecs_world_t *world) {
@@ -28414,6 +28438,97 @@ char* ecs_interpolate_string(
     return ecs_strbuf_get(&result);
 error:
     return NULL;
+}
+
+void ecs_iter_to_vars(
+    const ecs_iter_t *it,
+    ecs_vars_t *vars,
+    int offset)
+{
+    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
+
+    /* Set variable for $this */
+    if (it->count) {
+        ecs_expr_var_t *var = ecs_vars_lookup(vars, "this");
+        if (!var) {
+            ecs_value_t v = { 
+                .ptr = &it->entities[offset], 
+                .type = ecs_id(ecs_entity_t) 
+            };
+            var = ecs_vars_declare_w_value(vars, "this", &v);
+            var->owned = false;
+        } else {
+            var->value.ptr = &it->entities[offset];
+        }
+    }
+
+    /* Set variables for fields */
+    {
+        int32_t i, field_count = it->field_count;
+        for (i = 0; i < field_count; i ++) {
+            ecs_size_t size = it->sizes[i];
+            if (!size) {
+                continue;
+            }
+
+            void *ptr = it->ptrs[i];
+            if (!ptr) {
+                continue;
+            }
+
+            ptr = ECS_OFFSET(ptr, offset * size);
+
+            char name[8];
+            sprintf(name, "%d", i + 1);
+            ecs_expr_var_t *var = ecs_vars_lookup(vars, name);
+            if (!var) {
+                ecs_value_t v = { .ptr = ptr, .type = it->ids[i] };
+                var = ecs_vars_declare_w_value(vars, name, &v);
+                var->owned = false;
+            } else {
+                ecs_check(var->value.type == it->ids[i], 
+                    ECS_INVALID_PARAMETER, NULL);
+                var->value.ptr = ptr;
+            }
+        }
+    }
+
+    /* Set variables for query variables */
+    {
+        int32_t i, var_count = it->variable_count;
+        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+            ecs_entity_t *e_ptr = NULL;
+            ecs_var_t *query_var = &it->variables[i];
+            if (query_var->entity) {
+                e_ptr = &query_var->entity;
+            } else {
+                ecs_table_range_t *range = &query_var->range;
+                if (range->count == 1) {
+                    ecs_entity_t *entities = range->table->data.entities.array;
+                    e_ptr = &entities[range->offset];
+                }
+            }
+            if (!e_ptr) {
+                continue;
+            }
+
+            ecs_expr_var_t *var = ecs_vars_lookup(vars, it->variable_names[i]);
+            if (!var) {
+                ecs_value_t v = { .ptr = e_ptr, .type = ecs_id(ecs_entity_t) };
+                var = ecs_vars_declare_w_value(vars, it->variable_names[i], &v);
+                var->owned = false;
+            } else {
+                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                    ECS_INVALID_PARAMETER, NULL);
+                var->value.ptr = e_ptr;
+            }
+        }
+    }
+
+error:
+    return;
 }
 
 #endif
