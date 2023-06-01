@@ -28787,10 +28787,43 @@ bool flecs_parse_is_float(
     return false;
 }
 
+/* Attempt to resolve variable dotexpression to value (foo.bar) */
+static
+ecs_value_t flecs_dotresolve_var(
+    ecs_world_t *world,
+    ecs_vars_t *vars,
+    char *token)
+{
+    char *dot = strchr(token, '.');
+    if (!dot) {
+        return (ecs_value_t){0};
+    }
+
+    dot[0] = '\0';
+
+    const ecs_expr_var_t *var = ecs_vars_lookup(vars, token);
+    if (!var) {
+        return (ecs_value_t){0};
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, var->value.type, var->value.ptr);
+    ecs_meta_push(&cur);
+    if (ecs_meta_dotmember(&cur, dot + 1) != 0) {
+        return (ecs_value_t){0};
+    }
+
+    return (ecs_value_t){ 
+        .ptr = ecs_meta_get_ptr(&cur),
+        .type = ecs_meta_get_type(&cur)
+    };
+}
+
 /* Determine the type of an expression from the first character(s). This allows
  * us to initialize a storage for a type if none was provided. */
 static
 ecs_entity_t flecs_parse_discover_type(
+    ecs_world_t *world,
     const char *name,
     const char *expr,
     const char *ptr,
@@ -28838,8 +28871,14 @@ ecs_entity_t flecs_parse_discover_type(
         if (ecs_parse_expr_token(name, expr, &ptr[1], token) == NULL) {
             return 0;
         }
+
         const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, token);
         if (!var) {
+            ecs_value_t v = flecs_dotresolve_var(world, desc->vars, token);
+            if (v.type) {
+                return v.type;
+            }
+
             ecs_parser_error(name, expr, ptr - expr, 
                 "unresolved variable '%s'", token);
             return 0;
@@ -29357,7 +29396,7 @@ const char* flecs_parse_expr(
      * will be initialized by a nested expression */
     if (ptr[0] != '(') {
         ecs_entity_t type = flecs_parse_discover_type(
-            name, expr, ptr, value->type, desc);
+            world, name, expr, ptr, value->type, desc);
         if (!type) {
             return NULL;
         }
@@ -29524,12 +29563,17 @@ const char* flecs_parse_expr(
 
             const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &token[1]);
             if (!var) {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "unresolved variable '%s'", token);
-                return NULL;
+                ecs_value_t v = flecs_dotresolve_var(world, desc->vars, &token[1]);
+                if (!v.ptr) {
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "unresolved variable '%s'", token);
+                    return NULL;
+                } else {
+                    ecs_meta_set_value(&cur, &v);
+                }
+            } else {
+                ecs_meta_set_value(&cur, &var->value);
             }
-
-            ecs_meta_set_value(&cur, &var->value);
             is_lvalue = true;
 
         } else {
