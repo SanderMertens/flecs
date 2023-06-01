@@ -27388,7 +27388,8 @@ int flecs_expr_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *ser, 
     const void *base, 
-    ecs_strbuf_t *str);
+    ecs_strbuf_t *str,
+    bool is_expr);
 
 static
 int flecs_expr_ser_type_ops(
@@ -27397,14 +27398,16 @@ int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base, 
     ecs_strbuf_t *str,
-    int32_t in_array);
+    int32_t in_array,
+    bool is_expr);
 
 static
 int flecs_expr_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *base,
-    ecs_strbuf_t *str);
+    ecs_strbuf_t *str,
+    bool is_expr);
 
 static
 ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
@@ -27417,7 +27420,8 @@ int flecs_expr_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
     const void *base, 
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    bool is_expr) 
 {
     switch(kind) {
     case EcsBool:
@@ -27432,9 +27436,9 @@ int flecs_expr_ser_primitive(
         char ch = *(char*)base;
         if (ch) {
             ecs_chresc(chbuf, *(char*)base, '"');
-            ecs_strbuf_appendch(str, '"');
+            if (is_expr) ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
-            ecs_strbuf_appendch(str, '"');
+            if (is_expr) ecs_strbuf_appendch(str, '"');
         } else {
             ecs_strbuf_appendch(str, '0');
         }
@@ -27482,18 +27486,22 @@ int flecs_expr_ser_primitive(
     case EcsString: {
         char *value = *(char**)base;
         if (value) {
-            ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
-            if (length == ecs_os_strlen(value)) {
-                ecs_strbuf_appendch(str, '"');
-                ecs_strbuf_appendstrn(str, value, length);
-                ecs_strbuf_appendch(str, '"');
+            if (!is_expr) {
+                ecs_strbuf_appendstr(str, value);
             } else {
-                char *out = ecs_os_malloc(length + 3);
-                ecs_stresc(out + 1, length, '"', value);
-                out[0] = '"';
-                out[length + 1] = '"';
-                out[length + 2] = '\0';
-                ecs_strbuf_appendstr_zerocpy(str, out);
+                ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+                if (length == ecs_os_strlen(value)) {
+                    ecs_strbuf_appendch(str, '"');
+                    ecs_strbuf_appendstrn(str, value, length);
+                    ecs_strbuf_appendch(str, '"');
+                } else {
+                    char *out = ecs_os_malloc(length + 3);
+                    ecs_stresc(out + 1, length, '"', value);
+                    out[0] = '"';
+                    out[length + 1] = '"';
+                    out[length + 2] = '\0';
+                    ecs_strbuf_appendstr_zerocpy(str, out);
+                }
             }
         } else {
             ecs_strbuf_appendlit(str, "null");
@@ -27616,7 +27624,9 @@ int expr_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (flecs_expr_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
+        if (flecs_expr_ser_type_ops(
+            world, ops, op_count, ptr, str, is_array, true)) 
+        {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -27689,7 +27699,8 @@ int flecs_expr_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *ptr,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    bool is_expr)
 {
     switch(op->kind) {
     case EcsOpPush:
@@ -27719,7 +27730,7 @@ int flecs_expr_ser_type_op(
         break;
     default:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str)) 
+            ECS_OFFSET(ptr, op->offset), str, is_expr))
         {
             /* Unknown operation */
             ecs_err("unknown serializer operation kind (%d)", op->kind);
@@ -27741,7 +27752,8 @@ int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base,
     ecs_strbuf_t *str,
-    int32_t in_array) 
+    int32_t in_array,
+    bool is_expr) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
@@ -27776,7 +27788,7 @@ int flecs_expr_ser_type_ops(
             in_array ++;
             break;
         default:
-            if (flecs_expr_ser_type_op(world, op, base, str)) {
+            if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
                 goto error;
             }
             break;
@@ -27794,11 +27806,12 @@ int flecs_expr_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
     const void *base, 
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    bool is_expr) 
 {
     ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(v_ops);
-    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0);
+    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0, is_expr);
 }
 
 int ecs_ptr_to_expr_buf(
@@ -27816,7 +27829,7 @@ int ecs_ptr_to_expr_buf(
         goto error;
     }
 
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out)) {
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true)) {
         goto error;
     }
 
@@ -27840,13 +27853,52 @@ char* ecs_ptr_to_expr(
     return ecs_strbuf_get(&str);
 }
 
+int ecs_ptr_to_str_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf_out)
+{
+    const EcsMetaTypeSerialized *ser = ecs_get(
+        world, type, EcsMetaTypeSerialized);
+    if (ser == NULL) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize value for type '%s'", path);
+        ecs_os_free(path);
+        goto error;
+    }
+
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+char* ecs_ptr_to_str(
+    const ecs_world_t *world, 
+    ecs_entity_t type, 
+    const void* ptr)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+
+    if (ecs_ptr_to_str_buf(world, type, ptr, &str) != 0) {
+        ecs_strbuf_reset(&str);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&str);
+}
+
 int ecs_primitive_to_expr_buf(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
     const void *base, 
     ecs_strbuf_t *str)
 {
-    return flecs_expr_ser_primitive(world, kind, base, str);
+    return flecs_expr_ser_primitive(world, kind, base, str, true);
 }
 
 #endif
@@ -28018,7 +28070,7 @@ ecs_expr_var_t* flecs_vars_scope_lookup(
 }
 
 ecs_expr_var_t* ecs_vars_lookup(
-    ecs_vars_t *vars,
+    const ecs_vars_t *vars,
     const char *name)
 {
     return flecs_vars_scope_lookup(vars->cur, name);
@@ -28033,6 +28085,8 @@ ecs_expr_var_t* ecs_vars_lookup(
 
 
 #ifdef FLECS_EXPR
+
+#include <ctype.h>
 
 char* ecs_chresc(
     char *out, 
@@ -28199,6 +28253,167 @@ char* ecs_astresc(
     ecs_stresc(out, len, delimiter, in);
     out[len] = '\0';
     return out;
+}
+
+static
+const char* flecs_parse_var_name(
+    const char *ptr,
+    char *token_out)
+{
+    char ch, *bptr = token_out;
+
+    while ((ch = *ptr)) {
+        if (bptr - token_out > ECS_MAX_TOKEN_SIZE) {
+            goto error;
+        }
+
+        if (isalpha(ch) || isdigit(ch) || ch == '_') {
+            *bptr = ch;
+            bptr ++;
+            ptr ++;
+        } else {
+            break;
+        }
+    }
+
+    if (bptr == token_out) {
+        goto error;
+    }
+
+    *bptr = '\0';
+
+    return ptr;
+error:
+    return NULL;
+}
+
+static
+const char* flecs_parse_interpolated_str(
+    const char *ptr,
+    char *token_out)
+{
+    char ch, *bptr = token_out;
+
+    while ((ch = *ptr)) {
+        if (bptr - token_out > ECS_MAX_TOKEN_SIZE) {
+            goto error;
+        }
+
+        if (ch == '\\') {
+            if (ptr[1] == '}') {
+                *bptr = '}';
+                bptr ++;
+                ptr += 2;
+                continue;
+            }
+        }
+
+        if (ch != '}') {
+            *bptr = ch;
+            bptr ++;
+            ptr ++;
+        } else {
+            ptr ++;
+            break;
+        }
+    }
+
+    if (bptr == token_out) {
+        goto error;
+    }
+
+    *bptr = '\0';
+
+    return ptr;
+error:
+    return NULL;
+}
+
+char* ecs_interpolate_string(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_vars_t *vars)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+    ecs_strbuf_t result = ECS_STRBUF_INIT;
+    const char *ptr;
+    char ch;
+
+    for(ptr = str; (ch = *ptr); ptr++) {
+        if (ch == '\\') {
+            ptr ++;
+            if (ptr[0] == '$') {
+                ecs_strbuf_appendch(&result, '$');
+                continue;
+            }
+            if (ptr[0] == '\\') {
+                ecs_strbuf_appendch(&result, '\\');
+                continue;
+            }
+            if (ptr[0] == '{') {
+                ecs_strbuf_appendch(&result, '{');
+                continue;
+            }
+            if (ptr[0] == '}') {
+                ecs_strbuf_appendch(&result, '}');
+                continue;
+            }
+            ptr --;
+        }
+
+        if (ch == '$') {
+            ptr = flecs_parse_var_name(ptr + 1, token);
+            if (!ptr) {
+                ecs_parser_error(NULL, str, ptr - str, 
+                    "invalid variable name '%s'", ptr);
+                goto error;
+            }
+
+            ecs_expr_var_t *var = ecs_vars_lookup(vars, token);
+            if (!var) {
+                ecs_parser_error(NULL, str, ptr - str, 
+                    "unresolved variable '%s'", token);
+                goto error;
+            }
+
+            if (ecs_ptr_to_str_buf(
+                world, var->value.type, var->value.ptr, &result)) 
+            {
+                goto error;
+            }
+
+            ptr --;
+        } else if (ch == '{') {
+            ptr = flecs_parse_interpolated_str(ptr + 1, token);
+            if (!ptr) {
+                ecs_parser_error(NULL, str, ptr - str, 
+                    "invalid interpolated expression");
+                goto error;
+            }
+
+            ecs_parse_expr_desc_t expr_desc = { .vars = (ecs_vars_t*)vars };
+            ecs_value_t expr_result = {0};
+            if (!ecs_parse_expr(world, token, &expr_result, &expr_desc)) {
+                goto error;
+            }
+
+            if (ecs_ptr_to_str_buf(
+                world, expr_result.type, expr_result.ptr, &result)) 
+            {
+                goto error;
+            }
+
+            ecs_value_free(world, expr_result.type, expr_result.ptr);
+
+            ptr --;
+        } else {
+            ecs_strbuf_appendch(&result, ch);
+        }
+    }
+
+    return ecs_strbuf_get(&result);
+error:
+    return NULL;
 }
 
 #endif

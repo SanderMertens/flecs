@@ -1752,3 +1752,208 @@ void DeserExprOperators_mul_int_shift_left_int_mul_int() {
 
     ecs_fini(world);
 }
+
+void DeserExprOperators_interpolate_string_w_i32_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result != NULL);
+    test_str(result, "10");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_string_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_string_t));
+    test_assert(v != NULL);
+    *(ecs_string_t*)v->value.ptr = ecs_os_strdup("Hello World");
+
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_entity_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(v != NULL);
+    *(ecs_entity_t*)v->value.ptr = ecs_id(ecs_i32_t);
+
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result != NULL);
+    test_str(result, "flecs.meta.i32");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_var_not_found() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_log_set_level(-4);
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result == NULL);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_entity_var_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(v != NULL);
+    *(ecs_entity_t*)v->value.ptr = 0;
+
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result != NULL);
+    test_str(result, "0");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_var_special_chars() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "_foo_bar_10", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "$_foo_bar_10", &vars);
+    test_assert(result != NULL);
+    test_str(result, "10");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_var_before_after_text() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "Hello $foo World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello 10 World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_curly_brackets_var() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "Hello {$foo}World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello 10World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_curly_brackets_expr() {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_interpolate_string(world, "Hello {10 + 20}World", NULL);
+    test_assert(result != NULL);
+    test_str(result, "Hello 30World");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_escape_var_operator() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_i32_t));
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_interpolate_string(world, "Hello \\$foo World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello $foo World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_escape_curly_brackets() {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_interpolate_string(world, "Hello \\{10 + 20}World", NULL);
+    test_assert(result != NULL);
+    test_str(result, "Hello {10 + 20}World");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}

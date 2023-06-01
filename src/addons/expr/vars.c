@@ -166,7 +166,7 @@ ecs_expr_var_t* flecs_vars_scope_lookup(
 }
 
 ecs_expr_var_t* ecs_vars_lookup(
-    ecs_vars_t *vars,
+    const ecs_vars_t *vars,
     const char *name)
 {
     return flecs_vars_scope_lookup(vars->cur, name);
