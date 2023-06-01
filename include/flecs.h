@@ -1937,6 +1937,10 @@ bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
 
+/** Get the largest issued entity id (not counting generation).
+ * 
+ * @param world The world.
+ */
 FLECS_API
 ecs_entity_t ecs_get_max_id(
     const ecs_world_t *world);

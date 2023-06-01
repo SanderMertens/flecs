@@ -377,8 +377,8 @@ void ecs_iter_to_vars(
 
             ptr = ECS_OFFSET(ptr, offset * size);
 
-            char name[8];
-            sprintf(name, "%d", i + 1);
+            char name[16];
+            ecs_os_sprintf(name, "%d", i + 1);
             ecs_expr_var_t *var = ecs_vars_lookup(vars, name);
             if (!var) {
                 ecs_value_t v = { .ptr = ptr, .type = it->ids[i] };
