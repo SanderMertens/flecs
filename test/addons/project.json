@@ -610,7 +610,9 @@
                 "pipeline_custom_run_action",
                 "change_custom_run_action",
                 "custom_run_action_call_next",
-                "system_w_short_notation"
+                "system_w_short_notation",
+                "update_interval_w_system_init",
+                "update_rate_w_system_init"
             ]
         }, {
             "id": "RulesBasic",
@@ -1525,7 +1527,8 @@
                 "two_active_alerts",
                 "alert_message",
                 "alert_message_w_this_var",
-                "alert_message_w_var"
+                "alert_message_w_var",
+                "alert_message_w_changed_var"
             ]
         }]
     }

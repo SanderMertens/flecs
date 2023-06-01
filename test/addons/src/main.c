@@ -598,6 +598,8 @@ void SystemMisc_pipeline_custom_run_action(void);
 void SystemMisc_change_custom_run_action(void);
 void SystemMisc_custom_run_action_call_next(void);
 void SystemMisc_system_w_short_notation(void);
+void SystemMisc_update_interval_w_system_init(void);
+void SystemMisc_update_rate_w_system_init(void);
 
 // Testsuite 'RulesBasic'
 void RulesBasic_1_fact_w_tag(void);
@@ -1455,6 +1457,7 @@ void Alerts_two_active_alerts(void);
 void Alerts_alert_message(void);
 void Alerts_alert_message_w_this_var(void);
 void Alerts_alert_message_w_var(void);
+void Alerts_alert_message_w_changed_var(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -3792,6 +3795,14 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_w_short_notation",
         SystemMisc_system_w_short_notation
+    },
+    {
+        "update_interval_w_system_init",
+        SystemMisc_update_interval_w_system_init
+    },
+    {
+        "update_rate_w_system_init",
+        SystemMisc_update_rate_w_system_init
     }
 };
 
@@ -7043,6 +7054,10 @@ bake_test_case Alerts_testcases[] = {
     {
         "alert_message_w_var",
         Alerts_alert_message_w_var
+    },
+    {
+        "alert_message_w_changed_var",
+        Alerts_alert_message_w_changed_var
     }
 };
 
@@ -7079,7 +7094,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        63,
+        65,
         SystemMisc_testcases
     },
     {
@@ -7282,7 +7297,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        5,
+        6,
         Alerts_testcases
     }
 };

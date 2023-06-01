@@ -130,13 +130,26 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_iter_set_var(&rit, 0, s);
 
         if (ecs_rule_next(&rit)) {
-            /* Check if message needs to be generated */
-            if (alert->message && !alert_instance[i].message) {
+            bool generate_message = alert->message;
+            if (generate_message) {
+                if (alert_instance[i].message) {
+                    /* If a message was already generated, only regenerate if
+                     * rule has multiple variables. Variable values could have 
+                     * changed, this ensures the message remains up to date. */
+                    generate_message = rit.variable_count > 1;
+                }
+            }
+
+            if (generate_message) {
+                if (alert_instance[i].message) {
+                    ecs_os_free(alert_instance[i].message);
+                }
+
                 ecs_iter_to_vars(&rit, &vars, 0);
                 alert_instance[i].message = ecs_interpolate_string(
                     world, alert->message, &vars);
             }
-            
+
             /* Alert instance still matches rule, keep it alive */
             ecs_iter_fini(&rit);
             continue;
@@ -195,6 +208,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsAlerts);
 
     ECS_IMPORT(world, FlecsPipeline);
+    ECS_IMPORT(world, FlecsTimer);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -239,7 +253,13 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
-        .no_readonly = true
+        .no_readonly = true,
+        .interval = 1.0
+    });
+
+    ecs_system(world, {
+        .entity = ecs_id(MonitorAlertInstances),
+        .interval = 1.0
     });
 }
 
