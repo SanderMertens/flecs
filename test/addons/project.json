@@ -1522,7 +1522,10 @@
             "id": "Alerts",
             "testcases": [
                 "one_active_alert",
-                "two_active_alerts"
+                "two_active_alerts",
+                "alert_message",
+                "alert_message_w_this_var",
+                "alert_message_w_var"
             ]
         }]
     }
