@@ -1130,6 +1130,8 @@ void Misc_member_metric_w_value_name_camel_case_type(void);
 void Misc_member_metric_w_custom_name(void);
 void Misc_counter_id_metric(void);
 void Misc_counter_target_metric(void);
+void Misc_alert(void);
+void Misc_alert_w_message(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5575,6 +5577,14 @@ bake_test_case Misc_testcases[] = {
     {
         "counter_target_metric",
         Misc_counter_target_metric
+    },
+    {
+        "alert",
+        Misc_alert
+    },
+    {
+        "alert_w_message",
+        Misc_alert_w_message
     }
 };
 
@@ -6072,7 +6082,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        27,
+        29,
         Misc_testcases
     },
     {

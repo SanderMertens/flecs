@@ -1183,7 +1183,9 @@
                 "member_metric_w_value_name_camel_case_type",
                 "member_metric_w_custom_name",
                 "counter_id_metric",
-                "counter_target_metric"
+                "counter_target_metric",
+                "alert",
+                "alert_w_message"
             ]
         }, {
             "id": "Meta",

@@ -32448,13 +32448,20 @@ ecs_entity_t ecs_system_init(
         if (desc->no_readonly) {
             system->no_readonly = desc->no_readonly;
         }
-        if (desc->interval != 0) {
-            ecs_set_interval(world, entity, desc->interval);
-        }
-        if (desc->rate != 0) {
-            ecs_set_rate(world, entity, desc->rate, desc->tick_source);
-        } else if (desc->tick_source) {
-            ecs_set_tick_source(world, entity, desc->tick_source);
+
+        if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
+#ifdef FLECS_TIMER
+            if (desc->interval != 0) {
+                ecs_set_interval(world, entity, desc->interval);
+            }
+            if (desc->rate != 0) {
+                ecs_set_rate(world, entity, desc->rate, desc->tick_source);
+            } else if (desc->tick_source) {
+                ecs_set_tick_source(world, entity, desc->tick_source);
+            }
+#else
+            ecs_abort(ECS_UNSUPPORTED, "timer module not available");
+#endif
         }
     }
 

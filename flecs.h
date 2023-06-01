@@ -17679,6 +17679,45 @@ struct metrics {
 }
 
 #endif
+#ifdef FLECS_ALERTS
+/**
+ * @file addons/cpp/mixins/alerts/decl.hpp
+ * @brief Alert declarations.
+ */
+
+#pragma once
+
+namespace flecs {
+
+/**
+ * @defgroup cpp_addons_alerts Alerts
+ * @brief Alert implementation.
+ * 
+ * \ingroup cpp_addons
+ * @{
+ */
+
+static const flecs::entity_t Alert = ecs_id(EcsAlert);
+using AlertInstance = EcsAlertInstance;
+using AlertSource = EcsAlertSource;
+using AlertsActive = EcsAlertsActive;
+
+/** Module */
+struct alerts {
+    alerts(flecs::world& world);
+};
+
+template <typename ... Components>
+struct alert;
+
+template <typename ... Components>
+struct alert_builder;
+
+/** @} */
+
+}
+
+#endif
 #ifdef FLECS_JSON
 /**
  * @file addons/cpp/mixins/json/decl.hpp
@@ -20188,6 +20227,17 @@ flecs::app_builder app() {
  */
 template <typename... Args>
 flecs::metric_builder metric(Args &&... args) const;
+
+#   endif
+#   ifdef FLECS_ALERTS
+
+/** Create alert.
+ * 
+ * \ingroup cpp_addons_alerts
+ * \memberof flecs::world
+ */
+template <typename... Comps, typename... Args>
+flecs::alert_builder<Comps...> alert(Args &&... args) const;
 
 #   endif
 
@@ -28974,6 +29024,139 @@ inline untyped_component& untyped_component::metric(flecs::entity_t parent, cons
     w.metric(metric_entity).member(me).kind<Kind>().brief(brief);
 
     return *this;
+}
+
+}
+
+#endif
+#ifdef FLECS_ALERTS
+/**
+ * @file addons/cpp/mixins/alerts/impl.hpp
+ * @brief Alerts module implementation.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/alerts/builder.hpp
+ * @brief Alert builder.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/alerts/builder_i.hpp
+ * @brief Alert builder interface.
+ */
+
+#pragma once
+
+
+namespace flecs {
+
+/** Alert builder interface.
+ * 
+ * \ingroup cpp_addons_alerts
+ */
+template<typename Base, typename ... Components>
+struct alert_builder_i : filter_builder_i<Base, Components ...> {
+private:
+    using BaseClass = filter_builder_i<Base, Components ...>;
+    
+public:
+    alert_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr) { }
+
+    alert_builder_i(ecs_alert_desc_t *desc, int32_t term_index = 0) 
+        : BaseClass(&desc->filter, term_index)
+        , m_desc(desc) { }
+
+    /** Alert message.
+     *
+     * @see ecs_alert_desc_t::message
+     */      
+    Base& message(const char *message) {
+        m_desc->message = message;
+        return *this;
+    }
+
+protected:
+    virtual flecs::world_t* world_v() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_alert_desc_t *m_desc;
+};
+
+}
+
+
+namespace flecs {
+namespace _ {
+    template <typename ... Components>
+    using alert_builder_base = builder<
+        alert, ecs_alert_desc_t, alert_builder<Components...>, 
+        alert_builder_i, Components ...>;
+}
+
+/** Alert builder.
+ * 
+ * \ingroup cpp_addons_alerts
+ */
+template <typename ... Components>
+struct alert_builder final : _::alert_builder_base<Components...> {
+    alert_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::alert_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::",
+            entity_desc.root_sep = "::",
+            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+        }
+    }
+};
+
+}
+
+
+namespace flecs {
+
+template <typename ... Components>
+struct alert final : entity
+{
+    using entity::entity;
+
+    explicit alert() {
+        m_id = 0;
+        m_world = nullptr;
+    }
+
+    explicit alert(flecs::world_t *world, ecs_alert_desc_t *desc) 
+    {
+        m_world = world;
+        m_id = ecs_alert_init(world, desc);
+
+        if (desc->filter.terms_buffer) {
+            ecs_os_free(desc->filter.terms_buffer);
+        }
+    }
+};
+
+inline alerts::alerts(flecs::world& world) {
+    /* Import C module  */
+    FlecsAlertsImport(world);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::alert_builder<Comps...> world::alert(Args &&... args) const {
+    return flecs::alert_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 }

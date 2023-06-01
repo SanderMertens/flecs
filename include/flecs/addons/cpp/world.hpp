@@ -1012,6 +1012,9 @@ struct world {
 #   ifdef FLECS_METRICS
 #   include "mixins/metrics/mixin.inl"
 #   endif
+#   ifdef FLECS_ALERTS
+#   include "mixins/alerts/mixin.inl"
+#   endif
 
 public:
     void init_builtin_components();
