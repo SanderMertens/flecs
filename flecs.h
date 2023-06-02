@@ -11507,6 +11507,10 @@ void FlecsMetricsImport(
 #define FLECS_RULES
 #endif
 
+#ifndef FLECS_UNITS
+#define FLECS_UNITS
+#endif
+
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
 #endif
@@ -11527,6 +11531,7 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
 /** Alert information. Added to each alert instance */
 typedef struct EcsAlertInstance {
     char *message;
+    double duration;
 } EcsAlertInstance;
 
 /** Source of alert. Added to each alert instance */
