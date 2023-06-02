@@ -165,6 +165,14 @@ const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 116;
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
 
+/* Declarations for addons. Located in world.c to avoid issues during linking of 
+ * static library */
+#ifdef FLECS_ALERTS
+ECS_COMPONENT_DECLARE(EcsAlert);
+ECS_COMPONENT_DECLARE(EcsAlertInstance);
+ECS_COMPONENT_DECLARE(EcsAlertsActive);
+#endif
+
 /* -- Private functions -- */
 
 const ecs_stage_t* flecs_stage_from_readonly_world(
