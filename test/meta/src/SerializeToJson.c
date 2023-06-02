@@ -2272,6 +2272,102 @@ void SerializeToJson_serialize_entity_from_core() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_1_alert() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
+        .message = "$this has Position but not Velocity"
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_progress(world, 1.0); /* Evaluate alert logic */
+
+    /* Give alert instance name so we don't have to test unstable entity ids */
+    ecs_entity_t ai = ecs_get_alert(world, e1, alert);
+    test_assert(ai != 0);
+    ecs_set_name(world, ai, "e1_alert");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_alerts = true;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[[\"Position\"]], "
+        "\"alerts\":[{"
+            "\"alert\":\"position_without_velocity.e1_alert\", "
+            "\"message\":\"e1 has Position but not Velocity\""
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_2_alerts() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t alert_1 = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
+        .message = "$this has Position but not Velocity"
+    });
+
+    ecs_entity_t alert_2 = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_mass"),
+        .filter.expr = "Position, !Mass",
+        .message = "$this has Position but not Mass"
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_progress(world, 1.0); /* Evaluate alert logic */
+
+    /* Give alert instance name so we don't have to test unstable entity ids */
+    ecs_entity_t ai = ecs_get_alert(world, e1, alert_1);
+    test_assert(ai != 0);
+    ecs_set_name(world, ai, "e1_alert_1");
+
+    ai = ecs_get_alert(world, e1, alert_2);
+    test_assert(ai != 0);
+    ecs_set_name(world, ai, "e1_alert_2");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_alerts = true;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[[\"Position\"]], "
+        "\"alerts\":[{"
+            "\"alert\":\"position_without_velocity.e1_alert_1\", "
+            "\"message\":\"e1 has Position but not Velocity\""
+        "}, {"
+            "\"alert\":\"position_without_mass.e1_alert_2\", "
+            "\"message\":\"e1 has Position but not Mass\""
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 

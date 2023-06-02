@@ -1012,6 +1012,35 @@ int ecs_entity_to_json_buf(
         goto error;
     }
 
+    if (desc && desc->serialize_alerts) {
+#ifdef FLECS_ALERTS
+        const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
+        if (alerts) {
+            flecs_json_memberl(buf, "alerts");
+            flecs_json_array_push(buf);
+            ecs_map_iter_t it = ecs_map_iter(&alerts->alerts);
+            while (ecs_map_next(&it)) {
+                flecs_json_next(buf);
+                flecs_json_object_push(buf);
+                ecs_entity_t ai = ecs_map_value(&it);
+                char *alert_name = ecs_get_fullpath(world, ai);
+                flecs_json_memberl(buf, "alert");
+                flecs_json_string(buf, alert_name);
+                ecs_os_free(alert_name);
+
+                const EcsAlertInstance *alert = ecs_get(
+                    world, ai, EcsAlertInstance);
+                if (alert) {
+                    flecs_json_memberl(buf, "message");
+                    flecs_json_string(buf, alert->message);
+                }
+                flecs_json_object_pop(buf);
+            }
+            flecs_json_array_pop(buf);
+        }
+#endif
+    }
+
     flecs_json_object_pop(buf);
 
     return 0;

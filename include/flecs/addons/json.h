@@ -201,10 +201,11 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_hidden;     /**< Serialize ids hidden by override */
     bool serialize_values;     /**< Serialize component values */
     bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
+    bool serialize_alerts;     /**< Serialize active alerts for entity */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, false, false, true, false, false, false, false }
+    false, false, false, false, false, true, false, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components

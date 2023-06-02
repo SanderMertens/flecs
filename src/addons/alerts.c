@@ -284,6 +284,29 @@ error:
     return 0;
 }
 
+ecs_entity_t ecs_get_alert(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(alert != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsAlertsActive *active = ecs_get(world, entity, EcsAlertsActive);
+    if (!active) {
+        return 0;
+    }
+
+    ecs_entity_t *ptr = ecs_map_get(&active->alerts, alert);
+    if (ptr) {
+        return ptr[0];
+    }
+
+error:
+    return 0;
+}
+
 void FlecsAlertsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsAlerts);
 
@@ -299,6 +322,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsAlert);
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
+
+    ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),

@@ -19845,6 +19845,29 @@ error:
     return 0;
 }
 
+ecs_entity_t ecs_get_alert(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(alert != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsAlertsActive *active = ecs_get(world, entity, EcsAlertsActive);
+    if (!active) {
+        return 0;
+    }
+
+    ecs_entity_t *ptr = ecs_map_get(&active->alerts, alert);
+    if (ptr) {
+        return ptr[0];
+    }
+
+error:
+    return 0;
+}
+
 void FlecsAlertsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsAlerts);
 
@@ -19860,6 +19883,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsAlert);
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
+
+    ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
@@ -34171,6 +34196,35 @@ int ecs_entity_to_json_buf(
         goto error;
     }
 
+    if (desc && desc->serialize_alerts) {
+#ifdef FLECS_ALERTS
+        const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
+        if (alerts) {
+            flecs_json_memberl(buf, "alerts");
+            flecs_json_array_push(buf);
+            ecs_map_iter_t it = ecs_map_iter(&alerts->alerts);
+            while (ecs_map_next(&it)) {
+                flecs_json_next(buf);
+                flecs_json_object_push(buf);
+                ecs_entity_t ai = ecs_map_value(&it);
+                char *alert_name = ecs_get_fullpath(world, ai);
+                flecs_json_memberl(buf, "alert");
+                flecs_json_string(buf, alert_name);
+                ecs_os_free(alert_name);
+
+                const EcsAlertInstance *alert = ecs_get(
+                    world, ai, EcsAlertInstance);
+                if (alert) {
+                    flecs_json_memberl(buf, "message");
+                    flecs_json_string(buf, alert->message);
+                }
+                flecs_json_object_pop(buf);
+            }
+            flecs_json_array_pop(buf);
+        }
+#endif
+    }
+
     flecs_json_object_pop(buf);
 
     return 0;
@@ -36597,6 +36651,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
     flecs_rest_bool_param(req, "private", &desc->serialize_private);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
+    flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
 }
 
 static
