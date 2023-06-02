@@ -2294,7 +2294,7 @@ PREDEFINED             = FLECS_APP FLECS_COREDOC FLECS_DOC FLECS_EXPR FLECS_HTTP
                          FLECS_MODULE FLECS_MONITOR FLECS_OS_API_IMPL FLECS_PARSER \
                          FLECS_PIPELINE FLECS_PLECS FLECS_REST FLECS_RULES \
                          FLECS_SNAPSHOT FLECS_STATS FLECS_SYSTEM FLECS_TIMER \
-                         FLECS_UNITS
+                         FLECS_UNITS FLECS_ALERTS FLECS_METRICS
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
