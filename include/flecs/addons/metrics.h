@@ -9,7 +9,7 @@
 #ifdef FLECS_METRICS
 
 /**
- * @defgroup c_addons_monitor Monitor
+ * @defgroup c_addons_metrics Metrics
  * @brief  * The metrics module extracts metrics from components and makes them 
  *           available through a unified component interface.
  * 

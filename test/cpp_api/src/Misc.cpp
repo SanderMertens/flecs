@@ -906,7 +906,8 @@ void Misc_alert() {
 
     test_assert(!e1.has<flecs::AlertsActive>());
     test_assert(e2.has<flecs::AlertsActive>());
-    test_int(e2.get<flecs::AlertsActive>()->count, 1);
+    test_int(e2.alert_count(), 1);
+    test_int(e2.alert_count(a), 1);
 
     {
         flecs::entity ai = ecs.filter_builder()
@@ -954,7 +955,8 @@ void Misc_alert_w_message() {
 
     test_assert(!e1.has<flecs::AlertsActive>());
     test_assert(e2.has<flecs::AlertsActive>());
-    test_int(e2.get<flecs::AlertsActive>()->count, 1);
+    test_int(e2.alert_count(), 1);
+    test_int(e2.alert_count(a), 1);
 
     {
         flecs::entity ai = ecs.filter_builder()

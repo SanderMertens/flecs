@@ -728,6 +728,9 @@ struct entity_view : public id {
 #   ifdef FLECS_DOC
 #   include "mixins/doc/entity_view.inl"
 #   endif
+#   ifdef FLECS_ALERTS
+#   include "mixins/alerts/entity_view.inl"
+#   endif
 
 #   include "mixins/enum/entity_view.inl"
 
