@@ -19571,7 +19571,6 @@ int32_t ecs_cpp_reset_count_inc(void) {
 ECS_COMPONENT_DECLARE(FlecsAlerts);
 ECS_COMPONENT_DECLARE(EcsAlert);
 ECS_COMPONENT_DECLARE(EcsAlertInstance);
-ECS_COMPONENT_DECLARE(EcsAlertSource);
 ECS_COMPONENT_DECLARE(EcsAlertsActive);
 
 typedef struct EcsAlert {
@@ -19581,6 +19580,7 @@ typedef struct EcsAlert {
 
 static
 ECS_CTOR(EcsAlert, ptr, {
+    ptr->message = NULL;
     ecs_map_init(&ptr->instances, NULL);
 })
 
@@ -19641,7 +19641,8 @@ void MonitorAlerts(ecs_iter_t *it) {
                     /* Alert does not yet exist for entity */
                     ecs_entity_t ai = ecs_new_w_pair(world, EcsChildOf, a);
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
-                    ecs_set(world, ai, EcsAlertSource, { .entity = e });
+                    ecs_set(world, ai, EcsMetricSource, { .entity = e });
+                    ecs_set(world, ai, EcsMetricValue, { .value = 0 });
                     ecs_doc_set_color(world, ai, "#ff0000");
                     ecs_defer_suspend(it->world);
                     flecs_alerts_increase_count(world, e, 1);
@@ -19657,7 +19658,8 @@ static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
-    EcsAlertSource *alert_source = ecs_field(it, EcsAlertSource, 2);
+    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 2);
+    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 3);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
@@ -19682,9 +19684,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t s = alert_source[i].entity;
+        ecs_entity_t s = source[i].entity;
 
-        alert_instance[i].duration += it->delta_system_time;
+        value[i].value += (double)it->delta_system_time;
 
         /* Check if alert instance still matches rule */
         ecs_iter_t rit = ecs_rule_iter(world, rule);
@@ -19733,6 +19735,7 @@ ecs_entity_t ecs_alert_init(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -19756,11 +19759,15 @@ ecs_entity_t ecs_alert_init(
         return 0;
     }
 
+    /* Initialize Alert component which identifiers entity as alert */
     EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
-    ecs_map_init(&alert->instances, NULL);
     ecs_modified(world, result, EcsAlert);
+
+    /* Register alert as metric */
+    ecs_add(world, result, EcsMetric);
+    ecs_add_pair(world, result, EcsMetric, EcsCounter);
 
     return result;
 error:
@@ -19772,13 +19779,12 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsTimer);
-    ECS_IMPORT(world, FlecsUnits);
+    ECS_IMPORT(world, FlecsMetrics);
 
     ecs_set_name_prefix(world, "Ecs");
 
     ECS_COMPONENT_DEFINE(world, EcsAlert);
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
-    ECS_COMPONENT_DEFINE(world, EcsAlertSource);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
 
     ecs_struct(world, {
@@ -19791,15 +19797,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
         .members = {
-            { .name = "message", .type = ecs_id(ecs_string_t) },
-            { .name = "duration", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds }
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(EcsAlertSource),
-        .members = {
-            { .name = "entity", .type = ecs_id(ecs_entity_t) }
+            { .name = "message", .type = ecs_id(ecs_string_t) }
         }
     });
 
@@ -19814,7 +19812,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
     });
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
-    ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, AlertInstance, AlertSource);
+    ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, AlertInstance, 
+        flecs.metrics.Source, flecs.metrics.Value);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
@@ -23671,6 +23670,7 @@ ecs_entity_t ecs_metric_init(
     const ecs_metric_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;

@@ -641,6 +641,7 @@ ecs_entity_t ecs_metric_init(
     const ecs_metric_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;
