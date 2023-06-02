@@ -27,9 +27,7 @@ void Alerts_one_active_alert() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -56,9 +54,7 @@ void Alerts_one_active_alert() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -123,9 +119,9 @@ void Alerts_two_active_alerts() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 2);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 2);
+        test_assert(ecs_get_alert_count(world, e2, alert_1) == 1);
+        test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
+        test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -164,9 +160,9 @@ void Alerts_two_active_alerts() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 2);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 2);
+        test_assert(ecs_get_alert_count(world, e2, alert_1) == 1);
+        test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
+        test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -207,9 +203,9 @@ void Alerts_two_active_alerts() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert_1) == 1);
+        test_assert(ecs_get_alert_count(world, e2, alert_2) == 0);
+        test_assert(ecs_get_alert_count(world, e2, 0) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -269,9 +265,7 @@ void Alerts_alert_message() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -323,9 +317,7 @@ void Alerts_alert_message_w_this_var() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -380,9 +372,7 @@ void Alerts_alert_message_w_var() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -438,9 +428,7 @@ void Alerts_alert_message_w_changed_var() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
@@ -469,9 +457,7 @@ void Alerts_alert_message_w_changed_var() {
     test_assert(ecs_has(world, e2, EcsAlertsActive));
     test_int(ecs_count(world, EcsAlertInstance), 1);
     {
-        const EcsAlertsActive *active = ecs_get(world, e2, EcsAlertsActive);
-        test_assert(active != NULL);
-        test_int(active->count, 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
         ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);

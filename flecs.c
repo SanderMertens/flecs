@@ -19602,16 +19602,54 @@ ECS_MOVE(EcsAlert, dst, src, {
 })
 
 static
-void flecs_alerts_increase_count(
+ECS_CTOR(EcsAlertsActive, ptr, {
+    ecs_map_init(&ptr->alerts, NULL);
+})
+
+static
+ECS_DTOR(EcsAlertsActive, ptr, {
+    ecs_map_fini(&ptr->alerts);
+})
+
+static
+ECS_MOVE(EcsAlertsActive, dst, src, {
+    ecs_map_fini(&dst->alerts);
+    dst->alerts = src->alerts;
+    src->alerts = (ecs_map_t){0};
+})
+
+static
+void flecs_alerts_add_alert_to_src(
     ecs_world_t *world,
     ecs_entity_t source,
-    int32_t count)
+    ecs_entity_t alert,
+    ecs_entity_t alert_instance)
 {
     EcsAlertsActive *active = ecs_get_mut(
         world, source, EcsAlertsActive);
-    active->count += count;
-    if (active->count == 0) {
+    ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t *ptr = ecs_map_ensure(&active->alerts, alert);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ptr[0] = alert_instance;
+    ecs_modified(world, source, EcsAlertsActive);
+}
+
+static
+void flecs_alerts_remove_alert_from_src(
+    ecs_world_t *world,
+    ecs_entity_t source,
+    ecs_entity_t alert)
+{
+    EcsAlertsActive *active = ecs_get_mut(
+        world, source, EcsAlertsActive);
+    ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_map_remove(&active->alerts, alert);
+
+    if (!ecs_map_count(&active->alerts)) {
         ecs_remove(world, source, EcsAlertsActive);
+    } else {
+        ecs_modified(world, source, EcsAlertsActive);
     }
 }
 
@@ -19643,9 +19681,9 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
-                    ecs_doc_set_color(world, ai, "#ff0000");
+                    ecs_doc_set_color(world, ai, "#b5494b");
                     ecs_defer_suspend(it->world);
-                    flecs_alerts_increase_count(world, e, 1);
+                    flecs_alerts_add_alert_to_src(world, e, a, ai);
                     ecs_defer_resume(it->world);
                     aptr[0] = ai;
                 }
@@ -19721,7 +19759,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         }
 
         /* Alert instance no longer matches rule, remove it */
-        flecs_alerts_increase_count(world, s, -1);
+        flecs_alerts_remove_alert_from_src(world, s, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, e);
     }
@@ -19783,6 +19821,30 @@ error:
     return 0;
 }
 
+int32_t ecs_get_alert_count(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!alert || ecs_has(world, alert, EcsAlert), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    const EcsAlertsActive *active = ecs_get(world, entity, EcsAlertsActive);
+    if (!active) {
+        return 0;
+    }
+
+    if (alert) {
+        return ecs_map_get(&active->alerts, alert) != NULL;
+    }
+
+    return ecs_map_count(&active->alerts);
+error:
+    return 0;
+}
+
 void FlecsAlertsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsAlerts);
 
@@ -19800,13 +19862,6 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
 
     ecs_struct(world, {
-        .entity = ecs_id(EcsAlertsActive),
-        .members = {
-            { .name = "value", .type = ecs_id(ecs_i32_t) }
-        }
-    });
-
-    ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
         .members = {
             { .name = "message", .type = ecs_id(ecs_string_t) }
@@ -19820,7 +19875,9 @@ void FlecsAlertsImport(ecs_world_t *world) {
     });
 
     ecs_set_hooks(world, EcsAlertsActive, {
-        .ctor = ecs_default_ctor
+        .ctor = ecs_ctor(EcsAlertsActive),
+        .dtor = ecs_dtor(EcsAlertsActive),
+        .move = ecs_move(EcsAlertsActive)
     });
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));

@@ -10,10 +10,8 @@
 #ifdef FLECS_ALERTS
 
 /**
- * @defgroup c_addons_alerts Alert
- * @brief  * The alerts module enables applications to register alerts for when
- *           certain conditions are met. Alerts are registered as queries, and 
- *           automatically become active for matching entities.
+ * @defgroup c_addons_alerts Alerts
+ * @brief Create alerts from monitoring queries.
  * 
  * \ingroup c_addons
  * @{
@@ -47,9 +45,9 @@ typedef struct EcsAlertInstance {
     char *message;
 } EcsAlertInstance;
 
-/** Number of active alerts. Added to alert source */
+/** Map with active alerts for entity. */
 typedef struct EcsAlertsActive {
-    int32_t count;
+    ecs_map_t alerts;
 } EcsAlertsActive;
 
 typedef struct ecs_alert_desc_t { 
@@ -95,7 +93,7 @@ typedef struct ecs_alert_desc_t {
  * created as children of the alert.
  * 
  * When an entity has active alerts, it will have the EcsAlertsActive component
- * which contains the number of active alerts for the entity. This component
+ * which contains a map with active alerts for the entity. This component
  * will be automatically removed once all alerts are cleared for the entity.
  * 
  * @param world The world.
@@ -109,6 +107,23 @@ ecs_entity_t ecs_alert_init(
 
 #define ecs_alert(world, ...)\
     ecs_alert_init(world, &(ecs_alert_desc_t)__VA_ARGS__)
+
+/** Return number of active alerts for entity.
+ * When a valid alert entity is specified for the alert parameter, the operation
+ * will return whether the specified alert is active for the entity. When no
+ * alert is specified, the operation will return the total number of active
+ * alerts for the entity.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param alert The alert to test for (optional).
+ * @return The number of active alerts for the entity.
+ */
+FLECS_API
+int32_t ecs_get_alert_count(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert);
 
 /* Module import */
 FLECS_API
