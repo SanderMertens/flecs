@@ -19,6 +19,7 @@ if host_machine.system() == 'windows'
 endif
 
 flecs_src = files(
+    'src/addons/alerts.c',
     'src/addons/coredoc.c',
     'src/addons/doc.c',
     'src/addons/expr/deserialize.c',

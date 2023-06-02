@@ -498,3 +498,50 @@ void Alerts_set_brief() {
 
     ecs_fini(world);
 }
+
+void Alerts_alert_instance_has_doc_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add(world, e2, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity"
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e2, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e2);
+
+        test_str(ecs_doc_get_name(world, it.entities[0]), "e2");
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_fini(world);
+}
