@@ -218,6 +218,23 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
     }
 }
 
+/** Set doc name of metric instance to name of source entity */
+#ifdef FLECS_DOC
+static void SetMetricDocName(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t src_e = src[i].entity;
+        const char *name = ecs_get_name(world, src_e);
+        if (name) {
+            ecs_doc_set_name(world, it->entities[i], name);
+        }
+    }
+}
+#endif
+
 /** Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -820,6 +837,10 @@ void FlecsMetricsImport(ecs_world_t *world) {
     });
 
     ecs_add_id(world, EcsMetric, EcsOneOf);
+
+#ifdef FLECS_DOC
+    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, EcsMetricSource);
+#endif
 
     ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,
         [in] Source);

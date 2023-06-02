@@ -1518,7 +1518,8 @@
                 "oneof_counter",
                 "metric_description",
                 "id_count",
-                "id_target_count"
+                "id_target_count",
+                "metric_instance_has_doc_name"
             ]
         }, {
             "id": "Alerts",
@@ -1529,7 +1530,8 @@
                 "alert_message_w_this_var",
                 "alert_message_w_var",
                 "alert_message_w_changed_var",
-                "set_brief"
+                "set_brief",
+                "alert_instance_has_doc_name"
             ]
         }]
     }
