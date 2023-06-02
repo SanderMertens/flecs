@@ -123,6 +123,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t s = alert_source[i].entity;
 
+        alert_instance[i].duration += it->delta_system_time;
+
         /* Check if alert instance still matches rule */
         ecs_iter_t rit = ecs_rule_iter(world, rule);
         rit.flags |= EcsIterNoData;
@@ -209,6 +211,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsTimer);
+    ECS_IMPORT(world, FlecsUnits);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -227,7 +230,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
         .members = {
-            { .name = "message", .type = ecs_id(ecs_string_t) }
+            { .name = "message", .type = ecs_id(ecs_string_t) },
+            { .name = "duration", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds }
         }
     });
 
