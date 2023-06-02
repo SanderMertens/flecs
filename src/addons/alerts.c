@@ -8,9 +8,6 @@
 #ifdef FLECS_ALERTS
 
 ECS_COMPONENT_DECLARE(FlecsAlerts);
-ECS_COMPONENT_DECLARE(EcsAlert);
-ECS_COMPONENT_DECLARE(EcsAlertInstance);
-ECS_COMPONENT_DECLARE(EcsAlertsActive);
 
 typedef struct EcsAlert {
     char *message;
