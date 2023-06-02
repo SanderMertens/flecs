@@ -181,6 +181,11 @@ Add reflection data for component types.
 
 **Default**: false
 
+#### alerts
+Add active alerts for entity.
+
+**Default**: false
+
 #### Example
 ```
 /entity/my_entity

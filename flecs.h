@@ -11647,6 +11647,21 @@ int32_t ecs_get_alert_count(
     ecs_entity_t entity,
     ecs_entity_t alert);
 
+/** Return alert instance for specified alert.
+ * This operation returns the alert instance for the specified alert. If the
+ * alert is not active for the entity, the operation will return 0.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param alert The alert to test for.
+ * @return The alert instance for the specified alert.
+ */
+FLECS_API
+ecs_entity_t ecs_get_alert(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert);
+
 /* Module import */
 FLECS_API
 void FlecsAlertsImport(
@@ -12192,10 +12207,11 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_hidden;     /**< Serialize ids hidden by override */
     bool serialize_values;     /**< Serialize component values */
     bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
+    bool serialize_alerts;     /**< Serialize active alerts for entity */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, false, false, true, false, false, false, false }
+    false, false, false, false, false, true, false, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components

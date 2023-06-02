@@ -125,6 +125,21 @@ int32_t ecs_get_alert_count(
     ecs_entity_t entity,
     ecs_entity_t alert);
 
+/** Return alert instance for specified alert.
+ * This operation returns the alert instance for the specified alert. If the
+ * alert is not active for the entity, the operation will return 0.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param alert The alert to test for.
+ * @return The alert instance for the specified alert.
+ */
+FLECS_API
+ecs_entity_t ecs_get_alert(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t alert);
+
 /* Module import */
 FLECS_API
 void FlecsAlertsImport(
