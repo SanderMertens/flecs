@@ -704,6 +704,7 @@ void SerializeToJson_serialize_iterator_variable_ids(void);
 void SerializeToJson_serialize_iterator_variable_ids_2_entities(void);
 void SerializeToJson_serialize_iterator_invalid_value(void);
 void SerializeToJson_serialize_iterator_recycled_pair_id(void);
+void SerializeToJson_serialize_iterator_w_alert(void);
 void SerializeToJson_serialize_paged_iterator(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_component(void);
 void SerializeToJson_serialize_paged_iterator_w_optional_tag(void);
@@ -3636,6 +3637,10 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_iterator_recycled_pair_id
     },
     {
+        "serialize_iterator_w_alert",
+        SerializeToJson_serialize_iterator_w_alert
+    },
+    {
         "serialize_paged_iterator",
         SerializeToJson_serialize_paged_iterator
     },
@@ -4564,7 +4569,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        130,
+        131,
         SerializeToJson_testcases
     },
     {
