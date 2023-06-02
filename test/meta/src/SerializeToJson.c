@@ -4109,6 +4109,49 @@ void SerializeToJson_serialize_iterator_recycled_pair_id() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_w_alert() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+
+    ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
+    });
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_progress(world, 1.0); /* Evaluate alert logic */
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_sources = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"ids\":[[\"Position\"]], \"results\":["
+        "{\"entities\":[\"e1\"]}, "
+        "{\"entities\":[\"e2\"], \"alerts\":true}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 
