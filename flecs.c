@@ -19769,6 +19769,15 @@ ecs_entity_t ecs_alert_init(
     ecs_add(world, result, EcsMetric);
     ecs_add_pair(world, result, EcsMetric, EcsCounter);
 
+    if (desc->brief) {
+#ifdef FLECS_DOC
+        ecs_doc_set_brief(world, result, desc->brief);
+#else
+        ecs_err("cannot set brief for alert, requires FLECS_DOC addon");
+        goto error;
+#endif
+    }
+
     return result;
 error:
     return 0;
@@ -19780,6 +19789,9 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsTimer);
     ECS_IMPORT(world, FlecsMetrics);
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

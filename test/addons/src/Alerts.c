@@ -494,3 +494,21 @@ void Alerts_alert_message_w_changed_var() {
 
     ecs_fini(world);
 }
+
+void Alerts_set_brief() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "has_position"),
+        .filter.expr = "Position",
+        .brief = "Entity has Position"
+    });
+    test_assert(alert != 0);
+    test_str(ecs_doc_get_brief(world, alert), "Entity has Position");
+
+    ecs_fini(world);
+}

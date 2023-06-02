@@ -17,7 +17,6 @@ namespace flecs {
 
 static const flecs::entity_t Alert = ecs_id(EcsAlert);
 using AlertInstance = EcsAlertInstance;
-using AlertSource = EcsAlertSource;
 using AlertsActive = EcsAlertsActive;
 
 /** Module */

@@ -36,6 +36,15 @@ public:
         return *this;
     }
 
+    /** Set brief description for alert.
+     * 
+     * @see ecs_alert_desc_t::brief
+     */
+    Base& brief(const char *brief) {
+        m_desc->brief = brief;
+        return *this;
+    }
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 

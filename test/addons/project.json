@@ -1528,7 +1528,8 @@
                 "alert_message",
                 "alert_message_w_this_var",
                 "alert_message_w_var",
-                "alert_message_w_changed_var"
+                "alert_message_w_changed_var",
+                "set_brief"
             ]
         }]
     }
