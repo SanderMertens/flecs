@@ -191,6 +191,11 @@ inline void world::remove(flecs::entity_t first, flecs::entity_t second) const {
     e.remove(first, second);
 }
 
+template <typename Func>
+inline void world::children(Func&& f) const {
+    this->entity(0).children(FLECS_FWD(f));
+}
+
 template <typename T>
 inline flecs::entity world::singleton() const {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));

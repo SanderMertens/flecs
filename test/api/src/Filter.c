@@ -3043,6 +3043,60 @@ void Filter_filter_w_unresolved_by_name_eq() {
     ecs_fini(world);
 }
 
+void Filter_filter_childof_this() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = { { .first.id = EcsChildOf, .second.id = EcsThis } }
+    }));
+
+    test_assert(f.terms[0].id == ecs_pair(EcsChildOf, EcsWildcard));
+    test_assert(f.terms[0].first.id == EcsChildOf);
+    test_uint(f.terms[0].first.flags, EcsSelf|EcsIsEntity);
+    test_assert(f.terms[0].second.id == EcsThis);
+    test_uint(f.terms[0].second.flags, EcsSelf|EcsIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_childof_this_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter(world, {
+        .storage = &f,
+        .terms = { { .first.id = EcsChildOf, .second.id = EcsThis, .second.flags = EcsIsEntity } }
+    }));
+
+    test_assert(f.terms[0].id == ecs_pair(EcsChildOf, EcsThis));
+    test_assert(f.terms[0].first.id == EcsChildOf);
+    test_uint(f.terms[0].first.flags, EcsSelf|EcsIsEntity);
+    test_assert(f.terms[0].second.id == EcsThis);
+    test_uint(f.terms[0].second.flags, EcsSelf|EcsIsEntity);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_childof_this_by_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_filter(world, {
+        .storage = &f,
+        .terms = { { .id = ecs_pair(EcsChildOf, EcsThis) } }
+    }));
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 

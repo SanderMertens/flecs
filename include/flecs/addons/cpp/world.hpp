@@ -711,6 +711,13 @@ struct world {
      */
     void remove(flecs::entity_t first, flecs::entity_t second) const;
 
+    /** Iterate entities in root of world 
+     * Accepts a callback with the following signature:
+     *  void(*)(flecs::entity e);
+     */
+    template <typename Func>
+    void children(Func&& f) const;
+
     /** Get singleton entity for type.
      */
     template <typename T>

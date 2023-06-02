@@ -246,6 +246,11 @@ void Entity_add_if_exclusive_R_O(void);
 void Entity_add_if_pair_w_0_object(void);
 void Entity_children_w_custom_relation(void);
 void Entity_children_w_custom_relation_type(void);
+void Entity_children_w_this(void);
+void Entity_children_w_wildcard(void);
+void Entity_children_w_any(void);
+void Entity_children_from_root(void);
+void Entity_children_from_root_world(void);
 void Entity_get_depth(void);
 void Entity_get_depth_w_type(void);
 void Entity_to_view(void);
@@ -2161,6 +2166,26 @@ bake_test_case Entity_testcases[] = {
     {
         "children_w_custom_relation_type",
         Entity_children_w_custom_relation_type
+    },
+    {
+        "children_w_this",
+        Entity_children_w_this
+    },
+    {
+        "children_w_wildcard",
+        Entity_children_w_wildcard
+    },
+    {
+        "children_w_any",
+        Entity_children_w_any
+    },
+    {
+        "children_from_root",
+        Entity_children_from_root
+    },
+    {
+        "children_from_root_world",
+        Entity_children_from_root_world
     },
     {
         "get_depth",
@@ -5926,7 +5951,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        239,
+        244,
         Entity_testcases
     },
     {

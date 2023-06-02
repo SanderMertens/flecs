@@ -19354,6 +19354,13 @@ struct world {
      */
     void remove(flecs::entity_t first, flecs::entity_t second) const;
 
+    /** Iterate entities in root of world 
+     * Accepts a callback with the following signature:
+     *  void(*)(flecs::entity e);
+     */
+    template <typename Func>
+    void children(Func&& f) const;
+
     /** Get singleton entity for type.
      */
     template <typename T>
@@ -21057,6 +21064,14 @@ struct entity_view : public id {
      */
     template <typename Func>
     void children(flecs::entity_t rel, Func&& func) const {
+        /* When the entity is a wildcard, this would attempt to query for all
+         * entities with (ChildOf, *) or (ChildOf, _) instead of querying for
+         * the children of the wildcard entity. */
+        if (m_id == flecs::Wildcard || m_id == flecs::Any) {
+            /* This is correct, wildcard entities don't have children */
+            return;
+        }
+
         flecs::world world(m_world);
 
         ecs_term_t terms[2];
@@ -21065,18 +21080,20 @@ struct entity_view : public id {
         f.term_count = 2;
 
         ecs_filter_desc_t desc = {};
-        desc.terms[0].id = ecs_pair(rel, m_id);
+        desc.terms[0].first.id = rel;
+        desc.terms[0].second.id = m_id;
+        desc.terms[0].second.flags = EcsIsEntity;
         desc.terms[1].id = flecs::Prefab;
         desc.terms[1].oper = EcsOptional;
         desc.storage = &f;
-        ecs_filter_init(m_world, &desc);
+        if (ecs_filter_init(m_world, &desc) != nullptr) {
+            ecs_iter_t it = ecs_filter_iter(m_world, &f);
+            while (ecs_filter_next(&it)) {
+                _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
+            }
 
-        ecs_iter_t it = ecs_filter_iter(m_world, &f);
-        while (ecs_filter_next(&it)) {
-            _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
+            ecs_filter_fini(&f);
         }
-
-        ecs_filter_fini(&f);
     }
 
     /** Iterate children for entity.
@@ -29574,6 +29591,11 @@ inline void world::remove(flecs::entity_t second) const {
 inline void world::remove(flecs::entity_t first, flecs::entity_t second) const {
     flecs::entity e(m_world, first);
     e.remove(first, second);
+}
+
+template <typename Func>
+inline void world::children(Func&& f) const {
+    this->entity(0).children(FLECS_FWD(f));
 }
 
 template <typename T>

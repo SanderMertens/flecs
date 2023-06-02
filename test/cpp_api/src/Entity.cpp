@@ -4225,6 +4225,58 @@ void Entity_children_w_custom_relation_type() {
     test_assert(child_2_found == true);
 }
 
+void Entity_children_w_this() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity(flecs::This).children([&](flecs::entity) {
+        count ++;
+    });
+    test_assert(count == 0);
+}
+
+void Entity_children_w_wildcard() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity(flecs::Wildcard).children([&](flecs::entity) {
+        count ++;
+    });
+    test_assert(count == 0);
+}
+
+void Entity_children_w_any() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity(flecs::Any).children([&](flecs::entity) {
+        count ++;
+    });
+    test_assert(count == 0);
+}
+
+void Entity_children_from_root() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity(0).children([&](flecs::entity e) {
+        test_assert(e == ecs.entity("flecs"));
+        count ++;
+    });
+    test_assert(count == 1);
+}
+
+void Entity_children_from_root_world() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.children([&](flecs::entity e) {
+        test_assert(e == ecs.entity("flecs"));
+        count ++;
+    });
+    test_assert(count == 1);
+}
+
 void Entity_get_depth() {
     flecs::world world;
 

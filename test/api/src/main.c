@@ -1119,6 +1119,9 @@ void Filter_filter_w_pair_wildcard_inout_none(void);
 void Filter_filter_w_pair_var_inout_none(void);
 void Filter_filter_w_unresolved_by_name(void);
 void Filter_filter_w_unresolved_by_name_eq(void);
+void Filter_filter_childof_this(void);
+void Filter_filter_childof_this_entity(void);
+void Filter_filter_childof_this_by_id(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6826,6 +6829,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_unresolved_by_name_eq",
         Filter_filter_w_unresolved_by_name_eq
+    },
+    {
+        "filter_childof_this",
+        Filter_filter_childof_this
+    },
+    {
+        "filter_childof_this_entity",
+        Filter_filter_childof_this_entity
+    },
+    {
+        "filter_childof_this_by_id",
+        Filter_filter_childof_this_by_id
     },
     {
         "term_w_id",
@@ -12597,7 +12612,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        297,
+        300,
         Filter_testcases
     },
     {
