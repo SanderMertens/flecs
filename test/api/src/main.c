@@ -1684,6 +1684,7 @@ void Pairs_add_exclusive_non_empty_table_w_pairs(void);
 void Pairs_add_pair_to_entity_w_exclusive_pair(void);
 void Pairs_add_pair_to_entity_w_scope(void);
 void Pairs_add_existing_exclusive_pair_after_pair(void);
+void Pairs_add_remove_exclusive_property(void);
 void Pairs_add_symmetric_relation(void);
 void Pairs_remove_symmetric_relation(void);
 void Pairs_delete_entity_w_symmetric_relation(void);
@@ -9067,6 +9068,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_add_existing_exclusive_pair_after_pair
     },
     {
+        "add_remove_exclusive_property",
+        Pairs_add_remove_exclusive_property
+    },
+    {
         "add_symmetric_relation",
         Pairs_add_symmetric_relation
     },
@@ -12620,7 +12625,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        114,
+        115,
         Pairs_testcases
     },
     {

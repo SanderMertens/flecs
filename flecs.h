@@ -11357,8 +11357,7 @@ void ecs_metric_copy(
 
 /**
  * @defgroup c_addons_metrics Metrics
- * @brief  * The metrics module extracts metrics from components and makes them 
- *           available through a unified component interface.
+ * @brief Collect user-defined metrics from ECS data.
  * 
  * \ingroup c_addons
  * @{

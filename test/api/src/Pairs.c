@@ -2491,6 +2491,26 @@ void Pairs_add_existing_exclusive_pair_after_pair() {
     ecs_fini(world);
 }
 
+void Pairs_add_remove_exclusive_property() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsExclusive);
+    ecs_remove_id(world, rel, EcsExclusive);
+
+    ecs_entity_t tgt_1 = ecs_new_id(world);
+    ecs_entity_t tgt_2 = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, rel, tgt_1);
+    test_assert( ecs_has_pair(world, e, rel, tgt_1));
+
+    ecs_add_pair(world, e, rel, tgt_2);
+    test_assert( ecs_has_pair(world, e, rel, tgt_2));
+    test_assert( ecs_has_pair(world, e, rel, tgt_1));
+
+    ecs_fini(world);
+}
+
 void Pairs_add_symmetric_relation() {
     ecs_world_t *world = ecs_mini();
 

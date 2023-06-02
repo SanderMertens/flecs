@@ -60699,7 +60699,7 @@ void flecs_bootstrap(
 
     ecs_observer(world, {
         .filter.terms = {{ .id = EcsExclusive, .src.flags = EcsSelf  }, match_prefab },
-        .events = {EcsOnAdd},
+        .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_exclusive
     });
 
