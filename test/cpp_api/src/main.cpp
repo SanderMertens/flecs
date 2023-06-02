@@ -1132,6 +1132,7 @@ void Misc_counter_id_metric(void);
 void Misc_counter_target_metric(void);
 void Misc_alert(void);
 void Misc_alert_w_message(void);
+void Misc_alert_w_brief(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5585,6 +5586,10 @@ bake_test_case Misc_testcases[] = {
     {
         "alert_w_message",
         Misc_alert_w_message
+    },
+    {
+        "alert_w_brief",
+        Misc_alert_w_brief
     }
 };
 
@@ -6082,7 +6087,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        29,
+        30,
         Misc_testcases
     },
     {

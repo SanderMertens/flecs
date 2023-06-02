@@ -1185,7 +1185,8 @@
                 "counter_id_metric",
                 "counter_target_metric",
                 "alert",
-                "alert_w_message"
+                "alert_w_message",
+                "alert_w_brief"
             ]
         }, {
             "id": "Meta",

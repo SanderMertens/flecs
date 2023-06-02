@@ -17777,7 +17777,6 @@ namespace flecs {
 
 static const flecs::entity_t Alert = ecs_id(EcsAlert);
 using AlertInstance = EcsAlertInstance;
-using AlertSource = EcsAlertSource;
 using AlertsActive = EcsAlertsActive;
 
 /** Module */
@@ -29156,6 +29155,15 @@ public:
      */      
     Base& message(const char *message) {
         m_desc->message = message;
+        return *this;
+    }
+
+    /** Set brief description for alert.
+     * 
+     * @see ecs_alert_desc_t::brief
+     */
+    Base& brief(const char *brief) {
+        m_desc->brief = brief;
         return *this;
     }
 

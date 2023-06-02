@@ -915,8 +915,8 @@ void Misc_alert() {
             .first();
         test_assert(ai != 0);
         test_assert(ai.has<flecs::AlertInstance>());
-        test_assert(ai.has<flecs::AlertSource>());
-        test_assert(ai.get<flecs::AlertSource>()->entity == e2);
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
         test_assert(ai.parent() == a);
     }
 
@@ -963,8 +963,8 @@ void Misc_alert_w_message() {
             .first();
         test_assert(ai != 0);
         test_assert(ai.has<flecs::AlertInstance>());
-        test_assert(ai.has<flecs::AlertSource>());
-        test_assert(ai.get<flecs::AlertSource>()->entity == e2);
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
         test_assert(ai.parent() == a);
         test_str(ai.get<flecs::AlertInstance>()->message, 
             "e2 has position but not velocity");
@@ -981,4 +981,19 @@ void Misc_alert_w_message() {
             .first();
         test_assert(ai == 0);
     }
+}
+
+void Misc_alert_w_brief() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("has_position")
+        .with<Position>()
+        .brief("Entity has Position")
+        .build();
+
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "has_position");
+    test_str(a.doc_brief(), "Entity has Position");
 }
