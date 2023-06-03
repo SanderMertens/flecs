@@ -756,6 +756,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPredEq);
     flecs_bootstrap_tag(world, EcsPredMatch);
     flecs_bootstrap_tag(world, EcsPredLookup);
+    flecs_bootstrap_tag(world, EcsScopeOpen);
+    flecs_bootstrap_tag(world, EcsScopeClose);
 
     /* Builtin relationships */
     flecs_bootstrap_tag(world, EcsIsA);

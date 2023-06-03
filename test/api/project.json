@@ -1402,7 +1402,8 @@
                 "one_term_w_first_var_entity_src",
                 "one_term_w_pair_w_0_entity",
                 "not_term",
-                "wildcard_term"
+                "wildcard_term",
+                "scopes"
             ]
         }, {
             "id": "Query",

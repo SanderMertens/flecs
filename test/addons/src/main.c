@@ -224,6 +224,13 @@ void Parser_neq_same_var_this(void);
 void Parser_eq_w_optional(void);
 void Parser_neq_w_optional(void);
 void Parser_match_w_optional(void);
+void Parser_query_scope_1_term(void);
+void Parser_query_scope_1_term_spaces(void);
+void Parser_query_scope_2_terms(void);
+void Parser_query_nested_scope(void);
+void Parser_query_nested_scope_spaces(void);
+void Parser_query_scope_unbalanced(void);
+void Parser_query_not_scope(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2322,6 +2329,34 @@ bake_test_case Parser_testcases[] = {
     {
         "match_w_optional",
         Parser_match_w_optional
+    },
+    {
+        "query_scope_1_term",
+        Parser_query_scope_1_term
+    },
+    {
+        "query_scope_1_term_spaces",
+        Parser_query_scope_1_term_spaces
+    },
+    {
+        "query_scope_2_terms",
+        Parser_query_scope_2_terms
+    },
+    {
+        "query_nested_scope",
+        Parser_query_nested_scope
+    },
+    {
+        "query_nested_scope_spaces",
+        Parser_query_nested_scope_spaces
+    },
+    {
+        "query_scope_unbalanced",
+        Parser_query_scope_unbalanced
+    },
+    {
+        "query_not_scope",
+        Parser_query_not_scope
     }
 };
 
@@ -7081,7 +7116,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        215,
+        222,
         Parser_testcases
     },
     {

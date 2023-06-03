@@ -21,6 +21,8 @@
 #define TOK_BITWISE_OR '|'
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
+#define TOK_SCOPE_OPEN '{'
+#define TOK_SCOPE_CLOSE '}'
 #define TOK_WILDCARD '*'
 #define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
@@ -623,7 +625,7 @@ const char* flecs_parse_term(
 
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
-    if (flecs_valid_token_start_char(ptr[0])) {
+    if (flecs_valid_identifier_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
@@ -646,6 +648,23 @@ const char* flecs_parse_term(
     /* Pair with implicit subject */
     } else if (ptr[0] == TOK_PAREN_OPEN) {
         goto parse_pair;
+
+    /* Open query scope */
+    } else if (ptr[0] == TOK_SCOPE_OPEN) {
+        term.first.id = EcsScopeOpen;
+        term.src.id = 0;
+        term.src.flags = EcsIsEntity;
+        term.inout = EcsInOutNone;
+        goto parse_done;
+
+    /* Close query scope */
+    } else if (ptr[0] == TOK_SCOPE_CLOSE) {
+        term.first.id = EcsScopeClose;
+        term.src.id = 0;
+        term.src.flags = EcsIsEntity;
+        term.inout = EcsInOutNone;
+        ptr = ecs_parse_ws(ptr + 1);
+        goto parse_done;
 
     /* Nothing else expected here */
     } else {
@@ -934,6 +953,10 @@ char* ecs_parse_term(
                 ptr ++;
             } else if (ptr[0] == '|') {
                 ptr += 2;
+            } else if (ptr[0] == '{') {
+                ptr ++;
+            } else if (ptr[0] == '}') {
+                /* nothing to be done */
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid preceding token");
@@ -1023,9 +1046,11 @@ char* ecs_parse_term(
 
     /* Cannot combine EcsIsEntity/0 with operators other than AND */
     if (term->oper != EcsAnd && ecs_term_match_0(term)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid operator for empty source"); 
-        goto error;
+        if (term->first.id != EcsScopeOpen && term->first.id != EcsScopeClose) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid operator for empty source"); 
+            goto error;
+        }
     }
 
     /* Automatically assign This if entity is not assigned and the set is

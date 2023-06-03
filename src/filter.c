@@ -1123,7 +1123,7 @@ int ecs_filter_finalize(
 {
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
-    int32_t filter_terms = 0;
+    int32_t filter_terms = 0, scope_nesting = 0;
     bool cond_set = false;
 
     ecs_filter_finalize_ctx_t ctx = {0};
@@ -1224,6 +1224,29 @@ int ecs_filter_finalize(
         if (term->oper == EcsOptional || term->oper == EcsNot) {
             cond_set = true;
         }
+
+        if (term->first.id == EcsPredEq || term->first.id == EcsPredMatch ||
+            term->first.id == EcsPredLookup)
+        {
+            f->flags |= EcsFilterHasPred;
+        }
+
+        if (term->first.id == EcsScopeOpen) {
+            f->flags |= EcsFilterHasScopes;
+            scope_nesting ++;
+        }
+        if (term->first.id == EcsScopeClose) {
+            f->flags |= EcsFilterHasScopes;
+            scope_nesting --;
+        }
+        if (scope_nesting < 0) {
+            flecs_filter_error(&ctx, "'}' without matching '{'");
+        }
+    }
+
+    if (scope_nesting != 0) {
+        flecs_filter_error(&ctx, "missing '}'");
+        return -1;
     }
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
@@ -1622,7 +1645,8 @@ static
 void flecs_term_str_w_strbuf(
     const ecs_world_t *world,
     const ecs_term_t *term,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    int32_t t)
 {
     const ecs_term_id_t *src = &term->src;
     const ecs_term_id_t *second = &term->second;
@@ -1634,6 +1658,26 @@ void flecs_term_str_w_strbuf(
     bool pred_set = ecs_term_id_is_set(&term->first);
     bool subj_set = !ecs_term_match_0(term);
     bool obj_set = ecs_term_id_is_set(second);
+
+    if (term->first.id == EcsScopeOpen) {
+        ecs_strbuf_appendlit(buf, "{");
+        return;
+    } else if (term->first.id == EcsScopeClose) {
+        ecs_strbuf_appendlit(buf, "}");
+        return;
+    }
+
+    if (!t || !(term[-1].oper == EcsOr)) {
+        if (term->inout == EcsIn) {
+            ecs_strbuf_appendlit(buf, "[in] ");
+        } else if (term->inout == EcsInOut) {
+            ecs_strbuf_appendlit(buf, "[inout] ");
+        } else if (term->inout == EcsOut) {
+            ecs_strbuf_appendlit(buf, "[out] ");
+        } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
+            ecs_strbuf_appendlit(buf, "[none] ");
+        }
+    }
 
     if (term->first.flags & EcsIsEntity && term->first.id != 0) {
         if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
@@ -1703,7 +1747,7 @@ char* ecs_term_str(
     const ecs_term_t *term)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    flecs_term_str_w_strbuf(world, term, &buf);
+    flecs_term_str_w_strbuf(world, term, &buf, 0);
     return ecs_strbuf_get(&buf);
 }
 
@@ -1733,25 +1777,17 @@ char* flecs_filter_str(
             }
         }
 
-        if (!i || !(term[-1].oper == EcsOr)) {
-            if (term->inout == EcsIn) {
-                ecs_strbuf_appendlit(&buf, "[in] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendlit(&buf, "[inout] ");
-            } else if (term->inout == EcsOut) {
-                ecs_strbuf_appendlit(&buf, "[out] ");
-            } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
-                ecs_strbuf_appendlit(&buf, "[none] ");
-            }
-        }
-
-        flecs_term_str_w_strbuf(world, term, &buf);
+        flecs_term_str_w_strbuf(world, term, &buf, i);
 
         if (i != (count - 1)) {
             if (term->oper == EcsOr) {
                 ecs_strbuf_appendlit(&buf, " || ");
             } else {
-                ecs_strbuf_appendlit(&buf, ", ");
+                if (term->first.id != EcsScopeOpen) {
+                    if (term[1].first.id != EcsScopeClose) {
+                        ecs_strbuf_appendlit(&buf, ", ");
+                    }
+                }
             }
         }
     }
@@ -2588,6 +2624,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(filter->flags & (EcsFilterHasPred|EcsFilterHasScopes)),
+        ECS_UNSUPPORTED, NULL);
     const ecs_world_t *world = ecs_get_world(stage);
     
     if (!(flags & EcsIterMatchVar)) {
