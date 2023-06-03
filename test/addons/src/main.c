@@ -1056,16 +1056,16 @@ void RulesBuiltinPredicates_this_match_3_or_written(void);
 void RulesBuiltinPredicates_unresolved_by_name(void);
 
 // Testsuite 'RulesScopes'
-void RulesScopes_not_scope_1_term(void);
-void RulesScopes_not_scope_2_terms(void);
-void RulesScopes_not_scope_1_term_w_not(void);
-void RulesScopes_not_scope_2_terms_w_not(void);
-void RulesScopes_not_scope_1_term_w_var(void);
-void RulesScopes_not_scope_2_terms_w_var(void);
-void RulesScopes_not_scope_1_term_w_not_w_var(void);
-void RulesScopes_not_scope_2_terms_w_not_w_var(void);
-void RulesScopes_not_scope_2_terms_w_or(void);
-void RulesScopes_not_scope_3_terms_w_or(void);
+void RulesScopes_term_w_not_scope_1_term(void);
+void RulesScopes_term_w_not_scope_2_terms(void);
+void RulesScopes_term_w_not_scope_1_term_w_not(void);
+void RulesScopes_term_w_not_scope_2_terms_w_not(void);
+void RulesScopes_term_w_not_scope_1_term_w_var(void);
+void RulesScopes_term_w_not_scope_2_terms_w_var(void);
+void RulesScopes_term_w_not_scope_1_term_w_not_w_var(void);
+void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void);
+void RulesScopes_term_w_not_scope_2_terms_w_or(void);
+void RulesScopes_term_w_not_scope_3_terms_w_or(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -5611,44 +5611,44 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
 
 bake_test_case RulesScopes_testcases[] = {
     {
-        "not_scope_1_term",
-        RulesScopes_not_scope_1_term
+        "term_w_not_scope_1_term",
+        RulesScopes_term_w_not_scope_1_term
     },
     {
-        "not_scope_2_terms",
-        RulesScopes_not_scope_2_terms
+        "term_w_not_scope_2_terms",
+        RulesScopes_term_w_not_scope_2_terms
     },
     {
-        "not_scope_1_term_w_not",
-        RulesScopes_not_scope_1_term_w_not
+        "term_w_not_scope_1_term_w_not",
+        RulesScopes_term_w_not_scope_1_term_w_not
     },
     {
-        "not_scope_2_terms_w_not",
-        RulesScopes_not_scope_2_terms_w_not
+        "term_w_not_scope_2_terms_w_not",
+        RulesScopes_term_w_not_scope_2_terms_w_not
     },
     {
-        "not_scope_1_term_w_var",
-        RulesScopes_not_scope_1_term_w_var
+        "term_w_not_scope_1_term_w_var",
+        RulesScopes_term_w_not_scope_1_term_w_var
     },
     {
-        "not_scope_2_terms_w_var",
-        RulesScopes_not_scope_2_terms_w_var
+        "term_w_not_scope_2_terms_w_var",
+        RulesScopes_term_w_not_scope_2_terms_w_var
     },
     {
-        "not_scope_1_term_w_not_w_var",
-        RulesScopes_not_scope_1_term_w_not_w_var
+        "term_w_not_scope_1_term_w_not_w_var",
+        RulesScopes_term_w_not_scope_1_term_w_not_w_var
     },
     {
-        "not_scope_2_terms_w_not_w_var",
-        RulesScopes_not_scope_2_terms_w_not_w_var
+        "term_w_not_scope_2_terms_w_not_w_var",
+        RulesScopes_term_w_not_scope_2_terms_w_not_w_var
     },
     {
-        "not_scope_2_terms_w_or",
-        RulesScopes_not_scope_2_terms_w_or
+        "term_w_not_scope_2_terms_w_or",
+        RulesScopes_term_w_not_scope_2_terms_w_or
     },
     {
-        "not_scope_3_terms_w_or",
-        RulesScopes_not_scope_3_terms_w_or
+        "term_w_not_scope_3_terms_w_or",
+        RulesScopes_term_w_not_scope_3_terms_w_or
     }
 };
 
