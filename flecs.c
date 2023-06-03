@@ -43831,6 +43831,8 @@ void FlecsDocImport(
 #define TOK_BITWISE_OR '|'
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
+#define TOK_SCOPE_OPEN '{'
+#define TOK_SCOPE_CLOSE '}'
 #define TOK_WILDCARD '*'
 #define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
@@ -44433,7 +44435,7 @@ const char* flecs_parse_term(
 
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
-    if (flecs_valid_token_start_char(ptr[0])) {
+    if (flecs_valid_identifier_start_char(ptr[0])) {
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             goto error;
@@ -44456,6 +44458,23 @@ const char* flecs_parse_term(
     /* Pair with implicit subject */
     } else if (ptr[0] == TOK_PAREN_OPEN) {
         goto parse_pair;
+
+    /* Open query scope */
+    } else if (ptr[0] == TOK_SCOPE_OPEN) {
+        term.first.id = EcsScopeOpen;
+        term.src.id = 0;
+        term.src.flags = EcsIsEntity;
+        term.inout = EcsInOutNone;
+        goto parse_done;
+
+    /* Close query scope */
+    } else if (ptr[0] == TOK_SCOPE_CLOSE) {
+        term.first.id = EcsScopeClose;
+        term.src.id = 0;
+        term.src.flags = EcsIsEntity;
+        term.inout = EcsInOutNone;
+        ptr = ecs_parse_ws(ptr + 1);
+        goto parse_done;
 
     /* Nothing else expected here */
     } else {
@@ -44744,6 +44763,10 @@ char* ecs_parse_term(
                 ptr ++;
             } else if (ptr[0] == '|') {
                 ptr += 2;
+            } else if (ptr[0] == '{') {
+                ptr ++;
+            } else if (ptr[0] == '}') {
+                /* nothing to be done */
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid preceding token");
@@ -44833,9 +44856,11 @@ char* ecs_parse_term(
 
     /* Cannot combine EcsIsEntity/0 with operators other than AND */
     if (term->oper != EcsAnd && ecs_term_match_0(term)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid operator for empty source"); 
-        goto error;
+        if (term->first.id != EcsScopeOpen && term->first.id != EcsScopeClose) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid operator for empty source"); 
+            goto error;
+        }
     }
 
     /* Automatically assign This if entity is not assigned and the set is
@@ -45954,6 +45979,8 @@ const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 58;
+const ecs_entity_t EcsScopeOpen =                    FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsScopeClose =                   FLECS_HI_COMPONENT_ID + 60;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 61;
@@ -50350,7 +50377,7 @@ int ecs_filter_finalize(
 {
     int32_t i, term_count = f->term_count, field_count = 0;
     ecs_term_t *terms = f->terms;
-    int32_t filter_terms = 0;
+    int32_t filter_terms = 0, scope_nesting = 0;
     bool cond_set = false;
 
     ecs_filter_finalize_ctx_t ctx = {0};
@@ -50451,6 +50478,29 @@ int ecs_filter_finalize(
         if (term->oper == EcsOptional || term->oper == EcsNot) {
             cond_set = true;
         }
+
+        if (term->first.id == EcsPredEq || term->first.id == EcsPredMatch ||
+            term->first.id == EcsPredLookup)
+        {
+            f->flags |= EcsFilterHasPred;
+        }
+
+        if (term->first.id == EcsScopeOpen) {
+            f->flags |= EcsFilterHasScopes;
+            scope_nesting ++;
+        }
+        if (term->first.id == EcsScopeClose) {
+            f->flags |= EcsFilterHasScopes;
+            scope_nesting --;
+        }
+        if (scope_nesting < 0) {
+            flecs_filter_error(&ctx, "'}' without matching '{'");
+        }
+    }
+
+    if (scope_nesting != 0) {
+        flecs_filter_error(&ctx, "missing '}'");
+        return -1;
     }
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
@@ -50849,7 +50899,8 @@ static
 void flecs_term_str_w_strbuf(
     const ecs_world_t *world,
     const ecs_term_t *term,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    int32_t t)
 {
     const ecs_term_id_t *src = &term->src;
     const ecs_term_id_t *second = &term->second;
@@ -50861,6 +50912,26 @@ void flecs_term_str_w_strbuf(
     bool pred_set = ecs_term_id_is_set(&term->first);
     bool subj_set = !ecs_term_match_0(term);
     bool obj_set = ecs_term_id_is_set(second);
+
+    if (term->first.id == EcsScopeOpen) {
+        ecs_strbuf_appendlit(buf, "{");
+        return;
+    } else if (term->first.id == EcsScopeClose) {
+        ecs_strbuf_appendlit(buf, "}");
+        return;
+    }
+
+    if (!t || !(term[-1].oper == EcsOr)) {
+        if (term->inout == EcsIn) {
+            ecs_strbuf_appendlit(buf, "[in] ");
+        } else if (term->inout == EcsInOut) {
+            ecs_strbuf_appendlit(buf, "[inout] ");
+        } else if (term->inout == EcsOut) {
+            ecs_strbuf_appendlit(buf, "[out] ");
+        } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
+            ecs_strbuf_appendlit(buf, "[none] ");
+        }
+    }
 
     if (term->first.flags & EcsIsEntity && term->first.id != 0) {
         if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
@@ -50930,7 +51001,7 @@ char* ecs_term_str(
     const ecs_term_t *term)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    flecs_term_str_w_strbuf(world, term, &buf);
+    flecs_term_str_w_strbuf(world, term, &buf, 0);
     return ecs_strbuf_get(&buf);
 }
 
@@ -50960,25 +51031,17 @@ char* flecs_filter_str(
             }
         }
 
-        if (!i || !(term[-1].oper == EcsOr)) {
-            if (term->inout == EcsIn) {
-                ecs_strbuf_appendlit(&buf, "[in] ");
-            } else if (term->inout == EcsInOut) {
-                ecs_strbuf_appendlit(&buf, "[inout] ");
-            } else if (term->inout == EcsOut) {
-                ecs_strbuf_appendlit(&buf, "[out] ");
-            } else if (term->inout == EcsInOutNone && term->oper != EcsNot) {
-                ecs_strbuf_appendlit(&buf, "[none] ");
-            }
-        }
-
-        flecs_term_str_w_strbuf(world, term, &buf);
+        flecs_term_str_w_strbuf(world, term, &buf, i);
 
         if (i != (count - 1)) {
             if (term->oper == EcsOr) {
                 ecs_strbuf_appendlit(&buf, " || ");
             } else {
-                ecs_strbuf_appendlit(&buf, ", ");
+                if (term->first.id != EcsScopeOpen) {
+                    if (term[1].first.id != EcsScopeClose) {
+                        ecs_strbuf_appendlit(&buf, ", ");
+                    }
+                }
             }
         }
     }
@@ -51815,6 +51878,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(filter->flags & (EcsFilterHasPred|EcsFilterHasScopes)),
+        ECS_UNSUPPORTED, NULL);
     const ecs_world_t *world = ecs_get_world(stage);
     
     if (!(flags & EcsIterMatchVar)) {
@@ -60614,6 +60679,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPredEq);
     flecs_bootstrap_tag(world, EcsPredMatch);
     flecs_bootstrap_tag(world, EcsPredLookup);
+    flecs_bootstrap_tag(world, EcsScopeOpen);
+    flecs_bootstrap_tag(world, EcsScopeClose);
 
     /* Builtin relationships */
     flecs_bootstrap_tag(world, EcsIsA);

@@ -228,7 +228,14 @@
                 "neq_same_var_this",
                 "eq_w_optional",
                 "neq_w_optional",
-                "match_w_optional"
+                "match_w_optional",
+                "query_scope_1_term",
+                "query_scope_1_term_spaces",
+                "query_scope_2_terms",
+                "query_nested_scope",
+                "query_nested_scope_spaces",
+                "query_scope_unbalanced",
+                "query_not_scope"
             ]
         }, {
             "id": "Plecs",

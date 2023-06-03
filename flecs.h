@@ -392,7 +392,8 @@ extern "C" {
 #define EcsFilterPopulate              (1u << 9u)  /* Populate data, ignore non-matching fields */
 #define EcsFilterHasCondSet            (1u << 10u) /* Does filter have conditionally set fields */
 #define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
-
+#define EcsFilterHasPred               (1u << 12u) /* Filter has equality predicates */
+#define EcsFilterHasScopes             (1u << 13u) /* Filter has query scopes */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -4072,6 +4073,10 @@ FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 FLECS_API extern const ecs_entity_t EcsPredEq;
 FLECS_API extern const ecs_entity_t EcsPredMatch;
 FLECS_API extern const ecs_entity_t EcsPredLookup;
+
+/* Builtin marker entities for opening/closing query scopes */
+FLECS_API extern const ecs_entity_t EcsScopeOpen;
+FLECS_API extern const ecs_entity_t EcsScopeClose;
 
 /** Tag used to indicate query is empty */
 FLECS_API extern const ecs_entity_t EcsEmpty;

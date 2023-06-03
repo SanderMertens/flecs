@@ -1367,6 +1367,10 @@ FLECS_API extern const ecs_entity_t EcsPredEq;
 FLECS_API extern const ecs_entity_t EcsPredMatch;
 FLECS_API extern const ecs_entity_t EcsPredLookup;
 
+/* Builtin marker entities for opening/closing query scopes */
+FLECS_API extern const ecs_entity_t EcsScopeOpen;
+FLECS_API extern const ecs_entity_t EcsScopeClose;
+
 /** Tag used to indicate query is empty */
 FLECS_API extern const ecs_entity_t EcsEmpty;
 

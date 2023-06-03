@@ -1342,6 +1342,7 @@ void FilterStr_one_term_w_first_var_entity_src(void);
 void FilterStr_one_term_w_pair_w_0_entity(void);
 void FilterStr_not_term(void);
 void FilterStr_wildcard_term(void);
+void FilterStr_scopes(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -7716,6 +7717,10 @@ bake_test_case FilterStr_testcases[] = {
     {
         "wildcard_term",
         FilterStr_wildcard_term
+    },
+    {
+        "scopes",
+        FilterStr_scopes
     }
 };
 
@@ -12619,7 +12624,7 @@ static bake_test_suite suites[] = {
         "FilterStr",
         NULL,
         NULL,
-        22,
+        23,
         FilterStr_testcases
     },
     {
