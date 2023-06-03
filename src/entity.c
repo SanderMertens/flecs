@@ -888,8 +888,10 @@ const ecs_entity_t* flecs_bulk_new(
             ecs_entity_t id = component_ids->array[c_i];
             const ecs_table_record_t *tr = flecs_table_record_get(
                 world, storage_table, id);
-            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr != NULL, ECS_INVALID_PARAMETER, 
+                "id is not a component");
+            ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
+                "ids cannot be wildcards");
 
             int32_t index = tr->column;
             ecs_type_info_t *ti = table->type_info[index];

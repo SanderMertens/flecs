@@ -6594,8 +6594,10 @@ const ecs_entity_t* flecs_bulk_new(
             ecs_entity_t id = component_ids->array[c_i];
             const ecs_table_record_t *tr = flecs_table_record_get(
                 world, storage_table, id);
-            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr != NULL, ECS_INVALID_PARAMETER, 
+                "id is not a component");
+            ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
+                "ids cannot be wildcards");
 
             int32_t index = tr->column;
             ecs_type_info_t *ti = table->type_info[index];
@@ -43596,7 +43598,8 @@ ecs_iter_t ecs_rule_iter(
 {
     ecs_iter_t it = {0};
     ecs_rule_iter_t *rit = &it.priv.iter.rule;
-    
+    ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_run_aperiodic(rule->filter.world, EcsAperiodicEmptyTables);
 
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;
@@ -43638,6 +43641,7 @@ ecs_iter_t ecs_rule_iter(
     it.variable_count = rule->var_pub_count;
     it.variable_names = rule->var_names;
 
+error:
     return it;
 }
 

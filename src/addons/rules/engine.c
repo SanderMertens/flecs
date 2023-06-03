@@ -1866,7 +1866,8 @@ ecs_iter_t ecs_rule_iter(
 {
     ecs_iter_t it = {0};
     ecs_rule_iter_t *rit = &it.priv.iter.rule;
-    
+    ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_run_aperiodic(rule->filter.world, EcsAperiodicEmptyTables);
 
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;
@@ -1908,6 +1909,7 @@ ecs_iter_t ecs_rule_iter(
     it.variable_count = rule->var_pub_count;
     it.variable_names = rule->var_names;
 
+error:
     return it;
 }
 
