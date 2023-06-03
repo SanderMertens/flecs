@@ -1456,6 +1456,79 @@ To create a query with the `AndFrom`, `OrFrom` and `NotFrom` operators in the C 
 AND | type_list, OR | type_list, NOT | type_list
 ```
 
+### Query scopes
+> *Supported by: rules*
+
+Query scopes are a mechanism that allows for treating the output of a number of terms as a single condition. For example, the following query has two terms with an `Or` operator that are negated by a `Not` operator:
+
+```c
+// Match entities with Position that don't have Velocity or Speed
+Position, !{ Velocity || Speed }
+```
+
+A query scope can contain any number of terms and operators. The following query has a scope with mixed operators:
+
+```
+Position, !{ Mass, Velocity || Speed, !Rotation }
+```
+
+Query scopes allow for the creation of complex queries when combined with variables and relationships. The following query finds all entities that have no children with `Position`:
+
+```
+Position($this), !{ ChildOf($child, $this), Position($child) }
+```
+
+Note how this is different from this query, which finds all children that don't have `Position`:
+
+```
+Position($this), ChildOf($child, $this), !Position($child)
+```
+
+Whereas the first query only returns parents without children with `Position`, the second query returns parents that have _at least one child_ that doesn't have `Position`.
+
+When a scope is evaluated, the entire result set of the scope is treated as a single term. This has as side effect that any variables first declared inside the scope are not available outside of the scope. For example, in the following query the value for variable `$child` is undefined, as it is first used inside a scope:
+
+```
+Position($this), !{ ChildOf($child, $this), Position($child) }
+```
+
+Scopes currently have the following limitations:
+ - scopes can only be combined with Not operators (e.g. `!{ ... }`). Future versions of flecs will add support for combining scopes with Or operators (e.g. `{ ... } || { ... }`).
+ - scopes cannot appear as first terms in a query.
+
+The following examples show how to use scopes in the different language bindings:
+
+#### Query Descriptor (C)
+```c
+ecs_rule_t *r = ecs_rule(world, {
+  .terms = {
+    // Position, !{ Velocity || Speed }
+    { .id = ecs_id(Position) },
+    { .id = EcsScopeOpen, .src.flags = EcsIsEntity, .oper = EcsNot },
+    { .id = ecs_id(Velocity), .oper = EcsOr },
+    { .id = ecs_id(Speed) },
+    { .id = EcsScopeClose, .src.flags = EcsIsEntity }
+  }
+});
+```
+
+#### Query Builder (C++)
+```cpp
+world.rule_builder()
+  // Position, !{ Velocity || Speed }
+  .with<Position>()
+  .scope_open().not_()
+    .with<Velocity>().or_()
+    .with<Speed>()
+  .scope_close()
+  .build();
+```
+
+#### Query DSL
+```js
+Position, !{ Velocity || Speed }
+```
+
 ### Source
 > *Supported by: filters, cached queries, rules*
 

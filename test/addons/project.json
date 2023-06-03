@@ -1085,16 +1085,16 @@
         }, {
             "id": "RulesScopes",
             "testcases": [
-                "not_scope_1_term",
-                "not_scope_2_terms",
-                "not_scope_1_term_w_not",
-                "not_scope_2_terms_w_not",
-                "not_scope_1_term_w_var",
-                "not_scope_2_terms_w_var",
-                "not_scope_1_term_w_not_w_var",
-                "not_scope_2_terms_w_not_w_var",
-                "not_scope_2_terms_w_or",
-                "not_scope_3_terms_w_or"
+                "term_w_not_scope_1_term",
+                "term_w_not_scope_2_terms",
+                "term_w_not_scope_1_term_w_not",
+                "term_w_not_scope_2_terms_w_not",
+                "term_w_not_scope_1_term_w_var",
+                "term_w_not_scope_2_terms_w_var",
+                "term_w_not_scope_1_term_w_not_w_var",
+                "term_w_not_scope_2_terms_w_not_w_var",
+                "term_w_not_scope_2_terms_w_or",
+                "term_w_not_scope_3_terms_w_or"
             ]
         }, {
             "id": "SystemPeriodic",
