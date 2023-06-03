@@ -145,6 +145,10 @@ static const flecs::entity_t PredEq = EcsPredEq;
 static const flecs::entity_t PredMatch = EcsPredMatch;
 static const flecs::entity_t PredLookup = EcsPredLookup;
 
+/* Builtin marker entities for query scopes */
+static const flecs::entity_t ScopeOpen = EcsScopeOpen;
+static const flecs::entity_t ScopeClose = EcsScopeClose;
+
 /** @} */
 
 }

@@ -15306,6 +15306,10 @@ static const flecs::entity_t PredEq = EcsPredEq;
 static const flecs::entity_t PredMatch = EcsPredMatch;
 static const flecs::entity_t PredLookup = EcsPredLookup;
 
+/* Builtin marker entities for query scopes */
+static const flecs::entity_t ScopeOpen = EcsScopeOpen;
+static const flecs::entity_t ScopeClose = EcsScopeClose;
+
 /** @} */
 
 }
@@ -26472,6 +26476,15 @@ struct filter_builder_i : term_builder_i<Base> {
     template <typename First, typename Second>
     Base& read() {
         return this->term<First, Second>().read();
+    }
+
+    /* Scope_open/scope_close shorthand notation. */
+    Base& scope_open() {
+        return this->with(flecs::ScopeOpen).entity(0);
+    }
+
+    Base& scope_close() {
+        return this->with(flecs::ScopeClose).entity(0);
     }
 
     /* Term notation for more complex query features */

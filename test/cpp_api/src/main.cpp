@@ -767,6 +767,7 @@ void RuleBuilder_named_rule(void);
 void RuleBuilder_named_scoped_rule(void);
 void RuleBuilder_is_valid(void);
 void RuleBuilder_unresolved_by_name(void);
+void RuleBuilder_scope(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -4195,6 +4196,10 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "unresolved_by_name",
         RuleBuilder_unresolved_by_name
+    },
+    {
+        "scope",
+        RuleBuilder_scope
     }
 };
 
@@ -6028,7 +6033,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        27,
+        28,
         RuleBuilder_testcases
     },
     {

@@ -115,6 +115,15 @@ struct filter_builder_i : term_builder_i<Base> {
         return this->term<First, Second>().read();
     }
 
+    /* Scope_open/scope_close shorthand notation. */
+    Base& scope_open() {
+        return this->with(flecs::ScopeOpen).entity(0);
+    }
+
+    Base& scope_close() {
+        return this->with(flecs::ScopeClose).entity(0);
+    }
+
     /* Term notation for more complex query features */
 
     Base& term() {

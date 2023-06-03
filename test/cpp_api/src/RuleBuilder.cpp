@@ -725,3 +725,43 @@ void RuleBuilder_unresolved_by_name() {
 
     test_true(q.iter().is_true());
 }
+
+void RuleBuilder_scope() {
+    flecs::world ecs;
+
+    flecs::entity Root = ecs.entity();
+    flecs::entity TagA = ecs.entity();
+    flecs::entity TagB = ecs.entity();
+
+    ecs.entity()
+        .add(Root)
+        .add(TagA)
+        .add(TagB);
+
+    auto e2 = ecs.entity()
+        .add(Root)
+        .add(TagA);
+
+    ecs.entity()
+        .add(Root)
+        .add(TagB);
+
+    ecs.entity()
+        .add(Root);
+
+    auto r = ecs.rule_builder()
+        .with(Root)
+        .scope_open().not_()
+            .with(TagA)
+            .without(TagB)
+        .scope_close()
+        .build();
+
+    int32_t count = 0;
+    r.each([&](flecs::entity e) {
+        test_assert(e != e2);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
