@@ -1055,6 +1055,18 @@ void RulesBuiltinPredicates_this_match_3_or(void);
 void RulesBuiltinPredicates_this_match_3_or_written(void);
 void RulesBuiltinPredicates_unresolved_by_name(void);
 
+// Testsuite 'RulesScopes'
+void RulesScopes_not_scope_1_term(void);
+void RulesScopes_not_scope_2_terms(void);
+void RulesScopes_not_scope_1_term_w_not(void);
+void RulesScopes_not_scope_2_terms_w_not(void);
+void RulesScopes_not_scope_1_term_w_var(void);
+void RulesScopes_not_scope_2_terms_w_var(void);
+void RulesScopes_not_scope_1_term_w_not_w_var(void);
+void RulesScopes_not_scope_2_terms_w_not_w_var(void);
+void RulesScopes_not_scope_2_terms_w_or(void);
+void RulesScopes_not_scope_3_terms_w_or(void);
+
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
 void SystemPeriodic_1_type_3_component(void);
@@ -5597,6 +5609,49 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     }
 };
 
+bake_test_case RulesScopes_testcases[] = {
+    {
+        "not_scope_1_term",
+        RulesScopes_not_scope_1_term
+    },
+    {
+        "not_scope_2_terms",
+        RulesScopes_not_scope_2_terms
+    },
+    {
+        "not_scope_1_term_w_not",
+        RulesScopes_not_scope_1_term_w_not
+    },
+    {
+        "not_scope_2_terms_w_not",
+        RulesScopes_not_scope_2_terms_w_not
+    },
+    {
+        "not_scope_1_term_w_var",
+        RulesScopes_not_scope_1_term_w_var
+    },
+    {
+        "not_scope_2_terms_w_var",
+        RulesScopes_not_scope_2_terms_w_var
+    },
+    {
+        "not_scope_1_term_w_not_w_var",
+        RulesScopes_not_scope_1_term_w_not_w_var
+    },
+    {
+        "not_scope_2_terms_w_not_w_var",
+        RulesScopes_not_scope_2_terms_w_not_w_var
+    },
+    {
+        "not_scope_2_terms_w_or",
+        RulesScopes_not_scope_2_terms_w_or
+    },
+    {
+        "not_scope_3_terms_w_or",
+        RulesScopes_not_scope_3_terms_w_or
+    }
+};
+
 bake_test_case SystemPeriodic_testcases[] = {
     {
         "1_type_1_component",
@@ -7197,6 +7252,13 @@ static bake_test_suite suites[] = {
         RulesBuiltinPredicates_testcases
     },
     {
+        "RulesScopes",
+        NULL,
+        NULL,
+        10,
+        RulesScopes_testcases
+    },
+    {
         "SystemPeriodic",
         NULL,
         NULL,
@@ -7353,5 +7415,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 34);
+    return bake_test_run("addons", argc, argv, suites, 35);
 }

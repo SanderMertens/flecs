@@ -24,6 +24,7 @@ typedef enum {
 
 typedef struct ecs_rule_var_t {
     int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable)*/
+    bool anonymous;        /* variable is anonymous */
     ecs_var_id_t id;       /* variable id */
     ecs_var_id_t table_id; /* id to table variable, if any */
     const char *name;      /* variable name */
@@ -175,12 +176,7 @@ typedef struct ecs_rule_op_ctx_t {
     } is;
 } ecs_rule_op_ctx_t;
 
-/* Rule compiler state */
 typedef struct {
-    ecs_vec_t *ops;
-    ecs_write_flags_t written; /* Bitmask to check which variables have been written */
-    ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
-
     /* Labels used for control flow */
     ecs_rule_lbl_t lbl_union;
     ecs_rule_lbl_t lbl_not;
@@ -189,6 +185,20 @@ typedef struct {
     ecs_rule_lbl_t lbl_or;
     ecs_rule_lbl_t lbl_none;
     ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
+} ecs_rule_compile_ctrlflow_t;
+
+/* Rule compiler state */
+typedef struct {
+    ecs_vec_t *ops;
+    ecs_write_flags_t written; /* Bitmask to check which variables have been written */
+    ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
+
+    /* Maintain control flow per scope */
+    ecs_rule_compile_ctrlflow_t ctrlflow[FLECS_QUERY_SCOPE_NESTING_MAX];
+    ecs_rule_compile_ctrlflow_t *cur; /* Current scope */
+
+    int32_t scope; /* Nesting level of query scopes */
+    ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
 } ecs_rule_compile_ctx_t;    
 
 /* Rule run state */
