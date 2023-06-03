@@ -1187,13 +1187,13 @@ int flecs_rule_compile_term(
         /* If the term has a 0 source, check if it's a scope open/close */
         if (term->first.id == EcsScopeOpen) {
             if (term->oper == EcsNot) {
-                ctx->scope_is_not |= (1ull << ctx->scope);
+                ctx->scope_is_not |= (ecs_flags32_t)(1ull << ctx->scope);
             } else {
-                ctx->scope_is_not &= ~(1ull << ctx->scope);
+                ctx->scope_is_not &= (ecs_flags32_t)~(1ull << ctx->scope);
             }
         } else if (term->first.id == EcsScopeClose) {
             flecs_rule_compile_pop(ctx);
-            if (ctx->scope_is_not & (1 << ctx->scope)) {
+            if (ctx->scope_is_not & (ecs_flags32_t)(1ull << ctx->scope)) {
                 op.field_index = -1;
                 flecs_rule_end_not(&op, ctx, false);
             }
