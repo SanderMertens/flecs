@@ -29,7 +29,7 @@ void Alerts_one_active_alert() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -56,7 +56,7 @@ void Alerts_one_active_alert() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -123,7 +123,7 @@ void Alerts_two_active_alerts() {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -164,7 +164,7 @@ void Alerts_two_active_alerts() {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -207,7 +207,7 @@ void Alerts_two_active_alerts() {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 0);
         test_assert(ecs_get_alert_count(world, e2, 0) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -267,7 +267,7 @@ void Alerts_alert_message() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -319,7 +319,7 @@ void Alerts_alert_message_w_this_var() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -374,7 +374,7 @@ void Alerts_alert_message_w_var() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -430,7 +430,7 @@ void Alerts_alert_message_w_changed_var() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -459,7 +459,7 @@ void Alerts_alert_message_w_changed_var() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
@@ -523,7 +523,7 @@ void Alerts_alert_instance_has_doc_name() {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.AlertInstance" });
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_filter_iter(world, alerts);
         test_bool(ecs_filter_next(&it), true);
         test_int(it.count, 1);
