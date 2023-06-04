@@ -1769,7 +1769,7 @@ int flecs_json_serialize_iter_result(
 
     /* Add "alerts": true member if table has entities with active alerts */
 #ifdef FLECS_ALERTS
-    if (ecs_id(EcsAlertsActive) != 0) {
+    if (it->table && (ecs_id(EcsAlertsActive) != 0)) {
         /* Only add field if alerts addon is imported */
         if (ecs_table_has_id(world, it->table, ecs_id(EcsAlertsActive))) {
             flecs_json_memberl(buf, "alerts");
