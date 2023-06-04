@@ -5267,3 +5267,19 @@ void Parser_query_not_scope() {
 
     ecs_fini(world);
 }
+
+void Parser_query_empty_scope() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "TagA, !{}"
+    }));
+
+    ecs_fini(world);
+}

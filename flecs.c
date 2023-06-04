@@ -41214,6 +41214,19 @@ int flecs_rule_compile(
             if (!flecs_rule_var_is_anonymous(rule, var_id)) {
                 only_anonymous = false;
                 break;
+            } else {
+                /* Don't fetch component data for anonymous variables. Because
+                 * not all metadata (such as it.sources) is initialized for
+                 * anonymous variables, and because they may only be available
+                 * as table variables (each is not guaranteed to be inserted for
+                 * anonymous variables) the iterator may not have sufficient
+                 * information to resolve component data. */
+                for (int32_t t = 0; t < filter->term_count; t ++) {
+                    ecs_term_t *term = &filter->terms[t];
+                    if (term->field_index == i) {
+                        term->inout = EcsInOutNone;
+                    }
+                }
             }
         }
 
@@ -50577,6 +50590,11 @@ int ecs_filter_finalize(
             scope_nesting ++;
         }
         if (term->first.id == EcsScopeClose) {
+            if (i && terms[i - 1].first.id == EcsScopeOpen) {
+                flecs_filter_error(&ctx, "invalid empty scope");
+                return -1;
+            }
+
             f->flags |= EcsFilterHasScopes;
             scope_nesting --;
         }
