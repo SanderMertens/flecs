@@ -231,6 +231,7 @@ void Parser_query_nested_scope(void);
 void Parser_query_nested_scope_spaces(void);
 void Parser_query_scope_unbalanced(void);
 void Parser_query_not_scope(void);
+void Parser_query_empty_scope(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -793,6 +794,10 @@ void RulesVariables_parse_2_vars_paren_w_spaces(void);
 void RulesVariables_var_count(void);
 void RulesVariables_var_name(void);
 void RulesVariables_var_is_entity(void);
+void RulesVariables_no_this_anonymous_src(void);
+void RulesVariables_no_this_anonymous_src_w_pair(void);
+void RulesVariables_no_this_anonymous_component_src(void);
+void RulesVariables_no_this_anonymous_component_src_w_pair(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -2369,6 +2374,10 @@ bake_test_case Parser_testcases[] = {
     {
         "query_not_scope",
         Parser_query_not_scope
+    },
+    {
+        "query_empty_scope",
+        Parser_query_empty_scope
     }
 };
 
@@ -4587,6 +4596,22 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "var_is_entity",
         RulesVariables_var_is_entity
+    },
+    {
+        "no_this_anonymous_src",
+        RulesVariables_no_this_anonymous_src
+    },
+    {
+        "no_this_anonymous_src_w_pair",
+        RulesVariables_no_this_anonymous_src_w_pair
+    },
+    {
+        "no_this_anonymous_component_src",
+        RulesVariables_no_this_anonymous_component_src
+    },
+    {
+        "no_this_anonymous_component_src_w_pair",
+        RulesVariables_no_this_anonymous_component_src_w_pair
     }
 };
 
@@ -7171,7 +7196,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        222,
+        223,
         Parser_testcases
     },
     {
@@ -7213,7 +7238,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        93,
+        97,
         RulesVariables_testcases
     },
     {

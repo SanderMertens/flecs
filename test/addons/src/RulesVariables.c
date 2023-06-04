@@ -5844,3 +5844,111 @@ void RulesVariables_var_is_entity() {
 
     ecs_fini(world);
 }
+
+void RulesVariables_no_this_anonymous_src() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new_w_id(world, TagA);
+    test_assert(e != 0);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "TagA($_x)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_uint(TagA, ecs_field_id(&it, 1));
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_no_this_anonymous_src_w_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_id(world, TagA);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, EcsChildOf, parent);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "TagA($_x), ChildOf($_x, $Parent)"
+    });
+    test_assert(r != NULL);
+
+    int parent_var = ecs_rule_find_var(r, "Parent");
+    test_assert(parent_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_uint(0, it.count);
+    test_uint(TagA, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 2));
+    test_uint(parent, ecs_iter_get_var(&it, parent_var));
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_no_this_anonymous_component_src() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position($_x)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_no_this_anonymous_component_src_w_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, EcsChildOf, parent);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position($_x), ChildOf($_x, $Parent)"
+    });
+    test_assert(r != NULL);
+
+    int parent_var = ecs_rule_find_var(r, "Parent");
+    test_assert(parent_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_uint(0, it.count);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 2));
+    test_uint(parent, ecs_iter_get_var(&it, parent_var));
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

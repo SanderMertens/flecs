@@ -235,7 +235,8 @@
                 "query_nested_scope",
                 "query_nested_scope_spaces",
                 "query_scope_unbalanced",
-                "query_not_scope"
+                "query_not_scope",
+                "query_empty_scope"
             ]
         }, {
             "id": "Plecs",
@@ -809,7 +810,11 @@
                 "parse_2_vars_paren_w_spaces",
                 "var_count",
                 "var_name",
-                "var_is_entity"
+                "var_is_entity",
+                "no_this_anonymous_src",
+                "no_this_anonymous_src_w_pair",
+                "no_this_anonymous_component_src",
+                "no_this_anonymous_component_src_w_pair"
             ]
         }, {
             "id": "RulesOperators",
