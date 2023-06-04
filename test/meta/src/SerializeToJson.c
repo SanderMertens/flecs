@@ -4248,6 +4248,47 @@ void SerializeToJson_serialize_iterator_w_alert() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_no_this_alert_imported() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position($x)"
+    });
+    ecs_iter_t it = ecs_rule_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[[\"Position\"]], "
+        "\"vars\":[\"x\"], "
+        "\"results\":[{"
+            "\"ids\":[[\"Position\"]], "
+            "\"sources\":[\"Foo\"], "
+            "\"vars\":[\"Foo\"], "
+            "\"values\":["
+                "{\"x\":10, \"y\":20}"
+            "]"
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 
@@ -4665,4 +4706,8 @@ void SerializeToJson_serialize_anonymous_entities_w_offset() {
     ecs_rule_fini(r);
 
     ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_w_alert_no_this() {
+    // Implement testcase
 }
