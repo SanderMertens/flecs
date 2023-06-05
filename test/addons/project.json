@@ -1557,7 +1557,8 @@
                 "alert_message_w_var",
                 "alert_message_w_changed_var",
                 "set_brief",
-                "alert_instance_has_doc_name"
+                "alert_instance_has_doc_name",
+                "reraise_alert"
             ]
         }]
     }

@@ -1485,6 +1485,7 @@ void Alerts_alert_message_w_var(void);
 void Alerts_alert_message_w_changed_var(void);
 void Alerts_set_brief(void);
 void Alerts_alert_instance_has_doc_name(void);
+void Alerts_reraise_alert(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7188,6 +7189,10 @@ bake_test_case Alerts_testcases[] = {
     {
         "alert_instance_has_doc_name",
         Alerts_alert_instance_has_doc_name
+    },
+    {
+        "reraise_alert",
+        Alerts_reraise_alert
     }
 };
 
@@ -7434,7 +7439,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        8,
+        9,
         Alerts_testcases
     }
 };

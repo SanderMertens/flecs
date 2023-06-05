@@ -157,8 +157,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_entity_t s = source[i].entity;
+        ecs_entity_t ai = it->entities[i];
+        ecs_entity_t e = source[i].entity;
 
         value[i].value += (double)it->delta_system_time;
 
@@ -166,7 +166,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_iter_t rit = ecs_rule_iter(world, rule);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
-        ecs_iter_set_var(&rit, 0, s);
+        ecs_iter_set_var(&rit, 0, e);
 
         if (ecs_rule_next(&rit)) {
             bool generate_message = alert->message;
@@ -195,9 +195,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         }
 
         /* Alert instance no longer matches rule, remove it */
-        flecs_alerts_remove_alert_from_src(world, s, parent);
+        flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
-        ecs_delete(world, e);
+        ecs_delete(world, ai);
     }
 
     ecs_vars_fini(&vars);
