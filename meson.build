@@ -66,7 +66,6 @@ flecs_src = files(
     'src/datastructures/map.c',
     'src/datastructures/stack_allocator.c',
     'src/datastructures/name_index.c',
-    'src/datastructures/qsort.c',
     'src/datastructures/sparse.c',
     'src/datastructures/strbuf.c',
     'src/datastructures/switch_list.c',

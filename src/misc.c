@@ -127,15 +127,6 @@ int flecs_entity_compare(
     return (e1 > e2) - (e1 < e2);
 }
 
-int flecs_entity_compare_qsort(
-    const void *e1,
-    const void *e2)
-{
-    ecs_entity_t v1 = *(ecs_entity_t*)e1;
-    ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    return flecs_entity_compare(v1, NULL, v2, NULL);
-}
-
 uint64_t flecs_string_hash(
     const void *ptr)
 {
