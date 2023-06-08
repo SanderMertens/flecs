@@ -15,7 +15,6 @@
 #include "poly.h"
 #include "stage.h"
 #include "world.h"
-#include "datastructures/qsort.h"
 #include "datastructures/name_index.h"
 
 
@@ -276,11 +275,6 @@ int flecs_entity_compare(
     const void *ptr1, 
     ecs_entity_t e2, 
     const void *ptr2); 
-
-/* Compare function for entity ids which can be used with qsort */
-int flecs_entity_compare_qsort(
-    const void *e1,
-    const void *e2);
 
 bool flecs_name_is_id(
     const char *name);
