@@ -657,7 +657,7 @@ f.each([](flecs::entity e, Position& p) {
 // Option 2: iter() function that iterates each archetype
 f.iter([](flecs::iter& it, Position *p) {
     for (int i : it) {
-        std::cout << e.name()
+        std::cout << it.entity(i).name()
             << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
     }
 });
