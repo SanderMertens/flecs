@@ -1192,7 +1192,11 @@
                 "counter_target_metric",
                 "alert",
                 "alert_w_message",
-                "alert_w_brief"
+                "alert_w_brief",
+                "alert_severity_info",
+                "alert_severity_warning",
+                "alert_severity_error",
+                "alert_severity_implicit"
             ]
         }, {
             "id": "Meta",

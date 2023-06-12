@@ -628,3 +628,60 @@ void Alerts_reraise_alert() {
 
     ecs_fini(world);
 }
+
+void Alerts_info_severity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "has_position"),
+        .filter.expr = "Position",
+        .severity = EcsAlertInfo
+    });
+    test_assert(alert != 0);
+    test_assert(
+        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertInfo);
+
+    ecs_fini(world);
+}
+
+void Alerts_warning_severity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "has_position"),
+        .filter.expr = "Position",
+        .severity = EcsAlertWarning
+    });
+    test_assert(alert != 0);
+    test_assert(
+        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertWarning);
+
+    ecs_fini(world);
+}
+
+void Alerts_error_severity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "has_position"),
+        .filter.expr = "Position",
+        .severity = EcsAlertError
+    });
+    test_assert(alert != 0);
+    test_assert(
+        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertError);
+
+    ecs_fini(world);
+}

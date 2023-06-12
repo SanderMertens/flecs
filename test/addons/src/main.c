@@ -1486,6 +1486,9 @@ void Alerts_alert_message_w_changed_var(void);
 void Alerts_set_brief(void);
 void Alerts_alert_instance_has_doc_name(void);
 void Alerts_reraise_alert(void);
+void Alerts_info_severity(void);
+void Alerts_warning_severity(void);
+void Alerts_error_severity(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7193,6 +7196,18 @@ bake_test_case Alerts_testcases[] = {
     {
         "reraise_alert",
         Alerts_reraise_alert
+    },
+    {
+        "info_severity",
+        Alerts_info_severity
+    },
+    {
+        "warning_severity",
+        Alerts_warning_severity
+    },
+    {
+        "error_severity",
+        Alerts_error_severity
     }
 };
 
@@ -7439,7 +7454,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        9,
+        12,
         Alerts_testcases
     }
 };

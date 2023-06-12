@@ -15,12 +15,16 @@ namespace flecs {
  * @{
  */
 
-static const flecs::entity_t Alert = ecs_id(EcsAlert);
-using AlertInstance = EcsAlertInstance;
-using AlertsActive = EcsAlertsActive;
-
 /** Module */
 struct alerts {
+    using AlertsActive = EcsAlertsActive;
+    using Instance = EcsAlertInstance;
+
+    struct Alert { };
+    struct Info { };
+    struct Warning { };
+    struct Error { };
+
     alerts(flecs::world& world);
 };
 

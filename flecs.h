@@ -11566,9 +11566,17 @@ extern "C" {
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 /* Module components */
+
+/** Tag added to alert, and used as first element of alert severity pair */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
+
+/* Alert severity tags */
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertInfo);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertWarning);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertError);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertCritical);
 
 /** Alert information. Added to each alert instance */
 typedef struct EcsAlertInstance {
@@ -11603,6 +11611,10 @@ typedef struct ecs_alert_desc_t {
 
     /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
+
+    /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
+     * EcsAlertCritical. Defaults to EcsAlertError. */
+    ecs_entity_t severity;
 } ecs_alert_desc_t;
 
 /** Create a new alert.
@@ -17818,12 +17830,16 @@ namespace flecs {
  * @{
  */
 
-static const flecs::entity_t Alert = ecs_id(EcsAlert);
-using AlertInstance = EcsAlertInstance;
-using AlertsActive = EcsAlertsActive;
-
 /** Module */
 struct alerts {
+    using AlertsActive = EcsAlertsActive;
+    using Instance = EcsAlertInstance;
+
+    struct Alert { };
+    struct Info { };
+    struct Warning { };
+    struct Error { };
+
     alerts(flecs::world& world);
 };
 
@@ -29252,6 +29268,24 @@ public:
         return *this;
     }
 
+    /** Set severity of alert (default is Error) 
+     * 
+     * @see ecs_alert_desc_t::severity
+     */
+    Base& severity(flecs::entity_t kind) {
+        m_desc->severity = kind;
+        return *this;
+    }
+
+    /** Set severity of alert (default is Error) 
+     * 
+     * @see ecs_alert_desc_t::severity
+     */
+    template <typename Severity>
+    Base& severity() {
+        return severity(_::cpp_type<Severity>::id(world_v()));
+    }
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 
@@ -29323,6 +29357,11 @@ struct alert final : entity
 inline alerts::alerts(flecs::world& world) {
     /* Import C module  */
     FlecsAlertsImport(world);
+
+    world.entity<alerts::Alert>("::flecs::alerts::Alert");
+    world.entity<alerts::Info>("::flecs::alerts::Info");
+    world.entity<alerts::Warning>("::flecs::alerts::Warning");
+    world.entity<alerts::Error>("::flecs::alerts::Error");
 }
 
 template <typename... Comps, typename... Args>

@@ -45,6 +45,24 @@ public:
         return *this;
     }
 
+    /** Set severity of alert (default is Error) 
+     * 
+     * @see ecs_alert_desc_t::severity
+     */
+    Base& severity(flecs::entity_t kind) {
+        m_desc->severity = kind;
+        return *this;
+    }
+
+    /** Set severity of alert (default is Error) 
+     * 
+     * @see ecs_alert_desc_t::severity
+     */
+    template <typename Severity>
+    Base& severity() {
+        return severity(_::cpp_type<Severity>::id(world_v()));
+    }
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 

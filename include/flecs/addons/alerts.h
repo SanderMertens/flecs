@@ -36,9 +36,17 @@ extern "C" {
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 /* Module components */
+
+/** Tag added to alert, and used as first element of alert severity pair */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
+
+/* Alert severity tags */
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertInfo);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertWarning);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertError);
+FLECS_API extern ECS_TAG_DECLARE(EcsAlertCritical);
 
 /** Alert information. Added to each alert instance */
 typedef struct EcsAlertInstance {
@@ -73,6 +81,10 @@ typedef struct ecs_alert_desc_t {
 
     /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
+
+    /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
+     * EcsAlertCritical. Defaults to EcsAlertError. */
+    ecs_entity_t severity;
 } ecs_alert_desc_t;
 
 /** Create a new alert.

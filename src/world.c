@@ -173,6 +173,10 @@ static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
 ECS_COMPONENT_DECLARE(EcsAlert);
 ECS_COMPONENT_DECLARE(EcsAlertInstance);
 ECS_COMPONENT_DECLARE(EcsAlertsActive);
+ECS_TAG_DECLARE(EcsAlertInfo);
+ECS_TAG_DECLARE(EcsAlertWarning);
+ECS_TAG_DECLARE(EcsAlertError);
+ECS_TAG_DECLARE(EcsAlertCritical);
 #endif
 
 /* -- Private functions -- */

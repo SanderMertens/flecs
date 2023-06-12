@@ -2306,7 +2306,8 @@ void SerializeToJson_serialize_entity_w_1_alert() {
         "\"ids\":[[\"Position\"]], "
         "\"alerts\":[{"
             "\"alert\":\"position_without_velocity.e1_alert\", "
-            "\"message\":\"e1 has Position but not Velocity\""
+            "\"message\":\"e1 has Position but not Velocity\", "
+            "\"severity\":\"Error\""
         "}]"
     "}");
 
@@ -2357,11 +2358,13 @@ void SerializeToJson_serialize_entity_w_2_alerts() {
         "\"path\":\"e1\", "
         "\"ids\":[[\"Position\"]], "
         "\"alerts\":[{"
-            "\"alert\":\"position_without_velocity.e1_alert_1\", "
-            "\"message\":\"e1 has Position but not Velocity\""
-        "}, {"
             "\"alert\":\"position_without_mass.e1_alert_2\", "
-            "\"message\":\"e1 has Position but not Mass\""
+            "\"message\":\"e1 has Position but not Mass\", "
+            "\"severity\":\"Error\""
+        "}, {"
+            "\"alert\":\"position_without_velocity.e1_alert_1\", "
+            "\"message\":\"e1 has Position but not Velocity\", "
+            "\"severity\":\"Error\""
         "}]"
     "}");
 

@@ -117,7 +117,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
-                    ecs_doc_set_color(world, ai, "#b5494b");
+                    // ecs_doc_set_color(world, ai, "#b5494b");
                     ecs_defer_suspend(it->world);
                     flecs_alerts_add_alert_to_src(world, e, a, ai);
                     ecs_defer_resume(it->world);
@@ -243,6 +243,14 @@ ecs_entity_t ecs_alert_init(
     ecs_add(world, result, EcsMetric);
     ecs_add_pair(world, result, EcsMetric, EcsCounter);
 
+    /* Add severity to alert */
+    ecs_entity_t severity = desc->severity;
+    if (!severity) {
+        severity = EcsAlertError;
+    }
+
+    ecs_add_pair(world, result, ecs_id(EcsAlert), severity);
+
     if (desc->brief) {
 #ifdef FLECS_DOC
         ecs_doc_set_brief(world, result, desc->brief);
@@ -316,10 +324,16 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsAlert);
+    ecs_remove_pair(world, ecs_id(EcsAlert), ecs_id(EcsIdentifier), EcsSymbol);
 
     ecs_set_name_prefix(world, "EcsAlert");
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
+
+    ECS_TAG_DEFINE(world, EcsAlertInfo);
+    ECS_TAG_DEFINE(world, EcsAlertWarning);
+    ECS_TAG_DEFINE(world, EcsAlertError);
+    ECS_TAG_DEFINE(world, EcsAlertCritical);
 
     ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 

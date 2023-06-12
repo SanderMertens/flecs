@@ -1139,6 +1139,10 @@ void Misc_counter_target_metric(void);
 void Misc_alert(void);
 void Misc_alert_w_message(void);
 void Misc_alert_w_brief(void);
+void Misc_alert_severity_info(void);
+void Misc_alert_severity_warning(void);
+void Misc_alert_severity_error(void);
+void Misc_alert_severity_implicit(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5620,6 +5624,22 @@ bake_test_case Misc_testcases[] = {
     {
         "alert_w_brief",
         Misc_alert_w_brief
+    },
+    {
+        "alert_severity_info",
+        Misc_alert_severity_info
+    },
+    {
+        "alert_severity_warning",
+        Misc_alert_severity_warning
+    },
+    {
+        "alert_severity_error",
+        Misc_alert_severity_error
+    },
+    {
+        "alert_severity_implicit",
+        Misc_alert_severity_implicit
     }
 };
 
@@ -6117,7 +6137,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        30,
+        34,
         Misc_testcases
     },
     {

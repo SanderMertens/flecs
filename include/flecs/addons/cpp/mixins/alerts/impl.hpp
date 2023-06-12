@@ -33,6 +33,11 @@ struct alert final : entity
 inline alerts::alerts(flecs::world& world) {
     /* Import C module  */
     FlecsAlertsImport(world);
+
+    world.entity<alerts::Alert>("::flecs::alerts::Alert");
+    world.entity<alerts::Info>("::flecs::alerts::Info");
+    world.entity<alerts::Warning>("::flecs::alerts::Warning");
+    world.entity<alerts::Error>("::flecs::alerts::Error");
 }
 
 template <typename... Comps, typename... Args>

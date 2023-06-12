@@ -1558,7 +1558,10 @@
                 "alert_message_w_changed_var",
                 "set_brief",
                 "alert_instance_has_doc_name",
-                "reraise_alert"
+                "reraise_alert",
+                "info_severity",
+                "warning_severity",
+                "error_severity"
             ]
         }]
     }
