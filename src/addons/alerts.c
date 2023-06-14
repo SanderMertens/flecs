@@ -55,6 +55,24 @@ ECS_MOVE(EcsAlertsActive, dst, src, {
 })
 
 static
+ECS_DTOR(EcsAlertInstance, ptr, {
+    ecs_os_free(ptr->message);
+})
+
+static
+ECS_MOVE(EcsAlertInstance, dst, src, {
+    ecs_os_free(dst->message);
+    dst->message = src->message;
+    src->message = NULL;
+})
+
+static
+ECS_COPY(EcsAlertInstance, dst, src, {
+    ecs_os_free(dst->message);
+    dst->message = ecs_os_strdup(src->message);
+})
+
+static
 void flecs_alerts_add_alert_to_src(
     ecs_world_t *world,
     ecs_entity_t source,
@@ -354,6 +372,13 @@ void FlecsAlertsImport(ecs_world_t *world) {
         .ctor = ecs_ctor(EcsAlertsActive),
         .dtor = ecs_dtor(EcsAlertsActive),
         .move = ecs_move(EcsAlertsActive)
+    });
+
+    ecs_set_hooks(world, EcsAlertInstance, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(EcsAlertInstance),
+        .move = ecs_move(EcsAlertInstance),
+        .copy = ecs_copy(EcsAlertInstance)
     });
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
