@@ -4142,6 +4142,8 @@ void DeserializeFromJson_ser_deser_large_data() {
 
     test_str(value.v, long_str);
     ecs_os_free(value.v);
+    ecs_os_free(long_str);
+    ecs_os_free(json);
 
     ecs_fini(world);
 }

@@ -482,7 +482,9 @@ void flecs_entity_filter_init(
     }
 
     if (has_filter) {
-        *entity_filter = ecs_os_malloc_t(ecs_entity_filter_t);
+        if (!*entity_filter) {
+            *entity_filter = ecs_os_malloc_t(ecs_entity_filter_t);
+        }
         ecs_assert(*entity_filter != NULL, ECS_OUT_OF_MEMORY, NULL);
         **entity_filter = ef;
     }

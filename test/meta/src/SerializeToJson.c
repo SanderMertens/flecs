@@ -2310,6 +2310,7 @@ void SerializeToJson_serialize_entity_w_1_alert() {
             "\"severity\":\"Error\""
         "}]"
     "}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -2367,6 +2368,7 @@ void SerializeToJson_serialize_entity_w_2_alerts() {
             "\"severity\":\"Error\""
         "}]"
     "}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -4288,6 +4290,9 @@ void SerializeToJson_serialize_iterator_no_this_alert_imported() {
             "]"
         "}]"
     "}");
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
 
     ecs_fini(world);
 }
@@ -4705,12 +4710,9 @@ void SerializeToJson_serialize_anonymous_entities_w_offset() {
     test_str(json, expect);
 
     ecs_os_free(json);
+    ecs_os_free(expect);
 
     ecs_rule_fini(r);
 
     ecs_fini(world);
-}
-
-void SerializeToJson_serialize_iterator_w_alert_no_this() {
-    // Implement testcase
 }

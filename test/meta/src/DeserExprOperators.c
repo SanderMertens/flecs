@@ -2376,6 +2376,7 @@ void DeserExprOperators_iter_to_vars_no_data() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }
@@ -2435,6 +2436,7 @@ void DeserExprOperators_iter_to_vars_1_comp() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }
@@ -2511,6 +2513,7 @@ void DeserExprOperators_iter_to_vars_2_comps() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }
@@ -2592,6 +2595,7 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }
@@ -2654,6 +2658,7 @@ void DeserExprOperators_iter_to_vars_w_1_query_var() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }
@@ -2733,6 +2738,7 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_vars_fini(&vars);
+    ecs_rule_fini(rule);
 
     ecs_fini(world);
 }

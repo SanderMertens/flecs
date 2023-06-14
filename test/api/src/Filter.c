@@ -2952,8 +2952,8 @@ void Filter_filter_w_first_wildcard_inout_none() {
         }
     }));
 
-
     test_int(f.terms[0].inout, EcsInOutNone);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -2971,6 +2971,7 @@ void Filter_filter_w_first_var_inout_none() {
 
 
     test_int(f.terms[0].inout, EcsInOutNone);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -2986,8 +2987,8 @@ void Filter_filter_w_pair_wildcard_inout_none() {
         }
     }));
 
-
     test_int(f.terms[0].inout, EcsInOutNone);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -3007,6 +3008,7 @@ void Filter_filter_w_pair_var_inout_none() {
     }));
 
     test_int(f.terms[0].inout, EcsInOutNone);
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
