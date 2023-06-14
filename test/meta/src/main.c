@@ -884,6 +884,16 @@ void DeserExprOperators_add_int_shift_left_int(void);
 void DeserExprOperators_mul_int_shift_left_int(void);
 void DeserExprOperators_add_int_shift_left_int_add_int(void);
 void DeserExprOperators_mul_int_shift_left_int_mul_int(void);
+void DeserExprOperators_entity_expr(void);
+void DeserExprOperators_entity_path_expr(void);
+void DeserExprOperators_entity_parent_func(void);
+void DeserExprOperators_entity_name_func(void);
+void DeserExprOperators_entity_doc_name_func(void);
+void DeserExprOperators_entity_chain_func(void);
+void DeserExprOperators_var_parent_func(void);
+void DeserExprOperators_var_name_func(void);
+void DeserExprOperators_var_doc_name_func(void);
+void DeserExprOperators_var_chain_func(void);
 void DeserExprOperators_interpolate_string_w_i32_var(void);
 void DeserExprOperators_interpolate_string_w_string_var(void);
 void DeserExprOperators_interpolate_string_w_entity_var(void);
@@ -897,6 +907,8 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var(void);
 void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var(void);
 void DeserExprOperators_interpolate_string_w_escape_var_operator(void);
 void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void);
+void DeserExprOperators_interpolate_string_w_func(void);
+void DeserExprOperators_interpolate_string_w_func_chain(void);
 void DeserExprOperators_iter_to_vars_no_data(void);
 void DeserExprOperators_iter_to_vars_1_comp(void);
 void DeserExprOperators_iter_to_vars_2_comps(void);
@@ -4340,6 +4352,46 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_mul_int_shift_left_int_mul_int
     },
     {
+        "entity_expr",
+        DeserExprOperators_entity_expr
+    },
+    {
+        "entity_path_expr",
+        DeserExprOperators_entity_path_expr
+    },
+    {
+        "entity_parent_func",
+        DeserExprOperators_entity_parent_func
+    },
+    {
+        "entity_name_func",
+        DeserExprOperators_entity_name_func
+    },
+    {
+        "entity_doc_name_func",
+        DeserExprOperators_entity_doc_name_func
+    },
+    {
+        "entity_chain_func",
+        DeserExprOperators_entity_chain_func
+    },
+    {
+        "var_parent_func",
+        DeserExprOperators_var_parent_func
+    },
+    {
+        "var_name_func",
+        DeserExprOperators_var_name_func
+    },
+    {
+        "var_doc_name_func",
+        DeserExprOperators_var_doc_name_func
+    },
+    {
+        "var_chain_func",
+        DeserExprOperators_var_chain_func
+    },
+    {
         "interpolate_string_w_i32_var",
         DeserExprOperators_interpolate_string_w_i32_var
     },
@@ -4390,6 +4442,14 @@ bake_test_case DeserExprOperators_testcases[] = {
     {
         "interpolate_string_w_escape_curly_brackets",
         DeserExprOperators_interpolate_string_w_escape_curly_brackets
+    },
+    {
+        "interpolate_string_w_func",
+        DeserExprOperators_interpolate_string_w_func
+    },
+    {
+        "interpolate_string_w_func_chain",
+        DeserExprOperators_interpolate_string_w_func_chain
     },
     {
         "iter_to_vars_no_data",
@@ -4612,7 +4672,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        113,
+        125,
         DeserExprOperators_testcases
     },
     {

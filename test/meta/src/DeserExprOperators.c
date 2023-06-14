@@ -1796,6 +1796,235 @@ void DeserExprOperators_mul_int_shift_left_int_mul_int() {
     ecs_fini(world);
 }
 
+void DeserExprOperators_entity_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_new_entity(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "foo", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, foo);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_entity_path_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_new_entity(world, "parent.foo");
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "parent.foo", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, foo);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_entity_parent_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_new_entity(world, "parent.foo");
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "parent.foo.parent()", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, parent);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_entity_name_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_new_entity(world, "parent.foo");
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "parent.foo.name()", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "foo");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_entity_doc_name_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_new_entity(world, "parent.foo");
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooDoc");
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "parent.foo.doc_name()", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooDoc");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_entity_chain_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_new_entity(world, "parent.foo");
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_parse_expr(world, "parent.foo.parent().name()", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "parent");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_var_parent_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    test_assert(ecs_parse_expr(world, "$foo.parent()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, parent);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_var_name_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    test_assert(ecs_parse_expr(world, "$foo.name()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "child");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_var_doc_name_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+    ecs_doc_set_name(world, child, "ChildDoc");
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    test_assert(ecs_parse_expr(world, "$foo.doc_name()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "ChildDoc");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_var_chain_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    ecs_value_t v = {0};
+    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    test_assert(ecs_parse_expr(world, "$foo.parent().name()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "parent");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
 void DeserExprOperators_interpolate_string_w_i32_var() {
     ecs_world_t *world = ecs_init();
 
@@ -2049,6 +2278,59 @@ void DeserExprOperators_interpolate_string_w_escape_curly_brackets() {
     test_assert(result != NULL);
     test_str(result, "Hello {10 + 20}World");
     ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_func() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    char *result = ecs_interpolate_string(world, "Hello {$foo.name()} World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello child World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
+void DeserExprOperators_interpolate_string_w_func_chain() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    test_assert(parent != 0);
+    ecs_doc_set_name(world, parent, "Parent");
+
+    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    test_assert(var != NULL);
+    *(ecs_entity_t*)var->value.ptr = child;
+
+    char *result = ecs_interpolate_string(world, "Hello {$foo.parent().doc_name()} World", &vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello Parent World");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
 
     ecs_fini(world);
 }
