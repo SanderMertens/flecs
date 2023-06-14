@@ -262,7 +262,7 @@ ecs_value_t flecs_dotresolve_var(
 {
     char *dot = strchr(token, '.');
     if (!dot) {
-        return (ecs_value_t){0};
+        return (ecs_value_t){ .type = ecs_id(ecs_entity_t) };
     }
 
     dot[0] = '\0';
@@ -283,6 +283,63 @@ ecs_value_t flecs_dotresolve_var(
         .ptr = ecs_meta_get_ptr(&cur),
         .type = ecs_meta_get_type(&cur)
     };
+}
+
+static
+int flecs_meta_call(
+    ecs_world_t *world,
+    ecs_value_stack_t *stack,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    ecs_meta_cursor_t *cur, 
+    const char *function) 
+{
+    ecs_entity_t type = ecs_meta_get_type(cur);
+    void *value_ptr = ecs_meta_get_ptr(cur);
+
+    if (!ecs_os_strcmp(function, "parent")) {
+        if (type != ecs_id(ecs_entity_t)) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "parent() can only be called on entity");
+            return -1;
+        }
+
+        *(ecs_entity_t*)value_ptr = ecs_get_parent(
+            world, *(ecs_entity_t*)value_ptr);
+    } else if (!ecs_os_strcmp(function, "name")) {
+        if (type != ecs_id(ecs_entity_t)) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "name() can only be called on entity");
+            return -1;
+        }
+
+        char **result = flecs_expr_value_new(stack, ecs_id(ecs_string_t));
+        *result = ecs_os_strdup(ecs_get_name(world, *(ecs_entity_t*)value_ptr));
+        *cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), result);
+    } else if (!ecs_os_strcmp(function, "doc_name")) {
+#ifdef FLECS_DOC
+        if (type != ecs_id(ecs_entity_t)) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "name() can only be called on entity");
+            return -1;
+        }
+
+        char **result = flecs_expr_value_new(stack, ecs_id(ecs_string_t));
+        *result = ecs_os_strdup(ecs_doc_get_name(world, *(ecs_entity_t*)value_ptr));
+        *cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), result);
+#else
+        ecs_parser_error(name, expr, ptr - expr, 
+            "doc_name() is not available without FLECS_DOC addon");
+        return -1;
+#endif
+    } else {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "unknown function '%s'", function);
+        return -1;
+    }
+
+    return 0;
 }
 
 /* Determine the type of an expression from the first character(s). This allows
@@ -340,6 +397,16 @@ ecs_entity_t flecs_parse_discover_type(
 
         const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, token);
         if (!var) {
+            ecs_size_t len = ecs_os_strlen(token);
+            if (ptr[len + 1] == '(') {
+                while ((len > 0) && (token[len] != '.')) {
+                    len --;
+                }
+                if (token[len] == '.') {
+                    token[len] = '\0';
+                }
+            }
+
             ecs_value_t v = flecs_dotresolve_var(world, desc->vars, token);
             if (v.type) {
                 return v.type;
@@ -831,6 +898,85 @@ const char* flecs_binary_expr_parse(
 }
 
 static
+const char* flecs_funccall_parse(
+    ecs_world_t *world,
+    ecs_value_stack_t *stack,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token,
+    ecs_meta_cursor_t *cur,
+    ecs_value_t *value,
+    bool isvar,
+    const ecs_parse_expr_desc_t *desc)
+{
+    char *sep = strrchr(token, '.');
+    if (!sep) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing object for function call '%s'", token);
+        return NULL;
+    }
+
+    sep[0] = '\0';
+    const char *function = sep + 1;
+
+    if (!isvar) {
+        if (ecs_meta_set_string(cur, token) != 0) {
+            goto error;
+        }
+    } else {
+        const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, token);
+        ecs_meta_set_value(cur, &var->value);
+    }
+
+    do {
+        if (!function[0]) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "missing function name for function call '%s'", token);
+            return NULL;
+        }
+
+        if (flecs_meta_call(world, stack, name, expr, ptr, cur, 
+            function) != 0) 
+        {
+            goto error;
+        }
+
+        ecs_entity_t type = ecs_meta_get_type(cur);
+        value->ptr = ecs_meta_get_ptr(cur);
+        value->type = type;
+
+        ptr += 2;
+        if (ptr[0] != '.') {
+            break;
+        }
+
+        ptr ++;
+        char *paren = strchr(ptr, '(');
+        if (!paren) {
+            break;
+        }
+
+        ecs_size_t len = flecs_ito(int32_t, paren - ptr);
+        if (len >= ECS_MAX_TOKEN_SIZE) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "token exceeds maximum token size");
+            goto error;
+        }
+
+        ecs_os_strncpy(token, ptr, len);
+        token[len] = '\0';
+        function = token;
+
+        ptr = paren;
+    } while (true);
+
+    return ptr;
+error:
+    return NULL;
+}
+
+static
 const char* flecs_parse_expr(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
@@ -1029,13 +1175,22 @@ const char* flecs_parse_expr(
 
             const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &token[1]);
             if (!var) {
-                ecs_value_t v = flecs_dotresolve_var(world, desc->vars, &token[1]);
-                if (!v.ptr) {
-                    ecs_parser_error(name, expr, ptr - expr, 
-                        "unresolved variable '%s'", token);
-                    return NULL;
+                if (ptr[0] == '(') {
+                    /* Function */
+                    ptr = flecs_funccall_parse(world, stack, name, expr, ptr, 
+                        &token[1], &cur, &result, true, desc);
+                    if (!ptr) {
+                        goto error;
+                    }
                 } else {
-                    ecs_meta_set_value(&cur, &v);
+                    ecs_value_t v = flecs_dotresolve_var(world, desc->vars, &token[1]);
+                    if (!v.ptr) {
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "unresolved variable '%s'", token);
+                        return NULL;
+                    } else {
+                        ecs_meta_set_value(&cur, &v);
+                    }
                 }
             } else {
                 ecs_meta_set_value(&cur, &var->value);
@@ -1054,6 +1209,13 @@ const char* flecs_parse_expr(
                 /* Member assignment */
                 ptr ++;
                 if (ecs_meta_dotmember(&cur, token) != 0) {
+                    goto error;
+                }
+            } else if (ptr[0] == '(') {
+                /* Function */
+                ptr = flecs_funccall_parse(world, stack, name, expr, ptr, 
+                    token, &cur, &result, false, desc);
+                if (!ptr) {
                     goto error;
                 }
             } else {
