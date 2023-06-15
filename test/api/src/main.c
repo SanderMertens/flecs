@@ -567,6 +567,8 @@ void Has_has_wildcard_pair(void);
 void Count_count_empty(void);
 void Count_count_w_entity_0(void);
 void Count_count_1_component(void);
+void Count_count_disabled(void);
+void Count_count_prefab(void);
 
 // Testsuite 'Get_component'
 void Get_component_setup(void);
@@ -4707,6 +4709,14 @@ bake_test_case Count_testcases[] = {
     {
         "count_1_component",
         Count_count_1_component
+    },
+    {
+        "count_disabled",
+        Count_count_disabled
+    },
+    {
+        "count_prefab",
+        Count_count_prefab
     }
 };
 
@@ -12526,7 +12536,7 @@ static bake_test_suite suites[] = {
         "Count",
         NULL,
         NULL,
-        3,
+        5,
         Count_testcases
     },
     {

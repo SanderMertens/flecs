@@ -2528,7 +2528,10 @@ bool ecs_term_next(
         goto yield;
 
     } else {
-        if (!flecs_term_iter_next(world, iter, false, false)) {
+        if (!flecs_term_iter_next(world, iter, 
+                (term->flags & EcsTermMatchPrefab) != 0, 
+                (term->flags & EcsTermMatchDisabled) != 0)) 
+        {
             goto done;
         }
 

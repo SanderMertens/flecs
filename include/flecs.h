@@ -567,13 +567,17 @@ typedef enum ecs_oper_kind_t {
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
 
 /* Term flags discovered & set during filter creation. */
-#define EcsTermMatchAny    (1 << 0)
-#define EcsTermMatchAnySrc (1 << 1)
-#define EcsTermSrcFirstEq  (1 << 2)
-#define EcsTermSrcSecondEq (1 << 3)
-#define EcsTermTransitive  (1 << 4)
-#define EcsTermReflexive   (1 << 5)
-#define EcsTermIdInherited (1 << 6)
+#define EcsTermMatchAny               (1u << 0)
+#define EcsTermMatchAnySrc            (1u << 1)
+#define EcsTermSrcFirstEq             (1u << 2)
+#define EcsTermSrcSecondEq            (1u << 3)
+#define EcsTermTransitive             (1u << 4)
+#define EcsTermReflexive              (1u << 5)
+#define EcsTermIdInherited            (1u << 6)
+
+/* Term flags used for term iteration */
+#define EcsTermMatchDisabled          (1u << 7)
+#define EcsTermMatchPrefab            (1u << 8)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
