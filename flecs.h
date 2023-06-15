@@ -2704,13 +2704,17 @@ typedef enum ecs_oper_kind_t {
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
 
 /* Term flags discovered & set during filter creation. */
-#define EcsTermMatchAny    (1 << 0)
-#define EcsTermMatchAnySrc (1 << 1)
-#define EcsTermSrcFirstEq  (1 << 2)
-#define EcsTermSrcSecondEq (1 << 3)
-#define EcsTermTransitive  (1 << 4)
-#define EcsTermReflexive   (1 << 5)
-#define EcsTermIdInherited (1 << 6)
+#define EcsTermMatchAny               (1u << 0)
+#define EcsTermMatchAnySrc            (1u << 1)
+#define EcsTermSrcFirstEq             (1u << 2)
+#define EcsTermSrcSecondEq            (1u << 3)
+#define EcsTermTransitive             (1u << 4)
+#define EcsTermReflexive              (1u << 5)
+#define EcsTermIdInherited            (1u << 6)
+
+/* Term flags used for term iteration */
+#define EcsTermMatchDisabled          (1u << 7)
+#define EcsTermMatchPrefab            (1u << 8)
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
@@ -11609,12 +11613,22 @@ typedef struct ecs_alert_desc_t {
      */
     const char *message;
 
-    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /* User friendly name. Will only be set if FLECS_DOC addon is enabled. */
+    const char *doc_name;
+
+    /* Description of alert. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 
     /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
+
+    /* The retain period specifies how long an alert must be inactive before it
+     * is cleared. This makes it easier to track noisy alerts. While an alert is
+     * inactive its duration won't increase. 
+     * When the retain period is 0, the alert will clear immediately after it no
+     * longer matches the alert query. */
+    ecs_ftime_t retain_period;
 } ecs_alert_desc_t;
 
 /** Create a new alert.
@@ -29268,12 +29282,30 @@ public:
         return *this;
     }
 
+    /** Set doc name for alert.
+     * 
+     * @see ecs_alert_desc_t::doc_name
+     */
+    Base& doc_name(const char *doc_name) {
+        m_desc->doc_name = doc_name;
+        return *this;
+    }
+
     /** Set severity of alert (default is Error) 
      * 
      * @see ecs_alert_desc_t::severity
      */
     Base& severity(flecs::entity_t kind) {
         m_desc->severity = kind;
+        return *this;
+    }
+
+    /* Set retain period of alert. 
+     * 
+     * @see ecs_alert_desc_t::retain_period
+     */
+    Base& retain_period(ecs_ftime_t period) {
+        m_desc->retain_period = period;
         return *this;
     }
 

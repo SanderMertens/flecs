@@ -9620,7 +9620,8 @@ int32_t ecs_count_id(
     int32_t count = 0;
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
         .id = id,
-        .src.flags = EcsSelf
+        .src.flags = EcsSelf,
+        .flags = EcsTermMatchDisabled|EcsTermMatchPrefab
     });
 
     it.flags |= EcsIterNoData;
@@ -19342,8 +19343,16 @@ ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 typedef struct EcsAlert {
     char *message;
-    ecs_map_t instances; /* Active instances for metric */
+    ecs_map_t instances;       /* Active instances for metric */
+    ecs_ftime_t retain_period; /* How long to retain the alert */
 } EcsAlert;
+
+typedef struct EcsAlertTimeout {
+    ecs_ftime_t inactive_time; /* Time the alert has been inactive */
+    ecs_ftime_t expire_time;   /* Expiration duration */
+} EcsAlertTimeout;
+
+ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 
 static
 ECS_CTOR(EcsAlert, ptr, {
@@ -19366,6 +19375,8 @@ ECS_MOVE(EcsAlert, dst, src, {
     ecs_map_fini(&dst->instances);
     dst->instances = src->instances;
     src->instances = (ecs_map_t){0};
+
+    dst->retain_period = src->retain_period;
 })
 
 static
@@ -19466,7 +19477,13 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
-                    // ecs_doc_set_color(world, ai, "#b5494b");
+                    if (alert[i].retain_period != 0) {
+                        ecs_set(world, ai, EcsAlertTimeout, {
+                            .inactive_time = 0,
+                            .expire_time = alert[i].retain_period
+                        });
+                    }
+
                     ecs_defer_suspend(it->world);
                     flecs_alerts_add_alert_to_src(world, e, a, ai);
                     ecs_defer_resume(it->world);
@@ -19483,6 +19500,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
     EcsMetricSource *source = ecs_field(it, EcsMetricSource, 2);
     EcsMetricValue *value = ecs_field(it, EcsMetricValue, 3);
+    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 4);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
@@ -19509,8 +19527,6 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_entity_t ai = it->entities[i];
         ecs_entity_t e = source[i].entity;
 
-        value[i].value += (double)it->delta_system_time;
-
         /* Check if alert instance still matches rule */
         ecs_iter_t rit = ecs_rule_iter(world, rule);
         rit.flags |= EcsIterNoData;
@@ -19518,6 +19534,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_iter_set_var(&rit, 0, e);
 
         if (ecs_rule_next(&rit)) {
+            /* Only increase alert duration if the alert was active */
+            value[i].value += (double)it->delta_system_time;
+
             bool generate_message = alert->message;
             if (generate_message) {
                 if (alert_instance[i].message) {
@@ -19538,12 +19557,36 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                     world, alert->message, &vars);
             }
 
+            if (timeout) {
+                if (timeout[i].inactive_time != 0) {
+                    /* The alert just became active. Remove Disabled tag */
+                    flecs_alerts_add_alert_to_src(world, e, parent, ai);
+                    ecs_remove_id(world, ai, EcsDisabled);
+                }
+                timeout[i].inactive_time = 0;
+            }
+
             /* Alert instance still matches rule, keep it alive */
             ecs_iter_fini(&rit);
             continue;
+        } else {
+            if (timeout) {
+                if (timeout[i].inactive_time == 0) {
+                    /* The alert just became inactive. Add Disabled tag */
+                    flecs_alerts_remove_alert_from_src(world, e, parent);
+                    ecs_add_id(world, ai, EcsDisabled);
+                }
+                ecs_ftime_t t = timeout[i].inactive_time;
+                timeout[i].inactive_time += it->delta_system_time;
+                if (t < timeout[i].expire_time) {
+                    /* Alert instance no longer matches rule, but is still
+                     * within the timeout period. Keep it alive. */
+                    continue;
+                }
+            }
         }
 
-        /* Alert instance no longer matches rule, remove it */
+        /* Alert instance no longer matches rule, remove it */        
         flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, ai);
@@ -19586,6 +19629,7 @@ ecs_entity_t ecs_alert_init(
     EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
+    alert->retain_period = desc->retain_period;
     ecs_modified(world, result, EcsAlert);
 
     /* Register alert as metric */
@@ -19599,6 +19643,15 @@ ecs_entity_t ecs_alert_init(
     }
 
     ecs_add_pair(world, result, ecs_id(EcsAlert), severity);
+
+    if (desc->doc_name) {
+#ifdef FLECS_DOC
+        ecs_doc_set_name(world, result, desc->doc_name);
+#else
+        ecs_err("cannot set doc_name for alert, requires FLECS_DOC addon");
+        goto error;
+#endif
+    }
 
     if (desc->brief) {
 #ifdef FLECS_DOC
@@ -19678,6 +19731,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_set_name_prefix(world, "EcsAlert");
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
     ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
+    ECS_COMPONENT_DEFINE(world, EcsAlertTimeout);
 
     ECS_TAG_DEFINE(world, EcsAlertInfo);
     ECS_TAG_DEFINE(world, EcsAlertWarning);
@@ -19714,7 +19768,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
     ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, Instance, 
-        flecs.metrics.Source, flecs.metrics.Value);
+        flecs.metrics.Source, flecs.metrics.Value, ?EcsAlertTimeout, ?Disabled);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
@@ -51863,7 +51917,10 @@ bool ecs_term_next(
         goto yield;
 
     } else {
-        if (!flecs_term_iter_next(world, iter, false, false)) {
+        if (!flecs_term_iter_next(world, iter, 
+                (term->flags & EcsTermMatchPrefab) != 0, 
+                (term->flags & EcsTermMatchDisabled) != 0)) 
+        {
             goto done;
         }
 

@@ -599,7 +599,9 @@
             "testcases": [
                 "count_empty",
                 "count_w_entity_0",
-                "count_1_component"
+                "count_1_component",
+                "count_disabled",
+                "count_prefab"
             ]
         }, {
             "id": "Get_component",

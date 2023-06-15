@@ -1556,12 +1556,15 @@
                 "alert_message_w_this_var",
                 "alert_message_w_var",
                 "alert_message_w_changed_var",
+                "set_doc_name",
                 "set_brief",
                 "alert_instance_has_doc_name",
                 "reraise_alert",
                 "info_severity",
                 "warning_severity",
-                "error_severity"
+                "error_severity",
+                "expire_after_retain",
+                "revive_w_retain"
             ]
         }]
     }

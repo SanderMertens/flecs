@@ -45,12 +45,30 @@ public:
         return *this;
     }
 
+    /** Set doc name for alert.
+     * 
+     * @see ecs_alert_desc_t::doc_name
+     */
+    Base& doc_name(const char *doc_name) {
+        m_desc->doc_name = doc_name;
+        return *this;
+    }
+
     /** Set severity of alert (default is Error) 
      * 
      * @see ecs_alert_desc_t::severity
      */
     Base& severity(flecs::entity_t kind) {
         m_desc->severity = kind;
+        return *this;
+    }
+
+    /* Set retain period of alert. 
+     * 
+     * @see ecs_alert_desc_t::retain_period
+     */
+    Base& retain_period(ecs_ftime_t period) {
+        m_desc->retain_period = period;
         return *this;
     }
 

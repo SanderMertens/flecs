@@ -1000,6 +1000,21 @@ void Misc_alert_w_brief() {
     test_str(a.doc_brief(), "Entity has Position");
 }
 
+void Misc_alert_doc_name() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("has_position")
+        .with<Position>()
+        .doc_name("Has Position")
+        .build();
+
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "has_position");
+    test_str(a.doc_name(), "Has Position");
+}
+
 void Misc_alert_severity_info() {
     flecs::world ecs;
 
@@ -1057,4 +1072,59 @@ void Misc_alert_severity_implicit() {
     test_assert(a != 0);
     test_str(a.name().c_str(), "has_position");
     test_assert(a.target<flecs::alerts::Alert>() == ecs.id<flecs::alerts::Error>());
+}
+
+void Misc_alert_w_retain_period() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .retain_period(1.0)
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto e1 = ecs.entity("e1").set<Position>({10, 20});
+    auto e2 = ecs.entity("e2").set<Position>({10, 20});
+    e1.set<Velocity>({1, 2});
+
+    ecs.progress(1.0);
+
+    test_assert(!e1.has<flecs::alerts::AlertsActive>());
+    test_assert(e2.has<flecs::alerts::AlertsActive>());
+    test_int(e2.alert_count(), 1);
+    test_int(e2.alert_count(a), 1);
+
+    flecs::entity ai;
+    {
+        ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
+        test_assert(ai.parent() == a);
+    }
+
+    e2.add<Velocity>();
+    ecs.progress(1.0);
+
+    test_assert(ai.is_alive());
+    test_assert(!e1.has<flecs::alerts::AlertsActive>());
+    test_assert(!e2.has<flecs::alerts::AlertsActive>());
+    test_int(e2.alert_count(), 0);
+    test_int(e2.alert_count(a), 0);
+
+    ecs.progress(1.0);
+
+    test_assert(!ai.is_alive());
+    test_assert(!e1.has<flecs::alerts::AlertsActive>());
+    test_assert(!e2.has<flecs::alerts::AlertsActive>());
+    test_int(e2.alert_count(), 0);
+    test_int(e2.alert_count(a), 0);
 }

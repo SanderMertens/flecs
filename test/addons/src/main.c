@@ -1483,12 +1483,15 @@ void Alerts_alert_message(void);
 void Alerts_alert_message_w_this_var(void);
 void Alerts_alert_message_w_var(void);
 void Alerts_alert_message_w_changed_var(void);
+void Alerts_set_doc_name(void);
 void Alerts_set_brief(void);
 void Alerts_alert_instance_has_doc_name(void);
 void Alerts_reraise_alert(void);
 void Alerts_info_severity(void);
 void Alerts_warning_severity(void);
 void Alerts_error_severity(void);
+void Alerts_expire_after_retain(void);
+void Alerts_revive_w_retain(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7186,6 +7189,10 @@ bake_test_case Alerts_testcases[] = {
         Alerts_alert_message_w_changed_var
     },
     {
+        "set_doc_name",
+        Alerts_set_doc_name
+    },
+    {
         "set_brief",
         Alerts_set_brief
     },
@@ -7208,6 +7215,14 @@ bake_test_case Alerts_testcases[] = {
     {
         "error_severity",
         Alerts_error_severity
+    },
+    {
+        "expire_after_retain",
+        Alerts_expire_after_retain
+    },
+    {
+        "revive_w_retain",
+        Alerts_revive_w_retain
     }
 };
 
@@ -7454,7 +7469,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        12,
+        15,
         Alerts_testcases
     }
 };

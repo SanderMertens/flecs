@@ -79,12 +79,22 @@ typedef struct ecs_alert_desc_t {
      */
     const char *message;
 
-    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /* User friendly name. Will only be set if FLECS_DOC addon is enabled. */
+    const char *doc_name;
+
+    /* Description of alert. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 
     /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
+
+    /* The retain period specifies how long an alert must be inactive before it
+     * is cleared. This makes it easier to track noisy alerts. While an alert is
+     * inactive its duration won't increase. 
+     * When the retain period is 0, the alert will clear immediately after it no
+     * longer matches the alert query. */
+    ecs_ftime_t retain_period;
 } ecs_alert_desc_t;
 
 /** Create a new alert.
