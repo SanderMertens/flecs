@@ -305,8 +305,7 @@ ecs_entity_t flecs_term_id_get_entity(
 
 static
 int flecs_term_populate_id(
-    ecs_term_t *term,
-    ecs_filter_finalize_ctx_t *ctx)
+    ecs_term_t *term)
 {
     ecs_entity_t first = flecs_term_id_get_entity(&term->first);
     ecs_entity_t second = flecs_term_id_get_entity(&term->second);
@@ -319,19 +318,14 @@ int flecs_term_populate_id(
         return -1;
     }
 
-    if ((second || term->second.flags == EcsIsEntity) && !role) {
-        role = term->id_flags = ECS_PAIR;
+    if ((second || term->second.flags == EcsIsEntity)) {
+        role = term->id_flags |= ECS_PAIR;
     }
 
     if (!second && !ECS_HAS_ID_FLAG(role, PAIR)) {
         term->id = first | role;
     } else {
-        if (!ECS_HAS_ID_FLAG(role, PAIR)) {
-            flecs_filter_error(ctx, "invalid role for pair");
-            return -1;
-        }
-
-        term->id = ecs_pair(first, second);
+        term->id = ecs_pair(first, second) | role;
     }
 
     return 0;
@@ -708,7 +702,7 @@ int flecs_term_finalize(
     }
 
     if (!term->id) {
-        if (flecs_term_populate_id(term, ctx)) {
+        if (flecs_term_populate_id(term)) {
             return -1;
         }
     }

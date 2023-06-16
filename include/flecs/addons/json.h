@@ -31,9 +31,11 @@ extern "C" {
 
 /** Used with ecs_ptr_from_json, ecs_entity_from_json. */
 typedef struct ecs_from_json_desc_t {
-    const char *name; /* Name of expression (used for logging) */
-    const char *expr; /* Full expression (used for logging) */
+    const char *name; /**< Name of expression (used for logging) */
+    const char *expr; /**< Full expression (used for logging) */
 
+    /** Callback that allows for specifying a custom lookup function. The 
+     * default behavior uses ecs_lookup_fullpath */
     ecs_entity_t (*lookup_action)(
         const ecs_world_t*, 
         const char *value, 
@@ -308,8 +310,8 @@ int ecs_iter_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_world_to_json_desc_t {
-    bool serialize_builtin;    /* Exclude flecs modules & contents */
-    bool serialize_modules;    /* Exclude modules & contents */
+    bool serialize_builtin;    /**< Exclude flecs modules & contents */
+    bool serialize_modules;    /**< Exclude modules & contents */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.

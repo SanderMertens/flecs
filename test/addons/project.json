@@ -236,7 +236,9 @@
                 "query_nested_scope_spaces",
                 "query_scope_unbalanced",
                 "query_not_scope",
-                "query_empty_scope"
+                "query_empty_scope",
+                "override_tag",
+                "override_pair"
             ]
         }, {
             "id": "Plecs",
@@ -460,7 +462,11 @@
                 "with_pair_in_scope",
                 "assembly_redeclare_prop_as_const",
                 "assembly_redeclare_prop_as_prop",
-                "assembly_redeclare_const_as_const"
+                "assembly_redeclare_const_as_const",
+                "add_auto_override",
+                "add_auto_override_pair",
+                "scope_w_auto_override",
+                "scope_w_auto_override_pair"
             ]
         }, {
             "id": "Doc",

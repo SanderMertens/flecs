@@ -21095,16 +21095,17 @@ int plecs_create_term(
     }
 
     if (subj) {
+        ecs_id_t id;
         if (!obj) {
-            ecs_add_id(world, subj, pred);
-            state->last_assign_id = pred;
+            id = term->id_flags | pred;
         } else {
-            ecs_add_pair(world, subj, pred, obj);
+            id = term->id_flags | ecs_pair(pred, obj);
             state->last_object = obj;
-            state->last_assign_id = ecs_pair(pred, obj);
         }
+        state->last_assign_id = id;
         state->last_predicate = pred;
         state->last_subject = subj;
+        ecs_add_id(world, subj, id);
 
         pred_as_subj = false;
     } else {
@@ -44832,14 +44833,7 @@ parse_pair_object:
         goto error;
     }
 
-    if (term.id_flags != 0) {
-        if (!ECS_HAS_ID_FLAG(term.id_flags, PAIR)) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid combination of role '%s' with pair", 
-                    ecs_id_flag_str(term.id_flags));
-            goto error;
-        }
-    } else {
+    if (term.id_flags == 0) {
         term.id_flags = ECS_PAIR;
     }
 
@@ -49694,8 +49688,7 @@ ecs_entity_t flecs_term_id_get_entity(
 
 static
 int flecs_term_populate_id(
-    ecs_term_t *term,
-    ecs_filter_finalize_ctx_t *ctx)
+    ecs_term_t *term)
 {
     ecs_entity_t first = flecs_term_id_get_entity(&term->first);
     ecs_entity_t second = flecs_term_id_get_entity(&term->second);
@@ -49708,19 +49701,14 @@ int flecs_term_populate_id(
         return -1;
     }
 
-    if ((second || term->second.flags == EcsIsEntity) && !role) {
-        role = term->id_flags = ECS_PAIR;
+    if ((second || term->second.flags == EcsIsEntity)) {
+        role = term->id_flags |= ECS_PAIR;
     }
 
     if (!second && !ECS_HAS_ID_FLAG(role, PAIR)) {
         term->id = first | role;
     } else {
-        if (!ECS_HAS_ID_FLAG(role, PAIR)) {
-            flecs_filter_error(ctx, "invalid role for pair");
-            return -1;
-        }
-
-        term->id = ecs_pair(first, second);
+        term->id = ecs_pair(first, second) | role;
     }
 
     return 0;
@@ -50097,7 +50085,7 @@ int flecs_term_finalize(
     }
 
     if (!term->id) {
-        if (flecs_term_populate_id(term, ctx)) {
+        if (flecs_term_populate_id(term)) {
             return -1;
         }
     }

@@ -691,16 +691,17 @@ int plecs_create_term(
     }
 
     if (subj) {
+        ecs_id_t id;
         if (!obj) {
-            ecs_add_id(world, subj, pred);
-            state->last_assign_id = pred;
+            id = term->id_flags | pred;
         } else {
-            ecs_add_pair(world, subj, pred, obj);
+            id = term->id_flags | ecs_pair(pred, obj);
             state->last_object = obj;
-            state->last_assign_id = ecs_pair(pred, obj);
         }
+        state->last_assign_id = id;
         state->last_predicate = pred;
         state->last_subject = subj;
+        ecs_add_id(world, subj, id);
 
         pred_as_subj = false;
     } else {

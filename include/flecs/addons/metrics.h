@@ -72,27 +72,27 @@ typedef struct EcsMetricSource {
 typedef struct ecs_metric_desc_t {
     int32_t _canary;
 
-    /* Entity associated with metric */
+    /** Entity associated with metric */
     ecs_entity_t entity;
     
-    /* Entity associated with member that stores metric value. Must not be set
+    /** Entity associated with member that stores metric value. Must not be set
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
-    /* Tracks whether entities have the specified component id. Must not be set
+    /** Tracks whether entities have the specified component id. Must not be set
      * at the same time as member. */
     ecs_id_t id;
 
-    /* If id is a (R, *) wildcard and relationship R has the OneOf property,
+    /** If id is a (R, *) wildcard and relationship R has the OneOf property,
      * setting this value to true will track individual targets. 
      * If the kind is EcsCountId and the id is a (R, *) wildcard, this value
      * will create a metric per target. */
     bool targets;
 
-    /* Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
+    /** Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
     ecs_entity_t kind;
 
-    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of metric. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 } ecs_metric_desc_t;
 

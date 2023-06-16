@@ -11432,27 +11432,27 @@ typedef struct EcsMetricSource {
 typedef struct ecs_metric_desc_t {
     int32_t _canary;
 
-    /* Entity associated with metric */
+    /** Entity associated with metric */
     ecs_entity_t entity;
     
-    /* Entity associated with member that stores metric value. Must not be set
+    /** Entity associated with member that stores metric value. Must not be set
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
-    /* Tracks whether entities have the specified component id. Must not be set
+    /** Tracks whether entities have the specified component id. Must not be set
      * at the same time as member. */
     ecs_id_t id;
 
-    /* If id is a (R, *) wildcard and relationship R has the OneOf property,
+    /** If id is a (R, *) wildcard and relationship R has the OneOf property,
      * setting this value to true will track individual targets. 
      * If the kind is EcsCountId and the id is a (R, *) wildcard, this value
      * will create a metric per target. */
     bool targets;
 
-    /* Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
+    /** Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
     ecs_entity_t kind;
 
-    /* Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of metric. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 } ecs_metric_desc_t;
 
@@ -11595,15 +11595,15 @@ typedef struct EcsAlertsActive {
 typedef struct ecs_alert_desc_t { 
     int32_t _canary;
 
-    /* Entity associated with alert */
+    /** Entity associated with alert */
     ecs_entity_t entity;
 
-    /* Alert query. An alert will be created for each entity that matches the
+    /** Alert query. An alert will be created for each entity that matches the
      * specified query. The query must have at least one term that uses the
      * $this variable (default). */
     ecs_filter_desc_t filter;
 
-    /* Template for alert message. This string is used to generate the alert
+    /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
      * the template expressions is as specified by ecs_interpolate_string.
      * 
@@ -11613,17 +11613,17 @@ typedef struct ecs_alert_desc_t {
      */
     const char *message;
 
-    /* User friendly name. Will only be set if FLECS_DOC addon is enabled. */
+    /** User friendly name. Will only be set if FLECS_DOC addon is enabled. */
     const char *doc_name;
 
-    /* Description of alert. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of alert. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 
-    /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
+    /** Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
 
-    /* The retain period specifies how long an alert must be inactive before it
+    /** The retain period specifies how long an alert must be inactive before it
      * is cleared. This makes it easier to track noisy alerts. While an alert is
      * inactive its duration won't increase. 
      * When the retain period is 0, the alert will clear immediately after it no
@@ -12071,9 +12071,11 @@ extern "C" {
 
 /** Used with ecs_ptr_from_json, ecs_entity_from_json. */
 typedef struct ecs_from_json_desc_t {
-    const char *name; /* Name of expression (used for logging) */
-    const char *expr; /* Full expression (used for logging) */
+    const char *name; /**< Name of expression (used for logging) */
+    const char *expr; /**< Full expression (used for logging) */
 
+    /** Callback that allows for specifying a custom lookup function. The 
+     * default behavior uses ecs_lookup_fullpath */
     ecs_entity_t (*lookup_action)(
         const ecs_world_t*, 
         const char *value, 
@@ -12348,8 +12350,8 @@ int ecs_iter_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_world_to_json_desc_t {
-    bool serialize_builtin;    /* Exclude flecs modules & contents */
-    bool serialize_modules;    /* Exclude modules & contents */
+    bool serialize_builtin;    /**< Exclude flecs modules & contents */
+    bool serialize_modules;    /**< Exclude modules & contents */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.
@@ -13245,7 +13247,7 @@ typedef struct ecs_meta_scope_t {
 
     const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
     const EcsOpaque *opaque;  /**< Opaque type interface */ 
-    ecs_vec_t *vector;    /**< Current vector, in case a vector is iterated */
+    ecs_vec_t *vector;        /**< Current vector, in case a vector is iterated */
     ecs_hashmap_t *members;   /**< string -> member index */
     bool is_collection;       /**< Is the scope iterating elements? */
     bool is_inline_array;     /**< Is the scope iterating an inline array? */

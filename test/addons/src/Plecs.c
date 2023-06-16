@@ -7375,3 +7375,97 @@ void Plecs_assembly_redeclare_const_as_const() {
 
     ecs_fini(world);
 }
+
+void Plecs_add_auto_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    LINE "p :- OVERRIDE|Tag"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, ECS_OVERRIDE | Tag));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_add_auto_override_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "p :- OVERRIDE|(Rel, Tgt)"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, ECS_OVERRIDE | ecs_pair(Rel, Tgt)));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Plecs_scope_w_auto_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    LINE "p {"
+    LINE " - OVERRIDE|Tag"
+    LINE "}"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, ECS_OVERRIDE | Tag));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_scope_w_auto_override_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "p {"
+    LINE " - OVERRIDE|(Rel, Tgt)"
+    LINE "}"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, ECS_OVERRIDE | ecs_pair(Rel, Tgt)));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}

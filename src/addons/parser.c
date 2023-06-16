@@ -891,14 +891,7 @@ parse_pair_object:
         goto error;
     }
 
-    if (term.id_flags != 0) {
-        if (!ECS_HAS_ID_FLAG(term.id_flags, PAIR)) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid combination of role '%s' with pair", 
-                    ecs_id_flag_str(term.id_flags));
-            goto error;
-        }
-    } else {
+    if (term.id_flags == 0) {
         term.id_flags = ECS_PAIR;
     }
 

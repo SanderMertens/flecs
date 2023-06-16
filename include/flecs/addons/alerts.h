@@ -61,15 +61,15 @@ typedef struct EcsAlertsActive {
 typedef struct ecs_alert_desc_t { 
     int32_t _canary;
 
-    /* Entity associated with alert */
+    /** Entity associated with alert */
     ecs_entity_t entity;
 
-    /* Alert query. An alert will be created for each entity that matches the
+    /** Alert query. An alert will be created for each entity that matches the
      * specified query. The query must have at least one term that uses the
      * $this variable (default). */
     ecs_filter_desc_t filter;
 
-    /* Template for alert message. This string is used to generate the alert
+    /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
      * the template expressions is as specified by ecs_interpolate_string.
      * 
@@ -79,17 +79,17 @@ typedef struct ecs_alert_desc_t {
      */
     const char *message;
 
-    /* User friendly name. Will only be set if FLECS_DOC addon is enabled. */
+    /** User friendly name. Will only be set if FLECS_DOC addon is enabled. */
     const char *doc_name;
 
-    /* Description of alert. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of alert. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 
-    /* Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
+    /** Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
 
-    /* The retain period specifies how long an alert must be inactive before it
+    /** The retain period specifies how long an alert must be inactive before it
      * is cleared. This makes it easier to track noisy alerts. While an alert is
      * inactive its duration won't increase. 
      * When the retain period is 0, the alert will clear immediately after it no

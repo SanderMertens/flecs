@@ -232,6 +232,8 @@ void Parser_query_nested_scope_spaces(void);
 void Parser_query_scope_unbalanced(void);
 void Parser_query_not_scope(void);
 void Parser_query_empty_scope(void);
+void Parser_override_tag(void);
+void Parser_override_pair(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -454,6 +456,10 @@ void Plecs_with_pair_in_scope(void);
 void Plecs_assembly_redeclare_prop_as_const(void);
 void Plecs_assembly_redeclare_prop_as_prop(void);
 void Plecs_assembly_redeclare_const_as_const(void);
+void Plecs_add_auto_override(void);
+void Plecs_add_auto_override_pair(void);
+void Plecs_scope_w_auto_override(void);
+void Plecs_scope_w_auto_override_pair(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2385,6 +2391,14 @@ bake_test_case Parser_testcases[] = {
     {
         "query_empty_scope",
         Parser_query_empty_scope
+    },
+    {
+        "override_tag",
+        Parser_override_tag
+    },
+    {
+        "override_pair",
+        Parser_override_pair
     }
 };
 
@@ -3268,6 +3282,22 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_redeclare_const_as_const",
         Plecs_assembly_redeclare_const_as_const
+    },
+    {
+        "add_auto_override",
+        Plecs_add_auto_override
+    },
+    {
+        "add_auto_override_pair",
+        Plecs_add_auto_override_pair
+    },
+    {
+        "scope_w_auto_override",
+        Plecs_scope_w_auto_override
+    },
+    {
+        "scope_w_auto_override_pair",
+        Plecs_scope_w_auto_override_pair
     }
 };
 
@@ -7231,14 +7261,14 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        223,
+        225,
         Parser_testcases
     },
     {
         "Plecs",
         NULL,
         NULL,
-        220,
+        224,
         Plecs_testcases
     },
     {
