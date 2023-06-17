@@ -927,6 +927,11 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+    /** Return world scoped to entity */
+    scoped_world scope() const {
+        return scoped_world(m_world, m_id);
+    }
+
     /* Set the entity name.
      */
     Self& set_name(const char *name) {

@@ -4357,3 +4357,11 @@ void Entity_emplace_w_observer() {
     test_int(e.get<Position>()->x, 10);
     test_int(e.get<Position>()->y, 20);
 }
+
+void Entity_scoped_world() {
+    flecs::world world;
+
+    flecs::entity parent = world.entity();
+    flecs::entity child = parent.scope().entity();
+    test_assert(child.parent() == parent);
+}

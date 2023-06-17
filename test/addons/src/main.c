@@ -1499,6 +1499,7 @@ void Alerts_error_severity(void);
 void Alerts_expire_after_retain(void);
 void Alerts_revive_w_retain(void);
 void Alerts_severity_filter(void);
+void Alerts_two_severity_filters(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7258,6 +7259,10 @@ bake_test_case Alerts_testcases[] = {
     {
         "severity_filter",
         Alerts_severity_filter
+    },
+    {
+        "two_severity_filters",
+        Alerts_two_severity_filters
     }
 };
 
@@ -7504,7 +7509,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        16,
+        17,
         Alerts_testcases
     }
 };
