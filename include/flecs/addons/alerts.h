@@ -61,8 +61,11 @@ typedef struct EcsAlertsActive {
 } EcsAlertsActive;
 
 typedef struct ecs_alert_severity_filter_t {
-    ecs_entity_t severity;
-    ecs_id_t with;
+    ecs_entity_t severity; /* Severity kind */
+    ecs_id_t with;         /* Component to match */
+    const char *var;       /* Variable to match component on. Do not include the
+                            * '$' character. Leave to NULL for $this. */
+    int32_t _var_index;    /* Index of variable in filter (do not set) */
 } ecs_alert_severity_filter_t;
 
 typedef struct ecs_alert_desc_t { 

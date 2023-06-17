@@ -1572,7 +1572,9 @@
                 "expire_after_retain",
                 "revive_w_retain",
                 "severity_filter",
-                "two_severity_filters"
+                "two_severity_filters",
+                "severity_filter_w_var",
+                "severity_filter_w_var_change_var"
             ]
         }]
     }

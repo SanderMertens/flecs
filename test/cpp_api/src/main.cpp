@@ -1150,6 +1150,10 @@ void Misc_alert_w_severity_filter(void);
 void Misc_alert_w_severity_filter_severity_type(void);
 void Misc_alert_w_severity_filter_severity_type_id_type(void);
 void Misc_alert_w_severity_filter_severity_type_enum_constant(void);
+void Misc_alert_w_severity_filter_w_var(void);
+void Misc_alert_w_severity_filter_severity_type_w_var(void);
+void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void);
+void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5675,6 +5679,22 @@ bake_test_case Misc_testcases[] = {
     {
         "alert_w_severity_filter_severity_type_enum_constant",
         Misc_alert_w_severity_filter_severity_type_enum_constant
+    },
+    {
+        "alert_w_severity_filter_w_var",
+        Misc_alert_w_severity_filter_w_var
+    },
+    {
+        "alert_w_severity_filter_severity_type_w_var",
+        Misc_alert_w_severity_filter_severity_type_w_var
+    },
+    {
+        "alert_w_severity_filter_severity_type_id_type_w_var",
+        Misc_alert_w_severity_filter_severity_type_id_type_w_var
+    },
+    {
+        "alert_w_severity_filter_severity_type_enum_constant_w_var",
+        Misc_alert_w_severity_filter_severity_type_enum_constant_w_var
     }
 };
 
@@ -6172,7 +6192,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        40,
+        44,
         Misc_testcases
     },
     {

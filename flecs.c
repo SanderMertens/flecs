@@ -19459,15 +19459,25 @@ void flecs_alerts_remove_alert_from_src(
 static
 ecs_entity_t flecs_alert_get_severity(
     ecs_world_t *world,
-    ecs_table_t *table,
+    ecs_iter_t *it,
     EcsAlert *alert)
 {
     int32_t i, filter_count = ecs_vec_count(&alert->severity_filters);
     ecs_alert_severity_filter_t *filters = 
         ecs_vec_first(&alert->severity_filters);
     for (i = 0; i < filter_count; i ++) {
-        if (ecs_table_has_id(world, table, filters[i].with)) {
-            return filters[i].severity;
+        ecs_alert_severity_filter_t *filter = &filters[i];
+        if (!filter->var) {
+            if (ecs_table_has_id(world, it->table, filters[i].with)) {
+                return filters[i].severity;
+            }
+        } else {
+            ecs_entity_t src = ecs_iter_get_var(it, filter->_var_index);
+            if (src && src != EcsWildcard) {
+                if (ecs_has_id(world, src, filters[i].with)) {
+                    return filters[i].severity;
+                }
+            }
         }
     }
 
@@ -19494,7 +19504,7 @@ void MonitorAlerts(ecs_iter_t *it) {
 
         while (ecs_rule_next(&rit)) {
             ecs_entity_t severity = flecs_alert_get_severity(
-                world, rit.table, &alert[i]);
+                world, &rit, &alert[i]);
             if (!severity) {
                 severity = default_severity;
             }
@@ -19686,6 +19696,14 @@ ecs_entity_t ecs_alert_init(
             ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
+            if (sf->var) {
+                sf->_var_index = ecs_rule_find_var(rule, sf->var);
+                if (sf->_var_index == -1) {
+                    ecs_err("unresolved variable '%s' in alert severity filter", 
+                        sf->var);
+                    goto error;
+                }
+            }
         }
     }
 

@@ -82,7 +82,7 @@ public:
     }
 
     /** Add severity filter */
-    Base& severity_filter(flecs::entity_t kind, flecs::id_t with) {
+    Base& severity_filter(flecs::entity_t kind, flecs::id_t with, const char *var = nullptr) {
         ecs_assert(severity_filter_count < ECS_ALERT_MAX_SEVERITY_FILTERS, 
             ECS_INVALID_PARAMETER, "Maxium number of severity filters reached");
 
@@ -91,29 +91,30 @@ public:
 
         filter->severity = kind;
         filter->with = with;
+        filter->var = var;
         return *this;
     }
 
     /** Add severity filter */
     template <typename Severity>
-    Base& severity_filter(flecs::id_t with) {
-        return severity_filter(_::cpp_type<Severity>::id(world_v()), with);
+    Base& severity_filter(flecs::id_t with, const char *var = nullptr) {
+        return severity_filter(_::cpp_type<Severity>::id(world_v()), with, var);
     }
 
     /** Add severity filter */
     template <typename Severity, typename T, if_not_t< is_enum<T>::value > = 0>
-    Base& severity_filter() {
+    Base& severity_filter(const char *var = nullptr) {
         return severity_filter(_::cpp_type<Severity>::id(world_v()), 
-            _::cpp_type<T>::id(world_v()));
+            _::cpp_type<T>::id(world_v()), var);
     }
 
     /** Add severity filter */
     template <typename Severity, typename T, if_t< is_enum<T>::value > = 0 >
-    Base& severity_filter(T with) {
+    Base& severity_filter(T with, const char *var = nullptr) {
         flecs::world w(world_v());
         flecs::entity constant = w.to_entity<T>(with);
         return severity_filter(_::cpp_type<Severity>::id(world_v()), 
-            w.pair<T>(constant));
+            w.pair<T>(constant), var);
     }
 
 protected:

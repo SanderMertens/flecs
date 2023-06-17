@@ -1457,3 +1457,319 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant() {
         test_assert(ai.parent() == a);
     }
 }
+
+void Misc_alert_w_severity_filter_w_var() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .with(flecs::ChildOf).second("$parent")
+        .severity_filter(ecs.id<flecs::alerts::Warning>(), ecs.id<Mass>(), "parent")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto p = ecs.entity();
+    auto e1 = ecs.entity("e1").set<Position>({10, 20}).add<Mass>().child_of(p);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.add<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.remove<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+}
+
+void Misc_alert_w_severity_filter_severity_type_w_var() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .with(flecs::ChildOf).second("$parent")
+        .severity_filter<flecs::alerts::Warning>(ecs.id<Mass>(), "parent")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto p = ecs.entity();
+    auto e1 = ecs.entity("e1").set<Position>({10, 20}).add<Mass>().child_of(p);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.add<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.remove<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+}
+
+void Misc_alert_w_severity_filter_severity_type_id_type_w_var() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .with(flecs::ChildOf).second("$parent")
+        .severity_filter<flecs::alerts::Warning, Mass>("parent")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto p = ecs.entity();
+    auto e1 = ecs.entity("e1").set<Position>({10, 20}).add<Mass>().child_of(p);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.add<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.remove<Mass>();
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+}
+
+void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    flecs::entity a = ecs.alert("position_without_velocity")
+        .with<Position>()
+        .without<Velocity>()
+        .with(flecs::ChildOf).second("$parent")
+        .severity_filter<flecs::alerts::Warning>(Color::Green, "parent")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "position_without_velocity");
+
+    auto p = ecs.entity();
+    auto e1 = ecs.entity("e1").set<Position>({10, 20}).add(Color::Green).child_of(p);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.add(Color::Green);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
+        test_assert(ai.parent() == a);
+    }
+
+    p.remove<Color>(flecs::Wildcard);
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
+        test_assert(ai.parent() == a);
+    }
+}
