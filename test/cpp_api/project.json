@@ -1198,7 +1198,11 @@
                 "alert_severity_warning",
                 "alert_severity_error",
                 "alert_severity_implicit",
-                "alert_w_retain_period"
+                "alert_w_retain_period",
+                "alert_w_severity_filter",
+                "alert_w_severity_filter_severity_type",
+                "alert_w_severity_filter_severity_type_id_type",
+                "alert_w_severity_filter_severity_type_enum_constant"
             ]
         }, {
             "id": "Meta",

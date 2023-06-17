@@ -1145,6 +1145,10 @@ void Misc_alert_severity_warning(void);
 void Misc_alert_severity_error(void);
 void Misc_alert_severity_implicit(void);
 void Misc_alert_w_retain_period(void);
+void Misc_alert_w_severity_filter(void);
+void Misc_alert_w_severity_filter_severity_type(void);
+void Misc_alert_w_severity_filter_severity_type_id_type(void);
+void Misc_alert_w_severity_filter_severity_type_enum_constant(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5650,6 +5654,22 @@ bake_test_case Misc_testcases[] = {
     {
         "alert_w_retain_period",
         Misc_alert_w_retain_period
+    },
+    {
+        "alert_w_severity_filter",
+        Misc_alert_w_severity_filter
+    },
+    {
+        "alert_w_severity_filter_severity_type",
+        Misc_alert_w_severity_filter_severity_type
+    },
+    {
+        "alert_w_severity_filter_severity_type_id_type",
+        Misc_alert_w_severity_filter_severity_type_id_type
+    },
+    {
+        "alert_w_severity_filter_severity_type_enum_constant",
+        Misc_alert_w_severity_filter_severity_type_enum_constant
     }
 };
 
@@ -6147,7 +6167,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        36,
+        40,
         Misc_testcases
     },
     {

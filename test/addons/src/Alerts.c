@@ -36,6 +36,7 @@ void Alerts_one_active_alert() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -63,6 +64,7 @@ void Alerts_one_active_alert() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -129,6 +131,7 @@ void Alerts_two_active_alerts() {
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_1);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         {
             const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
             test_assert(instance != NULL);
@@ -141,6 +144,7 @@ void Alerts_two_active_alerts() {
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_2);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         {
             const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
             test_assert(instance != NULL);
@@ -170,6 +174,7 @@ void Alerts_two_active_alerts() {
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_1);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         {
             const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
             test_assert(instance != NULL);
@@ -182,6 +187,7 @@ void Alerts_two_active_alerts() {
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_2);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         {
             const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
             test_assert(instance != NULL);
@@ -214,6 +220,7 @@ void Alerts_two_active_alerts() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_1);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -274,6 +281,7 @@ void Alerts_alert_message() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
         test_str(instance->message, "missing velocity");
@@ -326,6 +334,7 @@ void Alerts_alert_message_w_this_var() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
         test_str(instance->message, "e2: missing velocity");
@@ -381,6 +390,7 @@ void Alerts_alert_message_w_var() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
         test_str(instance->message, "p2.e2: parent p2 does not have Position");
@@ -437,6 +447,7 @@ void Alerts_alert_message_w_changed_var() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
         test_str(instance->message, "p2.e2: parent p2 does not have Position");
@@ -548,6 +559,7 @@ void Alerts_alert_instance_has_doc_name() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -596,6 +608,7 @@ void Alerts_reraise_alert() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -633,6 +646,7 @@ void Alerts_reraise_alert() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -653,15 +667,44 @@ void Alerts_info_severity() {
     ECS_IMPORT(world, FlecsAlerts);
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
         .severity = EcsAlertInfo
     });
     test_assert(alert != 0);
-    test_assert(
-        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertInfo);
+    ecs_has_pair(world, alert, ecs_id(EcsAlert), EcsAlertInfo);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertInfo));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
 
     ecs_fini(world);
 }
@@ -672,15 +715,44 @@ void Alerts_warning_severity() {
     ECS_IMPORT(world, FlecsAlerts);
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
         .severity = EcsAlertWarning
     });
     test_assert(alert != 0);
-    test_assert(
-        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertWarning);
+    ecs_has_pair(world, alert, ecs_id(EcsAlert), EcsAlertWarning);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
 
     ecs_fini(world);
 }
@@ -691,15 +763,44 @@ void Alerts_error_severity() {
     ECS_IMPORT(world, FlecsAlerts);
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
         .severity = EcsAlertError
     });
     test_assert(alert != 0);
-    test_assert(
-        ecs_get_target(world, alert, ecs_id(EcsAlert), 0) == EcsAlertError);
+    ecs_has_pair(world, alert, ecs_id(EcsAlert), EcsAlertError);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
 
     ecs_fini(world);
 }
@@ -742,6 +843,7 @@ void Alerts_expire_after_retain() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -833,6 +935,7 @@ void Alerts_revive_w_retain() {
         
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
         const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
         test_assert(instance != NULL);
 
@@ -899,6 +1002,112 @@ void Alerts_revive_w_retain() {
     test_int(ecs_get(world, ai, EcsMetricValue)->value, 4);
     test_assert(ecs_get_alert_count(world, e2, alert) == 1);
     test_assert(!ecs_has_id(world, ai, EcsDisabled));
+
+    ecs_fini(world);
+}
+
+void Alerts_severity_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
+        .severity_filters[0] = {
+            .severity = EcsAlertWarning,
+            .with = ecs_id(Mass)
+        }
+    });
+    test_assert(alert != 0);
+    ecs_has_pair(world, alert, ecs_id(EcsAlert), EcsAlertError);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_add(world, e1, Mass);
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_remove(world, e1, Mass);
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
 
     ecs_fini(world);
 }

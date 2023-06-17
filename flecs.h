@@ -11566,6 +11566,8 @@ void FlecsMetricsImport(
 extern "C" {
 #endif
 
+#define ECS_ALERT_MAX_SEVERITY_FILTERS (4)
+
 /* Module id */
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 
@@ -11591,6 +11593,11 @@ typedef struct EcsAlertInstance {
 typedef struct EcsAlertsActive {
     ecs_map_t alerts;
 } EcsAlertsActive;
+
+typedef struct ecs_alert_severity_filter_t {
+    ecs_entity_t severity;
+    ecs_id_t with;
+} ecs_alert_severity_filter_t;
 
 typedef struct ecs_alert_desc_t { 
     int32_t _canary;
@@ -11629,6 +11636,12 @@ typedef struct ecs_alert_desc_t {
      * When the retain period is 0, the alert will clear immediately after it no
      * longer matches the alert query. */
     ecs_ftime_t retain_period;
+
+    /** Severity filters can be used to assign different severities to the same
+     * alert. This prevents having to create multiple alerts, and allows 
+     * entities to transition between severities without resetting the 
+     * alert duration. */
+    ecs_alert_severity_filter_t severity_filters[ECS_ALERT_MAX_SEVERITY_FILTERS];
 } ecs_alert_desc_t;
 
 /** Create a new alert.
@@ -29320,6 +29333,41 @@ public:
         return severity(_::cpp_type<Severity>::id(world_v()));
     }
 
+    /** Add severity filter */
+    Base& severity_filter(flecs::entity_t kind, flecs::id_t with) {
+        ecs_assert(severity_filter_count < ECS_ALERT_MAX_SEVERITY_FILTERS, 
+            ECS_INVALID_PARAMETER, "Maxium number of severity filters reached");
+
+        ecs_alert_severity_filter_t *filter = 
+            &m_desc->severity_filters[severity_filter_count ++];
+
+        filter->severity = kind;
+        filter->with = with;
+        return *this;
+    }
+
+    /** Add severity filter */
+    template <typename Severity>
+    Base& severity_filter(flecs::id_t with) {
+        return severity_filter(_::cpp_type<Severity>::id(world_v()), with);
+    }
+
+    /** Add severity filter */
+    template <typename Severity, typename T, if_not_t< is_enum<T>::value > = 0>
+    Base& severity_filter() {
+        return severity_filter(_::cpp_type<Severity>::id(world_v()), 
+            _::cpp_type<T>::id(world_v()));
+    }
+
+    /** Add severity filter */
+    template <typename Severity, typename T, if_t< is_enum<T>::value > = 0 >
+    Base& severity_filter(T with) {
+        flecs::world w(world_v());
+        flecs::entity constant = w.to_entity<T>(with);
+        return severity_filter(_::cpp_type<Severity>::id(world_v()), 
+            w.pair<T>(constant));
+    }
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 
@@ -29329,6 +29377,7 @@ private:
     }
 
     ecs_alert_desc_t *m_desc;
+    int32_t severity_filter_count = 0;
 };
 
 }

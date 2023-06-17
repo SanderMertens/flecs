@@ -1570,7 +1570,8 @@
                 "warning_severity",
                 "error_severity",
                 "expire_after_retain",
-                "revive_w_retain"
+                "revive_w_retain",
+                "severity_filter"
             ]
         }]
     }

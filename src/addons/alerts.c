@@ -11,8 +11,9 @@ ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 typedef struct EcsAlert {
     char *message;
-    ecs_map_t instances;       /* Active instances for metric */
-    ecs_ftime_t retain_period; /* How long to retain the alert */
+    ecs_map_t instances;        /* Active instances for metric */
+    ecs_ftime_t retain_period;  /* How long to retain the alert */
+    ecs_vec_t severity_filters; /* Severity filters */
 } EcsAlert;
 
 typedef struct EcsAlertTimeout {
@@ -26,12 +27,14 @@ static
 ECS_CTOR(EcsAlert, ptr, {
     ptr->message = NULL;
     ecs_map_init(&ptr->instances, NULL);
+    ecs_vec_init_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t, 0);
 })
 
 static
 ECS_DTOR(EcsAlert, ptr, {
     ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
+    ecs_vec_fini_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t);
 })
 
 static
@@ -43,6 +46,10 @@ ECS_MOVE(EcsAlert, dst, src, {
     ecs_map_fini(&dst->instances);
     dst->instances = src->instances;
     src->instances = (ecs_map_t){0};
+
+    ecs_vec_fini_t(NULL, &dst->severity_filters, ecs_alert_severity_filter_t);
+    dst->severity_filters = src->severity_filters;
+    src->severity_filters = (ecs_vec_t){0};
 
     dst->retain_period = src->retain_period;
 })
@@ -118,6 +125,24 @@ void flecs_alerts_remove_alert_from_src(
 }
 
 static
+ecs_entity_t flecs_alert_get_severity(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    EcsAlert *alert)
+{
+    int32_t i, filter_count = ecs_vec_count(&alert->severity_filters);
+    ecs_alert_severity_filter_t *filters = 
+        ecs_vec_first(&alert->severity_filters);
+    for (i = 0; i < filter_count; i ++) {
+        if (ecs_table_has_id(world, table, filters[i].with)) {
+            return filters[i].severity;
+        }
+    }
+
+    return 0;
+}
+
+static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsAlert *alert = ecs_field(it, EcsAlert, 1);
@@ -126,6 +151,8 @@ void MonitorAlerts(ecs_iter_t *it) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t a = it->entities[i]; /* Alert entity */
+        ecs_entity_t default_severity = ecs_get_target(
+            world, a, ecs_id(EcsAlert), 0);
         ecs_rule_t *rule = poly[i].poly;
         ecs_poly_assert(rule, ecs_rule_t);
 
@@ -134,6 +161,12 @@ void MonitorAlerts(ecs_iter_t *it) {
         rit.flags |= EcsIterIsInstanced;
 
         while (ecs_rule_next(&rit)) {
+            ecs_entity_t severity = flecs_alert_get_severity(
+                world, rit.table, &alert[i]);
+            if (!severity) {
+                severity = default_severity;
+            }
+
             int32_t j, alert_src_count = rit.count;
             for (j = 0; j < alert_src_count; j ++) {
                 ecs_entity_t e = rit.entities[j];
@@ -145,6 +178,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
+                    ecs_add_pair(world, ai, ecs_id(EcsAlert), severity);
                     if (alert[i].retain_period != 0) {
                         ecs_set(world, ai, EcsAlertTimeout, {
                             .inactive_time = 0,
@@ -156,6 +190,16 @@ void MonitorAlerts(ecs_iter_t *it) {
                     flecs_alerts_add_alert_to_src(world, e, a, ai);
                     ecs_defer_resume(it->world);
                     aptr[0] = ai;
+                } else {
+                    /* Make sure alert severity is up to date */
+                    if (ecs_vec_count(&alert[i].severity_filters)) {
+                        ecs_entity_t cur_severity = ecs_get_target(
+                            world, aptr[0], ecs_id(EcsAlert), 0);
+                        if (cur_severity != severity) {
+                            ecs_add_pair(world, aptr[0], ecs_id(EcsAlert), 
+                                severity);
+                        }
+                    }
                 }
             }
         }
@@ -298,6 +342,21 @@ ecs_entity_t ecs_alert_init(
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
     alert->retain_period = desc->retain_period;
+
+    /* Initialize severity filters */
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        if (desc->severity_filters[i].with) {
+            if (!desc->severity_filters[i].severity) {
+                ecs_err("severity filter must have severity");
+                goto error;
+            }
+            ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
+                &alert->severity_filters, ecs_alert_severity_filter_t);
+            *sf = desc->severity_filters[i];
+        }
+    }
+
     ecs_modified(world, result, EcsAlert);
 
     /* Register alert as metric */
@@ -332,6 +391,9 @@ ecs_entity_t ecs_alert_init(
 
     return result;
 error:
+    if (result) {
+        ecs_delete(world, result);
+    }
     return 0;
 }
 
@@ -406,6 +468,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, EcsAlertError);
     ECS_TAG_DEFINE(world, EcsAlertCritical);
 
+    ecs_add_id(world, ecs_id(EcsAlert), EcsTag);
+    ecs_add_id(world, ecs_id(EcsAlert), EcsExclusive);
     ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
     ecs_struct(world, {
