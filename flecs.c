@@ -23993,6 +23993,34 @@ bool flecs_unit_validate(
 
 #ifdef FLECS_META
 
+static
+bool flecs_type_is_number(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsPrimitive *p = ecs_get(world, type, EcsPrimitive);
+    if (!p) {
+        return false;
+    }
+
+    switch(p->kind) {
+    case EcsChar:
+    case EcsU8:
+    case EcsU16:
+    case EcsU32:
+    case EcsU64:
+    case EcsI8:
+    case EcsI16:
+    case EcsI32:
+    case EcsI64:
+    case EcsF32:
+    case EcsF64:
+        return true;
+    default:
+        return false;
+    }
+}
+
 ecs_entity_t ecs_primitive_init(
     ecs_world_t *world,
     const ecs_primitive_desc_t *desc)
@@ -24161,6 +24189,57 @@ ecs_entity_t ecs_struct_init(
             .offset = m_desc->offset,
             .unit = m_desc->unit
         });
+
+        EcsMemberRanges *ranges = NULL;
+        if (m_desc->error.min != m_desc->error.max) {
+            if (m_desc->error.min > m_desc->error.max) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("member '%s' has an invalid error range [%d..%d]",
+                    member_name, m_desc->error.min, m_desc->error.max);
+                ecs_os_free(member_name);
+                ecs_delete(world, t);
+                return 0;
+            }
+            ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            ranges->error.min = m_desc->error.min;
+            ranges->error.max = m_desc->error.max;
+        }
+
+        if (m_desc->warning.min != m_desc->warning.max) {
+            if (m_desc->warning.min > m_desc->warning.max) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("member '%s' has an invalid warning range [%d..%d]",
+                    member_name, m_desc->warning.min, m_desc->warning.max);
+                ecs_os_free(member_name);
+                ecs_delete(world, t);
+                return 0;
+            }
+            if (ranges) {
+                if (m_desc->warning.min < m_desc->error.min || 
+                    m_desc->warning.max > m_desc->error.max) 
+                {
+                    char *member_name = ecs_get_fullpath(world, m);
+                    ecs_err("warning range of member '%s' overlaps with error "
+                        "range", member_name);
+                    ecs_os_free(member_name);
+                    ecs_delete(world, t);
+                    return 0;
+                }
+            } else {
+                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            }
+            ranges->warning.min = m_desc->warning.min;
+            ranges->warning.max = m_desc->warning.max;
+        }
+
+        if (ranges && !flecs_type_is_number(world, m_desc->type)) {
+            char *member_name = ecs_get_fullpath(world, m);
+            ecs_err("member '%s' has an error/warning range, but is not a "
+                    "number", member_name);
+            ecs_os_free(member_name);
+            ecs_delete(world, t);
+            return 0;
+        }
     }
 
     ecs_set_scope(world, old_scope);
@@ -25651,6 +25730,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsEnum);
     flecs_bootstrap_component(world, EcsBitmask);
     flecs_bootstrap_component(world, EcsMember);
+    flecs_bootstrap_component(world, EcsMemberRanges);
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
@@ -25708,6 +25788,10 @@ void FlecsMetaImport(
         .move = ecs_move(EcsUnitPrefix),
         .copy = ecs_copy(EcsUnitPrefix),
         .dtor = ecs_dtor(EcsUnitPrefix)
+    });
+
+    ecs_set_hooks(world, EcsMemberRanges, { 
+        .ctor = ecs_default_ctor
     });
 
     /* Register triggers to finalize type information from component data */
@@ -25907,6 +25991,22 @@ void FlecsMetaImport(
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
             {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"offset", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t vr = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, { .name = "value_range" }),
+        .members = {
+            {.name = (char*)"min", .type = ecs_id(ecs_f64_t)},
+            {.name = (char*)"max", .type = ecs_id(ecs_f64_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsMemberRanges),
+        .members = {
+            {.name = (char*)"min", .type = vr},
+            {.name = (char*)"max", .type = vr}
         }
     });
 
@@ -46232,24 +46332,25 @@ const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 99;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 102;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 111;
 
 /* Doc module components */
-const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 111;
-const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 112;
-const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 113;
-const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 114;
-const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 114;
+const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 116;
 
 /* REST module components */
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 117;
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };

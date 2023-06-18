@@ -1077,6 +1077,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsEnum);
     flecs_bootstrap_component(world, EcsBitmask);
     flecs_bootstrap_component(world, EcsMember);
+    flecs_bootstrap_component(world, EcsMemberRanges);
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
@@ -1134,6 +1135,10 @@ void FlecsMetaImport(
         .move = ecs_move(EcsUnitPrefix),
         .copy = ecs_copy(EcsUnitPrefix),
         .dtor = ecs_dtor(EcsUnitPrefix)
+    });
+
+    ecs_set_hooks(world, EcsMemberRanges, { 
+        .ctor = ecs_default_ctor
     });
 
     /* Register triggers to finalize type information from component data */
@@ -1333,6 +1338,22 @@ void FlecsMetaImport(
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
             {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"offset", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t vr = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, { .name = "value_range" }),
+        .members = {
+            {.name = (char*)"min", .type = ecs_id(ecs_f64_t)},
+            {.name = (char*)"max", .type = ecs_id(ecs_f64_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsMemberRanges),
+        .members = {
+            {.name = (char*)"min", .type = vr},
+            {.name = (char*)"max", .type = vr}
         }
     });
 
