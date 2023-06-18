@@ -12885,6 +12885,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
+FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
@@ -12966,6 +12967,16 @@ typedef struct EcsMember {
     int32_t offset;
 } EcsMember;
 
+typedef struct ecs_member_value_range_t {
+    double min;
+    double max;
+} ecs_member_value_range_t;
+
+typedef struct EcsMemberRanges {
+    ecs_member_value_range_t error;
+    ecs_member_value_range_t warning;
+} EcsMemberRanges;
+
 /** Element type of members vector in EcsStruct */
 typedef struct ecs_member_t {
     /** Must be set when used with ecs_struct_desc_t */
@@ -12979,6 +12990,12 @@ typedef struct ecs_member_t {
     /** May be set when used with ecs_struct_desc_t, will be auto-populated if
      * type entity is also a unit */
     ecs_entity_t unit;
+
+    /** Numerical range outside of which the value represents an error */
+    ecs_member_value_range_t error;
+
+    /** Numerical range outside of which the value represents a warning */
+    ecs_member_value_range_t warning;
 
     /** Should not be set by ecs_struct_desc_t */
     ecs_size_t size;

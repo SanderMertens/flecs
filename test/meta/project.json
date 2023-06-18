@@ -108,7 +108,15 @@
                 "incomplete_member",
                 "partial_type",
                 "partial_type_custom_offset",
-                "struct_w_short_notation"
+                "struct_w_short_notation",
+                "error_range",
+                "warning_range",
+                "error_and_warning_range",
+                "error_range_invalid_type",
+                "warning_range_invalid_type",
+                "invalid_error_range",
+                "invalid_warning_range",
+                "overlapping_error_warning_range"
             ]
         }, {
             "id": "NestedStructTypes",
