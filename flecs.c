@@ -24154,6 +24154,28 @@ ecs_entity_t ecs_vector_init(
     return t;
 }
 
+static
+bool flecs_member_range_overlaps(
+    const ecs_member_value_range_t *range,
+    const ecs_member_value_range_t *with)
+{
+    if (with->min == with->max) {
+        return false;
+    }
+
+    if (range->min == range->max) {
+        return false;
+    }
+
+    if (range->min < with->min || 
+        range->max > with->max) 
+    {
+        return true;
+    }
+
+    return false;
+}
+
 ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc)
@@ -24191,54 +24213,79 @@ ecs_entity_t ecs_struct_init(
         });
 
         EcsMemberRanges *ranges = NULL;
-        if (m_desc->error.min != m_desc->error.max) {
-            if (m_desc->error.min > m_desc->error.max) {
+        const ecs_member_value_range_t *range = &m_desc->range;
+        const ecs_member_value_range_t *error = &m_desc->error_range;
+        const ecs_member_value_range_t *warning = &m_desc->warning_range;
+        if (range->min != range->max) {
+            ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            if (range->min > range->max) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("member '%s' has an invalid value range [%d..%d]",
+                    member_name, range->min, range->max);
+                ecs_os_free(member_name);
+                goto error;
+            }
+            ranges->value.min = range->min;
+            ranges->value.max = range->max;
+        }
+        if (error->min != error->max) {
+            if (error->min > error->max) {
                 char *member_name = ecs_get_fullpath(world, m);
                 ecs_err("member '%s' has an invalid error range [%d..%d]",
-                    member_name, m_desc->error.min, m_desc->error.max);
+                    member_name, error->min, error->max);
                 ecs_os_free(member_name);
-                ecs_delete(world, t);
-                return 0;
+                goto error;
             }
-            ranges = ecs_get_mut(world, m, EcsMemberRanges);
-            ranges->error.min = m_desc->error.min;
-            ranges->error.max = m_desc->error.max;
-        }
-
-        if (m_desc->warning.min != m_desc->warning.max) {
-            if (m_desc->warning.min > m_desc->warning.max) {
+            if (flecs_member_range_overlaps(error, range)) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid warning range [%d..%d]",
-                    member_name, m_desc->warning.min, m_desc->warning.max);
+                ecs_err("error range of member '%s' overlaps with value range",
+                    member_name);
                 ecs_os_free(member_name);
-                ecs_delete(world, t);
-                return 0;
+                goto error;
             }
-            if (ranges) {
-                if (m_desc->warning.min < m_desc->error.min || 
-                    m_desc->warning.max > m_desc->error.max) 
-                {
-                    char *member_name = ecs_get_fullpath(world, m);
-                    ecs_err("warning range of member '%s' overlaps with error "
-                        "range", member_name);
-                    ecs_os_free(member_name);
-                    ecs_delete(world, t);
-                    return 0;
-                }
-            } else {
+            if (!ranges) {
                 ranges = ecs_get_mut(world, m, EcsMemberRanges);
             }
-            ranges->warning.min = m_desc->warning.min;
-            ranges->warning.max = m_desc->warning.max;
+            ranges->error.min = error->min;
+            ranges->error.max = error->max;
+        }
+
+        if (warning->min != warning->max) {
+            if (warning->min > warning->max) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("member '%s' has an invalid warning range [%d..%d]",
+                    member_name, warning->min, warning->max);
+                ecs_os_free(member_name);
+                goto error;
+            }
+            if (flecs_member_range_overlaps(warning, range)) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("warning range of member '%s' overlaps with value "
+                    "range", member_name);
+                ecs_os_free(member_name);
+                goto error;
+            }
+            if (flecs_member_range_overlaps(warning, error)) {
+                char *member_name = ecs_get_fullpath(world, m);
+                ecs_err("warning range of member '%s' overlaps with error "
+                    "range", member_name);
+                ecs_os_free(member_name);
+                goto error;
+            }
+
+            if (!ranges) {
+                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            }
+            ranges->warning.min = warning->min;
+            ranges->warning.max = warning->max;
         }
 
         if (ranges && !flecs_type_is_number(world, m_desc->type)) {
             char *member_name = ecs_get_fullpath(world, m);
-            ecs_err("member '%s' has an error/warning range, but is not a "
+            ecs_err("member '%s' has an value/error/warning range, but is not a "
                     "number", member_name);
             ecs_os_free(member_name);
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
 
         if (ranges) {
@@ -24261,6 +24308,11 @@ ecs_entity_t ecs_struct_init(
     }
 
     return t;
+error:
+    if (t) {
+        ecs_delete(world, t);
+    }
+    return 0;
 }
 
 ecs_entity_t ecs_opaque_init(
@@ -24975,7 +25027,6 @@ int flecs_init_type(
 
 static
 void flecs_set_struct_member(
-    ecs_world_t *world,
     ecs_member_t *member,
     ecs_entity_t entity,
     const char *name,
@@ -24998,8 +25049,13 @@ void flecs_set_struct_member(
     ecs_os_strset((char**)&member->name, name);
 
     if (ranges) {
-        member->error = ranges->error;
-        member->warning = ranges->warning;
+        member->range = ranges->value;
+        member->error_range = ranges->error;
+        member->warning_range = ranges->warning;
+    } else {
+        ecs_os_zeromem(&member->range);
+        ecs_os_zeromem(&member->error_range);
+        ecs_os_zeromem(&member->warning_range);
     }
 }
 
@@ -25068,7 +25124,7 @@ int flecs_add_member_to_struct(
     int32_t i, count = ecs_vec_count(&s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            flecs_set_struct_member(world, &members[i], member, name, m->type, 
+            flecs_set_struct_member(&members[i], member, name, m->type, 
                 m->count, m->offset, unit, ranges);
             break;
         }
@@ -25079,7 +25135,7 @@ int flecs_add_member_to_struct(
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(world, elem, member, name, m->type, 
+        flecs_set_struct_member(elem, member, name, m->type, 
             m->count, m->offset, unit, ranges);
 
         /* Reobtain members array in case it was reallocated */
@@ -26050,8 +26106,9 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsMemberRanges),
         .members = {
-            {.name = (char*)"min", .type = vr},
-            {.name = (char*)"max", .type = vr}
+            { .name = (char*)"value", .type = vr},
+            { .name = (char*)"warning", .type = vr},
+            { .name = (char*)"error", .type = vr}
         }
     });
 
@@ -35628,11 +35685,12 @@ int json_typeinfo_ser_type_op(
             &st->members, ecs_member_t, op->member_index);
         ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        bool error_range = m->error.min != m->error.max;
-        bool warning_range = m->warning.min != m->warning.max;
+        bool value_range = m->range.min != m->range.max;
+        bool error_range = m->error_range.min != m->error_range.max;
+        bool warning_range = m->warning_range.min != m->warning_range.max;
 
         ecs_entity_t unit = m->unit;
-        if (unit || error_range || warning_range) {
+        if (unit || error_range || warning_range || value_range) {
             flecs_json_next(str);
             flecs_json_next(str);
             flecs_json_object_push(str);
@@ -35640,11 +35698,14 @@ int json_typeinfo_ser_type_op(
             if (unit) {
                 json_typeinfo_ser_unit(world, str, unit);
             }
+            if (value_range) {
+                json_typeinfo_ser_range(str, "range", &m->range);
+            }
             if (error_range) {
-                json_typeinfo_ser_range(str, "error", &m->error);
+                json_typeinfo_ser_range(str, "error_range", &m->error_range);
             }
             if (warning_range) {
-                json_typeinfo_ser_range(str, "warning", &m->warning);
+                json_typeinfo_ser_range(str, "warning_range", &m->warning_range);
             }
 
             flecs_json_object_pop(str);

@@ -473,18 +473,35 @@ void SerializeTypeInfoToJson_custom_struct_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_w_error_range() {
+void SerializeTypeInfoToJson_struct_w_value_range() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            { "value", ecs_id(ecs_i32_t), .error = {-1, 1} }
+            { "value", ecs_id(ecs_i32_t), .range = {-1, 1} }
         }
     });
 
     char *str = ecs_type_info_to_json(world, s);
     test_assert(str != NULL);
-    test_str(str, "{\"value\":[\"int\", {\"error\":[-1, 1]}]}");
+    test_str(str, "{\"value\":[\"int\", {\"range\":[-1, 1]}]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_w_error_range() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "value", ecs_id(ecs_i32_t), .error_range = {-1, 1} }
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, s);
+    test_assert(str != NULL);
+    test_str(str, "{\"value\":[\"int\", {\"error_range\":[-1, 1]}]}");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -495,13 +512,13 @@ void SerializeTypeInfoToJson_struct_w_warning_range() {
 
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            { "value", ecs_id(ecs_i32_t), .warning = {-1, 1} }
+            { "value", ecs_id(ecs_i32_t), .warning_range = {-1, 1} }
         }
     });
 
     char *str = ecs_type_info_to_json(world, s);
     test_assert(str != NULL);
-    test_str(str, "{\"value\":[\"int\", {\"warning\":[-1, 1]}]}");
+    test_str(str, "{\"value\":[\"int\", {\"warning_range\":[-1, 1]}]}");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -512,14 +529,17 @@ void SerializeTypeInfoToJson_struct_w_error_and_warning_range() {
 
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            { "value", ecs_id(ecs_i32_t), .warning = {-1, 1}, .error = {-2, 2} }
+            { "value", ecs_id(ecs_i32_t), 
+                .warning_range = {-1, 1}, 
+                .error_range = {-2, 2} 
+            }
         }
     });
 
     char *str = ecs_type_info_to_json(world, s);
     test_assert(str != NULL);
-    test_str(str, "{\"value\":[\"int\", {\"error\":[-2, 2],"
-        " \"warning\":[-1, 1]}]}");
+    test_str(str, "{\"value\":[\"int\", {\"error_range\":[-2, 2],"
+        " \"warning_range\":[-1, 1]}]}");
     ecs_os_free(str);
 
     ecs_fini(world);

@@ -317,7 +317,6 @@ int flecs_init_type(
 
 static
 void flecs_set_struct_member(
-    ecs_world_t *world,
     ecs_member_t *member,
     ecs_entity_t entity,
     const char *name,
@@ -340,8 +339,13 @@ void flecs_set_struct_member(
     ecs_os_strset((char**)&member->name, name);
 
     if (ranges) {
-        member->error = ranges->error;
-        member->warning = ranges->warning;
+        member->range = ranges->value;
+        member->error_range = ranges->error;
+        member->warning_range = ranges->warning;
+    } else {
+        ecs_os_zeromem(&member->range);
+        ecs_os_zeromem(&member->error_range);
+        ecs_os_zeromem(&member->warning_range);
     }
 }
 
@@ -410,7 +414,7 @@ int flecs_add_member_to_struct(
     int32_t i, count = ecs_vec_count(&s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            flecs_set_struct_member(world, &members[i], member, name, m->type, 
+            flecs_set_struct_member(&members[i], member, name, m->type, 
                 m->count, m->offset, unit, ranges);
             break;
         }
@@ -421,7 +425,7 @@ int flecs_add_member_to_struct(
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(world, elem, member, name, m->type, 
+        flecs_set_struct_member(elem, member, name, m->type, 
             m->count, m->offset, unit, ranges);
 
         /* Reobtain members array in case it was reallocated */
@@ -1392,8 +1396,9 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsMemberRanges),
         .members = {
-            {.name = (char*)"min", .type = vr},
-            {.name = (char*)"max", .type = vr}
+            { .name = (char*)"value", .type = vr},
+            { .name = (char*)"warning", .type = vr},
+            { .name = (char*)"error", .type = vr}
         }
     });
 

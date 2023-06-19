@@ -196,8 +196,9 @@ typedef struct ecs_member_value_range_t {
 } ecs_member_value_range_t;
 
 typedef struct EcsMemberRanges {
-    ecs_member_value_range_t error;
+    ecs_member_value_range_t value;
     ecs_member_value_range_t warning;
+    ecs_member_value_range_t error;
 } EcsMemberRanges;
 
 /** Element type of members vector in EcsStruct */
@@ -214,11 +215,18 @@ typedef struct ecs_member_t {
      * type entity is also a unit */
     ecs_entity_t unit;
 
-    /** Numerical range outside of which the value represents an error */
-    ecs_member_value_range_t error;
+    /** Numerical range that specifies which values member can assume. This 
+     * range may be used by UI elements such as a progress bar or slider. The
+     * value of a member should not exceed this range. */
+    ecs_member_value_range_t range;
 
-    /** Numerical range outside of which the value represents a warning */
-    ecs_member_value_range_t warning;
+    /** Numerical range outside of which the value represents an error. This 
+     * range may be used by UI elements to style a value. */
+    ecs_member_value_range_t error_range;
+
+    /** Numerical range outside of which the value represents an warning. This 
+     * range may be used by UI elements to style a value. */
+    ecs_member_value_range_t warning_range;
 
     /** Should not be set by ecs_struct_desc_t */
     ecs_size_t size;

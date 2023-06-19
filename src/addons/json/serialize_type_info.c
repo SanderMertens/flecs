@@ -248,11 +248,12 @@ int json_typeinfo_ser_type_op(
             &st->members, ecs_member_t, op->member_index);
         ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        bool error_range = m->error.min != m->error.max;
-        bool warning_range = m->warning.min != m->warning.max;
+        bool value_range = m->range.min != m->range.max;
+        bool error_range = m->error_range.min != m->error_range.max;
+        bool warning_range = m->warning_range.min != m->warning_range.max;
 
         ecs_entity_t unit = m->unit;
-        if (unit || error_range || warning_range) {
+        if (unit || error_range || warning_range || value_range) {
             flecs_json_next(str);
             flecs_json_next(str);
             flecs_json_object_push(str);
@@ -260,11 +261,14 @@ int json_typeinfo_ser_type_op(
             if (unit) {
                 json_typeinfo_ser_unit(world, str, unit);
             }
+            if (value_range) {
+                json_typeinfo_ser_range(str, "range", &m->range);
+            }
             if (error_range) {
-                json_typeinfo_ser_range(str, "error", &m->error);
+                json_typeinfo_ser_range(str, "error_range", &m->error_range);
             }
             if (warning_range) {
-                json_typeinfo_ser_range(str, "warning", &m->warning);
+                json_typeinfo_ser_range(str, "warning_range", &m->warning_range);
             }
 
             flecs_json_object_pop(str);

@@ -484,6 +484,47 @@ void StructTypes_struct_w_short_notation() {
     ecs_fini(world);
 }
 
+void StructTypes_value_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t), .range = {-1, 1}},
+            {"y", ecs_id(ecs_f32_t), .range = {-2, 2}}
+        }
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    test_assert(x != 0);
+    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    test_assert(y != 0);
+
+    const EcsMemberRanges *xr = ecs_get(world, x, EcsMemberRanges);
+    test_assert(xr != NULL);
+    test_int(xr->value.min, -1);
+    test_int(xr->value.max, 1);
+    test_int(xr->warning.min, 0);
+    test_int(xr->warning.max, 0);
+    test_int(xr->error.min, 0);
+    test_int(xr->error.max, 0);
+
+    const EcsMemberRanges *yr = ecs_get(world, y, EcsMemberRanges);
+    test_assert(yr != NULL);
+    test_int(yr->value.min, -2);
+    test_int(yr->value.max, 2);
+    test_int(xr->warning.min, 0);
+    test_int(xr->warning.max, 0);
+    test_int(xr->error.min, 0);
+    test_int(xr->error.max, 0);
+
+    ecs_fini(world);
+}
+
 void StructTypes_error_range() {
     ecs_world_t *world = ecs_init();
 
@@ -492,8 +533,8 @@ void StructTypes_error_range() {
     ecs_entity_t s = ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
-            {"x", ecs_id(ecs_f32_t), .error = {-1, 1}},
-            {"y", ecs_id(ecs_f32_t), .error = {-2, 2}}
+            {"x", ecs_id(ecs_f32_t), .error_range = {-1, 1}},
+            {"y", ecs_id(ecs_f32_t), .error_range = {-2, 2}}
         }
     });
 
@@ -529,8 +570,8 @@ void StructTypes_warning_range() {
     ecs_entity_t s = ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
-            {"x", ecs_id(ecs_f32_t), .warning = {-1, 1}},
-            {"y", ecs_id(ecs_f32_t), .warning = {-2, 2}}
+            {"x", ecs_id(ecs_f32_t), .warning_range = {-1, 1}},
+            {"y", ecs_id(ecs_f32_t), .warning_range = {-2, 2}}
         }
     });
 
@@ -566,8 +607,8 @@ void StructTypes_error_and_warning_range() {
     ecs_entity_t s = ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
-            {"x", ecs_id(ecs_f32_t), .error = {-2, 2}, .warning = {-1, 1}},
-            {"y", ecs_id(ecs_f32_t), .error = {-4, 4}, .warning = {-2, 2}}
+            {"x", ecs_id(ecs_f32_t), .error_range = {-2, 2}, .warning_range = {-1, 1}},
+            {"y", ecs_id(ecs_f32_t), .error_range = {-4, 4}, .warning_range = {-2, 2}}
         }
     });
 
@@ -603,7 +644,7 @@ void StructTypes_error_range_invalid_type() {
     ecs_log_set_level(-4);
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            {"x", ecs_id(ecs_string_t), .error = {-1, 1}},
+            {"x", ecs_id(ecs_string_t), .error_range = {-1, 1}},
         }
     });
 
@@ -620,7 +661,24 @@ void StructTypes_warning_range_invalid_type() {
     ecs_log_set_level(-4);
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            {"x", ecs_id(ecs_string_t), .warning = {-1, 1}},
+            {"x", ecs_id(ecs_string_t), .warning_range = {-1, 1}},
+        }
+    });
+
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_invalid_value_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t), .range = {1, -1}},
         }
     });
 
@@ -637,7 +695,7 @@ void StructTypes_invalid_error_range() {
     ecs_log_set_level(-4);
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            {"x", ecs_id(ecs_i32_t), .error = {1, -1}},
+            {"x", ecs_id(ecs_i32_t), .error_range = {1, -1}},
         }
     });
 
@@ -654,7 +712,7 @@ void StructTypes_invalid_warning_range() {
     ecs_log_set_level(-4);
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            {"x", ecs_id(ecs_i32_t), .warning = {1, -1}},
+            {"x", ecs_id(ecs_i32_t), .warning_range = {1, -1}},
         }
     });
 
@@ -671,7 +729,41 @@ void StructTypes_overlapping_error_warning_range() {
     ecs_log_set_level(-4);
     ecs_entity_t s = ecs_struct(world, {
         .members = {
-            {"x", ecs_id(ecs_i32_t), .error = {-1, 1}, .warning = {-2, 2}},
+            {"x", ecs_id(ecs_i32_t), .error_range = {-1, 1}, .warning_range = {-2, 2}},
+        }
+    });
+
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_overlapping_value_error_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t), .range = {-1, 1}, .error_range = {-2, 2}},
+        }
+    });
+
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_overlapping_value_warning_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t), .range = {-1, 1}, .warning_range = {-2, 2}},
         }
     });
 
