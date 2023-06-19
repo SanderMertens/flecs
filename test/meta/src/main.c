@@ -759,6 +759,9 @@ void SerializeTypeInfoToJson_custom_primitive_type(void);
 void SerializeTypeInfoToJson_custom_array_type(void);
 void SerializeTypeInfoToJson_custom_vector_type(void);
 void SerializeTypeInfoToJson_custom_struct_type(void);
+void SerializeTypeInfoToJson_struct_w_error_range(void);
+void SerializeTypeInfoToJson_struct_w_warning_range(void);
+void SerializeTypeInfoToJson_struct_w_error_and_warning_range(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -3873,6 +3876,18 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "custom_struct_type",
         SerializeTypeInfoToJson_custom_struct_type
+    },
+    {
+        "struct_w_error_range",
+        SerializeTypeInfoToJson_struct_w_error_range
+    },
+    {
+        "struct_w_warning_range",
+        SerializeTypeInfoToJson_struct_w_warning_range
+    },
+    {
+        "struct_w_error_and_warning_range",
+        SerializeTypeInfoToJson_struct_w_error_and_warning_range
     }
 };
 
@@ -4691,7 +4706,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        31,
+        34,
         SerializeTypeInfoToJson_testcases
     },
     {

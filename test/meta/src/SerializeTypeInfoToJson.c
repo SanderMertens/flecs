@@ -472,3 +472,55 @@ void SerializeTypeInfoToJson_custom_struct_type() {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_struct_w_error_range() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "value", ecs_id(ecs_i32_t), .error = {-1, 1} }
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, s);
+    test_assert(str != NULL);
+    test_str(str, "{\"value\":[\"int\", {\"error\":[-1, 1]}]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_w_warning_range() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "value", ecs_id(ecs_i32_t), .warning = {-1, 1} }
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, s);
+    test_assert(str != NULL);
+    test_str(str, "{\"value\":[\"int\", {\"warning\":[-1, 1]}]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_w_error_and_warning_range() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "value", ecs_id(ecs_i32_t), .warning = {-1, 1}, .error = {-2, 2} }
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, s);
+    test_assert(str != NULL);
+    test_str(str, "{\"value\":[\"int\", {\"error\":[-2, 2],"
+        " \"warning\":[-1, 1]}]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

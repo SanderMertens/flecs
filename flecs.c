@@ -24240,6 +24240,10 @@ ecs_entity_t ecs_struct_init(
             ecs_delete(world, t);
             return 0;
         }
+
+        if (ranges) {
+            ecs_modified(world, m, EcsMemberRanges);
+        }
     }
 
     ecs_set_scope(world, old_scope);
@@ -24390,7 +24394,7 @@ ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t k
     op->name = NULL;
     op->members = NULL;
     op->type = 0;
-    op->unit = 0;
+    op->member_index = 0;
     return op;
 }
 
@@ -24548,7 +24552,8 @@ int flecs_meta_serialize_struct(
         ecs_member_t *member = &members[i];
 
         cur = ecs_vec_count(ops);
-        flecs_meta_serialize_type(world, member->type, offset + member->offset, ops);
+        flecs_meta_serialize_type(world, 
+            member->type, offset + member->offset, ops);
 
         op = flecs_meta_ops_get(ops, cur);
         if (!op->type) {
@@ -24561,8 +24566,8 @@ int flecs_meta_serialize_struct(
 
         const char *member_name = member->name;
         op->name = member_name;
-        op->unit = member->unit;
         op->op_count = ecs_vec_count(ops) - cur;
+        op->member_index = i;
 
         flecs_name_index_ensure(
             member_index, flecs_ito(uint64_t, cur - first - 1), 
@@ -24970,13 +24975,15 @@ int flecs_init_type(
 
 static
 void flecs_set_struct_member(
+    ecs_world_t *world,
     ecs_member_t *member,
     ecs_entity_t entity,
     const char *name,
     ecs_entity_t type,
     int32_t count,
     int32_t offset,
-    ecs_entity_t unit)
+    ecs_entity_t unit,
+    EcsMemberRanges *ranges)
 {
     member->member = entity;
     member->type = type;
@@ -24989,6 +24996,11 @@ void flecs_set_struct_member(
     }
 
     ecs_os_strset((char**)&member->name, name);
+
+    if (ranges) {
+        member->error = ranges->error;
+        member->warning = ranges->warning;
+    }
 }
 
 static
@@ -24996,7 +25008,8 @@ int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t member,
-    EcsMember *m)
+    EcsMember *m,
+    EcsMemberRanges *ranges)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
@@ -25028,7 +25041,6 @@ int flecs_add_member_to_struct(
     }
 
     ecs_entity_t unit = m->unit;
-
     if (unit) {
         if (!ecs_has(world, unit, EcsUnit)) {
             ecs_err("entity '%s' for member '%s' is not a unit",
@@ -25056,8 +25068,8 @@ int flecs_add_member_to_struct(
     int32_t i, count = ecs_vec_count(&s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            flecs_set_struct_member(
-                &members[i], member, name, m->type, m->count, m->offset, unit);
+            flecs_set_struct_member(world, &members[i], member, name, m->type, 
+                m->count, m->offset, unit, ranges);
             break;
         }
     }
@@ -25067,8 +25079,8 @@ int flecs_add_member_to_struct(
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(elem, member, name, m->type, 
-            m->count, m->offset, unit);
+        flecs_set_struct_member(world, elem, member, name, m->type, 
+            m->count, m->offset, unit, ranges);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vec_first_t(&s->members, ecs_member_t);
@@ -25386,6 +25398,8 @@ static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_field(it, EcsMember, 1);
+    EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
+        ecs_id(EcsMemberRanges), it->offset);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -25396,7 +25410,32 @@ void flecs_set_member(ecs_iter_t *it) {
             continue;
         }
 
-        flecs_add_member_to_struct(world, parent, e, &member[i]);
+        flecs_add_member_to_struct(world, parent, e, &member[i], 
+            ranges ? &ranges[i] : NULL);
+    }
+}
+
+static
+void flecs_set_member_ranges(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 1);
+    EcsMember *member = ecs_table_get_id(world, it->table, 
+        ecs_id(EcsMember), it->offset);
+    if (!member) {
+        return;
+    }
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+        if (!parent) {
+            ecs_err("missing parent for member '%s'", ecs_get_name(world, e));
+            continue;
+        }
+
+        flecs_add_member_to_struct(world, parent, e, &member[i], 
+            &ranges[i]);
     }
 }
 
@@ -25762,6 +25801,10 @@ void FlecsMetaImport(
         .on_set = flecs_member_on_set
     });
 
+    ecs_set_hooks(world, EcsMemberRanges, { 
+        .ctor = ecs_default_ctor
+    });
+
     ecs_set_hooks(world, EcsEnum, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsEnum),
@@ -25790,10 +25833,6 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
-    ecs_set_hooks(world, EcsMemberRanges, { 
-        .ctor = ecs_default_ctor
-    });
-
     /* Register triggers to finalize type information from component data */
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
@@ -25807,6 +25846,12 @@ void FlecsMetaImport(
         .filter.terms[0] = { .id = ecs_id(EcsMember), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_member
+    });
+
+    ecs_observer(world, {
+        .filter.terms[0] = { .id = ecs_id(EcsMemberRanges), .src.flags = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = flecs_set_member_ranges
     });
 
     ecs_observer(world, {
@@ -26725,8 +26770,17 @@ ecs_entity_t ecs_meta_get_unit(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_entity_t type = scope->type;
+    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
+    if (!st) {
+        return 0;
+    }
+
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
-    return op->unit;
+    ecs_member_t *m = ecs_vec_get_t(
+        &st->members, ecs_member_t, op->member_index);
+
+    return m->unit;
 }
 
 const char* ecs_meta_get_member(
@@ -35504,12 +35558,28 @@ int json_typeinfo_ser_unit(
     return 0;
 }
 
+static
+void json_typeinfo_ser_range(
+    ecs_strbuf_t *str,
+    const char *kind,
+    ecs_member_value_range_t *range)
+{
+    flecs_json_member(str, kind);
+    flecs_json_array_push(str);
+    flecs_json_next(str);
+    flecs_json_number(str, range->min);
+    flecs_json_next(str);
+    flecs_json_number(str, range->max);
+    flecs_json_array_pop(str);
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_typeinfo_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    const EcsStruct *st) 
 {
     if (op->kind == EcsOpOpaque) {
         const EcsOpaque *ct = ecs_get(world, op->type, 
@@ -35553,14 +35623,32 @@ int json_typeinfo_ser_type_op(
         break;
     }
 
-    ecs_entity_t unit = op->unit;
-    if (unit) {
-        flecs_json_next(str);
-        flecs_json_next(str);
+    if (st) {
+        ecs_member_t *m = ecs_vec_get_t(
+            &st->members, ecs_member_t, op->member_index);
+        ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        flecs_json_object_push(str);
-        json_typeinfo_ser_unit(world, str, unit);
-        flecs_json_object_pop(str);
+        bool error_range = m->error.min != m->error.max;
+        bool warning_range = m->warning.min != m->warning.max;
+
+        ecs_entity_t unit = m->unit;
+        if (unit || error_range || warning_range) {
+            flecs_json_next(str);
+            flecs_json_next(str);
+            flecs_json_object_push(str);
+
+            if (unit) {
+                json_typeinfo_ser_unit(world, str, unit);
+            }
+            if (error_range) {
+                json_typeinfo_ser_range(str, "error", &m->error);
+            }
+            if (warning_range) {
+                json_typeinfo_ser_range(str, "warning", &m->warning);
+            }
+
+            flecs_json_object_pop(str);
+        }
     }
 
     flecs_json_array_pop(str);
@@ -35576,7 +35664,8 @@ int json_typeinfo_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    const EcsStruct *st) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
@@ -35604,7 +35693,7 @@ int json_typeinfo_ser_type_ops(
             flecs_json_object_pop(str);
             break;
         default:
-            if (json_typeinfo_ser_type_op(world, op, str)) {
+            if (json_typeinfo_ser_type_op(world, op, str, st)) {
                 goto error;
             }
             break;
@@ -35635,10 +35724,11 @@ int json_typeinfo_ser_type(
         return 0;
     }
 
+    const EcsStruct *st = ecs_get(world, type, EcsStruct);
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(&ser->ops);
 
-    return json_typeinfo_ser_type_ops(world, ops, count, buf);
+    return json_typeinfo_ser_type_ops(world, ops, count, buf, st);
 }
 
 int ecs_type_info_to_json_buf(

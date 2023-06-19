@@ -317,13 +317,15 @@ int flecs_init_type(
 
 static
 void flecs_set_struct_member(
+    ecs_world_t *world,
     ecs_member_t *member,
     ecs_entity_t entity,
     const char *name,
     ecs_entity_t type,
     int32_t count,
     int32_t offset,
-    ecs_entity_t unit)
+    ecs_entity_t unit,
+    EcsMemberRanges *ranges)
 {
     member->member = entity;
     member->type = type;
@@ -336,6 +338,11 @@ void flecs_set_struct_member(
     }
 
     ecs_os_strset((char**)&member->name, name);
+
+    if (ranges) {
+        member->error = ranges->error;
+        member->warning = ranges->warning;
+    }
 }
 
 static
@@ -343,7 +350,8 @@ int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t member,
-    EcsMember *m)
+    EcsMember *m,
+    EcsMemberRanges *ranges)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
@@ -375,7 +383,6 @@ int flecs_add_member_to_struct(
     }
 
     ecs_entity_t unit = m->unit;
-
     if (unit) {
         if (!ecs_has(world, unit, EcsUnit)) {
             ecs_err("entity '%s' for member '%s' is not a unit",
@@ -403,8 +410,8 @@ int flecs_add_member_to_struct(
     int32_t i, count = ecs_vec_count(&s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            flecs_set_struct_member(
-                &members[i], member, name, m->type, m->count, m->offset, unit);
+            flecs_set_struct_member(world, &members[i], member, name, m->type, 
+                m->count, m->offset, unit, ranges);
             break;
         }
     }
@@ -414,8 +421,8 @@ int flecs_add_member_to_struct(
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(elem, member, name, m->type, 
-            m->count, m->offset, unit);
+        flecs_set_struct_member(world, elem, member, name, m->type, 
+            m->count, m->offset, unit, ranges);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vec_first_t(&s->members, ecs_member_t);
@@ -733,6 +740,8 @@ static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_field(it, EcsMember, 1);
+    EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
+        ecs_id(EcsMemberRanges), it->offset);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -743,7 +752,32 @@ void flecs_set_member(ecs_iter_t *it) {
             continue;
         }
 
-        flecs_add_member_to_struct(world, parent, e, &member[i]);
+        flecs_add_member_to_struct(world, parent, e, &member[i], 
+            ranges ? &ranges[i] : NULL);
+    }
+}
+
+static
+void flecs_set_member_ranges(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 1);
+    EcsMember *member = ecs_table_get_id(world, it->table, 
+        ecs_id(EcsMember), it->offset);
+    if (!member) {
+        return;
+    }
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+        if (!parent) {
+            ecs_err("missing parent for member '%s'", ecs_get_name(world, e));
+            continue;
+        }
+
+        flecs_add_member_to_struct(world, parent, e, &member[i], 
+            &ranges[i]);
     }
 }
 
@@ -1109,6 +1143,10 @@ void FlecsMetaImport(
         .on_set = flecs_member_on_set
     });
 
+    ecs_set_hooks(world, EcsMemberRanges, { 
+        .ctor = ecs_default_ctor
+    });
+
     ecs_set_hooks(world, EcsEnum, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsEnum),
@@ -1137,10 +1175,6 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
-    ecs_set_hooks(world, EcsMemberRanges, { 
-        .ctor = ecs_default_ctor
-    });
-
     /* Register triggers to finalize type information from component data */
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
@@ -1154,6 +1188,12 @@ void FlecsMetaImport(
         .filter.terms[0] = { .id = ecs_id(EcsMember), .src.flags = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_member
+    });
+
+    ecs_observer(world, {
+        .filter.terms[0] = { .id = ecs_id(EcsMemberRanges), .src.flags = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = flecs_set_member_ranges
     });
 
     ecs_observer(world, {

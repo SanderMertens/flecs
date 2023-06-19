@@ -36,7 +36,7 @@ ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t k
     op->name = NULL;
     op->members = NULL;
     op->type = 0;
-    op->unit = 0;
+    op->member_index = 0;
     return op;
 }
 
@@ -194,7 +194,8 @@ int flecs_meta_serialize_struct(
         ecs_member_t *member = &members[i];
 
         cur = ecs_vec_count(ops);
-        flecs_meta_serialize_type(world, member->type, offset + member->offset, ops);
+        flecs_meta_serialize_type(world, 
+            member->type, offset + member->offset, ops);
 
         op = flecs_meta_ops_get(ops, cur);
         if (!op->type) {
@@ -207,8 +208,8 @@ int flecs_meta_serialize_struct(
 
         const char *member_name = member->name;
         op->name = member_name;
-        op->unit = member->unit;
         op->op_count = ecs_vec_count(ops) - cur;
+        op->member_index = i;
 
         flecs_name_index_ensure(
             member_index, flecs_ito(uint64_t, cur - first - 1), 
