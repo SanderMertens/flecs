@@ -118,6 +118,13 @@ int32_t ecs_cpp_reset_count_get(void);
 FLECS_API
 int32_t ecs_cpp_reset_count_inc(void);
 
+#ifdef FLECS_META
+FLECS_API
+const ecs_member_t* ecs_cpp_last_member(
+    const ecs_world_t *world, 
+    ecs_entity_t type);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -492,4 +492,25 @@ int32_t ecs_cpp_reset_count_inc(void) {
     return ++flecs_reset_count;
 }
 
+#ifdef FLECS_META
+const ecs_member_t* ecs_cpp_last_member(
+    const ecs_world_t *world, 
+    ecs_entity_t type)
+{
+    const EcsStruct *st = ecs_get(world, type, EcsStruct);
+    if (!st) {
+        char *type_str = ecs_get_fullpath(world, type);
+        ecs_err("entity '%s' is not a struct", type_str);
+        ecs_os_free(type_str);
+        return 0;
+    }
+
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 
+        ecs_vec_count(&st->members) - 1);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return m;
+}
+#endif
+
 #endif
