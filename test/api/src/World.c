@@ -306,7 +306,7 @@ void World_dim() {
     os_api.realloc_ = test_realloc;
     ecs_os_set_api(&os_api);
 
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 

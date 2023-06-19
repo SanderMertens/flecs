@@ -98,14 +98,18 @@ void StructTypes_incomplete_member(void);
 void StructTypes_partial_type(void);
 void StructTypes_partial_type_custom_offset(void);
 void StructTypes_struct_w_short_notation(void);
+void StructTypes_value_range(void);
 void StructTypes_error_range(void);
 void StructTypes_warning_range(void);
 void StructTypes_error_and_warning_range(void);
 void StructTypes_error_range_invalid_type(void);
 void StructTypes_warning_range_invalid_type(void);
+void StructTypes_invalid_value_range(void);
 void StructTypes_invalid_error_range(void);
 void StructTypes_invalid_warning_range(void);
 void StructTypes_overlapping_error_warning_range(void);
+void StructTypes_overlapping_value_error_range(void);
+void StructTypes_overlapping_value_warning_range(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -759,6 +763,7 @@ void SerializeTypeInfoToJson_custom_primitive_type(void);
 void SerializeTypeInfoToJson_custom_array_type(void);
 void SerializeTypeInfoToJson_custom_vector_type(void);
 void SerializeTypeInfoToJson_custom_struct_type(void);
+void SerializeTypeInfoToJson_struct_w_value_range(void);
 void SerializeTypeInfoToJson_struct_w_error_range(void);
 void SerializeTypeInfoToJson_struct_w_warning_range(void);
 void SerializeTypeInfoToJson_struct_w_error_and_warning_range(void);
@@ -1289,6 +1294,10 @@ bake_test_case StructTypes_testcases[] = {
         StructTypes_struct_w_short_notation
     },
     {
+        "value_range",
+        StructTypes_value_range
+    },
+    {
         "error_range",
         StructTypes_error_range
     },
@@ -1309,6 +1318,10 @@ bake_test_case StructTypes_testcases[] = {
         StructTypes_warning_range_invalid_type
     },
     {
+        "invalid_value_range",
+        StructTypes_invalid_value_range
+    },
+    {
         "invalid_error_range",
         StructTypes_invalid_error_range
     },
@@ -1319,6 +1332,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "overlapping_error_warning_range",
         StructTypes_overlapping_error_warning_range
+    },
+    {
+        "overlapping_value_error_range",
+        StructTypes_overlapping_value_error_range
+    },
+    {
+        "overlapping_value_warning_range",
+        StructTypes_overlapping_value_warning_range
     }
 };
 
@@ -3878,6 +3899,10 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
         SerializeTypeInfoToJson_custom_struct_type
     },
     {
+        "struct_w_value_range",
+        SerializeTypeInfoToJson_struct_w_value_range
+    },
+    {
         "struct_w_error_range",
         SerializeTypeInfoToJson_struct_w_error_range
     },
@@ -4629,7 +4654,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        23,
+        27,
         StructTypes_testcases
     },
     {
@@ -4706,7 +4731,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        34,
+        35,
         SerializeTypeInfoToJson_testcases
     },
     {

@@ -109,14 +109,18 @@
                 "partial_type",
                 "partial_type_custom_offset",
                 "struct_w_short_notation",
+                "value_range",
                 "error_range",
                 "warning_range",
                 "error_and_warning_range",
                 "error_range_invalid_type",
                 "warning_range_invalid_type",
+                "invalid_value_range",
                 "invalid_error_range",
                 "invalid_warning_range",
-                "overlapping_error_warning_range"
+                "overlapping_error_warning_range",
+                "overlapping_value_error_range",
+                "overlapping_value_warning_range"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -792,6 +796,7 @@
                 "custom_array_type",
                 "custom_vector_type",
                 "custom_struct_type",
+                "struct_w_value_range",
                 "struct_w_error_range",
                 "struct_w_warning_range",
                 "struct_w_error_and_warning_range"
