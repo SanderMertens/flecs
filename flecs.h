@@ -13255,8 +13255,8 @@ typedef struct ecs_meta_type_op_t {
     const char *name;       /**< Name of value (only used for struct members) */
     int32_t op_count;       /**< Number of operations until next field or end */
     ecs_size_t size;        /**< Size of type of operation */
-    ecs_entity_t type;
-    ecs_entity_t unit;
+    ecs_entity_t type;      /**< Type entity */
+    int32_t member_index;   /**< Index of member in struct */
     ecs_hashmap_t *members; /**< string -> member index (structs only) */
 } ecs_meta_type_op_t;
 

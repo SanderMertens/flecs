@@ -791,7 +791,10 @@
                 "custom_primitive_type",
                 "custom_array_type",
                 "custom_vector_type",
-                "custom_struct_type"
+                "custom_struct_type",
+                "struct_w_error_range",
+                "struct_w_warning_range",
+                "struct_w_error_and_warning_range"
             ]
         }, {
             "id": "MetaUtils",

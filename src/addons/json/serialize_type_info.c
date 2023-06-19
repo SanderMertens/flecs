@@ -178,12 +178,28 @@ int json_typeinfo_ser_unit(
     return 0;
 }
 
+static
+void json_typeinfo_ser_range(
+    ecs_strbuf_t *str,
+    const char *kind,
+    ecs_member_value_range_t *range)
+{
+    flecs_json_member(str, kind);
+    flecs_json_array_push(str);
+    flecs_json_next(str);
+    flecs_json_number(str, range->min);
+    flecs_json_next(str);
+    flecs_json_number(str, range->max);
+    flecs_json_array_pop(str);
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_typeinfo_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    const EcsStruct *st) 
 {
     if (op->kind == EcsOpOpaque) {
         const EcsOpaque *ct = ecs_get(world, op->type, 
@@ -227,14 +243,32 @@ int json_typeinfo_ser_type_op(
         break;
     }
 
-    ecs_entity_t unit = op->unit;
-    if (unit) {
-        flecs_json_next(str);
-        flecs_json_next(str);
+    if (st) {
+        ecs_member_t *m = ecs_vec_get_t(
+            &st->members, ecs_member_t, op->member_index);
+        ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        flecs_json_object_push(str);
-        json_typeinfo_ser_unit(world, str, unit);
-        flecs_json_object_pop(str);
+        bool error_range = m->error.min != m->error.max;
+        bool warning_range = m->warning.min != m->warning.max;
+
+        ecs_entity_t unit = m->unit;
+        if (unit || error_range || warning_range) {
+            flecs_json_next(str);
+            flecs_json_next(str);
+            flecs_json_object_push(str);
+
+            if (unit) {
+                json_typeinfo_ser_unit(world, str, unit);
+            }
+            if (error_range) {
+                json_typeinfo_ser_range(str, "error", &m->error);
+            }
+            if (warning_range) {
+                json_typeinfo_ser_range(str, "warning", &m->warning);
+            }
+
+            flecs_json_object_pop(str);
+        }
     }
 
     flecs_json_array_pop(str);
@@ -250,7 +284,8 @@ int json_typeinfo_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str,
+    const EcsStruct *st) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
@@ -278,7 +313,7 @@ int json_typeinfo_ser_type_ops(
             flecs_json_object_pop(str);
             break;
         default:
-            if (json_typeinfo_ser_type_op(world, op, str)) {
+            if (json_typeinfo_ser_type_op(world, op, str, st)) {
                 goto error;
             }
             break;
@@ -309,10 +344,11 @@ int json_typeinfo_ser_type(
         return 0;
     }
 
+    const EcsStruct *st = ecs_get(world, type, EcsStruct);
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(&ser->ops);
 
-    return json_typeinfo_ser_type_ops(world, ops, count, buf);
+    return json_typeinfo_ser_type_ops(world, ops, count, buf, st);
 }
 
 int ecs_type_info_to_json_buf(

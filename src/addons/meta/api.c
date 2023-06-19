@@ -254,6 +254,10 @@ ecs_entity_t ecs_struct_init(
             ecs_delete(world, t);
             return 0;
         }
+
+        if (ranges) {
+            ecs_modified(world, m, EcsMemberRanges);
+        }
     }
 
     ecs_set_scope(world, old_scope);
