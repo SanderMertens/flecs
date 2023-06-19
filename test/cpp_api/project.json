@@ -1253,7 +1253,10 @@
                 "new_world_ser_deser_empty_flecs_entity",
                 "opaque_vector_w_builder",
                 "deser_entity_w_path",
-                "enum_w_bits"
+                "enum_w_bits",
+                "value_range",
+                "warning_range",
+                "error_range"
             ]
         }, {
             "id": "Table",

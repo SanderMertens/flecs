@@ -105,4 +105,53 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Add member value range */
+untyped_component& range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->value.min = min;
+    mr->value.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+/** Add member warning range */
+untyped_component& warning_range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->warning.min = min;
+    mr->warning.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+/** Add member error range */
+untyped_component& error_range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->error.min = min;
+    mr->error.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+
 /** @} */

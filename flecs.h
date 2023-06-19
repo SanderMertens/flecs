@@ -15175,6 +15175,13 @@ int32_t ecs_cpp_reset_count_get(void);
 FLECS_API
 int32_t ecs_cpp_reset_count_inc(void);
 
+#ifdef FLECS_META
+FLECS_API
+const ecs_member_t* ecs_cpp_last_member(
+    const ecs_world_t *world, 
+    ecs_entity_t type);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
@@ -16940,6 +16947,7 @@ using Primitive = EcsPrimitive;
 using Enum = EcsEnum;
 using Bitmask = EcsBitmask;
 using Member = EcsMember;
+using MemberRanges = EcsMemberRanges;
 using Struct = EcsStruct;
 using Array = EcsArray;
 using Vector = EcsVector;
@@ -24666,6 +24674,55 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Add member value range */
+untyped_component& range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->value.min = min;
+    mr->value.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+/** Add member warning range */
+untyped_component& warning_range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->warning.min = min;
+    mr->warning.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+/** Add member error range */
+untyped_component& error_range(double min, double max) {
+    const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
+    if (!m) {
+        return *this;
+    }
+
+    flecs::world w(m_world);
+    flecs::entity me = w.entity(m->member);
+    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+    mr->error.min = min;
+    mr->error.max = max;
+    me.modified<flecs::MemberRanges>();
+    return *this;
+}
+
+
 /** @} */
 
 #   endif
@@ -29223,27 +29280,20 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief, const char *metric_name) {
+inline untyped_component& untyped_component::metric(
+    flecs::entity_t parent, 
+    const char *brief, 
+    const char *metric_name) 
+{
     flecs::world w(m_world);
-    flecs::entity e = w.entity(m_id);
-    const flecs::Struct *s = e.get<flecs::Struct>();
-    if (!s) {
-        flecs::log::err("can't register metric, component '%s' is not a struct",    
-            e.path().c_str());
+    flecs::entity e(m_world, m_id);
+
+    const flecs::member_t *m = ecs_cpp_last_member(w, e);
+    if (!m) {
         return *this;
     }
 
-    ecs_member_t *m = ecs_vec_get_t(&s->members, ecs_member_t, 
-        ecs_vec_count(&s->members) - 1);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity me = e.lookup(m->name);
-    if (!me) {
-        flecs::log::err("can't find member '%s' in component '%s' for metric",    
-            m->name, e.path().c_str());
-        return *this;
-    }
-
+    flecs::entity me = w.entity(m->member);
     flecs::entity metric_entity = me;
     if (parent) {
         const char *component_name = e.name();

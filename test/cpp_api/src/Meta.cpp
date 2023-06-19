@@ -1033,3 +1033,87 @@ void Meta_enum_w_bits() {
     auto s = q.iter().to_json();
     test_str(s.c_str(), "");
 }
+
+void Meta_value_range() {
+    flecs::world ecs;
+
+    flecs::entity s = ecs.component<Position>()
+        .member<float>("x").range(-1, 1)
+        .member<float>("y").range(-2, 2);
+
+    flecs::entity x = s.lookup("x");
+    test_assert(x != 0);
+    test_assert(x.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->value.min == -1);
+        test_assert(ranges->value.max == 1);
+    }
+
+    flecs::entity y = s.lookup("y");
+    test_assert(y != 0);
+    test_assert(y.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->value.min == -2);
+        test_assert(ranges->value.max == 2);
+    }
+}
+
+void Meta_warning_range() {
+    flecs::world ecs;
+
+    flecs::entity s = ecs.component<Position>()
+        .member<float>("x").warning_range(-1, 1)
+        .member<float>("y").warning_range(-2, 2);
+
+    flecs::entity x = s.lookup("x");
+    test_assert(x != 0);
+    test_assert(x.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->warning.min == -1);
+        test_assert(ranges->warning.max == 1);
+    }
+
+    flecs::entity y = s.lookup("y");
+    test_assert(y != 0);
+    test_assert(y.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->warning.min == -2);
+        test_assert(ranges->warning.max == 2);
+    }
+}
+
+void Meta_error_range() {
+    flecs::world ecs;
+
+    flecs::entity s = ecs.component<Position>()
+        .member<float>("x").error_range(-1, 1)
+        .member<float>("y").error_range(-2, 2);
+
+    flecs::entity x = s.lookup("x");
+    test_assert(x != 0);
+    test_assert(x.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->error.min == -1);
+        test_assert(ranges->error.max == 1);
+    }
+
+    flecs::entity y = s.lookup("y");
+    test_assert(y != 0);
+    test_assert(y.has<flecs::MemberRanges>());
+    {
+        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        test_assert(ranges != nullptr);
+        test_assert(ranges->error.min == -2);
+        test_assert(ranges->error.max == 2);
+    }
+}

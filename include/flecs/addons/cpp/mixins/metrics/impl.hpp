@@ -61,27 +61,20 @@ inline flecs::metric_builder world::metric(Args &&... args) const {
 }
 
 template <typename Kind>
-inline untyped_component& untyped_component::metric(flecs::entity_t parent, const char *brief, const char *metric_name) {
+inline untyped_component& untyped_component::metric(
+    flecs::entity_t parent, 
+    const char *brief, 
+    const char *metric_name) 
+{
     flecs::world w(m_world);
-    flecs::entity e = w.entity(m_id);
-    const flecs::Struct *s = e.get<flecs::Struct>();
-    if (!s) {
-        flecs::log::err("can't register metric, component '%s' is not a struct",    
-            e.path().c_str());
+    flecs::entity e(m_world, m_id);
+
+    const flecs::member_t *m = ecs_cpp_last_member(w, e);
+    if (!m) {
         return *this;
     }
 
-    ecs_member_t *m = ecs_vec_get_t(&s->members, ecs_member_t, 
-        ecs_vec_count(&s->members) - 1);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity me = e.lookup(m->name);
-    if (!me) {
-        flecs::log::err("can't find member '%s' in component '%s' for metric",    
-            m->name, e.path().c_str());
-        return *this;
-    }
-
+    flecs::entity me = w.entity(m->member);
     flecs::entity metric_entity = me;
     if (parent) {
         const char *component_name = e.name();
