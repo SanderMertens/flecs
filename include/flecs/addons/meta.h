@@ -137,7 +137,7 @@ FLECS_API extern const ecs_entity_t ecs_id(ecs_f64_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_string_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_entity_t);
 
-/** Type kinds supported by reflection type system */
+/** Type kinds supported by meta addon */
 typedef enum ecs_type_kind_t {
     EcsPrimitiveType,
     EcsBitmaskType,
@@ -158,6 +158,7 @@ typedef struct EcsMetaType {
     ecs_size_t alignment;  /**< Computed alignment */
 } EcsMetaType;
 
+/** Primitive type kinds supported by meta addon */
 typedef enum ecs_primitive_kind_t {
     EcsBool = 1,
     EcsChar,
@@ -179,10 +180,12 @@ typedef enum ecs_primitive_kind_t {
     EcsPrimitiveKindLast = EcsEntity
 } ecs_primitive_kind_t;
 
+/** Component added to primitive types */
 typedef struct EcsPrimitive {
     ecs_primitive_kind_t kind;
 } EcsPrimitive;
 
+/** Component added to member entities */
 typedef struct EcsMember {
     ecs_entity_t type;
     int32_t count;
@@ -190,11 +193,13 @@ typedef struct EcsMember {
     int32_t offset;
 } EcsMember;
 
+/** Type expressing a range for a member value */
 typedef struct ecs_member_value_range_t {
     double min;
     double max;
 } ecs_member_value_range_t;
 
+/** Component added to member entities to express valid value ranges */
 typedef struct EcsMemberRanges {
     ecs_member_value_range_t value;
     ecs_member_value_range_t warning;
@@ -233,6 +238,7 @@ typedef struct ecs_member_t {
     ecs_entity_t member;
 } ecs_member_t;
 
+/** Component added to struct type entities */
 typedef struct EcsStruct {
     /** Populated from child entities with Member component */
     ecs_vec_t members; /* vector<ecs_member_t> */
@@ -249,6 +255,7 @@ typedef struct ecs_enum_constant_t {
     ecs_entity_t constant;
 } ecs_enum_constant_t;
 
+/** Component added to enum type entities */
 typedef struct EcsEnum {
     /** Populated from child entities with Constant component */
     ecs_map_t constants; /* map<i32_t, ecs_enum_constant_t> */
@@ -265,18 +272,21 @@ typedef struct ecs_bitmask_constant_t {
     ecs_entity_t constant;
 } ecs_bitmask_constant_t;
 
+/** Component added to bitmask type entities */
 typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
     ecs_map_t constants; /* map<u32_t, ecs_bitmask_constant_t> */
 } EcsBitmask;
 
+/** Component added to array type entities */
 typedef struct EcsArray {
-    ecs_entity_t type;
-    int32_t count;
+    ecs_entity_t type; /**< Element type */
+    int32_t count;     /**< Number of elements */
 } EcsArray;
 
+/** Component added to vector type entities */
 typedef struct EcsVector {
-    ecs_entity_t type;
+    ecs_entity_t type; /**< Element type */
 } EcsVector;
 
 
@@ -289,13 +299,13 @@ typedef struct ecs_serializer_t {
     /* Serialize value */
     int (*value)(
         const struct ecs_serializer_t *ser, /**< Serializer */
-        ecs_entity_t type,            /**< Type of the value to serialize */
-        const void *value);           /**< Pointer to the value to serialize */
+        ecs_entity_t type,                  /**< Type of the value to serialize */
+        const void *value);                 /**< Pointer to the value to serialize */
 
     /* Serialize member */
     int (*member)(
         const struct ecs_serializer_t *ser, /**< Serializer */
-        const char *member);           /**< Member name */
+        const char *member);                /**< Member name */
 
     const ecs_world_t *world;
     void *ctx;
