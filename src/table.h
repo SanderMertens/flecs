@@ -1,5 +1,5 @@
 /**
- * @file table.c
+ * @file table.h
  * @brief Table storage implementation.
  */
 

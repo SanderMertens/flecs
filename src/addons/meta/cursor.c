@@ -1,5 +1,5 @@
 /**
- * @file meta/api.c
+ * @file meta/cursor.c
  * @brief API for assigning values of runtime types with reflection.
  */
 
