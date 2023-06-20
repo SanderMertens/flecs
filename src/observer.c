@@ -1,5 +1,5 @@
 /**
- * @file observer.h
+ * @file observer.c
  * @brief Observer implementation.
  * 
  * The observer implementation contains functions for creating, deleting and

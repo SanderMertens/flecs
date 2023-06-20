@@ -1,5 +1,5 @@
 /**
- * @file world.c
+ * @file world.h
  * @brief World-level API.
  */
 

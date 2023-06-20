@@ -1,5 +1,5 @@
 /**
- * @file addons/system/system.c
+ * @file addons/system/system.h
  * @brief Internal types and functions for system addon.
  */
 

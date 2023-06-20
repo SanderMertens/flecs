@@ -1,5 +1,5 @@
 /**
- * @file expr/strutil.c
+ * @file expr/utils.c
  * @brief String parsing utilities.
  */
 

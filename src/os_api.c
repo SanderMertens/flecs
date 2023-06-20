@@ -1,5 +1,5 @@
 /**
- * @file os_api.h
+ * @file os_api.c
  * @brief Operating system abstraction API.
  * 
  * The OS API implements an overridable interface for implementing functions 
