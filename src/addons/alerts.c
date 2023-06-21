@@ -178,11 +178,11 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     case EcsU8: value = *(uint8_t*)value_ptr; break;
     case EcsU16: value = *(uint16_t*)value_ptr; break;
     case EcsU32: value = *(uint32_t*)value_ptr; break;
-    case EcsU64: value = *(uint64_t*)value_ptr; break;
+    case EcsU64: value = (double)*(uint64_t*)value_ptr; break;
     case EcsI8: value = *(int8_t*)value_ptr; break;
     case EcsI16: value = *(int16_t*)value_ptr; break;
     case EcsI32: value = *(int32_t*)value_ptr; break;
-    case EcsI64: value = *(int64_t*)value_ptr; break;
+    case EcsI64: value = (double)*(int64_t*)value_ptr; break;
     case EcsF32: value = (double)*(float*)value_ptr; break;
     case EcsF64: value = *(double*)value_ptr; break;
     default: return 0;
@@ -340,10 +340,11 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             const void *member_data = ecs_get_id(world, e, member_id);
             if (!member_data) {
                 range_match = false;
+            } else {
+                member_data = ECS_OFFSET(member_data, alert->offset);
+                range_match = flecs_alert_out_of_range_kind(
+                    &alert[i], ranges, member_data) != 0;
             }
-            member_data = ECS_OFFSET(member_data, alert->offset);
-            range_match = flecs_alert_out_of_range_kind(
-                &alert[i], ranges, member_data) != 0;
         }
 
         /* Check if alert instance still matches rule */

@@ -118,8 +118,8 @@ public:
     }
 
     /** Set member to create an alert for out of range values */
-    Base& member(flecs::entity_t member) {
-        m_desc->member = member;
+    Base& member(flecs::entity_t m) {
+        m_desc->member = m;
         return *this;
     }
 
@@ -132,12 +132,12 @@ public:
 
     /** Set member to create an alert for out of range values */
     template <typename T>
-    Base& member(const char *member) {
+    Base& member(const char *m) {
         flecs::entity_t id = _::cpp_type<T>::id(world_v());
-        flecs::entity_t m = ecs_lookup_path_w_sep(
-            world_v(), id, member, "::", "::", false);
+        flecs::entity_t mid = ecs_lookup_path_w_sep(
+            world_v(), id, m, "::", "::", false);
         ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
-        return this->member(m);
+        return this->member(mid);
     }
 
 protected:
