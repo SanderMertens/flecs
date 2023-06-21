@@ -709,6 +709,7 @@
                 "serialize_entity_from_core",
                 "serialize_entity_w_1_alert",
                 "serialize_entity_w_2_alerts",
+                "serialize_entity_w_severity_filter_alert",
                 "serialize_iterator_1_comps_empty",
                 "serialize_iterator_1_comps_2_ents_same_table",
                 "serialize_iterator_1_tag_2_ents_same_table",

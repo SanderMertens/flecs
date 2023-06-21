@@ -1022,7 +1022,6 @@ int ecs_entity_to_json_buf(
             while (ecs_map_next(&it)) {
                 flecs_json_next(buf);
                 flecs_json_object_push(buf);
-                ecs_entity_t a = ecs_map_key(&it);
                 ecs_entity_t ai = ecs_map_value(&it);
                 char *alert_name = ecs_get_fullpath(world, ai);
                 flecs_json_memberl(buf, "alert");
@@ -1030,7 +1029,7 @@ int ecs_entity_to_json_buf(
                 ecs_os_free(alert_name);
 
                 ecs_entity_t severity_id = ecs_get_target(
-                    world, a, ecs_id(EcsAlert), 0);
+                    world, ai, ecs_id(EcsAlert), 0);
                 const char *severity = ecs_get_name(world, severity_id);
 
                 const EcsAlertInstance *alert = ecs_get(
