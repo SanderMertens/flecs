@@ -19375,6 +19375,7 @@ typedef struct EcsAlert {
     int32_t size;               /* Size of component */
     ecs_primitive_kind_t kind;  /* Primitive type kind */
     ecs_ref_t ranges;           /* Reference to ranges component */
+    int32_t var_id;             /* Variable from which to obtain data (0 = $this) */
 } EcsAlert;
 
 typedef struct EcsAlertTimeout {
@@ -19419,6 +19420,7 @@ ECS_MOVE(EcsAlert, dst, src, {
     dst->size = src->size;
     dst->kind = src->kind;
     dst->ranges = src->ranges;
+    dst->var_id = src->var_id;
 })
 
 static
@@ -19587,9 +19589,20 @@ void MonitorAlerts(ecs_iter_t *it) {
             }
 
             const void *member_data = NULL;
+            ecs_entity_t member_src = 0;
             if (ranges) {
-                member_data = ecs_table_get_id(
-                    world, rit.table, member_id, rit.offset);
+                if (alert[i].var_id) {
+                    member_src = ecs_iter_get_var(&rit, alert[i].var_id);
+                    if (!member_src || member_src == EcsWildcard) {
+                        continue;
+                    }
+                }
+                if (!member_src) {
+                    member_data = ecs_table_get_id(
+                        world, rit.table, member_id, rit.offset);
+                } else {
+                    member_data = ecs_get_id(world, member_src, member_id);
+                }
                 if (!member_data) {
                     continue;
                 }
@@ -19603,7 +19616,9 @@ void MonitorAlerts(ecs_iter_t *it) {
                 if (member_data) {
                     ecs_entity_t range_severity = flecs_alert_out_of_range_kind(
                         &alert[i], ranges, member_data);
-                    member_data = ECS_OFFSET(member_data, alert[i].size);
+                    if (!member_src) {
+                        member_data = ECS_OFFSET(member_data, alert[i].size);
+                    }
                     if (!range_severity) {
                         continue;
                     }
@@ -19687,78 +19702,99 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
         ecs_entity_t e = source[i].entity;
-        bool range_match = true;
 
-        if (ranges) {
-            const void *member_data = ecs_get_id(world, e, member_id);
-            if (!member_data) {
-                range_match = false;
-            } else {
-                member_data = ECS_OFFSET(member_data, alert->offset);
-                range_match = flecs_alert_out_of_range_kind(
-                    alert, ranges, member_data) != 0;
-            }
+        /* If source of alert is no longer alive, delete alert instance even if
+         * the alert has a retain period. */
+        if (!ecs_is_alive(world, e)) {
+            ecs_delete(world, ai);
+            continue;
         }
 
         /* Check if alert instance still matches rule */
-        ecs_iter_t rit;
-        if (range_match) {
-            rit = ecs_rule_iter(world, rule);
-            rit.flags |= EcsIterNoData;
-            rit.flags |= EcsIterIsInstanced;
-            ecs_iter_set_var(&rit, 0, e);
+        ecs_iter_t rit = ecs_rule_iter(world, rule);
+        rit.flags |= EcsIterNoData;
+        rit.flags |= EcsIterIsInstanced;
+        ecs_iter_set_var(&rit, 0, e);
+
+        if (ecs_rule_next(&rit)) {
+            bool match = true;
+
+            /* If alert is monitoring member range, test value against range */
+            if (ranges) {
+                ecs_entity_t member_src = e;
+                if (alert->var_id) {
+                    member_src = ecs_iter_get_var(&rit, alert->var_id);
+                }
+
+                const void *member_data = ecs_get_id(
+                    world, member_src, member_id);
+                if (!member_data) {
+                    match = false;
+                } else {
+                    member_data = ECS_OFFSET(member_data, alert->offset);
+                    if (flecs_alert_out_of_range_kind(
+                        alert, ranges, member_data) == 0) 
+                    {
+                        match = false;
+                    }
+                }
+            }
+
+            if (match) {
+                /* Only increase alert duration if the alert was active */
+                value[i].value += (double)it->delta_system_time;
+
+                bool generate_message = alert->message;
+                if (generate_message) {
+                    if (alert_instance[i].message) {
+                        /* If a message was already generated, only regenerate if
+                        * rule has multiple variables. Variable values could have 
+                        * changed, this ensures the message remains up to date. */
+                        generate_message = rit.variable_count > 1;
+                    }
+                }
+
+                if (generate_message) {
+                    if (alert_instance[i].message) {
+                        ecs_os_free(alert_instance[i].message);
+                    }
+
+                    ecs_iter_to_vars(&rit, &vars, 0);
+                    alert_instance[i].message = ecs_interpolate_string(
+                        world, alert->message, &vars);
+                }
+
+                if (timeout) {
+                    if (timeout[i].inactive_time != 0) {
+                        /* The alert just became active. Remove Disabled tag */
+                        flecs_alerts_add_alert_to_src(world, e, parent, ai);
+                        ecs_remove_id(world, ai, EcsDisabled);
+                    }
+                    timeout[i].inactive_time = 0;
+                }
+
+                /* Alert instance still matches rule, keep it alive */
+                ecs_iter_fini(&rit);
+                continue;
+            }
+
+            ecs_iter_fini(&rit);
         }
 
-        if (range_match && ecs_rule_next(&rit)) {
-            /* Only increase alert duration if the alert was active */
-            value[i].value += (double)it->delta_system_time;
+        /* Alert instance is no longer active */
 
-            bool generate_message = alert->message;
-            if (generate_message) {
-                if (alert_instance[i].message) {
-                    /* If a message was already generated, only regenerate if
-                     * rule has multiple variables. Variable values could have 
-                     * changed, this ensures the message remains up to date. */
-                    generate_message = rit.variable_count > 1;
-                }
+        if (timeout) {
+            if (timeout[i].inactive_time == 0) {
+                /* The alert just became inactive. Add Disabled tag */
+                flecs_alerts_remove_alert_from_src(world, e, parent);
+                ecs_add_id(world, ai, EcsDisabled);
             }
-
-            if (generate_message) {
-                if (alert_instance[i].message) {
-                    ecs_os_free(alert_instance[i].message);
-                }
-
-                ecs_iter_to_vars(&rit, &vars, 0);
-                alert_instance[i].message = ecs_interpolate_string(
-                    world, alert->message, &vars);
-            }
-
-            if (timeout) {
-                if (timeout[i].inactive_time != 0) {
-                    /* The alert just became active. Remove Disabled tag */
-                    flecs_alerts_add_alert_to_src(world, e, parent, ai);
-                    ecs_remove_id(world, ai, EcsDisabled);
-                }
-                timeout[i].inactive_time = 0;
-            }
-
-            /* Alert instance still matches rule, keep it alive */
-            ecs_iter_fini(&rit);
-            continue;
-        } else {
-            if (timeout) {
-                if (timeout[i].inactive_time == 0) {
-                    /* The alert just became inactive. Add Disabled tag */
-                    flecs_alerts_remove_alert_from_src(world, e, parent);
-                    ecs_add_id(world, ai, EcsDisabled);
-                }
-                ecs_ftime_t t = timeout[i].inactive_time;
-                timeout[i].inactive_time += it->delta_system_time;
-                if (t < timeout[i].expire_time) {
-                    /* Alert instance no longer matches rule, but is still
-                     * within the timeout period. Keep it alive. */
-                    continue;
-                }
+            ecs_ftime_t t = timeout[i].inactive_time;
+            timeout[i].inactive_time += it->delta_system_time;
+            if (t < timeout[i].expire_time) {
+                /* Alert instance no longer matches rule, but is still
+                    * within the timeout period. Keep it alive. */
+                continue;
             }
         }
 
@@ -19881,10 +19917,20 @@ ecs_entity_t ecs_alert_init(
             goto error;
         }
 
+        int32_t var_id = 0;
+        if (desc->var) {
+            var_id = ecs_rule_find_var(rule, desc->var);
+            if (var_id == -1) {
+                ecs_err("unresolved variable '%s' in alert member", desc->var);
+                goto error;
+            }
+        }
+
         alert->offset = member->offset;
         alert->size = idr->type_info->size;
         alert->kind = pr->kind;
         alert->ranges = ecs_ref_init(world, desc->member, EcsMemberRanges);
+        alert->var_id = var_id;
     }
 
     ecs_modified(world, result, EcsAlert);

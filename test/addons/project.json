@@ -1587,7 +1587,10 @@
                 "member_range_invalid_type",
                 "member_range_invalid_member_type",
                 "member_range_no_range",
-                "member_range_alert_two_instances"
+                "member_range_alert_two_instances",
+                "member_range_from_var",
+                "member_range_from_var_after_remove",
+                "retained_alert_w_dead_source"
             ]
         }]
     }

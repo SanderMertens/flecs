@@ -1831,3 +1831,61 @@ void Misc_alert_for_member_range() {
         test_assert(ai == 0);
     }
 }
+
+void Misc_alert_w_member_range_from_var() {
+    flecs::world ecs;
+
+    ecs.import<flecs::alerts>();
+
+    ecs.component<Mass>()
+        .member<float>("value")
+            .error_range(0, 100);
+
+    flecs::entity a = ecs.alert("high_parent_mass")
+        .with(flecs::ChildOf).second("$parent")
+        .with<Mass>().src("$parent")
+        .message("$this has high mass")
+        .member<Mass>("value", "parent")
+        .build();
+    test_assert(a != 0);
+    test_str(a.name().c_str(), "high_parent_mass");
+
+    auto p = ecs.entity().set<Mass>({25});
+    auto e1 = ecs.entity("e1").child_of(p);
+
+    ecs.progress(1.0);
+
+    test_assert(!e1.has<flecs::alerts::AlertsActive>());
+
+    p.set<Mass>({150});
+
+    ecs.progress(1.0);
+
+    test_assert(e1.has<flecs::alerts::AlertsActive>());
+    test_int(e1.alert_count(), 1);
+    test_int(e1.alert_count(a), 1);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai != 0);
+        test_assert(ai.has<flecs::alerts::Instance>());
+        test_assert(ai.has<flecs::metrics::Source>());
+        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.parent() == a);
+    }
+
+    p.set<Mass>({0});
+
+    ecs.progress(1.0);
+
+    {
+        flecs::entity ai = ecs.filter_builder()
+            .with<flecs::alerts::Instance>()
+            .build()
+            .first();
+        test_assert(ai == 0);
+    }
+}

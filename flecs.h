@@ -11653,6 +11653,10 @@ typedef struct ecs_alert_desc_t {
     /** (Component) id of member to monitor. If left to 0 this will be set to
      * the parent entity of the member (optional). */
     ecs_id_t id;
+
+    /** Variable from which to fetch the member (optional). When left to NULL
+     * 'id' will be obtained from $this. */
+    const char *var;
 } ecs_alert_desc_t;
 
 /** Create a new alert.
@@ -29485,12 +29489,19 @@ public:
 
     /** Set member to create an alert for out of range values */
     template <typename T>
-    Base& member(const char *m) {
+    Base& member(const char *m, const char *v = nullptr) {
         flecs::entity_t id = _::cpp_type<T>::id(world_v());
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
         ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
+        m_desc->var = v;
         return this->member(mid);
+    }
+
+    /** Set source variable for member (optional, defaults to $this) */
+    Base& var(const char *v) {
+        m_desc->var = v;
+        return *this;
     }
 
 protected:
