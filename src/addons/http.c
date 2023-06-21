@@ -304,6 +304,7 @@ void http_sock_keep_alive(
 static
 void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
     (void)sock;
+    (void)enable;
 #ifdef ECS_TARGET_POSIX
     int flags;
     flags = fcntl(sock,F_GETFL,0);
