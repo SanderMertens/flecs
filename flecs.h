@@ -11746,7 +11746,7 @@ void FlecsAlertsImport(
 #error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
 #endif
 /**
- * @file addons/doc.h
+ * @file addons/monitor.h
  * @brief Doc module.
  *
  * The monitor module automatically tracks statistics from the stats addon and

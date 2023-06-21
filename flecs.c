@@ -1459,7 +1459,7 @@ void flecs_iter_free(
 #endif
 
 /**
- * @file table.c
+ * @file table.h
  * @brief Table storage implementation.
  */
 
@@ -1901,7 +1901,7 @@ bool flecs_defer_purge(
 #endif
 
 /**
- * @file world.c
+ * @file world.h
  * @brief World-level API.
  */
 
@@ -16746,7 +16746,7 @@ int ecs_log_last_error(void)
  */
 
 /**
- * @file addons/system/system.c
+ * @file addons/system/system.h
  * @brief Internal types and functions for system addon.
  */
 
@@ -20081,12 +20081,12 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
         .no_readonly = true,
-        .interval = 1.0
+        .interval = 0.5
     });
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlertInstances),
-        .interval = 1.0
+        .interval = 0.5
     });
 }
 
@@ -26391,7 +26391,7 @@ void FlecsMetaImport(
 #endif
 
 /**
- * @file meta/api.c
+ * @file meta/cursor.c
  * @brief API for assigning values of runtime types with reflection.
  */
 
@@ -28665,7 +28665,7 @@ ecs_expr_var_t* ecs_vars_lookup(
 #endif
 
 /**
- * @file expr/strutil.c
+ * @file expr/utils.c
  * @brief String parsing utilities.
  */
 
@@ -45587,7 +45587,7 @@ error:
 #endif
 
 /**
- * @file addons/meta.c
+ * @file addons/meta_c.c
  * @brief C utilities for meta addon.
  */
 
@@ -53308,7 +53308,7 @@ int32_t flecs_relation_depth(
 }
 
 /**
- * @file observer.h
+ * @file observer.c
  * @brief Observer implementation.
  * 
  * The observer implementation contains functions for creating, deleting and
@@ -54609,7 +54609,7 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
 }
 
 /**
- * @file os_api.h
+ * @file os_api.c
  * @brief Operating system abstraction API.
  * 
  * The OS API implements an overridable interface for implementing functions 
