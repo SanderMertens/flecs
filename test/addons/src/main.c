@@ -1514,6 +1514,7 @@ void Alerts_member_range_invalid_member_child(void);
 void Alerts_member_range_invalid_type(void);
 void Alerts_member_range_invalid_member_type(void);
 void Alerts_member_range_no_range(void);
+void Alerts_member_range_alert_two_instances(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7333,6 +7334,10 @@ bake_test_case Alerts_testcases[] = {
     {
         "member_range_no_range",
         Alerts_member_range_no_range
+    },
+    {
+        "member_range_alert_two_instances",
+        Alerts_member_range_alert_two_instances
     }
 };
 
@@ -7579,7 +7584,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        31,
+        32,
         Alerts_testcases
     }
 };
