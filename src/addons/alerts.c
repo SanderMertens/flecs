@@ -18,8 +18,8 @@ typedef struct EcsAlert {
     /* Member range monitoring */
     ecs_id_t id;                /* (Component) id that contains to monitor member */
     ecs_entity_t member;        /* Member to monitor */
-    uint16_t offset;            /* Offset of member in component */
-    uint16_t size;              /* Size of component */
+    int32_t offset;             /* Offset of member in component */
+    int32_t size;               /* Size of component */
     ecs_primitive_kind_t kind;  /* Primitive type kind */
     ecs_ref_t ranges;           /* Reference to ranges component */
 } EcsAlert;
@@ -183,7 +183,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     case EcsI16: value = *(int16_t*)value_ptr; break;
     case EcsI32: value = *(int32_t*)value_ptr; break;
     case EcsI64: value = *(int64_t*)value_ptr; break;
-    case EcsF32: value = *(float*)value_ptr; break;
+    case EcsF32: value = (double)*(float*)value_ptr; break;
     case EcsF64: value = *(double*)value_ptr; break;
     default: return 0;
     }
