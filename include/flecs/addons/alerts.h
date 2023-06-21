@@ -99,6 +99,12 @@ typedef struct ecs_alert_desc_t {
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
 
+    /** Severity filters can be used to assign different severities to the same
+     * alert. This prevents having to create multiple alerts, and allows 
+     * entities to transition between severities without resetting the 
+     * alert duration (optional). */
+    ecs_alert_severity_filter_t severity_filters[ECS_ALERT_MAX_SEVERITY_FILTERS];
+
     /** The retain period specifies how long an alert must be inactive before it
      * is cleared. This makes it easier to track noisy alerts. While an alert is
      * inactive its duration won't increase. 
@@ -106,11 +112,13 @@ typedef struct ecs_alert_desc_t {
      * longer matches the alert query. */
     ecs_ftime_t retain_period;
 
-    /** Severity filters can be used to assign different severities to the same
-     * alert. This prevents having to create multiple alerts, and allows 
-     * entities to transition between severities without resetting the 
-     * alert duration. */
-    ecs_alert_severity_filter_t severity_filters[ECS_ALERT_MAX_SEVERITY_FILTERS];
+    /** Alert when member value is out of range. Uses the warning/error ranges
+     * assigned to the member in the MemberRanges component (optional). */
+    ecs_entity_t member;
+
+    /** (Component) id of member to monitor. If left to 0 this will be set to
+     * the parent entity of the member (optional). */
+    ecs_id_t id;
 } ecs_alert_desc_t;
 
 /** Create a new alert.

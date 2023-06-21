@@ -14,6 +14,14 @@ typedef struct EcsAlert {
     ecs_map_t instances;        /* Active instances for metric */
     ecs_ftime_t retain_period;  /* How long to retain the alert */
     ecs_vec_t severity_filters; /* Severity filters */
+    
+    /* Member range monitoring */
+    ecs_id_t id;                /* (Component) id that contains to monitor member */
+    ecs_entity_t member;        /* Member to monitor */
+    uint16_t offset;            /* Offset of member in component */
+    uint16_t size;              /* Size of component */
+    ecs_primitive_kind_t kind;  /* Primitive type kind */
+    ecs_ref_t ranges;           /* Reference to ranges component */
 } EcsAlert;
 
 typedef struct EcsAlertTimeout {
@@ -25,7 +33,7 @@ ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 
 static
 ECS_CTOR(EcsAlert, ptr, {
-    ptr->message = NULL;
+    ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->instances, NULL);
     ecs_vec_init_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t, 0);
 })
@@ -52,6 +60,12 @@ ECS_MOVE(EcsAlert, dst, src, {
     src->severity_filters = (ecs_vec_t){0};
 
     dst->retain_period = src->retain_period;
+    dst->id = src->id;
+    dst->member = src->member;
+    dst->offset = src->offset;
+    dst->size = src->size;
+    dst->kind = src->kind;
+    dst->ranges = src->ranges;
 })
 
 static
@@ -153,6 +167,42 @@ ecs_entity_t flecs_alert_get_severity(
 }
 
 static
+ecs_entity_t flecs_alert_out_of_range_kind(
+    EcsAlert *alert,
+    const EcsMemberRanges *ranges,
+    const void *value_ptr)
+{
+    double value;
+
+    switch(alert->kind) {
+    case EcsU8: value = *(uint8_t*)value_ptr; break;
+    case EcsU16: value = *(uint16_t*)value_ptr; break;
+    case EcsU32: value = *(uint32_t*)value_ptr; break;
+    case EcsU64: value = *(uint64_t*)value_ptr; break;
+    case EcsI8: value = *(int8_t*)value_ptr; break;
+    case EcsI16: value = *(int16_t*)value_ptr; break;
+    case EcsI32: value = *(int32_t*)value_ptr; break;
+    case EcsI64: value = *(int64_t*)value_ptr; break;
+    case EcsF32: value = *(float*)value_ptr; break;
+    case EcsF64: value = *(double*)value_ptr; break;
+    default: return 0;
+    }
+
+    bool has_error = ranges->error.min != ranges->error.max;
+    bool has_warning = ranges->warning.min != ranges->warning.max;
+
+    if (has_error && (value < ranges->error.min || value > ranges->error.max)) {
+        return EcsAlertError;
+    } else if (has_warning && 
+        (value < ranges->warning.min || value > ranges->warning.max)) 
+    {
+        return EcsAlertWarning;
+    } else {
+        return 0;
+    }
+}
+
+static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsAlert *alert = ecs_field(it, EcsAlert, 1);
@@ -166,6 +216,12 @@ void MonitorAlerts(ecs_iter_t *it) {
         ecs_rule_t *rule = poly[i].poly;
         ecs_poly_assert(rule, ecs_rule_t);
 
+        ecs_id_t member_id = alert[i].id;
+        const EcsMemberRanges *ranges = NULL;
+        if (member_id) {
+            ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
+        }
+
         ecs_iter_t rit = ecs_rule_iter(world, rule);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
@@ -177,9 +233,33 @@ void MonitorAlerts(ecs_iter_t *it) {
                 severity = default_severity;
             }
 
+            const void *member_data = NULL;
+            if (ranges) {
+                member_data = ecs_table_get_id(
+                    world, rit.table, member_id, rit.offset);
+                if (!member_data) {
+                    continue;
+                }
+                member_data = ECS_OFFSET(member_data, alert[i].offset);
+            }
+
             int32_t j, alert_src_count = rit.count;
             for (j = 0; j < alert_src_count; j ++) {
+                ecs_entity_t src_severity = severity;
                 ecs_entity_t e = rit.entities[j];
+                if (member_data) {
+                    ecs_entity_t range_severity = flecs_alert_out_of_range_kind(
+                        &alert[i], ranges, member_data);
+                    member_data = ECS_OFFSET(member_data, alert[i].size);
+                    if (!range_severity) {
+                        continue;
+                    }
+                    if (range_severity < src_severity) {
+                        /* Range severity should not exceed alert severity */
+                        src_severity = range_severity;
+                    }
+                }
+
                 ecs_entity_t *aptr = ecs_map_ensure(&alert[i].instances, e);
                 ecs_assert(aptr != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (!aptr[0]) {
@@ -188,7 +268,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
-                    ecs_add_pair(world, ai, ecs_id(EcsAlert), severity);
+                    ecs_add_pair(world, ai, ecs_id(EcsAlert), src_severity);
                     if (alert[i].retain_period != 0) {
                         ecs_set(world, ai, EcsAlertTimeout, {
                             .inactive_time = 0,
@@ -202,12 +282,12 @@ void MonitorAlerts(ecs_iter_t *it) {
                     aptr[0] = ai;
                 } else {
                     /* Make sure alert severity is up to date */
-                    if (ecs_vec_count(&alert[i].severity_filters)) {
+                    if (ecs_vec_count(&alert[i].severity_filters) || member_data) {
                         ecs_entity_t cur_severity = ecs_get_target(
                             world, aptr[0], ecs_id(EcsAlert), 0);
-                        if (cur_severity != severity) {
+                        if (cur_severity != src_severity) {
                             ecs_add_pair(world, aptr[0], ecs_id(EcsAlert), 
-                                severity);
+                                src_severity);
                         }
                     }
                 }
@@ -241,6 +321,12 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_rule_t *rule = poly->poly;
     ecs_poly_assert(rule, ecs_rule_t);
 
+    ecs_id_t member_id = alert->id;
+    const EcsMemberRanges *ranges = NULL;
+    if (member_id) {
+        ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
+    }
+
     ecs_vars_t vars = {0};
     ecs_vars_init(world, &vars);
 
@@ -248,14 +334,28 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
         ecs_entity_t e = source[i].entity;
+        bool range_match = true;
+
+        if (ranges) {
+            const void *member_data = ecs_get_id(world, e, member_id);
+            if (!member_data) {
+                range_match = false;
+            }
+            member_data = ECS_OFFSET(member_data, alert->offset);
+            range_match = flecs_alert_out_of_range_kind(
+                &alert[i], ranges, member_data) != 0;
+        }
 
         /* Check if alert instance still matches rule */
-        ecs_iter_t rit = ecs_rule_iter(world, rule);
-        rit.flags |= EcsIterNoData;
-        rit.flags |= EcsIterIsInstanced;
-        ecs_iter_set_var(&rit, 0, e);
+        ecs_iter_t rit;
+        if (range_match) {
+            rit = ecs_rule_iter(world, rule);
+            rit.flags |= EcsIterNoData;
+            rit.flags |= EcsIterIsInstanced;
+            ecs_iter_set_var(&rit, 0, e);
+        }
 
-        if (ecs_rule_next(&rit)) {
+        if (range_match && ecs_rule_next(&rit)) {
             /* Only increase alert duration if the alert was active */
             value[i].value += (double)it->delta_system_time;
 
@@ -337,6 +437,7 @@ ecs_entity_t ecs_alert_init(
 
     ecs_rule_t *rule = ecs_rule_init(world, &private_desc);
     if (!rule) {
+        ecs_err("failed to create alert filter");
         return 0;
     }
 
@@ -373,6 +474,63 @@ ecs_entity_t ecs_alert_init(
                 }
             }
         }
+    }
+
+    /* Fetch data for member monitoring */
+    if (desc->member) {
+        alert->member = desc->member;
+        if (!desc->id) {
+            alert->id = ecs_get_parent(world, desc->member);
+            if (!alert->id) {
+                ecs_err("ecs_alert_desc_t::member is not a member");
+                goto error;
+            }
+            ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, NULL);
+        } else {
+            alert->id = desc->id;
+        }
+
+        ecs_id_record_t *idr = flecs_id_record_ensure(world, alert->id);
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!idr->type_info) {
+            ecs_err("ecs_alert_desc_t::id must be a component");
+            goto error;
+        }
+
+        ecs_entity_t type = idr->type_info->component;
+        if (type != ecs_get_parent(world, desc->member)) {
+            char *type_name = ecs_get_fullpath(world, type);
+            ecs_err("member '%s' is not a member of '%s'", 
+                ecs_get_name(world, desc->member), type_name);
+            ecs_os_free(type_name);
+            goto error;
+        }
+
+        const EcsMember *member = ecs_get(world, alert->member, EcsMember);
+        if (!member) {
+            ecs_err("ecs_alert_desc_t::member is not a member");
+            goto error;
+        }
+        if (!member->type) {
+            ecs_err("ecs_alert_desc_t::member must have a type");
+            goto error;
+        }
+        
+        const EcsPrimitive *pr = ecs_get(world, member->type, EcsPrimitive);
+        if (!pr) {
+            ecs_err("ecs_alert_desc_t::member must be of a primitive type");
+            goto error;
+        }
+
+        if (!ecs_has(world, desc->member, EcsMemberRanges)) {
+            ecs_err("ecs_alert_desc_t::member must have warning/error ranges");
+            goto error;
+        }
+
+        alert->offset = member->offset;
+        alert->size = idr->type_info->size;
+        alert->kind = pr->kind;
+        alert->ranges = ecs_ref_init(world, desc->member, EcsMemberRanges);
     }
 
     ecs_modified(world, result, EcsAlert);

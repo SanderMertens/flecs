@@ -1475,3 +1475,704 @@ void Alerts_severity_filter_w_var_change_var() {
 
     ecs_fini(world);
 }
+
+void Alerts_member_range_warning() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_error() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_warning_error() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = {0, 50}, .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {25});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {75});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {125});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_error_w_warning_severity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .severity = EcsAlertWarning,
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_error_w_severity_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .severity = EcsAlertWarning,
+        .severity_filters[0] = {
+            .with = Tag,
+            .severity = EcsAlertError
+        },
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_add(world, e1, Tag);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_warning_w_severity_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .severity = EcsAlertWarning,
+        .severity_filters[0] = {
+            .with = Tag,
+            .severity = EcsAlertError
+        },
+        .member = member
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_add(world, e1, Tag);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertWarning));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_pair_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member,
+        .id = ecs_pair_t(Mass, Tag)
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set_pair(world, e1, Mass, Tag, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 1);
+        
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        const EcsAlertInstance *instance = ecs_get(world, it.entities[0], EcsAlertInstance);
+        test_assert(instance != NULL);
+
+        const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+        test_assert(source != NULL);
+        test_int(source->entity, e1);
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set_pair(world, e1, Mass, Tag, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_invalid_member() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = Tag,
+    });
+    test_assert(alert == 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_invalid_member_child() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, ecs_id(Mass));
+
+    ecs_log_set_level(-4);
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = child,
+    });
+    test_assert(alert == 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_invalid_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member,
+        .id = Tag
+    });
+    test_assert(alert == 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_invalid_member_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t) }}
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_new_entity(world, "Foo"),
+        .members = {{ "value", ecs_id(Mass) }}
+    });
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Foo.value");
+    test_assert(member != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member,
+    });
+    test_assert(alert == 0);
+
+    ecs_fini(world);
+}
+
+void Alerts_member_range_no_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t) }}
+    });
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member,
+    });
+    test_assert(alert == 0);
+
+    ecs_fini(world);
+}

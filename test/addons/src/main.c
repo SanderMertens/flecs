@@ -1502,6 +1502,18 @@ void Alerts_severity_filter(void);
 void Alerts_two_severity_filters(void);
 void Alerts_severity_filter_w_var(void);
 void Alerts_severity_filter_w_var_change_var(void);
+void Alerts_member_range_warning(void);
+void Alerts_member_range_error(void);
+void Alerts_member_range_warning_error(void);
+void Alerts_member_range_error_w_warning_severity(void);
+void Alerts_member_range_error_w_severity_filter(void);
+void Alerts_member_range_warning_w_severity_filter(void);
+void Alerts_member_range_pair_id(void);
+void Alerts_member_range_invalid_member(void);
+void Alerts_member_range_invalid_member_child(void);
+void Alerts_member_range_invalid_type(void);
+void Alerts_member_range_invalid_member_type(void);
+void Alerts_member_range_no_range(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7273,6 +7285,54 @@ bake_test_case Alerts_testcases[] = {
     {
         "severity_filter_w_var_change_var",
         Alerts_severity_filter_w_var_change_var
+    },
+    {
+        "member_range_warning",
+        Alerts_member_range_warning
+    },
+    {
+        "member_range_error",
+        Alerts_member_range_error
+    },
+    {
+        "member_range_warning_error",
+        Alerts_member_range_warning_error
+    },
+    {
+        "member_range_error_w_warning_severity",
+        Alerts_member_range_error_w_warning_severity
+    },
+    {
+        "member_range_error_w_severity_filter",
+        Alerts_member_range_error_w_severity_filter
+    },
+    {
+        "member_range_warning_w_severity_filter",
+        Alerts_member_range_warning_w_severity_filter
+    },
+    {
+        "member_range_pair_id",
+        Alerts_member_range_pair_id
+    },
+    {
+        "member_range_invalid_member",
+        Alerts_member_range_invalid_member
+    },
+    {
+        "member_range_invalid_member_child",
+        Alerts_member_range_invalid_member_child
+    },
+    {
+        "member_range_invalid_type",
+        Alerts_member_range_invalid_type
+    },
+    {
+        "member_range_invalid_member_type",
+        Alerts_member_range_invalid_member_type
+    },
+    {
+        "member_range_no_range",
+        Alerts_member_range_no_range
     }
 };
 
@@ -7519,7 +7579,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        19,
+        31,
         Alerts_testcases
     }
 };

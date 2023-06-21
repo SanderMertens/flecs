@@ -1574,7 +1574,19 @@
                 "severity_filter",
                 "two_severity_filters",
                 "severity_filter_w_var",
-                "severity_filter_w_var_change_var"
+                "severity_filter_w_var_change_var",
+                "member_range_warning",
+                "member_range_error",
+                "member_range_warning_error",
+                "member_range_error_w_warning_severity",
+                "member_range_error_w_severity_filter",
+                "member_range_warning_w_severity_filter",
+                "member_range_pair_id",
+                "member_range_invalid_member",
+                "member_range_invalid_member_child",
+                "member_range_invalid_type",
+                "member_range_invalid_member_type",
+                "member_range_no_range"
             ]
         }]
     }
