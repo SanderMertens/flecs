@@ -117,6 +117,29 @@ public:
             w.pair<T>(constant), var);
     }
 
+    /** Set member to create an alert for out of range values */
+    Base& member(flecs::entity_t member) {
+        m_desc->member = member;
+        return *this;
+    }
+
+    /** Set (component) id for member (optional). If .member() is set and id
+     * is not set, the id will default to the member parent. */
+    Base& id(flecs::id_t id) {
+        m_desc->id = id;
+        return *this;
+    }
+
+    /** Set member to create an alert for out of range values */
+    template <typename T>
+    Base& member(const char *member) {
+        flecs::entity_t id = _::cpp_type<T>::id(world_v());
+        flecs::entity_t m = ecs_lookup_path_w_sep(
+            world_v(), id, member, "::", "::", false);
+        ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
+        return this->member(m);
+    }
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 
