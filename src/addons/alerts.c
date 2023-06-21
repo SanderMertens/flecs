@@ -343,7 +343,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             } else {
                 member_data = ECS_OFFSET(member_data, alert->offset);
                 range_match = flecs_alert_out_of_range_kind(
-                    &alert[i], ranges, member_data) != 0;
+                    alert, ranges, member_data) != 0;
             }
         }
 

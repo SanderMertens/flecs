@@ -2176,3 +2176,120 @@ void Alerts_member_range_no_range() {
 
     ecs_fini(world);
 }
+
+void Alerts_member_range_alert_two_instances() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Mass, {50});
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_set(world, e2, Mass, {50});
+
+    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    test_assert(member != 0);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "high_mass"),
+        .filter.expr = "Mass",
+        .member = member,
+    });
+    test_assert(alert != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_assert(!ecs_has(world, e2, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_set(world, e1, Mass, {150});
+    ecs_set(world, e2, Mass, {150});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_assert(ecs_has(world, e2, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 2);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 2);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        test_assert(ecs_get(world, it.entities[0], EcsAlertInstance) != NULL);
+        test_assert(ecs_get(world, it.entities[1], EcsAlertInstance) != NULL);
+
+        {
+            const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+            test_assert(source != NULL);
+            test_int(source->entity, e1);
+        }
+        {
+            const EcsMetricSource *source = ecs_get(world, it.entities[1], EcsMetricSource);
+            test_assert(source != NULL);
+            test_int(source->entity, e2);
+        }
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_assert(ecs_has(world, e2, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 2);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert) == 1);
+        test_assert(ecs_get_alert_count(world, e2, alert) == 1);
+
+        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_filter_iter(world, alerts);
+        test_bool(ecs_filter_next(&it), true);
+        test_int(it.count, 2);
+
+        test_assert(it.entities[0] != 0);
+        test_assert(ecs_get_parent(world, it.entities[0]) == alert);
+        test_assert(ecs_has_pair(world, it.entities[0], ecs_id(EcsAlert), EcsAlertError));
+        test_assert(ecs_get(world, it.entities[0], EcsAlertInstance) != NULL);
+        test_assert(ecs_get(world, it.entities[1], EcsAlertInstance) != NULL);
+
+        {
+            const EcsMetricSource *source = ecs_get(world, it.entities[0], EcsMetricSource);
+            test_assert(source != NULL);
+            test_int(source->entity, e1);
+        }
+        {
+            const EcsMetricSource *source = ecs_get(world, it.entities[1], EcsMetricSource);
+            test_assert(source != NULL);
+            test_int(source->entity, e2);
+        }
+
+        test_bool(ecs_filter_next(&it), false);
+        ecs_filter_fini(alerts);
+    }
+
+    ecs_set(world, e1, Mass, {25});
+    ecs_set(world, e2, Mass, {25});
+
+    ecs_progress(world, 1.0);
+
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}

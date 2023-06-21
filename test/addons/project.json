@@ -1586,7 +1586,8 @@
                 "member_range_invalid_member_child",
                 "member_range_invalid_type",
                 "member_range_invalid_member_type",
-                "member_range_no_range"
+                "member_range_no_range",
+                "member_range_alert_two_instances"
             ]
         }]
     }
