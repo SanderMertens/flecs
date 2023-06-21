@@ -132,12 +132,19 @@ public:
 
     /** Set member to create an alert for out of range values */
     template <typename T>
-    Base& member(const char *m) {
+    Base& member(const char *m, const char *v = nullptr) {
         flecs::entity_t id = _::cpp_type<T>::id(world_v());
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
         ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
+        m_desc->var = v;
         return this->member(mid);
+    }
+
+    /** Set source variable for member (optional, defaults to $this) */
+    Base& var(const char *v) {
+        m_desc->var = v;
+        return *this;
     }
 
 protected:

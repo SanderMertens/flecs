@@ -119,6 +119,10 @@ typedef struct ecs_alert_desc_t {
     /** (Component) id of member to monitor. If left to 0 this will be set to
      * the parent entity of the member (optional). */
     ecs_id_t id;
+
+    /** Variable from which to fetch the member (optional). When left to NULL
+     * 'id' will be obtained from $this. */
+    const char *var;
 } ecs_alert_desc_t;
 
 /** Create a new alert.
