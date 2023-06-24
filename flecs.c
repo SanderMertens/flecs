@@ -18234,6 +18234,7 @@ void FlecsPipelineImport(
 
 ECS_COMPONENT_DECLARE(FlecsMonitor);
 ECS_COMPONENT_DECLARE(EcsWorldStats);
+ECS_COMPONENT_DECLARE(EcsWorldSummary);
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
 ecs_entity_t EcsPeriod1s = 0;
@@ -18262,6 +18263,26 @@ static
 ECS_DTOR(EcsPipelineStats, ptr, {
     ecs_pipeline_stats_fini(&ptr->stats);
 })
+
+static
+void UpdateWorldSummary(ecs_iter_t *it) {
+    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 1);
+
+    const ecs_world_info_t *info = ecs_get_world_info(it->world);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        summary[i].target_fps = (double)info->target_fps;
+
+        summary[i].frame_time_last = (double)info->frame_time_total - summary[i].frame_time_total;
+        summary[i].system_time_last = (double)info->system_time_total - summary[i].system_time_total;
+        summary[i].merge_time_last = (double)info->merge_time_total - summary[i].merge_time_total;
+
+        summary[i].frame_time_total = (double)info->frame_time_total;
+        summary[i].system_time_total = (double)info->system_time_total;
+        summary[i].merge_time_total = (double)info->merge_time_total;
+    }
+}
 
 static
 void MonitorStats(ecs_iter_t *it) {
@@ -18525,6 +18546,26 @@ void FlecsMonitorImport(
     EcsPeriod1h = ecs_new_entity(world, "EcsPeriod1h");
     EcsPeriod1d = ecs_new_entity(world, "EcsPeriod1d");
     EcsPeriod1w = ecs_new_entity(world, "EcsPeriod1w");
+
+    ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
+
+#ifdef FLECS_META
+    ecs_struct(world, {
+        .entity = ecs_id(EcsWorldSummary),
+        .members = {
+            { .name = "target_fps", .type = ecs_id(ecs_f64_t), .unit = EcsHertz },
+            { .name = "frame_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
+            { .name = "system_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "frame_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "system_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  }
+        }
+    });
+#endif
+
+    ECS_SYSTEM(world, UpdateWorldSummary, EcsPreFrame, EcsWorldSummary);
+    ecs_set(world, EcsWorld, EcsWorldSummary, {0});
 
     flecs_world_monitor_import(world);
     flecs_pipeline_monitor_import(world);

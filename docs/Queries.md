@@ -26,7 +26,7 @@ Here are some of the highlights of Flecs queries:
 
 - Queries can be created with the regular API or by parsing a query string, making it possible to [create tools that create queries at runtime](https://www.flecs.dev/explorer/).
 
-- Queries support [component inheritance](/examples/cpp/rules/component_inheritance).
+- Queries support [component inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance).
 
 ## Definitions
 
