@@ -314,6 +314,9 @@ void FlecsMonitorImport(
     ECS_MODULE_DEFINE(world, FlecsMonitor);
     ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsTimer);
+#ifdef FLECS_META
+    ECS_IMPORT(world, FlecsMeta);
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -340,7 +343,16 @@ void FlecsMonitorImport(
     });
 #endif
 
-    ECS_SYSTEM(world, UpdateWorldSummary, EcsPreFrame, EcsWorldSummary);
+    ecs_system(world, {
+        .entity = ecs_entity(world, { 
+            .name = "UpdateWorldSummary", 
+            .add = {ecs_dependson(EcsPreFrame)} 
+        }),
+        .query.filter.terms[0] = { .id = ecs_id(EcsWorldSummary) },
+        .callback = UpdateWorldSummary
+    });
+
+    ECS_SYSTEM(world, UpdateWorldSummary, EcsPreFrame, WorldSummary);
     ecs_set(world, EcsWorld, EcsWorldSummary, {0});
 
     flecs_world_monitor_import(world);

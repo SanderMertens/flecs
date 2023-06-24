@@ -179,6 +179,139 @@ ECS_TAG_DECLARE(EcsAlertWarning);
 ECS_TAG_DECLARE(EcsAlertError);
 ECS_TAG_DECLARE(EcsAlertCritical);
 #endif
+#ifdef FLECS_UNITS
+ECS_DECLARE(EcsUnitPrefixes);
+
+ECS_DECLARE(EcsYocto);
+ECS_DECLARE(EcsZepto);
+ECS_DECLARE(EcsAtto);
+ECS_DECLARE(EcsFemto);
+ECS_DECLARE(EcsPico);
+ECS_DECLARE(EcsNano);
+ECS_DECLARE(EcsMicro);
+ECS_DECLARE(EcsMilli);
+ECS_DECLARE(EcsCenti);
+ECS_DECLARE(EcsDeci);
+ECS_DECLARE(EcsDeca);
+ECS_DECLARE(EcsHecto);
+ECS_DECLARE(EcsKilo);
+ECS_DECLARE(EcsMega);
+ECS_DECLARE(EcsGiga);
+ECS_DECLARE(EcsTera);
+ECS_DECLARE(EcsPeta);
+ECS_DECLARE(EcsExa);
+ECS_DECLARE(EcsZetta);
+ECS_DECLARE(EcsYotta);
+
+ECS_DECLARE(EcsKibi);
+ECS_DECLARE(EcsMebi);
+ECS_DECLARE(EcsGibi);
+ECS_DECLARE(EcsTebi);
+ECS_DECLARE(EcsPebi);
+ECS_DECLARE(EcsExbi);
+ECS_DECLARE(EcsZebi);
+ECS_DECLARE(EcsYobi);
+
+ECS_DECLARE(EcsDuration);
+    ECS_DECLARE(EcsPicoSeconds);
+    ECS_DECLARE(EcsNanoSeconds);
+    ECS_DECLARE(EcsMicroSeconds);
+    ECS_DECLARE(EcsMilliSeconds);
+    ECS_DECLARE(EcsSeconds);
+    ECS_DECLARE(EcsMinutes);
+    ECS_DECLARE(EcsHours);
+    ECS_DECLARE(EcsDays);
+
+ECS_DECLARE(EcsTime);
+    ECS_DECLARE(EcsDate);
+
+ECS_DECLARE(EcsMass);
+    ECS_DECLARE(EcsGrams);
+    ECS_DECLARE(EcsKiloGrams);
+
+ECS_DECLARE(EcsElectricCurrent);
+    ECS_DECLARE(EcsAmpere);
+
+ECS_DECLARE(EcsAmount);
+    ECS_DECLARE(EcsMole);
+
+ECS_DECLARE(EcsLuminousIntensity);
+    ECS_DECLARE(EcsCandela);
+
+ECS_DECLARE(EcsForce);
+    ECS_DECLARE(EcsNewton);
+
+ECS_DECLARE(EcsLength);
+    ECS_DECLARE(EcsMeters);
+        ECS_DECLARE(EcsPicoMeters);
+        ECS_DECLARE(EcsNanoMeters);
+        ECS_DECLARE(EcsMicroMeters);
+        ECS_DECLARE(EcsMilliMeters);
+        ECS_DECLARE(EcsCentiMeters);
+        ECS_DECLARE(EcsKiloMeters);
+    ECS_DECLARE(EcsMiles);
+    ECS_DECLARE(EcsPixels);
+
+ECS_DECLARE(EcsPressure);
+    ECS_DECLARE(EcsPascal);
+    ECS_DECLARE(EcsBar);
+
+ECS_DECLARE(EcsSpeed);
+    ECS_DECLARE(EcsMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerHour);
+    ECS_DECLARE(EcsMilesPerHour);
+
+ECS_DECLARE(EcsAcceleration);
+
+ECS_DECLARE(EcsTemperature);
+    ECS_DECLARE(EcsKelvin);
+    ECS_DECLARE(EcsCelsius);
+    ECS_DECLARE(EcsFahrenheit);
+
+ECS_DECLARE(EcsData);
+    ECS_DECLARE(EcsBits);
+        ECS_DECLARE(EcsKiloBits);
+        ECS_DECLARE(EcsMegaBits);
+        ECS_DECLARE(EcsGigaBits);
+    ECS_DECLARE(EcsBytes);
+        ECS_DECLARE(EcsKiloBytes);
+        ECS_DECLARE(EcsMegaBytes);
+        ECS_DECLARE(EcsGigaBytes);
+        ECS_DECLARE(EcsKibiBytes);
+        ECS_DECLARE(EcsGibiBytes);
+        ECS_DECLARE(EcsMebiBytes);
+
+ECS_DECLARE(EcsDataRate);
+    ECS_DECLARE(EcsBitsPerSecond);
+    ECS_DECLARE(EcsKiloBitsPerSecond);
+    ECS_DECLARE(EcsMegaBitsPerSecond);
+    ECS_DECLARE(EcsGigaBitsPerSecond);
+    ECS_DECLARE(EcsBytesPerSecond);
+    ECS_DECLARE(EcsKiloBytesPerSecond);
+    ECS_DECLARE(EcsMegaBytesPerSecond);
+    ECS_DECLARE(EcsGigaBytesPerSecond);
+
+ECS_DECLARE(EcsPercentage);
+
+ECS_DECLARE(EcsAngle);
+    ECS_DECLARE(EcsRadians);
+    ECS_DECLARE(EcsDegrees);
+
+ECS_DECLARE(EcsBel);
+ECS_DECLARE(EcsDeciBel);
+
+ECS_DECLARE(EcsFrequency);
+    ECS_DECLARE(EcsHertz);
+    ECS_DECLARE(EcsKiloHertz);
+    ECS_DECLARE(EcsMegaHertz);
+    ECS_DECLARE(EcsGigaHertz);
+
+ECS_DECLARE(EcsUri);
+    ECS_DECLARE(EcsUriHyperlink);
+    ECS_DECLARE(EcsUriImage);
+    ECS_DECLARE(EcsUriFile);
+#endif
 
 /* -- Private functions -- */
 
