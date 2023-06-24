@@ -56,6 +56,9 @@ typedef SOCKET ecs_http_socket_t;
 #include <strings.h>
 #include <signal.h>
 #include <fcntl.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
 typedef int ecs_http_socket_t;
 #endif
 
