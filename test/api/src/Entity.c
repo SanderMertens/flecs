@@ -2082,3 +2082,129 @@ void Entity_set_generation_while_deferred() {
     test_expect_abort();
     ecs_set_entity_generation(world, e1 |= 0x200000000ul);
 }
+
+static
+void Observer(ecs_iter_t *it) {
+    int *invoked = it->ctx;
+    (*invoked) ++;
+}
+
+void Entity_commit_w_on_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    int invoked = 0;
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = Tag }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &invoked
+    });
+
+    ecs_table_t *dst = ecs_table_add_id(world, NULL, Tag);
+    test_assert(dst != NULL);
+
+    ecs_type_t added = {
+        .array = (ecs_id_t[]){ Tag },
+        .count = 1
+    };
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_commit(world, e, NULL, dst, &added, NULL);
+
+    test_assert(ecs_has(world, e, Tag));
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Entity_commit_w_on_remove() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+
+    int invoked = 0;
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = Tag }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &invoked
+    });
+
+    ecs_type_t removed = {
+        .array = (ecs_id_t[]){ Tag },
+        .count = 1
+    };
+
+    ecs_table_t *dst = ecs_table_add_id(world, NULL, Foo);
+    test_assert(dst != NULL);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_add_id(world, e, Foo);
+    ecs_commit(world, e, NULL, dst, NULL, &removed);
+
+    test_assert(!ecs_has(world, e, Tag));
+    test_assert(ecs_has(world, e, Foo));
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}
+
+static ECS_TAG_DECLARE(Foo);
+
+static
+void Observer_w_cmd(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int *invoked = it->ctx;
+    (*invoked) ++;
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_add(world, e, Foo);
+        test_assert(!ecs_has(world, e, Foo));
+    }
+}
+
+void Entity_commit_w_cmd_in_observer() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG_DEFINE(world, Foo);
+
+    int invoked = 0;
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = Tag }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer_w_cmd,
+        .ctx = &invoked
+    });
+
+    ecs_table_t *dst = ecs_table_add_id(world, NULL, Tag);
+    test_assert(dst != NULL);
+
+    ecs_type_t added = {
+        .array = (ecs_id_t[]){ Tag },
+        .count = 1
+    };
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_commit(world, e, NULL, dst, &added, NULL);
+
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_has(world, e, Foo));
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}

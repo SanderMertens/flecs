@@ -139,6 +139,9 @@ void Entity_entity_w_existing_digit_name(void);
 void Entity_entity_w_conflicting_digit_name(void);
 void Entity_set_generation_on_nonempty_entity(void);
 void Entity_set_generation_while_deferred(void);
+void Entity_commit_w_on_add(void);
+void Entity_commit_w_on_remove(void);
+void Entity_commit_w_cmd_in_observer(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -3070,6 +3073,18 @@ bake_test_case Entity_testcases[] = {
     {
         "set_generation_while_deferred",
         Entity_set_generation_while_deferred
+    },
+    {
+        "commit_w_on_add",
+        Entity_commit_w_on_add
+    },
+    {
+        "commit_w_on_remove",
+        Entity_commit_w_on_remove
+    },
+    {
+        "commit_w_cmd_in_observer",
+        Entity_commit_w_cmd_in_observer
     }
 };
 
@@ -12445,7 +12460,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        102,
+        105,
         Entity_testcases
     },
     {

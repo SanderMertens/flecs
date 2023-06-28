@@ -1159,6 +1159,7 @@ bool ecs_commit(
     const ecs_type_t *removed)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
 
     ecs_table_t *src_table = NULL;
     if (!record) {
@@ -1172,10 +1173,12 @@ bool ecs_commit(
         diff.added = *added;
     }
     if (removed) {
-        diff.added = *removed;
+        diff.removed = *removed;
     }
-    
+
+    ecs_defer_begin(world);
     flecs_commit(world, entity, record, table, &diff, true, 0);
+    ecs_defer_end(world);
 
     return src_table != table;
 error:

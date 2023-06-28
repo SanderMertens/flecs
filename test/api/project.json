@@ -145,7 +145,10 @@
                 "entity_w_existing_digit_name",
                 "entity_w_conflicting_digit_name",
                 "set_generation_on_nonempty_entity",
-                "set_generation_while_deferred"
+                "set_generation_while_deferred",
+                "commit_w_on_add",
+                "commit_w_on_remove",
+                "commit_w_cmd_in_observer"
             ]
         }, {
             "id": "Search",
