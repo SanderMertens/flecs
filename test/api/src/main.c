@@ -1937,6 +1937,7 @@ void Observer_notify_after_defer_batched(void);
 void Observer_notify_after_defer_batched_2_entities_in_table(void);
 void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void);
 void Observer_multi_observer_table_fill_w_singleton(void);
+void Observer_wildcard_propagate_w_other_table(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -10079,6 +10080,10 @@ bake_test_case Observer_testcases[] = {
         Observer_multi_observer_table_fill_w_singleton
     },
     {
+        "wildcard_propagate_w_other_table",
+        Observer_wildcard_propagate_w_other_table
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -12684,7 +12689,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        111,
+        112,
         Observer_testcases
     },
     {

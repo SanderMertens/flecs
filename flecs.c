@@ -49628,7 +49628,7 @@ void flecs_emit(
 
     const ecs_type_t *ids = desc->ids;
     ecs_entity_t event = desc->event;
-    ecs_table_t *table = desc->table;
+    ecs_table_t *table = desc->table, *other_table = desc->other_table;
     int32_t offset = desc->offset;
     int32_t i, r, count = desc->count;
     ecs_flags32_t table_flags = table->flags;
@@ -49662,7 +49662,7 @@ void flecs_emit(
         .sizes = &sizes_cache,
         .columns = &columns_cache,
         .sources = &sources_cache,
-        .other_table = desc->other_table,
+        .other_table = other_table,
         .offset = offset,
         .count = count,
         .param = (void*)desc->param,
@@ -49940,6 +49940,7 @@ repeat_event:
         }
 
         it.table = table;
+        it.other_table = other_table;
         it.entities = entities;
         it.count = count;
         it.offset = offset;

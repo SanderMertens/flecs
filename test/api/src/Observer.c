@@ -3893,6 +3893,52 @@ void Observer_on_remove_target_component_from_base_at_offset() {
     ecs_fini(world);
 }
 
+static void Observer_w_other_table(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+    test_assert(it->table != NULL);
+    test_assert(it->other_table != NULL);
+}
+
+static void Observer_dummy(ecs_iter_t *it) {}
+
+void Observer_wildcard_propagate_w_other_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t tgt_1 = ecs_new_id(world);
+    
+    ecs_entity_t parent = ecs_new_w_id(world, tag);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+
+    Probe ctx_parent = {0};
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_pair(rel, EcsWildcard) }},
+        .events = {EcsOnAdd},
+        .callback = Observer_dummy
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_pair(rel, EcsWildcard) }},
+        .events = {EcsWildcard},
+        .callback = Observer_w_other_table,
+        .ctx = &ctx_parent
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_pair(rel, EcsWildcard), .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsWildcard},
+        .callback = Observer_dummy
+    });
+
+    ecs_add_pair(world, parent, rel, tgt_1);
+
+    test_int(ctx_parent.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1() {
     ecs_world_t *world = ecs_mini();
     
