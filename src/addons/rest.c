@@ -221,7 +221,12 @@ bool flecs_rest_reply_entity(
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
     flecs_rest_parse_json_ser_entity_params(&desc, req);
-    ecs_entity_to_json_buf(world, e, &reply->body, &desc);
+    if (ecs_entity_to_json_buf(world, e, &reply->body, &desc) != 0) {
+        ecs_strbuf_reset(&reply->body);
+        reply->code = 500;
+        reply->status = "Internal server error";
+        return true;
+    }
     return true;
 }
 
@@ -232,7 +237,12 @@ bool flecs_rest_reply_world(
     ecs_http_reply_t *reply)
 {
     (void)req;
-    ecs_world_to_json_buf(world, &reply->body, NULL);
+    if (ecs_world_to_json_buf(world, &reply->body, NULL) != 0) {
+        ecs_strbuf_reset(&reply->body);
+        reply->code = 500;
+        reply->status = "Internal server error";
+        return true;
+    }
     return true;
 }
 
