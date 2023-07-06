@@ -458,6 +458,8 @@ void System_startup_system(void);
 void System_interval_tick_source(void);
 void System_rate_tick_source(void);
 void System_nested_rate_tick_source(void);
+void System_table_get(void);
+void System_range_get(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -3010,6 +3012,14 @@ bake_test_case System_testcases[] = {
     {
         "nested_rate_tick_source",
         System_nested_rate_tick_source
+    },
+    {
+        "table_get",
+        System_table_get
+    },
+    {
+        "range_get",
+        System_range_get
     }
 };
 
@@ -6091,7 +6101,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        64,
+        66,
         System_testcases
     },
     {

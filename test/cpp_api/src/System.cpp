@@ -2146,3 +2146,53 @@ void System_nested_rate_tick_source() {
     test_int(2, sys_a_invoked);
     test_int(1, sys_b_invoked);
 }
+
+void System_table_get() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    auto s = ecs.system()
+        .with<Position>()
+        .each([&](flecs::iter& iter, size_t index) {
+            flecs::entity e = iter.entity(index);
+            const Position *p = &iter.table().get<Position>()[index];
+            test_assert(p != nullptr);
+            test_assert(e == e1 || e == e2);
+            if (e == e1) {
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+            } else if (e == e2) {
+                test_int(p->x, 20);
+                test_int(p->y, 30);
+            }
+        });
+
+    s.run();
+}
+
+void System_range_get() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+
+    auto s = ecs.system()
+        .with<Position>()
+        .each([&](flecs::iter& iter, size_t index) {
+            flecs::entity e = iter.entity(index);
+            const Position *p = &iter.range().get<Position>()[index];
+            test_assert(p != nullptr);
+            test_assert(e == e1 || e == e2);
+            if (e == e1) {
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+            } else if (e == e2) {
+                test_int(p->x, 20);
+                test_int(p->y, 30);
+            }
+        });
+
+    s.run();
+}

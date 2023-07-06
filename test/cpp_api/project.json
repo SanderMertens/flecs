@@ -475,7 +475,9 @@
                 "startup_system",
                 "interval_tick_source",
                 "rate_tick_source",
-                "nested_rate_tick_source"
+                "nested_rate_tick_source",
+                "table_get",
+                "range_get"
             ]
         }, {
             "id": "Event",

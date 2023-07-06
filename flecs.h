@@ -29666,11 +29666,11 @@ inline flecs::type iter::type() const {
 }
 
 inline flecs::table iter::table() const {
-    return flecs::table(m_iter->world, m_iter->table);
+    return flecs::table(m_iter->real_world, m_iter->table);
 }
 
 inline flecs::table_range iter::range() const {
-    return flecs::table_range(m_iter->world, m_iter->table, 
+    return flecs::table_range(m_iter->real_world, m_iter->table, 
         m_iter->offset, m_iter->count);
 }
 
