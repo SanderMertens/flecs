@@ -26,24 +26,15 @@ void probe_system_w_ctx(
         test_assert(e != 0);
     }
 
-    if (it->entities) {
-        ecs_entity_t *e = ecs_field(it, ecs_entity_t, 0);
-        if (e) {
-            test_assert(e != NULL);
-            test_assert(it->entities != NULL);
-            test_assert(it->entities == e);
-            
-            for (i = 0; i < it->count; i ++) {
-                if (i + ctx->count < 256) {
-                    ctx->e[i + ctx->count] = e[i];
-                } else {
-                    /* can't store more than that, tests shouldn't rely on
-                     * getting back more than 256 results */
-                }
-            }
-            ctx->count += it->count;
+    for (i = 0; i < it->count; i ++) {
+        if (i + ctx->count < 256) {
+            ctx->e[i + ctx->count] = it->entities[i];
+        } else {
+            /* can't store more than that, tests shouldn't rely on
+                * getting back more than 256 results */
         }
     }
+    ctx->count += it->count;
 
     ctx->invoked ++;
 }
