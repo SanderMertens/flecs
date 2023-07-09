@@ -561,6 +561,7 @@ void Query_instanced_nested_query_w_world(void);
 void Query_captured_query(void);
 void Query_page_iter_captured_query(void);
 void Query_worker_iter_captured_query(void);
+void Query_iter_entities(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -3407,6 +3408,10 @@ bake_test_case Query_testcases[] = {
     {
         "worker_iter_captured_query",
         Query_worker_iter_captured_query
+    },
+    {
+        "iter_entities",
+        Query_iter_entities
     }
 };
 
@@ -6112,7 +6117,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        78,
+        79,
         Query_testcases
     },
     {

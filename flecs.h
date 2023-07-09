@@ -20900,6 +20900,14 @@ public:
         return get_unchecked_field(index);
     }
 
+    /** Get readonly access to entity ids.
+     *
+     * @return The entity ids.
+     */
+    flecs::column<const flecs::entity_t> entities() const {
+        return flecs::column<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
+    }
+
     /** Obtain the total number of tables the iterator will iterate over. */
     int32_t table_count() const {
         return m_iter->table_count;

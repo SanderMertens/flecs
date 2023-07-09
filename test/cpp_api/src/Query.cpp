@@ -2229,3 +2229,21 @@ void Query_worker_iter_captured_query() {
         test_int(count, 1);
     }();
 }
+
+void Query_iter_entities() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({10, 20});
+    auto e2 = ecs.entity().set<Position>({10, 20});
+    auto e3 = ecs.entity().set<Position>({10, 20});
+
+    ecs.query<Position>()
+        .iter([&](flecs::iter& it) {
+            test_int(it.count(), 3);
+
+            auto entities = it.entities();
+            test_assert(entities[0] == e1);
+            test_assert(entities[1] == e2);
+            test_assert(entities[2] == e3);
+        });
+}
