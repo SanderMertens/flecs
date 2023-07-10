@@ -24,7 +24,7 @@ int main(int, char *[]) {
         .member<Color>("color");
 
     // Create entity with Position as usual
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<TypeWithEnum>({Green});
 
     // Convert position component to flecs expression string

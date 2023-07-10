@@ -24,7 +24,7 @@ int main(int, char *[]) {
         .member<Toppings>("toppings");
 
     // Create entity with Position as usual
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
 
     // Convert position component to flecs expression string

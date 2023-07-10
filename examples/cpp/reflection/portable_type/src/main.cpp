@@ -19,7 +19,7 @@ int main(int, char *[]) {
         .member(flecs::Uptr, "intptr");
 
     // Create entity with PortableType
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<PortableType>({10, 20});
 
     // Convert PortableType component to flecs expression string

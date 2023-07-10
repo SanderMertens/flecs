@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
         .member<double, mass::KiloGrams>("value");
 
     // Simple hierarchy
-    auto Sun = world.entity("Sun")
+    flecs::entity Sun = world.entity("Sun")
         .set<Mass>({1.988500e31});
 
-    auto Earth = world.scope(Sun).entity("Earth")
+    flecs::entity Earth = world.scope(Sun).entity("Earth")
         .set<Mass>({5.9722e24});
 
     world.scope(Earth).entity("Moon")

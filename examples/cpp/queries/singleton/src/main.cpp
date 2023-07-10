@@ -26,9 +26,10 @@ int main(int, char *[]) {
     world.entity("e3").set<Velocity>({0, 2});
 
     // Create query that matches Gravity as singleton
-    auto q = world.query_builder<Velocity, const Gravity>()
-        .term_at(2).singleton()
-        .build();
+    flecs::query<Velocity, const Gravity> q = 
+        world.query_builder<Velocity, const Gravity>()
+            .term_at(2).singleton()
+            .build();
 
     // In a query string expression you can use the $ shortcut for singletons:
     //   Velocity, Gravity($)

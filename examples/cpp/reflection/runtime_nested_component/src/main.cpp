@@ -5,19 +5,19 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create components for types that aren't known at compile time
-    auto point = ecs.component("Point")
+    flecs::entity point = ecs.component("Point")
         .member<float>("x")
         .member<float>("y");
 
-    auto line = ecs.component("Line")
+    flecs::entity line = ecs.component("Line")
         .member(point, "start")
         .member(point, "stop");
 
     // Create entity, set value of position using reflection API
-    auto e = ecs.entity();
+    flecs::entity e = ecs.entity();
     void *ptr = e.get_mut(line);
 
-    auto cur = ecs.cursor(line, ptr);
+    flecs::cursor cur = ecs.cursor(line, ptr);
     cur.push();        // {
     cur.push();        //   {
     cur.set_float(10); //     10

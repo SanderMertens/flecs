@@ -28,12 +28,12 @@ int main(int, char*[]) {
 
     // When one element of a pair is a component and the other element is a tag, 
     // the pair assumes the type of the component. 
-    auto e1 = ecs.entity().set<Requires, Gigawatts>({1.21});
+    flecs::entity e1 = ecs.entity().set<Requires, Gigawatts>({1.21});
     const Requires *r = e1.get<Requires, Gigawatts>();
     std::cout << "requires: " << r->amount << std::endl;
 
     // The component can be either the first or second part of a pair:
-    auto e2 = ecs.entity().set<Gigawatts, Requires>({1.21});
+    flecs::entity e2 = ecs.entity().set<Gigawatts, Requires>({1.21});
     r = e2.get<Gigawatts, Requires>();
     std::cout << "requires: " << r->amount << std::endl;
 
@@ -42,7 +42,7 @@ int main(int, char*[]) {
 
     // If both parts of a pair are components, the pair assumes the type of
     // the first element:
-    auto e3 = ecs.entity().set<Expires, Position>({0.5});
+    flecs::entity e3 = ecs.entity().set<Expires, Position>({0.5});
     const Expires *e = e3.get<Expires, Position>();
     std::cout << "expires: " << e->timeout << std::endl;
 
@@ -62,8 +62,8 @@ int main(int, char*[]) {
 
     // When querying for a relationship component, add the pair type as template
     // argument to the builder:
-    auto q = ecs.query_builder<Requires>()
-        .arg(1).second<Gigawatts>() // set second part of pair for first term
+    flecs::query<Requires> q = ecs.query_builder<Requires>()
+        .term_at(1).second<Gigawatts>() // set second part of pair for first term
         .build();
     
     // When iterating, always use the pair type:

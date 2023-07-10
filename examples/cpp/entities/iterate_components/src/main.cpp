@@ -55,7 +55,7 @@ void iterate_components(flecs::entity e) {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto bob = ecs.entity()
+    flecs::entity bob = ecs.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 1})
         .add<Human>()

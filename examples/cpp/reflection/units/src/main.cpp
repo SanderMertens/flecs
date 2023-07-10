@@ -30,11 +30,11 @@ int main(int, char *[]) {
         .member<double, flecs::units::pressure::Bar>("pressure")
         .member<double, flecs::units::length::MilliMeters>("precipitation");
 
-    auto e = ecs.entity().set<WeatherStation>({24, 1.2, 0.5});
+    flecs::entity e = ecs.entity().set<WeatherStation>({24, 1.2, 0.5});
 
     // Use cursor API to print values with units
     WeatherStation *ptr = e.get_mut<WeatherStation>();
-    auto cur = ecs.cursor<WeatherStation>(ptr);
+    flecs::cursor cur = ecs.cursor<WeatherStation>(ptr);
     cur.push();
     print_value(cur);
     cur.next();

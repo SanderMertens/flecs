@@ -71,7 +71,7 @@ int main(int, char *[]) {
 
     flecs::log::set_level(0);
 
-    auto e = ecs.entity("Entity");
+    flecs::entity e = ecs.entity("Entity");
 
     flecs::log::push("e.add<String>()");
     e.add<String>();

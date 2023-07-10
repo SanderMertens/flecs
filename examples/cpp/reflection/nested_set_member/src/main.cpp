@@ -23,10 +23,10 @@ int main(int, char *[]) {
         .member<Point>("stop");
 
     // Create entity, set value of Line using reflection API
-    auto e = ecs.entity();
+    flecs::entity e = ecs.entity();
     Line *ptr = e.get_mut<Line>();
 
-    auto cur = ecs.cursor<Line>(ptr);
+    flecs::cursor cur = ecs.cursor<Line>(ptr);
     cur.push();          // {
     cur.member("start"); //   start:
     cur.push();          //   {

@@ -33,7 +33,7 @@ int main(int, char *[]) {
     // Hierarchies use ECS relationships and the builtin flecs::ChildOf relationship to
     // create entities as children of other entities.
 
-    auto sun = ecs.entity("Sun")
+    flecs::entity sun = ecs.entity("Sun")
         .add<Star>()
         .set<Position>({1, 1});
 
@@ -47,12 +47,12 @@ int main(int, char *[]) {
             .add<Planet>()
             .set<Position>({2, 2});
 
-        auto earth = ecs.entity("Earth")
+        flecs::entity earth = ecs.entity("Earth")
             .child_of(sun)
             .add<Planet>()
             .set<Position>({3, 3});
 
-            auto moon = ecs.entity("Moon")
+            flecs::entity moon = ecs.entity("Moon")
                 .child_of(earth)
                 .add<Moon>()
                 .set<Position>({0.1, 0.1});

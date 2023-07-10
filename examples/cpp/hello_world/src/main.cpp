@@ -28,7 +28,7 @@ int main(int, char *[]) {
         });
 
     // Create an entity with name Bob, add Position and food preference
-    auto Bob = ecs.entity("Bob")
+    flecs::entity Bob = ecs.entity("Bob")
         .set(Position{0, 0})
         .set(Velocity{1, 2})
         .add<Eats, Apples>();

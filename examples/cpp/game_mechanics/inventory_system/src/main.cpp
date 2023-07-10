@@ -136,9 +136,9 @@ void transfer_item(flecs::entity container, flecs::entity item) {
     if (amt) {
         // If item has amount we need to check if the container already has an
         // item of this kind, and increase the value.
-        auto ecs = container.world();
-        auto ik = item_kind(item);
-        auto dst_item = find_item_w_kind(container, ik);
+        flecs::world ecs = container.world();
+        flecs::entity ik = item_kind(item);
+        flecs::entity dst_item = find_item_w_kind(container, ik);
         if (dst_item) {
             // If a matching item was found, increase its amount
             Amount *dst_amt = dst_item.get_mut<Amount>();
@@ -302,14 +302,14 @@ int main(int, char *[]) {
         .set_override<Health>({ 20 });
 
     // Create a loot box with items
-    auto loot_box = ecs.entity("Chest").add<Container>().with<ContainedBy>([&]{
+    flecs::entity loot_box = ecs.entity("Chest").add<Container>().with<ContainedBy>([&]{
         ecs.entity().is_a<IronSword>();
         ecs.entity().is_a<WoodenArmor>();
         ecs.entity().add<Coin>().set<Amount>({ 30 });
     });
 
     // Create a player entity with an inventory
-    auto player = ecs.entity("Player").set<Health>({10}).add<Inventory>(
+    flecs::entity player = ecs.entity("Player").set<Health>({10}).add<Inventory>(
         ecs.entity().add<Container>().with<ContainedBy>([&]{
             ecs.entity().add<Coin>().set<Amount>({ 20 });
         })

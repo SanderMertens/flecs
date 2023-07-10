@@ -15,10 +15,10 @@ int main(int, char *[]) {
         .member<float>("y");
 
     // Create entity, set value of position using reflection API
-    auto e = ecs.entity();
+    flecs::entity e = ecs.entity();
     Position *ptr = e.get_mut<Position>();
 
-    auto cur = ecs.cursor<Position>(ptr);
+    flecs::cursor cur = ecs.cursor<Position>(ptr);
     cur.push();          // {
     cur.set_float(10.0); //   10
     cur.next();          //   ,

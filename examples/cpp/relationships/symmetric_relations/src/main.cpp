@@ -13,8 +13,8 @@ int main(int, char*[]) {
         .add(flecs::Symmetric);
 
     // Create two players
-    auto player_1 = ecs.entity();
-    auto player_2 = ecs.entity();
+    flecs::entity player_1 = ecs.entity();
+    flecs::entity player_2 = ecs.entity();
 
     // Add (TradesWith, player_2) to player_1. This also adds 
     // (TradesWith, player_1) to player_2.

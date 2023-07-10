@@ -41,7 +41,7 @@ int main(int, char *[]) {
     ecs.entity("builder_2").add<Builder>();
 
     // Create a rule to find all ranged units
-    auto r = ecs.rule<RangedUnit>();
+    flecs::rule<RangedUnit> r = ecs.rule<RangedUnit>();
 
     // Iterate the rule
     r.each([](flecs::entity e, RangedUnit) {

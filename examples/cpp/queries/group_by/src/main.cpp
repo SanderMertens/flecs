@@ -55,7 +55,7 @@ int main() {
     ecs.component<Third>();
 
     // Grouped query
-    auto q = ecs.query_builder<Position>()
+    flecs::query<Position> q = ecs.query_builder<Position>()
         .group_by<Group>(group_by_relation)
         .build();
 
@@ -92,7 +92,7 @@ int main() {
     //
 
     q.iter([&](flecs::iter& it, Position *p) {
-        auto group = ecs.entity(it.group_id());
+        flecs::entity group = ecs.entity(it.group_id());
         std::cout << " - group " << group.path() << ": table ["
             << it.table().str() << "]\n";
 

@@ -17,7 +17,8 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create a query for Position, Velocity.
-    auto q = ecs.query<Position, const Velocity>();
+    flecs::query<Position, const Velocity> q = 
+        ecs.query<Position, const Velocity>();
 
     // Create a few test entities for a Position, Velocity query
     ecs.entity("e1")

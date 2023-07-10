@@ -5,15 +5,15 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create component for a type that isn't known at compile time
-    auto position = ecs.component("Position")
+    flecs::entity position = ecs.component("Position")
         .member<float>("x")
         .member<float>("y");
 
     // Create entity, set value of position using reflection API
-    auto e = ecs.entity();
+    flecs::entity e = ecs.entity();
     void *ptr = e.get_mut(position);
 
-    auto cur = ecs.cursor(position, ptr);
+    flecs::cursor cur = ecs.cursor(position, ptr);
     cur.push();
     cur.set_float(10);
     cur.next();

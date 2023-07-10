@@ -16,9 +16,16 @@ int main(int argc, char *argv[]) {
     // Create three custom phases. Note that the phases have the Phase tag, 
     // which is necessary for the builtin pipeline to discover which systems it 
     // should run.
-    auto Update = ecs.entity().add(flecs::Phase);
-    auto Physics = ecs.entity().add(flecs::Phase).depends_on(Update);
-    auto Collisions = ecs.entity().add(flecs::Phase).depends_on(Physics);
+    flecs::entity Update = ecs.entity()
+        .add(flecs::Phase);
+
+    flecs::entity Physics = ecs.entity()
+        .add(flecs::Phase)
+        .depends_on(Update);
+
+    flecs::entity Collisions = ecs.entity()
+        .add(flecs::Phase)
+        .depends_on(Physics);
 
     // Create 3 dummy systems.
     ecs.system("CollisionSystem")

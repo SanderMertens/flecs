@@ -24,7 +24,7 @@ int main(int, char *[]) {
                 // When the entity to be mutated is not the same as the entity
                 // provided by the system, an additional mut() call is required.
                 // See the mutate_entity_handle example.
-                auto e = it.entity(index);
+                flecs::entity e = it.entity(index);
                 e.destruct();
                 std::cout << "Expire: " << e.name() << "deleted!\n";
             }
@@ -45,7 +45,7 @@ int main(int, char *[]) {
         });
 
 
-    auto e = ecs.entity("MyEntity")
+    flecs::entity e = ecs.entity("MyEntity")
         .set<Timeout>({3.0});
 
     ecs.set_target_fps(1);

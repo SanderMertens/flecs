@@ -15,7 +15,7 @@ int main(int, char *[]) {
         .member<float>("y");
 
     // Create entity with Position as usual
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<Position>({10, 20});
 
     // Convert position component to flecs expression string

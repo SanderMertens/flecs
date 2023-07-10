@@ -7,11 +7,11 @@ struct Healthy { };
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto Apples = ecs.entity("Apples").add<Healthy>();
-    auto Salad = ecs.entity("Salad").add<Healthy>();
-    auto Burgers = ecs.entity("Burgers");
-    auto Pizza = ecs.entity("Pizza");
-    auto Chocolate = ecs.entity("Chocolate");
+    flecs::entity Apples = ecs.entity("Apples").add<Healthy>();
+    flecs::entity Salad = ecs.entity("Salad").add<Healthy>();
+    flecs::entity Burgers = ecs.entity("Burgers");
+    flecs::entity Pizza = ecs.entity("Pizza");
+    flecs::entity Chocolate = ecs.entity("Chocolate");
 
     ecs.entity("Bob")
         .add<Eats>(Apples)
@@ -28,7 +28,7 @@ int main(int, char *[]) {
     //
     // Rules are similar to queries, but support more advanced features. This
     // example shows how the basics of how to use rules & variables.
-    auto r = ecs.rule_builder()
+    flecs::rule<> r = ecs.rule_builder()
         // Identifiers that start with _ are query variables. Query variables
         // are like wildcards, but enforce that the entity substituted by the
         // wildcard is the same across terms.
@@ -39,10 +39,10 @@ int main(int, char *[]) {
         //
         // By replacing * with _Food, both terms are constrained to use the
         // same entity.
-        .term<Eats>("$Food")
-        .term<Healthy>().src("$Food")
+        .with<Eats>("$Food")
+        .with<Healthy>().src("$Food")
         .build();
-    
+
     // Lookup the index of the variable. This will let us quickly lookup its
     // value while we're iterating.
     int food_var = r.find_var("Food");

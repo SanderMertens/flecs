@@ -15,7 +15,7 @@ int main(int, char *[]) {
     // result does not become part of the function signatures of each and iter.
     // This is useful for things like tags, which because they don't have a 
     // value are less useful to pass to the each/iter functions as argument.
-    auto q = ecs.query_builder<Position>()
+    flecs::query<Position> q = ecs.query_builder<Position>()
         .with<Npc>()
         .build();
 

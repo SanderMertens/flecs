@@ -24,7 +24,7 @@ int main(int, char *[]) {
         .member<Point>("stop");
 
     // Create entity with Position as usual
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<Line>({{10, 20}, {30, 40}});
 
     // Convert position component to flecs expression string

@@ -72,14 +72,14 @@ int main() {
         .add<Soldier>()
         .add<Npc>();
 
-    auto q = ecs.query_builder<Npc>()
+    flecs::query<Npc> q = ecs.query_builder<Npc>()
         .group_by<WorldCell>(group_by_relation)
         .build();
 
     // Iterate all tables
     std::cout << "All tables:\n";
     q.iter([&](flecs::iter& it) {
-        auto group = ecs.entity(it.group_id());
+        flecs::entity group = ecs.entity(it.group_id());
         std::cout << " - group " << group.path() << ": table ["
             << it.table().str() << "]\n";
     });
@@ -89,7 +89,7 @@ int main() {
     // Only iterate entities in cell 1_0
     std::cout << "Tables for cell 1_0:\n";
     q.iter().set_group<Cell_1_0>().iter([&](flecs::iter& it) {
-        auto group = ecs.entity(it.group_id());
+        flecs::entity group = ecs.entity(it.group_id());
         std::cout << " - group " << group.path() << ": table ["
             << it.table().str() << "]\n";
     });

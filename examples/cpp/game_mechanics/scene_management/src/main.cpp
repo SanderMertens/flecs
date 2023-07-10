@@ -30,8 +30,8 @@ void reset_scene(flecs::world& ecs) {
 void menu_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `MenuScene`\n\n";
 
-    auto ecs = it.world();
-    auto scene = ecs.component<SceneRoot>();
+    flecs::world ecs = it.world();
+    flecs::entity scene = ecs.component<SceneRoot>();
     
     reset_scene(ecs);
 
@@ -48,8 +48,8 @@ void menu_scene(flecs::iter& it, size_t, ActiveScene) {
 void game_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `GameScene`\n\n";
 
-    auto ecs = it.world();
-    auto scene = ecs.component<SceneRoot>();
+    flecs::world ecs = it.world();
+    flecs::entity scene = ecs.component<SceneRoot>();
     
     reset_scene(ecs);
 

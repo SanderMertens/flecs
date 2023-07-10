@@ -38,7 +38,8 @@ int main(int, char *[]) {
     ecs.entity("d").set<Position>({30, 40}).set<Velocity>({4, 5}).set<Mass>({20});
 
     // Query for components
-    auto q = ecs.query<Position, const Velocity>();
+    flecs::query<Position, const Velocity> q = 
+        ecs.query<Position, const Velocity>();
 
     // Serialize query to JSON. Customize serializer to only serialize entity
     // names and component values.

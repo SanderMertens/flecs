@@ -13,11 +13,11 @@ int main(int, char*[]) {
         .add(flecs::Exclusive);
 
     // Create two platoons
-    auto platoon_1 = ecs.entity();
-    auto platoon_2 = ecs.entity();
+    flecs::entity platoon_1 = ecs.entity();
+    flecs::entity platoon_2 = ecs.entity();
 
     // Create a unit
-    auto unit = ecs.entity();
+    flecs::entity unit = ecs.entity();
 
     // Add unit to platoon 1
     unit.add<Platoon>(platoon_1);

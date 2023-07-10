@@ -28,21 +28,21 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     // Create entities, set Position in random order
-    auto e = ecs.entity().set<Position>({1, 0});
+    flecs::entity e = ecs.entity().set<Position>({1, 0});
     ecs.entity().set<Position>({6, 0});
     ecs.entity().set<Position>({2, 0});
     ecs.entity().set<Position>({5, 0});
     ecs.entity().set<Position>({4, 0});
 
     // Create a sorted system
-    auto sys = ecs.system<const Position>()
+    flecs::system sys = ecs.system<const Position>()
         .order_by(compare_position)
         .each([](const Position &p) {
             std::cout << "{" << p.x << "," << p.y << "}" << std::endl;
         });
 
     // Create a sorted query
-    auto q = ecs.query_builder<const Position>()
+    flecs::query<const Position> q = ecs.query_builder<const Position>()
         .order_by(compare_position)
         .build();
 

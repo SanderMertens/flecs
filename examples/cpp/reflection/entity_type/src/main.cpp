@@ -13,10 +13,10 @@ int main(int, char *[]) {
     ecs.component<TypeWithEntity>()
         .member(flecs::Entity, "e");
 
-    auto foo = ecs.entity("Foo");
+    flecs::entity foo = ecs.entity("Foo");
 
     // Create entity with PortableType
-    auto e = ecs.entity()
+    flecs::entity e = ecs.entity()
         .set<TypeWithEntity>({ foo });
 
     // Convert PortableType component to flecs expression string

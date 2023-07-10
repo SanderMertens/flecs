@@ -33,7 +33,7 @@ int main(int, char *[]) {
 
     CollisionQuery q_collide = ecs.query<const Position, const Radius>();
 
-    auto sys = ecs.system<const Position, const Radius>("Collide")
+    flecs::system sys = ecs.system<const Position, const Radius>("Collide")
         .ctx(&q_collide)
         .each([](flecs::iter& it, size_t i, const Position& p1, const Radius& r1) {
             CollisionQuery *q = it.ctx<CollisionQuery>();

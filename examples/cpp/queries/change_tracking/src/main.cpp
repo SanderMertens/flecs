@@ -25,18 +25,19 @@ int main(int, char *[]) {
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    auto q_read = ecs.query<const Position>();
+    flecs::query<const Position> q_read = ecs.query<const Position>();
 
     // Create a query that writes the component based on a Dirty state.
-    auto q_write = ecs.query_builder<const Dirty, Position>()
-        .term_at(1).up()     // Only match Dirty from prefab
-        .instanced()         // Instanced iteration is faster (see example)
-        .build();
+    flecs::query<const Dirty, Position> q_write = 
+        ecs.query_builder<const Dirty, Position>()
+            .term_at(1).up()     // Only match Dirty from prefab
+            .instanced()         // Instanced iteration is faster (see example)
+            .build();
 
     // Create two prefabs with a Dirty component. We can use this to share a
     // single Dirty value for all entities in a table.
-    auto p1 = ecs.prefab("p1").set<Dirty>({false});
-    auto p2 = ecs.prefab("p2").set<Dirty>({true});
+    flecs::entity p1 = ecs.prefab("p1").set<Dirty>({false});
+    flecs::entity p2 = ecs.prefab("p2").set<Dirty>({true});
 
     // Create instances of p1 and p2. Because the entities have different
     // prefabs, they end up in different tables.

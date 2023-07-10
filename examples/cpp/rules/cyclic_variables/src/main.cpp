@@ -9,10 +9,10 @@ struct Likes { };
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto bob = ecs.entity("Bob");
-    auto alice = ecs.entity("Alice");
-    auto john = ecs.entity("John");
-    auto jane = ecs.entity("Jane");
+    flecs::entity bob = ecs.entity("Bob");
+    flecs::entity alice = ecs.entity("Alice");
+    flecs::entity john = ecs.entity("John");
+    flecs::entity jane = ecs.entity("Jane");
 
     bob.add<Likes>(alice);
     alice.add<Likes>(bob);
@@ -33,7 +33,7 @@ int main(int, char *[]) {
     //
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
-    auto r = ecs.rule_builder()
+    flecs::rule<> r = ecs.rule_builder()
         .term<Likes>("$Y").src("$X")
         .term<Likes>("$X").src("$Y")
         .build();
@@ -46,8 +46,8 @@ int main(int, char *[]) {
     // Because the query doesn't use the This variable we cannot use "each"
     // which iterates the entities array. Instead we can use iter like this:
     r.iter([&](flecs::iter& it) {
-        auto x = it.get_var(x_var);
-        auto y = it.get_var(y_var);
+        flecs::entity x = it.get_var(x_var);
+        flecs::entity y = it.get_var(y_var);
         std::cout << x.name() << " likes " << y.name() << "\n";
     });
 

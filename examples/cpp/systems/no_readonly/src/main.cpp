@@ -21,7 +21,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create query to find all waiters without a plate
-    auto q_waiter = ecs.query_builder()
+    flecs::query<> q_waiter = ecs.query_builder()
         .term<Waiter>()
         .term<Plate>(flecs::Wildcard).not_()
         .build();

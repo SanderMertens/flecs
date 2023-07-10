@@ -17,7 +17,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create a prefab hierarchy.
-    auto spaceship = ecs.prefab("Spaceship")
+    flecs::entity spaceship = ecs.prefab("Spaceship")
         // Add components to prefab entity as usual
         .set<ImpulseSpeed>({50})
         .set<Defense>({50})
@@ -27,7 +27,7 @@ int main(int, char *[]) {
         // copy of the component.
         .override<Position>();
 
-        auto freighter = ecs.prefab("Freighter")
+        flecs::entity freighter = ecs.prefab("Freighter")
             // Short for .add(flecs::IsA, spaceship). This ensures the entity
             // inherits all components from spaceship.
             .is_a(spaceship)
@@ -35,7 +35,7 @@ int main(int, char *[]) {
             .set<FreightCapacity>({100})
             .set<Defense>({100});
 
-            auto mammoth_freighter = ecs.prefab("MammothFreighter")
+            flecs::entity mammoth_freighter = ecs.prefab("MammothFreighter")
                 .is_a(freighter)
                 .set<FreightCapacity>({500})
                 .set<Defense>({300});
@@ -50,7 +50,7 @@ int main(int, char *[]) {
     // Create a regular entity from a prefab.
     // The instance will have a private copy of the Position component, because
     // of the override in the spaceship entity. All other components are shared.
-    auto inst = ecs.entity("my_mammoth_freighter")
+    flecs::entity inst = ecs.entity("my_mammoth_freighter")
         .is_a(mammoth_freighter);
 
     // Inspect the type of the entity. This outputs:

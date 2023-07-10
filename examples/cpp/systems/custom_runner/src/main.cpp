@@ -19,7 +19,7 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto s = ecs.system<Position, const Velocity>()
+    flecs::system s = ecs.system<Position, const Velocity>()
         // The run function has a signature that accepts a C iterator. By 
         // forwarding the iterator to it->callback, the each function of the
         // system is invoked.

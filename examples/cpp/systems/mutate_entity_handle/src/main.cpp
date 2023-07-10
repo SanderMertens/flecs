@@ -60,7 +60,7 @@ int main(int, char *[]) {
         });
 
     // Add Tag so we can get notified when entity is actually deleted
-    auto to_delete = ecs.entity("ToDelete")
+    flecs::entity to_delete = ecs.entity("ToDelete")
         .add<Tag>();
 
     ecs.entity("MyEntity")

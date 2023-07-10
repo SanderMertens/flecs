@@ -18,7 +18,7 @@ int main(int, char *[]) {
     //
     // The without method is short for:
     //   .term<Npc>().not_()
-    auto q = ecs.query_builder<Position>()
+    flecs::query<Position> q = ecs.query_builder<Position>()
         .without<Npc>()
         .build();
 

@@ -32,7 +32,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create an entity with (Tile, Stone) and (TileStatus, Free) relationships
-    auto tile = ecs.entity()
+    flecs::entity tile = ecs.entity()
         .add(Tile::Stone)
         .add(TileStatus::Free);
 
@@ -62,7 +62,7 @@ int main(int, char *[]) {
         .term<Tile>(flecs::Wildcard)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            auto tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(1).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 
@@ -77,7 +77,7 @@ int main(int, char *[]) {
         .term(TileStatus::Occupied)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            auto tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(1).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 

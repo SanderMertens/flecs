@@ -8,15 +8,15 @@ int main(int, char*[]) {
     flecs::world ecs;
 
     // Entity used for Grows relationship
-    auto grows = ecs.entity("Grows");
+    flecs::entity grows = ecs.entity("Grows");
 
     // Relationship objects
-    auto apples = ecs.entity("Apples");
-    auto pears = ecs.entity("Pears");
+    flecs::entity apples = ecs.entity("Apples");
+    flecs::entity pears = ecs.entity("Pears");
 
     // Create an entity with 3 relationships. Relationships are like regular components,
     // but combine two types/identifiers into an (relationship, object) pair.
-    auto bob = ecs.entity("Bob")
+    flecs::entity bob = ecs.entity("Bob")
         // Pairs can be constructed from a type and entity
         .add<Eats>(apples)
         .add<Eats>(pears)

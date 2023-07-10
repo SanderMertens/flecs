@@ -40,13 +40,14 @@ int main(int, char *[]) {
 
     // Create a query for Position, Velocity. We'll create a few entities that
     // have Velocity as owned and shared component.
-    auto q = ecs.query_builder<Position, const Velocity>()
-        .term_at(1).self()       // Position must always be owned by the entity
-        .instanced()             // create instanced query
-        .build();
+    flecs::query<Position, const Velocity> q = 
+        ecs.query_builder<Position, const Velocity>()
+            .term_at(1).self()   // Position must always be owned by the entity
+            .instanced()         // create instanced query
+            .build();
 
     // Create a prefab with Velocity. Prefabs are not matched with queries.
-    auto prefab = ecs.prefab("p")
+    flecs::entity prefab = ecs.prefab("p")
         .set<Velocity>({1, 2});
 
     // Create a few entities that own Position & share Velocity from the prefab.

@@ -24,10 +24,10 @@ struct Likes { };
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto bob = ecs.entity("Bob");
-    auto alice = ecs.entity("Alice");
-    auto jane = ecs.entity("Jane");
-    auto john = ecs.entity("John");
+    flecs::entity bob = ecs.entity("Bob");
+    flecs::entity alice = ecs.entity("Alice");
+    flecs::entity jane = ecs.entity("Jane");
+    flecs::entity john = ecs.entity("John");
 
     bob.add<Likes>(alice);
     alice.add<Likes>(bob);
@@ -46,7 +46,7 @@ int main(int, char *[]) {
     // Instead of using variables we could have created a rule that referred the
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
-    auto friends = ecs.rule_builder()
+    flecs::rule<> friends = ecs.rule_builder()
         .term<Likes>("$Y").src("$X")
         .term<Likes>("$X").src("$Y")
         .build();

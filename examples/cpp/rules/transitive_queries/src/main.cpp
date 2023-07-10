@@ -29,50 +29,50 @@ int main(int, char *[]) {
     ecs.component<LocatedIn>().add(flecs::Transitive);
 
     // Populate the store with locations
-    auto earth = ecs.entity("Earth")
+    flecs::entity earth = ecs.entity("Earth")
         .add<Planet>();
 
     // Continents
-    auto north_america = ecs.entity("NorthAmerica")
+    flecs::entity north_america = ecs.entity("NorthAmerica")
         .add<Continent>()
         .add<LocatedIn>(earth);
 
-    auto europe = ecs.entity("Europe")
+    flecs::entity europe = ecs.entity("Europe")
         .add<Continent>()
         .add<LocatedIn>(earth);
 
     // Countries
-    auto united_states = ecs.entity("UnitedStates")
+    flecs::entity united_states = ecs.entity("UnitedStates")
         .add<Country>()
         .add<LocatedIn>(north_america);
 
-    auto netherlands = ecs.entity("Netherlands")
+    flecs::entity netherlands = ecs.entity("Netherlands")
         .add<Country>()
         .add<LocatedIn>(europe);
 
     // States
-    auto california = ecs.entity("California")
+    flecs::entity california = ecs.entity("California")
         .add<State>()
         .add<LocatedIn>(united_states);
 
-    auto washington = ecs.entity("Washington")
+    flecs::entity washington = ecs.entity("Washington")
         .add<State>()
         .add<LocatedIn>(united_states);
 
-    auto noord_holland = ecs.entity("NoordHolland")
+    flecs::entity noord_holland = ecs.entity("NoordHolland")
         .add<State>()
         .add<LocatedIn>(netherlands);
 
     // Cities
-    auto san_francisco = ecs.entity("SanFrancisco")
+    flecs::entity san_francisco = ecs.entity("SanFrancisco")
         .add<City>()
         .add<LocatedIn>(california);
 
-    auto seattle = ecs.entity("Seattle")
+    flecs::entity seattle = ecs.entity("Seattle")
         .add<City>()
         .add<LocatedIn>(washington);
 
-    auto amsterdam = ecs.entity("Amsterdam")
+    flecs::entity amsterdam = ecs.entity("Amsterdam")
         .add<City>()
         .add<LocatedIn>(noord_holland);
 
@@ -96,7 +96,7 @@ int main(int, char *[]) {
     // 
     // The equivalent of this query in the DSL is:
     //   Person, (LocatedIn, $Location), Country($Location)
-    auto r = ecs.rule_builder()
+    flecs::rule<> r = ecs.rule_builder()
         .term<Person>()
         .term<LocatedIn>("$Location")
         .term<Country>().src("$Location")

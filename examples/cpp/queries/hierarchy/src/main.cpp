@@ -13,7 +13,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create a hierarchy. For an explanation see the entities/hierarchy example
-    auto sun = ecs.entity("Sun")
+    flecs::entity sun = ecs.entity("Sun")
         .add<Position, World>()
         .set<Position, Local>({1, 1});
 
@@ -27,7 +27,7 @@ int main(int, char *[]) {
             .add<Position, World>()
             .set<Position, Local>({2, 2});
 
-        auto earth = ecs.entity("Earth")
+        flecs::entity earth = ecs.entity("Earth")
             .child_of(sun)
             .add<Position, World>()
             .set<Position, Local>({3, 3});
@@ -39,21 +39,22 @@ int main(int, char *[]) {
 
     // Create a hierarchical query to compute the global position from the
     // local position and the parent position.
-    auto q = ecs.query_builder<const Position, const Position, Position>()
-        // Modify terms from template to make sure the query selects the
-        // local, world and parent position components.
-        .term_at(1).second<Local>()
-        .term_at(2).second<World>()
-        .term_at(3).second<World>()
+    flecs::query<const Position, const Position, Position> q = 
+        ecs.query_builder<const Position, const Position, Position>()
+            // Modify terms from template to make sure the query selects the
+            // local, world and parent position components.
+            .term_at(1).second<Local>()
+            .term_at(2).second<World>()
+            .term_at(3).second<World>()
 
-        // Extend the 2nd query argument to select it from the parent
-        .term_at(2)
-            // Get from the parent, in breadth-first order (cascade)
-            .parent().cascade()
-            // Make term component optional so we also match the root (sun)
-            .optional()
-        // Finalize the query
-        .build();
+            // Extend the 2nd query argument to select it from the parent
+            .term_at(2)
+                // Get from the parent, in breadth-first order (cascade)
+                .parent().cascade()
+                // Make term component optional so we also match the root (sun)
+                .optional()
+            // Finalize the query
+            .build();
 
     // Do the transform
     q.iter([](flecs::iter& it, 

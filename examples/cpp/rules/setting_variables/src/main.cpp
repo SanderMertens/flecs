@@ -51,7 +51,7 @@ int main(int, char *[]) {
         player.add<Player>();
 
         for (int pl = 0; pl < PlatoonsPerPlayer; pl ++) {
-            auto platoon = ecs.entity().add<Player>(player);
+            flecs::entity platoon = ecs.entity().add<Player>(player);
 
             // Add platoon tag so we can query for all platoons if we want to
             platoon.add<Platoon>();
@@ -70,7 +70,7 @@ int main(int, char *[]) {
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
-    auto r = ecs.rule_builder<RangedUnit>()
+    flecs::rule<RangedUnit> r = ecs.rule_builder<RangedUnit>()
         .term<Platoon>().second("$Platoon")
         .term<Player>("$Player").src("$Platoon")
         .build();

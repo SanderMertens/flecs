@@ -11,7 +11,7 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create an entity with name Bob
-    auto bob = ecs.entity("Bob")
+    flecs::entity bob = ecs.entity("Bob")
         // The set operation finds or creates a component, and sets it.
         // Components are automatically registered with the world.
         .set<Position>({10, 20}) 
@@ -27,7 +27,7 @@ int main(int, char *[]) {
     bob.set<Position>({20, 30});
 
     // Create another named entity
-    auto alice = ecs.entity("Alice")
+    flecs::entity alice = ecs.entity("Alice")
         .set<Position>({10, 20});
 
     // Add a tag after entity is created

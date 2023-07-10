@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     // Create a query that subscribes for all entities that have a Direction
     // and that are walking
-    auto q = ecs.query_builder()
+    flecs::query<> q = ecs.query_builder()
         .term(Walking)
         .term<Direction>(flecs::Wildcard)
         .build();
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         .add(Running)
         .add(Left);
 
-    auto e3 = ecs.entity("e3")
+    flecs::entity e3 = ecs.entity("e3")
         .add(Running)
         .add(Back);
 
