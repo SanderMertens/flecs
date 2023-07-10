@@ -35,17 +35,6 @@ struct First { };
 struct Second { };
 struct Third { };
 
-uint64_t group_by_relation(flecs::world_t *ecs, flecs::table_t *table, 
-    flecs::entity_t id, void *) 
-{
-    // Use ecs_search to find the target for the relationship in the table
-    flecs::id_t match;
-    if (ecs_search(ecs, table, flecs::id(id, flecs::Wildcard), &match) != -1) {
-        return flecs::id(ecs, match).second(); // First, Second or Third
-    }
-    return 0;
-}
-
 int main() {
     flecs::world ecs;
 
@@ -56,7 +45,7 @@ int main() {
 
     // Grouped query
     flecs::query<Position> q = ecs.query_builder<Position>()
-        .group_by<Group>(group_by_relation)
+        .group_by<Group>()
         .build();
 
     // Create entities in 6 different tables with 3 group ids
