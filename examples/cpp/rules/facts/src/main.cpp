@@ -47,8 +47,8 @@ int main(int, char *[]) {
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
     flecs::rule<> friends = ecs.rule_builder()
-        .term<Likes>("$Y").src("$X")
-        .term<Likes>("$X").src("$Y")
+        .with<Likes>("$Y").src("$X")
+        .with<Likes>("$X").src("$Y")
         .build();
 
     int x_var = friends.find_var("X");

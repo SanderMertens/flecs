@@ -59,7 +59,7 @@ int main(int, char *[]) {
 
     // Iterate all entities with a Tile relationship
     ecs.filter_builder()
-        .term<Tile>(flecs::Wildcard)
+        .with<Tile>(flecs::Wildcard)
         .build()
         .each([&](flecs::iter& it, size_t) {
             flecs::entity tile_constant = it.pair(1).second();
@@ -73,8 +73,8 @@ int main(int, char *[]) {
 
     // Iterate only occupied tiles
     ecs.filter_builder()
-        .term<Tile>(flecs::Wildcard)
-        .term(TileStatus::Occupied)
+        .with<Tile>(flecs::Wildcard)
+        .with(TileStatus::Occupied)
         .build()
         .each([&](flecs::iter& it, size_t) {
             flecs::entity tile_constant = it.pair(1).second();

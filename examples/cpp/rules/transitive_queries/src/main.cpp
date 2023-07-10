@@ -97,9 +97,9 @@ int main(int, char *[]) {
     // The equivalent of this query in the DSL is:
     //   Person, (LocatedIn, $Location), Country($Location)
     flecs::rule<> r = ecs.rule_builder()
-        .term<Person>()
-        .term<LocatedIn>("$Location")
-        .term<Country>().src("$Location")
+        .with<Person>()
+        .with<LocatedIn>("$Location")
+        .with<Country>().src("$Location")
         .build();
     
     // Lookup the index of the variable. This will let us quickly lookup its

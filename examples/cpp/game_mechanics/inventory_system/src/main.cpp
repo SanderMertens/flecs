@@ -99,7 +99,7 @@ flecs::entity get_container(flecs::entity container) {
 template <typename Func>
 void for_each_item(flecs::entity container, const Func& func) {
     container.world().filter_builder()
-        .term<ContainedBy>(container)
+        .with<ContainedBy>(container)
         .build()
         .each(func);
 }

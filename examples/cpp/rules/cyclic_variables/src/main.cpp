@@ -34,8 +34,8 @@ int main(int, char *[]) {
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
     flecs::rule<> r = ecs.rule_builder()
-        .term<Likes>("$Y").src("$X")
-        .term<Likes>("$X").src("$Y")
+        .with<Likes>("$Y").src("$X")
+        .with<Likes>("$X").src("$Y")
         .build();
 
     // Lookup the index of the variables. This will let us quickly lookup their

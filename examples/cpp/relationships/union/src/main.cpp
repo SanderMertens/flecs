@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
     // Create a query that subscribes for all entities that have a Direction
     // and that are walking
     flecs::query<> q = ecs.query_builder()
-        .term(Walking)
-        .term<Direction>(flecs::Wildcard)
+        .with(Walking)
+        .with<Direction>(flecs::Wildcard)
         .build();
 
     // Create a few entities with various state combinations
