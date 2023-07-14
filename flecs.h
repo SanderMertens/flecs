@@ -10550,9 +10550,6 @@ void ecs_reset_clock(
  * default pipeline (either the builtin pipeline or the pipeline set with 
  * set_pipeline()). An application may run additional pipelines.
  *
- * Note: calling this function from an application currently only works in
- * single threaded applications with a single stage.
- *
  * @param world The world.
  * @param pipeline The pipeline to run.
  */

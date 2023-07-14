@@ -521,6 +521,11 @@ struct ecs_stage_t {
     /* Caches for rule creation */
     ecs_vec_t variables;
     ecs_vec_t operations;
+
+#ifdef FLECS_PIPELINE
+    /* The pipeline for the worker thread to execute using this stage */
+    void* pq; // TODO: This should be ecs_pipeline_state_t but its not defined yet
+#endif
 };
 
 /* Component monitor */
