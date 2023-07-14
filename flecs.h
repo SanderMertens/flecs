@@ -20134,6 +20134,13 @@ bool progress(ecs_ftime_t delta_time = 0.0) const;
  */
 void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const;
 
+/** Run pipeline.
+ * @tparam Pipeline Type associated with pipeline.
+ * @see ecs_run_pipeline
+ */
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
+void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
+
 /** Set timescale.
  * @see ecs_set_time_scale
  */
@@ -28371,6 +28378,11 @@ inline bool world::progress(ecs_ftime_t delta_time) const {
 
 inline void world::run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(m_world, pip, delta_time);
+}
+
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
+inline void world::run_pipeline(ecs_ftime_t delta_time) const {
+    return ecs_run_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world), delta_time);
 }
 
 inline void world::set_time_scale(ecs_ftime_t mul) const {

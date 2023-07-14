@@ -48,6 +48,13 @@ bool progress(ecs_ftime_t delta_time = 0.0) const;
  */
 void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const;
 
+/** Run pipeline.
+ * @tparam Pipeline Type associated with pipeline.
+ * @see ecs_run_pipeline
+ */
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
+void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
+
 /** Set timescale.
  * @see ecs_set_time_scale
  */
