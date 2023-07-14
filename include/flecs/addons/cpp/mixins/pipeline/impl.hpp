@@ -56,6 +56,11 @@ inline void world::run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_tim
     return ecs_run_pipeline(m_world, pip, delta_time);
 }
 
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
+inline void world::run_pipeline(ecs_ftime_t delta_time) const {
+    return ecs_run_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world), delta_time);
+}
+
 inline void world::set_time_scale(ecs_ftime_t mul) const {
     ecs_set_time_scale(m_world, mul);
 }  
