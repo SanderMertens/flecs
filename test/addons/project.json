@@ -556,8 +556,10 @@
                 "2_pipelines_1_system",
                 "builtin_pipeline_w_self_system_term",
                 "custom_pipeline_w_self_system_term",
-		"switch_from_threads_to_tasks",
-		"switch_from_tasks_to_threads"
+                "switch_from_threads_to_tasks",
+                "switch_from_tasks_to_threads",
+                "run_pipeline_multithreaded",
+                "run_pipeline_multithreaded_tasks"
             ]
         }, {
             "id": "SystemMisc",

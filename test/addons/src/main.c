@@ -547,6 +547,8 @@ void Pipeline_builtin_pipeline_w_self_system_term(void);
 void Pipeline_custom_pipeline_w_self_system_term(void);
 void Pipeline_switch_from_threads_to_tasks(void);
 void Pipeline_switch_from_tasks_to_threads(void);
+void Pipeline_run_pipeline_multithreaded(void);
+void Pipeline_run_pipeline_multithreaded_tasks(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -3656,6 +3658,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "switch_from_tasks_to_threads",
         Pipeline_switch_from_tasks_to_threads
+    },
+    {
+        "run_pipeline_multithreaded",
+        Pipeline_run_pipeline_multithreaded
+    },
+    {
+        "run_pipeline_multithreaded_tasks",
+        Pipeline_run_pipeline_multithreaded_tasks
     }
 };
 
@@ -7382,7 +7392,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        78,
+        80,
         Pipeline_testcases
     },
     {
