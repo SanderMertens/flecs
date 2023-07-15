@@ -586,7 +586,8 @@
                 "instanced_nested_query_w_world",
                 "captured_query",
                 "page_iter_captured_query",
-                "worker_iter_captured_query"
+                "worker_iter_captured_query",
+                "iter_entities"
             ]
         }, {
             "id": "QueryBuilder",
