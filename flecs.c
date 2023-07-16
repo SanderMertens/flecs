@@ -18013,14 +18013,7 @@ void ecs_set_pipeline(
     ecs_check( ecs_get(world, pipeline, EcsPipeline) != NULL, 
         ECS_INVALID_PARAMETER, "not a pipeline");
 
-    int32_t thread_count = ecs_get_stage_count(world);
-    if (thread_count > 1) {
-        ecs_set_threads(world, 1);
-    }
     world->pipeline = pipeline;
-    if (thread_count > 1) {
-        ecs_set_threads(world, thread_count);
-    }
 error:
     return;
 }
