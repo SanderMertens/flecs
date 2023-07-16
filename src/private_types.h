@@ -480,6 +480,8 @@ typedef struct ecs_cmd_entry_t {
     int32_t last;                    /* If -1, a delete command was inserted */
 } ecs_cmd_entry_t;
 
+typedef struct ecs_pipeline_state_t ecs_pipeline_state_t;
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
@@ -524,7 +526,7 @@ struct ecs_stage_t {
 
 #ifdef FLECS_PIPELINE
     /* The pipeline for the worker thread to execute using this stage */
-    void* pq; // TODO: This should be ecs_pipeline_state_t but its not defined yet
+    ecs_pipeline_state_t* pq;
 #endif
 };
 

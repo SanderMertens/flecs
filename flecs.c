@@ -949,6 +949,8 @@ typedef struct ecs_cmd_entry_t {
     int32_t last;                    /* If -1, a delete command was inserted */
 } ecs_cmd_entry_t;
 
+typedef struct ecs_pipeline_state_t ecs_pipeline_state_t;
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
@@ -993,7 +995,7 @@ struct ecs_stage_t {
 
 #ifdef FLECS_PIPELINE
     /* The pipeline for the worker thread to execute using this stage */
-    void* pq; // TODO: This should be ecs_pipeline_state_t but its not defined yet
+    ecs_pipeline_state_t* pq;
 #endif
 };
 
@@ -16844,7 +16846,7 @@ typedef struct ecs_pipeline_op_t {
     bool no_readonly;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
-typedef struct ecs_pipeline_state_t {
+struct ecs_pipeline_state_t {
     ecs_query_t *query;         /* Pipeline query */
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
@@ -16862,7 +16864,7 @@ typedef struct ecs_pipeline_state_t {
     int32_t cur_i;              /* Index in current result */
     int32_t ran_since_merge;    /* Index in current op */
     bool no_readonly;           /* Is pipeline in readonly mode */
-} ecs_pipeline_state_t;
+};
 
 typedef struct EcsPipeline {
     /* Stable ptr so threads can safely access while entity/components move */
