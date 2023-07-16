@@ -201,6 +201,22 @@ inline flecs::entity world::singleton() const {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
 }
 
+template <typename First>
+inline flecs::entity world::target(int32_t index) const
+{
+    return flecs::entity(m_world,
+        ecs_get_target(m_world, _::cpp_type<First>::id(m_world), _::cpp_type<First>::id(m_world), index));
+}
+
+template <typename T>
+inline flecs::entity world::target(
+    flecs::entity_t relationship,
+    int32_t index) const
+{
+    return flecs::entity(m_world,
+        ecs_get_target(m_world, _::cpp_type<T>::id(m_world), relationship, index));
+}
+
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
