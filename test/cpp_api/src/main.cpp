@@ -1110,6 +1110,7 @@ void Singleton_get_set_singleton_pair_R_t(void);
 void Singleton_add_remove_singleton_pair_R_T(void);
 void Singleton_add_remove_singleton_pair_R_t(void);
 void Singleton_add_remove_singleton_pair_r_t(void);
+void Singleton_get_target(void);
 
 // Testsuite 'Misc'
 void Misc_setup(void);
@@ -5536,6 +5537,10 @@ bake_test_case Singleton_testcases[] = {
     {
         "add_remove_singleton_pair_r_t",
         Singleton_add_remove_singleton_pair_r_t
+    },
+    {
+        "get_target",
+        Singleton_get_target
     }
 };
 
@@ -6225,7 +6230,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        18,
+        19,
         Singleton_testcases
     },
     {

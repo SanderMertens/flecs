@@ -1160,7 +1160,8 @@
                 "get_set_singleton_pair_R_t",
                 "add_remove_singleton_pair_R_T",
                 "add_remove_singleton_pair_R_t",
-                "add_remove_singleton_pair_r_t"
+                "add_remove_singleton_pair_r_t",
+                "get_target"
             ]
         }, {
             "id": "Misc",
