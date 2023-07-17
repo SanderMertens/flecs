@@ -745,6 +745,16 @@ struct world {
     template<typename T>
     flecs::entity target(flecs::entity_t first, int32_t index = 0) const;
 
+    /** Get target for a given pair from a singleton entity.
+     * This operation returns the target for a given pair. The optional
+     * index can be used to iterate through targets, in case the entity has
+     * multiple instances for the same relationship.
+     *
+     * @param first The first element of the pair for which to retrieve the target.
+     * @param index The index (0 for the first instance of the relationship).
+     */
+    flecs::entity target(flecs::entity_t first, int32_t index = 0) const;
+
     /** Create alias for component.
      *
      * @tparam T to create an alias for.
