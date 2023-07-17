@@ -265,3 +265,54 @@ void Singleton_add_remove_singleton_pair_r_t() {
     world.remove(rel, tgt);
     test_assert(!(world.has(rel, tgt)));
 }
+
+void Singleton_get_target() {
+    flecs::world world;
+
+    auto Rel = world.singleton<Tag>();
+
+    auto obj1 = world.entity()
+        .add<Position>();
+
+    auto obj2 = world.entity()
+        .add<Velocity>();
+
+    auto obj3 = world.entity()
+        .add<Mass>();
+
+    flecs::entity entities[3] = {obj1, obj2, obj3};
+
+    world.add<Tag>(obj1);
+    world.add<Tag>(obj2);
+    world.add(Rel, obj3);
+
+    auto p = world.target<Tag>();
+    test_assert(p != 0);
+    test_assert(p == obj1);
+
+    p = world.target<Tag>(Rel);
+    test_assert(p != 0);
+    test_assert(p == obj1);
+
+    p = world.target(Rel);
+    test_assert(p != 0);
+    test_assert(p == obj1);
+
+    for (int i = 0; i < 3; i++) {
+        p = world.target<Tag>(i);
+        test_assert(p != 0);
+        test_assert(p == entities[i]);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        p = world.target<Tag>(Rel, i);
+        test_assert(p != 0);
+        test_assert(p == entities[i]);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        p = world.target(Rel, i);
+        test_assert(p != 0);
+        test_assert(p == entities[i]);
+    }
+}
