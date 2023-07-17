@@ -217,6 +217,14 @@ inline flecs::entity world::target(
         ecs_get_target(m_world, _::cpp_type<T>::id(m_world), relationship, index));
 }
 
+inline flecs::entity world::target(
+    flecs::entity_t relationship,
+    int32_t index) const
+{
+    return flecs::entity(m_world,
+        ecs_get_target(m_world, relationship, relationship, index));
+}
+
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
