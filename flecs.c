@@ -17874,9 +17874,6 @@ void flecs_run_pipeline(
 
         const int32_t i = flecs_run_pipeline_ops(world, stage, stage_index, stage_count, delta_time, true);
 
-        // TODO: What if one of the worker threads has more 'work' to do and so takes longer?
-        // This time interval on the main-thread will not be equivelent to the amount of time the system
-        // actually took to execute.
         if (measure_time) {
             /* Don't include merge time in system time */
             world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
