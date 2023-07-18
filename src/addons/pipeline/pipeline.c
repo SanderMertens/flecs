@@ -590,7 +590,7 @@ void flecs_run_pipeline(
 
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
 
-    bool multi_threaded = ecs_get_stage_count(world) > 1;;
+    bool multi_threaded = ecs_get_stage_count(world) > 1;
 
     // Update the pipeline the workers will execute
     world->pq = pq;

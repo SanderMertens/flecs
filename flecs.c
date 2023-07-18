@@ -11416,7 +11416,7 @@ ecs_page_t* flecs_sparse_get_page(
     if (page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
     }
-    return ecs_vec_get_t(&sparse->pages, ecs_page_t, page_index);;
+    return ecs_vec_get_t(&sparse->pages, ecs_page_t, page_index);
 }
 
 static
@@ -17816,7 +17816,7 @@ void flecs_run_pipeline(
 
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
 
-    bool multi_threaded = ecs_get_stage_count(world) > 1;;
+    bool multi_threaded = ecs_get_stage_count(world) > 1;
 
     // Update the pipeline the workers will execute
     world->pq = pq;
