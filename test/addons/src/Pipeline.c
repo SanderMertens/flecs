@@ -3090,3 +3090,100 @@ void Pipeline_switch_from_tasks_to_threads() {
     ecs_fini(world);
 }
 
+void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysA,
+        .multi_threaded = true
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysB
+    });
+    ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysC", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysC
+    });
+    ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysD", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysD,
+        .multi_threaded = true
+    });
+    ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysE", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysE,
+        .multi_threaded = true
+    });
+    ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = ecs_entity(world, { .name = "SysF", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .query.filter.expr = "Position",
+        .callback = SysF
+    });
+
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+
+    test_assert(s1 != 0);
+    test_assert(s2 != 0);
+    test_assert(s3 != 0);
+    test_assert(s4 != 0);
+    test_assert(s5 != 0);
+    test_assert(s6 != 0);
+
+    ecs_new(world, Position);
+    ecs_new(world, Position);
+
+    if (task_threads)
+    {
+        ecs_set_task_threads(world, 2);
+    }
+    else
+    {
+    	ecs_set_threads(world, 2);
+    }
+
+    ecs_run_pipeline(world, P, 1);
+
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+    test_int(sys_d_invoked, 2);
+    test_int(sys_e_invoked, 2);
+    test_int(sys_f_invoked, 1);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(ecs_pipeline_stats_get(world, P, &stats), true);
+
+    test_int(ecs_vec_count(&stats.systems), 10);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], s2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[5], s4);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[6], s5);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[8], s6);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
+
+    ecs_pipeline_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
+void Pipeline_run_pipeline_multithreaded() {
+    Pipeline_run_pipeline_multithreaded_internal(false);
+}
+
+void Pipeline_run_pipeline_multithreaded_tasks() {
+    Pipeline_run_pipeline_multithreaded_internal(true);
+}

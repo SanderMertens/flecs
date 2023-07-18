@@ -17,7 +17,7 @@ typedef struct ecs_pipeline_op_t {
     bool no_readonly;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
-typedef struct ecs_pipeline_state_t {
+struct ecs_pipeline_state_t {
     ecs_query_t *query;         /* Pipeline query */
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
@@ -35,7 +35,7 @@ typedef struct ecs_pipeline_state_t {
     int32_t cur_i;              /* Index in current result */
     int32_t ran_since_merge;    /* Index in current op */
     bool no_readonly;           /* Is pipeline in readonly mode */
-} ecs_pipeline_state_t;
+};
 
 typedef struct EcsPipeline {
     /* Stable ptr so threads can safely access while entity/components move */
@@ -56,26 +56,17 @@ void flecs_run_pipeline(
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time);
 
+int32_t flecs_run_pipeline_ops(
+    ecs_world_t* world,
+    ecs_stage_t* stage,
+    int32_t stage_index,
+    int32_t stage_count,
+    ecs_ftime_t delta_time,
+    bool main_thread);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
 ////////////////////////////////////////////////////////////////////////////////
-
-bool flecs_worker_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_pipeline_state_t *pq,
-    bool start_of_frame);
-
-void flecs_worker_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool flecs_worker_sync(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_pipeline_state_t *pq,
-    ecs_pipeline_op_t **cur_op,
-    int32_t *cur_i);
 
 void flecs_workers_progress(
     ecs_world_t *world,
@@ -86,6 +77,12 @@ void flecs_create_worker_threads(
     ecs_world_t *world);
 
 bool flecs_join_worker_threads(
+    ecs_world_t *world);
+
+void flecs_signal_workers(
+    ecs_world_t *world);
+
+void flecs_wait_for_sync(
     ecs_world_t *world);
 
 #endif
