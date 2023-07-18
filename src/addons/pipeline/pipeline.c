@@ -532,17 +532,13 @@ int32_t flecs_run_pipeline_ops(
     ecs_ftime_t delta_time,
     bool main_thread)
 {
-    ecs_pipeline_state_t* pq = stage->pq;
+    ecs_pipeline_state_t* pq = world->pq;
     ecs_pipeline_op_t* op = pq->cur_op;
     int32_t i = pq->cur_i;
 
     int32_t count = ecs_vec_count(&pq->systems);
     ecs_entity_t* systems = ecs_vec_first_t(&pq->systems, ecs_entity_t);
     int32_t ran_since_merge = i - op->offset;
-
-    if (i == count) {
-        return i;
-    }
 
     for (; i < count; i++) {
         /* Run system if:
@@ -602,11 +598,7 @@ void flecs_run_pipeline(
     bool multi_threaded = ecs_get_stage_count(world) > 1;;
 
     // Update the pipeline the workers will execute
-    int32_t stages = ecs_get_stage_count(world);
-    for (int32_t i = 0; i < stages; i++) {
-        ecs_stage_t* other_stage = (ecs_stage_t*)ecs_get_stage(world, i);
-        other_stage->pq = pq;
-    }
+    world->pq = pq;
 
     // Update the pipeline before waking the workers.
     flecs_pipeline_update(world, pq, true);

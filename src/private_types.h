@@ -480,8 +480,6 @@ typedef struct ecs_cmd_entry_t {
     int32_t last;                    /* If -1, a delete command was inserted */
 } ecs_cmd_entry_t;
 
-typedef struct ecs_pipeline_state_t ecs_pipeline_state_t;
-
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
@@ -523,11 +521,6 @@ struct ecs_stage_t {
     /* Caches for rule creation */
     ecs_vec_t variables;
     ecs_vec_t operations;
-
-#ifdef FLECS_PIPELINE
-    /* The pipeline for the worker thread to execute using this stage */
-    ecs_pipeline_state_t* pq;
-#endif
 };
 
 /* Component monitor */
@@ -579,6 +572,8 @@ typedef struct ecs_action_elem_t {
     ecs_fini_action_t action;
     void *ctx;
 } ecs_action_elem_t;
+
+typedef struct ecs_pipeline_state_t ecs_pipeline_state_t;
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
@@ -637,7 +632,8 @@ struct ecs_world_t {
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
     int32_t workers_running;         /* Number of threads running */
     int32_t workers_waiting;         /* Number of workers waiting on sync */
-    bool workers_use_task_api;   /* Workers are short-lived tasks, not long-running threads */
+    ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
+    bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
 
     /* -- Time management -- */
     ecs_time_t world_start_time;     /* Timestamp of simulation start */
